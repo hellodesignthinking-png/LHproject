@@ -489,11 +489,19 @@
 
     <!-- 보고서 모달 -->
     <div id="reportModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; overflow-y: auto;">
-        <div style="max-width: 900px; margin: 50px auto; background: white; border-radius: 20px; padding: 40px; position: relative;">
-            <button onclick="closeReportModal()" style="position: absolute; top: 20px; right: 20px; background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px;">
-                ✕ 닫기
-            </button>
-            <div id="reportContent" style="white-space: pre-wrap; font-family: 'Nanum Gothic', sans-serif; line-height: 1.8; color: #333;"></div>
+        <div style="max-width: 1200px; margin: 30px auto; background: white; border-radius: 20px; padding: 20px; position: relative;">
+            <div style="position: sticky; top: 0; background: white; padding: 15px 20px; border-bottom: 2px solid #eee; margin: -20px -20px 20px -20px; border-radius: 20px 20px 0 0; z-index: 100; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0; color: #667eea; font-size: 20px;">📄 LH 신축매입임대 사업 감정평가 보고서</h2>
+                <div>
+                    <button id="printReportBtn" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 14px; margin-right: 10px; font-weight: 600;">
+                        🖨️ 인쇄
+                    </button>
+                    <button onclick="closeReportModal()" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: 600;">
+                        ✕ 닫기
+                    </button>
+                </div>
+            </div>
+            <div id="reportContent" style="font-family: 'Malgun Gothic', sans-serif; line-height: 1.6; color: #333;"></div>
         </div>
     </div>
 
@@ -667,25 +675,22 @@
                 return;
             }
 
-            // Markdown을 HTML로 간단 변환
-            let html = currentReport
-                .replace(/# (.*)/g, '<h1 style="color: #667eea; margin-top: 30px; margin-bottom: 15px; border-bottom: 3px solid #667eea; padding-bottom: 10px;">$1</h1>')
-                .replace(/## (.*)/g, '<h2 style="color: #764ba2; margin-top: 25px; margin-bottom: 12px;">$1</h2>')
-                .replace(/### (.*)/g, '<h3 style="color: #555; margin-top: 20px; margin-bottom: 10px;">$1</h3>')
-                .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #333;">$1</strong>')
-                .replace(/\n\n/g, '<br><br>')
-                .replace(/\|(.*)\|/g, (match) => {
-                    const cells = match.split('|').filter(c => c.trim());
-                    return '<tr>' + cells.map(c => `<td style="padding: 8px; border: 1px solid #ddd;">${c.trim()}</td>`).join('') + '</tr>';
-                });
-
-            // 표 감지 및 스타일링
-            html = html.replace(/(<tr>.*<\/tr>)+/g, (match) => {
-                return `<table style="width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 14px;">${match}</table>`;
-            });
-
-            document.getElementById('reportContent').innerHTML = html;
+            // HTML 보고서 직접 표시 (이미 HTML 형식)
+            document.getElementById('reportContent').innerHTML = currentReport;
             document.getElementById('reportModal').style.display = 'block';
+            
+            // 인쇄 버튼 추가 이벤트
+            const printBtn = document.getElementById('printReportBtn');
+            if (printBtn) {
+                printBtn.onclick = () => {
+                    const reportWindow = window.open('', '_blank');
+                    reportWindow.document.write(currentReport);
+                    reportWindow.document.close();
+                    setTimeout(() => {
+                        reportWindow.print();
+                    }, 500);
+                };
+            }
         });
 
         function closeReportModal() {

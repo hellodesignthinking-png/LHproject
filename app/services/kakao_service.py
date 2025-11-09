@@ -226,3 +226,92 @@ class KakaoService:
             "universities": universities[:3],
             "convenience_stores": convenience_stores[:5]
         }
+    
+    def generate_static_map_url(
+        self,
+        coordinates: Coordinates,
+        width: int = 800,
+        height: int = 600,
+        zoom_level: int = 15,
+        markers: Optional[List[Dict[str, Any]]] = None
+    ) -> str:
+        """
+        카카오 정적 지도 이미지 URL 생성
+        
+        Args:
+            coordinates: 중심 좌표
+            width: 이미지 너비
+            height: 이미지 높이
+            zoom_level: 확대 레벨 (1-14)
+            markers: 마커 정보 리스트 [{'lat': 37.5, 'lng': 127.0, 'text': '위치'}]
+            
+        Returns:
+            정적 지도 이미지 URL
+        """
+        base_url = "https://dapi.kakao.com/v2/maps/staticmap"
+        
+        # 기본 파라미터
+        params = {
+            "center": f"{coordinates.longitude},{coordinates.latitude}",
+            "level": zoom_level,
+            "marker": f"color:red|{coordinates.longitude},{coordinates.latitude}"
+        }
+        
+        # 추가 마커가 있는 경우
+        if markers:
+            marker_strings = []
+            for m in markers[:10]:  # 최대 10개
+                lng = m.get('lng', coordinates.longitude)
+                lat = m.get('lat', coordinates.latitude)
+                marker_strings.append(f"{lng},{lat}")
+            if marker_strings:
+                params["marker"] += "|" + "|".join(marker_strings)
+        
+        # URL 파라미터 구성
+        param_string = "&".join([f"{k}={v}" for k, v in params.items()])
+        return f"{base_url}?{param_string}"
+    
+    async def get_static_map_image(
+        self,
+        coordinates: Coordinates,
+        width: int = 800,
+        height: int = 600,
+        zoom_level: int = 15
+    ) -> Optional[str]:
+        """
+        카카오 정적 지도 이미지를 Base64로 인코딩하여 반환
+        
+        Args:
+            coordinates: 중심 좌표
+            width: 이미지 너비
+            height: 이미지 높이  
+            zoom_level: 확대 레벨
+            
+        Returns:
+            Base64 인코딩된 이미지 문자열 또는 None
+        """
+        url = f"https://dapi.kakao.com/v2/maps/staticmap"
+        params = {
+            "center": f"{coordinates.longitude},{coordinates.latitude}",
+            "level": zoom_level,
+            "marker": f"color:red|{coordinates.longitude},{coordinates.latitude}"
+        }
+        
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    url,
+                    headers=self.headers,
+                    params=params,
+                    timeout=15.0
+                )
+                response.raise_for_status()
+                
+                # 이미지를 Base64로 인코딩
+                import base64
+                image_base64 = base64.b64encode(response.content).decode('utf-8')
+                return f"data:image/png;base64,{image_base64}"
+                
+        except Exception as e:
+            print(f"❌ 지도 이미지 생성 실패: {e}")
+            return None

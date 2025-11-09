@@ -19,6 +19,7 @@ from app.schemas import (
 )
 from app.services.analysis_engine import AnalysisEngine
 from app.services.report_generator import ProfessionalReportGenerator
+from app.services.advanced_report_generator import ExpertReportGenerator
 
 settings = get_settings()
 
@@ -174,24 +175,44 @@ async def analyze_land(request: LandAnalysisRequest):
 @app.post("/api/generate-report")
 async def generate_professional_report(request: LandAnalysisRequest):
     """
-    전문 보고서 생성 API
+    전문가급 감정평가 보고서 생성 API (A4 10장 이상)
     
     Args:
         request: 토지 분석 요청
         
     Returns:
-        Markdown 형식의 전문 보고서
+        HTML 형식의 전문가급 보고서 (지도 이미지 포함)
     """
     analysis_id = str(uuid.uuid4())[:8]
     
     try:
-        print(f"\n📄 전문 보고서 생성 요청 [ID: {analysis_id}]")
+        print(f"\n📄 전문가급 감정평가 보고서 생성 요청 [ID: {analysis_id}]")
+        print(f"🏠 유형: {request.unit_type}")
         
         # 분석 실행
         engine = AnalysisEngine()
         result = await engine.analyze_land(request)
         
-        # 분석 데이터 구성
+        # 지도 이미지 생성
+        from app.services.kakao_service import KakaoService
+        kakao_service = KakaoService()
+        
+        coords = result.get("coordinates")
+        map_image = None
+        if coords:
+            print("🗺️ 지도 이미지 생성 중...")
+            map_image = await kakao_service.get_static_map_image(
+                coords,
+                width=800,
+                height=600,
+                zoom_level=15
+            )
+            if map_image:
+                print("✅ 지도 이미지 생성 완료")
+            else:
+                print("⚠️ 지도 이미지 생성 실패 (보고서는 계속 생성됨)")
+        
+        # 분석 데이터 구성 (지도 이미지 포함)
         analysis_data = {
             "analysis_id": analysis_id,
             "address": request.address,
@@ -203,25 +224,33 @@ async def generate_professional_report(request: LandAnalysisRequest):
             "risk_factors": result["risk_factors"],
             "demographic_info": result["demographic_info"],
             "demand_analysis": result["demand_analysis"],
-            "summary": result["summary"]
+            "summary": result["summary"],
+            "map_image": map_image  # Base64 인코딩된 지도 이미지
         }
         
-        # 전문 보고서 생성
-        report_generator = ProfessionalReportGenerator()
-        report_markdown = report_generator.generate_comprehensive_report(analysis_data)
+        # 전문가급 보고서 생성 (HTML)
+        print("📝 전문가급 보고서 생성 중...")
+        expert_generator = ExpertReportGenerator()
+        report_html = expert_generator.generate_expert_report(analysis_data)
         
-        print(f"✅ 전문 보고서 생성 완료 [ID: {analysis_id}]\n")
+        print(f"✅ 전문가급 감정평가 보고서 생성 완료 [ID: {analysis_id}]")
+        print(f"📊 보고서 크기: {len(report_html):,} bytes")
+        print()
         
         return {
             "status": "success",
             "analysis_id": analysis_id,
-            "report": report_markdown,
-            "format": "markdown",
-            "generated_at": datetime.now().isoformat()
+            "report": report_html,
+            "format": "html",
+            "generated_at": datetime.now().isoformat(),
+            "has_map_image": map_image is not None
         }
         
     except Exception as e:
         print(f"❌ 보고서 생성 오류: {e}")
+        import traceback
+        traceback.print_exc()
+        
         raise HTTPException(
             status_code=500,
             detail={
