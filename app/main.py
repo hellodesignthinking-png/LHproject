@@ -18,6 +18,7 @@ from app.schemas import (
     ErrorResponse
 )
 from app.services.analysis_engine import AnalysisEngine
+from app.services.report_generator import ProfessionalReportGenerator
 
 settings = get_settings()
 
@@ -165,6 +166,67 @@ async def analyze_land(request: LandAnalysisRequest):
                 "status": "error",
                 "error_code": "INTERNAL_ERROR",
                 "message": "분석 중 오류가 발생했습니다.",
+                "details": str(e) if settings.debug else None
+            }
+        )
+
+
+@app.post("/api/generate-report")
+async def generate_professional_report(request: LandAnalysisRequest):
+    """
+    전문 보고서 생성 API
+    
+    Args:
+        request: 토지 분석 요청
+        
+    Returns:
+        Markdown 형식의 전문 보고서
+    """
+    analysis_id = str(uuid.uuid4())[:8]
+    
+    try:
+        print(f"\n📄 전문 보고서 생성 요청 [ID: {analysis_id}]")
+        
+        # 분석 실행
+        engine = AnalysisEngine()
+        result = await engine.analyze_land(request)
+        
+        # 분석 데이터 구성
+        analysis_data = {
+            "analysis_id": analysis_id,
+            "address": request.address,
+            "land_area": request.land_area,
+            "unit_type": request.unit_type,
+            "coordinates": result["coordinates"],
+            "zone_info": result["zone_info"],
+            "building_capacity": result["building_capacity"],
+            "risk_factors": result["risk_factors"],
+            "demographic_info": result["demographic_info"],
+            "demand_analysis": result["demand_analysis"],
+            "summary": result["summary"]
+        }
+        
+        # 전문 보고서 생성
+        report_generator = ProfessionalReportGenerator()
+        report_markdown = report_generator.generate_comprehensive_report(analysis_data)
+        
+        print(f"✅ 전문 보고서 생성 완료 [ID: {analysis_id}]\n")
+        
+        return {
+            "status": "success",
+            "analysis_id": analysis_id,
+            "report": report_markdown,
+            "format": "markdown",
+            "generated_at": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        print(f"❌ 보고서 생성 오류: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "status": "error",
+                "message": "보고서 생성 중 오류가 발생했습니다.",
                 "details": str(e) if settings.debug else None
             }
         )
