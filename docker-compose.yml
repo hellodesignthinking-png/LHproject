@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # FastAPI Application
+  api:
+    build: .
+    container_name: lh_land_analysis_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - ./output:/app/output
+    environment:
+      - KAKAO_REST_API_KEY=${KAKAO_REST_API_KEY}
+      - LAND_REGULATION_API_KEY=${LAND_REGULATION_API_KEY}
+      - MOIS_API_KEY=${MOIS_API_KEY}
+      - DATABASE_URL=postgresql://lhuser:lhpass@db:5432/lh_analysis
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # PostgreSQL Database
+  db:
+    image: postgis/postgis:15-3.3
+    container_name: lh_land_analysis_db
+    environment:
+      - POSTGRES_USER=lhuser
+      - POSTGRES_PASSWORD=lhpass
+      - POSTGRES_DB=lh_analysis
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Redis for Caching and Task Queue
+  redis:
+    image: redis:7-alpine
+    container_name: lh_land_analysis_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # Celery Worker
+  worker:
+    build: .
+    container_name: lh_land_analysis_worker
+    volumes:
+      - .:/app
+      - ./output:/app/output
+    environment:
+      - KAKAO_REST_API_KEY=${KAKAO_REST_API_KEY}
+      - LAND_REGULATION_API_KEY=${LAND_REGULATION_API_KEY}
+      - MOIS_API_KEY=${MOIS_API_KEY}
+      - DATABASE_URL=postgresql://lhuser:lhpass@db:5432/lh_analysis
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+      - db
+    command: celery -A app.tasks worker --loglevel=info
+
+volumes:
+  postgres_data:
+  redis_data:
