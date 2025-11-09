@@ -58,7 +58,7 @@ class RiskFactor(BaseModel):
     """리스크 요인"""
     category: str = Field(..., description="리스크 카테고리")
     description: str = Field(..., description="리스크 상세 설명")
-    severity: str = Field(..., description="심각도 (low/medium/high)")
+    severity: str = Field(..., description="심각도 (low/medium/high/critical)")
 
 
 class DemographicInfo(BaseModel):

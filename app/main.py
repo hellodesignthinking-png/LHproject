@@ -20,6 +20,7 @@ from app.schemas import (
 from app.services.analysis_engine import AnalysisEngine
 from app.services.report_generator import ProfessionalReportGenerator
 from app.services.advanced_report_generator import ExpertReportGenerator
+from app.services.lh_official_report_generator import LHOfficialReportGenerator
 
 settings = get_settings()
 
@@ -193,22 +194,19 @@ async def generate_professional_report(request: LandAnalysisRequest):
         engine = AnalysisEngine()
         result = await engine.analyze_land(request)
         
-        # 지도 이미지 생성
+        # 지도 이미지 생성 (여러 스케일)
         from app.services.kakao_service import KakaoService
         kakao_service = KakaoService()
         
         coords = result.get("coordinates")
-        map_image = None
+        map_images = None
         if coords:
-            print("🗺️ 지도 이미지 생성 중...")
-            map_image = await kakao_service.get_static_map_image(
-                coords,
-                width=800,
-                height=600,
-                zoom_level=15
-            )
-            if map_image:
-                print("✅ 지도 이미지 생성 완료")
+            print("🗺️ 지도 이미지 생성 중 (여러 스케일)...")
+            map_images = await kakao_service.get_multiple_maps(coords)
+            
+            if map_images:
+                generated_count = sum(1 for v in map_images.values() if v)
+                print(f"✅ 지도 이미지 생성 완료 ({generated_count}개)")
             else:
                 print("⚠️ 지도 이미지 생성 실패 (보고서는 계속 생성됨)")
         
@@ -225,13 +223,13 @@ async def generate_professional_report(request: LandAnalysisRequest):
             "demographic_info": result["demographic_info"],
             "demand_analysis": result["demand_analysis"],
             "summary": result["summary"],
-            "map_image": map_image  # Base64 인코딩된 지도 이미지
+            "map_images": map_images  # 여러 스케일의 지도 이미지 (overview, detail, close)
         }
         
-        # 전문가급 보고서 생성 (HTML)
-        print("📝 전문가급 보고서 생성 중...")
-        expert_generator = ExpertReportGenerator()
-        report_html = expert_generator.generate_expert_report(analysis_data)
+        # LH 공식 양식 보고서 생성 (HTML)
+        print("📝 LH 공식 양식 보고서 생성 중...")
+        lh_generator = LHOfficialReportGenerator()
+        report_html = lh_generator.generate_official_report(analysis_data)
         
         print(f"✅ 전문가급 감정평가 보고서 생성 완료 [ID: {analysis_id}]")
         print(f"📊 보고서 크기: {len(report_html):,} bytes")

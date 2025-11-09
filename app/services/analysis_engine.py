@@ -139,14 +139,41 @@ class AnalysisEngine:
                 severity="high"
             ))
         
-        # 유해시설 리스크
+        # 유해시설 리스크 - LH 기준 적용
         if hazardous_facilities:
-            for facility in hazardous_facilities[:3]:  # 최대 3개
-                risks.append(RiskFactor(
-                    category="유해시설",
-                    description=f"{facility['category']} {int(facility['distance'])}m 이내 위치 ({facility['name']})",
-                    severity="medium" if facility['distance'] > 300 else "high"
-                ))
+            for facility in hazardous_facilities:
+                distance = facility['distance']
+                category = facility['category']
+                name = facility['name']
+                
+                # 주유소 25m 이내: 절대 탈락 사유 (LH 매입 제외 대상)
+                if category == "주유소" and distance <= 25:
+                    risks.append(RiskFactor(
+                        category="LH매입제외",
+                        description=f"주유소 {int(distance)}m 이내 위치 - 절대 탈락 사유 ({name})",
+                        severity="critical"
+                    ))
+                # 주유소 25~50m: 고위험
+                elif category == "주유소" and distance <= 50:
+                    risks.append(RiskFactor(
+                        category="유해시설",
+                        description=f"주유소 {int(distance)}m 이내 위치 - 고위험 ({name})",
+                        severity="high"
+                    ))
+                # 기타 유해시설 50m 이내
+                elif distance <= 50:
+                    risks.append(RiskFactor(
+                        category="유해시설",
+                        description=f"{category} {int(distance)}m 이내 위치 ({name})",
+                        severity="high"
+                    ))
+                # 유해시설 50~500m
+                elif distance <= 500:
+                    risks.append(RiskFactor(
+                        category="유해시설",
+                        description=f"{category} {int(distance)}m 이내 위치 ({name})",
+                        severity="medium"
+                    ))
         
         # 접근성 리스크
         if accessibility['nearest_subway_distance'] > 2000:
@@ -233,25 +260,32 @@ class AnalysisEngine:
     ) -> AnalysisSummary:
         """종합 판단 생성"""
         
+        # 절대 탈락 사유 확인 (주유소 25m 이내 등)
+        has_absolute_disqualification = any(
+            r.severity == "critical" for r in risk_factors
+        )
+        
         # 치명적 리스크 확인
         has_critical_risk = any(
             r.severity == "high" for r in risk_factors
         ) or len(restrictions) > 0
         
         # 적격성 판단
-        is_eligible = (
-            not has_critical_risk and
-            demand_analysis.demand_score >= 50 and
-            building_capacity.units >= 10
-        )
-        
-        # 종합 추천
-        if is_eligible and demand_analysis.demand_score >= 70:
+        if has_absolute_disqualification:
+            is_eligible = False
+            recommendation = "절대 탈락 - LH 매입 제외 대상 (주유소 25m 이내 또는 기타 절대 제한 사유)"
+        elif has_critical_risk:
+            is_eligible = False
+            recommendation = "부적합 - 고위험 요인 존재"
+        elif demand_analysis.demand_score >= 70 and building_capacity.units >= 10:
+            is_eligible = True
             recommendation = "적합 - LH 매입 가능성 높음"
-        elif is_eligible:
+        elif demand_analysis.demand_score >= 50 and building_capacity.units >= 10:
+            is_eligible = True
             recommendation = "검토 필요 - 조건부 적합"
         else:
-            recommendation = "부적합 - 매입 제외 대상"
+            is_eligible = False
+            recommendation = "부적합 - 수요 또는 규모 미달"
         
         return AnalysisSummary(
             is_eligible=is_eligible,
