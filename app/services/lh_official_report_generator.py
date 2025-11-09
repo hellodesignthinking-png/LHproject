@@ -273,6 +273,152 @@ class LHOfficialReportGenerator:
         else:
             return "下"
     
+    def _evaluate_recommendations(self, data: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        LH 공공 매입 선호도 증대 항목 (권장사항) 5개 자동 평가
+        
+        Returns:
+            권장사항 평가 결과 리스트
+        """
+        
+        capacity = data.get('building_capacity', {})
+        unit_type = data.get('unit_type', '청년형')
+        zone_info = data.get('zone_info', {})
+        units = capacity.get('units', 0)
+        parking_spaces = capacity.get('parking_spaces', 0)
+        
+        # 법정 주차대수 계산 (단순화)
+        if unit_type == '청년형':
+            legal_parking = units * 0.5
+        elif unit_type == '신혼부부형':
+            legal_parking = units * 0.7
+        else:  # 고령자형
+            legal_parking = units * 0.3
+        
+        recommendations = []
+        
+        # 1. 표준 평면 및 인테리어 활용
+        recommendations.append({
+            "no": 1,
+            "item": "표준 평면 및 인테리어 활용",
+            "status": "권장",
+            "plan": "LH 제공 표준 평면(Type A/B/C) 중 선택 적용 예정",
+            "benefit": "설계 심의 기간 단축, 공사비 절감, LH 선호도 상승"
+        })
+        
+        # 2. 주차 계획 강화
+        excess_parking = parking_spaces - legal_parking
+        parking_status = "반영" if excess_parking > 0 else "미반영"
+        parking_plan = f"법정 주차대수 {legal_parking:.0f}대 → 계획 {parking_spaces}대 ({'+' if excess_parking > 0 else ''}{excess_parking:.0f}대)" if excess_parking > 0 else f"법정 주차대수 {legal_parking:.0f}대 충족 (지하 주차장 설치 검토 권장)"
+        
+        recommendations.append({
+            "no": 2,
+            "item": "주차 계획 강화",
+            "status": parking_status,
+            "plan": parking_plan,
+            "benefit": "법정 초과 확보 시 심의 가점, 입주자 만족도 향상" if excess_parking > 0 else "지하 주차장 설치 시 대지 활용도 증가"
+        })
+        
+        # 3. 커뮤니티 시설 확충
+        has_community = units >= 50  # 50세대 이상 시 의무
+        community_status = "반영" if has_community else "미반영"
+        
+        recommendations.append({
+            "no": 3,
+            "item": "커뮤니티 시설 확충",
+            "status": community_status,
+            "plan": f"{'주민공동시설 100㎡ 이상 계획 (입주자 라운지, 독서실 등)' if has_community else '소규모 공용 공간 확보 (우편함실, 택배보관함 등)'}",
+            "benefit": "입주자 편의 증대, LH 평가 우대"
+        })
+        
+        # 4. 단지형 통합 및 조경
+        is_complex = units >= 30  # 30세대 이상
+        complex_status = "반영" if is_complex else "미반영"
+        
+        recommendations.append({
+            "no": 4,
+            "item": "단지형 통합 및 조경",
+            "status": complex_status,
+            "plan": f"{'2개동 이상 단지 구성, 1층 주민 휴게공간 조경 계획' if is_complex else '단일동 계획 (소규모 조경 공간 확보)'}",
+            "benefit": "단지 쾌적성 향상, 조경면적 확보로 건폐율 여유"
+        })
+        
+        # 5. 사업 관리 방식
+        is_large_scale = units >= 50  # 50세대 이상 시 LH가 토지신탁 필수 지정 가능
+        trust_status = "관리형 토지신탁 권장" if is_large_scale else "근저당/토지신탁 선택"
+        
+        recommendations.append({
+            "no": 5,
+            "item": "사업 관리 방식",
+            "status": trust_status,
+            "plan": f"{'관리형 토지신탁 방식 (LH 필수 조건 충족)' if is_large_scale else '관리형 토지신탁 또는 근저당 방식 중 선택'}",
+            "benefit": "토지신탁 시 선금 70~80% 조기 수령, 사업 안정성 확보"
+        })
+        
+        return recommendations
+    
+    def _generate_project_schedule(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        사업 추진 일정 자동 산정
+        
+        LH 프로세스:
+        1. 설계/서류 취합: 1개월
+        2. 심의 결과 발표: 2~3개월
+        3. 도면 협의: 4개월 (실효제도)
+        4. 1차 감정평가: 1개월
+        5. 매입 약정 체결: 1~2개월
+        6. 인허가 및 착공: 9개월 (약정 후)
+        7. 준공: 18~24개월 (착공 후)
+        
+        Returns:
+            일정 딕셔너리
+        """
+        
+        from datetime import timedelta
+        
+        today = self.report_date
+        
+        # 1. 접수도면 설계/서류 취합
+        design_complete = today + timedelta(days=30)
+        
+        # 2. 서류 접수 및 심의 결과 (2.5개월)
+        review_complete = design_complete + timedelta(days=75)
+        
+        # 3. 도면 협의 완료 (4개월)
+        drawing_complete = review_complete + timedelta(days=120)
+        
+        # 4. 1차 감정평가 (1개월)
+        appraisal_complete = drawing_complete + timedelta(days=30)
+        
+        # 5. 매입 약정 체결 (1.5개월)
+        contract_complete = appraisal_complete + timedelta(days=45)
+        
+        # 6. 토지비 선금 수령 (약정 후 즉시)
+        advance_payment = contract_complete + timedelta(days=7)
+        
+        # 7. 인허가 완료 (9개월 내)
+        permit_complete = contract_complete + timedelta(days=270)
+        
+        # 8. 착공 (인허가 후 2개월 내)
+        construction_start = permit_complete + timedelta(days=60)
+        
+        # 9. 준공 (착공 후 20개월)
+        construction_complete = construction_start + timedelta(days=600)
+        
+        return {
+            "today": today,
+            "design_complete": design_complete,
+            "review_complete": review_complete,
+            "drawing_complete": drawing_complete,
+            "appraisal_complete": appraisal_complete,
+            "contract_complete": contract_complete,
+            "advance_payment": advance_payment,
+            "permit_complete": permit_complete,
+            "construction_start": construction_start,
+            "construction_complete": construction_complete,
+            "total_months": int((construction_complete - today).days / 30)
+        }
+    
     def _estimate_lh_purchase_price(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
         LH 매입 예상 가격 산정
@@ -1584,9 +1730,274 @@ class LHOfficialReportGenerator:
         </div>
     </div>
     
+    <!-- V. 공공 매입 선호도 증대 항목 (권장사항) -->
+"""
+        
+        # 권장사항 평가
+        recommendations = self._evaluate_recommendations(data)
+        
+        html += f"""
+    <div class="section page-break">
+        <h2 class="section-title">V. 공공 매입 선호도 증대 항목 (권장사항)</h2>
+        
+        <div class="info-box">
+            <strong>🌟 권장사항 개요</strong><br>
+            LH의 매입 심의 시 <strong>우대받거나 매입 적정성을 높이는</strong> 권장사항입니다.<br>
+            필수 사항은 아니나, 반영 시 <strong>심의 통과 가능성 및 평가 점수가 상승</strong>합니다.
+        </div>
+        
+        <table style="margin-top: 20px;">
+            <thead>
+                <tr>
+                    <th style="width: 5%;">No.</th>
+                    <th style="width: 25%;">권장사항 구분</th>
+                    <th style="width: 15%;">계획 반영 여부</th>
+                    <th style="width: 35%;">계획/설계 반영 내용</th>
+                    <th style="width: 20%;">기대 효과</th>
+                </tr>
+            </thead>
+            <tbody>
+"""
+        
+        for rec in recommendations:
+            status_color = "#28a745" if rec['status'] == "반영" else "#ffc107" if "권장" in rec['status'] else "#0066cc"
+            html += f"""
+                <tr>
+                    <td style="text-align: center;"><strong>{rec['no']}</strong></td>
+                    <td><strong>{rec['item']}</strong></td>
+                    <td style="text-align: center; color: {status_color}; font-weight: bold;">
+                        {"✅ " if rec['status'] == "반영" else "⚠️ " if "권장" in rec['status'] else ""}
+                        {rec['status']}
+                    </td>
+                    <td>{rec['plan']}</td>
+                    <td style="font-size: 9pt;">{rec['benefit']}</td>
+                </tr>
+"""
+        
+        html += """
+            </tbody>
+        </table>
+        
+        <div style="margin-top: 20px; padding: 20px; background: #f8f9fa; border-left: 4px solid #28a745; line-height: 1.8;">
+            <h4 style="color: #28a745; margin-bottom: 15px; font-size: 10.5pt;">💡 권장사항 활용 전략</h4>
+            <p style="margin-bottom: 10px; text-indent: 20px;">
+                상기 5개 권장사항 중 <strong>최소 3개 이상을 반영</strong>하면 LH 심의 시 <strong>가점 효과</strong>가 발생합니다.
+                특히 다음 항목들은 심의위원들의 선호도가 높으므로 우선 검토를 권장합니다:
+            </p>
+            <ul style="margin-left: 40px; margin-bottom: 15px;">
+                <li style="margin-bottom: 8px;">
+                    <strong>표준 평면 적용</strong>: LH가 검증한 평면이므로 설계 변경 요구가 적고, 
+                    심의 기간이 <strong>평균 1개월 단축</strong>됩니다.
+                </li>
+                <li style="margin-bottom: 8px;">
+                    <strong>관리형 토지신탁 방식</strong>: 사업 규모가 클수록 LH가 선호하며, 
+                    선금 비율이 높아(70~80%) <strong>초기 자금 확보에 유리</strong>합니다.
+                </li>
+                <li style="margin-bottom: 8px;">
+                    <strong>주차 대수 초과 확보</strong>: 법정 기준을 10% 이상 초과하면 
+                    입주자 만족도가 높아져 <strong>공실률 감소</strong> 효과가 있습니다.
+                </li>
+            </ul>
+            <p style="margin-bottom: 0; padding: 15px; background: white; border: 2px solid #28a745; border-radius: 5px;">
+                <strong>📌 종합 권장사항:</strong> 
+                본 대상지는 권장사항 중 {sum(1 for r in recommendations if r['status'] == '반영')}개가 이미 반영 가능한 상태이며,
+                추가 검토 항목 {sum(1 for r in recommendations if '권장' in r['status'])}개를 보완하면
+                <strong>LH 심의 통과 가능성을 최대한 높일 수 있습니다.</strong>
+            </p>
+        </div>
+    </div>
+    
+    <!-- VI. 사업 추진 일정 및 자금 조달 계획 -->
+"""
+        
+        # 일정 산정
+        schedule = self._generate_project_schedule(data)
+        price_estimate = self._estimate_lh_purchase_price(data)
+        
+        html += f"""
+    <div class="section page-break">
+        <h2 class="section-title">VI. 사업 추진 일정 및 자금 조달 계획 (LH 프로세스 연동)</h2>
+        
+        <h3 class="subsection-title">1. 사업 추진 일정 (예상)</h3>
+        
+        <div class="info-box">
+            <strong>📅 전체 사업 기간</strong><br>
+            현재 시점부터 준공까지 약 <strong>{schedule['total_months']}개월</strong> 소요 예상<br>
+            (설계 착수 → 심의 → 약정 → 착공 → 준공)
+        </div>
+        
+        <table style="margin-top: 20px;">
+            <thead>
+                <tr>
+                    <th style="width: 30%;">주요 단계</th>
+                    <th style="width: 20%;">예상 소요 기간</th>
+                    <th style="width: 25%;">계획(예정) 일자</th>
+                    <th style="width: 25%;">현재 진행 단계</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>접수도면 설계/서류 취합</strong></td>
+                    <td style="text-align: center;">1개월</td>
+                    <td style="text-align: center;">{schedule['design_complete'].strftime('%Y년 %m월 %d일')}</td>
+                    <td style="font-size: 9pt;">계획설계/기본설계/실시설계</td>
+                </tr>
+                <tr style="background: #fff3cd;">
+                    <td><strong>서류 접수 및 심의 결과 발표</strong></td>
+                    <td style="text-align: center;">2~3개월</td>
+                    <td style="text-align: center;">{schedule['review_complete'].strftime('%Y년 %m월 %d일')}</td>
+                    <td style="font-size: 9pt;">토지소유권 확보 시 우선 심의 가능</td>
+                </tr>
+                <tr>
+                    <td><strong>도면 협의 완료</strong></td>
+                    <td style="text-align: center;">4개월 이내</td>
+                    <td style="text-align: center;">{schedule['drawing_complete'].strftime('%Y년 %m월 %d일')}</td>
+                    <td style="font-size: 9pt;">실시설계 수준 협의 필요 (실효제도 주의)</td>
+                </tr>
+                <tr style="background: #e3f2fd;">
+                    <td><strong>1차 감정평가</strong></td>
+                    <td style="text-align: center;">1개월</td>
+                    <td style="text-align: center;">{schedule['appraisal_complete'].strftime('%Y년 %m월 %d일')}</td>
+                    <td style="font-size: 9pt;">LH 선정 2개 감정평가법인</td>
+                </tr>
+                <tr style="background: #d4edda; font-weight: bold;">
+                    <td><strong>매입 약정 체결</strong></td>
+                    <td style="text-align: center;">1~2개월</td>
+                    <td style="text-align: center; color: #28a745;">{schedule['contract_complete'].strftime('%Y년 %m월 %d일')}</td>
+                    <td style="font-size: 9pt;">약정 체결 기한 내 미체결 시 재신청 제한</td>
+                </tr>
+                <tr style="background: #e6ffe6;">
+                    <td><strong>토지비 선금 수령</strong></td>
+                    <td style="text-align: center;">약정 후 즉시</td>
+                    <td style="text-align: center; color: #28a745; font-weight: bold;">{schedule['advance_payment'].strftime('%Y년 %m월 %d일')}</td>
+                    <td style="font-size: 9pt; color: #28a745; font-weight: bold;">
+                        관리형 토지신탁 시 최대 {price_estimate['advance_payment_trust_early']:,.0f}원 수령
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>인허가 및 착공</strong></td>
+                    <td style="text-align: center;">9개월 (약정 후)</td>
+                    <td style="text-align: center;">{schedule['construction_start'].strftime('%Y년 %m월 %d일')}</td>
+                    <td style="font-size: 9pt;">착공 전 LH 전문가 구조 안정성 검토</td>
+                </tr>
+                <tr style="background: #f0f0f0; font-weight: bold;">
+                    <td><strong>준공 (사용승인 예정)</strong></td>
+                    <td style="text-align: center;">20개월 (착공 후)</td>
+                    <td style="text-align: center; font-size: 11pt; color: #0066cc;">{schedule['construction_complete'].strftime('%Y년 %m월 %d일')}</td>
+                    <td style="font-size: 9pt;">최종 잔금 수령 및 LH 매입 완료</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div style="margin-top: 20px; padding: 15px; background: #fffbea; border-left: 4px solid #ffc107; line-height: 1.6;">
+            <strong>⚠️ 주요 유의사항:</strong><br>
+            • <strong>도면 협의 실효제도</strong>: 심의 통과 안내일로부터 4개월 이내 도면 협의를 완료하지 못하면 <strong>자동 실효</strong>됩니다.<br>
+            • <strong>인허가 기한</strong>: 약정 체결 후 9개월 이내에 건축허가를 득하지 못하면 약정이 해제될 수 있습니다.<br>
+            • <strong>착공 의무</strong>: 인허가 완료 후 2개월 이내에 착공해야 하며, 미착공 시 페널티가 부과될 수 있습니다.
+        </div>
+        
+        <h3 class="subsection-title" style="margin-top: 30px;">2. 매입 대금 지급 방식 및 채권 보전</h3>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 25%;">채권 보전 방식</th>
+                    <th style="width: 40%;">지급 방식 개요</th>
+                    <th style="width: 35%;">주요 유의사항</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>근저당 방식</strong></td>
+                    <td>
+                        • 선금: 토지분 1차 감정평가액의 <strong>50%</strong> 한도<br>
+                        • 매입약정금: 토지분 감평액 50% 한도<br>
+                        • 잔금: 준공 후 지급
+                    </td>
+                    <td style="font-size: 9pt;">
+                        채권확보 비용 매도신청인 부담<br>
+                        후순위 근저당 설정 불가
+                    </td>
+                </tr>
+                <tr style="background: #e6ffe6;">
+                    <td><strong>관리형 토지신탁 방식</strong><br><span style="color: #28a745; font-weight: bold;">(권장)</span></td>
+                    <td>
+                        • 선금: 토지분 1차 감정평가액의 <strong>70%</strong> 한도<br>
+                        • <strong>조기약정 인센티브 충족 시 80%</strong><br>
+                        • 매입약정금: 매매예정금액의 60% 한도<br>
+                        • 잔금: 준공 후 지급
+                    </td>
+                    <td style="font-size: 9pt; color: #28a745; font-weight: bold;">
+                        LH가 필수 조건으로 제시 가능<br>
+                        선금 비율 높아 자금 확보 유리<br>
+                        사업 안정성 최고
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3 class="subsection-title" style="margin-top: 30px;">3. 자금 조달 계획 및 수지 분석</h3>
+        
+        <div style="margin: 15px 0; padding: 20px; background: #f8f9fa; border-left: 4px solid #0066cc; line-height: 1.8;">
+            <h4 style="color: #0066cc; margin-bottom: 15px; font-size: 10.5pt;">💰 단계별 자금 흐름</h4>
+            
+            <table style="margin-top: 10px; font-size: 9pt;">
+                <thead>
+                    <tr>
+                        <th style="width: 30%;">단계</th>
+                        <th style="width: 25%;">시점</th>
+                        <th style="width: 30%;">수령 금액</th>
+                        <th style="width: 15%;">누적</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background: #e6ffe6;">
+                        <td><strong>선금 수령</strong></td>
+                        <td>{schedule['advance_payment'].strftime('%Y.%m')}</td>
+                        <td style="text-align: right; color: #28a745; font-weight: bold;">
+                            {price_estimate['advance_payment_trust_early']:,.0f}원<br>
+                            <span style="font-size: 8pt;">(토지분 80%)</span>
+                        </td>
+                        <td style="text-align: right; font-weight: bold;">80%</td>
+                    </tr>
+                    <tr style="background: #f0f0f0;">
+                        <td><strong>준공 후 잔금</strong></td>
+                        <td>{schedule['construction_complete'].strftime('%Y.%m')}</td>
+                        <td style="text-align: right; color: #0066cc; font-weight: bold;">
+                            {price_estimate['total_purchase_price'] - price_estimate['advance_payment_trust_early']:,.0f}원<br>
+                            <span style="font-size: 8pt;">(토지잔금 20% + 건물공사비 전액)</span>
+                        </td>
+                        <td style="text-align: right; font-weight: bold;">100%</td>
+                    </tr>
+                    <tr style="background: #e3f2fd; font-weight: bold; font-size: 10pt;">
+                        <td colspan="2"><strong>총 매입 대금</strong></td>
+                        <td style="text-align: right; color: #0066cc; font-size: 11pt;">
+                            {price_estimate['total_purchase_price']:,.0f}원
+                        </td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <p style="margin-top: 15px; margin-bottom: 10px; text-indent: 20px;">
+                <strong>자금 조달의 핵심 장점</strong>은 매도신청인이 <strong>건물 공사비를 직접 부담하지 않는다</strong>는 점입니다.
+                LH가 시공사에 직접 공사비를 지급하는 구조이므로, 
+                매도신청인은 <strong>선금 {price_estimate['advance_payment_trust_early']:,.0f}원만 수령</strong>한 후
+                {schedule['total_months']}개월 동안 별도 자금 투입 없이 사업을 진행할 수 있습니다.
+            </p>
+            
+            <p style="margin-bottom: 0; padding: 15px; background: white; border: 2px solid #28a745; border-radius: 5px;">
+                <strong>✅ 자금 조달 종합 평가:</strong>
+                관리형 토지신탁 방식 선택 시, 약정 체결 후 <strong>1주일 이내에 {price_estimate['advance_payment_trust_early']:,.0f}원</strong>을 수령하여
+                초기 자금 유동성을 확보할 수 있으며, 이후 공사 기간 동안 추가 자금 투입이 불필요하므로
+                <strong>재무적 리스크가 최소화</strong>됩니다.
+            </p>
+        </div>
+    </div>
+    
     <!-- 종합 결론 -->
     <div class="conclusion page-break">
-        <h3>V. 종합 검토 및 최종 결론</h3>
+        <h3>VII. 종합 검토 및 최종 결론</h3>
         
         <h4 style="margin-top: 20px;">1. 사업 적정성 최종 판단</h4>
         <p style="margin: 10px 0; line-height: 1.8;">
