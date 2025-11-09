@@ -4,10 +4,12 @@ FastAPI 메인 애플리케이션
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import uuid
 from datetime import datetime
+from pathlib import Path
 
 from app.config import get_settings
 from app.schemas import (
@@ -46,10 +48,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 정적 파일 서빙
+static_path = Path(__file__).parent.parent / "static"
+if static_path.exists():
+    app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
+
 
 @app.get("/")
 async def root():
-    """헬스 체크"""
+    """메인 페이지 - 웹 인터페이스"""
+    index_path = static_path / "index.html"
+    if index_path.exists():
+        return FileResponse(str(index_path))
+    
+    # 파일이 없는 경우 기본 JSON 응답
     return {
         "service": "LH 토지진단 자동화 시스템",
         "version": "1.0.0",

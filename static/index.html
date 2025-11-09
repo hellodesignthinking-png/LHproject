@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LH 토지진단 시스템</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .input-hint {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .btn-analyze {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-analyze:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-analyze:active {
+            transform: translateY(0);
+        }
+
+        .btn-analyze:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+            color: #667eea;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            display: none;
+            margin-top: 30px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .result.active {
+            display: block;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .result-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .result-badge {
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .result-badge.eligible {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .result-badge.not-eligible {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .result-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .result-section h3 {
+            font-size: 16px;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .result-section h3::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #667eea;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .result-value {
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .risk-list {
+            list-style: none;
+        }
+
+        .risk-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .risk-high {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+
+        .risk-medium {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+
+        .risk-low {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .score-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .score-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            transition: width 1s ease;
+        }
+
+        .error {
+            display: none;
+            padding: 20px;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 10px;
+            color: #721c24;
+            margin-top: 20px;
+        }
+
+        .error.active {
+            display: block;
+        }
+
+        .example-addresses {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .example-btn {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 3px;
+            background: #e9ecef;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+
+        .example-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .facilities-list {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .facility-item {
+            padding: 8px;
+            margin-bottom: 5px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏢 LH 토지진단 시스템</h1>
+            <p>주소만 입력하면 자동으로 분석됩니다</p>
+        </div>
+
+        <div class="content">
+            <form id="analysisForm">
+                <div class="input-group">
+                    <label for="address">📍 토지 주소</label>
+                    <input 
+                        type="text" 
+                        id="address" 
+                        placeholder="예: 서울특별시 강남구 역삼동 679" 
+                        required
+                    >
+                    <div class="input-hint">도로명 주소 또는 지번 주소를 입력하세요</div>
+                    <div class="example-addresses">
+                        <strong>예시:</strong>
+                        <span class="example-btn" onclick="setExample('서울특별시 강남구 역삼동 679')">강남 역삼동</span>
+                        <span class="example-btn" onclick="setExample('서울특별시 마포구 서교동 395-1')">마포 홍대</span>
+                        <span class="example-btn" onclick="setExample('서울특별시 서초구 반포동 19-1')">서초 반포동</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="landArea">📐 토지 면적 (㎡)</label>
+                    <input 
+                        type="number" 
+                        id="landArea" 
+                        placeholder="500" 
+                        min="100" 
+                        max="10000"
+                        value="500"
+                        required
+                    >
+                    <div class="input-hint">100㎡ ~ 10,000㎡ 사이로 입력하세요</div>
+                </div>
+
+                <div class="input-group">
+                    <label for="unitType">🏠 세대 유형</label>
+                    <select id="unitType" required>
+                        <option value="청년형" selected>청년형 (1인 가구, 30㎡)</option>
+                        <option value="신혼부부형">신혼부부형 (2-3인, 50㎡)</option>
+                        <option value="고령자형">고령자형 (1-2인, 40㎡)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-analyze" id="analyzeBtn">
+                    🔍 토지 분석 시작
+                </button>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>토지를 분석하고 있습니다...</p>
+                <p style="font-size: 14px; margin-top: 10px;">약 6-8초 소요됩니다</p>
+            </div>
+
+            <div class="error" id="error"></div>
+
+            <div class="result" id="result">
+                <div class="result-header">
+                    <div class="result-title" id="resultTitle">분석 결과</div>
+                    <div class="result-badge" id="resultBadge"></div>
+                </div>
+
+                <div class="result-section">
+                    <h3>📊 기본 정보</h3>
+                    <div class="result-item">
+                        <span class="result-label">주소</span>
+                        <span class="result-value" id="resultAddress"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">용도지역</span>
+                        <span class="result-value" id="resultZone"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">건폐율 / 용적률</span>
+                        <span class="result-value" id="resultRatio"></span>
+                    </div>
+                </div>
+
+                <div class="result-section">
+                    <h3>🏗️ 건축 규모</h3>
+                    <div class="result-item">
+                        <span class="result-label">예상 세대수</span>
+                        <span class="result-value" id="resultUnits"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">층수</span>
+                        <span class="result-value" id="resultFloors"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">주차대수</span>
+                        <span class="result-value" id="resultParking"></span>
+                    </div>
+                </div>
+
+                <div class="result-section">
+                    <h3>📈 수요 분석</h3>
+                    <div class="result-item">
+                        <span class="result-label">수요 점수</span>
+                        <span class="result-value" id="resultScore"></span>
+                    </div>
+                    <div class="score-bar">
+                        <div class="score-fill" id="scoreBar"></div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <strong style="font-size: 14px; color: #333;">핵심 요인:</strong>
+                        <ul id="keyFactors" style="margin-top: 10px; padding-left: 20px; font-size: 14px; color: #666;"></ul>
+                    </div>
+                </div>
+
+                <div class="result-section" id="riskSection">
+                    <h3>⚠️ 리스크 요인</h3>
+                    <ul class="risk-list" id="riskList"></ul>
+                </div>
+
+                <div class="result-section">
+                    <h3>🎯 종합 판단</h3>
+                    <div class="result-item">
+                        <span class="result-label">LH 매입 적격</span>
+                        <span class="result-value" id="resultEligible"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">최종 추천</span>
+                        <span class="result-value" id="resultRecommendation"></span>
+                    </div>
+                </div>
+
+                <div class="result-section" id="facilitiesSection" style="display: none;">
+                    <h3>🚇 주변 시설</h3>
+                    <div class="facilities-list" id="facilitiesList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin;
+
+        function setExample(address) {
+            document.getElementById('address').value = address;
+        }
+
+        document.getElementById('analysisForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const address = document.getElementById('address').value;
+            const landArea = parseFloat(document.getElementById('landArea').value);
+            const unitType = document.getElementById('unitType').value;
+
+            // UI 초기화
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('result').classList.remove('active');
+            document.getElementById('error').classList.remove('active');
+            document.getElementById('analyzeBtn').disabled = true;
+
+            try {
+                const response = await fetch(`${API_URL}/api/analyze-land`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        address: address,
+                        land_area: landArea,
+                        unit_type: unitType
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('분석 요청에 실패했습니다.');
+                }
+
+                const data = await response.json();
+                displayResult(data);
+
+            } catch (error) {
+                document.getElementById('error').textContent = `오류: ${error.message}`;
+                document.getElementById('error').classList.add('active');
+            } finally {
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('analyzeBtn').disabled = false;
+            }
+        });
+
+        function displayResult(data) {
+            // 기본 정보
+            document.getElementById('resultAddress').textContent = data.address;
+            document.getElementById('resultZone').textContent = data.zone_info.zone_type;
+            document.getElementById('resultRatio').textContent = 
+                `${data.zone_info.building_coverage_ratio}% / ${data.zone_info.floor_area_ratio}%`;
+
+            // 건축 규모
+            document.getElementById('resultUnits').textContent = `${data.building_capacity.units}세대`;
+            document.getElementById('resultFloors').textContent = `${data.building_capacity.floors}층`;
+            document.getElementById('resultParking').textContent = `${data.building_capacity.parking_spaces}대`;
+
+            // 수요 분석
+            const score = data.demand_analysis.demand_score;
+            document.getElementById('resultScore').textContent = `${score}/100점`;
+            document.getElementById('scoreBar').style.width = `${score}%`;
+            document.getElementById('scoreBar').textContent = `${score}점`;
+
+            // 핵심 요인
+            const factorsList = document.getElementById('keyFactors');
+            factorsList.innerHTML = '';
+            data.demand_analysis.key_factors.forEach(factor => {
+                const li = document.createElement('li');
+                li.textContent = factor;
+                li.style.marginBottom = '5px';
+                factorsList.appendChild(li);
+            });
+
+            // 리스크 요인
+            const riskList = document.getElementById('riskList');
+            riskList.innerHTML = '';
+            if (data.risk_factors.length > 0) {
+                data.risk_factors.forEach(risk => {
+                    const li = document.createElement('li');
+                    li.className = `risk-item risk-${risk.severity}`;
+                    li.textContent = `[${risk.category}] ${risk.description}`;
+                    riskList.appendChild(li);
+                });
+            } else {
+                riskList.innerHTML = '<li style="padding: 10px; color: #28a745;">✅ 리스크 요인이 없습니다.</li>';
+            }
+
+            // 종합 판단
+            const isEligible = data.summary.is_eligible;
+            document.getElementById('resultEligible').textContent = isEligible ? '✅ 적격' : '❌ 부적격';
+            document.getElementById('resultRecommendation').textContent = data.summary.recommendation;
+
+            // 배지
+            const badge = document.getElementById('resultBadge');
+            badge.textContent = isEligible ? '✅ 적격' : '❌ 부적격';
+            badge.className = `result-badge ${isEligible ? 'eligible' : 'not-eligible'}`;
+
+            // 주변 시설 (있는 경우)
+            if (data.demand_analysis.nearby_facilities && data.demand_analysis.nearby_facilities.length > 0) {
+                const facilitiesSection = document.getElementById('facilitiesSection');
+                const facilitiesList = document.getElementById('facilitiesList');
+                facilitiesSection.style.display = 'block';
+                facilitiesList.innerHTML = '';
+                
+                data.demand_analysis.nearby_facilities.forEach(facility => {
+                    const div = document.createElement('div');
+                    div.className = 'facility-item';
+                    div.textContent = `${facility.name} (${Math.round(facility.distance)}m)`;
+                    facilitiesList.appendChild(div);
+                });
+            }
+
+            // 결과 표시
+            document.getElementById('result').classList.add('active');
+
+            // 결과로 스크롤
+            document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    </script>
+</body>
+</html>
