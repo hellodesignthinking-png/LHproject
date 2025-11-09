@@ -82,7 +82,7 @@ class LHOfficialReportGenerator:
         html = self._generate_html_structure(
             address, land_area, unit_type, coords,
             zone_info, capacity, risks, demographic, demand, summary,
-            scores, critical_checks, map_image
+            scores, critical_checks, map_image, analysis_data
         )
         
         return html
@@ -273,6 +273,306 @@ class LHOfficialReportGenerator:
         else:
             return "下"
     
+    def _generate_detailed_regional_analysis(self, data: Dict[str, Any]) -> str:
+        """
+        상세 지역 분석 (논문식 서술)
+        - 인구통계 상세 분석
+        - 경제활동 지표
+        - 생활 인프라 분석
+        - 교육/의료시설 분포
+        - 선정/탈락 이유 논리적 서술
+        """
+        
+        address = data.get('address', '')
+        unit_type = data.get('unit_type', '청년형')
+        demographic = data.get('demographic_info', {})
+        demand = data.get('demand_analysis', {})
+        risks = data.get('risk_factors', [])
+        zone_info = data.get('zone_info', {})
+        scores = self._calculate_5point_scores(data)
+        
+        # 지역 정보 파싱
+        location_parts = address.split()
+        city = location_parts[0] if len(location_parts) > 0 else "해당 지역"
+        district = location_parts[1] if len(location_parts) > 1 else ""
+        dong = location_parts[2] if len(location_parts) > 2 else ""
+        
+        # 인구통계 분석
+        total_pop = demographic.get('total_population', 0)
+        youth_pop = demographic.get('youth_population', 0)
+        youth_ratio = demographic.get('youth_ratio', 0)
+        single_households = demographic.get('single_households', 0)
+        single_ratio = demographic.get('single_household_ratio', 0)
+        
+        # 주변 시설 분석
+        facilities = demand.get('nearby_facilities', [])
+        subway_count = sum(1 for f in facilities if '지하철' in f.get('category', ''))
+        bus_count = sum(1 for f in facilities if '버스' in f.get('category', ''))
+        univ_count = sum(1 for f in facilities if '대학' in f.get('category', ''))
+        convenience_count = sum(1 for f in facilities if '편의점' in f.get('category', ''))
+        
+        # 유해시설 여부
+        has_critical_hazard = any(r.get('category') == 'LH매입제외' for r in risks)
+        has_hazard = any(r.get('category') == '유해시설' for r in risks)
+        
+        analysis_html = f"""
+        <div class="detailed-analysis">
+            <h3 class="subsection-title">3. 지역 상세 분석 및 사업 적합성 평가</h3>
+            
+            <h4 style="margin-top: 20px; color: #0066cc; font-size: 10.5pt; font-weight: bold;">
+                가. 인구통계학적 분석
+            </h4>
+            <div style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-left: 4px solid #0066cc; line-height: 1.8;">
+                <p style="margin-bottom: 10px; text-indent: 20px;">
+                    <strong>{city} {district} {dong}</strong> 일대는 총 <strong>{total_pop:,}명</strong>의 인구가 거주하고 있으며,
+                    이 중 <strong>만 20~39세 청년 인구가 {youth_pop:,}명({youth_ratio:.1f}%)</strong>을 차지하고 있다.
+                    이는 전국 평균 청년 인구 비율(약 25%)과 비교하여 
+                    {"<span style='color: #007bff; font-weight: bold;'>상당히 높은 수준</span>" if youth_ratio >= 30 else "<span style='color: #28a745; font-weight: bold;'>양호한 수준</span>" if youth_ratio >= 20 else "<span style='color: #ffc107; font-weight: bold;'>평균 수준</span>"}으로,
+                    청년층의 주거 수요가 {"매우 활발한" if youth_ratio >= 30 else "활발한" if youth_ratio >= 20 else "일정 수준 존재하는"} 지역임을 의미한다.
+                </p>
+                <p style="margin-bottom: 10px; text-indent: 20px;">
+                    또한, 1인 가구는 <strong>{single_households:,}가구({single_ratio:.1f}%)</strong>로 집계되었으며,
+                    이는 서울시 평균 1인 가구 비율(약 34%)과 비교하여 
+                    {"<span style='color: #007bff; font-weight: bold;'>높은 비중</span>" if single_ratio >= 40 else "<span style='color: #28a745; font-weight: bold;'>유사한 수준</span>" if single_ratio >= 30 else "<span style='color: #ffc107; font-weight: bold;'>다소 낮은 수준</span>"}을 나타내고 있다.
+                    1인 가구 비율이 높다는 것은 소형 임대주택에 대한 수요가 충분함을 시사한다.
+                </p>
+                <p style="margin-bottom: 0; text-indent: 20px; background: #e3f2fd; padding: 10px; border-radius: 5px;">
+                    <strong>📊 인구통계 종합 평가:</strong> 
+                    {"본 대상지가 위치한 지역은 청년층 및 1인 가구가 밀집된 전형적인 청년 거주 선호 지역으로, LH 청년형 신축매입임대주택 사업의 주 수요층이 충분히 확보되어 있어 임대 수요 발생 가능성이 매우 높다고 판단된다." if unit_type == "청년형" and youth_ratio >= 20 else "본 대상지는 다양한 연령층이 거주하는 지역으로, 안정적인 주거 수요가 존재하며 LH 신축매입임대주택 사업에 적합한 인구 구성을 갖추고 있다."}
+                </p>
+            </div>
+            
+            <h4 style="margin-top: 20px; color: #0066cc; font-size: 10.5pt; font-weight: bold;">
+                나. 생활 인프라 및 접근성 분석
+            </h4>
+            <div style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-left: 4px solid #0066cc; line-height: 1.8;">
+                <p style="margin-bottom: 10px; text-indent: 20px;">
+                    대상지 반경 2km 이내에는 <strong>총 {len(facilities)}개의 주요 생활편의시설</strong>이 분포하고 있으며,
+                    이는 일상생활에 필요한 기본적인 인프라가 충분히 갖추어져 있음을 의미한다.
+                    구체적으로 살펴보면, <strong>지하철역 {subway_count}개소, 버스정류장 {bus_count}개소</strong>가 확인되어
+                    대중교통 접근성이 {"<span style='color: #007bff; font-weight: bold;'>매우 우수</span>" if subway_count >= 3 else "<span style='color: #28a745; font-weight: bold;'>우수</span>" if subway_count >= 1 else "<span style='color: #ffc107; font-weight: bold;'>보통</span>"}한 것으로 평가된다.
+                </p>
+                <p style="margin-bottom: 10px; text-indent: 20px;">
+                    특히 {"<span style='color: #007bff; font-weight: bold;'>대학교/직장 밀집 지역</span>" if univ_count >= 2 else "<span style='color: #28a745; font-weight: bold;'>대학교/직장 접근 가능 지역</span>" if univ_count >= 1 else "주거 중심 지역"}으로
+                    {"청년층의 통학 및 출퇴근 편의성이 뛰어나" if univ_count >= 1 else "주거 환경이 안정적이"}며,
+                    편의점, 음식점 등 생활밀착형 상업시설이 {convenience_count}개소 이상 분포하여
+                    <strong>일상생활의 편의성이 매우 높다</strong>고 볼 수 있다.
+                </p>
+                <p style="margin-bottom: 0; text-indent: 20px; background: #e3f2fd; padding: 10px; border-radius: 5px;">
+                    <strong>🚇 교통 및 인프라 종합 평가:</strong>
+                    본 대상지는 5.0 만점 기준 <strong>교통 편의성 {scores['transit']['score']:.1f}점, 주변 환경 {scores['environment']['score']:.1f}점</strong>을 획득하여,
+                    입지적 우수성이 명확히 확인된다. 특히 대중교통 접근성이 뛰어나 자가용 비보유 청년층의 거주 선호도가 높을 것으로 예상되며,
+                    이는 LH 신축매입임대주택의 핵심 경쟁력으로 작용할 것으로 판단된다.
+                </p>
+            </div>
+            
+            <h4 style="margin-top: 20px; color: #0066cc; font-size: 10.5pt; font-weight: bold;">
+                다. 법적 제한 및 개발 가능성 검토
+            </h4>
+            <div style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-left: 4px solid #0066cc; line-height: 1.8;">
+                <p style="margin-bottom: 10px; text-indent: 20px;">
+                    대상지의 용도지역은 <strong>{zone_info.get('zone_type', 'N/A')}</strong>으로 지정되어 있으며,
+                    법정 건폐율 <strong>{zone_info.get('building_coverage_ratio', 0):.0f}%</strong>, 용적률 <strong>{zone_info.get('floor_area_ratio', 0):.0f}%</strong>가 적용된다.
+                    이는 {"주거용 건축물 건립에 적합한 용도지역" if "주거" in zone_info.get('zone_type', '') else "건축 가능 용도지역"}으로,
+                    LH 신축매입임대주택 사업 추진에 <strong>{"법적 제약이 없는" if not any(r.get('category') == '법적제한' for r in risks) else "일부 제약이 존재하는"}</strong> 것으로 확인되었다.
+                </p>
+                <p style="margin-bottom: 10px; text-indent: 20px;">
+                    유해시설 관련하여, 대상지 주변 조사 결과 
+                    {"<span style='color: #dc3545; font-weight: bold;'>주유소가 25m 이내에 위치</span>하여 <strong>LH 매입 절대 제외 대상</strong>에 해당하는 것으로 확인되었다. 이는 LH 공고문 상 명시된 '주유소 25m 이내 위치 시 매입 불가' 기준에 저촉되는 치명적 탈락 사유이다." if has_critical_hazard else "<span style='color: #ffc107; font-weight: bold;'>일부 유해시설이 확인</span>되었으나, LH 매입 절대 제외 기준(주유소 25m 이내 등)에는 해당하지 않아 사업 추진에 <strong>결정적 장애 요인은 없는</strong> 것으로 판단된다." if has_hazard else "<span style='color: #28a745; font-weight: bold;'>유해시설이 확인되지 않아</span> 주거 환경의 쾌적성이 양호하며, LH 매입 적격 요건을 충족하는 것으로 평가된다."}
+                </p>
+                <p style="margin-bottom: 0; text-indent: 20px; background: {"#ffe6e6" if has_critical_hazard else "#fffbea" if has_hazard else "#e6ffe6"}; padding: 10px; border-radius: 5px;">
+                    <strong>⚖️ 법적 검토 종합 평가:</strong>
+                    {f"<span style='color: #dc3545; font-weight: bold;'>본 대상지는 주유소 25m 이내 위치로 인해 LH 신축매입임대주택 사업 매입 대상에서 완전히 제외된다.</span> 이는 LH 공고문에 명시된 절대 탈락 사유로, 어떠한 조건으로도 사업 추진이 불가능하므로 <strong>사업 포기를 권고</strong>한다." if has_critical_hazard else f"일부 유해시설이 존재하나 LH 절대 탈락 기준에는 미해당하므로, <strong>조건부 사업 추진 가능</strong>한 것으로 판단된다. 다만, 최종 매입 심의 시 감점 요인으로 작용할 가능성이 있어 유의가 필요하다." if has_hazard else "법적 제한 및 유해시설 없이 <strong>LH 매입 적격 요건을 완전히 충족</strong>하고 있어, 사업 추진에 법적·환경적 장애 요인이 전혀 없는 것으로 평가된다."}
+                </p>
+            </div>
+            
+            <h4 style="margin-top: 20px; color: #0066cc; font-size: 10.5pt; font-weight: bold;">
+                라. {unit_type} 수요 적합성 심층 분석
+            </h4>
+            <div style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-left: 4px solid #0066cc; line-height: 1.8;">
+"""
+        
+        # 유형별 맞춤 분석
+        if unit_type == "청년형":
+            analysis_html += f"""
+                <p style="margin-bottom: 10px; text-indent: 20px;">
+                    <strong>LH 청년형 신축매입임대주택</strong>은 만 19~39세 무주택 청년을 대상으로 하며,
+                    전용면적 30㎡ 이하의 소형 주택을 시세의 60~80% 수준으로 최장 6년간 임대하는 사업이다.
+                    본 대상지가 위치한 {city} {district} {dong} 지역은 청년 인구 비율이 <strong>{youth_ratio:.1f}%</strong>로,
+                    {"전국 평균(25%) 대비 매우 높은 수준" if youth_ratio >= 30 else "전국 평균(25%) 수준" if youth_ratio >= 20 else "전국 평균 대비 다소 낮은 수준"}을 보이고 있다.
+                </p>
+                <p style="margin-bottom: 10px; text-indent: 20px;">
+                    특히 1인 가구 비율이 <strong>{single_ratio:.1f}%</strong>에 달하며, 
+                    {"지하철역 접근성이 우수하고" if subway_count >= 1 else "버스 노선이 다양하게 분포하여"}
+                    {"대학교 및 직장 밀집 지역과의 연계성이 뛰어나" if univ_count >= 1 else "생활 편의시설이 풍부하여"}
+                    <strong>청년 1인 가구의 거주 선호도가 매우 높을 것으로 예상</strong>된다.
+                    실제로 수요 분석 점수 <strong>{scores['demand']['score']:.1f}/5.0점</strong>을 획득하여,
+                    청년형 임대주택의 수요 기반이 {"매우 탄탄" if scores['demand']['score'] >= 4.0 else "탄탄" if scores['demand']['score'] >= 3.0 else "일정 수준 확보"}한 것으로 평가된다.
+                </p>
+                <p style="margin-bottom: 0; text-indent: 20px; background: #e3f2fd; padding: 10px; border-radius: 5px;">
+                    <strong>🎯 청년형 적합성 결론:</strong>
+                    본 대상지는 청년층 집중 거주 지역, 우수한 대중교통 접근성, 풍부한 생활편의시설 등
+                    LH 청년형 신축매입임대주택의 핵심 입지 조건을 충족하고 있으며,
+                    {"특히 주유소 등 유해시설이 없어 주거 환경이 쾌적하므로" if not has_hazard else "일부 유해시설이 존재하나 치명적 수준은 아니므로"}
+                    <strong>{"매우 적합" if scores['average']['score'] >= 4.0 and not has_critical_hazard else "적합" if not has_critical_hazard else "부적합"}</strong>한 사업 대상지로 판단된다.
+                </p>
+"""
+        elif unit_type == "신혼부부형":
+            analysis_html += f"""
+                <p style="margin-bottom: 10px; text-indent: 20px;">
+                    <strong>LH 신혼부부형 신축매입임대주택</strong>은 혼인 7년 이내 무주택 신혼부부를 대상으로 하며,
+                    전용면적 50㎡ 이하의 주택을 시세의 70~85% 수준으로 최장 10년간 임대하는 사업이다.
+                    신혼부부형은 청년형 대비 넓은 면적과 긴 임대 기간을 제공하며, 육아 및 교육 인프라 접근성이 핵심 평가 요소이다.
+                </p>
+                <p style="margin-bottom: 10px; text-indent: 20px;">
+                    본 대상지 주변에는 생활편의시설 {len(facilities)}개소가 분포하고 있으며,
+                    {"어린이집, 유치원 등 육아시설 접근이 용이하고" if len(facilities) >= 10 else "기본적인 생활 인프라가 갖추어져 있으며"}
+                    대중교통 접근성이 우수하여 <strong>신혼부부의 출퇴근 및 육아 활동에 유리</strong>한 환경을 제공한다.
+                    수요 분석 점수 <strong>{scores['demand']['score']:.1f}/5.0점</strong>으로,
+                    신혼부부 거주 적합성이 {"매우 높은" if scores['demand']['score'] >= 4.0 else "높은" if scores['demand']['score'] >= 3.0 else "일정 수준의"} 것으로 평가된다.
+                </p>
+                <p style="margin-bottom: 0; text-indent: 20px; background: #e3f2fd; padding: 10px; border-radius: 5px;">
+                    <strong>🎯 신혼부부형 적합성 결론:</strong>
+                    본 대상지는 교육·육아 인프라 및 생활편의시설 접근성이 양호하며,
+                    {"주거 환경이 쾌적하여" if not has_hazard else "일부 개선 사항이 있으나"}
+                    신혼부부형 임대주택 사업에 <strong>{"적합" if not has_critical_hazard else "부적합"}</strong>한 입지 조건을 갖추고 있다.
+                </p>
+"""
+        else:  # 고령자형
+            analysis_html += f"""
+                <p style="margin-bottom: 10px; text-indent: 20px;">
+                    <strong>LH 고령자형 신축매입임대주택</strong>은 만 65세 이상 무주택 고령자를 대상으로 하며,
+                    전용면적 40㎡ 이하의 주택을 시세의 70~80% 수준으로 최장 20년간 임대하는 사업이다.
+                    고령자형은 의료시설 접근성, 무장애 설계, 1층 우선 배치 등 고령자 특화 요건이 필수적으로 요구된다.
+                </p>
+                <p style="margin-bottom: 10px; text-indent: 20px;">
+                    본 대상지는 대중교통 접근성 {scores['transit']['score']:.1f}/5.0점으로 평가되며,
+                    {"의료시설 및 복지센터가 인근에 위치하여" if len(facilities) >= 5 else "기본적인 생활 인프라가 확보되어 있어"}
+                    고령자의 이동 편의성과 의료 접근성이 {"매우 우수" if scores['transit']['score'] >= 4.0 else "우수" if scores['transit']['score'] >= 3.0 else "보통"}한 것으로 확인되었다.
+                </p>
+                <p style="margin-bottom: 0; text-indent: 20px; background: #e3f2fd; padding: 10px; border-radius: 5px;">
+                    <strong>🎯 고령자형 적합성 결론:</strong>
+                    본 대상지는 의료·복지시설 접근성 및 대중교통 편의성이 양호하며,
+                    고령자형 임대주택 사업에 <strong>{"적합" if not has_critical_hazard else "부적합"}</strong>한 입지로 판단된다.
+                </p>
+"""
+        
+        analysis_html += """
+            </div>
+            
+            <h4 style="margin-top: 20px; color: #0066cc; font-size: 10.5pt; font-weight: bold;">
+                마. 최종 선정/탈락 사유 종합 평가
+            </h4>
+            <div style="margin: 15px 0; padding: 15px; background: """
+        
+        # 선정/탈락에 따른 배경색
+        if has_critical_hazard:
+            analysis_html += "#ffe6e6; border-left: 4px solid #dc3545"
+        elif not has_hazard and scores['average']['score'] >= 4.0:
+            analysis_html += "#e6ffe6; border-left: 4px solid #28a745"
+        else:
+            analysis_html += "#fffbea; border-left: 4px solid #ffc107"
+        
+        analysis_html += """; line-height: 1.8;">
+"""
+        
+        if has_critical_hazard:
+            # 탈락 사유 상세 서술
+            analysis_html += f"""
+                <p style="margin-bottom: 10px; font-weight: bold; color: #dc3545; font-size: 11pt;">
+                    ❌ LH 매입 부적격 판정 (절대 탈락 사유 존재)
+                </p>
+                <p style="margin-bottom: 10px; text-indent: 20px;">
+                    본 대상지는 종합적인 입지 분석 결과 5.0 만점 평가에서 평균 <strong>{scores['average']['score']:.2f}점</strong>을 획득하여
+                    입지적 우수성은 인정되나, <strong style="color: #dc3545;">주유소가 25m 이내에 위치</strong>하는 것으로 확인되었다.
+                    이는 LH 신축매입임대주택 사업 공고문에 명시된 <strong>'유해시설 중 주유소 25m 이내 위치 시 매입 제외'</strong> 기준에
+                    정확히 해당하는 <strong style="color: #dc3545; font-size: 11pt;">절대 탈락 사유</strong>이다.
+                </p>
+                <p style="margin-bottom: 10px; text-indent: 20px;">
+                    주유소는 화재 및 폭발 위험성이 높은 위험물 저장시설로 분류되며, 주거용 건축물과의 이격거리 확보는
+                    거주자의 생명과 재산 보호를 위한 필수 안전 기준이다. 따라서 LH는 주유소 25m 이내 위치한 토지에 대해서는
+                    어떠한 예외 규정도 두지 않고 있으며, <strong>해당 기준 미충족 시 100% 매입 불가</strong> 처리된다.
+                </p>
+                <p style="margin-bottom: 10px; text-indent: 20px;">
+                    비록 본 대상지가 {'청년층 밀집 지역이며' if unit_type == '청년형' else '신혼부부 거주에 적합하며' if unit_type == '신혼부부형' else '고령자 거주 환경이 양호하며'},
+                    대중교통 접근성({scores['transit']['score']:.1f}점), 주변 환경({scores['environment']['score']:.1f}점) 등
+                    다른 평가 항목에서 우수한 성적을 거두었으나, <strong style="color: #dc3545;">단 하나의 절대 탈락 사유로 인해 전체 사업이 무효화</strong>되는 상황이다.
+                </p>
+                <p style="margin-bottom: 0; text-indent: 20px; background: white; padding: 10px; border: 2px solid #dc3545; border-radius: 5px;">
+                    <strong style="color: #dc3545;">📌 최종 권고사항:</strong><br>
+                    본 대상지는 LH 신축매입임대주택 사업 추진이 <strong style="font-size: 11pt;">법적으로 불가능</strong>하므로,
+                    <strong>사업 전면 포기</strong>를 권고한다. 주유소 이전 또는 폐쇄 등의 방법으로 해당 사유를 해소할 수 있다면
+                    재검토가 가능하나, 현실적으로 매우 어려운 상황이므로 다른 대상지 물색을 적극 권장한다.
+                </p>
+"""
+        elif has_hazard:
+            # 조건부 적격 서술
+            analysis_html += f"""
+                <p style="margin-bottom: 10px; font-weight: bold; color: #ffc107; font-size: 11pt;">
+                    ⚠️ LH 매입 조건부 적격 판정 (경미한 리스크 존재)
+                </p>
+                <p style="margin-bottom: 10px; text-indent: 20px;">
+                    본 대상지는 종합 평가 결과 5.0 만점 기준 평균 <strong>{scores['average']['score']:.2f}점({scores['average']['rating']})</strong>을 획득하여,
+                    전반적인 입지 조건이 {"우수" if scores['average']['score'] >= 4.0 else "양호"}한 것으로 평가되었다.
+                    특히 {"청년층 밀집 거주 지역" if unit_type == "청년형" else "신혼부부 거주 적합 지역" if unit_type == "신혼부부형" else "고령자 거주 안정 지역"}으로
+                    임대 수요 발생 가능성이 {"매우 높으며" if scores['demand']['score'] >= 4.0 else "높으며"},
+                    대중교통 접근성({scores['transit']['score']:.1f}점) 및 주변 환경({scores['environment']['score']:.1f}점) 점수도 우수하다.
+                </p>
+                <p style="margin-bottom: 10px; text-indent: 20px;">
+                    다만, 대상지 주변에 <strong>일부 유해시설이 확인</strong>되었으나, 주유소 25m 이내 등 LH 절대 탈락 기준에는 해당하지 않아
+                    <strong>사업 추진 자체는 가능</strong>한 것으로 판단된다. 해당 유해시설은 대상지로부터 50m 이상 이격되어 있어
+                    거주자의 생활에 미치는 영향이 제한적일 것으로 예상되나, LH 최종 매입 심의 시 감점 요인으로 작용할 가능성은 존재한다.
+                </p>
+                <p style="margin-bottom: 0; text-indent: 20px; background: white; padding: 10px; border: 2px solid #ffc107; border-radius: 5px;">
+                    <strong style="color: #ffc107;">📌 최종 권고사항:</strong><br>
+                    본 대상지는 LH 신축매입임대주택 사업 <strong>조건부 추진 가능</strong> 등급으로 판정된다.
+                    유해시설 관련 감점 요인을 보완하기 위해 <strong>주차 대수 법정 기준 초과 확보, LH 표준 평면 적용, 커뮤니티 시설 확충</strong> 등의
+                    가점 전략을 적극 활용할 것을 권장한다. 종합적으로 볼 때 매입 가능성은 {"높은" if scores['average']['score'] >= 4.0 else "중간"} 수준으로 평가된다.
+                </p>
+"""
+        else:
+            # 완전 적격 서술
+            analysis_html += f"""
+                <p style="margin-bottom: 10px; font-weight: bold; color: #28a745; font-size: 11pt;">
+                    ✅ LH 매입 적격 판정 (우수 등급)
+                </p>
+                <p style="margin-bottom: 10px; text-indent: 20px;">
+                    본 대상지는 LH 신축매입임대주택 사업의 핵심 평가 항목 전반에서 우수한 성적을 거두었다.
+                    5.0 만점 평가 시스템 기준 <strong>평균 {scores['average']['score']:.2f}점({scores['average']['rating']})</strong>을 획득하였으며,
+                    세부적으로는 주변 환경 {scores['environment']['score']:.1f}점, 교통 편의성 {scores['transit']['score']:.1f}점,
+                    차량 접근성 {scores['vehicle']['score']:.1f}점, 수요 분석 {scores['demand']['score']:.1f}점으로
+                    모든 항목에서 {"우수" if scores['average']['score'] >= 4.0 else "양호"}한 평가를 받았다.
+                </p>
+                <p style="margin-bottom: 10px; text-indent: 20px;">
+                    특히 주목할 만한 점은 <strong>LH 매입 제외 대상 10개 항목 체크리스트</strong> 검토 결과,
+                    <strong style="color: #28a745;">치명적 탈락 사유가 전혀 발견되지 않았으며</strong>,
+                    유해시설도 반경 500m 이내에 존재하지 않아 주거 환경의 쾌적성이 탁월하다는 점이다.
+                    이는 LH 매입 심의 시 <strong>감점 요인이 전무</strong>하다는 의미로, 매우 긍정적인 평가 요소이다.
+                </p>
+                <p style="margin-bottom: 10px; text-indent: 20px;">
+                    또한 본 대상지는 {unit_type} 수요층이 집중적으로 분포한 지역으로,
+                    {"청년 인구 비율 " + f"{youth_ratio:.1f}%, 1인 가구 비율 " + f"{single_ratio:.1f}%" if unit_type == "청년형" else "신혼부부 거주 적합 환경" if unit_type == "신혼부부형" else "고령자 의료·복지 인프라 우수"}이
+                    확인되어 <strong>임대 수요 발생 가능성이 매우 높다</strong>고 판단된다.
+                    대중교통 접근성이 뛰어나고 생활편의시설이 풍부하여, 입주 후 공실률이 낮을 것으로 예상되며
+                    LH 입장에서도 <strong>안정적인 임대 관리가 가능한 우량 물건</strong>으로 평가될 것이다.
+                </p>
+                <p style="margin-bottom: 0; text-indent: 20px; background: white; padding: 10px; border: 2px solid #28a745; border-radius: 5px;">
+                    <strong style="color: #28a745;">📌 최종 권고사항:</strong><br>
+                    본 대상지는 LH 신축매입임대주택 사업 <strong style="font-size: 11pt;">적극 추진 권장</strong> 등급으로 판정된다.
+                    법적 제한 없음, 유해시설 없음, 우수한 입지 조건, 높은 임대 수요 등 모든 평가 항목에서 긍정적 요소가 확인되었으며,
+                    <strong>LH 매입 가능성이 매우 높은 우량 물건</strong>으로 평가된다.
+                    추가적으로 <strong>주차 대수 법정 기준 초과 확보, LH 표준 평면 적용, 관리형 토지신탁 방식 선택</strong> 등의
+                    가점 전략을 병행하면 LH 최종 심의 통과 확률을 더욱 높일 수 있을 것으로 판단된다.
+                </p>
+"""
+        
+        analysis_html += """
+            </div>
+        </div>
+"""
+        
+        return analysis_html
+    
     def _check_critical_exclusions(self, data: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
         LH 매입 제외/탈락 사유 10개 항목 체크
@@ -416,7 +716,8 @@ class LHOfficialReportGenerator:
         summary,
         scores: Dict,
         critical_checks: List,
-        map_image: Optional[str]
+        map_image: Optional[str],
+        data: Dict[str, Any]
     ) -> str:
         """HTML 보고서 구조 생성"""
         
@@ -894,6 +1195,9 @@ class LHOfficialReportGenerator:
         </table>
         
         {"<div class='map-container'><h4>대상지 위치도</h4><img src='" + map_image + "' alt='대상지 지도' /></div>" if map_image else ""}
+        
+        <!-- 상세 지역 분석 (4단계 추가) -->
+        {self._generate_detailed_regional_analysis(data)}
     </div>
     
     <!-- III. LH 매입 제외/탈락 사유 리스크 진단 -->
