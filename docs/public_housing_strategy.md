@@ -93,3 +93,47 @@ Connect private capital with public policy to balance social impact and profitab
 
 A **Public Housing Strategy & Risk Management Firm** that leverages real-time LH policy intelligence, minimizes risks for private development partners, and delivers social value through public rental housing projects.
 
+## Appendix: Running the Automation Platform
+
+To put the consulting model into practice, run the accompanying land-screening automation service included in this repository. The commands below summarize the detailed instructions from the project README.
+
+1. **Set up a Python environment**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # Windows는 venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+
+2. **Create a `.env` file** with API keys and service endpoints.
+   ```env
+   KAKAO_REST_API_KEY=...
+   LAND_REGULATION_API_KEY=...
+   MOIS_API_KEY=...
+   OPENAI_API_KEY=...
+   DATABASE_URL=postgresql://user:password@localhost/lh_analysis
+   REDIS_URL=redis://localhost:6379
+   ```
+
+3. **Launch the FastAPI server**
+   ```bash
+   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   ```
+
+4. **Run the Celery worker** in a separate terminal to process background tasks.
+   ```bash
+   celery -A app.tasks worker --loglevel=info
+   ```
+
+5. **Send a sample request** once both services are running.
+   ```bash
+   curl -X POST "http://localhost:8000/api/analyze-land" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "address": "서울특별시 강남구 역삼동 123-45",
+       "land_area": 500,
+       "unit_type": "청년형"
+     }'
+   ```
+
+For more deployment options, including Docker usage and advanced configuration, see the root-level `README.md`.
+
