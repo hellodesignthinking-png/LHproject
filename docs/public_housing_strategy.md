@@ -135,5 +135,11 @@ To put the consulting model into practice, run the accompanying land-screening a
      }'
    ```
 
+6. **View the results.**
+   - **Curl/HTTP clients** (e.g., curl, Postman, Insomnia) will print the `LandAnalysisResponse` JSON directly. Key sections such as `summary`, `risk_factors`, `demand_analysis`, and the generated `analysis_id` appear in the payload.
+   - Open `http://localhost:8000/docs` in a browser to use the FastAPI Swagger UI. The response body displays below the "Response" panel after you execute the request.
+   - The terminal running `uvicorn` echoes a concise log showing the generated `analysis_id`, request parameters, and completion status. This helps you trace requests in multi-user scenarios.
+   - When report generation is enabled, download links become available at `/api/reports/{analysis_id}.pdf`. Until then, the placeholder route shows the pending status message returned in the JSON.
+
 For more deployment options, including Docker usage and advanced configuration, see the root-level `README.md`.
 
