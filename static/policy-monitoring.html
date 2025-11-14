@@ -523,6 +523,7 @@
             </button>
             <button class="tab-button" onclick="switchTab('comprehensive-report')">
                 📄 종합 리포트
+            <button class="tab-button" onclick="switchTab('ai-strategy')">🤖 AI 전략 분석</button>
             </button>
         </div>
 
@@ -619,6 +620,40 @@
             </div>
 
             <div id="comprehensive-report-content"></div>
+
+        <!-- AI 전략 분석 탭 -->
+        <div id="ai-strategy" class="tab-content">
+            <div class="filters">
+                <h3>🤖 AI 기반 정책 영향 분석</h3>
+                <p style="color: #666; margin-bottom: 15px;">
+                    AI가 정책 모니터링 결과를 종합 분석하여 구체적인 실행 전략을 제시합니다.
+                </p>
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label>분석 기간</label>
+                        <select id="ai-days">
+                            <option value="7">최근 7일</option>
+                            <option value="30" selected>최근 30일</option>
+                            <option value="90">최근 90일</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>분석 카테고리</label>
+                        <select id="ai-category">
+                            <option value="">전체 종합 분석</option>
+                            <option value="lh">LH 공고만</option>
+                            <option value="policy">정책 변경만</option>
+                            <option value="regulation">건축/제도만</option>
+                        </select>
+                    </div>
+                    <button class="filter-button" onclick="generateAIStrategy()" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                        🤖 AI 전략 생성
+                    </button>
+                </div>
+            </div>
+
+            <div id="ai-strategy-content"></div>
+        </div>
         </div>
     </div>
 
@@ -1067,6 +1102,125 @@
         }
 
         // 초기 로드
+
+        // AI 전략 생성
+        async function generateAIStrategy() {
+            const days = document.getElementById('ai-days').value;
+            const category = document.getElementById('ai-category').value;
+            
+            document.getElementById('ai-strategy-content').innerHTML = '<div class="loading"><div class="loading-spinner"></div><p>AI가 정책을 분석하여 전략을 생성하는 중... (30초~1분 소요)</p></div>';
+            
+            try {
+                const url = `/api/policy/analyze-with-ai?days=${days}${category ? '&category=' + category : ''}`;
+                const response = await fetch(url, { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderAIStrategy(data);
+                } else {
+                    throw new Error('AI 분석 실패');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('ai-strategy-content').innerHTML = '<div class="loading"><p>AI 전략 생성 중 오류가 발생했습니다. 다시 시도해주세요.</p></div>';
+            }
+        }
+
+        // AI 전략 렌더링
+        function renderAIStrategy(data) {
+            const ai = data.ai_analysis;
+            
+            const html = `
+                <div class="summary-card">
+                    <h3>🤖 AI 정책 영향 분석 결과</h3>
+                    <p style="color: #666; margin-bottom: 15px;">
+                        분석 기간: ${data.period} | 
+                        분석 정책 수: ${data.total_policies}건 |
+                        생성 시간: ${new Date(data.analysis_date).toLocaleString('ko-KR')}
+                    </p>
+                    <div style="background: #e7f5ff; padding: 15px; border-radius: 8px; border-left: 4px solid #1971c2;">
+                        <h4 style="color: #1971c2; margin-bottom: 10px;">📌 핵심 요약</h4>
+                        <div style="white-space: pre-wrap; line-height: 1.8; color: #333;">${ai.summary || '분석 결과를 불러오는 중...'}</div>
+                    </div>
+                </div>
+                
+                <div class="summary-card">
+                    <h3>✅ 기회 요인</h3>
+                    <div class="impact-analysis">
+                        <div class="impact-section positive">
+                            <div style="white-space: pre-wrap; line-height: 1.8;">${ai.opportunities || '분석 중...'}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="summary-card">
+                    <h3>⚠️ 위험 요인</h3>
+                    <div class="impact-analysis">
+                        <div class="impact-section negative">
+                            <div style="white-space: pre-wrap; line-height: 1.8;">${ai.risks || '분석 중...'}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="summary-card" style="background: linear-gradient(135deg, #fff5f5 0%, #ffe3e3 100%);">
+                    <h3>🚨 즉시 실행 전략 (우선순위 높음)</h3>
+                    <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #e03131;">
+                        <div style="white-space: pre-wrap; line-height: 1.8; color: #333;">${ai.immediate_actions || '분석 중...'}</div>
+                    </div>
+                </div>
+                
+                <div class="summary-card">
+                    <h3>📅 중장기 전략 (3-6개월)</h3>
+                    <div class="impact-analysis">
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                            <div style="white-space: pre-wrap; line-height: 1.8;">${ai.mid_term_strategy || '분석 중...'}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="summary-card">
+                    <h3>💰 비용 영향 대응</h3>
+                    <div style="background: #fff3bf; padding: 15px; border-radius: 8px; border-left: 4px solid #fab005;">
+                        <div style="white-space: pre-wrap; line-height: 1.8; color: #333;">${ai.cost_response || '분석 중...'}</div>
+                    </div>
+                </div>
+                
+                <div class="summary-card" style="background: linear-gradient(135deg, #f0f7ff 0%, #e0f2fe 100%);">
+                    <h3>🎯 최종 권장사항</h3>
+                    <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #0c8599;">
+                        <div style="white-space: pre-wrap; line-height: 1.8; color: #333; font-size: 15px;">${ai.recommendations || '분석 중...'}</div>
+                    </div>
+                </div>
+                
+                <div class="summary-card" style="background: #f8f9fa;">
+                    <h3>📊 분석 데이터 요약</h3>
+                    <div class="summary-stats">
+                        <div class="stat-box">
+                            <div class="label">LH 공고</div>
+                            <div class="value">${data.raw_data_summary.lh_count}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">정책 변경</div>
+                            <div class="value">${data.raw_data_summary.policy_count}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">건축/제도</div>
+                            <div class="value">${data.raw_data_summary.regulation_count}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">총 분석</div>
+                            <div class="value">${data.total_policies}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="report-button" onclick="window.print()" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                    📄 AI 전략 보고서 인쇄/PDF 저장
+                </button>
+            `;
+            
+            document.getElementById('ai-strategy-content').innerHTML = html;
+        }
         loadLHAnnouncements();
     </script>
 </body>

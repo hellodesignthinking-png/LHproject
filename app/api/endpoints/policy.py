@@ -15,6 +15,7 @@ from app.modules.policy_monitor.models import (
     PolicyCategory
 )
 from app.modules.policy_monitor.analyzer import PolicyAnalyzer
+from app.services.policy_ai_service import get_policy_ai_service
 
 router = APIRouter(prefix="/api/policy", tags=["policy-monitoring"])
 
@@ -823,4 +824,78 @@ async def compare_policies(request: PolicyComparisonRequest):
     return {
         "success": True,
         "comparison": comparison
+    }
+
+
+@router.post("/analyze-with-ai")
+async def analyze_policy_with_ai(days: int = 30, category: Optional[str] = None):
+    """
+    AI 기반 정책 영향 분석 및 전략 생성
+    
+    정책 모니터링 결과를 AI가 종합 분석하여 구체적인 실행 전략을 제시합니다.
+    """
+    
+    # 카테고리별 데이터 수집
+    if category == "lh" or not category:
+        lh_data = await get_lh_announcements(days=days)
+    else:
+        lh_data = None
+    
+    if category == "policy" or not category:
+        policy_data = await get_policy_changes(days=days)
+    else:
+        policy_data = None
+    
+    if category == "regulation" or not category:
+        regulation_data = await get_building_regulations(days=days)
+    else:
+        regulation_data = None
+    
+    # 종합 데이터 구성
+    comprehensive_data = {
+        "category": "종합 정책 분석" if not category else category,
+        "period": f"최근 {days}일",
+        "total_count": 0,
+        "summary": {
+            "key_changes": []
+        }
+    }
+    
+    # 데이터 통합
+    all_data = []
+    if lh_data:
+        comprehensive_data["total_count"] += lh_data["total_count"]
+        comprehensive_data["summary"]["key_changes"].extend(lh_data["summary"]["key_changes"])
+        all_data.extend(lh_data["data"])
+    
+    if policy_data:
+        comprehensive_data["total_count"] += policy_data["total_count"]
+        comprehensive_data["summary"]["key_changes"].extend(policy_data["summary"]["key_changes"])
+        all_data.extend(policy_data["data"])
+    
+    if regulation_data:
+        comprehensive_data["total_count"] += regulation_data["total_count"]
+        comprehensive_data["summary"]["key_changes"].extend(regulation_data["summary"]["key_changes"])
+        all_data.extend(regulation_data["data"])
+    
+    comprehensive_data["data"] = all_data
+    
+    # AI 서비스로 분석
+    ai_service = get_policy_ai_service()
+    ai_analysis = await ai_service.analyze_policy_impact(
+        comprehensive_data,
+        analysis_type="comprehensive"
+    )
+    
+    return {
+        "success": True,
+        "analysis_date": datetime.now().isoformat(),
+        "period": f"최근 {days}일",
+        "total_policies": comprehensive_data["total_count"],
+        "ai_analysis": ai_analysis,
+        "raw_data_summary": {
+            "lh_count": lh_data["total_count"] if lh_data else 0,
+            "policy_count": policy_data["total_count"] if policy_data else 0,
+            "regulation_count": regulation_data["total_count"] if regulation_data else 0
+        }
     }
