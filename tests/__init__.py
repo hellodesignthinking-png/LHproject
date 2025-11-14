@@ -1,3 +1,1 @@
-"""
-테스트 모듈
-"""
+"""Tests for the application"""

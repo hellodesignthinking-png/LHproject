@@ -19,6 +19,15 @@ from app.schemas import (
 )
 from app.services.analysis_engine import AnalysisEngine
 from app.services.report_generator import ProfessionalReportGenerator
+from app.services.advanced_report_generator import ExpertReportGenerator
+from app.services.lh_official_report_generator import LHOfficialReportGenerator
+
+# 정책 모니터링 API 라우터
+from app.api.endpoints.policy import router as policy_router
+# 프로젝트 관리 API 라우터
+from app.api.endpoints.projects import router as projects_router
+# 사업성 시뮬레이션 API 라우터
+from app.api.endpoints.business import router as business_router
 
 settings = get_settings()
 
@@ -34,9 +43,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="LH 신축매입임대 토지진단 자동화 시스템",
-    description="LH 신축매입임대주택 사업을 위한 토지 적합성 자동 진단 API",
-    version="1.0.0",
+    title="공공정책 기반 민간개발 매니지먼트 플랫폼",
+    description="LH 신축매입임대주택 사업을 위한 토지 적합성 자동 진단 + 정책 모니터링 + 프로젝트 관리 통합 플랫폼",
+    version="2.0.0",
     lifespan=lifespan
 )
 
@@ -48,6 +57,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 정책 모니터링 라우터 등록
+app.include_router(policy_router)
+# 프로젝트 관리 라우터 등록
+app.include_router(projects_router)
+# 사업성 시뮬레이션 라우터 등록
+app.include_router(business_router)
 
 # 정적 파일 서빙
 static_path = Path(__file__).parent.parent / "static"
@@ -65,10 +81,50 @@ async def root():
     # 파일이 없는 경우 기본 JSON 응답
     return {
         "service": "LH 토지진단 자동화 시스템",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "status": "running",
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
+        "dashboard": "/dashboard"
     }
+
+
+@app.get("/dashboard")
+async def dashboard():
+    """사업성 시뮬레이션 대시보드"""
+    dashboard_path = static_path / "dashboard.html"
+    if dashboard_path.exists():
+        return FileResponse(str(dashboard_path))
+    else:
+        return {
+            "error": "Dashboard not found",
+            "message": "대시보드 파일을 찾을 수 없습니다."
+        }
+
+
+@app.get("/project-analysis")
+async def project_analysis():
+    """프로젝트 종합 분석 페이지 (원스톱 분석)"""
+    analysis_path = static_path / "project-analysis.html"
+    if analysis_path.exists():
+        return FileResponse(str(analysis_path))
+    else:
+        return {
+            "error": "Project analysis page not found",
+            "message": "프로젝트 분석 페이지를 찾을 수 없습니다."
+        }
+
+
+@app.get("/policy-monitoring")
+async def policy_monitoring():
+    """정책 모니터링 페이지"""
+    monitoring_path = static_path / "policy-monitoring.html"
+    if monitoring_path.exists():
+        return FileResponse(str(monitoring_path))
+    else:
+        return {
+            "error": "Policy monitoring page not found",
+            "message": "정책 모니터링 페이지를 찾을 수 없습니다."
+        }
 
 
 @app.get("/health")
@@ -174,54 +230,89 @@ async def analyze_land(request: LandAnalysisRequest):
 @app.post("/api/generate-report")
 async def generate_professional_report(request: LandAnalysisRequest):
     """
-    전문 보고서 생성 API
+    전문가급 감정평가 보고서 생성 API (A4 10장 이상)
     
     Args:
         request: 토지 분석 요청
         
     Returns:
-        Markdown 형식의 전문 보고서
+        HTML 형식의 전문가급 보고서 (지도 이미지 포함)
     """
     analysis_id = str(uuid.uuid4())[:8]
     
     try:
-        print(f"\n📄 전문 보고서 생성 요청 [ID: {analysis_id}]")
+        print(f"\n📄 전문가급 감정평가 보고서 생성 요청 [ID: {analysis_id}]")
+        print(f"🏠 유형: {request.unit_type}")
         
         # 분석 실행
         engine = AnalysisEngine()
         result = await engine.analyze_land(request)
         
-        # 분석 데이터 구성
+        # 지도 이미지 생성 (여러 스케일)
+        from app.services.kakao_service import KakaoService
+        kakao_service = KakaoService()
+        
+        coords = result.get("coordinates")
+        map_images = None
+        if coords:
+            print("🗺️ 지도 이미지 생성 중 (여러 스케일)...")
+            map_images = await kakao_service.get_multiple_maps(coords)
+            
+            if map_images:
+                generated_count = sum(1 for v in map_images.values() if v)
+                print(f"✅ 지도 이미지 생성 완료 ({generated_count}개)")
+            else:
+                print("⚠️ 지도 이미지 생성 실패 (보고서는 계속 생성됨)")
+        
+        # 분석 데이터 구성 (지도 이미지 포함) - Pydantic 객체를 dict로 변환
+        def to_dict(obj):
+            """Pydantic 객체를 dict로 변환"""
+            if hasattr(obj, 'model_dump'):
+                return obj.model_dump()
+            elif hasattr(obj, 'dict'):
+                return obj.dict()
+            elif isinstance(obj, list):
+                return [to_dict(item) for item in obj]
+            return obj
+        
         analysis_data = {
             "analysis_id": analysis_id,
             "address": request.address,
             "land_area": request.land_area,
             "unit_type": request.unit_type,
-            "coordinates": result["coordinates"],
-            "zone_info": result["zone_info"],
-            "building_capacity": result["building_capacity"],
-            "risk_factors": result["risk_factors"],
-            "demographic_info": result["demographic_info"],
-            "demand_analysis": result["demand_analysis"],
-            "summary": result["summary"]
+            "coordinates": to_dict(result["coordinates"]),
+            "zone_info": to_dict(result["zone_info"]),
+            "building_capacity": to_dict(result["building_capacity"]),
+            "risk_factors": to_dict(result["risk_factors"]),
+            "demographic_info": to_dict(result["demographic_info"]),
+            "demand_analysis": to_dict(result["demand_analysis"]),
+            "summary": to_dict(result["summary"]),
+            "map_images": map_images  # 여러 스케일의 지도 이미지 (overview, detail, close)
         }
         
-        # 전문 보고서 생성
-        report_generator = ProfessionalReportGenerator()
-        report_markdown = report_generator.generate_comprehensive_report(analysis_data)
+        # LH 공식 양식 보고서 생성 (HTML)
+        print("📝 LH 공식 양식 보고서 생성 중...")
+        lh_generator = LHOfficialReportGenerator()
+        report_html = lh_generator.generate_official_report(analysis_data)
         
-        print(f"✅ 전문 보고서 생성 완료 [ID: {analysis_id}]\n")
+        print(f"✅ 전문가급 감정평가 보고서 생성 완료 [ID: {analysis_id}]")
+        print(f"📊 보고서 크기: {len(report_html):,} bytes")
+        print()
         
         return {
             "status": "success",
             "analysis_id": analysis_id,
-            "report": report_markdown,
-            "format": "markdown",
-            "generated_at": datetime.now().isoformat()
+            "report": report_html,
+            "format": "html",
+            "generated_at": datetime.now().isoformat(),
+            "has_map_images": map_images is not None and len(map_images) > 0
         }
         
     except Exception as e:
         print(f"❌ 보고서 생성 오류: {e}")
+        import traceback
+        traceback.print_exc()
+        
         raise HTTPException(
             status_code=500,
             detail={

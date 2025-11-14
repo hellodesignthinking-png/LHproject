@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프로젝트 종합 분석 시스템</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            font-size: 11pt; /* 논문 표준 크기 */
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            position: relative;
+            font-size: 0.85em;
+        }
+
+        .step:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            right: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2em;
+            color: #ddd;
+        }
+
+        .step.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            color: white;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            color: #667eea;
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+            font-weight: 600;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 6px;
+            font-size: 0.9em;
+            display: block;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 0.9em;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-group small {
+            color: #666;
+            margin-top: 3px;
+            font-size: 0.8em;
+            display: block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 3px 15px rgba(102, 126, 234, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 0 auto;
+            min-width: 250px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: white;
+            font-size: 1.2em;
+            margin-bottom: 8px;
+        }
+
+        .loading-detail {
+            color: #ccc;
+            font-size: 0.9em;
+        }
+
+        #results {
+            display: none;
+        }
+
+        /* 논문 스타일 보고서 섹션 */
+        .report-section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+
+        .report-section h2 {
+            color: #2c3e50;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #667eea;
+            font-weight: 600;
+        }
+
+        .report-section h3 {
+            color: #34495e;
+            font-size: 1.1em;
+            margin: 15px 0 10px 0;
+            padding-left: 12px;
+            border-left: 3px solid #667eea;
+            font-weight: 600;
+        }
+
+        .report-section h4 {
+            color: #555;
+            font-size: 1em;
+            margin: 12px 0 8px 0;
+            font-weight: 600;
+        }
+
+        .report-section p {
+            color: #333;
+            font-size: 0.95em;
+            line-height: 1.8;
+            margin-bottom: 10px;
+            text-align: justify;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .stat-box .label {
+            color: #666;
+            font-size: 0.85em;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .stat-box .value {
+            color: #2c3e50;
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+
+        .stat-box .unit {
+            color: #666;
+            font-size: 0.8em;
+            margin-top: 3px;
+        }
+
+        .rating-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 1em;
+            margin: 10px 0;
+        }
+
+        .rating-excellent { background: #10b981; color: white; }
+        .rating-good { background: #3b82f6; color: white; }
+        .rating-fair { background: #f59e0b; color: white; }
+        .rating-poor { background: #ef4444; color: white; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.9em;
+        }
+
+        table th {
+            background: #f8f9fa;
+            color: #2c3e50;
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #dee2e6;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        table td {
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            color: #333;
+        }
+
+        table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .ai-insight {
+            background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 6px;
+            font-size: 0.9em;
+            line-height: 1.7;
+        }
+
+        .ai-insight .ai-icon {
+            color: #3b82f6;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ai-insight p {
+            color: #1e40af;
+            margin: 5px 0;
+        }
+
+        .improvement-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .improvement-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .priority-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+
+        .priority-high { background: #fee2e2; color: #dc2626; }
+        .priority-medium { background: #fef3c7; color: #d97706; }
+        .priority-low { background: #d1fae5; color: #059669; }
+
+        .category-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 500;
+            background: #e0e7ff;
+            color: #4f46e5;
+        }
+
+        .improvement-card h4 {
+            color: #1f2937;
+            font-size: 1em;
+            margin: 8px 0;
+        }
+
+        .improvement-card p {
+            color: #4b5563;
+            font-size: 0.88em;
+            margin: 5px 0;
+        }
+
+        .chart-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .conclusion-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .conclusion-box h3 {
+            color: #92400e;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            border: none;
+            padding: 0;
+        }
+
+        .conclusion-box p {
+            color: #78350f;
+            font-size: 0.95em;
+            line-height: 1.8;
+            text-align: justify;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+            transform: translateY(-2px);
+        }
+
+        ul, ol {
+            margin: 10px 0 10px 25px;
+        }
+
+        li {
+            margin: 6px 0;
+            color: #333;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        /* 인쇄용 CSS */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+                font-size: 10pt;
+            }
+
+            .container {
+                max-width: 100%;
+            }
+
+            .header, .step-indicator, .card, .loading-overlay {
+                box-shadow: none !important;
+                page-break-inside: avoid;
+            }
+
+            .header {
+                background: white;
+                border: 1px solid #ddd;
+            }
+
+            .step-indicator, .action-buttons, .btn-primary, .btn-secondary {
+                display: none !important;
+            }
+
+            .report-section {
+                box-shadow: none;
+                border: 1px solid #ddd;
+                page-break-inside: avoid;
+                margin-bottom: 15px;
+                padding: 20px;
+            }
+
+            .report-section h2 {
+                font-size: 1.2em;
+                color: #000;
+                page-break-after: avoid;
+            }
+
+            .report-section h3 {
+                font-size: 1em;
+                color: #000;
+                page-break-after: avoid;
+            }
+
+            .ai-insight {
+                border: 1px solid #3b82f6;
+                page-break-inside: avoid;
+            }
+
+            .improvement-card {
+                border: 1px solid #e5e7eb;
+                page-break-inside: avoid;
+            }
+
+            .chart-container {
+                page-break-inside: avoid;
+            }
+
+            table {
+                font-size: 9pt;
+                page-break-inside: avoid;
+            }
+
+            .stat-box {
+                border: 1px solid #ddd;
+            }
+
+            /* 페이지 번호 추가 */
+            @page {
+                margin: 2cm;
+                @bottom-right {
+                    content: counter(page);
+                }
+            }
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .step .step-title {
+                font-size: 0.75em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 -->
+        <div class="header">
+            <h1>🏢 LH 신축매입임대 프로젝트 종합 분석 시스템</h1>
+            <p>AI 기반 사업성 분석 및 개선 방안 자동 생성</p>
+        </div>
+
+        <!-- 단계 표시기 -->
+        <div class="step-indicator">
+            <div class="step active">
+                <div class="step-number">1</div>
+                <div class="step-title">프로젝트 정보 입력</div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-title">데이터 분석</div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-title">AI 해설 생성</div>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-title">결과 확인</div>
+            </div>
+        </div>
+
+        <!-- 입력 폼 -->
+        <div class="card">
+            <h2>📝 프로젝트 정보 입력</h2>
+            <form id="projectForm">
+                <!-- 기본 정보 -->
+                <h3 style="color: #667eea; margin: 20px 0 15px 0; font-size: 1.1em;">📋 기본 정보</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>프로젝트명 *</label>
+                        <input type="text" name="project_name" required placeholder="예: 강남구 청년주택">
+                    </div>
+                    <div class="form-group">
+                        <label>주소 *</label>
+                        <input type="text" name="address" required placeholder="예: 서울특별시 강남구 역삼동 123-45">
+                    </div>
+                    <div class="form-group">
+                        <label>세대 유형 *</label>
+                        <select name="unit_type" required>
+                            <option value="">선택하세요</option>
+                            <option value="청년형">청년형 (60㎡ 이하)</option>
+                            <option value="신혼부부형">신혼부부형 (85㎡ 이하)</option>
+                            <option value="고령자형">고령자형 (60㎡ 이하)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 토지 정보 -->
+                <h3 style="color: #667eea; margin: 20px 0 15px 0; font-size: 1.1em;">🗺️ 토지 정보</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>토지 면적 (㎡) *</label>
+                        <input type="number" name="land_area" required placeholder="500" min="100" step="0.01">
+                        <small>단위: 제곱미터 (㎡)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>평당 토지 가격 (원) *</label>
+                        <input type="number" name="land_price_per_pyeong" required placeholder="15000000" min="0" step="10000">
+                        <small>1평당 토지 가격 (원/평)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>지역 *</label>
+                        <select name="region" required>
+                            <option value="">선택하세요</option>
+                            <option value="서울">서울특별시</option>
+                            <option value="경기">경기도</option>
+                            <option value="기타">기타 지역</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 건물 정보 -->
+                <h3 style="color: #667eea; margin: 20px 0 15px 0; font-size: 1.1em;">🏗️ 건물 정보</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>연면적 (㎡) *</label>
+                        <input type="number" name="gross_area" required placeholder="1200" min="100" step="0.01">
+                        <small>건물 전체 연면적</small>
+                    </div>
+                    <div class="form-group">
+                        <label>세대수 *</label>
+                        <input type="number" name="num_units" required placeholder="40" min="30" step="1">
+                        <small>최소 30세대 이상</small>
+                    </div>
+                    <div class="form-group">
+                        <label>층수 *</label>
+                        <input type="number" name="num_floors" required placeholder="8" min="1" step="1">
+                    </div>
+                </div>
+
+                <!-- 사업 일정 -->
+                <h3 style="color: #667eea; margin: 20px 0 15px 0; font-size: 1.1em;">📅 사업 일정</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>공사 기간 (년) *</label>
+                        <input type="number" name="construction_duration_years" required placeholder="2" min="1" max="5" step="0.5">
+                        <small>토지 취득부터 준공까지</small>
+                    </div>
+                    <div class="form-group">
+                        <label>기타 비용 (원) *</label>
+                        <input type="number" name="other_costs" required placeholder="200000000" min="0" step="1000000">
+                        <small>설계비, 인허가비, 금융비용 등</small>
+                    </div>
+                </div>
+
+                <!-- 추가 정보 -->
+                <h3 style="color: #667eea; margin: 20px 0 15px 0; font-size: 1.1em;">💬 추가 정보</h3>
+                <div class="form-group">
+                    <label>프로젝트 설명 (선택)</label>
+                    <textarea name="description" placeholder="프로젝트에 대한 추가 설명이나 특이사항을 입력하세요"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin: 20px 0;">
+                    <button type="button" class="btn-secondary" onclick="fillSampleData()" style="background: #10b981;">
+                        📝 샘플 데이터로 채우기
+                    </button>
+                    <button type="submit" class="btn-primary">
+                        🚀 프로젝트 분석 시작
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 로딩 오버레이 -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <div class="loading-text" id="loadingText">분석을 시작합니다...</div>
+                <div class="loading-detail" id="loadingDetail">잠시만 기다려주세요</div>
+            </div>
+        </div>
+
+        <!-- 결과 섹션 -->
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // 안전한 숫자 포맷팅 함수
+        function formatNumber(value) {
+            if (value === null || value === undefined || isNaN(value)) {
+                return '0';
+            }
+            return Number(value).toLocaleString();
+        }
+
+        // 샘플 데이터로 채우기
+        function fillSampleData() {
+            const form = document.getElementById('projectForm');
+            
+            // 샘플 데이터
+            const sampleData = {
+                project_name: '강남구 청년주택 프로젝트',
+                address: '서울특별시 강남구 역삼동 123-45',
+                unit_type: '청년형',
+                land_area: 500,
+                land_price_per_pyeong: 15000000,
+                region: '서울',
+                gross_area: 1200,
+                num_units: 40,
+                num_floors: 8,
+                construction_duration_years: 2,
+                other_costs: 200000000,
+                description: '역삼역 도보 5분 거리, 대중교통 접근성 우수'
+            };
+
+            // 폼 필드에 값 채우기
+            for (let [key, value] of Object.entries(sampleData)) {
+                const field = form.querySelector(`[name="${key}"]`);
+                if (field) {
+                    field.value = value;
+                }
+            }
+
+            // 사용자에게 알림
+            alert('✅ 샘플 데이터가 입력되었습니다!\n\n이제 "프로젝트 분석 시작" 버튼을 클릭하여 분석을 진행하세요.');
+        }
+
+        // 폼 제출 처리
+        document.getElementById('projectForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // 폼 데이터 수집
+            const formData = new FormData(e.target);
+            const data = {};
+            for (let [key, value] of formData.entries()) {
+                if (value && value !== '') {
+                    data[key] = isNaN(value) ? value : Number(value);
+                }
+            }
+
+            // 분석 시작
+            await analyzeProject(data);
+        });
+
+        // 프로젝트 분석 함수
+        async function analyzeProject(data) {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingText = document.getElementById('loadingText');
+            const loadingDetail = document.getElementById('loadingDetail');
+            const resultsDiv = document.getElementById('results');
+
+            try {
+                // 로딩 표시
+                loadingOverlay.classList.add('active');
+                updateStep(2);
+
+                // Step 1: 종합 사업성 분석
+                loadingText.textContent = '종합 사업성 분석 중...';
+                loadingDetail.textContent = '건축비, LH 매입가, 사업성 평가 (1/4)';
+
+                // 평당 가격을 ㎡당 가격으로 변환
+                const landPricePerSqm = data.land_price_per_pyeong / 3.3058;
+                const landPyeong = data.land_area / 3.3058;
+                const landCost = landPyeong * data.land_price_per_pyeong;
+
+                // 세대 유형 한글 → 영문 변환
+                const unitTypeMap = {
+                    '청년형': 'YOUTH',
+                    '신혼부부형': 'NEWLYWED',
+                    '고령자형': 'PUBLIC_RENTAL'
+                };
+                const unitTypeEn = unitTypeMap[data.unit_type] || 'YOUTH';
+
+                const comprehensiveRequest = {
+                    project_name: data.project_name,
+                    address: data.address,
+                    land_area: data.land_area,
+                    gross_area: data.gross_area,
+                    num_units: data.num_units,
+                    num_floors: data.num_floors,
+                    unit_type: unitTypeEn,  // 영문 enum 값 사용
+                    region: data.region,
+                    land_price_per_sqm: landPricePerSqm,  // ㎡당 가격으로 변환
+                    construction_duration_years: data.construction_duration_years
+                };
+
+                const comprehensiveResponse = await fetch('/api/business/analyze-comprehensive', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(comprehensiveRequest)
+                });
+
+                if (!comprehensiveResponse.ok) {
+                    throw new Error('종합 분석 API 오류');
+                }
+
+                const comprehensiveResult = await comprehensiveResponse.json();
+
+                // Step 2: ROI/IRR 상세 분석
+                loadingText.textContent = 'ROI/IRR 상세 분석 중...';
+                loadingDetail.textContent = '투자수익률, 내부수익률, 현금흐름 (2/4)';
+
+                const roiRequest = {
+                    project_name: data.project_name,
+                    land_acquisition_cost: landCost,
+                    construction_cost: comprehensiveResult.construction_analysis.grand_total,
+                    other_costs: data.other_costs,
+                    lh_purchase_price: comprehensiveResult.purchase_analysis.total_purchase_price,
+                    construction_duration_years: data.construction_duration_years
+                };
+
+                const roiResponse = await fetch('/api/business/analyze-roi', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(roiRequest)
+                });
+
+                if (!roiResponse.ok) {
+                    throw new Error('ROI 분석 API 오류');
+                }
+
+                const roiResult = await roiResponse.json();
+
+                // Step 3: AI 해설 생성
+                loadingText.textContent = 'AI 해설 생성 중...';
+                loadingDetail.textContent = 'Gemini AI가 결과를 분석하고 있습니다 (3/4)';
+
+                const aiInsights = await generateAIInsights(data, comprehensiveResult, roiResult);
+
+                // Step 4: 개선 방안 생성
+                loadingText.textContent = '보고서 생성 중...';
+                loadingDetail.textContent = '개선 방안 및 최종 보고서 작성 (4/4)';
+
+                const improvements = generateImprovements(comprehensiveResult, roiResult);
+
+                // 보고서 생성
+                generateReport(data, comprehensiveResult, roiResult, improvements, aiInsights);
+
+                // 완료
+                updateStep(4);
+                loadingOverlay.classList.remove('active');
+
+                // 결과로 스크롤
+                resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            } catch (error) {
+                console.error('분석 오류:', error);
+                loadingOverlay.classList.remove('active');
+                alert('분석 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        // AI 해설 생성 함수 (Gemini AI 시뮬레이션)
+        async function generateAIInsights(inputData, comprehensive, roi) {
+            // 실제 환경에서는 Gemini API를 호출
+            // 여기서는 시뮬레이션으로 구현
+
+            const insights = {
+                overall: generateOverallInsight(comprehensive, roi),
+                construction: generateConstructionInsight(comprehensive),
+                lh_purchase: generateLHInsight(comprehensive),
+                roi: generateROIInsight(roi),
+                cashflow: generateCashflowInsight(roi),
+                improvements: generateImprovementInsight(comprehensive, roi),
+                final: generateFinalInsight(comprehensive, roi)
+            };
+
+            return insights;
+        }
+
+        // 종합 평가 AI 해설
+        function generateOverallInsight(comprehensive, roi) {
+            const rating = comprehensive.overall_rating;
+            const roiValue = roi.roi_percentage;
+            const irrValue = roi.irr_percentage;
+
+            let insight = '';
+
+            if (rating === 'excellent') {
+                insight = `본 프로젝트는 투자수익률(ROI) ${roiValue.toFixed(2)}%, 내부수익률(IRR) ${irrValue.toFixed(2)}%로 "우수" 등급을 받았습니다. `;
+                insight += `이는 LH 신축매입임대사업의 평균 수익률을 크게 상회하는 수준으로, 높은 사업성을 갖춘 프로젝트입니다. `;
+                insight += `특히 IRR이 ${irrValue.toFixed(2)}%로 시장 이자율을 충분히 초과하여 투자 매력도가 매우 높습니다. `;
+                insight += `안정적인 LH 매입이 보장되므로 리스크가 낮으며, 추천할 만한 프로젝트입니다.`;
+            } else if (rating === 'good') {
+                insight = `본 프로젝트는 투자수익률(ROI) ${roiValue.toFixed(2)}%, 내부수익률(IRR) ${irrValue.toFixed(2)}%로 "양호" 등급을 받았습니다. `;
+                insight += `LH 신축매입임대사업으로서 적정 수준의 수익성을 확보하고 있으며, 안정적인 사업 추진이 가능합니다. `;
+                insight += `다만, 건축비 최적화나 토지비 절감 등의 개선 방안을 통해 수익성을 더욱 향상시킬 여지가 있습니다. `;
+                insight += `전반적으로 긍정적인 사업성을 보유하고 있어 추진을 고려할 만합니다.`;
+            } else if (rating === 'fair') {
+                insight = `본 프로젝트는 투자수익률(ROI) ${roiValue.toFixed(2)}%, 내부수익률(IRR) ${irrValue.toFixed(2)}%로 "보통" 등급을 받았습니다. `;
+                insight += `최소한의 수익성은 확보되어 있으나, 시장 평균 대비 다소 낮은 수준입니다. `;
+                insight += `토지비 부담이 크거나 건축비가 높은 것으로 보이며, 사업 구조 개선이 필요합니다. `;
+                insight += `제시된 개선 방안들을 적극적으로 검토하여 사업성을 제고한 후 추진하는 것을 권장합니다.`;
+            } else {
+                insight = `본 프로젝트는 투자수익률(ROI) ${roiValue.toFixed(2)}%, 내부수익률(IRR) ${irrValue.toFixed(2)}%로 "미흡" 등급을 받았습니다. `;
+                insight += `현재 구조로는 충분한 수익성을 확보하기 어려우며, 사업 추진에 신중을 기해야 합니다. `;
+                insight += `토지비, 건축비, 사업 기간 등 주요 변수들에 대한 전면적인 재검토가 필요하며, `;
+                insight += `근본적인 사업 구조 개선 없이는 추진을 보류하는 것이 바람직합니다.`;
+            }
+
+            return insight;
+        }
+
+        // 건축비 분석 AI 해설
+        function generateConstructionInsight(comprehensive) {
+            const costPerPyeong = comprehensive.construction_analysis.cost_per_pyeong;
+            const region = comprehensive.construction_analysis.region;
+            const multiplier = comprehensive.construction_analysis.regional_multiplier;
+
+            let insight = `건축비는 평당 ${costPerPyeong.toLocaleString()}원으로 산정되었습니다. `;
+            
+            if (region === '서울') {
+                insight += `서울 지역의 경우 지역 가중치 ${multiplier}배가 적용되어 다른 지역 대비 20% 높은 건축비가 반영되었습니다. `;
+                insight += `이는 서울 지역의 높은 인건비, 자재비, 장비 임대료 등을 고려한 것입니다. `;
+            } else if (region === '경기') {
+                insight += `경기 지역의 경우 지역 가중치 ${multiplier}배가 적용되어 수도권 특성이 반영되었습니다. `;
+                insight += `서울 대비 약간 낮으나 여전히 전국 평균보다는 높은 수준입니다. `;
+            } else {
+                insight += `기타 지역의 경우 표준 건축비가 적용되었습니다. `;
+            }
+
+            if (costPerPyeong > 1500000) {
+                insight += `평당 건축비가 150만원을 초과하여 다소 높은 편이므로, VE(Value Engineering) 기법을 활용한 비용 절감을 검토하시기 바랍니다.`;
+            } else if (costPerPyeong > 1300000) {
+                insight += `평당 건축비가 적정 범위 내에 있으나, 설계 최적화를 통한 추가 절감 여지가 있습니다.`;
+            } else {
+                insight += `평당 건축비가 합리적인 수준으로 평가됩니다.`;
+            }
+
+            return insight;
+        }
+
+        // LH 매입 분석 AI 해설
+        function generateLHInsight(comprehensive) {
+            const lhAnalysis = comprehensive.purchase_analysis;
+            const isEligible = lhAnalysis.is_eligible;
+            const purchasePrice = lhAnalysis.estimated_purchase_price;
+
+            let insight = '';
+
+            if (isEligible) {
+                insight = `본 프로젝트는 LH 신축매입임대 매입 자격을 충족합니다. `;
+                insight += `예상 매입가는 ${(purchasePrice / 100000000).toFixed(1)}억원으로 산정되었으며, `;
+                insight += `이는 감정평가액 대비 LH 기준 매입가를 적용한 결과입니다. `;
+                insight += `세대 규모, 세대수, 용도 등이 모두 LH 기준을 충족하므로 안정적인 매입이 기대됩니다. `;
+                insight += `다만, 최종 매입가는 준공 후 감정평가를 통해 결정되므로, `;
+                insight += `시공 품질 관리와 마감재 선정에 유의하여 감정가를 최대화하는 전략이 필요합니다.`;
+            } else {
+                insight = `본 프로젝트는 LH 신축매입임대 매입 자격 요건을 충족하지 못합니다. `;
+                insight += `${lhAnalysis.eligibility_notes}. `;
+                insight += `LH 매입을 받기 위해서는 자격 요건을 충족하도록 사업 계획을 수정해야 합니다. `;
+                insight += `세대 면적, 세대수, 용도 등을 재검토하여 LH 기준에 맞추는 것이 중요합니다. `;
+                insight += `자격 요건을 충족하지 못할 경우 일반 분양으로 전환해야 하므로 판매 리스크가 증가합니다.`;
+            }
+
+            return insight;
+        }
+
+        // ROI 분석 AI 해설
+        function generateROIInsight(roi) {
+            const roiValue = roi.roi_percentage;
+            const irrValue = roi.irr_percentage;
+            const npv = roi.npv;
+            const payback = roi.payback_period_years;
+
+            let insight = `투자수익률(ROI)은 ${roiValue.toFixed(2)}%로, `;
+            
+            if (roiValue >= 12) {
+                insight += `매우 우수한 수준입니다. 이는 투자 원금 대비 ${roiValue.toFixed(0)}% 이상의 수익을 기대할 수 있음을 의미하며, `;
+                insight += `부동산 개발 사업으로서 높은 투자 매력도를 갖추고 있습니다. `;
+            } else if (roiValue >= 8) {
+                insight += `양호한 수준입니다. LH 신축매입임대사업의 평균적인 수익률 범위에 해당하며, `;
+                insight += `안정적인 수익 창출이 가능합니다. `;
+            } else if (roiValue >= 5) {
+                insight += `최소 수익 기준은 충족하나 다소 낮은 편입니다. `;
+                insight += `개선 방안을 통해 수익성을 높일 필요가 있습니다. `;
+            } else {
+                insight += `낮은 수준으로, 사업 추진에 신중을 기해야 합니다. `;
+            }
+
+            insight += `\n\n내부수익률(IRR)은 ${irrValue.toFixed(2)}%로, `;
+            
+            if (irrValue >= 10) {
+                insight += `시장 이자율을 크게 상회하는 우수한 수준입니다. `;
+                insight += `시간가치를 고려할 때 매우 매력적인 투자 기회입니다. `;
+            } else if (irrValue >= 7) {
+                insight += `적정 수준으로 평가됩니다. 기회비용을 감안할 때 투자 가치가 있습니다. `;
+            } else {
+                insight += `낮은 편으로, 다른 투자 대안 대비 매력도가 떨어질 수 있습니다. `;
+            }
+
+            insight += `\n\n순현재가치(NPV)는 ${(npv / 100000000).toFixed(2)}억원으로, `;
+            insight += npv > 0 ? 
+                `긍정적인 값을 나타내어 투자 가치가 있음을 보여줍니다. ` :
+                `부정적인 값으로 나타나 투자 가치에 대한 재검토가 필요합니다. `;
+
+            insight += `회수 기간은 약 ${payback.toFixed(1)}년으로, `;
+            insight += payback <= 3 ? 
+                `빠른 자금 회수가 가능한 프로젝트입니다.` :
+                `다소 긴 편이므로 자금 조달 계획에 유의해야 합니다.`;
+
+            return insight;
+        }
+
+        // 현금흐름 분석 AI 해설
+        function generateCashflowInsight(roi) {
+            const cashFlows = roi.cash_flows;
+            const totalInvestment = roi.total_investment;
+            const netProfit = roi.net_profit;
+
+            let insight = `현금흐름 분석 결과, 사업 기간 동안 총 ${(totalInvestment / 100000000).toFixed(1)}억원의 투자가 필요합니다. `;
+            insight += `초기에는 토지 매입비와 기타 비용으로 큰 유출이 발생하며, `;
+            insight += `공사 기간 동안 건축비가 단계적으로 투입됩니다. `;
+            insight += `준공 및 LH 매입 시점에 매입대금이 일시에 유입되어 누적 현금흐름이 양(+)으로 전환됩니다.\n\n`;
+
+            const maxNegativeCashflow = Math.min(...cashFlows.map(cf => cf.cumulative));
+            insight += `사업 기간 중 최대 누적 유출액은 약 ${(Math.abs(maxNegativeCashflow) / 100000000).toFixed(1)}억원으로, `;
+            insight += `이는 자기자본과 대출을 통해 조달해야 하는 최대 소요 자금입니다. `;
+            insight += `금융 비용 부담을 줄이기 위해 토지 매입 시 LH 토지임대부 방식이나 PF(Project Financing) 활용을 고려할 수 있습니다.\n\n`;
+
+            insight += `최종적으로 약 ${(netProfit / 100000000).toFixed(1)}억원의 순이익이 예상되며, `;
+            insight += `이는 총 투자 대비 ${roi.roi_percentage.toFixed(2)}%의 수익률에 해당합니다. `;
+            insight += `안정적인 현금흐름 관리를 위해 각 단계별 자금 조달 계획을 면밀히 수립하시기 바랍니다.`;
+
+            return insight;
+        }
+
+        // 개선 방안 AI 해설
+        function generateImprovementInsight(comprehensive, roi) {
+            let insight = `사업성을 더욱 향상시키기 위한 다양한 개선 방안이 도출되었습니다.\n\n`;
+
+            if (roi.roi_percentage < 8) {
+                insight += `**수익성 개선이 우선적으로 필요합니다.** `;
+                insight += `토지비 부담이 큰 경우 공공 토지 활용, 지분 참여 구조, 또는 토지임대부 방식을 검토하여 `;
+                insight += `초기 투자 부담을 줄일 수 있습니다. `;
+            }
+
+            if (roi.irr_percentage < 7) {
+                insight += `**공사 기간 단축**을 통해 IRR을 개선할 수 있습니다. `;
+                insight += `PC(Precast Concrete) 공법이나 모듈러 공법 등 공기 단축 공법을 적용하면 `;
+                insight += `금융 비용 절감과 함께 IRR 0.5~1% 개선이 가능합니다. `;
+            }
+
+            const costPerPyeong = comprehensive.construction_analysis.cost_per_pyeong;
+            if (costPerPyeong > 1400000) {
+                insight += `**건축비 최적화**도 중요한 과제입니다. `;
+                insight += `VE(Value Engineering) 기법을 활용한 설계 최적화, 자재 대체, 공법 개선 등을 통해 `;
+                insight += `품질 저하 없이 총 사업비의 5~10%를 절감할 수 있습니다. `;
+            }
+
+            insight += `\n\n또한 **세대수 최적화, 설계 효율화, 재무 구조 개선** 등 다각도의 접근이 필요하며, `;
+            insight += `각 개선 방안의 우선순위와 기대 효과를 고려하여 단계적으로 적용하시기 바랍니다. `;
+            insight += `특히 정책 금융 활용, 원가 절감, 인허가 기간 단축 등은 사업성에 직접적인 영향을 미치므로 `;
+            insight += `초기 기획 단계부터 전문가와 협력하여 추진하는 것이 효과적입니다.`;
+
+            return insight;
+        }
+
+        // 최종 결론 AI 해설
+        function generateFinalInsight(comprehensive, roi) {
+            const rating = comprehensive.overall_rating;
+            const roiValue = roi.roi_percentage;
+            const irrValue = roi.irr_percentage;
+            const isEligible = comprehensive.purchase_analysis.is_eligible;
+            const payback = roi.payback_period_years;
+
+            let conclusion = `본 LH 신축매입임대사업 타당성 분석 결과를 종합하면, `;
+
+            if (rating === 'excellent') {
+                conclusion += `본 프로젝트는 **"우수"** 등급으로 평가되어 **적극 추진을 권장**합니다. `;
+                conclusion += `투자수익률 ${roiValue.toFixed(2)}%, 내부수익률 ${irrValue.toFixed(2)}%의 높은 수익성과 `;
+                conclusion += `안정적인 LH 매입 보장으로 리스크가 낮은 우량 프로젝트입니다. `;
+                conclusion += `제시된 개선 방안을 적용하면 더욱 높은 수익성 달성이 가능합니다.`;
+            } else if (rating === 'good') {
+                conclusion += `본 프로젝트는 **"양호"** 등급으로 평가되어 **추진을 고려할 만**합니다. `;
+                conclusion += `투자수익률 ${roiValue.toFixed(2)}%, 내부수익률 ${irrValue.toFixed(2)}%로 적정 수익성을 확보하고 있으며, `;
+                conclusion += `${isEligible ? 'LH 매입 자격을 충족하여' : 'LH 기준 충족 시'} 안정적인 사업 추진이 가능합니다. `;
+                conclusion += `제시된 개선 방안을 검토하여 수익성을 더욱 향상시키는 것을 권장합니다.`;
+            } else if (rating === 'fair') {
+                conclusion += `본 프로젝트는 **"보통"** 등급으로 평가되어 **신중한 검토가 필요**합니다. `;
+                conclusion += `투자수익률 ${roiValue.toFixed(2)}%, 내부수익률 ${irrValue.toFixed(2)}%로 최소 수익성은 확보되나, `;
+                conclusion += `개선 여지가 큽니다. 토지비, 건축비, 공사 기간 등 핵심 변수들에 대한 개선안을 적용한 후 `;
+                conclusion += `재분석을 통해 사업성을 재확인하는 것이 바람직합니다.`;
+            } else {
+                conclusion += `본 프로젝트는 **"미흡"** 등급으로 평가되어 **현 구조로의 추진은 권장하지 않습니다**. `;
+                conclusion += `투자수익률 ${roiValue.toFixed(2)}%, 내부수익률 ${irrValue.toFixed(2)}%로 충분한 수익성을 확보하기 어려우며, `;
+                conclusion += `사업 구조 전반에 대한 근본적인 재검토가 필요합니다. `;
+                conclusion += `토지비 절감, 건축비 최적화, 사업 기간 단축 등 핵심 개선 방안을 전면 적용한 후 `;
+                conclusion += `사업성을 재평가하여 추진 여부를 결정하시기 바랍니다.`;
+            }
+
+            conclusion += `\n\n**주요 재무 지표:**\n`;
+            conclusion += `• ROI: ${roiValue.toFixed(2)}%\n`;
+            conclusion += `• IRR: ${irrValue.toFixed(2)}%\n`;
+            conclusion += `• NPV: ${(roi.npv / 100000000).toFixed(2)}억원\n`;
+            conclusion += `• 회수 기간: ${payback.toFixed(1)}년\n`;
+            conclusion += `• LH 매입 자격: ${isEligible ? '충족 ✅' : '미충족 ❌'}\n\n`;
+
+            conclusion += `상기 분석은 입력된 데이터를 기반으로 한 시뮬레이션 결과이며, `;
+            conclusion += `실제 사업 추진 시에는 시장 상황, 금리 변동, 정책 변화 등 외부 변수를 고려하여 `;
+            conclusion += `전문가의 상세한 검토를 받으시기 바랍니다.`;
+
+            return conclusion;
+        }
+
+        // 개선 방안 생성 함수
+        function generateImprovements(comprehensive, roi) {
+            const improvements = [];
+            const roiValue = roi.roi_percentage;
+            const irrValue = roi.irr_percentage;
+            const costPerPyeong = comprehensive.construction_analysis.cost_per_pyeong;
+
+            // 토지비 절감 (ROI가 8% 미만인 경우)
+            if (roiValue < 8) {
+                improvements.push({
+                    priority: 'high',
+                    category: '수익성 개선',
+                    title: '토지비 절감 방안',
+                    description: '공공 토지 활용, LH 토지임대부 방식, 또는 지분 참여 구조를 검토하여 초기 토지 투자 부담을 줄입니다. 협상 전략을 통해 토지 매입가를 5~10% 인하할 수 있습니다.',
+                    expected_impact: 'ROI 1~2% 증가 예상',
+                    considerations: ['정책 금융', '원가 절감']
+                });
+            }
+
+            // IRR 개선 (IRR이 7% 미만인 경우)
+            if (irrValue < 7) {
+                improvements.push({
+                    priority: 'high',
+                    category: '일정 관리',
+                    title: '공사 기간 단축',
+                    description: 'PC(Precast Concrete) 공법, 모듈러 공법 등 공기 단축 공법을 적용하여 건설 기간을 6~12개월 단축합니다. 이를 통해 금융 비용을 절감하고 IRR을 개선할 수 있습니다.',
+                    expected_impact: 'IRR 0.5~1% 개선 예상',
+                    considerations: ['원가 절감', '인허가 단축']
+                });
+            }
+
+            // 건축비 최적화 (평당 140만원 초과 시)
+            if (costPerPyeong > 1400000) {
+                improvements.push({
+                    priority: 'medium',
+                    category: '비용 최적화',
+                    title: '건축비 최적화',
+                    description: 'VE(Value Engineering) 기법을 활용하여 설계를 최적화하고, 자재 선택과 시공사 선정을 통해 건축비를 절감합니다. 품질 저하 없이 5~10% 비용 절감이 가능합니다.',
+                    expected_impact: '총 사업비 5~10% 절감 가능',
+                    considerations: ['원가 절감', '세무 최적화']
+                });
+            }
+
+            // 기본 개선 방안 (항상 포함)
+            improvements.push({
+                priority: 'medium',
+                category: '규모 최적화',
+                title: '세대수 최적화',
+                description: '세대당 면적과 전체 세대수의 최적 조합을 찾아 건축비 대비 LH 매입가를 극대화합니다. 전용면적 활용률을 높이고 공용면적 비율을 최소화합니다.',
+                expected_impact: '사업성 균형 개선',
+                considerations: ['인허가 단축', '마케팅']
+            });
+
+            improvements.push({
+                priority: 'low',
+                category: '설계 최적화',
+                title: '설계 효율화',
+                description: '평면 계획 최적화, 구조 시스템 합리화, 설비 시스템 통합 등을 통해 건축 효율성을 높입니다. 특히 코어 배치와 동선 계획을 개선하여 공용면적을 최소화합니다.',
+                expected_impact: '건축비 3~5% 절감',
+                considerations: ['원가 절감', '인허가 단축']
+            });
+
+            improvements.push({
+                priority: 'low',
+                category: '금융 전략',
+                title: '재무 구조 최적화',
+                description: 'HUG 보증, 주택도시기금 등 정책 금융을 적극 활용하여 금융 비용을 절감합니다. 적정 LTV(담보인정비율)를 유지하면서 자기자본 부담을 최소화하는 자본 구조를 설계합니다.',
+                expected_impact: '금융비용 10~20% 절감, 자기자본 부담 경감',
+                considerations: ['정책 금융', '세무 최적화']
+            });
+
+            return improvements;
+        }
+
+        // 보고서 생성 함수
+        function generateReport(inputData, comprehensive, roi, improvements, aiInsights) {
+            const resultsDiv = document.getElementById('results');
+            
+            // 필요한 값들 계산 (ROI API에서 반환하지 않는 값들)
+            const landPyeong = inputData.land_area / 3.3058;
+            const landCost = landPyeong * inputData.land_price_per_pyeong;
+            const constructionCost = comprehensive.construction_analysis.grand_total;
+            const otherCosts = inputData.other_costs || 0;
+            const lhPurchasePrice = comprehensive.purchase_analysis.total_purchase_price;
+            
+            // 현금흐름 데이터 변환 (API 형식 → 보고서 형식)
+            const cashFlows = [];
+            let cumulative = 0;
+            for (const cf of roi.cash_flows) {
+                const inflow = cf.amount > 0 ? cf.amount : 0;
+                const outflow = cf.amount < 0 ? Math.abs(cf.amount) : 0;
+                const net = cf.amount;
+                cumulative += net;
+                
+                cashFlows.push({
+                    year: cf.year,
+                    inflow,
+                    outflow,
+                    net,
+                    cumulative,
+                    description: cf.description
+                });
+            }
+            
+            const html = `
+                <!-- 1. 프로젝트 개요 -->
+                <div class="report-section">
+                    <h2>📋 1. 프로젝트 개요</h2>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="label">프로젝트명</div>
+                            <div class="value" style="font-size: 1.1em;">${inputData.project_name}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">위치</div>
+                            <div class="value" style="font-size: 0.95em;">${inputData.address}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">세대 유형</div>
+                            <div class="value" style="font-size: 1.1em;">${inputData.unit_type}</div>
+                        </div>
+                    </div>
+                    
+                    <h3>📊 규모</h3>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="label">토지 면적</div>
+                            <div class="value">${formatNumber(inputData.land_area)}</div>
+                            <div class="unit">㎡ (${(inputData.land_area / 3.3058).toFixed(1)}평)</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">연면적</div>
+                            <div class="value">${formatNumber(inputData.gross_area)}</div>
+                            <div class="unit">㎡ (${(inputData.gross_area / 3.3058).toFixed(1)}평)</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">세대수</div>
+                            <div class="value">${inputData.num_units}</div>
+                            <div class="unit">세대</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">층수</div>
+                            <div class="value">${inputData.num_floors}</div>
+                            <div class="unit">층</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. 종합 평가 -->
+                <div class="report-section">
+                    <h2>⭐ 2. 종합 평가</h2>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <div class="rating-badge rating-${getRatingClass(comprehensive.overall_rating)}">
+                            ${getRatingText(comprehensive.overall_rating)}
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="label">ROI (투자수익률)</div>
+                            <div class="value">${roi.roi_percentage.toFixed(2)}%</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">IRR (내부수익률)</div>
+                            <div class="value">${roi.irr_percentage.toFixed(2)}%</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">회수 기간</div>
+                            <div class="value">${roi.payback_period_years.toFixed(1)}</div>
+                            <div class="unit">년</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">LH 매입 자격</div>
+                            <div class="value" style="font-size: 1.5em;">${comprehensive.purchase_analysis.is_eligible ? '✅' : '❌'}</div>
+                        </div>
+                    </div>
+
+                    <div class="ai-insight">
+                        <div class="ai-icon">🤖 AI 종합 분석</div>
+                        <p>${aiInsights.overall}</p>
+                    </div>
+
+                    <!-- 5각형 레이더 차트 -->
+                    <div class="chart-container">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                    <div class="ai-insight">
+                        <div class="ai-icon">📊 레이더 차트 해설</div>
+                        <p>${generateRadarChartInsight(comprehensive, roi)}</p>
+                    </div>
+                </div>
+
+                <!-- 3. 재무 분석 -->
+                <div class="report-section">
+                    <h2>💰 3. 재무 분석</h2>
+                    
+                    <h3>📥 투자 내역</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>항목</th>
+                                <th style="text-align: right;">금액 (원)</th>
+                                <th style="text-align: right;">비율</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>토지비</td>
+                                <td style="text-align: right;">${formatNumber(landCost)}</td>
+                                <td style="text-align: right;">${((landCost / roi.total_investment) * 100).toFixed(1)}%</td>
+                            </tr>
+                            <tr>
+                                <td>건축비</td>
+                                <td style="text-align: right;">${formatNumber(constructionCost)}</td>
+                                <td style="text-align: right;">${((constructionCost / roi.total_investment) * 100).toFixed(1)}%</td>
+                            </tr>
+                            <tr>
+                                <td>기타 비용</td>
+                                <td style="text-align: right;">${formatNumber(otherCosts)}</td>
+                                <td style="text-align: right;">${((otherCosts / roi.total_investment) * 100).toFixed(1)}%</td>
+                            </tr>
+                            <tr style="font-weight: 600; background: #f8f9fa;">
+                                <td>총 투자액</td>
+                                <td style="text-align: right;">${formatNumber(roi.total_investment)}</td>
+                                <td style="text-align: right;">100%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>📤 수익 구조</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>항목</th>
+                                <th style="text-align: right;">금액 (원)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>LH 매입가</td>
+                                <td style="text-align: right;">${formatNumber(lhPurchasePrice)}</td>
+                            </tr>
+                            <tr>
+                                <td>총 수익</td>
+                                <td style="text-align: right;">${formatNumber(roi.total_revenue)}</td>
+                            </tr>
+                            <tr style="font-weight: 600; color: ${roi.net_profit >= 0 ? '#10b981' : '#ef4444'};">
+                                <td>순이익</td>
+                                <td style="text-align: right;">${formatNumber(roi.net_profit)}</td>
+                            </tr>
+                            <tr>
+                                <td>NPV (순현재가치)</td>
+                                <td style="text-align: right;">${formatNumber(roi.npv)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>💵 단가 분석</h3>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="label">평당 단가</div>
+                            <div class="value">${formatNumber(comprehensive.construction_analysis.cost_per_pyeong)}</div>
+                            <div class="unit">원/평</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">㎡당 단가</div>
+                            <div class="value">${formatNumber(comprehensive.construction_analysis.cost_per_sqm)}</div>
+                            <div class="unit">원/㎡</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">세대당 단가</div>
+                            <div class="value">${formatNumber(comprehensive.construction_analysis.grand_total / inputData.num_units)}</div>
+                            <div class="unit">원/세대</div>
+                        </div>
+                    </div>
+
+                    <div class="ai-insight">
+                        <div class="ai-icon">🤖 AI 재무 분석</div>
+                        <p>${aiInsights.roi}</p>
+                    </div>
+                </div>
+
+                <!-- 4. 건축비 상세 -->
+                <div class="report-section">
+                    <h2>🏗️ 4. 건축비 상세</h2>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="label">기본 건축비</div>
+                            <div class="value">${formatNumber(comprehensive.construction_analysis.cost_per_sqm)}</div>
+                            <div class="unit">원/㎡</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">지역</div>
+                            <div class="value">${comprehensive.construction_analysis.region}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">지역 가중치</div>
+                            <div class="value">${comprehensive.construction_analysis.regional_multiplier}</div>
+                            <div class="unit">배</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">총 건축비</div>
+                            <div class="value">${(comprehensive.construction_analysis.grand_total / 100000000).toFixed(1)}</div>
+                            <div class="unit">억원</div>
+                        </div>
+                    </div>
+
+                    <h3>📊 항목별 세부 내역</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>항목</th>
+                                <th style="text-align: right;">비율</th>
+                                <th style="text-align: right;">금액 (원)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${generateConstructionBreakdown(comprehensive.construction_analysis.grand_total)}
+                        </tbody>
+                    </table>
+
+                    <div class="ai-insight">
+                        <div class="ai-icon">🤖 AI 건축비 분석</div>
+                        <p>${aiInsights.construction}</p>
+                    </div>
+                </div>
+
+                <!-- 5. 현금흐름 분석 -->
+                <div class="report-section">
+                    <h2>📊 5. 현금흐름 분석</h2>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>연도</th>
+                                <th style="text-align: right;">유입 (원)</th>
+                                <th style="text-align: right;">유출 (원)</th>
+                                <th style="text-align: right;">순현금흐름 (원)</th>
+                                <th style="text-align: right;">누적 (원)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${cashFlows.map(cf => `
+                                <tr>
+                                    <td>${cf.year}년</td>
+                                    <td style="text-align: right; color: #10b981;">${formatNumber(cf.inflow)}</td>
+                                    <td style="text-align: right; color: #ef4444;">${formatNumber(cf.outflow)}</td>
+                                    <td style="text-align: right; font-weight: 600; color: ${cf.net >= 0 ? '#10b981' : '#ef4444'};">${formatNumber(cf.net)}</td>
+                                    <td style="text-align: right; font-weight: 600; color: ${cf.cumulative >= 0 ? '#10b981' : '#ef4444'};">${formatNumber(cf.cumulative)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+
+                    <div class="ai-insight">
+                        <div class="ai-icon">🤖 AI 현금흐름 분석</div>
+                        <p>${aiInsights.cashflow}</p>
+                    </div>
+                </div>
+
+                <!-- 6. LH 매입 자격 검증 -->
+                <div class="report-section">
+                    <h2>✅ 6. LH 매입 자격 검증</h2>
+                    
+                    <div style="text-align: center; margin: 20px 0;">
+                        <div class="stat-box" style="max-width: 400px; margin: 0 auto;">
+                            <div class="label">자격 상태</div>
+                            <div class="value" style="font-size: 2em; color: ${comprehensive.purchase_analysis.is_eligible ? '#10b981' : '#ef4444'};">
+                                ${comprehensive.purchase_analysis.is_eligible ? '통과 ✅' : '불통과 ❌'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3>📋 상세 사유</h3>
+                    <p style="padding: 15px; background: #f9fafb; border-radius: 8px; line-height: 1.8;">
+                        ${comprehensive.purchase_analysis.eligibility_notes || '모든 자격 요건을 충족합니다.'}
+                    </p>
+
+                    <div class="ai-insight">
+                        <div class="ai-icon">🤖 AI LH 매입 분석</div>
+                        <p>${aiInsights.lh_purchase}</p>
+                    </div>
+                </div>
+
+                <!-- 7. 권장 사항 -->
+                <div class="report-section">
+                    <h2>📝 7. 권장 사항</h2>
+                    <ul>
+                        ${comprehensive.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <!-- 8. 리스크 요인 -->
+                <div class="report-section">
+                    <h2>⚠️ 8. 리스크 요인</h2>
+                    <ul>
+                        ${comprehensive.risk_factors.map(risk => `<li>${risk}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <!-- 9. 사업성 개선 방안 -->
+                <div class="report-section">
+                    <h2>🚀 9. 사업성 개선 방안</h2>
+                    
+                    ${improvements.map(imp => `
+                        <div class="improvement-card">
+                            <div class="improvement-header">
+                                <span class="priority-badge priority-${imp.priority}">
+                                    ${imp.priority === 'high' ? '🔴 높음' : imp.priority === 'medium' ? '🟡 중간' : '🟢 낮음'}
+                                </span>
+                                <span class="category-badge">${imp.category}</span>
+                            </div>
+                            <h4>${imp.title}</h4>
+                            <p><strong>설명:</strong> ${imp.description}</p>
+                            <p><strong>기대 효과:</strong> ${imp.expected_impact}</p>
+                            <p style="margin-top: 8px;">
+                                <strong>고려사항:</strong> 
+                                ${imp.considerations.map(c => {
+                                    const icons = {
+                                        '정책 금융': '💰',
+                                        '원가 절감': '💸',
+                                        '인허가 단축': '📋',
+                                        '마케팅': '📢',
+                                        '세무 최적화': '📊'
+                                    };
+                                    return `${icons[c] || '•'} ${c}`;
+                                }).join(' | ')}
+                            </p>
+                        </div>
+                    `).join('')}
+
+                    <div class="ai-insight">
+                        <div class="ai-icon">🤖 AI 개선 방안 분석</div>
+                        <p>${aiInsights.improvements}</p>
+                    </div>
+                </div>
+
+                <!-- 10. 최종 결론 -->
+                <div class="report-section">
+                    <h2>🎓 10. 최종 결론</h2>
+                    
+                    <div class="conclusion-box">
+                        <h3>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</h3>
+                        <h3>최종 결론</h3>
+                        <h3>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</h3>
+                        <p style="white-space: pre-line; margin-top: 15px;">${aiInsights.final}</p>
+                    </div>
+                </div>
+
+                <!-- 액션 버튼 -->
+                <div class="action-buttons">
+                    <button class="btn-secondary" onclick="window.print()">
+                        📄 보고서 인쇄
+                    </button>
+                    <button class="btn-secondary" onclick="location.reload()">
+                        🔄 새 프로젝트 분석
+                    </button>
+                    <button class="btn-secondary" onclick="location.href='/dashboard'">
+                        📊 대시보드로 이동
+                    </button>
+                </div>
+            `;
+
+            resultsDiv.innerHTML = html;
+            resultsDiv.style.display = 'block';
+
+            // 레이더 차트 생성
+            createRadarChart(comprehensive, roi);
+        }
+
+        // 레이더 차트 생성
+        function createRadarChart(comprehensive, roi) {
+            const ctx = document.getElementById('radarChart');
+            if (!ctx) return;
+
+            // 5가지 평가 지표 계산 (0-100 스케일)
+            const roiScore = Math.min(100, (roi.roi_percentage / 15) * 100); // 15%를 100점으로
+            const irrScore = Math.min(100, (roi.irr_percentage / 12) * 100); // 12%를 100점으로
+            const lhScore = comprehensive.purchase_analysis.is_eligible ? 100 : 30; // 자격 통과 시 100점
+            
+            // 건축비 점수 (평당 120만원 이하가 100점, 180만원 이상이 0점)
+            const costPerPyeong = comprehensive.construction_analysis.cost_per_pyeong;
+            const costScore = Math.max(0, Math.min(100, ((1800000 - costPerPyeong) / 600000) * 100));
+            
+            // 회수기간 점수 (2년 이하가 100점, 5년 이상이 0점)
+            const paybackScore = Math.max(0, Math.min(100, ((5 - roi.payback_period_years) / 3) * 100));
+
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['ROI', 'IRR', 'LH 자격', '건축비', '회수기간'],
+                    datasets: [{
+                        label: '사업성 평가',
+                        data: [roiScore, irrScore, lhScore, costScore, paybackScore],
+                        backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(102, 126, 234, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(102, 126, 234, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        r: {
+                            min: 0,
+                            max: 100,
+                            ticks: {
+                                stepSize: 20,
+                                font: {
+                                    size: 11
+                                }
+                            },
+                            pointLabels: {
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: '종합 사업성 레이더 차트',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 레이더 차트 AI 해설 생성
+        function generateRadarChartInsight(comprehensive, roi) {
+            let insight = '레이더 차트는 5가지 핵심 지표를 기준으로 사업성을 시각화한 것입니다.\n\n';
+            
+            const roiScore = Math.min(100, (roi.roi_percentage / 15) * 100);
+            const irrScore = Math.min(100, (roi.irr_percentage / 12) * 100);
+            const lhScore = comprehensive.purchase_analysis.is_eligible ? 100 : 30;
+            const costPerPyeong = comprehensive.construction_analysis.cost_per_pyeong;
+            const costScore = Math.max(0, Math.min(100, ((1800000 - costPerPyeong) / 600000) * 100));
+            const paybackScore = Math.max(0, Math.min(100, ((5 - roi.payback_period_years) / 3) * 100));
+
+            const scores = [
+                { name: 'ROI', value: roiScore },
+                { name: 'IRR', value: irrScore },
+                { name: 'LH 자격', value: lhScore },
+                { name: '건축비', value: costScore },
+                { name: '회수기간', value: paybackScore }
+            ];
+
+            // 가장 높은 점수와 낮은 점수 찾기
+            const maxScore = scores.reduce((max, s) => s.value > max.value ? s : max);
+            const minScore = scores.reduce((min, s) => s.value < min.value ? s : min);
+
+            insight += `**강점:** ${maxScore.name} 항목이 ${maxScore.value.toFixed(0)}점으로 가장 우수합니다. `;
+            insight += `**개선 필요:** ${minScore.name} 항목이 ${minScore.value.toFixed(0)}점으로 상대적으로 낮아 집중적인 개선이 필요합니다.\n\n`;
+
+            insight += `차트의 면적이 넓을수록 전반적인 사업성이 우수함을 의미하며, `;
+            insight += `균형 잡힌 오각형 모양일수록 안정적인 프로젝트로 평가할 수 있습니다.`;
+
+            return insight;
+        }
+
+        // 건축비 세부 내역 생성
+        function generateConstructionBreakdown(totalCost) {
+            const breakdown = [
+                { name: '구조비', ratio: 30 },
+                { name: '마감비', ratio: 25 },
+                { name: '설비비', ratio: 20 },
+                { name: '전기/소방', ratio: 15 },
+                { name: '기타', ratio: 10 }
+            ];
+
+            return breakdown.map(item => `
+                <tr>
+                    <td>${item.name}</td>
+                    <td style="text-align: right;">${item.ratio}%</td>
+                    <td style="text-align: right;">${formatNumber(totalCost * item.ratio / 100)}</td>
+                </tr>
+            `).join('');
+        }
+
+        // 등급 클래스 반환
+        function getRatingClass(rating) {
+            const map = {
+                'excellent': 'excellent',
+                'good': 'good',
+                'fair': 'fair',
+                'poor': 'poor'
+            };
+            return map[rating] || 'fair';
+        }
+
+        // 등급 텍스트 반환
+        function getRatingText(rating) {
+            const map = {
+                'excellent': '우수',
+                'good': '양호',
+                'fair': '보통',
+                'poor': '미흡'
+            };
+            return map[rating] || '보통';
+        }
+
+        // 단계 업데이트
+        function updateStep(step) {
+            document.querySelectorAll('.step').forEach((el, idx) => {
+                if (idx + 1 <= step) {
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active');
+                }
+            });
+        }
+
+        // 페이지 로드 시 초기화
+        window.addEventListener('load', () => {
+            console.log('프로젝트 종합 분석 시스템 초기화 완료');
+        });
+    </script>
+</body>
+</html>

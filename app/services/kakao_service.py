@@ -102,38 +102,42 @@ class KakaoService:
     
     async def search_hazardous_facilities(self, coordinates: Coordinates) -> List[Dict[str, Any]]:
         """
-        유해시설 검색 (주유소, 공장 등)
+        유해시설 검색 (LH 매입 제외 기준)
         
         Args:
             coordinates: 중심 좌표
             
         Returns:
-            유해시설 리스트
+            유해시설 리스트 (distance, is_critical 포함)
         """
-        hazardous_categories = [
-            "주유소",
-            "공장",
-            "폐기물처리시설",
-            "축사",
-            "장례식장",
-            "화장장"
-        ]
+        # LH 유해시설 기준 (거리별 구분)
+        hazardous_categories = {
+            "주유소": {"radius": 50, "critical_distance": 25},  # 25m 이내 치명적
+            "공장": {"radius": 500, "critical_distance": 50},
+            "폐기물처리시설": {"radius": 500, "critical_distance": 50},
+            "축사": {"radius": 500, "critical_distance": 100},
+            "장례식장": {"radius": 500, "critical_distance": 50},
+            "화장장": {"radius": 500, "critical_distance": 500}
+        }
         
         all_hazardous = []
         
-        for category in hazardous_categories:
+        for category, config in hazardous_categories.items():
             facilities = await self.search_nearby_facilities(
                 coordinates,
                 category,
-                radius=500  # 500m 이내
+                radius=config["radius"]
             )
             
             for facility in facilities:
+                is_critical = facility.distance <= config["critical_distance"]
                 all_hazardous.append({
                     "name": facility.name,
                     "category": category,
                     "distance": facility.distance,
-                    "address": facility.address
+                    "address": facility.address,
+                    "is_critical": is_critical,  # LH 탈락 사유 여부
+                    "critical_distance": config["critical_distance"]
                 })
         
         return all_hazardous
@@ -226,3 +230,143 @@ class KakaoService:
             "universities": universities[:3],
             "convenience_stores": convenience_stores[:5]
         }
+    
+    def generate_static_map_url(
+        self,
+        coordinates: Coordinates,
+        width: int = 800,
+        height: int = 600,
+        zoom_level: int = 15,
+        markers: Optional[List[Dict[str, Any]]] = None
+    ) -> str:
+        """
+        카카오 정적 지도 이미지 URL 생성
+        
+        Args:
+            coordinates: 중심 좌표
+            width: 이미지 너비
+            height: 이미지 높이
+            zoom_level: 확대 레벨 (1-14)
+            markers: 마커 정보 리스트 [{'lat': 37.5, 'lng': 127.0, 'text': '위치'}]
+            
+        Returns:
+            정적 지도 이미지 URL
+        """
+        base_url = "https://dapi.kakao.com/v2/maps/staticmap"
+        
+        # 기본 파라미터
+        params = {
+            "center": f"{coordinates.longitude},{coordinates.latitude}",
+            "level": zoom_level,
+            "marker": f"color:red|{coordinates.longitude},{coordinates.latitude}"
+        }
+        
+        # 추가 마커가 있는 경우
+        if markers:
+            marker_strings = []
+            for m in markers[:10]:  # 최대 10개
+                lng = m.get('lng', coordinates.longitude)
+                lat = m.get('lat', coordinates.latitude)
+                marker_strings.append(f"{lng},{lat}")
+            if marker_strings:
+                params["marker"] += "|" + "|".join(marker_strings)
+        
+        # URL 파라미터 구성
+        param_string = "&".join([f"{k}={v}" for k, v in params.items()])
+        return f"{base_url}?{param_string}"
+    
+    async def get_static_map_image(
+        self,
+        coordinates: Coordinates,
+        width: int = 800,
+        height: int = 600,
+        zoom_level: int = 3,
+        markers: Optional[List[Dict[str, Any]]] = None
+    ) -> Optional[str]:
+        """
+        카카오 정적 지도 이미지를 Base64로 인코딩하여 반환 (마커 포함)
+        
+        Args:
+            coordinates: 중심 좌표 (대상지)
+            width: 이미지 너비
+            height: 이미지 높이  
+            zoom_level: 확대 레벨 (1~14, 작을수록 확대)
+            markers: 추가 마커 리스트 [{"lat": 37.5, "lng": 127.0, "color": "blue"}]
+            
+        Returns:
+            Base64 인코딩된 이미지 문자열 또는 None
+        """
+        url = "https://dapi.kakao.com/v2/maps/staticmap"
+        
+        # 기본 파라미터
+        params = {
+            "center": f"{coordinates.longitude},{coordinates.latitude}",
+            "level": zoom_level
+        }
+        
+        # 마커 구성: 대상지는 빨간색 큰 마커
+        marker_param = f"color:red|{coordinates.longitude},{coordinates.latitude}"
+        
+        # 추가 마커 (주요 시설 등 - 파란색)
+        if markers:
+            for marker in markers[:10]:  # 최대 10개
+                lng = marker.get("lng")
+                lat = marker.get("lat")
+                color = marker.get("color", "blue")
+                if lng and lat:
+                    marker_param += f"|color:{color}|{lng},{lat}"
+        
+        params["marker"] = marker_param
+        
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    url,
+                    headers=self.headers,
+                    params=params,
+                    timeout=15.0
+                )
+                response.raise_for_status()
+                
+                # 이미지를 Base64로 인코딩
+                import base64
+                image_base64 = base64.b64encode(response.content).decode('utf-8')
+                return f"data:image/png;base64,{image_base64}"
+                
+        except Exception as e:
+            print(f"❌ 지도 이미지 생성 실패: {e}")
+            return None
+    
+    async def get_multiple_maps(
+        self,
+        coordinates: Coordinates,
+        nearby_facilities: List[Dict[str, Any]] = None
+    ) -> Dict[str, Optional[str]]:
+        """
+        여러 스케일의 지도 이미지를 생성
+        
+        Args:
+            coordinates: 중심 좌표
+            nearby_facilities: 주변 시설 리스트 (마커 표시용)
+            
+        Returns:
+            Dict with 'overview', 'detail', 'facilities' 지도 이미지
+        """
+        maps = {}
+        
+        # 광역 지도 (큰 범위)
+        maps['overview'] = await self.get_static_map_image(
+            coordinates, zoom_level=6
+        )
+        
+        # 상세 지도 (중간 범위)
+        maps['detail'] = await self.get_static_map_image(
+            coordinates, zoom_level=3
+        )
+        
+        # 근접 지도 (작은 범위)
+        maps['close'] = await self.get_static_map_image(
+            coordinates, zoom_level=1
+        )
+        
+        return maps
