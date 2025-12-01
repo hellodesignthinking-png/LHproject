@@ -14,6 +14,8 @@ from pathlib import Path
 
 # Import the COMPLETE v7.2 field mapper with all 11 critical patches
 from app.services.report_field_mapper_v7_2_complete import ReportFieldMapperV72Complete
+# Import the ENHANCED v7.2 template generator with all 8 fixes
+from app.services.report_template_v7_2_enhanced import ReportTemplateV72Enhanced
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +35,10 @@ class ReportEngineV72:
     
     def __init__(self):
         self.mapper = ReportFieldMapperV72Complete()
+        self.template = ReportTemplateV72Enhanced()
         self.report_date = datetime.now().strftime("%Y.%m.%d")
-        self.version = "7.2-complete"
-        logger.info(f"✅ Report Engine v{self.version} initialized with ALL 11 CRITICAL PATCHES")
+        self.version = "7.2-enhanced"
+        logger.info(f"✅ Report Engine v{self.version} initialized with ALL 11 PATCHES + 8 TEMPLATE FIXES")
     
     def generate_report(
         self, 
@@ -208,17 +211,15 @@ class ReportEngineV72:
     
     def _generate_markdown_report(self, data: Dict[str, Any], report_type: str) -> str:
         """
-        Generate Markdown report with v7.2 data
+        Generate Markdown report with v7.2 data using ENHANCED template
         """
-        if report_type == "comprehensive":
-            return self._generate_comprehensive_markdown(data)
-        elif report_type == "executive":
-            return self._generate_executive_markdown(data)
-        else:
-            return self._generate_technical_markdown(data)
+        # Use the enhanced template generator with all 8 fixes
+        logger.info(f"✅ Using Enhanced Template v7.2 with all 8 fixes for {report_type} report")
+        return self.template.generate_comprehensive_markdown(data)
     
     def _generate_comprehensive_markdown(self, data: Dict[str, Any]) -> str:
         """
+        DEPRECATED: Use template.generate_comprehensive_markdown() instead
         Generate comprehensive markdown report (Full 10+ sections)
         """
         basic = data.get('basic_info', {})
