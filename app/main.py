@@ -30,6 +30,9 @@ from app.services.sheets_service import get_sheets_service
 from app.services.lh_notice_loader import LHNoticeLoader
 from app.services.dashboard_builder import DashboardBuilder
 
+# ✨ v7.2: Import new Report Engine v7.2 router
+from app.routers.report_v7_2 import router as report_v72_router
+
 settings = get_settings()
 
 # LH 공식 7개 유형 정보 매핑
@@ -69,6 +72,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ✨ v7.2: Include Report Engine v7.2 router
+app.include_router(report_v72_router)
 
 # 정적 파일 서빙
 static_path = Path(__file__).parent.parent / "static"
