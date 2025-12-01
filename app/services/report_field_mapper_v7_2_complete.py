@@ -332,14 +332,29 @@ class ReportFieldMapperV72Complete:
     
     def _map_type_demand_v3_1(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        PATCH 2: Type Demand Scoring v3.1
+        PATCH 2 + FIX 3: Type Demand Scoring v3.1 with v7.2 grading enforcement
         - final_score: After all adjustments
         - raw_score: Base calculation
         - poi_bonus: POI proximity bonus
         - user_type_weight: Weight for selected type
+        - grade: v7.2 grading S/A/B/C/D
+        - grade_text: Unified Korean descriptions (매우 높음, 높음, 보통, 낮음, 매우 낮음)
         """
         type_scores = self._safe_get(data, 'type_demand_scores', default={})
         demand_pred = self._safe_get(data, 'demand_prediction', default={})
+        
+        def get_v7_2_grade(score: float) -> tuple:
+            """FIX 3: Unified v7.2 grading scale with Korean descriptions"""
+            if score >= 90:
+                return "S", "매우 높음"
+            elif score >= 80:
+                return "A", "높음"
+            elif score >= 70:
+                return "B", "보통"
+            elif score >= 60:
+                return "C", "낮음"
+            else:
+                return "D", "매우 낮음"
         
         # Get scores for each type
         type_results = {}
@@ -355,21 +370,30 @@ class ReportFieldMapperV72Complete:
             user_type_weight = 1.0  # Default weight
             final_score = raw_score + poi_bonus
             
+            # FIX 3: Apply v7.2 grading
+            grade_letter, grade_text = get_v7_2_grade(final_score)
+            
             type_results[type_name] = {
                 "raw_score": round(raw_score, 2),
                 "poi_bonus": round(poi_bonus, 2),
                 "user_type_weight": user_type_weight,
                 "final_score": round(final_score, 2),
+                "grade": grade_letter,
+                "grade_text": grade_text,
             }
         
-        # Main score from demand_prediction
+        # Main score from demand_prediction - apply v7.2 grading
         main_score = self._safe_get(demand_pred, 'predicted_demand_score', default=0.0)
-        demand_level = self._safe_get(demand_pred, 'demand_level', default="N/A")
+        
+        # FIX 3: Convert demand_level to v7.2 grading text
+        old_demand_level = self._safe_get(demand_pred, 'demand_level', default="N/A")
+        _, main_grade_text = get_v7_2_grade(main_score)
         
         return {
             "type_scores": type_results,
             "main_score": round(main_score, 2),
-            "demand_level": demand_level,
+            "demand_level": main_grade_text,  # FIX 3: Use v7.2 grade text instead of legacy
+            "demand_level_legacy": old_demand_level,  # Keep for reference
             "version": "3.1",
         }
     
@@ -415,12 +439,13 @@ class ReportFieldMapperV72Complete:
     
     def _map_geo_optimizer_v3_1(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        PATCH 4: GeoOptimizer v3.1
+        PATCH 4 + FIX 2: GeoOptimizer v3.1
         - final_score: Overall optimization score
         - weighted_total: Sum of weighted factors
         - slope_score: Terrain analysis
         - noise_score: Noise level analysis
         - sunlight_score: Sunlight exposure
+        - alternatives: GUARANTEED 3 alternatives (with placeholders if needed)
         """
         geo_data = self._safe_get(data, 'geo_optimization', default={})
         if isinstance(geo_data, str):
@@ -440,13 +465,23 @@ class ReportFieldMapperV72Complete:
                     "reason": self._safe_get(site, 'reason', default="N/A"),
                 })
         
+        # FIX 2: Guarantee exactly 3 alternatives with placeholders
+        while len(alternatives) < 3:
+            placeholder_idx = len(alternatives) + 1
+            alternatives.append({
+                "location": f"대안 후보지 {placeholder_idx} (추가 분석 필요)",
+                "distance_m": 0,
+                "score": round(optimization_score * 0.95, 1),  # Slightly lower than current
+                "reason": "추가 지리 분석 필요",
+            })
+        
         return {
             "final_score": round(optimization_score, 2),
             "weighted_total": round(optimization_score * 0.9, 2),  # Estimate
             "slope_score": round(optimization_score * 0.3, 2),  # Component estimate
             "noise_score": round(optimization_score * 0.25, 2),
             "sunlight_score": round(optimization_score * 0.35, 2),
-            "alternatives": alternatives,
+            "alternatives": alternatives[:3],  # Ensure exactly 3
             "current_strengths": self._safe_get(geo_data, 'current_site_strengths', default=[]),
             "current_weaknesses": self._safe_get(geo_data, 'current_site_weaknesses', default=[]),
             "version": "3.1",

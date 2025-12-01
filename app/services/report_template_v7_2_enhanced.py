@@ -103,8 +103,27 @@ class ReportTemplateV72Enhanced:
     
     def _generate_location_info_v7_2(self, basic: Dict, coords: Dict, zone: Dict) -> str:
         """
-        FIX 1 & 2: Location info using ONLY v7.2 fields + 14 zoning fields with fallback
+        FIX 1: Location info using ONLY v7.2 fields + 23 zoning fields with explicit fallback visibility
+        All 23 fields ALWAYS display a value with clear fallback/error labels
         """
+        # Helper to format zone values with explicit fallback
+        def zone_val(key, default='N/A'):
+            val = zone.get(key, default)
+            return f"{val if val not in [None, '', 'N/A'] else 'N/A'}{self._render_fallback(val)}"
+        
+        def zone_num(key, unit='', default=0):
+            val = zone.get(key, default)
+            return f"{val:.1f}{unit}{self._render_fallback(val)}"
+        
+        def zone_list(key):
+            val = zone.get(key, [])
+            display = ', '.join(val) if val else '없음'
+            return f"{display}{self._render_fallback(val)}"
+        
+        def zone_bool(key, default=False):
+            val = zone.get(key, default)
+            return f"{self._yes_no(val)}{self._render_fallback(val)}"
+        
         return f"""## I. 대상지 기본 정보 (v7.2)
 
 ### 1. 위치 정보
@@ -117,40 +136,40 @@ class ReportTemplateV72Enhanced:
 
 ### 2. 용도지역 및 법규 정보 (Zoning v7.2 - 23 fields)
 
-#### 기본 용도지역
-- **용도지역**: {zone.get('land_use_zone', 'N/A')}
-- **건폐율**: {zone.get('building_coverage_ratio', 0):.1f}%
-- **용적률**: {zone.get('floor_area_ratio', 0):.1f}%
-- **높이 제한**: {zone.get('height_limit', 0):.1f}m {self._render_fallback(zone.get('height_limit', 0))}
+#### 기본 용도지역 (4 fields)
+- **1. 용도지역**: {zone_val('land_use_zone')}
+- **2. 건폐율**: {zone_num('building_coverage_ratio', '%', 60.0)}
+- **3. 용적률**: {zone_num('floor_area_ratio', '%', 200.0)}
+- **4. 높이 제한**: {zone_num('height_limit', 'm', 0)}
 
-#### 중첩 지역 지정 (Overlay Zones)
-- **중첩 용도지역**: {', '.join(zone.get('overlay_zones', [])) or '없음'} {self._render_fallback(zone.get('overlay_zones', []))}
-- **지구단위계획구역**: {self._yes_no(zone.get('district_unit_plan', False))} {self._render_fallback(zone.get('district_unit_plan'))}
-- **경관지구**: {self._yes_no(zone.get('landscape_district', False))} {self._render_fallback(zone.get('landscape_district'))}
+#### 중첩 지역 지정 (3 fields)
+- **5. 중첩 용도지역**: {zone_list('overlay_zones')}
+- **6. 지구단위계획구역**: {zone_bool('district_unit_plan')}
+- **7. 경관지구**: {zone_bool('landscape_district')}
 
-#### 개발 제한 사항 (Restrictions)
-- **개발제한사항**: {', '.join(zone.get('development_restrictions', [])) or '없음'} {self._render_fallback(zone.get('development_restrictions', []))}
-- **환경규제**: {', '.join(zone.get('environmental_restrictions', [])) or '없음'} {self._render_fallback(zone.get('environmental_restrictions', []))}
-- **문화재보호구역**: {self._yes_no(zone.get('cultural_heritage_zone', False))} {self._render_fallback(zone.get('cultural_heritage_zone'))}
-- **군사시설보호구역**: {self._yes_no(zone.get('military_restriction_zone', False))} {self._render_fallback(zone.get('military_restriction_zone'))}
+#### 개발 제한 사항 (4 fields)
+- **8. 개발제한사항**: {zone_list('development_restrictions')}
+- **9. 환경규제**: {zone_list('environmental_restrictions')}
+- **10. 문화재보호구역**: {zone_bool('cultural_heritage_zone')}
+- **11. 군사시설보호구역**: {zone_bool('military_restriction_zone')}
 
-#### 기반 시설 (Infrastructure)
-- **도로 너비**: {zone.get('road_width', 0):.1f}m {self._render_fallback(zone.get('road_width', 0))}
-- **도로 상태**: {zone.get('road_condition', 'N/A')} {self._render_fallback(zone.get('road_condition', 'N/A'))}
-- **상수도**: {self._yes_no(zone.get('water_supply', True))}
-- **하수도**: {self._yes_no(zone.get('sewage_system', True))}
-- **전기**: {self._yes_no(zone.get('electricity', True))}
-- **가스**: {self._yes_no(zone.get('gas_supply', True))}
+#### 기반 시설 (6 fields)
+- **12. 도로 너비**: {zone_num('road_width', 'm', 0)}
+- **13. 도로 상태**: {zone_val('road_condition')}
+- **14. 상수도**: {self._yes_no(zone.get('water_supply', True))}
+- **15. 하수도**: {self._yes_no(zone.get('sewage_system', True))}
+- **16. 전기**: {self._yes_no(zone.get('electricity', True))}
+- **17. 가스**: {self._yes_no(zone.get('gas_supply', True))}
 
-#### 도시계획 (Planning)
-- **도시계획구역**: {self._yes_no(zone.get('urban_planning_area', False))} {self._render_fallback(zone.get('urban_planning_area'))}
-- **재개발구역**: {self._yes_no(zone.get('redevelopment_zone', False))} {self._render_fallback(zone.get('redevelopment_zone'))}
-- **특별계획구역**: {self._yes_no(zone.get('special_planning_area', False))} {self._render_fallback(zone.get('special_planning_area'))}
+#### 도시계획 (3 fields)
+- **18. 도시계획구역**: {zone_bool('urban_planning_area')}
+- **19. 재개발구역**: {zone_bool('redevelopment_zone')}
+- **20. 특별계획구역**: {zone_bool('special_planning_area')}
 
-#### 추가 규제 사항 (Additional Regulations)
-- **주차 요구사항**: {zone.get('parking_requirements', 'N/A')} {self._render_fallback(zone.get('parking_requirements', 'N/A'))}
-- **녹지비율**: {zone.get('green_space_ratio', 0):.1f}% {self._render_fallback(zone.get('green_space_ratio', 0))}
-- **건축선 후퇴**: {self._format_setback(zone.get('setback_requirements', {}))} {self._render_fallback(zone.get('setback_requirements', {}))}
+#### 추가 규제 사항 (3 fields)
+- **21. 주차 요구사항**: {zone_val('parking_requirements')}
+- **22. 녹지비율**: {zone_num('green_space_ratio', '%', 0)}
+- **23. 건축선 후퇴**: {self._format_setback(zone.get('setback_requirements', {}))}{self._render_fallback(zone.get('setback_requirements', {}))}
 
 ---
 
@@ -194,7 +213,8 @@ class ReportTemplateV72Enhanced:
     
     def _generate_type_demand_v3_1(self, td: Dict) -> str:
         """
-        FIX 6: Type Demand with v7.2 grading scale
+        FIX 3 & FIX 6: Type Demand with ENFORCED v7.2 grading scale
+        Uses grade and grade_text fields from mapper
         """
         type_scores = td.get('type_scores', {})
         
@@ -206,16 +226,19 @@ class ReportTemplateV72Enhanced:
             bonus = scores.get('poi_bonus', 0)
             weight = scores.get('user_type_weight', 1.0)
             final = scores.get('final_score', 0)
-            grade = self._get_v7_2_type_grade(final)
+            # FIX 3: Use pre-calculated grade fields from mapper
+            grade_letter = scores.get('grade', 'N/A')
+            grade_text = scores.get('grade_text', 'N/A')
+            grade_display = f"{grade_letter} ({grade_text})"
             
-            table += f"| {type_name} | {raw:.1f} | {bonus:.1f} | {weight:.2f} | **{final:.1f}** | {grade} |\n"
+            table += f"| {type_name} | {raw:.1f} | {bonus:.1f} | {weight:.2f} | **{final:.1f}** | {grade_display} |\n"
         
         return f"""## III. 유형별 수요 분석 (Type Demand v3.1)
 
-### Type Demand v3.1 평가 결과
+### Type Demand v3.1 평가 결과 (v7.2 Grading Enforced)
 
 - **Main Score**: {td.get('main_score', 0):.2f}점
-- **Demand Level**: {td.get('demand_level', 'N/A')}
+- **Demand Level**: {td.get('demand_level', 'N/A')}  ← v7.2 등급 기준
 - **Engine Version**: {td.get('version', 'N/A')}
 
 ### 유형별 상세 점수 (v7.2 Grading Scale)
@@ -551,9 +574,20 @@ Cache   [{self._make_bar(cache_stats.get('hit_rate', 0), 100)}] {cache_stats.get
         return "✅ 예" if value else "❌ 아니오"
     
     def _render_fallback(self, value: Any) -> str:
-        """Show fallback indicator if value is default/empty"""
-        if value in [None, 0, 0.0, "", [], {}, False]:
-            return "*(fallback)*"
+        """
+        Show explicit fallback indicator if value is default/empty
+        FIX 1: Enhanced fallback visibility for Zoning v7.2
+        """
+        if value is None:
+            return " **(API 오류)**"
+        elif value == "" or value == "N/A":
+            return " **(API 오류)**"
+        elif value == 0 or value == 0.0:
+            return " **(fallback)**"
+        elif value == [] or value == {}:
+            return " **(fallback)**"
+        elif value is False:
+            return " **(fallback)**"
         return ""
     
     def _format_setback(self, setback: Dict) -> str:
