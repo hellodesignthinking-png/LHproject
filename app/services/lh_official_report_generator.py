@@ -1301,7 +1301,7 @@ class LHOfficialReportGenerator:
                 position: relative;
             }}
             body::before {{
-                content: '사회적기업(주)안테나';
+                content: 'ZeroSite';
                 position: fixed;
                 top: 50%;
                 left: 50%;
@@ -3030,7 +3030,7 @@ class LHOfficialReportGenerator:
         <p>본 보고서는 LH 신축매입임대주택 사업 토지진단 자동화 시스템에 의해 생성되었습니다.</p>
         <p>작성일시: {self.report_date.strftime('%Y년 %m월 %d일 %H:%M')}</p>
         <p style="margin-top: 15px; font-weight: bold; color: #003366; font-size: 10pt;">
-            개발: 사회적기업 (주)안테나 나태흠 대표
+            개발: ZeroSite
         </p>
         <p style="margin-top: 10px; font-size: 8pt; color: #999;">
             ※ 본 보고서는 참고용이며, 최종 매입 여부는 LH의 공식 심의를 거쳐 결정됩니다.<br>
