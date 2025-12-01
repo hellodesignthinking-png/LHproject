@@ -69,3 +69,5 @@ htmlcov/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+.env
+test_report.html
