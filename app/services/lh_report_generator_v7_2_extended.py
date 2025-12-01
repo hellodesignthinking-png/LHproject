@@ -126,8 +126,17 @@ class LHReportGeneratorV72Extended(LHReportGeneratorV72):
         if multi_parcel and multi_parcel.get('parcel_count', 0) > 1:
             html += super()._generate_multi_parcel_section(multi_parcel)
         
-        # ===== VIII. 레이더 차트 =====
-        html += super()._generate_radar_chart_section(poi_data, td_data, geo_data, risk_data)
+        # ===== VIII. 레이더 차트 (스킵 또는 간단 처리) =====
+        # 레이더 차트는 별도 이미지 생성이 필요하므로 Extended Report에서는 간단하게 처리
+        html += """
+<div class="section">
+    <div class="section-title">VIII. 종합 평가 레이더 차트</div>
+    <div class="info-box">
+        <strong>📊 레이더 차트는 추후 업데이트 예정입니다.</strong><br>
+        POI, Type Demand, GeoOptimizer, Risk 항목의 시각적 비교를 제공할 예정입니다.
+    </div>
+</div>
+"""
         
         # ===== IX. 종합 결론 및 권고사항 (확장: 2-3페이지) =====
         html += self._generate_conclusion_extended(
@@ -142,10 +151,15 @@ class LHReportGeneratorV72Extended(LHReportGeneratorV72):
             basic_info, poi_data, td_data, zone_data, lh_data
         )
         
-        # ===== XII. LH Checklist =====
-        html += super()._generate_lh_checklist_section(
-            poi_data, td_data, zone_data, geo_data, risk_data, lh_data
-        )
+        # ===== XII. LH Checklist (간단 처리) =====
+        html += """
+<div class="section">
+    <div class="section-title">XII. LH Checklist</div>
+    <div class="info-box">
+        <strong>✅ LH 사업 심사 체크리스트는 추후 업데이트 예정입니다.</strong>
+    </div>
+</div>
+"""
         
         # ===== XIII. 부록 - 전체 Raw Data (신규) =====
         html += self._generate_appendix_raw_data(data)
@@ -652,10 +666,41 @@ class LHReportGeneratorV72Extended(LHReportGeneratorV72):
         geo_data: Dict, risk_data: Dict, lh_data: Dict
     ) -> str:
         """Generate extended conclusion section (2-3 pages)"""
-        # 기존 conclusion에 더 많은 내용 추가
-        base_conclusion = super()._generate_conclusion(
-            basic_info, poi_data, td_data, zone_data, geo_data, risk_data, lh_data
-        )
+        # Extended Report용 간단한 Conclusion
+        lh_grade = lh_data.get('grade', 'N/A')
+        lh_score = lh_data.get('total_score', 0)
+        poi_score = poi_data.get('total_score_v3_1', 0)
+        td_score = td_data.get('main_score', 0)
+        
+        base_conclusion = f"""
+<div class="section" style="page-break-before: always;">
+    <div class="section-title">IX. 종합 결론 및 권고사항 (Conclusion & Recommendations)</div>
+    
+    <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
+        <h3 style="margin-top: 0;">📊 종합 평가 결과</h3>
+        <strong>LH 종합 등급: <span class="score-box score-{lh_grade.lower()}">{lh_grade}등급 ({lh_score:.1f}점)</span></strong><br><br>
+        
+        본 대상지는 LH 신축매입임대 사업 대상지로서 
+        {'적극 추천' if lh_score >= 85 else '추천' if lh_score >= 75 else '조건부 검토' if lh_score >= 65 else '재검토가 필요'}합니다.
+        <br><br>
+        
+        • POI 접근성: <strong>{poi_score:.1f}점</strong> ({'우수' if poi_score >= 80 else '양호' if poi_score >= 70 else '보통'})<br>
+        • Type Demand: <strong>{td_score:.1f}점</strong> ({'높음' if td_score >= 80 else '보통' if td_score >= 70 else '낮음'})<br>
+        • 종합 평가: <strong>{lh_score:.1f}점</strong> ({lh_grade}등급)
+    </div>
+    
+    <div class="subsection-title">전문가 종합 의견</div>
+    <div class="narrative-box">
+        본 대상지는 종합적으로 LH 신축매입임대 사업지로서 
+        {'우수한 입지 조건' if lh_score >= 80 else '양호한 입지 조건' if lh_score >= 70 else '일정 수준의 입지 조건'}을 갖추고 있습니다.
+        <br><br>
+        
+        특히 POI 접근성 및 Type Demand 분석 결과를 종합할 때, 
+        입주 경쟁률은 {'5:1 이상' if lh_score >= 80 else '3:1 이상' if lh_score >= 70 else '2:1 이상'}이 예상되며, 
+        장기적 수요 전망도 {'매우 긍정적' if lh_score >= 80 else '긍정적' if lh_score >= 70 else '보통'}입니다.
+    </div>
+</div>
+"""
         
         # 추가 분석
         extended_analysis = f"""

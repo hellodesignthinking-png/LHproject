@@ -249,7 +249,7 @@ class ExtendedSectionTemplates:
     
     <!-- Full Data JSON (부록용) -->
     <div style="display: none;" class="full-data-json">
-        {full_data.get('poi_analysis_v3_1', {{}})}
+        <!-- POI Full Data: Reserved for Appendix -->
     </div>
 </div>
 """
@@ -792,7 +792,7 @@ class ExtendedSectionTemplates:
     
     <!-- Full Data JSON (부록용) -->
     <div style="display: none;" class="full-data-json">
-        {full_data.get('type_demand_v3_1', {{}})}
+        <!-- Type Demand Full Data: Reserved for Appendix -->
     </div>
 </div>
 """

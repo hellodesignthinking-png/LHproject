@@ -22,6 +22,11 @@ class FullDataExporter:
         self.version = "1.0.0"
         logger.info(f"📊 Full Data Exporter initialized (v{self.version})")
     
+    def export_to_dict(self, analysis_data: Dict) -> Dict:
+        """분석 데이터를 Dictionary 형태로 반환 (Extended Report용)"""
+        # 이미 Dictionary 형태이므로 그대로 반환
+        return analysis_data
+    
     # ============================================================================
     # 모든 필드를 표 형태로 출력
     # ============================================================================
