@@ -321,9 +321,20 @@ class ReportTemplateV72Enhanced:
     
     def _generate_geo_optimizer_v3_1(self, geo: Dict) -> str:
         """
-        FIX 5: GeoOptimizer with Alternative 1-3 comparison + ASCII charts
+        FINAL FIX 2: GeoOptimizer with GUARANTEED 3 alternatives
+        Ensures exactly 3 alternatives are always displayed
         """
         alternatives = geo.get('alternatives', [])
+        
+        # FINAL FIX 2: Ensure exactly 3 alternatives with placeholders if needed
+        while len(alternatives) < 3:
+            placeholder_idx = len(alternatives) + 1
+            alternatives.append({
+                "location": f"대안 후보지 {placeholder_idx} (추가 분석 필요)",
+                "distance_m": 0,
+                "score": 0.0,
+                "reason": "추가 분석 필요"
+            })
         
         # ASCII chart for scores
         chart = self._generate_ascii_score_chart(geo.get('final_score', 0), alternatives)
@@ -575,19 +586,33 @@ Cache   [{self._make_bar(cache_stats.get('hit_rate', 0), 100)}] {cache_stats.get
     
     def _render_fallback(self, value: Any) -> str:
         """
-        Show explicit fallback indicator if value is default/empty
-        FIX 1: Enhanced fallback visibility for Zoning v7.2
+        FINAL FIX 1: Enhanced fallback rendering for Zoning v7.2
+        - None → "N/A (API 오류)"
+        - empty string → "N/A (API 오류)"
+        - {} or [] → "N/A (API 오류)"
+        - 0 or 0.0 → "0 (fallback)"
         """
-        if value is None:
-            return " **(API 오류)**"
-        elif value == "" or value == "N/A":
-            return " **(API 오류)**"
-        elif value == 0 or value == 0.0:
-            return " **(fallback)**"
-        elif value == [] or value == {}:
-            return " **(fallback)**"
-        elif value is False:
-            return " **(fallback)**"
+        # None or empty string
+        if value is None or value == "":
+            return " → N/A (API 오류)"
+        
+        # N/A string
+        if value == "N/A":
+            return " (API 오류)"
+        
+        # Empty collections
+        if value == {} or value == []:
+            return " → N/A (API 오류)"
+        
+        # Zero values - show the zero WITH fallback label
+        if value == 0 or value == 0.0:
+            return " (fallback)"
+        
+        # False boolean
+        if value is False:
+            return " (fallback)"
+        
+        # Has real value
         return ""
     
     def _format_setback(self, setback: Dict) -> str:
@@ -724,14 +749,26 @@ Cache   [{self._make_bar(cache_stats.get('hit_rate', 0), 100)}] {cache_stats.get
         return f"- {notice}"
     
     def _get_demand_grade(self, level: str) -> str:
-        grades = {
-            '높음': 'S',
-            '보통': 'A',
-            '낮음': 'B',
+        """
+        FINAL FIX 3: Remove v6 remnants, use v7.2 grading
+        Now expects v7.2 Korean text directly: 매우 높음, 높음, 보통, 낮음, 매우 낮음
+        """
+        # v7.2 Korean text to grade mapping
+        v7_2_grades = {
+            '매우 높음': 'S',
+            '높음': 'A',
+            '보통': 'B',
+            '낮음': 'C',
+            '매우 낮음': 'D',
+            # Legacy fallback (should not occur if FIX 3 in mapper works)
+            '높음': 'A',  # old v6 if any
+            '보통': 'B',  # old v6 if any
+            '낮음': 'C',  # old v6 if any
         }
-        return grades.get(level, 'N/A')
+        return v7_2_grades.get(level, level if level in ['S', 'A', 'B', 'C', 'D'] else 'N/A')
     
     def _get_score_grade(self, score: float) -> str:
+        """v7.2 score-based grading: S/A/B/C/D"""
         if score >= 90:
             return 'S'
         elif score >= 80:
