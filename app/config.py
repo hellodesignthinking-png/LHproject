@@ -30,6 +30,11 @@ class Settings(BaseSettings):
     reports_output_dir: str = "./output/reports"
     max_analysis_workers: int = 4
     
+    # Google Sheets Integration (Optional)
+    google_sheets_credentials_path: str = "./google_credentials.json"
+    google_sheets_spreadsheet_id: str = ""
+    google_sheets_worksheet_name: str = "토지분석기록"
+    
     # API Endpoints
     kakao_api_base_url: str = "https://dapi.kakao.com"
     land_regulation_api_base_url: str = "http://apis.data.go.kr/1613000/LandInfoService"
