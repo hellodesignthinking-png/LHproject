@@ -26,6 +26,8 @@ from app.services.analysis_engine import AnalysisEngine
 from app.services.report_generator import ProfessionalReportGenerator
 from app.services.advanced_report_generator import ExpertReportGenerator
 from app.services.lh_official_report_generator import LHOfficialReportGenerator
+from app.services.lh_report_generator_v7_2 import LHReportGeneratorV72
+from app.services.report_field_mapper_v7_2_complete import ReportFieldMapperV72Complete
 from app.services.sheets_service import get_sheets_service
 from app.services.lh_notice_loader import LHNoticeLoader
 from app.services.dashboard_builder import DashboardBuilder
@@ -793,10 +795,16 @@ async def generate_professional_report(request: LandAnalysisRequest):
             "map_images": map_images  # 여러 스케일의 지도 이미지 (overview, detail, close)
         }
         
-        # LH 공식 양식 보고서 생성 (HTML)
-        print("📝 LH 공식 양식 보고서 생성 중...")
-        lh_generator = LHOfficialReportGenerator()
-        report_html = lh_generator.generate_official_report(analysis_data)
+        # LH v7.2 보고서 생성 (HTML) - 100% 엔진 데이터 기반
+        print("📝 LH v7.2 보고서 생성 중 (ZeroSite v7.2 Engine)...")
+        
+        # Map engine output to v7.2 report fields
+        mapper = ReportFieldMapperV72Complete()
+        report_data = mapper.map_analysis_output_to_report(result)
+        
+        # Generate v7.2 HTML report
+        lh_generator = LHReportGeneratorV72()
+        report_html = lh_generator.generate_html_report(report_data)
         
         print(f"✅ 전문가급 감정평가 보고서 생성 완료 [ID: {analysis_id}]")
         print(f"📊 보고서 크기: {len(report_html):,} bytes")
@@ -905,9 +913,12 @@ async def generate_google_docs_report(request: LandAnalysisRequest):
             "map_images": map_images
         }
         
-        # HTML 보고서 생성
-        lh_generator = LHOfficialReportGenerator()
-        report_html = lh_generator.generate_official_report(analysis_data)
+        # LH v7.2 보고서 생성 (HTML) - 100% 엔진 데이터 기반
+        mapper = ReportFieldMapperV72Complete()
+        report_data = mapper.map_analysis_output_to_report(result)
+        
+        lh_generator = LHReportGeneratorV72()
+        report_html = lh_generator.generate_html_report(report_data)
         
         # 2. Google Docs로 변환
         print("📝 Google Docs 문서 생성 중...")
