@@ -53,6 +53,7 @@ class LandAnalysisRequest(BaseModel):
     consultant: Optional[ConsultantInfo] = Field(None, description="컨설팅 담당자 정보")
     weights: Optional[CategoryWeights] = Field(None, description="카테고리별 가중치 (선택사항, 기본값 사용)")
     lh_version: str = Field("2024", description="LH 기준 버전 (2024/2025/2026)")
+    report_mode: str = Field("basic", description="보고서 모드 ('basic': 8-10페이지, 'extended': 25-40페이지)")
     
     class Config:
         json_schema_extra = {

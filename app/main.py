@@ -802,9 +802,21 @@ async def generate_professional_report(request: LandAnalysisRequest):
         mapper = ReportFieldMapperV72Complete()
         report_data = mapper.map_analysis_output_to_report(result)
         
-        # Generate v7.2 HTML report
-        lh_generator = LHReportGeneratorV72()
-        report_html = lh_generator.generate_html_report(report_data)
+        # Generate v7.2 HTML report (기본 모드 또는 확장 모드)
+        # report_mode 파라미터가 있으면 사용, 없으면 기본값 'basic'
+        report_mode = getattr(request, 'report_mode', 'basic')
+        
+        if report_mode == 'extended':
+            # Extended Report (25-40 pages)
+            from app.services.lh_report_generator_v7_2_extended import LHReportGeneratorV72Extended
+            lh_generator = LHReportGeneratorV72Extended()
+            print("📄 Extended Report 모드 (25-40페이지)")
+        else:
+            # Basic Report (8-10 pages)
+            lh_generator = LHReportGeneratorV72()
+            print("📄 Basic Report 모드 (8-10페이지)")
+        
+        report_html = lh_generator.generate_html_report(report_data, report_mode=report_mode)
         
         print(f"✅ 전문가급 감정평가 보고서 생성 완료 [ID: {analysis_id}]")
         print(f"📊 보고서 크기: {len(report_html):,} bytes")
