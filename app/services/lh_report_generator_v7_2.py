@@ -12,6 +12,13 @@ This replaces the old lh_official_report_generator.py with complete v7.2 integra
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 import logging
+import matplotlib
+matplotlib.use('Agg')  # Non-interactive backend
+import matplotlib.pyplot as plt
+import numpy as np
+from io import BytesIO
+import base64
+from xhtml2pdf import pisa
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +36,70 @@ class LHReportGeneratorV72:
     def __init__(self):
         self.version = "7.2-lh-report"
         self.report_date = datetime.now()
+        
+        # Setup matplotlib Korean font
+        try:
+            plt.rcParams['font.family'] = 'NanumGothic'
+        except:
+            try:
+                plt.rcParams['font.family'] = 'Malgun Gothic'
+            except:
+                plt.rcParams['font.family'] = 'DejaVu Sans'
+        
+        plt.rcParams['axes.unicode_minus'] = False
+        
         logger.info(f"✅ LH Report Generator v{self.version} initialized")
+    
+    def generate_pdf_report(self, analysis_data: Dict[str, Any], output_path: str) -> Dict[str, Any]:
+        """
+        Generate complete LH report PDF from v7.2 engine data
+        
+        Args:
+            analysis_data: Complete analysis result from analyze_land()
+            output_path: Path to save PDF file
+            
+        Returns:
+            Result dict with success status and file path
+        """
+        try:
+            logger.info("🔄 Generating LH report PDF from v7.2 engine data...")
+            
+            # Generate HTML first
+            html_content = self.generate_html_report(analysis_data)
+            
+            # Convert HTML to PDF using xhtml2pdf
+            with open(output_path, "wb") as pdf_file:
+                # Convert HTML to PDF
+                pisa_status = pisa.CreatePDF(
+                    html_content.encode('utf-8'),
+                    dest=pdf_file,
+                    encoding='utf-8'
+                )
+                
+                if pisa_status.err:
+                    raise Exception(f"PDF generation error: {pisa_status.err}")
+            
+            import os
+            file_size = os.path.getsize(output_path)
+            
+            logger.info(f"✅ PDF generated successfully: {output_path} ({file_size:,} bytes)")
+            
+            return {
+                'success': True,
+                'file_path': output_path,
+                'file_size': file_size,
+                'version': self.version,
+                'generated_at': datetime.now().isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ PDF generation failed: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                'success': False,
+                'error': str(e)
+            }
     
     def generate_html_report(self, analysis_data: Dict[str, Any]) -> str:
         """
@@ -42,7 +112,7 @@ class LHReportGeneratorV72:
             Full HTML report string
         """
         try:
-            logger.info("🔄 Generating LH report from v7.2 engine data...")
+            logger.info("🔄 Generating LH report HTML from v7.2 engine data...")
             
             # Extract v7.2 data
             basic_info = analysis_data.get('basic_info', {})
@@ -79,6 +149,11 @@ class LHReportGeneratorV72:
             
             # GeoOptimizer Analysis
             html_sections.append(self._generate_geo_optimizer_section(geo_data))
+            
+            # Radar Chart (v7.2 전용)
+            radar_chart = self._generate_radar_chart(poi_data, td_data, geo_data, risk_data, basic_info)
+            if radar_chart:
+                html_sections.append(self._generate_radar_chart_section(radar_chart))
             
             # Risk Analysis
             html_sections.append(self._generate_risk_section(risk_data))
@@ -124,7 +199,7 @@ class LHReportGeneratorV72:
         }}
         
         body {{
-            font-family: 'Malgun Gothic', '맑은 고딕', 'Apple SD Gothic Neo', sans-serif;
+            font-family: Malgun Gothic, sans-serif;
             line-height: 1.6;
             color: #333;
             background: #f5f5f5;
@@ -1038,7 +1113,7 @@ class LHReportGeneratorV72:
     <title>보고서 생성 오류</title>
     <style>
         body {{
-            font-family: 'Malgun Gothic', sans-serif;
+            font-family: Malgun Gothic, sans-serif;
             padding: 40px;
             background: #f5f5f5;
         }}
@@ -1081,6 +1156,125 @@ class LHReportGeneratorV72:
             'library': '도서관'
         }
         return translations.get(poi_type, poi_type)
+    
+    def _generate_radar_chart_section(self, radar_chart_base64: str) -> str:
+        """Generate radar chart HTML section"""
+        return f"""
+<div class="section">
+    <div class="section-title">종합 평가 레이더 차트 (v7.2 100% 엔진 데이터)</div>
+    
+    <div class="info-box">
+        <strong>📊 v7.2 레이더 차트 설명</strong><br>
+        본 차트는 ZeroSite v7.2 엔진의 실제 분석 결과를 시각화한 것으로, 
+        모든 축의 점수는 실시간 분석 데이터에서 추출됩니다.<br>
+        <br>
+        <strong>5개 축 구성:</strong><br>
+        • 생활편의성 (POI v3.1): POI 접근성 종합 점수<br>
+        • 접근성 (GeoOptimizer v3.1): 지리적 최적화 점수<br>
+        • 수요강도 (Type Demand v3.1): 사용자 유형별 수요 점수<br>
+        • 규제환경 (Risk 2025): 리스크 역산 점수 (낮을수록 좋음)<br>
+        • 미래가치 (GeoOptimizer v3.1): 최적화 점수
+    </div>
+    
+    <div style="text-align: center; margin: 30px 0;">
+        <img src="{radar_chart_base64}" alt="v7.2 Radar Chart" style="max-width: 100%; height: auto;">
+    </div>
+    
+    <div class="warning-box">
+        <strong>⚠️ 레이더 차트 주의사항</strong><br>
+        • 모든 축은 0-100 점수 척도로 통일되어 있습니다.<br>
+        • 구버전의 고정 값 [32, 12, 24, 18, 16]은 완전히 제거되었습니다.<br>
+        • 본 차트는 분석 시점의 실제 데이터를 반영합니다.
+    </div>
+</div>
+"""
+    
+    def _generate_radar_chart(self, poi_data: Dict, td_data: Dict, geo_data: Dict, 
+                               risk_data: Dict, basic_info: Dict) -> str:
+        """
+        Generate v7.2 radar chart with REAL engine values
+        
+        5 axes:
+        - 생활편의성 (POI): poi.total_score_v3_1
+        - 접근성 (GeoOptimizer): geo.final_score
+        - 수요강도 (TypeDemand): user_type final_score
+        - 규제환경 (Risk): risk_normalized
+        - 미래가치 (GeoOptimizer): geo.optimization_score
+        """
+        try:
+            # Extract scores
+            poi_score = min(max(0, poi_data.get('total_score_v3_1', 0)), 100)
+            geo_score = min(max(0, geo_data.get('final_score', 0)), 100)
+            
+            # Get user type specific demand score
+            user_type = basic_info.get('unit_type', '청년')
+            type_scores = td_data.get('type_scores', {})
+            if user_type in type_scores:
+                demand_score = min(max(0, type_scores[user_type].get('final_score', 0)), 100)
+            else:
+                demand_score = min(max(0, td_data.get('main_score', 0)), 100)
+            
+            # Risk normalized (lower risk = higher score)
+            risk_score = risk_data.get('risk_score', 20)
+            risk_normalized = max(0, min(100, 100 - (risk_score * 5)))
+            
+            # Future value = optimization_score
+            future_value = min(max(0, geo_data.get('optimization_score', geo_score)), 100)
+            
+            # 5 axes values
+            categories = ['생활편의성\n(POI)', '접근성\n(GeoOpt)', '수요강도\n(Demand)', 
+                         '규제환경\n(Risk)', '미래가치\n(Future)']
+            values = [poi_score, geo_score, demand_score, risk_normalized, future_value]
+            
+            # Create radar chart
+            angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
+            values_closed = values + [values[0]]
+            angles_closed = angles + [angles[0]]
+            
+            # Normalize to 0-1 scale
+            normalized_values = [v / 100 for v in values_closed]
+            
+            fig, ax = plt.subplots(figsize=(10, 8), subplot_kw=dict(projection='polar'))
+            
+            # Plot
+            ax.plot(angles_closed, normalized_values, 'o-', linewidth=2, 
+                   color='#1a237e', label='v7.2 실제 점수')
+            ax.fill(angles_closed, normalized_values, alpha=0.25, color='#1a237e')
+            
+            # Styling
+            ax.set_ylim(0, 1)
+            ax.set_yticks([0.2, 0.4, 0.6, 0.8, 1.0])
+            ax.set_yticklabels(['20', '40', '60', '80', '100'], fontsize=9, color='gray')
+            ax.set_xticks(angles)
+            ax.set_xticklabels(categories, fontsize=11, weight='bold')
+            ax.grid(True, linestyle='--', linewidth=0.5, alpha=0.7)
+            
+            # Add score labels
+            for angle, value, category in zip(angles, values, categories):
+                x = angle
+                y = (value / 100) + 0.1
+                ax.text(x, y, f'{value:.1f}', 
+                       ha='center', va='center', fontsize=10, weight='bold',
+                       bbox=dict(boxstyle='round,pad=0.3', facecolor='white', 
+                                edgecolor='#1a237e', linewidth=1.5))
+            
+            plt.title('v7.2 종합 평가 레이더 차트 (100% 엔진 데이터)', 
+                     fontsize=14, weight='bold', pad=20)
+            ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1), fontsize=10)
+            
+            # Convert to base64
+            buffer = BytesIO()
+            plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight', 
+                       facecolor='white')
+            buffer.seek(0)
+            image_base64 = base64.b64encode(buffer.read()).decode('utf-8')
+            plt.close(fig)
+            
+            return f"data:image/png;base64,{image_base64}"
+            
+        except Exception as e:
+            logger.error(f"❌ Radar chart generation failed: {e}")
+            return ""
     
     @staticmethod
     def _get_score_grade(score: float) -> str:
