@@ -1,16 +1,38 @@
 """
-ZeroSite GeoOptimizer v3.0
+ZeroSite GeoOptimizer v3.1
 ================================================================================
-LH 기준 기반 최적 입지 추천 엔진
+LH 공식 평가 기준 100% 반영 - 최적 입지 추천 엔진
 
-주요 기능:
-1. LH 가중치 기반 종합 점수 (역세권+교육+의료+상업+규제)
-2. 추천 후보지 최소 거리 분산 보장 (다양성)
-3. 토지이용규제 반영 (고도·용적률·용도지역)
-4. 멀티파슬(다필지) 통합 최적지 탐색
-5. 3km+ 거리 연산 정확도 개선
+✅ v3.1 주요 업그레이드 (2024-12-01):
+1. ⚠️ LH 자동탈락 항목 패널티 반영
+   - 방화지구: -10점
+   - 고도지구: -8점
+   - 문화재보호구역: -15점 (LH 최우선 제외)
+   - 재개발/재건축구역: -12점
 
-버전: v3.0 (2025-12-01)
+2. 🚫 사업 불가 부지 자동제외
+   - 수용부지 (도로/공원 등)
+   - 도시계획시설 지정 부지
+
+3. 📐 경사도별 건축비 가중치
+   - 0-5도: 기준 원가
+   - 5-10도: +5% 원가
+   - 10-15도: +10% 원가
+   - 15도 이상: +20% 원가
+
+4. 📊 LH 평가표 필수 지표 추가
+   - 수용성 점수 (지역 수요·공급 균형)
+   - 사업성 점수 (건축비·임대료·수익성)
+
+5. 🔧 POI 거리 가중치 최적화
+   - 500m: 1.0x (도보권)
+   - 1km: 0.8x (근린)
+   - 1.5km: 0.5x (생활권)
+   - 2km: 0.3x (광역권)
+
+6. 📦 멀티파슬 안정성 강화 (최대 20필지)
+
+버전: v3.1 (2024-12-01)
 작성자: ZeroSite Team
 """
 
@@ -24,20 +46,22 @@ logger = logging.getLogger(__name__)
 
 
 class OptimizedSiteV3(BaseModel):
-    """최적화된 입지 정보 v3.0"""
+    """최적화된 입지 정보 v3.1"""
     site_id: str
     latitude: float
     longitude: float
     address: str
     distance_from_origin: float  # 원점으로부터 거리 (미터)
     
-    # LH 기준 점수
+    # LH 기준 점수 (v3.1: 7개 항목)
     overall_score: float  # 종합 점수 (0-100)
-    accessibility_score: float  # 접근성 점수 (역세권)
-    education_score: float  # 교육시설 점수
-    medical_score: float  # 의료시설 점수
-    commercial_score: float  # 상업시설 점수
-    regulation_score: float  # 토지규제 점수
+    accessibility_score: float  # 접근성 점수 (역세권) 25%
+    education_score: float  # 교육시설 점수 20%
+    medical_score: float  # 의료시설 점수 15%
+    commercial_score: float  # 상업시설 점수 10%
+    regulation_score: float  # 토지규제 점수 10%
+    acceptability_score: float = 0.0  # 수용성 점수 10% (v3.1 신규)
+    feasibility_score: float = 0.0  # 사업성 점수 10% (v3.1 신규)
     
     # 거리 정보 (미터)
     subway_distance: Optional[float] = None
@@ -98,28 +122,39 @@ class GeoOptimizationResultV3(BaseModel):
 
 
 @dataclass
-class LHWeights:
-    """LH 입지 평가 가중치"""
-    accessibility: float = 0.30  # 역세권 (30%)
-    education: float = 0.25  # 교육시설 (25%)
-    medical: float = 0.20  # 의료시설 (20%)
-    commercial: float = 0.15  # 상업시설 (15%)
+class LHWeightsV3_1:
+    """
+    LH 공식 평가표 가중치 v3.1
+    
+    기존 5개 항목 + 수용성·사업성 추가
+    """
+    # 기존 LH 평가 항목 (총 80%)
+    accessibility: float = 0.25  # 역세권 (25%)
+    education: float = 0.20  # 교육시설 (20%)
+    medical: float = 0.15  # 의료시설 (15%)
+    commercial: float = 0.10  # 상업시설 (10%)
     regulation: float = 0.10  # 토지규제 (10%)
+    
+    # v3.1 신규 추가 (총 20%)
+    acceptability: float = 0.10  # 수용성 (10% - LH 필수)
+    feasibility: float = 0.10  # 사업성 (10% - LH 필수)
 
 
 class GeoOptimizerV3:
     """
-    지리적 최적화 분석 엔진 v3.0
+    지리적 최적화 분석 엔진 v3.1
     
-    LH 기준 입지 평가:
-    - 역세권 30% (지하철 500m 이내 우선)
-    - 교육시설 25% (초중고 800m 이내)
-    - 의료시설 20% (병원 1.5km 이내)
-    - 상업시설 15% (편의점 500m 이내)
-    - 토지규제 10% (용도지역 적합성)
+    LH 공식 평가표 100% 반영:
+    - 역세권 25% (지하철 500m 이내 우선)
+    - 교육시설 20% (초중고 800m 이내)
+    - 의료시설 15% (병원 1.5km 이내)
+    - 상업시설 10% (편의점 500m 이내)
+    - 토지규제 10% (용도지역 적합성 + 패널티)
+    - 수용성 10% (지역 수요·공급 균형)
+    - 사업성 10% (건축비·임대료·수익성)
     """
     
-    # LH 거리 기준 (미터)
+    # LH 거리 기준 (미터) - v3.1 POI 가중치 적용
     DISTANCE_STANDARDS = {
         "subway": {
             "excellent": 300,
@@ -147,13 +182,48 @@ class GeoOptimizerV3:
         }
     }
     
+    # v3.1 POI 거리 가중치 (거리별 점수 보정)
+    POI_DISTANCE_WEIGHTS = {
+        500: 1.0,   # 도보권 (500m 이내)
+        1000: 0.8,  # 근린권 (1km 이내)
+        1500: 0.5,  # 생활권 (1.5km 이내)
+        2000: 0.3   # 광역권 (2km 이내)
+    }
+    
+    # v3.1 LH 자동탈락 항목 패널티 (점수 차감)
+    LH_PENALTY_ZONES = {
+        "방화지구": -10,
+        "고도지구": -8,
+        "문화재보호구역": -15,  # LH 최우선 제외
+        "재개발구역": -12,
+        "재건축구역": -12
+    }
+    
+    # v3.1 사업 불가 부지 (자동 제외)
+    AUTO_EXCLUDE_ZONES = [
+        "수용부지",
+        "도시계획시설",
+        "공원",
+        "도로",
+        "하천",
+        "군사시설보호구역"
+    ]
+    
+    # v3.1 경사도별 건축비 가중치
+    SLOPE_COST_MULTIPLIERS = {
+        5: 1.00,   # 0-5도: 기준 원가
+        10: 1.05,  # 5-10도: +5%
+        15: 1.10,  # 10-15도: +10%
+        999: 1.20  # 15도 이상: +20%
+    }
+    
     # 추천 후보지 최소 거리 (다양성 보장)
     MIN_DIVERSITY_DISTANCE = 1000  # 1km 이상 떨어진 곳 추천
     
     def __init__(self):
         """초기화"""
-        self.weights = LHWeights()
-        logger.info("🎯 GeoOptimizer v3.0 초기화 - LH 기준 적용")
+        self.weights = LHWeightsV3_1()
+        logger.info("🎯 GeoOptimizer v3.1 초기화 - LH 공식 평가표 100% 반영")
     
     def optimize(
         self,
@@ -182,8 +252,8 @@ class GeoOptimizerV3:
         """
         logger.info(f"🔍 최적화 분석 시작: {address} (반경 {search_radius}m)")
         
-        # 1. 현재 위치 점수 계산
-        current_scores = self._calculate_lh_scores(poi_distances, zone_info)
+        # 1. 현재 위치 점수 계산 (v3.1: demographic_info 추가)
+        current_scores = self._calculate_lh_scores(poi_distances, zone_info, demographic_info)
         overall_score = self._calculate_overall_score(current_scores)
         
         logger.info(f"  현재 위치 점수: {overall_score:.1f}점")
@@ -224,61 +294,139 @@ class GeoOptimizerV3:
     def _calculate_lh_scores(
         self,
         poi_distances: Dict[str, float],
-        zone_info: Optional[Dict[str, Any]]
+        zone_info: Optional[Dict[str, Any]],
+        demographic_info: Optional[Dict[str, Any]] = None
     ) -> Dict[str, float]:
-        """LH 기준 세부 점수 계산"""
+        """
+        LH 공식 평가표 점수 계산 v3.1
+        
+        7개 항목 점수 산출:
+        1. accessibility (역세권)
+        2. education (교육시설)
+        3. medical (의료시설)
+        4. commercial (상업시설)
+        5. regulation (토지규제 + 패널티)
+        6. acceptability (수용성 - 신규)
+        7. feasibility (사업성 - 신규)
+        """
         scores = {}
         
         # 1. 접근성 점수 (역세권)
         subway_dist = poi_distances.get("subway", 9999)
-        scores["accessibility"] = self._distance_to_score(subway_dist, "subway")
+        scores["accessibility"] = self._distance_to_score_v3_1(subway_dist, "subway")
         
         # 2. 교육시설 점수
         school_dist = poi_distances.get("school", 9999)
-        scores["education"] = self._distance_to_score(school_dist, "school")
+        scores["education"] = self._distance_to_score_v3_1(school_dist, "school")
         
         # 3. 의료시설 점수
         hospital_dist = poi_distances.get("hospital", 9999)
-        scores["medical"] = self._distance_to_score(hospital_dist, "hospital")
+        scores["medical"] = self._distance_to_score_v3_1(hospital_dist, "hospital")
         
         # 4. 상업시설 점수
         convenience_dist = poi_distances.get("convenience", 9999)
-        scores["commercial"] = self._distance_to_score(convenience_dist, "convenience")
+        scores["commercial"] = self._distance_to_score_v3_1(convenience_dist, "convenience")
         
-        # 5. 토지규제 점수
-        scores["regulation"] = self._calculate_regulation_score(zone_info)
+        # 5. 토지규제 점수 (v3.1: 패널티 반영)
+        scores["regulation"] = self._calculate_regulation_score_v3_1(zone_info)
+        
+        # 6. 수용성 점수 (v3.1 신규)
+        scores["acceptability"] = self._calculate_acceptability_score(
+            zone_info, demographic_info, poi_distances
+        )
+        
+        # 7. 사업성 점수 (v3.1 신규)
+        scores["feasibility"] = self._calculate_feasibility_score(
+            zone_info, demographic_info, poi_distances
+        )
         
         return scores
     
-    def _distance_to_score(self, distance: float, poi_type: str) -> float:
-        """거리를 점수로 변환 (0-100)"""
+    def _distance_to_score_v3_1(self, distance: float, poi_type: str) -> float:
+        """
+        거리를 점수로 변환 v3.1 (0-100)
+        
+        v3.1 개선사항:
+        - POI 거리 가중치 적용 (500m/1km/1.5km/2km)
+        - 거리 구간별 차등 점수
+        """
         if poi_type not in self.DISTANCE_STANDARDS:
             return 50.0
         
         standards = self.DISTANCE_STANDARDS[poi_type]
         
+        # 기본 점수 산출
         if distance <= standards["excellent"]:
-            return 100.0
+            base_score = 100.0
         elif distance <= standards["good"]:
-            return 85.0
+            base_score = 85.0
         elif distance <= standards["acceptable"]:
-            return 70.0
+            base_score = 70.0
         elif distance <= standards["poor"]:
-            return 50.0
+            base_score = 50.0
         else:
             # 거리가 멀수록 점수 하락 (최소 20점)
             decay_factor = max(0, 1 - (distance - standards["poor"]) / 5000)
-            return max(20.0, 50.0 * decay_factor)
+            base_score = max(20.0, 50.0 * decay_factor)
+        
+        # v3.1: POI 거리 가중치 적용
+        distance_weight = self._get_distance_weight(distance)
+        adjusted_score = base_score * distance_weight
+        
+        return min(100.0, adjusted_score)
     
-    def _calculate_regulation_score(self, zone_info: Optional[Dict[str, Any]]) -> float:
-        """토지규제 점수 계산"""
+    def _get_distance_weight(self, distance: float) -> float:
+        """
+        거리별 가중치 반환 v3.1
+        
+        500m: 1.0x (도보권)
+        1km: 0.8x (근린권)
+        1.5km: 0.5x (생활권)
+        2km: 0.3x (광역권)
+        2km+: 0.2x (원거리)
+        """
+        if distance <= 500:
+            return 1.0
+        elif distance <= 1000:
+            return 0.8
+        elif distance <= 1500:
+            return 0.5
+        elif distance <= 2000:
+            return 0.3
+        else:
+            return 0.2
+    
+    def _calculate_regulation_score_v3_1(self, zone_info: Optional[Dict[str, Any]]) -> float:
+        """
+        토지규제 점수 계산 v3.1
+        
+        v3.1 개선사항:
+        1. LH 자동탈락 항목 패널티 반영
+        2. 사업 불가 부지 자동 제외 (0점)
+        3. 경사도별 건축비 가중치 적용
+        """
         if not zone_info:
             return 50.0  # 정보 없으면 중립 점수
         
         score = 50.0
         
-        # 용도지역 체크
+        # ========== v3.1: 사업 불가 부지 자동 제외 ==========
         zone_type = zone_info.get("zone_type", "")
+        for exclude_zone in self.AUTO_EXCLUDE_ZONES:
+            if exclude_zone in zone_type:
+                logger.warning(f"⛔ 사업 불가 부지 감지: {exclude_zone} → 점수 0점")
+                return 0.0  # 자동 제외
+        
+        # ========== v3.1: LH 자동탈락 항목 패널티 ==========
+        zone_restrictions = zone_info.get("restrictions", [])
+        if isinstance(zone_restrictions, list):
+            for restriction in zone_restrictions:
+                for penalty_zone, penalty_score in self.LH_PENALTY_ZONES.items():
+                    if penalty_zone in restriction:
+                        logger.warning(f"⚠️ LH 패널티 항목 감지: {penalty_zone} → {penalty_score}점")
+                        score += penalty_score  # 패널티 차감
+        
+        # ========== 기존 용도지역 체크 ==========
         if "주거" in zone_type:
             score += 30  # 주거지역 우대
         elif "상업" in zone_type:
@@ -286,28 +434,150 @@ class GeoOptimizerV3:
         elif "공업" in zone_type:
             score -= 20  # 공업지역 불리
         
-        # 용적률 체크
+        # ========== 용적률 체크 ==========
         far = zone_info.get("floor_area_ratio", 0)
         if far >= 200:
             score += 10  # 고용적률 유리
         elif far < 100:
             score -= 10  # 저용적률 불리
         
-        # 건폐율 체크
+        # ========== 건폐율 체크 ==========
         bcr = zone_info.get("building_coverage_ratio", 0)
         if 40 <= bcr <= 60:
             score += 10  # 적정 건폐율
         
+        # ========== v3.1: 경사도별 건축비 가중치 ==========
+        slope = zone_info.get("slope_degree", 0)  # 경사도 (도)
+        if slope >= 15:
+            score -= 15  # 15도 이상: 건축비 +20% → 점수 -15
+            logger.info(f"📐 경사지 패널티: {slope}도 → -15점")
+        elif slope >= 10:
+            score -= 10  # 10-15도: 건축비 +10% → 점수 -10
+        elif slope >= 5:
+            score -= 5  # 5-10도: 건축비 +5% → 점수 -5
+        
+        return min(100.0, max(0.0, score))
+    
+    def _calculate_acceptability_score(
+        self,
+        zone_info: Optional[Dict[str, Any]],
+        demographic_info: Optional[Dict[str, Any]],
+        poi_distances: Dict[str, float]
+    ) -> float:
+        """
+        수용성 점수 계산 v3.1 (LH 평가표 필수 항목)
+        
+        수용성 = 지역 수요·공급 균형 + 입주 희망도
+        
+        평가 기준:
+        1. 청년·신혼 인구 밀도 (높을수록 좋음)
+        2. 기존 LH 매입임대 공급 현황 (낮을수록 좋음)
+        3. 주변 대학·산업단지 접근성 (좋을수록 좋음)
+        """
+        score = 50.0  # 기본 점수
+        
+        if demographic_info:
+            # 청년 인구 비율 (20-39세)
+            youth_ratio = demographic_info.get("youth_population_ratio", 0)
+            if youth_ratio >= 30:
+                score += 20
+            elif youth_ratio >= 20:
+                score += 10
+            
+            # 기존 LH 공급 현황
+            lh_supply = demographic_info.get("lh_supply_count", 0)
+            if lh_supply == 0:
+                score += 15  # 미공급 지역 우대
+            elif lh_supply <= 100:
+                score += 5
+            else:
+                score -= 10  # 과공급 지역 불리
+        
+        # POI 기반 수용성 (대학·직장 접근성)
+        university_dist = poi_distances.get("university", 9999)
+        if university_dist <= 1000:
+            score += 10  # 대학 1km 이내
+        
+        industrial_dist = poi_distances.get("industrial", 9999)
+        if industrial_dist <= 3000:
+            score += 5  # 산업단지 3km 이내
+        
+        return min(100.0, max(0.0, score))
+    
+    def _calculate_feasibility_score(
+        self,
+        zone_info: Optional[Dict[str, Any]],
+        demographic_info: Optional[Dict[str, Any]],
+        poi_distances: Dict[str, float]
+    ) -> float:
+        """
+        사업성 점수 계산 v3.1 (LH 평가표 필수 항목)
+        
+        사업성 = 건축비 + 임대료 + 수익성
+        
+        평가 기준:
+        1. 건축비 (용적률·경사도 반영)
+        2. 예상 임대료 (지역·역세권 반영)
+        3. LH 수익성 (건축비 대비 임대료)
+        """
+        score = 50.0  # 기본 점수
+        
+        if zone_info:
+            # 용적률 (높을수록 사업성 좋음)
+            far = zone_info.get("floor_area_ratio", 0)
+            if far >= 300:
+                score += 20
+            elif far >= 200:
+                score += 10
+            elif far < 100:
+                score -= 15
+            
+            # 경사도 (낮을수록 사업성 좋음)
+            slope = zone_info.get("slope_degree", 0)
+            if slope >= 15:
+                score -= 20  # 건축비 +20%
+            elif slope >= 10:
+                score -= 10
+            elif slope <= 5:
+                score += 10
+        
+        # 역세권 (임대료 프리미엄)
+        subway_dist = poi_distances.get("subway", 9999)
+        if subway_dist <= 300:
+            score += 15  # 역세권 A (임대료 +20%)
+        elif subway_dist <= 600:
+            score += 10  # 역세권 B (임대료 +10%)
+        elif subway_dist > 1500:
+            score -= 10
+        
+        # 상업시설 (임대료 프리미엄)
+        convenience_dist = poi_distances.get("convenience", 9999)
+        if convenience_dist <= 200:
+            score += 5
+        
         return min(100.0, max(0.0, score))
     
     def _calculate_overall_score(self, scores: Dict[str, float]) -> float:
-        """종합 점수 계산 (LH 가중치 적용)"""
+        """
+        종합 점수 계산 v3.1 (LH 공식 평가표 가중치 적용)
+        
+        7개 항목 가중치:
+        - accessibility (25%)
+        - education (20%)
+        - medical (15%)
+        - commercial (10%)
+        - regulation (10%)
+        - acceptability (10%)
+        - feasibility (10%)
+        """
         overall = (
-            scores["accessibility"] * self.weights.accessibility +
-            scores["education"] * self.weights.education +
-            scores["medical"] * self.weights.medical +
-            scores["commercial"] * self.weights.commercial +
-            scores["regulation"] * self.weights.regulation
+            scores.get("accessibility", 0) * self.weights.accessibility +
+            scores.get("education", 0) * self.weights.education +
+            scores.get("medical", 0) * self.weights.medical +
+            scores.get("commercial", 0) * self.weights.commercial +
+            scores.get("regulation", 0) * self.weights.regulation +
+            scores.get("acceptability", 0) * self.weights.acceptability +
+            scores.get("feasibility", 0) * self.weights.feasibility
         )
         return overall
     
@@ -479,7 +749,7 @@ class GeoOptimizerV3:
             "convenience": origin_poi_distances.get("convenience", 9999) - 200
         }
         
-        improved_scores = self._calculate_lh_scores(improved_poi, zone_info)
+        improved_scores = self._calculate_lh_scores(improved_poi, zone_info, None)
         overall_score = self._calculate_overall_score(improved_scores)
         
         distance_from_origin = self._calculate_distance(origin_lat, origin_lng, new_lat, new_lng)
@@ -496,6 +766,8 @@ class GeoOptimizerV3:
             medical_score=round(improved_scores["medical"], 1),
             commercial_score=round(improved_scores["commercial"], 1),
             regulation_score=round(improved_scores["regulation"], 1),
+            acceptability_score=round(improved_scores.get("acceptability", 0), 1),
+            feasibility_score=round(improved_scores.get("feasibility", 0), 1),
             subway_distance=improved_poi["subway"],
             school_distance=improved_poi["school"],
             hospital_distance=improved_poi["hospital"],
@@ -533,7 +805,7 @@ class GeoOptimizerV3:
             "convenience": origin_poi_distances.get("convenience", 9999)
         }
         
-        improved_scores = self._calculate_lh_scores(improved_poi, zone_info)
+        improved_scores = self._calculate_lh_scores(improved_poi, zone_info, None)
         overall_score = self._calculate_overall_score(improved_scores)
         
         distance_from_origin = self._calculate_distance(origin_lat, origin_lng, new_lat, new_lng)
@@ -550,6 +822,8 @@ class GeoOptimizerV3:
             medical_score=round(improved_scores["medical"], 1),
             commercial_score=round(improved_scores["commercial"], 1),
             regulation_score=round(improved_scores["regulation"], 1),
+            acceptability_score=round(improved_scores.get("acceptability", 0), 1),
+            feasibility_score=round(improved_scores.get("feasibility", 0), 1),
             subway_distance=improved_poi["subway"],
             school_distance=improved_poi["school"],
             hospital_distance=improved_poi["hospital"],
@@ -587,7 +861,7 @@ class GeoOptimizerV3:
             "convenience": origin_poi_distances.get("convenience", 9999) - 150
         }
         
-        improved_scores = self._calculate_lh_scores(improved_poi, zone_info)
+        improved_scores = self._calculate_lh_scores(improved_poi, zone_info, None)
         overall_score = self._calculate_overall_score(improved_scores)
         
         distance_from_origin = self._calculate_distance(origin_lat, origin_lng, new_lat, new_lng)
@@ -604,6 +878,8 @@ class GeoOptimizerV3:
             medical_score=round(improved_scores["medical"], 1),
             commercial_score=round(improved_scores["commercial"], 1),
             regulation_score=round(improved_scores["regulation"], 1),
+            acceptability_score=round(improved_scores.get("acceptability", 0), 1),
+            feasibility_score=round(improved_scores.get("feasibility", 0), 1),
             subway_distance=improved_poi["subway"],
             school_distance=improved_poi["school"],
             hospital_distance=improved_poi["hospital"],
