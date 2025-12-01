@@ -57,7 +57,7 @@ class ReportEngineV72:
         try:
             # Step 1: Map v7.2 engine output to report data
             logger.info("🔄 Step 1: Mapping v7.2 engine output → report data...")
-            report_data = self.mapper.map_engine_output_to_report(engine_output)
+            report_data = self.mapper.map_analysis_output_to_report(engine_output)
             
             # Step 2: Validate required fields
             logger.info("🔄 Step 2: Validating required fields...")

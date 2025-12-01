@@ -19,6 +19,19 @@ class ReportFieldMapperV72:
         self.version = "7.2.0"
         self.generated_at = datetime.now().isoformat()
     
+    def _to_dict(self, obj: Any) -> Any:
+        """Convert Pydantic models to dicts recursively"""
+        if hasattr(obj, 'model_dump'):
+            return obj.model_dump()
+        elif hasattr(obj, 'dict'):
+            return obj.dict()
+        elif isinstance(obj, dict):
+            return {k: self._to_dict(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [self._to_dict(item) for item in obj]
+        else:
+            return obj
+    
     def map_analysis_output_to_report(self, analysis_result: Dict[str, Any]) -> Dict[str, Any]:
         """
         Main mapping function: v7.2 engine output → report variables
@@ -29,6 +42,8 @@ class ReportFieldMapperV72:
         Returns:
             Complete report data dictionary with all v7.2 fields mapped
         """
+        # Convert Pydantic models to dicts if needed
+        data = self._to_dict(analysis_result)
         
         report_data = {
             # Meta information
@@ -37,37 +52,37 @@ class ReportFieldMapperV72:
             "engine_version": "ZeroSite v7.2",
             
             # Core analysis info
-            "basic_info": self._map_basic_info(analysis_result),
+            "basic_info": self._map_basic_info(data),
             
             # Type Demand v3.1
-            "type_demand": self._map_type_demand_v3_1(analysis_result),
+            "type_demand": self._map_type_demand_v3_1(data),
             
             # GeoOptimizer v3.1
-            "geo_optimizer": self._map_geo_optimizer_v3_1(analysis_result),
+            "geo_optimizer": self._map_geo_optimizer_v3_1(data),
             
             # Multi-Parcel v3.0 (if applicable)
-            "multi_parcel": self._map_multi_parcel_v3_0(analysis_result),
+            "multi_parcel": self._map_multi_parcel_v3_0(data),
             
             # LH scoring & assessment
-            "lh_assessment": self._map_lh_assessment(analysis_result),
+            "lh_assessment": self._map_lh_assessment(data),
             
             # Building & development info
-            "development": self._map_development_info(analysis_result),
+            "development": self._map_development_info(data),
             
             # Risk analysis
-            "risks": self._map_risk_analysis(analysis_result),
+            "risks": self._map_risk_analysis(data),
             
             # Performance stats (Rate Limit, Cache)
-            "performance": self._map_performance_stats(analysis_result),
+            "performance": self._map_performance_stats(data),
             
             # LH Notice Loader v2.1 (if applicable)
-            "lh_notice": self._map_lh_notice_loader(analysis_result),
+            "lh_notice": self._map_lh_notice_loader(data),
             
             # Negotiation strategies
-            "strategies": self._map_negotiation_strategies(analysis_result),
+            "strategies": self._map_negotiation_strategies(data),
             
             # Fallback status
-            "fallback_info": self._map_fallback_status(analysis_result)
+            "fallback_info": self._map_fallback_status(data)
         }
         
         return report_data
