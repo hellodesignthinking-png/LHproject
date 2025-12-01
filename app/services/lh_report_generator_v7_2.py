@@ -337,6 +337,21 @@ class LHReportGeneratorV72:
             margin: 15px 0;
         }}
         
+        .narrative-box {{
+            background: #f0f4ff;
+            border-left: 4px solid #5c6bc0;
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 14px;
+            line-height: 1.8;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }}
+        
+        .narrative-box strong {{
+            color: #1a237e;
+        }}
+        
         .metric {{
             display: inline-block;
             margin: 10px 20px 10px 0;
@@ -582,6 +597,25 @@ class LHReportGeneratorV72:
     
     <div class="subsection-title">POI 상세 거리 정보</div>
     {poi_table}
+    
+    <div class="narrative-box">
+        <strong>🎓 전문가 분석 (Expert Narrative)</strong><br><br>
+        POI(Point of Interest) 접근성 분석은 LH 신축매입임대 사업의 핵심 심사 항목으로, 
+        입주자의 생활 편의성을 정량적으로 평가하는 지표입니다. 본 대상지는 <strong>{lh_grade}등급({total_score:.1f}점)</strong>으로 
+        평가되었으며, 이는 주변 반경 500m~2km 내 필수 생활시설의 물리적 거리와 각 시설의 중요도(가중치)를 
+        종합적으로 반영한 결과입니다.
+        
+        특히 LH 공사는 초등학교(300m 이내 A등급), 종합병원(500m 이내 A등급), 지하철역(500m 이내 A등급) 등 
+        주요 시설과의 도보 접근성을 최우선 평가 기준으로 삼고 있습니다. 
+        Final Distance({final_distance:.0f}m)는 모든 POI 거리에 가중치를 적용한 종합 거리로, 
+        이 값이 낮을수록 입주자의 실제 체감 편의성이 높다는 것을 의미합니다.
+        
+        본 분석에서 확인된 학교 {school_count}개소, 병원 {hospital_count}개소, 
+        지하철역 {subway_count}개소는 모두 실제 카카오맵 API를 통해 검증된 데이터이며, 
+        해당 시설들과의 도보 동선이 안전하고 편리한지를 함께 고려해야 합니다. 
+        높은 POI 점수는 입주 후 만족도, 장기 거주 의향, 공실률 감소 등에 직접적인 영향을 미치므로, 
+        사업 수익성 예측의 중요한 근거자료로 활용됩니다.
+    </div>
 </div>
 """
     
@@ -658,6 +692,23 @@ class LHReportGeneratorV72:
         • <strong>B등급</strong>: 70~79점 (보통)<br>
         • <strong>C등급</strong>: 60~69점 (낮음)<br>
         • <strong>D등급</strong>: 60점 미만 (매우 낮음)
+    </div>
+    
+    <div class="narrative-box">
+        <strong>🎓 전문가 분석 (Expert Narrative)</strong><br><br>
+        본 대상지의 수요 분석 결과, <strong>{user_type}</strong> 유형에 대한 최종 점수는 <strong>{main_score:.1f}점({demand_level})</strong>으로 평가되었습니다. 
+        이는 LH 신축매입임대 사업의 핵심 지표로서, 해당 지역의 인구 구성, 교통 접근성, 생활 편의시설 밀집도, 
+        주변 임대시장 분석 등을 종합적으로 반영한 결과입니다. 
+        
+        특히 Raw Score는 지역 인구통계 및 주거 수요를 기반으로 산출되며, POI Bonus는 주변 500m~2km 반경 내 
+        필수 생활시설(학교, 병원, 대중교통 등)의 접근성을 가중 평가한 값입니다. 
+        
+        User Type Weight는 선택한 주거 유형({user_type})에 대한 시장 선호도를 반영하여, 
+        최종적으로 해당 입지가 목표 수요층에게 얼마나 매력적인지를 정량화합니다. 
+        
+        LH 공사는 이 점수를 기준으로 사업 우선순위를 결정하므로, 높은 수요 점수는 곧 사업 승인 가능성 및 
+        향후 입주율 안정성과 직결됩니다. 따라서 본 지표는 단순한 참고자료가 아닌, 
+        사업 타당성의 핵심 근거로 활용되어야 합니다.
     </div>
 </div>
 """
@@ -856,9 +907,14 @@ class LHReportGeneratorV72:
         
         cat_table += "</table>"
         
-        # Risk score visualization (0-20 scale, lower is better)
-        risk_bar_width = min(100, (risk_score / 20) * 100)
-        risk_color = '#28a745' if risk_score <= 5 else '#ffc107' if risk_score <= 10 else '#dc3545'
+        # FIX #5: Risk score visualization (100-point scale, higher is better)
+        risk_bar_width = min(100, risk_score)
+        risk_color = '#28a745' if risk_score >= 80 else '#ffc107' if risk_score >= 60 else '#dc3545'
+        
+        # Get formatted values from risk_data (added in Fix #5)
+        risk_score_formatted = risk_data.get('risk_score_formatted', f"{risk_score:.0f}점/100점")
+        total_risk_count = risk_data.get('total_risk_count', 0)
+        total_deduction = risk_data.get('total_deduction', 0)
         
         return f"""
 <div class="section">
@@ -866,12 +922,17 @@ class LHReportGeneratorV72:
     
     <div class="metric">
         <div class="metric-label">Risk Score</div>
-        <div class="metric-value">{risk_score:.1f}/20점</div>
+        <div class="metric-value">{risk_score_formatted}</div>
     </div>
     
     <div class="metric">
         <div class="metric-label">Risk Level</div>
         <div class="metric-value">{risk_level}</div>
+    </div>
+    
+    <div class="metric">
+        <div class="metric-label">Total Risks</div>
+        <div class="metric-value">{total_risk_count}건 (총 -{total_deduction:.0f}점)</div>
     </div>
     
     <div class="metric">
@@ -882,16 +943,35 @@ class LHReportGeneratorV72:
     <div class="subsection-title">리스크 점수 시각화</div>
     <div style="background: #f0f0f0; height: 30px; border-radius: 5px; overflow: hidden; margin: 20px 0;">
         <div style="background: {risk_color}; height: 100%; width: {risk_bar_width}%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
-            {risk_score:.1f}/20점
+            {risk_score:.0f}점/100점
         </div>
     </div>
     
     <div class="info-box">
-        <strong>📊 리스크 점수 해석</strong><br>
-        • 0-5점: 낮은 리스크 (매우 안전)<br>
-        • 6-10점: 보통 리스크 (주의 필요)<br>
-        • 11-15점: 높은 리스크 (신중 검토)<br>
-        • 16-20점: 매우 높은 리스크 (적극 대응 필요)
+        <strong>📊 리스크 점수 해석 (100점 만점, 감점 방식)</strong><br>
+        • 80-100점: 저위험 (매우 안전, 사업 추진 적극 권장)<br>
+        • 60-79점: 중위험 (주의 필요, 보완 방안 수립 후 추진)<br>
+        • 40-59점: 고위험 (신중 검토, 주요 리스크 해소 필수)<br>
+        • 0-39점: 매우 고위험 (사업 재검토, 대체 입지 고려)
+    </div>
+    
+    <div class="narrative-box">
+        <strong>🎓 전문가 분석 (Expert Narrative)</strong><br><br>
+        리스크 분석은 LH 사업의 안정성과 지속가능성을 판단하는 핵심 지표입니다. 
+        본 대상지는 100점 만점에 <strong>{risk_score:.0f}점({risk_level})</strong>으로 평가되었으며, 
+        이는 총 <strong>{total_risk_count}건</strong>의 리스크 요인이 확인되어 <strong>{total_deduction:.0f}점</strong>이 감점된 결과입니다.
+        
+        LH 공사는 법적 제약(용도지역 저촉, 개발행위제한), 물리적 제약(경사도, 지반 조건), 
+        환경적 제약(소음, 대기오염), 경제적 제약(사업비 초과, 수익성 부족) 등 
+        4대 리스크 카테고리를 기준으로 사업 위험도를 종합 평가합니다. 
+        
+        각 리스크 요인은 10점씩 감점되며, 80점 이상은 저위험(사업 추진 권장), 
+        60점 이상은 중위험(보완 후 추진 가능), 60점 미만은 고위험(재검토 필요)으로 분류됩니다. 
+        특히 법적 제약 리스크는 사업 진행 자체를 불가능하게 할 수 있으므로 최우선적으로 해소해야 하며, 
+        물리적 제약은 추가 공사비용으로 연결되므로 사업 수익성에 직접적인 영향을 미칩니다. 
+        
+        따라서 리스크 점수가 낮을 경우, 각 카테고리별 세부 요인을 정밀 분석하고 
+        실현 가능한 보완 방안을 수립한 후 사업 추진 여부를 최종 결정해야 합니다.
     </div>
     
     <div class="subsection-title">카테고리별 리스크 상세</div>
@@ -957,7 +1037,7 @@ class LHReportGeneratorV72:
     def _generate_conclusion(
         self, lh_data: Dict, td_data: Dict, poi_data: Dict, geo_data: Dict
     ) -> str:
-        """Generate dynamic conclusion based on scores"""
+        """FIX #6: Generate dynamic conclusion with NO contradictions"""
         
         lh_grade = lh_data.get('grade', 'N/A')
         lh_score = lh_data.get('total_score', 0)
@@ -967,49 +1047,76 @@ class LHReportGeneratorV72:
         poi_score = poi_data.get('total_score_v3_1', 0)
         poi_grade = poi_data.get('lh_grade', 'N/A')
         
+        # FIX #6: Use NUMERIC score, not text level (to avoid contradictions)
+        td_score = td_data.get('main_score', 0.0)
         td_level = td_data.get('demand_level', 'N/A')
+        td_grade = td_data.get('grade', 'N/A')
+        selected_type = td_data.get('selected_unit_type', '청년')
         
         geo_score = geo_data.get('final_score', 0)
         
-        # Dynamic conclusion based on scores
-        if lh_grade == 'A' and lh_score >= 85:
+        # FIX #6: Determine overall recommendation based on ALL scores (avoid contradictions)
+        # Criteria:
+        # - 적극 추천: LH A + td_score >= 75 + poi_score >= 70
+        # - 추천: LH A + td_score >= 60
+        # - 조건부: LH B or td_score >= 50
+        # - 비추천: LH C or td_score < 50
+        
+        overall_good = (lh_grade == 'A' and td_score >= 75 and poi_score >= 70)
+        overall_acceptable = (lh_grade == 'A' and td_score >= 60)
+        overall_conditional = (lh_grade == 'B' or (lh_grade == 'A' and td_score >= 50))
+        
+        # FIX #6: Generate consistent conclusion text
+        if overall_good:
             conclusion_text = f"""
             <div class="success-box">
-                <strong>✅ 매입 적극 추천 (A등급, {lh_score:.1f}점)</strong><br>
-                대상지는 LH 신축매입임대 사업에 매우 적합한 입지입니다. 
-                POI 접근성은 {poi_grade}등급({poi_score:.1f}점)으로 매우 우수하며, 
-                수요는 '{td_level}' 수준으로 평가됩니다. 
-                지리적 최적화 점수({geo_score:.1f}점)가 높아 입지 조건이 우수합니다.
+                <strong>✅ 매입 적극 추천 (종합 A등급)</strong><br>
+                대상지는 LH 신축매입임대 사업에 매우 적합한 입지입니다.<br>
+                • LH 심사: {lh_grade}등급 ({lh_score:.1f}점) - 우수<br>
+                • POI 접근성: {poi_grade}등급 ({poi_score:.1f}점) - 우수<br>
+                • 수요점수 ({selected_type}): {td_grade}등급 ({td_score:.1f}점) - {td_level}<br>
+                • 지리적 최적화: {geo_score:.1f}점 - 양호<br>
+                <br>
+                <strong>결론:</strong> 모든 지표가 우수하여 즉시 사업 추진이 가능합니다.
             </div>
             """
-        elif lh_grade == 'A':
+        elif overall_acceptable:
             conclusion_text = f"""
             <div class="success-box">
-                <strong>✅ 매입 추천 (A등급, {lh_score:.1f}점)</strong><br>
-                대상지는 LH 신축매입임대 사업에 적합한 입지입니다. 
-                POI 접근성은 {poi_grade}등급({poi_score:.1f}점)으로 양호하며, 
-                수요는 '{td_level}' 수준입니다. 
-                지리적 최적화 점수는 {geo_score:.1f}점입니다.
+                <strong>✅ 매입 추천 (종합 A-등급)</strong><br>
+                대상지는 LH 신축매입임대 사업에 적합한 입지입니다.<br>
+                • LH 심사: {lh_grade}등급 ({lh_score:.1f}점) - 양호<br>
+                • POI 접근성: {poi_grade}등급 ({poi_score:.1f}점)<br>
+                • 수요점수 ({selected_type}): {td_grade}등급 ({td_score:.1f}점) - {td_level}<br>
+                • 지리적 최적화: {geo_score:.1f}점<br>
+                <br>
+                <strong>결론:</strong> 대부분의 지표가 양호하여 사업 추진을 추천합니다.
             </div>
             """
-        elif lh_grade == 'B':
+        elif overall_conditional:
             conclusion_text = f"""
             <div class="warning-box">
-                <strong>⚠️ 조건부 검토 (B등급, {lh_score:.1f}점)</strong><br>
-                대상지는 일부 개선이 필요하나 사업 가능성이 있습니다. 
-                POI 접근성은 {poi_grade}등급({poi_score:.1f}점), 
-                수요는 '{td_level}' 수준입니다. 
-                지리적 최적화 점수({geo_score:.1f}점)를 고려한 보완 방안이 필요합니다.
+                <strong>⚠️ 조건부 검토 (종합 B등급)</strong><br>
+                대상지는 일부 개선이 필요하나 사업 가능성이 있습니다.<br>
+                • LH 심사: {lh_grade}등급 ({lh_score:.1f}점)<br>
+                • POI 접근성: {poi_grade}등급 ({poi_score:.1f}점)<br>
+                • 수요점수 ({selected_type}): {td_grade}등급 ({td_score:.1f}점) - {td_level}<br>
+                • 지리적 최적화: {geo_score:.1f}점<br>
+                <br>
+                <strong>결론:</strong> 일부 지표 개선 후 사업 추진 가능. 세부 보완 방안 수립이 필요합니다.
             </div>
             """
         else:
             conclusion_text = f"""
             <div class="danger-box">
-                <strong>❌ 매입 비추천 ({lh_grade}등급, {lh_score:.1f}점)</strong><br>
-                대상지는 현재 기준으로 사업성이 낮습니다. 
-                POI 접근성 {poi_grade}등급({poi_score:.1f}점), 
-                수요 '{td_level}', 
-                지리적 최적화 {geo_score:.1f}점으로 종합적인 개선이 필요합니다.
+                <strong>❌ 매입 비추천 (종합 C등급)</strong><br>
+                대상지는 현재 기준으로 사업성이 낮습니다.<br>
+                • LH 심사: {lh_grade}등급 ({lh_score:.1f}점) - 미흡<br>
+                • POI 접근성: {poi_grade}등급 ({poi_score:.1f}점)<br>
+                • 수요점수 ({selected_type}): {td_grade}등급 ({td_score:.1f}점) - {td_level}<br>
+                • 지리적 최적화: {geo_score:.1f}점<br>
+                <br>
+                <strong>결론:</strong> 주요 지표가 기준 미달로 사업 추진이 어렵습니다. 대체 입지 검토를 권장합니다.
             </div>
             """
         

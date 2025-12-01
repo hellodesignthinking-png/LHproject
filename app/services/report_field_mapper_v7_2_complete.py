@@ -549,22 +549,34 @@ class ReportFieldMapperV72Complete:
                 category = self._safe_get(risk, 'category', default="legal")
                 risk_categories.setdefault(category, []).append(risk)
         
-        # Calculate risk level (LH 2025 criteria)
+        # FIX #5: Calculate risk level (LH 2025 criteria) - Use 100-point scale with deduction
         total_risks = len(risk_factors)
-        if total_risks == 0:
+        
+        # LH standard: Start from 100, deduct 10 points per risk
+        base_score = 100.0
+        deduction_per_risk = 10.0
+        risk_score = max(0.0, base_score - (total_risks * deduction_per_risk))
+        
+        # Determine risk level based on final score
+        if risk_score >= 80.0:
             risk_level = "저위험"
-            risk_score = 90.0
-        elif total_risks <= 2:
+        elif risk_score >= 60.0:
             risk_level = "중위험"
-            risk_score = 70.0
         else:
             risk_level = "고위험"
-            risk_score = 50.0
+        
+        # FIX #5: Add formatted version for display (e.g., "80점/100점")
+        risk_score_formatted = f"{risk_score:.0f}점/100점"
+        risk_score_percentage = f"{risk_score:.0f}%"
         
         return {
             "total_risk_count": total_risks,
             "risk_level": risk_level,
-            "risk_score": risk_score,
+            "risk_score": risk_score,  # Raw numeric value
+            "risk_score_formatted": risk_score_formatted,  # FIX #5: Pre-formatted for display
+            "risk_score_percentage": risk_score_percentage,  # FIX #5: As percentage
+            "deduction_per_risk": deduction_per_risk,  # FIX #5: Show deduction rate
+            "total_deduction": total_risks * deduction_per_risk,  # FIX #5: Total deducted
             "risk_categories": risk_categories,
             "risk_factors": risk_factors,
             "criteria_version": "LH_2025",
