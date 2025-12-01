@@ -19,18 +19,84 @@ class ReportFieldMapperV72:
         self.version = "7.2.0"
         self.generated_at = datetime.now().isoformat()
     
+    def _parse_pydantic_string(self, value: str) -> Dict[str, Any]:
+        """
+        Parse Pydantic model string representation to dict
+        
+        Example: "grade='A' total_score=86.27 category_scores={'입지': 92.5}"
+        → {"grade": "A", "total_score": 86.27, "category_scores": {"입지": 92.5}}
+        """
+        if not isinstance(value, str):
+            return value
+        
+        import re
+        import ast
+        
+        result = {}
+        
+        # Pattern 1: Simple key=value pairs
+        # Matches: key='value' or key=123 or key=12.5 or key=None or key=True
+        pattern = r"(\w+)=((?:'[^']*'|\"[^\"]*\"|{[^}]*}|\[[^\]]*\]|[^\s]+))"
+        matches = re.findall(pattern, value)
+        
+        for key, val in matches:
+            # Try to evaluate the value safely
+            try:
+                # Handle quoted strings
+                if (val.startswith("'") and val.endswith("'")) or \
+                   (val.startswith('"') and val.endswith('"')):
+                    result[key] = val[1:-1]
+                # Handle dict/list/tuple
+                elif val.startswith(('{', '[', '(')):
+                    result[key] = ast.literal_eval(val)
+                # Handle numbers
+                elif '.' in val:
+                    result[key] = float(val)
+                elif val.isdigit() or (val.startswith('-') and val[1:].isdigit()):
+                    result[key] = int(val)
+                # Handle booleans and None
+                elif val == 'True':
+                    result[key] = True
+                elif val == 'False':
+                    result[key] = False
+                elif val == 'None':
+                    result[key] = None
+                else:
+                    result[key] = val
+            except:
+                # If parsing fails, keep as string
+                result[key] = val.strip("'\"")
+        
+        return result if result else value
+    
     def _to_dict(self, obj: Any) -> Any:
-        """Convert Pydantic models to dicts recursively"""
+        """Enhanced dict conversion with Pydantic string parsing"""
+        # First try Pydantic methods
         if hasattr(obj, 'model_dump'):
-            return obj.model_dump()
+            data = obj.model_dump()
         elif hasattr(obj, 'dict'):
-            return obj.dict()
+            data = obj.dict()
         elif isinstance(obj, dict):
-            return {k: self._to_dict(v) for k, v in obj.items()}
-        elif isinstance(obj, list):
-            return [self._to_dict(item) for item in obj]
+            data = obj
+        elif isinstance(obj, str) and '=' in obj:
+            # Parse Pydantic string representation
+            return self._parse_pydantic_string(obj)
         else:
             return obj
+        
+        # Now recursively parse any string values that look like Pydantic models
+        result = {}
+        for key, value in data.items():
+            if isinstance(value, str) and '=' in value:
+                result[key] = self._parse_pydantic_string(value)
+            elif isinstance(value, dict):
+                result[key] = self._to_dict(value)
+            elif isinstance(value, list):
+                result[key] = [self._to_dict(item) for item in value]
+            else:
+                result[key] = value
+        
+        return result
     
     def map_analysis_output_to_report(self, analysis_result: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -89,17 +155,39 @@ class ReportFieldMapperV72:
     
     def _map_basic_info(self, data: Dict) -> Dict[str, Any]:
         """Map basic analysis information"""
+        # Parse coordinates (may be Pydantic string)
+        coords = data.get("coordinates", {})
+        if isinstance(coords, str):
+            coords = self._parse_pydantic_string(coords)
+        
+        # Parse zone_info
+        zone = data.get("zone_info", {})
+        if isinstance(zone, str):
+            zone = self._parse_pydantic_string(zone)
+        
+        # Get address from financial_data or direct
+        address = data.get("address") or data.get("financial_data", {}).get("address", "주소 정보 없음")
+        
+        # Get land area
+        land_area = data.get("land_area") or data.get("financial_data", {}).get("land_area", 0.0)
+        
         return {
             "analysis_id": data.get("analysis_id", "N/A"),
             "timestamp": data.get("timestamp", datetime.now().isoformat()),
-            "address": data.get("address", "주소 정보 없음"),
+            "address": address,
+            "land_area": land_area,
             "coordinates": {
-                "lat": data.get("coordinates", {}).get("lat", 0.0),
-                "lng": data.get("coordinates", {}).get("lng", 0.0)
+                "lat": coords.get("latitude", 0.0),
+                "lng": coords.get("longitude", 0.0),
+                "latitude": coords.get("latitude", 0.0),
+                "longitude": coords.get("longitude", 0.0)
             },
-            "area_sqm": data.get("area", 0.0),
-            "area_pyeong": round(data.get("area", 0.0) / 3.3058, 2),
-            "zoning_type": data.get("zoning_type", "용도지역 미확인"),
+            "area_sqm": land_area,
+            "area_pyeong": round(land_area / 3.3058, 2) if land_area else 0.0,
+            "zone_type": zone.get("zone_type", "용도지역 미확인"),
+            "building_coverage_ratio": zone.get("building_coverage_ratio", 60),
+            "floor_area_ratio": zone.get("floor_area_ratio", 200),
+            "height_limit": zone.get("height_limit"),
             "unit_type": data.get("unit_type", "유형 미지정")
         }
     
@@ -221,22 +309,46 @@ class ReportFieldMapperV72:
         }
     
     def _map_lh_assessment(self, data: Dict) -> Dict[str, Any]:
-        """Map LH scoring and assessment"""
+        """Map LH scoring and assessment with Pydantic parsing"""
+        grade_info = data.get("grade_info", {})
+        if isinstance(grade_info, str):
+            grade_info = self._parse_pydantic_string(grade_info)
+        
+        summary = data.get("summary", {})
+        if isinstance(summary, str):
+            summary = self._parse_pydantic_string(summary)
+        
         return {
-            "score": data.get("lh_score", 0.0),
-            "grade": data.get("lh_grade", "C"),
+            "score": grade_info.get("total_score", 0.0),
+            "grade": grade_info.get("grade", "C"),
             "version": data.get("lh_version", "2024"),
-            "overall_suitability": data.get("overall_suitability", "평가 필요"),
-            "recommendation": data.get("recommendation", "상세 검토 권장")
+            "is_eligible": summary.get("is_eligible", True),
+            "detail_scores": grade_info.get("category_scores", {}),
+            "recommendation": grade_info.get("summary", "상세 검토 권장")
         }
     
     def _map_development_info(self, data: Dict) -> Dict[str, Any]:
-        """Map building and development information"""
+        """Map building and development information with Pydantic parsing"""
+        bldg = data.get("building_capacity", {})
+        if isinstance(bldg, str):
+            bldg = self._parse_pydantic_string(bldg)
+        
+        summary = data.get("summary", {})
+        if isinstance(summary, str):
+            summary = self._parse_pydantic_string(summary)
+        
+        zone = data.get("zone_info", {})
+        if isinstance(zone, str):
+            zone = self._parse_pydantic_string(zone)
+        
         return {
-            "estimated_units": data.get("estimated_units", 0),
-            "estimated_floors": data.get("estimated_floors", 0),
-            "building_coverage_ratio": data.get("building_coverage_ratio", 0.0),
-            "floor_area_ratio": data.get("floor_area_ratio", 0.0)
+            "estimated_units": bldg.get("units", summary.get("estimated_units", 0)),
+            "estimated_floors": bldg.get("floors", 0),
+            "parking_spaces": bldg.get("parking_spaces", 0),
+            "building_area": bldg.get("building_area", 0.0),
+            "total_floor_area": bldg.get("total_floor_area", 0.0),
+            "building_coverage_ratio": zone.get("building_coverage_ratio", 0.0),
+            "floor_area_ratio": zone.get("floor_area_ratio", 0.0)
         }
     
     def _map_risk_analysis(self, data: Dict) -> Dict[str, Any]:

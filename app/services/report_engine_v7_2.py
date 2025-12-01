@@ -12,8 +12,8 @@ import json
 import logging
 from pathlib import Path
 
-# Import the v7.2 field mapper
-from app.services.report_field_mapper_v7_2 import ReportFieldMapperV72
+# Import the COMPLETE v7.2 field mapper with all 11 critical patches
+from app.services.report_field_mapper_v7_2_complete import ReportFieldMapperV72Complete
 
 logger = logging.getLogger(__name__)
 
@@ -32,10 +32,10 @@ class ReportEngineV72:
     """
     
     def __init__(self):
-        self.mapper = ReportFieldMapperV72()
+        self.mapper = ReportFieldMapperV72Complete()
         self.report_date = datetime.now().strftime("%Y.%m.%d")
-        self.version = "7.2"
-        logger.info(f"✅ Report Engine v{self.version} initialized")
+        self.version = "7.2-complete"
+        logger.info(f"✅ Report Engine v{self.version} initialized with ALL 11 CRITICAL PATCHES")
     
     def generate_report(
         self, 
@@ -87,6 +87,7 @@ class ReportEngineV72:
                 'report_type': report_type,
                 'format': format,
                 'content': content,
+                'report_data': report_data,  # CRITICAL: Include mapped data for patch validation
                 'metadata': {
                     'generation_date': self.report_date,
                     'engine_version': '7.2',
