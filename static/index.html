@@ -1566,12 +1566,21 @@
             document.getElementById('reportBtn').textContent = '📄 보고서 생성 중...';
 
             try {
+                // 🔥 CRITICAL: Force v7.5 FINAL mode explicitly
+                const reportPayload = {
+                    ...currentAnalysisData,
+                    report_mode: 'v7_5_final'  // ✅ Explicitly set v7.5 FINAL mode
+                };
+                
+                console.log('🔥 Requesting v7.5 FINAL Report...');
+                console.log('   Report Mode:', reportPayload.report_mode);
+                
                 const response = await fetch(`${API_URL}/api/generate-report`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(currentAnalysisData)
+                    body: JSON.stringify(reportPayload)
                 });
 
                 if (!response.ok) {
