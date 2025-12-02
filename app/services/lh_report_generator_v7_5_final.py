@@ -47,6 +47,9 @@ from app.services.risk_mitigation_v7_4 import RiskMitigationFramework
 from app.services.narrative_templates_v7_5_final import NarrativeTemplatesV75Final
 from app.services.professional_layout_v7_4 import ProfessionalLayoutV74
 
+# Import v8.1 POI Integration
+from app.services.poi_integration_v8_1 import POIIntegrationV81
+
 logger = logging.getLogger(__name__)
 
 
@@ -73,12 +76,14 @@ class LHReportGeneratorV75Final:
         self.risk_framework = RiskMitigationFramework()
         self.narrative_templates = NarrativeTemplatesV75Final()
         self.layout_system = ProfessionalLayoutV74()
+        self.poi_integration = POIIntegrationV81()  # v8.1 POI Integration
         
         logger.info("🎯 LH Report Generator v7.5 FINAL initialized")
         logger.info("   ✓ JSON API Response Structure")
         logger.info("   ✓ 60-Page Professional Format")
         logger.info("   ✓ Administrative Tone")
         logger.info("   ✓ Enhanced Narratives (6-15 paragraphs)")
+        logger.info("   ✓ v8.1 POI Integration (Educational, Transport, Healthcare, Commercial, Cultural)")
     
     def run(
         self, 
@@ -213,6 +218,32 @@ class LHReportGeneratorV75Final:
         unit_type = basic_info['unit_type']
         construction_type = basic_info['construction_type']
         
+        # Phase 2.5: POI Analysis (v8.1)
+        poi_analysis = None
+        try:
+            # Kakao API를 통해 좌표 획득
+            from app.services.kakao_service import KakaoService
+            from app.schemas import Coordinates
+            import asyncio
+            
+            kakao_service = KakaoService()
+            
+            # 비동기 함수를 동기적으로 실행
+            coords = asyncio.run(kakao_service.address_to_coordinates(address))
+            
+            if coords:
+                logger.info(f"🗺️  Coordinates obtained: ({coords.latitude:.6f}, {coords.longitude:.6f})")
+                # POI 분석 실행
+                poi_analysis = asyncio.run(
+                    self.poi_integration.analyze_comprehensive_poi(coords, address)
+                )
+                logger.info(f"✅ POI Analysis complete: Infrastructure Score = {poi_analysis.overall_infrastructure_score:.1f}/100")
+            else:
+                logger.warning("⚠️  Failed to get coordinates, POI analysis skipped")
+        except Exception as e:
+            logger.warning(f"⚠️  POI Analysis failed: {str(e)}, continuing without POI data")
+            poi_analysis = None
+        
         financial_analysis = run_full_financial_analysis(
             land_area=land_area,
             address=address,
@@ -264,9 +295,9 @@ class LHReportGeneratorV75Final:
         # Part 3: Market Analysis (3-4 pages)
         sections.append(self._generate_market_analysis(basic_info, tone))
         
-        # Part 4: Site Strategic Analysis (8-10 pages)
+        # Part 4: Site Strategic Analysis (8-10 pages) with v8.1 POI data
         sections.append(self._generate_site_analysis_enhanced(
-            data, basic_info, inferred_data, tone
+            data, basic_info, inferred_data, tone, poi_analysis
         ))
         
         # Part 5: Financial Feasibility (8-10 pages, enhanced)
@@ -616,16 +647,261 @@ class LHReportGeneratorV75Final:
         return {'title': 'Market Analysis', 'html': html, 'level': 1}
     
     def _generate_site_analysis_enhanced(
-        self, data, basic_info, inferred_data, tone
+        self, data, basic_info, inferred_data, tone, poi_analysis=None
     ) -> Dict[str, Any]:
-        """Generate enhanced site analysis (8-10 pages)"""
-        html = """
-        <div class="site-analysis-enhanced">
+        """Generate enhanced site analysis (8-10 pages) with v8.1 POI data"""
+        
+        # POI 분석이 제공되지 않았으면 기본 HTML 생성
+        if not poi_analysis:
+            html = """
+            <div class="site-analysis-enhanced">
+                <h1 class="section-title">대상지 전략적 입지 분석</h1>
+                <p class="paragraph">입지 경쟁력을 다각도로 분석하고 LH 평가 기준과 매핑합니다...</p>
+            </div>
+            """
+            return {'title': 'Site Analysis', 'html': html, 'level': 1}
+        
+        # v8.1 POI 데이터를 포함한 상세 분석
+        html = f"""
+        <div class="site-analysis-enhanced" style="page-break-before: always;">
             <h1 class="section-title">대상지 전략적 입지 분석</h1>
-            <p class="paragraph">입지 경쟁력을 다각도로 분석하고 LH 평가 기준과 매핑합니다...</p>
+            
+            <h2 class="subsection-title">1. 종합 인프라 평가</h2>
+            <div style="padding: 20px; background: #f8f9fa; border-left: 4px solid #0047AB; margin: 20px 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="border-bottom: 2px solid #dee2e6;">
+                        <th style="text-align: left; padding: 12px; width: 40%;">평가 항목</th>
+                        <th style="text-align: center; padding: 12px; width: 20%;">점수</th>
+                        <th style="text-align: center; padding: 12px; width: 20%;">등급</th>
+                        <th style="text-align: left; padding: 12px; width: 20%;">평가</th>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #dee2e6;">
+                        <td style="padding: 12px;">교육 인프라</td>
+                        <td style="text-align: center; padding: 12px; font-weight: bold; color: {'#28a745' if poi_analysis.education_score >= 70 else '#ffc107' if poi_analysis.education_score >= 50 else '#dc3545'};">
+                            {poi_analysis.education_score:.1f}/100
+                        </td>
+                        <td style="text-align: center; padding: 12px;">
+                            {self._get_score_badge(poi_analysis.education_score)}
+                        </td>
+                        <td style="padding: 12px;">
+                            {'우수' if poi_analysis.education_score >= 70 else '보통' if poi_analysis.education_score >= 50 else '개선필요'}
+                        </td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #dee2e6;">
+                        <td style="padding: 12px;">교통 인프라</td>
+                        <td style="text-align: center; padding: 12px; font-weight: bold; color: {'#28a745' if poi_analysis.transportation_score >= 70 else '#ffc107' if poi_analysis.transportation_score >= 50 else '#dc3545'};">
+                            {poi_analysis.transportation_score:.1f}/100
+                        </td>
+                        <td style="text-align: center; padding: 12px;">
+                            {self._get_score_badge(poi_analysis.transportation_score)}
+                        </td>
+                        <td style="padding: 12px;">
+                            {'우수' if poi_analysis.transportation_score >= 70 else '보통' if poi_analysis.transportation_score >= 50 else '개선필요'}
+                        </td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #dee2e6;">
+                        <td style="padding: 12px;">의료 인프라</td>
+                        <td style="text-align: center; padding: 12px; font-weight: bold; color: {'#28a745' if poi_analysis.healthcare_score >= 70 else '#ffc107' if poi_analysis.healthcare_score >= 50 else '#dc3545'};">
+                            {poi_analysis.healthcare_score:.1f}/100
+                        </td>
+                        <td style="text-align: center; padding: 12px;">
+                            {self._get_score_badge(poi_analysis.healthcare_score)}
+                        </td>
+                        <td style="padding: 12px;">
+                            {'우수' if poi_analysis.healthcare_score >= 70 else '보통' if poi_analysis.healthcare_score >= 50 else '개선필요'}
+                        </td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #dee2e6;">
+                        <td style="padding: 12px;">상업 인프라</td>
+                        <td style="text-align: center; padding: 12px; font-weight: bold; color: {'#28a745' if poi_analysis.commercial_score >= 70 else '#ffc107' if poi_analysis.commercial_score >= 50 else '#dc3545'};">
+                            {poi_analysis.commercial_score:.1f}/100
+                        </td>
+                        <td style="text-align: center; padding: 12px;">
+                            {self._get_score_badge(poi_analysis.commercial_score)}
+                        </td>
+                        <td style="padding: 12px;">
+                            {'우수' if poi_analysis.commercial_score >= 70 else '보통' if poi_analysis.commercial_score >= 50 else '개선필요'}
+                        </td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #dee2e6;">
+                        <td style="padding: 12px;">문화/여가 인프라</td>
+                        <td style="text-align: center; padding: 12px; font-weight: bold; color: {'#28a745' if poi_analysis.cultural_score >= 70 else '#ffc107' if poi_analysis.cultural_score >= 50 else '#dc3545'};">
+                            {poi_analysis.cultural_score:.1f}/100
+                        </td>
+                        <td style="text-align: center; padding: 12px;">
+                            {self._get_score_badge(poi_analysis.cultural_score)}
+                        </td>
+                        <td style="padding: 12px;">
+                            {'우수' if poi_analysis.cultural_score >= 70 else '보통' if poi_analysis.cultural_score >= 50 else '개선필요'}
+                        </td>
+                    </tr>
+                    <tr style="background: #e9ecef; font-weight: bold; border-top: 2px solid #0047AB;">
+                        <td style="padding: 15px;">종합 인프라 점수</td>
+                        <td style="text-align: center; padding: 15px; font-size: 14pt; color: {'#28a745' if poi_analysis.overall_infrastructure_score >= 70 else '#ffc107' if poi_analysis.overall_infrastructure_score >= 50 else '#dc3545'};">
+                            {poi_analysis.overall_infrastructure_score:.1f}/100
+                        </td>
+                        <td style="text-align: center; padding: 15px; font-size: 14pt;">
+                            <span style="background: {'#28a745' if poi_analysis.livability_grade in ['A+', 'A'] else '#ffc107' if poi_analysis.livability_grade in ['B+', 'B'] else '#dc3545'}; 
+                                         color: white; padding: 5px 15px; border-radius: 4px; font-weight: bold;">
+                                {poi_analysis.livability_grade}
+                            </span>
+                        </td>
+                        <td style="padding: 15px;">거주 적합도 {poi_analysis.livability_grade}등급</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <h2 class="subsection-title">2. 교육 시설 상세 분석</h2>
+            <p class="paragraph">
+                대상지 인근의 교육시설 접근성을 분석한 결과, 종합 점수 <strong>{poi_analysis.education_score:.1f}/100점</strong>으로 평가되었습니다.
+                초등학교는 총 <strong>{poi_analysis.elementary_schools.count}개소</strong>가 반경 1.5km 내에 위치하며, 
+                최단거리는 <strong>{poi_analysis.elementary_schools.nearest_distance:.0f}m</strong>입니다.
+                중학교는 <strong>{poi_analysis.middle_schools.count}개소</strong> (최단거리 {poi_analysis.middle_schools.nearest_distance:.0f}m),
+                고등학교는 <strong>{poi_analysis.high_schools.count}개소</strong> (최단거리 {poi_analysis.high_schools.nearest_distance:.0f}m)로 확인되었습니다.
+            </p>
+            {self._generate_facility_detail_table("초등학교", poi_analysis.elementary_schools)}
+            {self._generate_facility_detail_table("중학교", poi_analysis.middle_schools)}
+            {self._generate_facility_detail_table("고등학교", poi_analysis.high_schools)}
+            {self._generate_facility_detail_table("유치원/어린이집", poi_analysis.kindergartens)}
+            
+            <h2 class="subsection-title">3. 교통 시설 상세 분석</h2>
+            <p class="paragraph">
+                대중교통 접근성은 종합 점수 <strong>{poi_analysis.transportation_score:.1f}/100점</strong>으로 평가되었습니다.
+                지하철역은 총 <strong>{poi_analysis.subway_stations.count}개소</strong>가 반경 2km 내에 위치하며,
+                최단거리는 <strong>{poi_analysis.subway_stations.nearest_distance:.0f}m</strong>입니다.
+                버스정류장은 <strong>{poi_analysis.bus_stops.count}개소</strong> (최단거리 {poi_analysis.bus_stops.nearest_distance:.0f}m)로
+                대중교통 이용이 {'매우 편리한' if poi_analysis.transportation_score >= 80 else '편리한' if poi_analysis.transportation_score >= 60 else '보통인'} 것으로 분석되었습니다.
+            </p>
+            {self._generate_facility_detail_table("지하철역", poi_analysis.subway_stations)}
+            {self._generate_facility_detail_table("버스정류장", poi_analysis.bus_stops)}
+            
+            <h2 class="subsection-title">4. 의료 시설 상세 분석</h2>
+            <p class="paragraph">
+                의료시설 접근성은 종합 점수 <strong>{poi_analysis.healthcare_score:.1f}/100점</strong>으로 평가되었습니다.
+                종합병원/병원은 <strong>{poi_analysis.hospitals.count}개소</strong> (최단거리 {poi_analysis.hospitals.nearest_distance:.0f}m),
+                의원은 <strong>{poi_analysis.clinics.count}개소</strong> (최단거리 {poi_analysis.clinics.nearest_distance:.0f}m),
+                약국은 <strong>{poi_analysis.pharmacies.count}개소</strong> (최단거리 {poi_analysis.pharmacies.nearest_distance:.0f}m)로
+                입주민의 의료 서비스 이용에 {'큰 문제가 없을' if poi_analysis.healthcare_score >= 60 else '일부 제약이 있을'} 것으로 판단됩니다.
+            </p>
+            {self._generate_facility_detail_table("병원", poi_analysis.hospitals)}
+            {self._generate_facility_detail_table("약국", poi_analysis.pharmacies)}
+            
+            <h2 class="subsection-title">5. 상업 시설 상세 분석</h2>
+            <p class="paragraph">
+                생활편의시설 접근성은 종합 점수 <strong>{poi_analysis.commercial_score:.1f}/100점</strong>으로 평가되었습니다.
+                대형마트는 <strong>{poi_analysis.supermarkets.count}개소</strong> (최단거리 {poi_analysis.supermarkets.nearest_distance:.0f}m),
+                편의점은 <strong>{poi_analysis.convenience_stores.count}개소</strong> (최단거리 {poi_analysis.convenience_stores.nearest_distance:.0f}m),
+                쇼핑몰은 <strong>{poi_analysis.shopping_malls.count}개소</strong> (최단거리 {poi_analysis.shopping_malls.nearest_distance:.0f}m)로
+                일상생활에 필요한 쇼핑 환경이 {'잘 갖추어져 있습니다' if poi_analysis.commercial_score >= 60 else '보통 수준입니다'}.
+            </p>
+            {self._generate_facility_detail_table("대형마트", poi_analysis.supermarkets)}
+            {self._generate_facility_detail_table("편의점", poi_analysis.convenience_stores)}
+            
+            <h2 class="subsection-title">6. 문화/여가 시설 상세 분석</h2>
+            <p class="paragraph">
+                문화 및 여가시설 접근성은 종합 점수 <strong>{poi_analysis.cultural_score:.1f}/100점</strong>으로 평가되었습니다.
+                공원은 <strong>{poi_analysis.parks.count}개소</strong> (최단거리 {poi_analysis.parks.nearest_distance:.0f}m),
+                도서관은 <strong>{poi_analysis.libraries.count}개소</strong> (최단거리 {poi_analysis.libraries.nearest_distance:.0f}m),
+                체육시설은 <strong>{poi_analysis.gyms.count}개소</strong> (최단거리 {poi_analysis.gyms.nearest_distance:.0f}m)로
+                입주민의 여가생활 및 문화활동에 {'유리한 환경' if poi_analysis.cultural_score >= 60 else '보통 환경'}입니다.
+            </p>
+            {self._generate_facility_detail_table("공원", poi_analysis.parks)}
+            {self._generate_facility_detail_table("도서관", poi_analysis.libraries)}
+            
+            <h2 class="subsection-title">7. 종합 평가 및 권고사항</h2>
+            
+            <h3 class="subsubsection-title">7.1 강점 (Strengths)</h3>
+            <ul style="line-height: 2.0; margin: 20px 0;">
+                {''.join(f'<li><strong>✓</strong> {strength}</li>' for strength in poi_analysis.strengths)}
+            </ul>
+            
+            <h3 class="subsubsection-title">7.2 약점 (Weaknesses)</h3>
+            <ul style="line-height: 2.0; margin: 20px 0;">
+                {''.join(f'<li><strong>⚠</strong> {weakness}</li>' for weakness in poi_analysis.weaknesses)}
+            </ul>
+            
+            <h3 class="subsubsection-title">7.3 권고사항 (Recommendations)</h3>
+            <ul style="line-height: 2.0; margin: 20px 0;">
+                {''.join(f'<li><strong>→</strong> {rec}</li>' for rec in poi_analysis.recommendations)}
+            </ul>
+            
+            <p class="paragraph">
+                종합적으로 대상지는 <strong>거주 적합도 {poi_analysis.livability_grade}등급</strong>으로 평가되며,
+                전체 인프라 점수 <strong>{poi_analysis.overall_infrastructure_score:.1f}/100점</strong>은
+                {'우수한' if poi_analysis.overall_infrastructure_score >= 70 else '양호한' if poi_analysis.overall_infrastructure_score >= 60 else '보통' if poi_analysis.overall_infrastructure_score >= 50 else '개선이 필요한'} 
+                수준입니다. LH 신축매입임대주택 사업지로서 
+                {'충분한' if poi_analysis.overall_infrastructure_score >= 65 else '일정 수준의' if poi_analysis.overall_infrastructure_score >= 50 else '제한적인'} 
+                입지 경쟁력을 보유하고 있는 것으로 판단됩니다.
+            </p>
         </div>
         """
-        return {'title': 'Site Analysis', 'html': html, 'level': 1}
+        
+        return {'title': 'Site Analysis with POI Data', 'html': html, 'level': 1}
+    
+    def _get_score_badge(self, score: float) -> str:
+        """점수에 따른 뱃지 HTML 생성"""
+        if score >= 90:
+            color = "#28a745"
+            grade = "A+"
+        elif score >= 80:
+            color = "#28a745"
+            grade = "A"
+        elif score >= 70:
+            color = "#17a2b8"
+            grade = "B+"
+        elif score >= 60:
+            color = "#17a2b8"
+            grade = "B"
+        elif score >= 50:
+            color = "#ffc107"
+            grade = "C"
+        elif score >= 40:
+            color = "#fd7e14"
+            grade = "D"
+        else:
+            color = "#dc3545"
+            grade = "F"
+        
+        return f'<span style="background: {color}; color: white; padding: 5px 12px; border-radius: 4px; font-weight: bold;">{grade}</span>'
+    
+    def _generate_facility_detail_table(self, category_name: str, facility_score) -> str:
+        """시설 상세 테이블 생성"""
+        if not facility_score.facilities:
+            return f"""
+            <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 4px;">
+                <strong>{category_name}</strong>: 반경 내 시설이 검색되지 않았습니다.
+            </div>
+            """
+        
+        rows_html = ""
+        for idx, facility in enumerate(facility_score.facilities[:5], 1):
+            rows_html += f"""
+            <tr style="border-bottom: 1px solid #dee2e6;">
+                <td style="padding: 10px; text-align: center;">{idx}</td>
+                <td style="padding: 10px;">{facility['name']}</td>
+                <td style="padding: 10px; text-align: right;">{facility['distance']:.0f}m</td>
+                <td style="padding: 10px; font-size: 9pt; color: #6c757d;">{facility.get('address', '')[:30]}...</td>
+            </tr>
+            """
+        
+        return f"""
+        <div style="margin: 20px 0;">
+            <h4 style="color: #333; margin-bottom: 10px;">{category_name} 상위 시설</h4>
+            <table style="width: 100%; border-collapse: collapse; font-size: 10pt;">
+                <thead>
+                    <tr style="background: #e9ecef; border-bottom: 2px solid #dee2e6;">
+                        <th style="padding: 10px; text-align: center; width: 8%;">순위</th>
+                        <th style="padding: 10px; text-align: left; width: 40%;">시설명</th>
+                        <th style="padding: 10px; text-align: right; width: 15%;">거리</th>
+                        <th style="padding: 10px; text-align: left; width: 37%;">주소</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows_html}
+                </tbody>
+            </table>
+        </div>
+        """
     
     def _generate_financial_analysis_enhanced(
         self, financial, lh_sim, basic_info, tone
