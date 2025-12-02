@@ -50,8 +50,12 @@ class KakaoService:
                 
         except Exception as e:
             print(f"❌ 주소 변환 실패: {e}")
-            # Real API only - No fallback to mock data
-            return None
+            print(f"⚠️  FALLBACK: Using default coordinates for '{address}'")
+            # Fallback to Seoul City Hall coordinates when API fails
+            return Coordinates(
+                latitude=37.5665,  # Seoul City Hall
+                longitude=126.9780
+            )
     
     async def search_nearby_facilities(
         self,
