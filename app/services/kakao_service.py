@@ -50,12 +50,8 @@ class KakaoService:
                 
         except Exception as e:
             print(f"❌ 주소 변환 실패: {e}")
-            print(f"⚠️ Mock 데이터로 fallback (서울 마포구 월드컵북로 120 기준)")
-            # Mock 데이터 반환 (서울 마포구 월드컵북로 120)
-            return Coordinates(
-                latitude=37.5665,
-                longitude=126.9780
-            )
+            # Real API only - No fallback to mock data
+            return None
     
     async def search_nearby_facilities(
         self,
@@ -102,46 +98,9 @@ class KakaoService:
                 
         except Exception as e:
             print(f"❌ 주변 시설 검색 실패 ({category}): {e}")
-            print(f"⚠️ Mock 데이터로 fallback")
-            # Mock 데이터 반환
-            facilities = self._get_mock_facilities(category)
+            # Real API only - Return empty list on error
         
         return facilities
-    
-    def _get_mock_facilities(self, category: str) -> List[NearbyFacility]:
-        """Mock POI 데이터 생성 (API 실패 시 사용)"""
-        mock_data = {
-            "초등학교": [
-                NearbyFacility(name="서울고등학교", category="학교", distance=280.0, address="서울특별시 마포구"),
-                NearbyFacility(name="마포초등학교", category="학교", distance=450.0, address="서울특별시 마포구"),
-            ],
-            "병원": [
-                NearbyFacility(name="마포중앙병원", category="병원", distance=420.0, address="서울특별시 마포구"),
-                NearbyFacility(name="서울의료원", category="병원", distance=650.0, address="서울특별시 마포구"),
-            ],
-            "지하철역": [
-                NearbyFacility(name="홍대입구역", category="지하철역", distance=310.0, address="서울특별시 마포구"),
-                NearbyFacility(name="신촌역", category="지하철역", distance=520.0, address="서울특별시 마포구"),
-            ],
-            "버스정류장": [
-                NearbyFacility(name="월드컵북로 정류장", category="버스정류장", distance=120.0, address="서울특별시 마포구"),
-                NearbyFacility(name="마포역 정류장", category="버스정류장", distance=280.0, address="서울특별시 마포구"),
-            ],
-            "편의점": [
-                NearbyFacility(name="GS25 홍대점", category="편의점", distance=180.0, address="서울특별시 마포구"),
-                NearbyFacility(name="CU 신촌점", category="편의점", distance=250.0, address="서울특별시 마포구"),
-            ],
-        }
-        
-        # 카테고리에 맞는 Mock 데이터 반환
-        for key, facilities in mock_data.items():
-            if key in category:
-                return facilities
-        
-        # 기본 Mock 데이터
-        return [
-            NearbyFacility(name=f"{category} (샘플)", category=category, distance=300.0, address="서울특별시 마포구")
-        ]
     
     async def search_hazardous_facilities(self, coordinates: Coordinates, unit_type: str = None) -> List[Dict[str, Any]]:
         """

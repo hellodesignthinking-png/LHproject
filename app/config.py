@@ -27,7 +27,13 @@ class Settings(BaseSettings):
     # ============================================
     
     kakao_rest_api_key: str = Field(..., description="Kakao REST API Key")
+    kakao_javascript_key: Optional[str] = Field(default=None, description="Kakao JavaScript API Key (optional)")
+    kakao_admin_key: Optional[str] = Field(default=None, description="Kakao Admin API Key (optional)")
+    
     land_regulation_api_key: str = Field(..., description="VWorld Land Regulation API Key")
+    land_use_regulation_api_key: Optional[str] = Field(default=None, description="Land Use Regulation API Key (optional)")
+    building_registry_api_key: Optional[str] = Field(default=None, description="Building Registry API Key (optional)")
+    
     mois_api_key: str = Field(..., description="MOIS Demographics API Key")
     
     # Optional API Keys
