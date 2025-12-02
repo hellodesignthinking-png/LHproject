@@ -1,0 +1,212 @@
+{
+  "test_addresses": [
+    {
+      "id": "addr_001",
+      "address": "서울특별시 마포구 월드컵북로 120",
+      "description": "상암동 DMC 인근",
+      "land_area": 660.0,
+      "expected_zone": "준주거지역",
+      "expected_grade": "A"
+    },
+    {
+      "id": "addr_002",
+      "address": "대전광역시 유성구 유성대로694번길 69",
+      "description": "유성구청 인근",
+      "land_area": 340.0,
+      "expected_zone": "일반주거지역",
+      "expected_grade": "A"
+    },
+    {
+      "id": "addr_003",
+      "address": "서울특별시 강남구 테헤란로 152",
+      "description": "강남역 인근",
+      "land_area": 500.0,
+      "expected_zone": "상업지역",
+      "expected_grade": "A"
+    },
+    {
+      "id": "addr_004",
+      "address": "서울특별시 송파구 올림픽로 300",
+      "description": "잠실 롯데월드타워 인근",
+      "land_area": 800.0,
+      "expected_zone": "상업지역",
+      "expected_grade": "A"
+    },
+    {
+      "id": "addr_005",
+      "address": "부산광역시 해운대구 우동 1408",
+      "description": "해운대 센텀시티 인근",
+      "land_area": 450.0,
+      "expected_zone": "준주거지역",
+      "expected_grade": "A"
+    },
+    {
+      "id": "addr_006",
+      "address": "경기도 성남시 분당구 정자동 178-1",
+      "description": "분당 정자역 인근",
+      "land_area": 550.0,
+      "expected_zone": "일반주거지역",
+      "expected_grade": "A"
+    },
+    {
+      "id": "addr_007",
+      "address": "인천광역시 연수구 송도동 24-1",
+      "description": "송도 국제도시",
+      "land_area": 700.0,
+      "expected_zone": "준주거지역",
+      "expected_grade": "A"
+    },
+    {
+      "id": "addr_008",
+      "address": "경기도 수원시 영통구 광교중앙로 140",
+      "description": "광교 신도시",
+      "land_area": 600.0,
+      "expected_zone": "일반주거지역",
+      "expected_grade": "B"
+    },
+    {
+      "id": "addr_009",
+      "address": "대구광역시 수성구 범어동 189-1",
+      "description": "수성구 범어네거리 인근",
+      "land_area": 400.0,
+      "expected_zone": "일반주거지역",
+      "expected_grade": "B"
+    },
+    {
+      "id": "addr_010",
+      "address": "광주광역시 서구 상무대로 1104",
+      "description": "상무지구",
+      "land_area": 480.0,
+      "expected_zone": "일반주거지역",
+      "expected_grade": "B"
+    },
+    {
+      "id": "addr_011",
+      "address": "서울특별시 서초구 서초대로 77길 54",
+      "description": "강남 법원단지 인근",
+      "land_area": 520.0,
+      "expected_zone": "일반주거지역",
+      "expected_grade": "A"
+    },
+    {
+      "id": "addr_012",
+      "address": "서울특별시 용산구 한강대로 405",
+      "description": "용산역 인근",
+      "land_area": 380.0,
+      "expected_zone": "상업지역",
+      "expected_grade": "A"
+    },
+    {
+      "id": "addr_013",
+      "address": "경기도 고양시 일산동구 중앙로 1275",
+      "description": "일산 신도시 중심",
+      "land_area": 650.0,
+      "expected_zone": "일반주거지역",
+      "expected_grade": "B"
+    },
+    {
+      "id": "addr_014",
+      "address": "경기도 용인시 수지구 죽전로 152",
+      "description": "수지구청 인근",
+      "land_area": 420.0,
+      "expected_zone": "일반주거지역",
+      "expected_grade": "B"
+    },
+    {
+      "id": "addr_015",
+      "address": "서울특별시 영등포구 여의도동 23-3",
+      "description": "여의도 금융중심지",
+      "land_area": 750.0,
+      "expected_zone": "상업지역",
+      "expected_grade": "A"
+    },
+    {
+      "id": "addr_016",
+      "address": "경기도 화성시 동탄반송길 201",
+      "description": "동탄신도시 2차",
+      "land_area": 580.0,
+      "expected_zone": "일반주거지역",
+      "expected_grade": "B"
+    },
+    {
+      "id": "addr_017",
+      "address": "세종특별자치시 한누리대로 411",
+      "description": "세종시청 인근",
+      "land_area": 500.0,
+      "expected_zone": "일반주거지역",
+      "expected_grade": "B"
+    },
+    {
+      "id": "addr_018",
+      "address": "울산광역시 남구 삼산로 244",
+      "description": "울산 삼산동",
+      "land_area": 460.0,
+      "expected_zone": "일반주거지역",
+      "expected_grade": "C"
+    },
+    {
+      "id": "addr_019",
+      "address": "경기도 파주시 교하읍 문발로 242",
+      "description": "운정신도시",
+      "land_area": 540.0,
+      "expected_zone": "일반주거지역",
+      "expected_grade": "C"
+    },
+    {
+      "id": "addr_020",
+      "address": "제주특별자치도 제주시 노형동 2039",
+      "description": "제주시 노형동",
+      "land_area": 620.0,
+      "expected_zone": "일반주거지역",
+      "expected_grade": "C"
+    }
+  ],
+  "multi_parcel_scenarios": [
+    {
+      "id": "multi_001",
+      "description": "강남 역삼동 인접 3필지",
+      "parcels": [
+        "서울특별시 강남구 역삼동 123-1",
+        "서울특별시 강남구 역삼동 123-2",
+        "서울특별시 강남구 역삼동 123-3"
+      ],
+      "total_area": 1500.0,
+      "expected_cluster_count": 1
+    },
+    {
+      "id": "multi_002",
+      "description": "분당 정자동 분산 4필지",
+      "parcels": [
+        "경기도 성남시 분당구 정자동 10-1",
+        "경기도 성남시 분당구 정자동 15-2",
+        "경기도 성남시 분당구 정자동 20-3",
+        "경기도 성남시 분당구 정자동 25-4"
+      ],
+      "total_area": 2000.0,
+      "expected_cluster_count": 2
+    }
+  ],
+  "edge_cases": [
+    {
+      "id": "edge_001",
+      "address": "서울특별시 강북구 우이동 산1-1",
+      "description": "산지 (개발 불가 예상)",
+      "land_area": 300.0,
+      "expected_result": "ineligible"
+    },
+    {
+      "id": "edge_002",
+      "address": "경기도 양평군 양평읍 양평리 1",
+      "description": "농지 (전용 검토 필요)",
+      "land_area": 250.0,
+      "expected_result": "conditional"
+    },
+    {
+      "id": "edge_003",
+      "address": "서울특별시 종로구 청와대로 1",
+      "description": "특수 용도지역",
+      "land_area": 500.0,
+      "expected_result": "restricted"
+    }
+  ]
+}
