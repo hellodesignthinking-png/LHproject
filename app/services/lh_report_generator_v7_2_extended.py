@@ -81,6 +81,10 @@ class LHReportGeneratorV72Extended(LHReportGeneratorV72):
         lh_data = data.get('lh_assessment', {})
         multi_parcel = data.get('multi_parcel_v3_0', {})
         
+        # 🔧 FIX #1: Extract 5-type TypeDemand scores from correct field
+        type_demand_scores = data.get('type_demand_scores', {})
+        geo_alternatives = data.get('geo_optimization', {}).get('recommended_sites', [])
+        
         # 벤치마크 데이터 (가상, 실제로는 DB에서 로드)
         benchmarks = self._load_benchmark_data()
         
@@ -108,8 +112,9 @@ class LHReportGeneratorV72Extended(LHReportGeneratorV72):
         
         # ===== III. Type Demand 분석 (확장: 4-5페이지) =====
         td_narrative = self.narrative_gen.generate_type_demand_narrative(td_data, basic_info)
-        html += self.extended_templates.generate_type_demand_extended_section(
-            td_data, basic_info, td_narrative, poi_full_data, benchmarks
+        # 🔧 FIX #1: Pass 5-type scores correctly
+        html += self._generate_type_demand_extended_section_fixed(
+            td_data, basic_info, td_narrative, poi_full_data, benchmarks, type_demand_scores
         )
         
         # ===== IV. Zoning 분석 (확장: 5-6페이지) =====
@@ -117,7 +122,10 @@ class LHReportGeneratorV72Extended(LHReportGeneratorV72):
         
         # ===== V. GeoOptimizer 분석 (확장: 3-4페이지) =====
         geo_narrative = self.narrative_gen.generate_geo_optimizer_narrative(geo_data, basic_info)
-        html += self._generate_geo_optimizer_extended_section(geo_data, geo_narrative, poi_full_data, benchmarks)
+        # 🔧 FIX #2: Pass alternatives correctly
+        html += self._generate_geo_optimizer_extended_section_fixed(
+            geo_data, geo_narrative, poi_full_data, benchmarks, geo_alternatives
+        )
         
         # ===== VI. Risk 분석 (확장: 3페이지) =====
         html += self._generate_risk_extended_section(risk_data, poi_full_data, benchmarks)
@@ -532,6 +540,138 @@ class LHReportGeneratorV72Extended(LHReportGeneratorV72):
 </div>
 """
     
+    def _generate_type_demand_extended_section_fixed(
+        self, td_data: Dict, basic_info: Dict, narrative: str, full_data: Dict, 
+        benchmarks: Dict, type_demand_scores: Dict
+    ) -> str:
+        """
+        🔧 FIX #1: TypeDemand Section with CORRECT 5-Type Scores
+        """
+        unit_type = basic_info.get('unit_type', 'N/A')
+        
+        # 5-type 점수 테이블 생성
+        five_type_table = """
+        <div class="subsection-title">2. 전체 유형별 수요 점수 (5개 타입)</div>
+        <table>
+            <tr>
+                <th style="width: 25%;">타입</th>
+                <th style="width: 20%;">점수</th>
+                <th style="width: 20%;">등급</th>
+                <th>평가</th>
+            </tr>
+        """
+        
+        # 5개 타입 순회
+        for type_name in ['청년', '신혼·신생아 I', '신혼·신생아 II', '다자녀', '고령자']:
+            score = type_demand_scores.get(type_name, 0)
+            grade = self._get_grade_from_score(score)
+            evaluation = self._get_evaluation_from_score(score)
+            
+            # 현재 선택된 타입 강조
+            is_current = (unit_type == type_name.replace('·', ''))
+            row_style = 'background: #e3f2fd; font-weight: bold;' if is_current else ''
+            
+            five_type_table += f"""
+            <tr style="{row_style}">
+                <td><strong>{type_name}</strong> {'👈 선택' if is_current else ''}</td>
+                <td><span class="score-box score-{grade.lower()}">{score:.1f}점</span></td>
+                <td>{grade}</td>
+                <td>{evaluation}</td>
+            </tr>
+            """
+        
+        five_type_table += "</table>"
+        
+        # 🔧 직접 HTML 생성 (기존 템플릿 사용하지 않음)
+        base_section = f"""
+<div class="section" style="page-break-before: always;">
+    <div class="section-title">III. 유형별 수요 분석 (Type-Specific Demand Analysis)</div>
+    <div class="subtitle">ZeroSite v7.2 Engine - Type Demand Module v3.1 (🔧 Fixed)</div>
+    
+    <div class="info-box">
+        <strong>📊 선택 타입: {unit_type}</strong><br>
+        선택된 타입에 대한 수요 분석을 수행합니다.
+    </div>
+    
+    <div class="subsection-title">1. 이론적 배경</div>
+    <div class="narrative-box">
+        <strong>📚 Type Demand 분석 이론</strong><br><br>
+        유형별 수요 분석은 Anas-Kim 공간 이론, Hedonic Price Model, Revealed Preference Theory를 기반으로 합니다.<br>
+        LH 신축매입임대 사업에서는 청년, 신혼부부, 다자녀, 고령자 등 5개 타입별 수요를 평가합니다.
+    </div>
+    
+    {five_type_table}
+    
+    <div class="subsection-title">3. 전문가 분석</div>
+    <div class="narrative-box">
+        {narrative}
+    </div>
+    
+    <div class="subsection-title">4. 정책적 시사점</div>
+    <div class="info-box" style="background: #fff3e0; border-left: 4px solid #ff9800;">
+        <strong>💡 LH 정책 제언</strong><br><br>
+        {self._generate_type_demand_policy_implications(type_demand_scores, unit_type)}
+    </div>
+</div>
+        """
+        
+        return base_section
+    
+    def _get_grade_from_score(self, score: float) -> str:
+        """Convert score to grade"""
+        if score >= 90:
+            return 'S'
+        elif score >= 80:
+            return 'A'
+        elif score >= 70:
+            return 'B'
+        elif score >= 60:
+            return 'C'
+        else:
+            return 'D'
+    
+    def _get_evaluation_from_score(self, score: float) -> str:
+        """Convert score to evaluation"""
+        if score >= 90:
+            return '매우 높은 수요'
+        elif score >= 80:
+            return '높은 수요'
+        elif score >= 70:
+            return '보통 수요'
+        elif score >= 60:
+            return '낮은 수요'
+        else:
+            return '매우 낮은 수요'
+    
+    def _generate_type_demand_policy_implications(self, type_demand_scores: Dict, current_type: str) -> str:
+        """Generate policy implications based on type demand scores"""
+        # 최고 점수 타입 찾기
+        sorted_types = sorted(type_demand_scores.items(), key=lambda x: x[1], reverse=True)
+        best_type = sorted_types[0][0] if sorted_types else 'N/A'
+        best_score = sorted_types[0][1] if sorted_types else 0
+        
+        implications = []
+        
+        if best_score >= 85:
+            implications.append(f"• <strong>{best_type}</strong> 타입의 수요가 매우 높아 ({best_score:.1f}점) 해당 타입 위주의 공급을 권장합니다.")
+        elif best_score >= 75:
+            implications.append(f"• <strong>{best_type}</strong> 타입의 수요가 높아 ({best_score:.1f}점) 해당 타입 공급이 적합합니다.")
+        else:
+            implications.append(f"• 모든 타입의 수요가 보통 수준이므로 다양한 타입의 혼합 공급을 권장합니다.")
+        
+        # 현재 선택된 타입 평가
+        current_score = type_demand_scores.get(current_type, 0)
+        if current_score >= 80:
+            implications.append(f"• 선택하신 <strong>{current_type}</strong> 타입은 우수한 수요를 보이고 있습니다 ({current_score:.1f}점).")
+        elif current_score >= 70:
+            implications.append(f"• 선택하신 <strong>{current_type}</strong> 타입은 양호한 수요를 보이고 있습니다 ({current_score:.1f}점).")
+        else:
+            implications.append(f"• 선택하신 <strong>{current_type}</strong> 타입은 보통 수준의 수요를 보이고 있으며, <strong>{best_type}</strong> 타입 ({best_score:.1f}점)으로 변경을 검토할 수 있습니다.")
+        
+        implications.append("• 장기적 수요 전망을 고려하여 복합 타입 공급을 검토하시기 바랍니다.")
+        
+        return "<br>".join(implications)
+    
     def _generate_zoning_extended_section(
         self, zone_data: Dict, basic_info: Dict, full_data: Dict, benchmarks: Dict
     ) -> str:
@@ -625,6 +765,105 @@ class LHReportGeneratorV72Extended(LHReportGeneratorV72):
     <div class="narrative-box">
         {narrative}
     </div>
+</div>
+"""
+    
+    def _generate_geo_optimizer_extended_section_fixed(
+        self, geo_data: Dict, narrative: str, full_data: Dict, 
+        benchmarks: Dict, alternatives: list
+    ) -> str:
+        """
+        🔧 FIX #2: GeoOptimizer Section with 3 Alternatives Comparison Table
+        """
+        current_score = geo_data.get('optimization_score', 82)
+        
+        # 대안 비교 테이블 생성
+        alternatives_table = """
+        <div class="subsection-title">2. 대안 입지 비교 분석 (3개 후보)</div>
+        <table>
+            <tr>
+                <th style="width: 15%;">순위</th>
+                <th style="width: 25%;">위치</th>
+                <th style="width: 15%;">종합 점수</th>
+                <th style="width: 15%;">개선 점수</th>
+                <th>강점</th>
+            </tr>
+        """
+        
+        # 현재 위치 먼저 표시
+        alternatives_table += f"""
+            <tr style="background: #e8f5e9; font-weight: bold;">
+                <td>현재</td>
+                <td>분석 대상지</td>
+                <td><span class="score-box score-a">{current_score:.0f}점</span></td>
+                <td>-</td>
+                <td>기준점</td>
+            </tr>
+        """
+        
+        # 상위 3개 대안 표시
+        for idx, alt in enumerate(alternatives[:3], 1):
+            site_id = alt.get('site_id', f'ALT_{idx:02d}')
+            address = alt.get('address', 'N/A')
+            overall_score = alt.get('overall_score', 0)
+            improvement = overall_score - current_score
+            strengths = ', '.join(alt.get('strengths', ['정보 없음'])[:2])
+            
+            alternatives_table += f"""
+            <tr>
+                <td>후보 {idx}</td>
+                <td>{address[:30]}...</td>
+                <td><span class="score-box score-b">{overall_score:.0f}점</span></td>
+                <td style="color: {'green' if improvement > 0 else 'red'};">
+                    {improvement:+.0f}점
+                </td>
+                <td>{strengths}</td>
+            </tr>
+            """
+        
+        alternatives_table += "</table>"
+        
+        # 전문가 해석 추가
+        if alternatives:
+            interpretation = f"""
+            <div class="info-box" style="background: #fff3e0; border-left: 4px solid #ff9800;">
+                <strong>🔍 전문가 해석</strong><br><br>
+                GeoOptimizer 분석 결과, 대상지의 지리적 최적화 점수는 <strong>{current_score:.0f}점</strong>입니다.<br>
+                분석된 {len(alternatives)}개의 대안 입지 중 상위 3개를 비교한 결과:<br><br>
+                
+                • <strong>최우수 대안</strong>: {alternatives[0].get('address', 'N/A')[:40]} 
+                  ({alternatives[0].get('overall_score', 0):.0f}점, {alternatives[0].get('overall_score', 0) - current_score:+.0f}점)<br>
+                • <strong>주요 강점</strong>: {', '.join(alternatives[0].get('strengths', ['정보 없음'])[:2])}<br>
+                • <strong>권고사항</strong>: {alternatives[0].get('recommendation_reason', '추가 검토 필요')}
+            </div>
+            """
+        else:
+            interpretation = """
+            <div class="info-box">
+                <strong>ℹ️ 대안 입지 정보 없음</strong><br>
+                현재 대상지에 대한 대안 입지 분석 결과가 없습니다.
+            </div>
+            """
+        
+        return f"""
+<div class="section" style="page-break-before: always;">
+    <div class="section-title">V. GeoOptimizer 분석 (Geographic Optimization Analysis)</div>
+    <div class="subtitle">ZeroSite v7.2 Engine - GeoOptimizer Module v3.1</div>
+    
+    <div class="info-box">
+        <strong>📍 지리적 최적화 점수</strong><br>
+        Final Score: <strong>{current_score:.2f}점</strong><br>
+        등급: <strong>{geo_data.get('grade', 'A')}</strong>
+    </div>
+    
+    <div class="subsection-title">1. 전문가 분석</div>
+    <div class="narrative-box">
+        {narrative}
+    </div>
+    
+    {alternatives_table}
+    
+    {interpretation}
 </div>
 """
     
@@ -776,30 +1015,100 @@ class LHReportGeneratorV72Extended(LHReportGeneratorV72):
 """
     
     def _generate_appendix_raw_data(self, data: Dict) -> str:
-        """Generate appendix with raw JSON data (신규)"""
+        """
+        🔧 FIX #3: Generate FULL Raw JSON Appendix (Target: 8 pages, 50,000+ chars)
+        
+        변경사항:
+        - 기존: 10,000자 제한 → 신규: 100,000자 제한 (또는 무제한)
+        - 모든 엔진 데이터 100% 출력
+        - 섹션별 구분 추가 (POI, TypeDemand, GeoOptimizer, Risk, Zoning)
+        """
         import json
         
-        # JSON을 예쁘게 포맷팅
+        # JSON을 예쁘게 포맷팅 (indent=2)
         json_str = json.dumps(data, ensure_ascii=False, indent=2)
         
-        # 너무 길면 축약 (10,000자 제한)
-        if len(json_str) > 10000:
-            json_str = json_str[:10000] + "\n... (데이터 축약됨)"
+        # 🔧 FIX #3: 제한 완화 (10,000 → 100,000)
+        max_length = 100000
+        is_truncated = False
+        
+        if len(json_str) > max_length:
+            json_str = json_str[:max_length] + "\n\n... (데이터가 너무 커서 축약됨. 전체 데이터는 API 응답 참조)"
+            is_truncated = True
+        
+        # 데이터 크기 정보
+        data_size_kb = len(json_str.encode('utf-8')) / 1024
+        
+        # 주요 섹션 요약
+        section_summary = f"""
+        <div class="subsection-title">📋 데이터 구조 요약</div>
+        <table>
+            <tr>
+                <th style="width: 30%;">섹션</th>
+                <th style="width: 20%;">데이터 유무</th>
+                <th>주요 필드 수</th>
+            </tr>
+            <tr>
+                <td><strong>POI Analysis v3.1</strong></td>
+                <td>{'✅ 있음' if data.get('poi_analysis_v3_1') else '❌ 없음'}</td>
+                <td>{len(data.get('poi_analysis_v3_1', {}))} fields</td>
+            </tr>
+            <tr>
+                <td><strong>Type Demand v3.1</strong></td>
+                <td>{'✅ 있음' if data.get('type_demand_v3_1') else '❌ 없음'}</td>
+                <td>{len(data.get('type_demand_v3_1', {}))} fields</td>
+            </tr>
+            <tr>
+                <td><strong>GeoOptimizer v3.1</strong></td>
+                <td>{'✅ 있음' if data.get('geo_optimizer_v3_1') else '❌ 없음'}</td>
+                <td>{len(data.get('geo_optimizer_v3_1', {}))} fields</td>
+            </tr>
+            <tr>
+                <td><strong>Risk Analysis 2025</strong></td>
+                <td>{'✅ 있음' if data.get('risk_analysis_2025') else '❌ 없음'}</td>
+                <td>{len(data.get('risk_analysis_2025', {}))} fields</td>
+            </tr>
+            <tr>
+                <td><strong>Zoning Info</strong></td>
+                <td>{'✅ 있음' if data.get('zone_info') else '❌ 없음'}</td>
+                <td>{len(data.get('zone_info', {}))} fields</td>
+            </tr>
+            <tr>
+                <td><strong>Multi-Parcel v3.0</strong></td>
+                <td>{'✅ 있음' if data.get('multi_parcel_v3_0') else '❌ 없음'}</td>
+                <td>{len(data.get('multi_parcel_v3_0', {}))} fields</td>
+            </tr>
+        </table>
+        """
         
         return f"""
 <div class="section" style="page-break-before: always;">
     <div class="section-title">XIII. 부록 - 전체 Raw Data (Appendix - Full Raw Data)</div>
-    <div class="subtitle">ZeroSite v7.2 Engine 전체 분석 데이터 (JSON 형식)</div>
+    <div class="subtitle">ZeroSite v7.2 Engine 전체 분석 데이터 (JSON 형식, 8-10 pages)</div>
     
     <div class="info-box">
         <strong>📄 원시 데이터 전체 출력</strong><br>
         본 섹션에는 ZeroSite v7.2 엔진이 생성한 모든 분석 데이터가 JSON 형식으로 출력되어 있습니다.<br>
-        개발자 또는 데이터 분석가가 추가 분석을 수행할 때 활용할 수 있습니다.
+        개발자 또는 데이터 분석가가 추가 분석을 수행할 때 활용할 수 있습니다.<br><br>
+        
+        • 데이터 크기: <strong>{data_size_kb:.2f} KB</strong><br>
+        • 축약 여부: <strong>{'예 (100KB 제한)' if is_truncated else '아니오 (전체 출력)'}</strong><br>
+        • 전체 필드 수: <strong>{len(str(data))} characters</strong>
     </div>
     
-    <pre style="background: #f5f5f5; padding: 20px; border: 1px solid #ddd; overflow-x: auto; font-size: 11px; line-height: 1.4;">
+    {section_summary}
+    
+    <div class="subsection-title">📊 전체 Raw JSON 데이터</div>
+    <pre style="background: #f5f5f5; padding: 20px; border: 1px solid #ddd; overflow-x: auto; font-size: 11px; line-height: 1.4; max-height: 800px; overflow-y: auto;">
 {json_str}
     </pre>
+    
+    <div class="info-box" style="margin-top: 20px;">
+        <strong>ℹ️ 데이터 활용 안내</strong><br>
+        • JSON 데이터를 복사하여 외부 분석 도구에서 활용 가능<br>
+        • Python, R, Excel 등에서 파싱 가능<br>
+        • API 응답에서 전체 데이터 다운로드 가능
+    </div>
 </div>
 """
     
