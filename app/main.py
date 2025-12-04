@@ -32,6 +32,10 @@ from app.services.report_field_mapper_v7_2_complete import ReportFieldMapperV72C
 from app.services.sheets_service import get_sheets_service
 from app.services.lh_notice_loader import LHNoticeLoader
 from app.services.dashboard_builder import DashboardBuilder
+# ✨ v8.5: Import new financial, visualization, and LH criteria engines
+from app.services.financial_engine_v7_4 import FinancialEngine
+from app.services.visualization_engine_v85 import VisualizationEngineV85
+from app.services.lh_criteria_checker_v85 import LHCriteriaCheckerV85
 
 # ✨ v7.2: Import new Report Engine v7.2 router
 from app.routers.report_v7_2 import router as report_v72_router
@@ -152,43 +156,44 @@ async def analyze_land(request: LandAnalysisRequest):
         if not request.unit_type:
             print("🔄 7가지 유형 전체 분석 시작...")
             all_types = list(UnitType)
-            all_results = []
             
-            # 공통 데이터 (좌표, 용도지역 등)는 한 번만 조회
+            # ✨ 한 번만 분석하여 type_demand_scores 가져오기 (효율적)
             temp_request = LandAnalysisRequest(
                 address=request.address,
                 land_area=request.land_area,
-                unit_type=UnitType.YOUTH,
+                unit_type=UnitType.YOUTH,  # 임시로 청년형 사용 (전체 분석 동일)
                 zone_type=request.zone_type,
                 land_status=request.land_status,
                 land_appraisal_price=request.land_appraisal_price
             )
-            first_result = await engine.analyze_land(temp_request)
+            result = await engine.analyze_land(temp_request)
             
-            # 각 유형별로 수요 점수만 재계산
-            for unit_type in all_types:
-                print(f"  ├─ {unit_type.value} 분석중...")
-                type_request = LandAnalysisRequest(
-                    address=request.address,
-                    land_area=request.land_area,
-                    unit_type=unit_type,
-                    zone_type=request.zone_type,
-                    land_status=request.land_status,
-                    land_appraisal_price=request.land_appraisal_price
-                )
-                type_result = await engine.analyze_land(type_request)
-                
-                # 유형별 정보 저장
-                housing_info = HOUSING_TYPE_INFO.get(unit_type.value, {})
-                demand_analysis = type_result["demand_analysis"]
-                # DemandAnalysis 객체에서 demand_score 추출
-                demand_score = demand_analysis.demand_score if hasattr(demand_analysis, 'demand_score') else demand_analysis.get("demand_score", 0)
-                
+            # 🔥 type_demand_scores에서 유형별 차별화된 점수 사용
+            type_demand_scores = result.get("type_demand_scores", {})
+            print(f"  ✓ 유형별 수요점수:")
+            for unit_type, score in type_demand_scores.items():
+                print(f"    - {unit_type}: {score:.1f}점")
+            
+            # 유형별 점수 매핑 (영문 → 한글)
+            type_mapping = {
+                "청년": UnitType.YOUTH.value,
+                "신혼·신생아 I": UnitType.NEWLYWED_I.value,
+                "신혼·신생아 II": UnitType.NEWLYWED_II.value,
+                "다자녀": UnitType.MULTI_CHILD.value,
+                "고령자": UnitType.ELDERLY.value,
+                "일반": UnitType.GENERAL.value,
+                "든든전세": UnitType.LONG_TERM_LEASE.value
+            }
+            
+            # 각 유형별 점수와 정보 구성
+            all_results = []
+            for kr_name, en_name in type_mapping.items():
+                score = type_demand_scores.get(kr_name, 50.0)  # 기본값 50점
+                housing_info = HOUSING_TYPE_INFO.get(en_name, {})
                 all_results.append({
-                    "unit_type": unit_type.value,
-                    "score": demand_score,
-                    "size": housing_info.get("size", "N/A"),
-                    "result": type_result
+                    "unit_type": en_name,
+                    "score": score,
+                    "size": housing_info.get("size", "N/A")
                 })
             
             # 점수 순으로 정렬
@@ -197,7 +202,6 @@ async def analyze_land(request: LandAnalysisRequest):
             # 최고 점수 유형 선택
             best_result = all_results[0]
             recommended_type = best_result["unit_type"]
-            result = best_result["result"]
             
             print(f"  └─ ✅ 추천 유형: {recommended_type} ({best_result['score']:.1f}점)")
             
@@ -228,6 +232,63 @@ async def analyze_land(request: LandAnalysisRequest):
                 )
             ]
         
+        # ✨ v8.5: Calculate financial result using FinancialEngine
+        print("💰 v8.5: Calculating financial metrics...")
+        financial_engine = FinancialEngine()
+        
+        # Calculate unit type for financial analysis
+        unit_type_for_financial = recommended_type if isinstance(recommended_type, str) else recommended_type.value
+        
+        # Run comprehensive financial analysis
+        from app.services.financial_engine_v7_4 import run_full_financial_analysis
+        financial_result = run_full_financial_analysis(
+            land_area=request.land_area,
+            address=request.address,
+            unit_type=unit_type_for_financial,
+            construction_type=getattr(request, 'construction_type', 'standard'),
+            land_appraisal_price=request.land_appraisal_price  # 🔥 User-provided appraisal
+        )
+        
+        print(f"  ✓ Financial analysis complete:")
+        print(f"    - Total CAPEX: {financial_result.get('summary', {}).get('total_investment', 0):,.0f} KRW")
+        print(f"    - Unit Count: {financial_result.get('summary', {}).get('unit_count', 0)} units")
+        print(f"    - Cap Rate: {financial_result.get('summary', {}).get('cap_rate', 0):.2f}%")
+        print(f"    - IRR Range: {financial_result.get('summary', {}).get('irr_range', 'N/A')}")
+        
+        # ✨ v8.5: Calculate LH scores using v8.5 criteria checker
+        print("📊 v8.5: Evaluating LH criteria...")
+        lh_checker_v85 = LHCriteriaCheckerV85()
+        
+        # Determine analysis mode based on unit count
+        unit_count = financial_result.get('summary', {}).get('unit_count', 0)
+        analysis_mode = 'LH_LINKED' if unit_count >= 50 else 'STANDARD'
+        print(f"  ✓ Analysis Mode: {analysis_mode} ({unit_count} units)")
+        
+        lh_scores = lh_checker_v85.evaluate_financial_feasibility(
+            financial_result=financial_result,
+            zone_info=result["zone_info"],
+            building_capacity=result["building_capacity"],
+            accessibility=result.get("demand_analysis", {})
+        )
+        
+        print(f"  ✓ LH Scores calculated:")
+        print(f"    - Location: {lh_scores.get('location_score', 0):.1f}/35")
+        print(f"    - Scale: {lh_scores.get('scale_score', 0):.1f}/20")
+        print(f"    - Financial: {lh_scores.get('financial_score', 0):.1f}/40")
+        print(f"    - Regulations: {lh_scores.get('regulations_score', 0):.1f}/15")
+        print(f"    - Total: {lh_scores.get('total_score', 0):.1f}/110")
+        
+        # ✨ v8.5: Generate visualizations
+        print("🎨 v8.5: Generating visualizations...")
+        viz_engine = VisualizationEngineV85()
+        visualizations = viz_engine.generate_all_visualizations(
+            financial_result=financial_result,
+            lh_scores=lh_scores,
+            analysis_data=result
+        )
+        
+        print(f"  ✓ Generated {len(visualizations)} visualization datasets")
+        
         # 응답 생성
         response = LandAnalysisResponse(
             status="success",
@@ -252,6 +313,11 @@ async def analyze_land(request: LandAnalysisRequest):
             type_demand_scores=result.get("type_demand_scores", {}),  # ✨ v5.0: 유형별 수요점수
             corrected_input=result.get("corrected_input"),  # ✨ v5.0: AI 자동 교정
             geo_optimization=result.get("geo_optimization"),  # ✨ v5.0: 지리 최적화
+            # ✨ v8.5: Add new financial, LH scores, and visualization data
+            financial_result=financial_result,  # 🔥 NEW: Complete financial analysis
+            lh_scores=lh_scores,  # 🔥 NEW: v8.5 LH evaluation scores
+            visualizations=visualizations,  # 🔥 NEW: Chart/graph data
+            analysis_mode=analysis_mode,  # 🔥 NEW: LH_LINKED or STANDARD
             created_at=datetime.now()
         )
         
@@ -793,6 +859,49 @@ async def generate_professional_report(request: LandAnalysisRequest):
             result = all_scores[0]["result"]
             print(f"✅ 추천 유형 선택: {final_unit_type.value} ({all_scores[0]['score']:.1f}점)")
         
+        # ✨ v8.5: Calculate financial result and visualizations
+        print("💰 v8.5: Calculating financial metrics...")
+        from app.services.financial_engine_v7_4 import run_full_financial_analysis
+        
+        unit_type_str = final_unit_type.value if hasattr(final_unit_type, 'value') else final_unit_type
+        
+        financial_result = run_full_financial_analysis(
+            land_area=request.land_area,
+            address=request.address,
+            unit_type=unit_type_str,
+            construction_type=getattr(request, 'construction_type', 'standard'),
+            land_appraisal_price=request.land_appraisal_price  # 🔥 User-provided appraisal
+        )
+        
+        print(f"  ✓ Financial: CAPEX={financial_result.get('summary', {}).get('total_investment', 0):,.0f}, Cap Rate={financial_result.get('summary', {}).get('cap_rate', 0):.2f}%")
+        
+        # ✨ v8.5: Calculate LH scores
+        print("📊 v8.5: Evaluating LH criteria...")
+        lh_checker_v85 = LHCriteriaCheckerV85()
+        
+        unit_count = financial_result.get('summary', {}).get('unit_count', 0)
+        analysis_mode = 'LH_LINKED' if unit_count >= 50 else 'STANDARD'
+        
+        lh_scores = lh_checker_v85.evaluate_financial_feasibility(
+            financial_result=financial_result,
+            zone_info=result["zone_info"],
+            building_capacity=result["building_capacity"],
+            accessibility=result.get("demand_analysis", {})
+        )
+        
+        print(f"  ✓ LH Scores: Total {lh_scores.get('total_score', 0):.1f}/110")
+        
+        # ✨ v8.5: Generate visualizations
+        print("🎨 v8.5: Generating visualizations...")
+        viz_engine = VisualizationEngineV85()
+        visualizations = viz_engine.generate_all_visualizations(
+            financial_result=financial_result,
+            lh_scores=lh_scores,
+            analysis_data=result
+        )
+        
+        print(f"  ✓ Generated {len(visualizations)} visualization datasets")
+        
         # 분석 데이터 구성 (지도 이미지 포함)
         analysis_data = {
             "analysis_id": analysis_id,
@@ -809,7 +918,12 @@ async def generate_professional_report(request: LandAnalysisRequest):
             "demographic_info": result["demographic_info"],
             "demand_analysis": result["demand_analysis"],
             "summary": result["summary"],
-            "map_images": map_images  # 여러 스케일의 지도 이미지 (overview, detail, close)
+            "map_images": map_images,  # 여러 스케일의 지도 이미지 (overview, detail, close)
+            # ✨ v8.5: Add new data
+            "financial_result": financial_result,  # 🔥 Complete financial analysis
+            "lh_scores": lh_scores,  # 🔥 v8.5 LH evaluation scores
+            "visualizations": visualizations,  # 🔥 Chart/graph data
+            "analysis_mode": analysis_mode  # 🔥 LH_LINKED or STANDARD
         }
         
         # ✨ v7.5 FINAL: Use new ultra-professional report generator
@@ -829,7 +943,8 @@ async def generate_professional_report(request: LandAnalysisRequest):
                 'address': request.address,
                 'land_area': request.land_area,
                 'unit_type': final_unit_type.value if hasattr(final_unit_type, 'value') else final_unit_type,
-                'construction_type': getattr(request, 'construction_type', 'standard')
+                'construction_type': getattr(request, 'construction_type', 'standard'),
+                'land_appraisal_price': request.land_appraisal_price  # 🔥 사용자 입력 감정가
             }
             
             # Generate report using v7.5 FINAL API

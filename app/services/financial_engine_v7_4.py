@@ -126,7 +126,8 @@ class FinancialEngine:
         land_area: float,
         address: str,
         construction_type: str = "standard",
-        include_breakdown: bool = True
+        include_breakdown: bool = True,
+        land_appraisal_price: float = None  # 🔥 NEW: 사용자 입력 감정평가액
     ) -> Dict[str, Any]:
         """
         Calculate total Capital Expenditure (CapEx)
@@ -136,18 +137,25 @@ class FinancialEngine:
             address: Site address (to determine land price zone)
             construction_type: 'standard', 'premium', or 'economy'
             include_breakdown: Whether to include detailed breakdown
+            land_appraisal_price: User-provided land appraisal price (optional)
         
         Returns:
             Dictionary with CapEx breakdown and total
         """
         logger.info(f"📊 Calculating CapEx for {land_area}㎡ site")
         
-        # Determine land price zone from address
-        land_price_zone = self._determine_land_price_zone(address)
-        land_price_per_sqm = self.assumptions['land_price_multiplier'][land_price_zone]
-        
         # 1. Land Acquisition Costs
-        land_purchase_price = land_area * land_price_per_sqm
+        if land_appraisal_price and land_appraisal_price > 0:
+            # 🔥 사용자 입력 감정가 사용 (우선순위)
+            land_purchase_price = land_appraisal_price
+            land_price_zone = "user_provided"
+            logger.info(f"✅ Using user-provided land appraisal: {self._format_krw(land_appraisal_price)}")
+        else:
+            # Determine land price zone from address (fallback)
+            land_price_zone = self._determine_land_price_zone(address)
+            land_price_per_sqm = self.assumptions['land_price_multiplier'][land_price_zone]
+            land_purchase_price = land_area * land_price_per_sqm
+            logger.info(f"📍 Using estimated land price: {land_price_zone} zone")
         acquisition_tax = land_purchase_price * self.assumptions['acquisition_tax_rate']
         brokerage_fee = land_purchase_price * self.assumptions['brokerage_fee_rate']
         legal_due_diligence = land_purchase_price * self.assumptions['legal_due_diligence_rate']
@@ -416,7 +424,8 @@ class FinancialEngine:
         land_area: float,
         address: str,
         unit_type: str,
-        construction_type: str = "standard"
+        construction_type: str = "standard",
+        land_appraisal_price: float = None  # 🔥 NEW: 사용자 입력 감정평가액
     ) -> Dict[str, Any]:
         """Run sensitivity analysis with optimistic/base/pessimistic scenarios"""
         logger.info("🔄 Running sensitivity analysis (3 scenarios)")
@@ -426,7 +435,8 @@ class FinancialEngine:
         scenarios['base'] = self._run_single_scenario(
             land_area, address, unit_type, construction_type,
             scenario_name="Base Case",
-            adjustments={}
+            adjustments={},
+            land_appraisal_price=land_appraisal_price
         )
         
         scenarios['optimistic'] = self._run_single_scenario(
@@ -436,7 +446,8 @@ class FinancialEngine:
                 'rent_multiplier': 1.10,
                 'occupancy_boost': 0.02,
                 'cost_reduction': 0.90
-            }
+            },
+            land_appraisal_price=land_appraisal_price
         )
         
         scenarios['pessimistic'] = self._run_single_scenario(
@@ -446,7 +457,8 @@ class FinancialEngine:
                 'rent_multiplier': 0.90,
                 'occupancy_reduction': 0.05,
                 'cost_increase': 1.10
-            }
+            },
+            land_appraisal_price=land_appraisal_price
         )
         
         base_irr = scenarios['base']['return_metrics'].get('irr_percent', 0)
@@ -502,7 +514,8 @@ class FinancialEngine:
         unit_type: str,
         construction_type: str,
         scenario_name: str,
-        adjustments: Dict[str, float]
+        adjustments: Dict[str, float],
+        land_appraisal_price: float = None  # 🔥 NEW: 사용자 입력 감정평가액
     ) -> Dict[str, Any]:
         """Run a single scenario with adjustments"""
         original_assumptions = self.assumptions.copy()
@@ -514,7 +527,7 @@ class FinancialEngine:
             for key in self.assumptions['construction_cost_per_sqm']:
                 self.assumptions['construction_cost_per_sqm'][key] *= adjustments['cost_increase']
         
-        capex_result = self.calculate_capex(land_area, address, construction_type)
+        capex_result = self.calculate_capex(land_area, address, construction_type, land_appraisal_price=land_appraisal_price)
         total_capex = capex_result['total_capex']
         unit_count = capex_result['unit_count']
         
@@ -597,19 +610,20 @@ def run_full_financial_analysis(
     land_area: float,
     address: str,
     unit_type: str,
-    construction_type: str = "standard"
+    construction_type: str = "standard",
+    land_appraisal_price: float = None  # 🔥 NEW: 사용자 입력 감정평가액
 ) -> Dict[str, Any]:
     """Run complete financial feasibility analysis"""
     engine = FinancialEngine()
     
-    capex = engine.calculate_capex(land_area, address, construction_type)
+    capex = engine.calculate_capex(land_area, address, construction_type, land_appraisal_price=land_appraisal_price)
     opex = engine.project_opex(capex['unit_count'], capex['total_capex'])
     noi = engine.calculate_noi(capex['unit_count'], unit_type, opex['year1_total_opex'], year=2)
     returns = engine.calculate_return_metrics(capex['total_capex'], noi['noi'])
     breakeven = engine.calculate_breakeven(
         capex['total_capex'], capex['unit_count'], unit_type, opex['year1_total_opex']
     )
-    sensitivity = engine.run_sensitivity_analysis(land_area, address, unit_type, construction_type)
+    sensitivity = engine.run_sensitivity_analysis(land_area, address, unit_type, construction_type, land_appraisal_price=land_appraisal_price)
     
     return {
         'capex': capex,

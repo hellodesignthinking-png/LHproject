@@ -761,4 +761,48 @@ class AnalysisEngine:
         elderly_score = min(elderly_score, 100)
         scores["고령자"] = round(elderly_score, 1)
         
+        # 6. 일반형 - 균형잡힌 입지 조건
+        general_score = base_score
+        if subway_dist < 800:
+            general_score += 15
+        elif subway_dist < 1500:
+            general_score += 8
+        
+        if school_dist < 800:
+            general_score += 10
+        elif school_dist < 1500:
+            general_score += 5
+        
+        # 적정 규모 (15~40세대)
+        if 15 <= building_capacity.units <= 40:
+            general_score += 10
+        
+        # 주거지역 가산
+        if "주거지역" in zone_info.zone_type:
+            general_score += 5
+        
+        general_score = min(general_score, 100)
+        scores["일반"] = round(general_score, 1)
+        
+        # 7. 든든전세형 - 안정적 전세 수요 중심
+        lease_score = base_score
+        # 신혼부부와 청년층 모두 타겟
+        lease_score += min((youth_ratio + elderly_ratio) * 0.3, 15)
+        
+        if subway_dist < 1000:
+            lease_score += 12
+        elif subway_dist < 1500:
+            lease_score += 6
+        
+        # 학교/병원 균형
+        if school_dist < 1000 or hospital_dist < 1000:
+            lease_score += 8
+        
+        # 안정적인 주거환경
+        if zone_info.zone_type in ["제2종일반주거지역", "제3종일반주거지역"]:
+            lease_score += 7
+        
+        lease_score = min(lease_score, 100)
+        scores["든든전세"] = round(lease_score, 1)
+        
         return scores

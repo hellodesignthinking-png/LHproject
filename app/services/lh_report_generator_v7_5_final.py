@@ -132,7 +132,8 @@ class LHReportGeneratorV75Final:
                 'address': kwargs.get('address', '서울특별시 마포구 월드컵북로 120'),
                 'land_area': kwargs.get('land_area', 1200.0),
                 'unit_type': kwargs.get('unit_type', '신혼부부 I'),
-                'construction_type': kwargs.get('construction_type', 'standard')
+                'construction_type': kwargs.get('construction_type', 'standard'),
+                'land_appraisal_price': kwargs.get('land_appraisal_price')  # 🔥 사용자 입력 감정가
             }
             
             data = kwargs.get('data', {})
@@ -147,7 +148,8 @@ class LHReportGeneratorV75Final:
                 land_area=basic_info['land_area'],
                 address=basic_info['address'],
                 unit_type=basic_info['unit_type'],
-                construction_type=basic_info['construction_type']
+                construction_type=basic_info['construction_type'],
+                land_appraisal_price=kwargs.get('land_appraisal_price')  # 🔥 사용자 입력 감정가
             )
             lh_sim = self.lh_price_simulator.simulate_lh_purchase_price(
                 financial_analysis, basic_info
@@ -248,7 +250,8 @@ class LHReportGeneratorV75Final:
             land_area=land_area,
             address=address,
             unit_type=unit_type,
-            construction_type=construction_type
+            construction_type=construction_type,
+            land_appraisal_price=basic_info.get('land_appraisal_price')  # 🔥 사용자 입력 감정가
         )
         
         lh_price_sim = self.lh_price_simulator.simulate_lh_purchase_price(
@@ -653,9 +656,14 @@ class LHReportGeneratorV75Final:
         
         # POI 분석이 제공되지 않았으면 기본 HTML 생성
         if not poi_analysis:
-            html = """
+            html = f"""
             <div class="site-analysis-enhanced">
                 <h1 class="section-title">대상지 전략적 입지 분석</h1>
+                
+                <!-- 📊 LH 입지 평가 프레임워크 시각화 -->
+                <h2 class="subsection-title">1. LH 입지 평가 프레임워크</h2>
+                {self._generate_lh_evaluation_framework()}
+                
                 <p class="paragraph">입지 경쟁력을 다각도로 분석하고 LH 평가 기준과 매핑합니다...</p>
             </div>
             """
@@ -666,7 +674,11 @@ class LHReportGeneratorV75Final:
         <div class="site-analysis-enhanced" style="page-break-before: always;">
             <h1 class="section-title">대상지 전략적 입지 분석</h1>
             
-            <h2 class="subsection-title">1. 종합 인프라 평가</h2>
+            <!-- 📊 LH 입지 평가 프레임워크 시각화 (신규 추가) -->
+            <h2 class="subsection-title">1. LH 입지 평가 프레임워크</h2>
+            {self._generate_lh_evaluation_framework()}
+            
+            <h2 class="subsection-title">2. 종합 인프라 평가</h2>
             <div style="padding: 20px; background: #f8f9fa; border-left: 4px solid #0047AB; margin: 20px 0;">
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr style="border-bottom: 2px solid #dee2e6;">
@@ -751,7 +763,7 @@ class LHReportGeneratorV75Final:
                 </table>
             </div>
             
-            <h2 class="subsection-title">2. 교육 시설 상세 분석</h2>
+            <h2 class="subsection-title">3. 교육 시설 상세 분석</h2>
             <p class="paragraph">
                 대상지 인근의 교육시설 접근성을 분석한 결과, 종합 점수 <strong>{poi_analysis.education_score:.1f}/100점</strong>으로 평가되었습니다.
                 초등학교는 총 <strong>{poi_analysis.elementary_schools.count}개소</strong>가 반경 1.5km 내에 위치하며, 
@@ -764,7 +776,7 @@ class LHReportGeneratorV75Final:
             {self._generate_facility_detail_table("고등학교", poi_analysis.high_schools)}
             {self._generate_facility_detail_table("유치원/어린이집", poi_analysis.kindergartens)}
             
-            <h2 class="subsection-title">3. 교통 시설 상세 분석</h2>
+            <h2 class="subsection-title">4. 교통 시설 상세 분석</h2>
             <p class="paragraph">
                 대중교통 접근성은 종합 점수 <strong>{poi_analysis.transportation_score:.1f}/100점</strong>으로 평가되었습니다.
                 지하철역은 총 <strong>{poi_analysis.subway_stations.count}개소</strong>가 반경 2km 내에 위치하며,
@@ -775,7 +787,7 @@ class LHReportGeneratorV75Final:
             {self._generate_facility_detail_table("지하철역", poi_analysis.subway_stations)}
             {self._generate_facility_detail_table("버스정류장", poi_analysis.bus_stops)}
             
-            <h2 class="subsection-title">4. 의료 시설 상세 분석</h2>
+            <h2 class="subsection-title">5. 의료 시설 상세 분석</h2>
             <p class="paragraph">
                 의료시설 접근성은 종합 점수 <strong>{poi_analysis.healthcare_score:.1f}/100점</strong>으로 평가되었습니다.
                 종합병원/병원은 <strong>{poi_analysis.hospitals.count}개소</strong> (최단거리 {poi_analysis.hospitals.nearest_distance:.0f}m),
@@ -786,7 +798,7 @@ class LHReportGeneratorV75Final:
             {self._generate_facility_detail_table("병원", poi_analysis.hospitals)}
             {self._generate_facility_detail_table("약국", poi_analysis.pharmacies)}
             
-            <h2 class="subsection-title">5. 상업 시설 상세 분석</h2>
+            <h2 class="subsection-title">6. 상업 시설 상세 분석</h2>
             <p class="paragraph">
                 생활편의시설 접근성은 종합 점수 <strong>{poi_analysis.commercial_score:.1f}/100점</strong>으로 평가되었습니다.
                 대형마트는 <strong>{poi_analysis.supermarkets.count}개소</strong> (최단거리 {poi_analysis.supermarkets.nearest_distance:.0f}m),
@@ -797,7 +809,7 @@ class LHReportGeneratorV75Final:
             {self._generate_facility_detail_table("대형마트", poi_analysis.supermarkets)}
             {self._generate_facility_detail_table("편의점", poi_analysis.convenience_stores)}
             
-            <h2 class="subsection-title">6. 문화/여가 시설 상세 분석</h2>
+            <h2 class="subsection-title">7. 문화/여가 시설 상세 분석</h2>
             <p class="paragraph">
                 문화 및 여가시설 접근성은 종합 점수 <strong>{poi_analysis.cultural_score:.1f}/100점</strong>으로 평가되었습니다.
                 공원은 <strong>{poi_analysis.parks.count}개소</strong> (최단거리 {poi_analysis.parks.nearest_distance:.0f}m),
@@ -808,21 +820,40 @@ class LHReportGeneratorV75Final:
             {self._generate_facility_detail_table("공원", poi_analysis.parks)}
             {self._generate_facility_detail_table("도서관", poi_analysis.libraries)}
             
-            <h2 class="subsection-title">7. 종합 평가 및 권고사항</h2>
+            <h2 class="subsection-title">8. 종합 평가 및 권고사항</h2>
             
-            <h3 class="subsubsection-title">7.1 강점 (Strengths)</h3>
+            <!-- 📊 카테고리별 점수 시각화 (바 차트) -->
+            <h3 class="subsubsection-title">8.1 카테고리별 점수 시각화</h3>
+            <div style="padding: 20px; background: #f8f9fa; border-radius: 8px; margin: 20px 0;">
+                {self._generate_score_bar_chart([
+                    ("교육 인프라", poi_analysis.education_score),
+                    ("교통 인프라", poi_analysis.transportation_score),
+                    ("의료 인프라", poi_analysis.healthcare_score),
+                    ("상업 인프라", poi_analysis.commercial_score),
+                    ("문화/여가 인프라", poi_analysis.cultural_score)
+                ])}
+            </div>
+            
+            <!-- 🎯 종합 인프라 점수 게이지 -->
+            <h3 class="subsubsection-title">8.2 종합 인프라 점수</h3>
+            <div style="text-align: center; padding: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                        border-radius: 10px; margin: 20px 0; color: white;">
+                {self._generate_gauge_chart(poi_analysis.overall_infrastructure_score, poi_analysis.livability_grade)}
+            </div>
+            
+            <h3 class="subsubsection-title">8.3 강점 (Strengths)</h3>
             <ul style="line-height: 2.0; margin: 20px 0;">
-                {''.join(f'<li><strong>✓</strong> {strength}</li>' for strength in poi_analysis.strengths)}
+                {''.join(f'<li><strong style="color: #28a745;">✓</strong> {strength}</li>' for strength in poi_analysis.strengths)}
             </ul>
             
-            <h3 class="subsubsection-title">7.2 약점 (Weaknesses)</h3>
+            <h3 class="subsubsection-title">8.4 약점 (Weaknesses)</h3>
             <ul style="line-height: 2.0; margin: 20px 0;">
-                {''.join(f'<li><strong>⚠</strong> {weakness}</li>' for weakness in poi_analysis.weaknesses)}
+                {''.join(f'<li><strong style="color: #ffc107;">⚠</strong> {weakness}</li>' for weakness in poi_analysis.weaknesses)}
             </ul>
             
-            <h3 class="subsubsection-title">7.3 권고사항 (Recommendations)</h3>
+            <h3 class="subsubsection-title">8.5 권고사항 (Recommendations)</h3>
             <ul style="line-height: 2.0; margin: 20px 0;">
-                {''.join(f'<li><strong>→</strong> {rec}</li>' for rec in poi_analysis.recommendations)}
+                {''.join(f'<li><strong style="color: #0047AB;">→</strong> {rec}</li>' for rec in poi_analysis.recommendations)}
             </ul>
             
             <p class="paragraph">
@@ -863,6 +894,169 @@ class LHReportGeneratorV75Final:
             grade = "F"
         
         return f'<span style="background: {color}; color: white; padding: 5px 12px; border-radius: 4px; font-weight: bold;">{grade}</span>'
+    
+    def _generate_lh_evaluation_framework(self) -> str:
+        """LH 입지 평가 프레임워크 시각화 (4개 카테고리)"""
+        
+        categories = [
+            {
+                "name": "입지 기준",
+                "icon": "🗺️",
+                "weight": "35%",
+                "color": "#0047AB",
+                "criteria": [
+                    "대중교통 접근성 (지하철 500m 이내)",
+                    "교육시설 인접성 (초등학교 1km 이내)",
+                    "생활편의시설 (대형마트, 편의점)",
+                    "주거환경 (용도지역, 일조권)"
+                ]
+            },
+            {
+                "name": "규모 기준",
+                "icon": "🏗️",
+                "weight": "20%",
+                "color": "#28a745",
+                "criteria": [
+                    "최소 세대수 (10세대 이상)",
+                    "건폐율/용적률 준수",
+                    "주차대수 (세대당 1대 이상)",
+                    "적정 평균 면적 (60~85㎡)"
+                ]
+            },
+            {
+                "name": "사업성 기준",
+                "icon": "💰",
+                "weight": "30%",
+                "color": "#ffc107",
+                "criteria": [
+                    "Cap Rate (4.5% 이상)",
+                    "LH 매입가 적정성",
+                    "운영비 안정성",
+                    "수익률 시뮬레이션"
+                ]
+            },
+            {
+                "name": "법규 기준",
+                "icon": "📋",
+                "weight": "15%",
+                "color": "#dc3545",
+                "criteria": [
+                    "용도지역 적합성",
+                    "건축법규 준수",
+                    "환경영향평가",
+                    "안전성 검토 (재해위험지역 배제)"
+                ]
+            }
+        ]
+        
+        cards_html = ""
+        for cat in categories:
+            criteria_list = "".join([f"<li style='margin: 5px 0; font-size: 10pt;'>{c}</li>" for c in cat['criteria']])
+            
+            cards_html += f"""
+            <div style="flex: 1; min-width: 250px; background: white; border: 2px solid {cat['color']}; 
+                        border-radius: 10px; padding: 20px; margin: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <div style="font-size: 48pt; margin-bottom: 10px;">{cat['icon']}</div>
+                    <h3 style="color: {cat['color']}; margin: 10px 0; font-size: 14pt;">{cat['name']}</h3>
+                    <span style="background: {cat['color']}; color: white; padding: 5px 15px; 
+                                 border-radius: 20px; font-weight: bold; font-size: 11pt;">
+                        가중치 {cat['weight']}
+                    </span>
+                </div>
+                <div style="border-top: 2px solid {cat['color']}; padding-top: 15px; margin-top: 15px;">
+                    <h4 style="color: #333; font-size: 11pt; margin-bottom: 10px;">평가 항목</h4>
+                    <ul style="padding-left: 20px; margin: 0;">
+                        {criteria_list}
+                    </ul>
+                </div>
+            </div>
+            """
+        
+        return f"""
+        <div style="padding: 20px; background: #f8f9fa; border-radius: 10px; margin: 20px 0;">
+            <p style="font-size: 11pt; line-height: 1.8; color: #555; margin-bottom: 20px; text-align: center;">
+                LH 신축매입임대주택 사업은 4대 평가 기준(입지, 규모, 사업성, 법규)에 따라 
+                종합적으로 심사되며, 각 기준의 가중치가 적용되어 최종 등급이 산정됩니다.
+            </p>
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-around; align-items: stretch;">
+                {cards_html}
+            </div>
+            <div style="text-align: center; margin-top: 30px; padding: 20px; background: white; border-radius: 8px; border: 2px solid #dee2e6;">
+                <h4 style="color: #0047AB; font-size: 12pt; margin-bottom: 10px;">💡 평가 프로세스</h4>
+                <p style="font-size: 10pt; color: #666; line-height: 1.6; margin: 5px 0;">
+                    <strong>1단계:</strong> 각 카테고리별 세부 항목 점수 산정 (0-100점) →
+                    <strong>2단계:</strong> 가중치 적용하여 카테고리 점수 계산 →
+                    <strong>3단계:</strong> 종합 점수 산출 및 등급 부여 (A/B/C)
+                </p>
+            </div>
+        </div>
+        """
+    
+    def _generate_score_bar_chart(self, categories: list) -> str:
+        """카테고리별 점수 바 차트 생성"""
+        bars_html = ""
+        for category_name, score in categories:
+            # 점수에 따른 색상 결정
+            if score >= 70:
+                color = "#28a745"
+            elif score >= 50:
+                color = "#ffc107"
+            else:
+                color = "#dc3545"
+            
+            bars_html += f"""
+            <div style="margin: 15px 0;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span style="font-weight: bold; font-size: 11pt;">{category_name}</span>
+                    <span style="font-weight: bold; color: {color}; font-size: 11pt;">{score:.1f}/100</span>
+                </div>
+                <div style="background: #e9ecef; border-radius: 10px; height: 30px; position: relative; overflow: hidden;">
+                    <div style="background: {color}; height: 100%; width: {score}%; 
+                                border-radius: 10px; transition: width 0.3s ease;
+                                display: flex; align-items: center; justify-content: flex-end; padding-right: 10px;">
+                        <span style="color: white; font-weight: bold; font-size: 10pt;">{score:.1f}%</span>
+                    </div>
+                </div>
+            </div>
+            """
+        
+        return bars_html
+    
+    def _generate_gauge_chart(self, score: float, grade: str) -> str:
+        """종합 점수 게이지 차트 생성"""
+        # 점수에 따른 색상
+        if score >= 70:
+            gauge_color = "#28a745"
+        elif score >= 50:
+            gauge_color = "#ffc107"
+        else:
+            gauge_color = "#dc3545"
+        
+        return f"""
+        <div style="text-align: center;">
+            <h2 style="margin: 0; font-size: 48pt; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                {score:.1f}<span style="font-size: 24pt;">/100</span>
+            </h2>
+            <div style="margin: 20px auto; width: 200px; height: 200px; position: relative;">
+                <svg viewBox="0 0 200 200" style="transform: rotate(-90deg);">
+                    <!-- 배경 원 -->
+                    <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="20"/>
+                    <!-- 진행 원 -->
+                    <circle cx="100" cy="100" r="80" fill="none" stroke="{gauge_color}" stroke-width="20"
+                            stroke-dasharray="{score * 5.024} 502.4" stroke-linecap="round"/>
+                </svg>
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                    <span style="font-size: 36pt; font-weight: bold; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                        {grade}
+                    </span>
+                </div>
+            </div>
+            <p style="font-size: 14pt; margin-top: 10px; color: white; font-weight: bold;">
+                거주 적합도 등급
+            </p>
+        </div>
+        """
     
     def _generate_facility_detail_table(self, category_name: str, facility_score) -> str:
         """시설 상세 테이블 생성"""
@@ -965,25 +1159,221 @@ class LHReportGeneratorV75Final:
     def _generate_final_recommendation(
         self, financial, lh_sim, risk, alternatives, basic_info, tone
     ) -> Dict[str, Any]:
-        """Generate final recommendation (2-3 pages)"""
+        """Generate final recommendation (2-3 pages) - Executive Summary Style"""
+        
+        # 핵심 재무 지표
+        cap_rate = financial['returns']['cap_rate_percent']
+        total_capex = financial['capex']['total_capex']
+        unit_count = financial['capex']['unit_count']
+        noi = financial['noi']['noi']
+        
+        # 위험 수준
+        risk_level = risk['executive_summary']['overall_risk_level']
+        risk_color = {'Low': '#28a745', 'Medium': '#ffc107', 'High': '#dc3545'}.get(risk_level, '#6c757d')
+        
+        # 최종 판정 색상
+        rec_color = {
+            'GO': '#28a745', 'CONDITIONAL': '#ffc107',
+            'REVISE': '#fd7e14', 'NO-GO': '#dc3545'
+        }.get(lh_sim['recommendation'], '#6c757d')
+        
         html = f"""
-        <div class="final-recommendation">
-            <h1 class="section-title">최종 의사결정 프레임워크</h1>
+        <div class="final-recommendation" style="page-break-before: always;">
+            <h1 class="section-title">종합판단 및 최종 권고안</h1>
             
-            <h3 style="color: #0047AB;">1. 4-Level Decision Framework</h3>
-            <div style="padding: 25px; background-color: 
-                {'#d4edda' if lh_sim['recommendation'] == 'GO' else '#fff3cd'}; 
-                border: 3px solid 
-                {'#28a745' if lh_sim['recommendation'] == 'GO' else '#ffc107'};">
-                <h4 style="margin-top: 0;">최종 판정: {lh_sim['recommendation']}</h4>
-                {lh_sim['explanation']}
+            <!-- 📊 핵심 지표 요약 테이블 -->
+            <h2 class="subsection-title">1. 핵심 지표 요약 (Key Metrics Summary)</h2>
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                <thead>
+                    <tr style="background: #0047AB; color: white;">
+                        <th style="padding: 15px; text-align: left; width: 30%;">평가 항목</th>
+                        <th style="padding: 15px; text-align: center; width: 25%;">실제 값</th>
+                        <th style="padding: 15px; text-align: center; width: 20%;">LH 기준</th>
+                        <th style="padding: 15px; text-align: center; width: 25%;">평가</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 12px; font-weight: bold;">Cap Rate (수익률)</td>
+                        <td style="padding: 12px; text-align: center; font-weight: bold; color: {'#28a745' if cap_rate >= 4.5 else '#dc3545'};">
+                            {cap_rate:.2f}%
+                        </td>
+                        <td style="padding: 12px; text-align: center;">≥ 4.5%</td>
+                        <td style="padding: 12px; text-align: center;">
+                            {'✅ 기준 충족' if cap_rate >= 4.5 else '❌ 기준 미달'}
+                        </td>
+                    </tr>
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 12px; font-weight: bold;">총 사업비 (CAPEX)</td>
+                        <td style="padding: 12px; text-align: center;">{self._format_krw(total_capex)}</td>
+                        <td style="padding: 12px; text-align: center;">-</td>
+                        <td style="padding: 12px; text-align: center;">참고</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px; font-weight: bold;">예상 세대수</td>
+                        <td style="padding: 12px; text-align: center;">{unit_count}세대</td>
+                        <td style="padding: 12px; text-align: center;">≥ 10세대</td>
+                        <td style="padding: 12px; text-align: center;">
+                            {'✅ 기준 충족' if unit_count >= 10 else '❌ 기준 미달'}
+                        </td>
+                    </tr>
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 12px; font-weight: bold;">연간 순영업소득 (NOI)</td>
+                        <td style="padding: 12px; text-align: center;">{self._format_krw(noi)}</td>
+                        <td style="padding: 12px; text-align: center;">-</td>
+                        <td style="padding: 12px; text-align: center;">참고</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px; font-weight: bold;">종합 위험도</td>
+                        <td style="padding: 12px; text-align: center; font-weight: bold; color: {risk_color};">
+                            {risk_level}
+                        </td>
+                        <td style="padding: 12px; text-align: center;">Low~Medium</td>
+                        <td style="padding: 12px; text-align: center;">
+                            {'✅ 양호' if risk_level in ['Low', 'Medium'] else '⚠️ 주의'}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <!-- 🎯 최종 의사결정 프레임워크 -->
+            <h2 class="subsection-title">2. 최종 의사결정 (Final Decision)</h2>
+            <div style="padding: 30px; background: linear-gradient(135deg, {rec_color}15, {rec_color}05); 
+                        border-left: 6px solid {rec_color}; margin: 25px 0; border-radius: 8px;">
+                <h3 style="margin-top: 0; color: {rec_color}; font-size: 24pt; text-align: center;">
+                    최종 판정: {lh_sim['recommendation']}
+                </h3>
+                <div style="padding: 20px; background: white; border-radius: 5px; margin-top: 20px;">
+                    {lh_sim['explanation']}
+                </div>
             </div>
             
-            <h3 style="color: #0047AB;">2. Next Steps & Action Items</h3>
-            <p class="paragraph">향후 3개월 내 실행해야 할 핵심 액션 아이템...</p>
+            <!-- ✅ 주요 강점 (Strengths) -->
+            <h2 class="subsection-title">3. 주요 강점 (Key Strengths)</h2>
+            <div style="padding: 20px; background: #d4edda; border-left: 4px solid #28a745; margin: 15px 0;">
+                <ul style="margin: 10px 0; padding-left: 25px;">
+                    <li style="margin: 10px 0; font-size: 11pt;">
+                        <strong>재무 안정성</strong>: Cap Rate {cap_rate:.2f}%로 
+                        {'LH 목표 기준 달성' if cap_rate >= 4.5 else f'LH 기준 대비 {4.5 - cap_rate:.2f}%p 부족'}
+                    </li>
+                    <li style="margin: 10px 0; font-size: 11pt;">
+                        <strong>사업 규모</strong>: {unit_count}세대 규모로 {'안정적 운영 가능' if unit_count >= 20 else '소규모 운영'}
+                    </li>
+                    <li style="margin: 10px 0; font-size: 11pt;">
+                        <strong>위험 관리</strong>: {risk_level} 위험도로 
+                        {'관리 가능한 수준' if risk_level in ['Low', 'Medium'] else '주의 필요'}
+                    </li>
+                    <li style="margin: 10px 0; font-size: 11pt;">
+                        <strong>입지 조건</strong>: 대상지 입지 분석 결과 LH 매입 기준 충족
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- ⚠️ 주요 약점 및 개선 필요사항 (Weaknesses & Improvements) -->
+            <h2 class="subsection-title">4. 주요 약점 및 개선 필요사항</h2>
+            <div style="padding: 20px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 15px 0;">
+                <ul style="margin: 10px 0; padding-left: 25px;">
+                    {self._generate_weakness_list(financial, risk, lh_sim)}
+                </ul>
+            </div>
+            
+            <!-- 📋 실행 체크리스트 (Action Items) -->
+            <h2 class="subsection-title">5. 핵심 실행 체크리스트 (Action Checklist)</h2>
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                <thead>
+                    <tr style="background: #0047AB; color: white;">
+                        <th style="padding: 12px; width: 10%;">우선순위</th>
+                        <th style="padding: 12px; width: 40%;">실행 항목</th>
+                        <th style="padding: 12px; width: 25%;">담당</th>
+                        <th style="padding: 12px; width: 25%;">목표 기한</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 12px; text-align: center; background: #dc3545; color: white; font-weight: bold;">HIGH</td>
+                        <td style="padding: 12px;">토지 감정평가 실시 (LH 공인 감정기관)</td>
+                        <td style="padding: 12px;">사업팀</td>
+                        <td style="padding: 12px;">2주 이내</td>
+                    </tr>
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 12px; text-align: center; background: #dc3545; color: white; font-weight: bold;">HIGH</td>
+                        <td style="padding: 12px;">건축 설계 및 공사비 산정 (Verified Cost)</td>
+                        <td style="padding: 12px;">설계팀</td>
+                        <td style="padding: 12px;">4주 이내</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px; text-align: center; background: #ffc107; font-weight: bold;">MEDIUM</td>
+                        <td style="padding: 12px;">LH 매입 협상 전략 수립</td>
+                        <td style="padding: 12px;">협상팀</td>
+                        <td style="padding: 12px;">6주 이내</td>
+                    </tr>
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 12px; text-align: center; background: #ffc107; font-weight: bold;">MEDIUM</td>
+                        <td style="padding: 12px;">위험 요인 상세 실사 (법규, 환경, 안전)</td>
+                        <td style="padding: 12px;">법무팀</td>
+                        <td style="padding: 12px;">8주 이내</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px; text-align: center; background: #28a745; color: white; font-weight: bold;">LOW</td>
+                        <td style="padding: 12px;">지역 주민 설명회 및 의견 수렴</td>
+                        <td style="padding: 12px;">커뮤니케이션팀</td>
+                        <td style="padding: 12px;">12주 이내</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <!-- 🎓 최종 결론 (Final Conclusion) -->
+            <h2 class="subsection-title">6. 최종 결론 (Conclusion)</h2>
+            <div style="padding: 25px; background: #f8f9fa; border: 2px solid #dee2e6; border-radius: 8px; margin: 20px 0;">
+                <p style="font-size: 12pt; line-height: 1.8; margin: 10px 0;">
+                    <strong>본 프로젝트는 {lh_sim['recommendation']} 판정을 받았으며</strong>, 
+                    {'사업 추진을 적극 권장합니다' if lh_sim['recommendation'] == 'GO' else '조건부 추진 가능' if lh_sim['recommendation'] == 'CONDITIONAL' else '사업 재검토가 필요합니다'}.
+                </p>
+                <p style="font-size: 11pt; line-height: 1.8; margin: 10px 0;">
+                    재무적 관점에서 Cap Rate {cap_rate:.2f}%, NOI {self._format_krw(noi)}/년으로 
+                    {'LH 기준을 충족하며' if cap_rate >= 4.5 else 'LH 기준 미달이나 개선 여지가 있으며'}, 
+                    {unit_count}세대 규모로 {'안정적인 운영이 가능합니다' if unit_count >= 20 else '소규모이나 관리 가능한 수준입니다'}.
+                </p>
+                <p style="font-size: 11pt; line-height: 1.8; margin: 10px 0;">
+                    종합 위험도는 <strong style="color: {risk_color};">{risk_level}</strong>로 평가되었으며, 
+                    {'위험 관리가 잘 되어 있어' if risk_level == 'Low' else '적절한 위험 관리 전략이 필요하나'} 
+                    사업 진행에 {'큰 문제는 없습니다' if risk_level in ['Low', 'Medium'] else '주의가 필요합니다'}.
+                </p>
+                <p style="font-size: 11pt; line-height: 1.8; margin: 10px 0;">
+                    <strong>권고사항</strong>: 상기 체크리스트에 따라 단계적으로 실행하되, 
+                    특히 <strong>토지 감정평가</strong>와 <strong>건축 공사비 검증</strong>을 
+                    최우선으로 진행하여 LH 매입 협상의 기초 자료를 확보하시기 바랍니다.
+                </p>
+            </div>
         </div>
         """
         return {'title': 'Final Recommendation', 'html': html, 'level': 1}
+    
+    def _generate_weakness_list(self, financial, risk, lh_sim) -> str:
+        """Generate weakness list based on analysis"""
+        weaknesses = []
+        
+        cap_rate = financial['returns']['cap_rate_percent']
+        if cap_rate < 4.5:
+            weaknesses.append(f"<li style='margin: 10px 0; font-size: 11pt;'><strong>수익률 부족</strong>: Cap Rate {cap_rate:.2f}%로 LH 기준(4.5%) 대비 {4.5 - cap_rate:.2f}%p 낮음 → 비용 절감 또는 임대료 상향 검토 필요</li>")
+        
+        unit_count = financial['capex']['unit_count']
+        if unit_count < 20:
+            weaknesses.append(f"<li style='margin: 10px 0; font-size: 11pt;'><strong>소규모 사업</strong>: {unit_count}세대로 규모의 경제 효과 제한적 → 운영비 최적화 필요</li>")
+        
+        risk_level = risk['executive_summary']['overall_risk_level']
+        if risk_level == 'High':
+            weaknesses.append("<li style='margin: 10px 0; font-size: 11pt;'><strong>높은 위험도</strong>: 종합 위험도 High → 위험 요인 상세 분석 및 완화 전략 수립 필요</li>")
+        
+        # 위험 요인 추가
+        if 'critical_risks' in risk['executive_summary']:
+            for risk_item in risk['executive_summary']['critical_risks'][:2]:  # 상위 2개만
+                weaknesses.append(f"<li style='margin: 10px 0; font-size: 11pt;'><strong>{risk_item['name']}</strong>: {risk_item['description']}</li>")
+        
+        if not weaknesses:
+            weaknesses.append("<li style='margin: 10px 0; font-size: 11pt;'>현재 단계에서 식별된 주요 약점 없음 (추가 실사 필요)</li>")
+        
+        return "\n".join(weaknesses)
     
     def _assemble_final_report(self, sections: List[Dict], basic_info: Dict) -> str:
         """Assemble all sections into complete HTML report"""

@@ -219,6 +219,24 @@ class LandAnalysisResponse(BaseModel):
         description="다필지 클러스터링 결과 (준비용, 단일 필지는 선택사항)"
     )
     
+    # ✨ v8.5: Financial, LH Scores, Visualizations
+    financial_result: Optional[Dict[str, Any]] = Field(
+        None,
+        description="v8.5 Financial Engine 결과 (CAPEX, OPEX, NOI, Cap Rate, IRR, LH Purchase Price)"
+    )
+    lh_scores: Optional[Dict[str, Any]] = Field(
+        None,
+        description="v8.5 LH 평가 점수 (입지 35점, 규모 20점, 사업성 40점, 법규 15점)"
+    )
+    visualizations: Optional[Dict[str, Any]] = Field(
+        None,
+        description="v8.5 시각화 데이터 (Financial Bar Chart, Infrastructure Radar, Grade Gauge, etc.)"
+    )
+    analysis_mode: Optional[str] = Field(
+        None,
+        description="분석 모드 (LH_LINKED for 50+ units, STANDARD otherwise)"
+    )
+    
     created_at: datetime = Field(default_factory=datetime.now)
     
     class Config:

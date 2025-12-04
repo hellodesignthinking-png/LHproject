@@ -395,8 +395,9 @@ class KakaoService:
                 return f"data:image/png;base64,{image_base64}"
                 
         except Exception as e:
-            print(f"❌ 지도 이미지 생성 실패: {e}")
-            return None
+            print(f"❌ Kakao 지도 이미지 생성 실패: {e}")
+            # 🔥 Fallback: OpenStreetMap 기반 지도 이미지 생성
+            return await self._generate_fallback_map_image(coordinates, zoom_level, markers)
     
     async def get_multiple_maps(
         self,
@@ -431,3 +432,107 @@ class KakaoService:
         )
         
         return maps
+    
+    async def _generate_fallback_map_image(
+        self,
+        coordinates: Coordinates,
+        zoom_level: int = 3,
+        markers: Optional[List[Dict[str, Any]]] = None
+    ) -> Optional[str]:
+        """
+        Fallback: OpenStreetMap 기반 지도 이미지 생성 (Kakao API 실패시)
+        
+        Args:
+            coordinates: 중심 좌표
+            zoom_level: Kakao zoom_level (1~14, 작을수록 확대)
+            markers: 추가 마커 리스트
+            
+        Returns:
+            Base64 인코딩된 이미지 또는 SVG placeholder
+        """
+        try:
+            # Kakao zoom level을 OSM zoom level로 변환 (1~14 → 18~5)
+            # Kakao: 1 (가장 확대) ~ 14 (가장 축소)
+            # OSM: 18 (가장 확대) ~ 1 (가장 축소)
+            osm_zoom = max(5, min(18, 19 - zoom_level))
+            
+            # MapBox Static Images API 사용 (무료 티어)
+            # 또는 StaticMaps.co 사용
+            width = 800
+            height = 600
+            
+            # StaticMaps.co API (무료, API 키 불필요)
+            url = f"https://staticmap.openstreetmap.de/staticmap.php"
+            params = {
+                "center": f"{coordinates.latitude},{coordinates.longitude}",
+                "zoom": osm_zoom,
+                "size": f"{width}x{height}",
+                "maptype": "mapnik",
+                "markers": f"{coordinates.latitude},{coordinates.longitude},red"
+            }
+            
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, params=params, timeout=15.0)
+                response.raise_for_status()
+                
+                import base64
+                image_base64 = base64.b64encode(response.content).decode('utf-8')
+                print(f"✅ Fallback 지도 이미지 생성 성공 (OpenStreetMap)")
+                return f"data:image/png;base64,{image_base64}"
+                
+        except Exception as fallback_error:
+            print(f"❌ Fallback 지도 생성도 실패: {fallback_error}")
+            # 최종 fallback: SVG placeholder 이미지
+            return self._generate_svg_placeholder(coordinates)
+    
+    def _generate_svg_placeholder(self, coordinates: Coordinates) -> str:
+        """
+        최종 fallback: SVG 기반 placeholder 지도 이미지
+        
+        Args:
+            coordinates: 좌표
+            
+        Returns:
+            Base64 encoded SVG 이미지
+        """
+        import base64
+        
+        svg_content = f'''<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+            <!-- 배경 -->
+            <rect width="800" height="600" fill="#f0f0f0"/>
+            
+            <!-- 그리드 패턴 -->
+            <defs>
+                <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+                    <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#e0e0e0" stroke-width="1"/>
+                </pattern>
+            </defs>
+            <rect width="800" height="600" fill="url(#grid)" />
+            
+            <!-- 중심 마커 -->
+            <circle cx="400" cy="300" r="20" fill="#FF0000" stroke="#FFFFFF" stroke-width="3"/>
+            
+            <!-- 텍스트 정보 -->
+            <text x="400" y="350" font-family="Arial" font-size="16" fill="#333" text-anchor="middle">
+                대상지 위치
+            </text>
+            <text x="400" y="380" font-family="Arial" font-size="14" fill="#666" text-anchor="middle">
+                위도: {coordinates.latitude:.6f}°
+            </text>
+            <text x="400" y="405" font-family="Arial" font-size="14" fill="#666" text-anchor="middle">
+                경도: {coordinates.longitude:.6f}°
+            </text>
+            
+            <!-- 지도 정보 안내 -->
+            <rect x="50" y="50" width="350" height="80" fill="#FFF" stroke="#DDD" stroke-width="2" rx="5"/>
+            <text x="70" y="80" font-family="Arial" font-size="14" fill="#333" font-weight="bold">
+                ⚠️ 지도 이미지를 불러올 수 없습니다
+            </text>
+            <text x="70" y="105" font-family="Arial" font-size="12" fill="#666">
+                Kakao API 키를 설정하면 실제 지도를 확인할 수 있습니다.
+            </text>
+        </svg>'''
+        
+        svg_base64 = base64.b64encode(svg_content.encode('utf-8')).decode('utf-8')
+        print(f"✅ SVG Placeholder 지도 생성")
+        return f"data:image/svg+xml;base64,{svg_base64}"
