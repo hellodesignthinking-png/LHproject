@@ -269,6 +269,9 @@ class AnalysisEngine:
         
         # 수요예측 입력 데이터 준비
         subway_dist = accessibility.get('nearest_subway_distance', 9999)
+        # 🔥 Sanitize infinity values to prevent OverflowError
+        if not isinstance(subway_dist, (int, float)) or subway_dist == float('inf') or subway_dist > 10000:
+            subway_dist = 9999
         univ_dist = accessibility.get('nearest_university_distance', 5000)  # 기본값
         youth_ratio_val = demographic_info.youth_ratio if demographic_info else 25.0
         avg_rent = 45.0  # 기본값 (만원) - 실제로는 지역별 시세 API 필요
@@ -458,10 +461,13 @@ class AnalysisEngine:
                     ))
         
         # 접근성 리스크
-        if accessibility['nearest_subway_distance'] > 2000:
+        nearest_subway = accessibility.get('nearest_subway_distance', 9999)
+        if nearest_subway == float('inf') or nearest_subway > 10000:
+            nearest_subway = 9999
+        if nearest_subway > 2000:
             risks.append(RiskFactor(
                 category="접근성",
-                description=f"지하철역 {int(accessibility['nearest_subway_distance'])}m (도보 20분 이상)",
+                description=f"지하철역 {int(nearest_subway)}m (도보 20봠6 이상)",
                 severity="medium"
             ))
         
@@ -582,8 +588,11 @@ class AnalysisEngine:
         if demographic_info.single_household_ratio > 30:
             key_factors.append(f"1인 가구 비율 {demographic_info.single_household_ratio}%")
         
-        if accessibility['nearest_subway_distance'] < 1000:
-            key_factors.append(f"지하철역 {int(accessibility['nearest_subway_distance'])}m (도보 10분 이내)")
+        nearest_subway_for_demand = accessibility.get('nearest_subway_distance', 9999)
+        if nearest_subway_for_demand == float('inf') or nearest_subway_for_demand > 10000:
+            nearest_subway_for_demand = 9999
+        if nearest_subway_for_demand < 1000:
+            key_factors.append(f"지하철역 {int(nearest_subway_for_demand)}m (도보 10분 이내)")
         
         if accessibility['nearest_university_distance'] < 3000:
             key_factors.append(f"대학교 {int(accessibility['nearest_university_distance'])}m 거리")
@@ -678,8 +687,15 @@ class AnalysisEngine:
         
         # POI 거리 데이터
         subway_dist = accessibility.get('nearest_subway_distance', 9999)
+        # 🔥 Sanitize infinity values for type demand scores
+        if subway_dist == float('inf') or subway_dist > 10000:
+            subway_dist = 9999
         school_dist = accessibility.get('nearest_school_distance', 9999)
+        if school_dist == float('inf') or school_dist > 10000:
+            school_dist = 9999
         hospital_dist = accessibility.get('nearest_hospital_distance', 9999)
+        if hospital_dist == float('inf') or hospital_dist > 10000:
+            hospital_dist = 9999
         
         # 1. 청년형 - 지하철/대학/편의시설 중심
         youth_score = base_score
