@@ -18,15 +18,17 @@ class VisualizationEngineV85:
     
     def generate_all_visualizations(
         self,
-        analysis_data: Dict[str, Any],
-        financial_result: Dict[str, Any]
+        financial_result: Dict[str, Any],
+        lh_scores: Dict[str, Any],
+        analysis_data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         모든 시각화 데이터 생성
         
         Args:
-            analysis_data: 분석 데이터 (입지, 인프라 등)
             financial_result: 재무 계산 결과
+            lh_scores: LH 평가 점수
+            analysis_data: 분석 데이터 (입지, 인프라 등)
             
         Returns:
             Dict with all visualization data
@@ -36,7 +38,7 @@ class VisualizationEngineV85:
                 "financial_bar_chart": self._build_financial_bar_chart(financial_result),
                 "infra_radar_chart": self._build_infra_radar_chart(analysis_data),
                 "infra_grade_gauge": self._build_infra_grade_gauge(analysis_data),
-                "lh_eval_framework_chart": self._build_lh_eval_framework(analysis_data),
+                "lh_eval_framework_chart": self._build_lh_eval_framework(lh_scores),
                 "cost_structure_pie": self._build_cost_structure_pie(financial_result),
                 "roi_trend_line": self._build_roi_trend_line(financial_result)
             }
@@ -162,12 +164,12 @@ class VisualizationEngineV85:
             }
         }
     
-    def _build_lh_eval_framework(self, analysis_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _build_lh_eval_framework(self, lh_scores: Dict[str, Any]) -> Dict[str, Any]:
         """
         LH 평가 프레임워크 시각화 데이터
         4대 카테고리: 입지(35%), 규모(20%), 사업성(30%), 법규(15%)
         """
-        lh_scores = analysis_data.get("lh_scores", {})
+        # lh_scores 직접 사용
         
         categories = [
             {"name": "입지", "weight": 35, "score": lh_scores.get("location", 0), "icon": "🗺️", "color": "#0047AB"},
