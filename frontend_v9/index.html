@@ -815,6 +815,10 @@
                             unit_count: this.landData.unit_count
                         };
                         
+                        // Debug logging
+                        console.log('📤 Sending API request:', apiPayload);
+                        console.log('🔍 landData:', this.landData);
+                        
                         const response = await fetch(`${this.apiBaseUrl}/api/v9/analyze-land`, {
                             method: 'POST',
                             headers: {
@@ -824,17 +828,27 @@
                         });
                         
                         if (!response.ok) {
-                            const errorData = await response.json();
-                            // Handle Pydantic validation errors
-                            if (errorData.detail && Array.isArray(errorData.detail)) {
-                                const errors = errorData.detail.map(e => `${e.loc.join('.')}: ${e.msg}`).join(', ');
-                                throw new Error(`입력값 오류: ${errors}`);
+                            // Try to parse as JSON first
+                            let errorMessage = '';
+                            try {
+                                const errorData = await response.json();
+                                // Handle Pydantic validation errors
+                                if (errorData.detail && Array.isArray(errorData.detail)) {
+                                    const errors = errorData.detail.map(e => `${e.loc.join('.')}: ${e.msg}`).join(', ');
+                                    errorMessage = `입력값 오류: ${errors}`;
+                                } else if (errorData.detail) {
+                                    errorMessage = typeof errorData.detail === 'string' ? errorData.detail : JSON.stringify(errorData.detail, null, 2);
+                                } else if (errorData.message) {
+                                    errorMessage = errorData.message;
+                                } else {
+                                    errorMessage = JSON.stringify(errorData, null, 2);
+                                }
+                            } catch (e) {
+                                // Not JSON, get as text
+                                errorMessage = await response.text();
                             }
-                            // Handle object detail errors
-                            if (errorData.detail && typeof errorData.detail === 'object') {
-                                throw new Error(JSON.stringify(errorData.detail));
-                            }
-                            throw new Error(errorData.detail || errorData.message || '분석 중 오류가 발생했습니다');
+                            console.error('API Error:', errorMessage);
+                            throw new Error(`API 오류 (${response.status}): ${errorMessage.substring(0, 500)}`);
                         }
                         
                         const responseData = await response.json();
@@ -930,8 +944,9 @@
                         this.activeTab = 'gis';
                         
                     } catch (err) {
-                        this.error = err.message;
+                        this.error = err.message || String(err);
                         console.error('Analysis error:', err);
+                        console.error('Error details:', JSON.stringify(err, null, 2));
                     } finally {
                         clearInterval(progressInterval);
                         this.loading = false;
