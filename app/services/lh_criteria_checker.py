@@ -242,6 +242,9 @@ class LHCriteriaChecker:
         
         # 4. 학교/교육시설 접근성 (다자녀/신혼부부형)
         school_distance = location_data.get('nearest_school_distance', float('inf'))
+        # 🔥 Sanitize infinity to prevent OverflowError
+        if school_distance == float('inf') or school_distance > 10000:
+            school_distance = 9999
         if school_distance <= 500:
             status = CheckStatus.PASS
             score = 100
