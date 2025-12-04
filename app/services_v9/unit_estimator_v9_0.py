@@ -1,15 +1,14 @@
 """
 Unit Estimator Service for ZeroSite v9.1
 
-Provides automatic household unit count estimation based on:
-- Land area
-- Building coverage ratio
-- Floor area ratio
-- Zoning type
-- Standard unit sizes (Korean LH standards)
+Provides automatic household unit calculation:
+- Total unit count estimation
+- Floor count calculation
+- Parking space calculation
+- Unit type distribution
+- GFA (Gross Floor Area) breakdown
 
-This service restores the v7.5 automation feature where users 
-don't need to manually calculate household count.
+Based on Korean building standards and LH construction guidelines.
 
 Author: ZeroSite Development Team
 Date: 2025-12-04
@@ -17,414 +16,453 @@ Version: v9.1
 """
 
 import logging
-import math
-from typing import Optional, Dict, List
-from dataclasses import dataclass
-from enum import Enum
+from typing import Optional, Dict
+from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)
 
 
-class UnitSizeType(Enum):
-    """
-    표준 평형 타입 (LH 기준)
-    """
-    TYPE_16 = "16평형"  # 약 53㎡
-    TYPE_20 = "20평형"  # 약 66㎡ 
-    TYPE_24 = "24평형"  # 약 79㎡
-    TYPE_26 = "26평형"  # 약 86㎡
-    TYPE_32 = "32평형"  # 약 106㎡
-    TYPE_40 = "40평형"  # 약 132㎡
-
-
 @dataclass
-class UnitEstimation:
+class UnitEstimate:
     """
-    세대수 자동 추정 결과
+    세대수 산정 결과
     
     Attributes:
-        estimated_units: 추정 세대수
-        calculation_method: 계산 방식 ("FLOOR_AREA_RATIO" | "BUILDING_COVERAGE")
-        total_floor_area: 총 연면적 (㎡)
-        buildable_area: 건축가능면적 (㎡)
-        avg_unit_size: 평균 세대면적 (㎡)
-        unit_type_distribution: 평형별 세대수 분포 (예: {"20평형": 30, "26평형": 20})
-        efficiency_ratio: 전용률 (%)
-        confidence_score: 신뢰도 (0-100)
-        warnings: 경고 메시지 목록
+        total_units: 총 세대수
+        total_gfa: 연면적 (m²)
+        residential_gfa: 주거 전용 면적 (m²)
+        commercial_gfa: 부대시설 면적 (m²)
+        building_footprint: 건축 면적 (m²)
+        floors: 층수
+        units_per_floor: 층별 세대수
+        parking_spaces: 법정 주차 대수
+        unit_type_distribution: 세대 유형별 배분
+        avg_unit_area: 세대당 평균 면적 (m²)
+        calculation_method: 계산 방법
     """
-    estimated_units: int
-    calculation_method: str
-    total_floor_area: float
-    buildable_area: float
-    avg_unit_size: float
-    unit_type_distribution: Dict[str, int]
-    efficiency_ratio: float
-    confidence_score: float
-    warnings: List[str]
+    total_units: int
+    total_gfa: float
+    residential_gfa: float
+    commercial_gfa: float
+    building_footprint: float
+    floors: int
+    units_per_floor: int
+    parking_spaces: int
+    unit_type_distribution: Dict[str, int] = field(default_factory=dict)
+    avg_unit_area: float = 60.0
+    calculation_method: str = "auto"
 
 
 class UnitEstimatorV9:
     """
-    세대수 자동 추정 엔진 (ZeroSite v9.1 핵심 기능)
+    자동 세대수 산정 엔진
     
     Features:
-    - 용적률 기반 세대수 계산
-    - 건폐율/층수 기반 세대수 계산
-    - 평형별 세대 분포 자동 생성
-    - LH 기준 전용률 적용 (75-85%)
-    - 법정 주차 대수 검증
-    
-    Calculation Logic:
-    1. 총 연면적 = 토지면적 × 용적률
-    2. 전용면적 = 총 연면적 × 전용률 (80%)
-    3. 세대수 = 전용면적 / 평균 세대 전용면적
+    - 용적률 기반 연면적 계산
+    - 세대 유형별 면적 배분
+    - 층수 및 층별 세대수 계산
+    - 주차 대수 자동 계산
+    - 건축 가능성 검증
     
     Based On:
-    - LH 한국토지주택공사 설계기준
-    - 주택법 시행규칙 (주택 규모별 기준)
-    - 건축법 (공용면적, 부대시설)
+    - 건축법 (건축물의 건폐율, 용적률)
+    - 주차장법 (주차 기준)
+    - LH 신축매입임대 기준 (세대수, 면적)
     
     Usage:
         estimator = UnitEstimatorV9()
-        result = estimator.estimate_units(
+        estimate = estimator.estimate_units(
             land_area=1000.0,
             floor_area_ratio=300.0,
-            building_coverage_ratio=50.0,
-            zone_type="제3종일반주거지역"
+            building_coverage_ratio=50.0
         )
-        print(result.estimated_units)  # 80
+        
+        print(estimate.total_units)    # 28
+        print(estimate.floors)          # 6
+        print(estimate.parking_spaces)  # 28
     """
     
-    # LH 표준 평형 전용면적 (㎡)
-    STANDARD_UNIT_SIZES = {
-        "16평형": 53.0,
-        "20평형": 66.0,
-        "24평형": 79.0,
-        "26평형": 86.0,
-        "32평형": 106.0,
-        "40평형": 132.0
+    # LH 신축매입임대 기준
+    DEFAULT_UNIT_AREA = 60.0  # m² (약 18평)
+    MIN_UNIT_AREA = 45.0      # m² (최소 전용면적)
+    MAX_UNIT_AREA = 85.0      # m² (최대 전용면적)
+    
+    # 부대시설 비율 (상가, 관리사무소, 주민공동시설 등)
+    COMMERCIAL_RATIO = 0.15   # 15%
+    RESIDENTIAL_RATIO = 0.85  # 85%
+    
+    # 세대 유형별 면적 (m²)
+    UNIT_TYPES = {
+        "59㎡": 59.0,  # 약 18평
+        "74㎡": 74.0,  # 약 22평
+        "84㎡": 84.0   # 약 25평
     }
     
-    # 전용률 (공용면적 포함 비율)
-    DEFAULT_EFFICIENCY_RATIO = 0.80  # 80% (LH 기준)
-    MIN_EFFICIENCY_RATIO = 0.75
-    MAX_EFFICIENCY_RATIO = 0.85
-    
-    # 층당 층고
-    FLOOR_HEIGHT = 3.0  # m
-    
-    # 법정 주차 대수 비율 (세대당)
-    PARKING_RATIO = 1.0
+    # 세대 유형별 기본 배분 비율
+    DEFAULT_UNIT_MIX = {
+        "59㎡": 0.6,   # 60%
+        "74㎡": 0.3,   # 30%
+        "84㎡": 0.1    # 10%
+    }
     
     def __init__(self):
-        logger.info("🏗️ UnitEstimatorV9 initialized")
+        """Initialize UnitEstimatorV9"""
+        logger.info("✅ UnitEstimatorV9 initialized")
     
     def estimate_units(
         self,
         land_area: float,
         floor_area_ratio: float,
-        building_coverage_ratio: Optional[float] = None,
-        zone_type: Optional[str] = None,
-        max_height: Optional[float] = None,
-        target_unit_size: str = "26평형"
-    ) -> UnitEstimation:
+        building_coverage_ratio: float,
+        unit_type_mix: Optional[Dict[str, float]] = None,
+        parking_ratio: float = 1.0
+    ) -> UnitEstimate:
         """
-        세대수 자동 추정 (v9.1 핵심 메서드)
+        자동 세대수 산정
+        
+        Process:
+        1. 연면적 계산 = 대지면적 × 용적률
+        2. 주거 전용 면적 계산 = 연면적 × 85% (부대시설 15% 제외)
+        3. 세대수 산정 = 주거 전용 면적 ÷ 세대당 평균 면적
+        4. 층수 계산 = 연면적 ÷ 건축 면적
+        5. 주차 대수 = 세대수 × 주차 비율
         
         Args:
-            land_area: 토지면적 (㎡)
+            land_area: 대지 면적 (m²)
             floor_area_ratio: 용적률 (%)
-            building_coverage_ratio: 건폐율 (%, optional)
-            zone_type: 용도지역명 (optional)
-            max_height: 최대 높이 제한 (m, optional)
-            target_unit_size: 목표 평형 (default: 26평형)
+            building_coverage_ratio: 건폐율 (%)
+            unit_type_mix: 세대 유형 비율 (선택)
+                {
+                    "59㎡": 0.6,  # 60%
+                    "74㎡": 0.3,  # 30%
+                    "84㎡": 0.1   # 10%
+                }
+            parking_ratio: 주차 비율 (세대당 대수, 기본 1.0)
         
         Returns:
-            UnitEstimation: 세대수 추정 결과
+            UnitEstimate: 세대수 산정 결과
+                - total_units: 총 세대수
+                - total_gfa: 연면적
+                - residential_gfa: 주거 전용 면적
+                - commercial_gfa: 부대시설 면적
+                - building_footprint: 건축 면적
+                - floors: 층수
+                - units_per_floor: 층별 세대수
+                - parking_spaces: 주차 대수
+                - unit_type_distribution: 세대 유형별 배분
         
         Example:
             >>> estimator = UnitEstimatorV9()
-            >>> result = estimator.estimate_units(1000, 300.0, 50.0)
-            >>> result.estimated_units
-            80
+            >>> result = estimator.estimate_units(
+            ...     land_area=1000.0,
+            ...     floor_area_ratio=300.0,
+            ...     building_coverage_ratio=50.0
+            ... )
+            >>> print(result.total_units)
+            42
+            >>> print(result.floors)
+            6
         """
-        logger.info(f"📊 세대수 자동 추정 시작: 토지면적 {land_area}㎡, 용적률 {floor_area_ratio}%")
+        logger.info(
+            f"📊 세대수 자동 산정 시작\n"
+            f"   대지면적: {land_area:.2f} m²\n"
+            f"   용적률: {floor_area_ratio:.1f}%\n"
+            f"   건폐율: {building_coverage_ratio:.1f}%"
+        )
         
-        warnings = []
+        # 1. 연면적 계산
+        total_gfa = land_area * (floor_area_ratio / 100.0)
+        logger.info(f"   연면적: {total_gfa:.2f} m²")
         
-        # 1. 입력 검증
-        if land_area <= 0:
-            raise ValueError(f"토지면적이 유효하지 않습니다: {land_area}㎡")
+        # 2. 건축 면적 계산
+        building_footprint = land_area * (building_coverage_ratio / 100.0)
+        logger.info(f"   건축면적: {building_footprint:.2f} m²")
         
-        if floor_area_ratio <= 0 or floor_area_ratio > 1000:
-            raise ValueError(f"용적률이 유효하지 않습니다: {floor_area_ratio}%")
+        # 3. 주거 전용 면적 (부대시설 15% 제외)
+        residential_gfa = total_gfa * self.RESIDENTIAL_RATIO
+        commercial_gfa = total_gfa * self.COMMERCIAL_RATIO
+        logger.info(f"   주거 전용 면적: {residential_gfa:.2f} m²")
+        logger.info(f"   부대시설 면적: {commercial_gfa:.2f} m²")
         
-        # 2. 총 연면적 계산
-        total_floor_area = land_area * (floor_area_ratio / 100.0)
-        logger.info(f"   총 연면적: {total_floor_area:.2f}㎡")
-        
-        # 3. 건축가능면적 계산 (건폐율 기반)
-        if building_coverage_ratio:
-            buildable_area = land_area * (building_coverage_ratio / 100.0)
-            logger.info(f"   건축면적: {buildable_area:.2f}㎡ (건폐율 {building_coverage_ratio}%)")
+        # 4. 세대당 평균 면적 계산
+        if unit_type_mix:
+            avg_unit_area = self._calculate_avg_unit_area(unit_type_mix)
         else:
-            buildable_area = total_floor_area / 5.0  # 기본 5층 가정
-            warnings.append("건폐율 미입력 - 기본값(5층) 가정")
+            avg_unit_area = self.DEFAULT_UNIT_AREA
         
-        # 4. 층수 추정
-        estimated_floors = math.ceil(total_floor_area / buildable_area)
+        logger.info(f"   세대당 평균 면적: {avg_unit_area:.2f} m²")
         
-        if max_height:
-            max_floors = math.floor(max_height / self.FLOOR_HEIGHT)
-            if estimated_floors > max_floors:
-                estimated_floors = max_floors
-                warnings.append(f"높이 제한으로 층수 조정: {max_floors}층")
+        # 5. 추정 세대수
+        estimated_units = int(residential_gfa / avg_unit_area)
         
-        logger.info(f"   추정 층수: {estimated_floors}층")
+        # 최소값 검증 (최소 10세대)
+        if estimated_units < 10:
+            logger.warning(f"⚠️ 세대수가 너무 적음: {estimated_units}세대 → 최소 10세대로 조정")
+            estimated_units = 10
         
-        # 5. 전용률 적용
-        efficiency_ratio = self.DEFAULT_EFFICIENCY_RATIO
-        usable_floor_area = total_floor_area * efficiency_ratio
-        logger.info(f"   전용면적: {usable_floor_area:.2f}㎡ (전용률 {efficiency_ratio*100:.0f}%)")
+        logger.info(f"   ✅ 추정 세대수: {estimated_units}세대")
         
-        # 6. 평균 세대 전용면적
-        if target_unit_size not in self.STANDARD_UNIT_SIZES:
-            target_unit_size = "26평형"
-            warnings.append(f"표준 평형 미지정 - 기본값({target_unit_size}) 사용")
+        # 6. 층수 계산
+        if building_footprint > 0:
+            floors = int(total_gfa / building_footprint)
+            # 최소 2층, 최대 20층
+            floors = max(2, min(floors, 20))
+        else:
+            floors = 5  # 기본값
         
-        avg_unit_size = self.STANDARD_UNIT_SIZES[target_unit_size]
-        logger.info(f"   목표 평형: {target_unit_size} ({avg_unit_size}㎡)")
+        logger.info(f"   층수: {floors}층")
         
-        # 7. 세대수 계산
-        estimated_units = math.floor(usable_floor_area / avg_unit_size)
-        logger.info(f"   추정 세대수: {estimated_units}세대")
+        # 7. 층별 세대수
+        units_per_floor = int(estimated_units / floors) if floors > 0 else 0
         
-        # 8. 평형별 분포 생성 (LH 표준 분포 적용)
-        unit_type_distribution = self._generate_unit_distribution(
-            estimated_units, 
-            target_unit_size
-        )
+        # 최소값 검증 (층별 최소 2세대)
+        if units_per_floor < 2:
+            units_per_floor = 2
         
-        # 9. 신뢰도 계산
-        confidence_score = self._calculate_confidence(
-            land_area=land_area,
-            floor_area_ratio=floor_area_ratio,
-            building_coverage_ratio=building_coverage_ratio,
-            estimated_units=estimated_units,
-            warnings=warnings
-        )
+        logger.info(f"   층별 세대수: {units_per_floor}세대/층")
         
-        # 10. 계산 방식 결정
-        calculation_method = "FLOOR_AREA_RATIO"
-        if building_coverage_ratio:
-            calculation_method = "FLOOR_AREA_RATIO_WITH_COVERAGE"
+        # 8. 주차 대수 (세대당 1대)
+        parking_spaces = int(estimated_units * parking_ratio)
+        logger.info(f"   주차 대수: {parking_spaces}대")
         
-        # 11. 결과 생성
-        result = UnitEstimation(
-            estimated_units=estimated_units,
-            calculation_method=calculation_method,
-            total_floor_area=total_floor_area,
-            buildable_area=buildable_area,
-            avg_unit_size=avg_unit_size,
+        # 9. 세대 유형별 배분
+        if not unit_type_mix:
+            unit_type_mix = self.DEFAULT_UNIT_MIX
+        
+        unit_type_distribution = self._distribute_units(estimated_units, unit_type_mix)
+        logger.info(f"   세대 유형 배분: {unit_type_distribution}")
+        
+        # UnitEstimate 생성
+        estimate = UnitEstimate(
+            total_units=estimated_units,
+            total_gfa=total_gfa,
+            residential_gfa=residential_gfa,
+            commercial_gfa=commercial_gfa,
+            building_footprint=building_footprint,
+            floors=floors,
+            units_per_floor=units_per_floor,
+            parking_spaces=parking_spaces,
             unit_type_distribution=unit_type_distribution,
-            efficiency_ratio=efficiency_ratio,
-            confidence_score=confidence_score,
-            warnings=warnings
+            avg_unit_area=avg_unit_area,
+            calculation_method="auto"
         )
         
-        logger.info(f"✅ 세대수 추정 완료: {estimated_units}세대 (신뢰도: {confidence_score:.1f}%)")
+        logger.info(
+            f"✅ 세대수 산정 완료\n"
+            f"   총 세대수: {estimate.total_units}세대\n"
+            f"   층수: {estimate.floors}층\n"
+            f"   층별 세대수: {estimate.units_per_floor}세대/층\n"
+            f"   주차 대수: {estimate.parking_spaces}대"
+        )
         
-        return result
+        return estimate
     
-    def _generate_unit_distribution(
-        self, 
-        total_units: int, 
-        primary_type: str = "26평형"
+    def _calculate_avg_unit_area(self, unit_type_mix: Dict[str, float]) -> float:
+        """
+        세대 유형별 평균 면적 계산
+        
+        Args:
+            unit_type_mix: 세대 유형 비율
+                {"59㎡": 0.6, "74㎡": 0.3, "84㎡": 0.1}
+        
+        Returns:
+            float: 평균 면적 (m²)
+        
+        Example:
+            >>> estimator = UnitEstimatorV9()
+            >>> avg = estimator._calculate_avg_unit_area({"59㎡": 0.6, "74㎡": 0.4})
+            >>> print(avg)
+            65.0  # 59*0.6 + 74*0.4 = 65.0
+        """
+        total_area = 0.0
+        total_ratio = 0.0
+        
+        for unit_type, ratio in unit_type_mix.items():
+            if unit_type in self.UNIT_TYPES:
+                area = self.UNIT_TYPES[unit_type]
+                total_area += area * ratio
+                total_ratio += ratio
+        
+        if total_ratio > 0:
+            avg_area = total_area / total_ratio
+        else:
+            avg_area = self.DEFAULT_UNIT_AREA
+        
+        return avg_area
+    
+    def _distribute_units(
+        self,
+        total_units: int,
+        unit_type_mix: Dict[str, float]
     ) -> Dict[str, int]:
         """
-        평형별 세대 분포 생성 (LH 표준 분포)
-        
-        Distribution Strategy:
-        - 주력 평형 (26평형): 50%
-        - 소형 (20평형): 30%
-        - 중대형 (32평형): 20%
+        세대수를 유형별로 배분
         
         Args:
             total_units: 총 세대수
-            primary_type: 주력 평형 (default: 26평형)
+            unit_type_mix: 세대 유형 비율
         
         Returns:
-            Dict[str, int]: 평형별 세대수 (예: {"20평형": 24, "26평형": 40, "32평형": 16})
+            Dict[str, int]: 세대 유형별 배분
+                {"59㎡": 25, "74㎡": 15, "84㎡": 5}
+        
+        Example:
+            >>> estimator = UnitEstimatorV9()
+            >>> dist = estimator._distribute_units(45, {"59㎡": 0.6, "74㎡": 0.4})
+            >>> print(dist)
+            {"59㎡": 27, "74㎡": 18}
         """
         distribution = {}
+        remaining_units = total_units
         
-        if total_units <= 0:
-            return {"26평형": 0}
+        # 비율 정규화 (합이 1.0이 되도록)
+        total_ratio = sum(unit_type_mix.values())
+        if total_ratio == 0:
+            total_ratio = 1.0
         
-        # 소규모 프로젝트 (30세대 미만) - 단일 평형
-        if total_units < 30:
-            distribution[primary_type] = total_units
-            return distribution
+        # 각 유형별 배분 (마지막 유형 제외)
+        unit_types = list(unit_type_mix.items())
+        for i, (unit_type, ratio) in enumerate(unit_types[:-1]):
+            normalized_ratio = ratio / total_ratio
+            count = int(total_units * normalized_ratio)
+            distribution[unit_type] = count
+            remaining_units -= count
         
-        # 중규모 프로젝트 (30-100세대) - 2-3 평형 mix
-        if total_units < 100:
-            distribution["20평형"] = math.floor(total_units * 0.30)
-            distribution["26평형"] = math.floor(total_units * 0.50)
-            distribution["32평형"] = total_units - distribution["20평형"] - distribution["26평형"]
-            return distribution
-        
-        # 대규모 프로젝트 (100세대+) - 다양한 평형 mix
-        distribution["16평형"] = math.floor(total_units * 0.15)
-        distribution["20평형"] = math.floor(total_units * 0.25)
-        distribution["26평형"] = math.floor(total_units * 0.35)
-        distribution["32평형"] = math.floor(total_units * 0.20)
-        distribution["40평형"] = total_units - sum(distribution.values())
+        # 마지막 유형은 남은 세대수 전부
+        if unit_types:
+            last_type = unit_types[-1][0]
+            distribution[last_type] = remaining_units
         
         return distribution
     
-    def _calculate_confidence(
+    def validate_estimate(self, estimate: UnitEstimate) -> Dict[str, bool]:
+        """
+        세대수 산정 결과 검증
+        
+        Args:
+            estimate: 세대수 산정 결과
+        
+        Returns:
+            Dict[str, bool]: 검증 결과
+                {
+                    "is_valid": True,
+                    "has_min_units": True,
+                    "has_feasible_floors": True,
+                    "has_parking": True
+                }
+        
+        Example:
+            >>> estimator = UnitEstimatorV9()
+            >>> estimate = estimator.estimate_units(1000, 300, 50)
+            >>> validation = estimator.validate_estimate(estimate)
+            >>> print(validation["is_valid"])
+            True
+        """
+        validation = {
+            "is_valid": True,
+            "has_min_units": estimate.total_units >= 10,
+            "has_feasible_floors": 2 <= estimate.floors <= 20,
+            "has_parking": estimate.parking_spaces >= estimate.total_units * 0.5,
+            "has_reasonable_gfa": estimate.total_gfa > 0
+        }
+        
+        # 전체 유효성
+        validation["is_valid"] = all([
+            validation["has_min_units"],
+            validation["has_feasible_floors"],
+            validation["has_parking"],
+            validation["has_reasonable_gfa"]
+        ])
+        
+        if not validation["is_valid"]:
+            logger.warning(f"⚠️ 세대수 산정 결과 검증 실패: {validation}")
+        
+        return validation
+    
+    def estimate_with_unit_count(
         self,
         land_area: float,
         floor_area_ratio: float,
-        building_coverage_ratio: Optional[float],
-        estimated_units: int,
-        warnings: List[str]
-    ) -> float:
+        building_coverage_ratio: float,
+        target_unit_count: int,
+        parking_ratio: float = 1.0
+    ) -> UnitEstimate:
         """
-        추정 신뢰도 계산 (0-100)
-        
-        Confidence Factors:
-        - 토지면적 (너무 작거나 크면 감점)
-        - 용적률 범위 (100-500% 정상)
-        - 건폐율 입력 여부 (있으면 +20점)
-        - 경고 개수 (1개당 -10점)
+        목표 세대수를 기반으로 역산 (사용자가 세대수를 직접 입력한 경우)
         
         Args:
-            land_area: 토지면적 (㎡)
+            land_area: 대지 면적 (m²)
             floor_area_ratio: 용적률 (%)
-            building_coverage_ratio: 건폐율 (%, optional)
-            estimated_units: 추정 세대수
-            warnings: 경고 목록
+            building_coverage_ratio: 건폐율 (%)
+            target_unit_count: 목표 세대수
+            parking_ratio: 주차 비율
         
         Returns:
-            float: 신뢰도 (0-100)
+            UnitEstimate: 세대수 산정 결과 (target_unit_count 기반)
+        
+        Example:
+            >>> estimator = UnitEstimatorV9()
+            >>> result = estimator.estimate_with_unit_count(
+            ...     land_area=1000.0,
+            ...     floor_area_ratio=300.0,
+            ...     building_coverage_ratio=50.0,
+            ...     target_unit_count=80
+            ... )
+            >>> print(result.total_units)
+            80
         """
-        confidence = 100.0
+        logger.info(f"📊 목표 세대수 기반 역산: {target_unit_count}세대")
         
-        # 1. 토지면적 검증
-        if land_area < 500:
-            confidence -= 15.0  # 소규모 토지 (500㎡ 미만)
-        elif land_area > 10000:
-            confidence -= 10.0  # 대규모 토지 (1만㎡ 초과)
+        # 기본 계산 수행
+        estimate = self.estimate_units(
+            land_area=land_area,
+            floor_area_ratio=floor_area_ratio,
+            building_coverage_ratio=building_coverage_ratio,
+            parking_ratio=parking_ratio
+        )
         
-        # 2. 용적률 검증
-        if floor_area_ratio < 100 or floor_area_ratio > 500:
-            confidence -= 20.0  # 비정상 용적률
+        # 세대수만 사용자 입력값으로 덮어쓰기
+        estimate.total_units = target_unit_count
+        estimate.calculation_method = "manual"
         
-        # 3. 건폐율 검증
-        if not building_coverage_ratio:
-            confidence -= 20.0  # 건폐율 미입력
+        # 주차 대수 재계산
+        estimate.parking_spaces = int(target_unit_count * parking_ratio)
         
-        # 4. 세대수 검증
-        if estimated_units < 20:
-            confidence -= 10.0  # 소규모 (20세대 미만)
-        elif estimated_units > 500:
-            confidence -= 15.0  # 대규모 (500세대 초과)
+        # 층별 세대수 재계산
+        if estimate.floors > 0:
+            estimate.units_per_floor = int(target_unit_count / estimate.floors)
+            if estimate.units_per_floor < 2:
+                estimate.units_per_floor = 2
         
-        # 5. 경고 개수 반영
-        confidence -= len(warnings) * 10.0
+        # 세대 유형별 배분 재계산
+        estimate.unit_type_distribution = self._distribute_units(
+            target_unit_count,
+            self.DEFAULT_UNIT_MIX
+        )
         
-        # 6. 범위 제한 (0-100)
-        confidence = max(0.0, min(100.0, confidence))
+        logger.info(f"✅ 목표 세대수 기반 역산 완료: {target_unit_count}세대")
         
-        return confidence
-    
-    def estimate_parking_requirement(self, unit_count: int) -> int:
-        """
-        법정 주차 대수 계산
-        
-        Args:
-            unit_count: 세대수
-        
-        Returns:
-            int: 필요 주차 대수
-        """
-        return math.ceil(unit_count * self.PARKING_RATIO)
-    
-    def validate_unit_estimation(
-        self,
-        estimated_units: int,
-        land_area: float,
-        parking_area_available: Optional[float] = None
-    ) -> Dict[str, any]:
-        """
-        세대수 추정 검증
-        
-        Args:
-            estimated_units: 추정 세대수
-            land_area: 토지면적 (㎡)
-            parking_area_available: 주차 가능 면적 (㎡, optional)
-        
-        Returns:
-            Dict: 검증 결과 {"valid": bool, "issues": List[str]}
-        """
-        issues = []
-        
-        # 1. 밀도 검증 (세대/토지면적)
-        density = estimated_units / land_area * 1000  # 세대/1000㎡
-        
-        if density > 150:
-            issues.append(f"세대 밀도 과밀 ({density:.1f}세대/1000㎡)")
-        elif density < 10:
-            issues.append(f"세대 밀도 과소 ({density:.1f}세대/1000㎡)")
-        
-        # 2. 주차 검증
-        required_parking = self.estimate_parking_requirement(estimated_units)
-        
-        if parking_area_available:
-            # 주차면적 기준: 25㎡/대 (평행주차 기준)
-            available_parking_spaces = parking_area_available / 25.0
-            
-            if available_parking_spaces < required_parking:
-                issues.append(
-                    f"주차 공간 부족 (필요: {required_parking}대, 가능: {available_parking_spaces:.0f}대)"
-                )
-        
-        return {
-            "valid": len(issues) == 0,
-            "issues": issues,
-            "required_parking": required_parking,
-            "density_per_1000sqm": round(density, 2)
-        }
+        return estimate
 
 
-# 모듈 레벨 함수 (간편 사용)
-def quick_estimate_units(
-    land_area: float, 
-    floor_area_ratio: float,
-    building_coverage_ratio: Optional[float] = None
-) -> int:
+# 전역 인스턴스 (싱글톤)
+_unit_estimator: Optional[UnitEstimatorV9] = None
+
+
+def get_unit_estimator() -> UnitEstimatorV9:
     """
-    세대수 빠른 추정 (간편 함수)
-    
-    Args:
-        land_area: 토지면적 (㎡)
-        floor_area_ratio: 용적률 (%)
-        building_coverage_ratio: 건폐율 (%, optional)
+    UnitEstimatorV9 싱글톤 인스턴스 획득
     
     Returns:
-        int: 추정 세대수
+        UnitEstimatorV9: 전역 인스턴스
     
-    Example:
-        >>> unit_count = quick_estimate_units(1000, 300.0, 50.0)
-        >>> print(unit_count)
-        80
+    Usage:
+        estimator = get_unit_estimator()
+        result = estimator.estimate_units(1000.0, 300.0, 50.0)
     """
-    estimator = UnitEstimatorV9()
-    result = estimator.estimate_units(
-        land_area=land_area,
-        floor_area_ratio=floor_area_ratio,
-        building_coverage_ratio=building_coverage_ratio
-    )
-    return result.estimated_units
+    global _unit_estimator
+    
+    if _unit_estimator is None:
+        _unit_estimator = UnitEstimatorV9()
+    
+    return _unit_estimator
