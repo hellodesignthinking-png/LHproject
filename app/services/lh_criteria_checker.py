@@ -162,6 +162,9 @@ class LHCriteriaChecker:
         
         # 1. 역세권 접근성 (지하철역 800m 이내 우수)
         subway_distance = location_data.get('nearest_subway_distance', float('inf'))
+        # 🔥 Sanitize infinity to prevent OverflowError
+        if subway_distance == float('inf') or subway_distance > 10000:
+            subway_distance = 9999
         if subway_distance <= 800:
             status = CheckStatus.PASS
             score = 100
