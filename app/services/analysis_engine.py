@@ -42,6 +42,26 @@ class AnalysisEngine:
         self.geo_optimizer = get_geo_optimizer()  # 지리 최적화
         self.parcel_analyzer = get_parcel_analyzer()  # 다필지 분석
     
+    def _format_distance(self, distance: float) -> str:
+        """
+        Format distance for display, handling edge cases like 9999 (no data)
+        """
+        if distance >= 9999 or distance == float('inf'):
+            return "2km 이상 (데이터 없음)"
+        elif distance > 2000:
+            return f"{distance/1000:.1f}km"
+        else:
+            return f"{int(distance)}m"
+    
+    def _format_walk_time(self, distance: float) -> str:
+        """
+        Calculate and format walking time (~80m/min)
+        """
+        if distance >= 9999 or distance == float('inf'):
+            return "도보 시간 미확인"
+        minutes = int(distance / 80)
+        return f"도보 {minutes}분"
+    
     def _get_zone_defaults(self, zone_type: str) -> Dict[str, float]:
         """용도지역별 기본 건폐율/용적률 반환"""
         zone_map = {
@@ -465,9 +485,15 @@ class AnalysisEngine:
         if nearest_subway == float('inf') or nearest_subway > 10000:
             nearest_subway = 9999
         if nearest_subway > 2000:
+            # Format distance display properly
+            if nearest_subway >= 9999:
+                distance_text = "2km 이상 (데이터 없음)"
+            else:
+                distance_text = f"{int(nearest_subway)}m (도보 {int(nearest_subway/80)}분 이상)"
+            
             risks.append(RiskFactor(
                 category="접근성",
-                description=f"지하철역 {int(nearest_subway)}m (도보 20봠6 이상)",
+                description=f"지하철역 {distance_text}",
                 severity="medium"
             ))
         
@@ -591,8 +617,8 @@ class AnalysisEngine:
         nearest_subway_for_demand = accessibility.get('nearest_subway_distance', 9999)
         if nearest_subway_for_demand == float('inf') or nearest_subway_for_demand > 10000:
             nearest_subway_for_demand = 9999
-        if nearest_subway_for_demand < 1000:
-            key_factors.append(f"지하철역 {int(nearest_subway_for_demand)}m (도보 10분 이내)")
+        if nearest_subway_for_demand < 1000 and nearest_subway_for_demand < 9999:
+            key_factors.append(f"지하철역 {self._format_distance(nearest_subway_for_demand)} ({self._format_walk_time(nearest_subway_for_demand)} 이내)")
         
         if accessibility['nearest_university_distance'] < 3000:
             key_factors.append(f"대학교 {int(accessibility['nearest_university_distance'])}m 거리")

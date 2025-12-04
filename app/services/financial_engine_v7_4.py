@@ -146,10 +146,10 @@ class FinancialEngine:
         
         # 1. Land Acquisition Costs
         if land_appraisal_price and land_appraisal_price > 0:
-            # 🔥 사용자 입력 감정가 사용 (우선순위)
-            land_purchase_price = land_appraisal_price
+            # 🔥 사용자 입력 감정평가액(단가) × 토지면적 = 총 토지가격
+            land_purchase_price = land_appraisal_price * land_area
             land_price_zone = "user_provided"
-            logger.info(f"✅ Using user-provided land appraisal: {self._format_krw(land_appraisal_price)}")
+            logger.info(f"✅ Using user-provided land appraisal: {self._format_krw(land_appraisal_price)}/㎡ × {land_area}㎡ = {self._format_krw(land_purchase_price)}")
         else:
             # Determine land price zone from address (fallback)
             land_price_zone = self._determine_land_price_zone(address)
@@ -633,11 +633,31 @@ def run_full_financial_analysis(
         'breakeven': breakeven,
         'sensitivity': sensitivity,
         'summary': {
+            # 기존 필드
             'total_investment': capex['total_capex'],
+            'total_capex': capex['total_capex'],  # 별칭
             'unit_count': capex['unit_count'],
             'noi_stabilized': noi['noi'],
             'cap_rate': returns['cap_rate_percent'],
             'meets_lh_criteria': returns['meets_lh_target'],
-            'irr_range': sensitivity['summary']['irr_range']
+            'irr_range': sensitivity['summary']['irr_range'],
+            
+            # 🆕 v8.5 보고서/UI용 추가 필드
+            'land_appraisal': land_appraisal_price or 0,
+            'total_verified_cost': capex['total_capex'],
+            'lh_purchase_price': int(capex['total_capex'] * 0.85),  # LH 매입가 85% 추정
+            'total_project_cost': capex['total_capex'],
+            'roi': round((noi['noi'] / capex['total_capex'] * 100), 2) if capex['total_capex'] > 0 else 0,
+            'project_rating': 'A' if returns['cap_rate_percent'] >= 5.0 else 'B' if returns['cap_rate_percent'] >= 4.0 else 'C' if returns['cap_rate_percent'] >= 3.0 else 'D',
+            'decision': 'GO' if returns['meets_lh_target'] and returns['cap_rate_percent'] >= 4.5 else 'CONDITIONAL' if returns['cap_rate_percent'] >= 3.5 else 'REVISE',
+            
+            # 🆕 v7.5 템플릿 호환용 추가 키
+            'per_unit_cost': capex['capex_per_unit'],
+            'per_unit_lh_price': int(capex['total_capex'] * 0.85) // capex['unit_count'] if capex['unit_count'] > 0 else 0,
+            'price_per_unit_lh': int(capex['total_capex'] * 0.85) // capex['unit_count'] if capex['unit_count'] > 0 else 0,  # Alias for templates
+            'gap_amount': capex['total_capex'] - int(capex['total_capex'] * 0.85),
+            'gap_percentage': 15.0,  # 15% gap (100% - 85%)
+            'profitability_score': min(round((noi['noi'] / capex['total_capex'] * 100) * 10, 2), 100) if capex['total_capex'] > 0 else 0,
+            'explanation': f"이 프로젝트는 {('A' if returns['cap_rate_percent'] >= 5.0 else 'B' if returns['cap_rate_percent'] >= 4.0 else 'C' if returns['cap_rate_percent'] >= 3.0 else 'D')} 등급으로 평가되었습니다. Cap Rate {returns['cap_rate_percent']:.2f}%, ROI {round((noi['noi'] / capex['total_capex'] * 100), 2):.2f}%로 {'우수한' if returns['cap_rate_percent'] >= 4.5 else '보통' if returns['cap_rate_percent'] >= 3.0 else '미흡한'} 수준입니다."
         }
     }

@@ -55,10 +55,12 @@ class VisualizationEngineV85:
         재무 요약 바 차트 데이터 생성
         LH Purchase vs Cost Structure
         """
-        land_appraisal = financial_result.get("land_appraisal", 0)
-        verified_cost = financial_result.get("verified_cost", 0)
-        lh_purchase = financial_result.get("lh_purchase_price", 0)
-        total_cost = financial_result.get("total_cost", 0)
+        # 🔥 v8.6: Extract from correct v8.5 structure (financial_result['summary'])
+        summ = financial_result.get("summary", {})
+        land_appraisal = summ.get("land_appraisal", 0)
+        verified_cost = summ.get("total_verified_cost", 0)
+        lh_purchase = summ.get("lh_purchase_price", 0)
+        total_cost = summ.get("total_investment", 0)
         
         return {
             "type": "bar",
@@ -69,10 +71,10 @@ class VisualizationEngineV85:
                     {
                         "name": "금액 (억원)",
                         "data": [
-                            round(land_appraisal / 100_000_000, 1),
-                            round(verified_cost / 100_000_000, 1),
-                            round(lh_purchase / 100_000_000, 1),
-                            round(total_cost / 100_000_000, 1)
+                            round(land_appraisal / 100_000_000, 1) if land_appraisal > 0 else 0,
+                            round(verified_cost / 100_000_000, 1) if verified_cost > 0 else 0,
+                            round(lh_purchase / 100_000_000, 1) if lh_purchase > 0 else 0,
+                            round(total_cost / 100_000_000, 1) if total_cost > 0 else 0
                         ]
                     }
                 ],
@@ -200,12 +202,14 @@ class VisualizationEngineV85:
         """
         비용 구조 파이 차트
         """
-        breakdown = financial_result.get("cost_breakdown", {})
+        # 🔥 v8.6: Extract from correct v8.5 structure (financial_result['capex']['breakdown'])
+        capex = financial_result.get("capex", {})
+        breakdown = capex.get("breakdown", {})
         
         land_cost = breakdown.get("land_acquisition", {}).get("subtotal", 0)
         construction_cost = breakdown.get("construction_hard_costs", {}).get("subtotal", 0)
         soft_cost = breakdown.get("soft_costs", {}).get("subtotal", 0)
-        ffe_cost = breakdown.get("ffe_costs", 0)
+        ffe_cost = breakdown.get("ffe", {}).get("subtotal", 0)
         
         return {
             "type": "pie",
@@ -213,10 +217,10 @@ class VisualizationEngineV85:
             "data": {
                 "labels": ["토지비", "건축비", "설계·감리비", "집기비"],
                 "series": [
-                    round(land_cost / 100_000_000, 1),
-                    round(construction_cost / 100_000_000, 1),
-                    round(soft_cost / 100_000_000, 1),
-                    round(ffe_cost / 100_000_000, 1)
+                    round(land_cost / 100_000_000, 1) if land_cost > 0 else 0,
+                    round(construction_cost / 100_000_000, 1) if construction_cost > 0 else 0,
+                    round(soft_cost / 100_000_000, 1) if soft_cost > 0 else 0,
+                    round(ffe_cost / 100_000_000, 1) if ffe_cost > 0 else 0
                 ],
                 "colors": ["#0047AB", "#28a745", "#ffc107", "#17a2b8"]
             },
@@ -230,12 +234,14 @@ class VisualizationEngineV85:
         """
         ROI 추세 라인 차트 (민감도 분석)
         """
+        # 🔥 v8.6: Extract from correct v8.5 structure
         sensitivity = financial_result.get("sensitivity", {})
+        summ = financial_result.get("summary", {})
         
         scenarios = ["Pessimistic", "Base", "Optimistic"]
         roi_values = [
             sensitivity.get("pessimistic", {}).get("return_metrics", {}).get("irr_percent", 0),
-            financial_result.get("roi", 0),
+            summ.get("roi", 0),  # 🔥 FIX: Get from summary
             sensitivity.get("optimistic", {}).get("return_metrics", {}).get("irr_percent", 0)
         ]
         

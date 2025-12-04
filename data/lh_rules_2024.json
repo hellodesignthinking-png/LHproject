@@ -83,6 +83,38 @@
         "rent_price": 50,
         "existing_supply": 40
       }
+    },
+    "일반": {
+      "target": "일반 무주택 가구",
+      "size_range": {"min": 30, "max": 60},
+      "rent_rate": {"min": 70, "max": 90},
+      "period_years": 10,
+      "parking_ratio": 0.6,
+      "floor_height": 2.3,
+      "construction_cost_per_sqm": 300,
+      "demand_weights": {
+        "subway_distance": 20,
+        "university_distance": 5,
+        "youth_ratio": 10,
+        "rent_price": 40,
+        "existing_supply": 25
+      }
+    },
+    "든든전세": {
+      "target": "전세보증보험 연동 유형 (청년·신혼 대상)",
+      "size_range": {"min": 30, "max": 55},
+      "rent_rate": {"min": 70, "max": 85},
+      "period_years": 10,
+      "parking_ratio": 0.7,
+      "floor_height": 2.3,
+      "construction_cost_per_sqm": 300,
+      "demand_weights": {
+        "subway_distance": 25,
+        "university_distance": 15,
+        "youth_ratio": 20,
+        "rent_price": 30,
+        "existing_supply": 10
+      }
     }
   },
   

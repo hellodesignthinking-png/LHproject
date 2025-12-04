@@ -40,6 +40,9 @@ from app.services.lh_criteria_checker_v85 import LHCriteriaCheckerV85
 # ✨ v7.2: Import new Report Engine v7.2 router
 from app.routers.report_v7_2 import router as report_v72_router
 
+# ✨ v9.0: Import Analysis API v9.0 router
+from app.api.endpoints.analysis_v9_0 import router as analysis_v90_router
+
 settings = get_settings()
 
 # LH 공식 7개 유형 정보 매핑
@@ -83,15 +86,29 @@ app.add_middleware(
 # ✨ v7.2: Include Report Engine v7.2 router
 app.include_router(report_v72_router)
 
+# ✨ v9.0: Include Analysis API v9.0 router
+app.include_router(analysis_v90_router)
+
 # 정적 파일 서빙
 static_path = Path(__file__).parent.parent / "static"
 if static_path.exists():
     app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
 
+# ✨ v9.0: Frontend v9.0 서빙
+frontend_v9_path = Path(__file__).parent.parent / "frontend_v9"
+if frontend_v9_path.exists():
+    app.mount("/v9", StaticFiles(directory=str(frontend_v9_path), html=True), name="frontend_v9")
+
 
 @app.get("/")
 async def root():
-    """메인 페이지 - 웹 인터페이스"""
+    """메인 페이지 - v9.0 UI로 리다이렉트"""
+    return FileResponse(str(frontend_v9_path / "index.html"))
+
+
+@app.get("/v7")
+async def root_v7():
+    """v7.0 웹 인터페이스"""
     index_path = static_path / "index.html"
     if index_path.exists():
         return FileResponse(str(index_path))
@@ -254,6 +271,33 @@ async def analyze_land(request: LandAnalysisRequest):
         print(f"    - Unit Count: {financial_result.get('summary', {}).get('unit_count', 0)} units")
         print(f"    - Cap Rate: {financial_result.get('summary', {}).get('cap_rate', 0):.2f}%")
         print(f"    - IRR Range: {financial_result.get('summary', {}).get('irr_range', 'N/A')}")
+        
+        # 🔥 v8.6: CRITICAL FIX - Override v7.5 unit count with v8.5 financial engine units
+        v8_5_unit_count = financial_result.get('summary', {}).get('unit_count', 0)
+        if v8_5_unit_count > 0:
+            print(f"  🔄 Synchronizing unit count:")
+            
+            # Get v7.5 building_capacity units safely
+            bc = result.get("building_capacity")
+            v7_5_units = bc.units if hasattr(bc, 'units') else (bc.get('units', 0) if isinstance(bc, dict) else 0)
+            print(f"    - v7.5 building_capacity: {v7_5_units} units (DISCARDING)")
+            print(f"    - v8.5 financial_result: {v8_5_unit_count} units (APPLYING)")
+            
+            # Override all unit count references with v8.5 value
+            if isinstance(bc, dict):
+                result["building_capacity"]["units"] = v8_5_unit_count
+            elif hasattr(bc, 'units'):
+                result["building_capacity"].units = v8_5_unit_count
+            
+            summ = result.get("summary")
+            if isinstance(summ, dict):
+                result["summary"]["estimated_units"] = v8_5_unit_count
+            elif hasattr(summ, 'estimated_units'):
+                result["summary"].estimated_units = v8_5_unit_count
+            
+            result["expected_units"] = v8_5_unit_count
+            
+            print(f"  ✅ Unit count synchronized to {v8_5_unit_count} units across all data structures")
         
         # ✨ v8.5: Calculate LH scores using v8.5 criteria checker
         print("📊 v8.5: Evaluating LH criteria...")
