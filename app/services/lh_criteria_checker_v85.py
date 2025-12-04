@@ -25,6 +25,84 @@ class LHCriteriaCheckerV85(LHCriteriaChecker):
         super().__init__(custom_weights, lh_version)
         self.model_type = "LH_LINKED"  # v8.5는 LH LINKED 모델만 사용
     
+    def evaluate_financial_feasibility(
+        self,
+        financial_result: Dict[str, Any],
+        zone_info: Any,
+        building_capacity: Any,
+        accessibility: Any
+    ) -> Dict[str, Any]:
+        """
+        v8.5 재무 타당성 평가 (Public API)
+        
+        Args:
+            financial_result: Financial engine output
+            zone_info: Zone information
+            building_capacity: Building capacity data
+            accessibility: Accessibility/demand analysis
+            
+        Returns:
+            Dict with LH scores breakdown
+        """
+        # Prepare financial data for _check_financial
+        summary = financial_result.get('summary', {})
+        capex_data = financial_result.get('capex', {})
+        
+        financial_data = {
+            'roi': summary.get('cap_rate', 0),  # Using cap_rate as proxy for ROI
+            'lh_purchase_price': summary.get('lh_purchase_price', 0),
+            'total_cost': summary.get('total_investment', 1),
+            'verified_cost': capex_data.get('breakdown', {}).get('construction_hard_costs', {}).get('subtotal', 0),
+            'land_appraisal': capex_data.get('breakdown', {}).get('land_acquisition', {}).get('purchase_price', 0)
+        }
+        
+        building_data = {
+            'expected_units': summary.get('unit_count', 0),
+            'land_area': capex_data.get('land_area', 0)
+        }
+        
+        # Prepare location data
+        subway_dist = getattr(accessibility, 'subway_distance', 999) if hasattr(accessibility, 'subway_distance') else 999
+        # Handle infinity values
+        if subway_dist == float('inf') or subway_dist > 10000:
+            subway_dist = 9999
+        
+        location_data = {
+            'subway_distance': subway_dist,
+            'accessibility_score': getattr(accessibility, 'accessibility_score', 50) if hasattr(accessibility, 'accessibility_score') else 50
+        }
+        
+        # Prepare zone data
+        zone_data = {
+            'zone_type': getattr(zone_info, 'zone_type', '제2종일반주거지역') if hasattr(zone_info, 'zone_type') else '제2종일반주거지역',
+            'is_residential': getattr(zone_info, 'is_residential_zone', True) if hasattr(zone_info, 'is_residential_zone') else True
+        }
+        
+        # Call parent's check_all method to get full evaluation
+        result = self.check_all(
+            location_data=location_data,
+            building_data=building_data,
+            financial_data=financial_data,
+            zone_data=zone_data
+        )
+        
+        # Extract scores
+        category_scores = result.category_scores
+        
+        return {
+            'location_score': category_scores.get('입지', 0),
+            'scale_score': category_scores.get('규모', 0),
+            'financial_score': category_scores.get('사업성', 0),
+            'regulations_score': category_scores.get('법규', 0),
+            'total_score': result.total_score,
+            'grade': result.grade.value,
+            'details': {
+                'roi_based_score': financial_data.get('roi', 0),
+                'lh_purchase_ratio': (financial_data.get('lh_purchase_price', 0) / financial_data.get('total_cost', 1) * 100) if financial_data.get('total_cost', 0) > 0 else 0,
+                'verified_cost_score': financial_data.get('verified_cost', 0)
+            }
+        }
+    
     def _check_financial(
         self,
         financial_data: Dict[str, Any],
