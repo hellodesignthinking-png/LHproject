@@ -830,6 +830,10 @@
                                 const errors = errorData.detail.map(e => `${e.loc.join('.')}: ${e.msg}`).join(', ');
                                 throw new Error(`입력값 오류: ${errors}`);
                             }
+                            // Handle object detail errors
+                            if (errorData.detail && typeof errorData.detail === 'object') {
+                                throw new Error(JSON.stringify(errorData.detail));
+                            }
                             throw new Error(errorData.detail || errorData.message || '분석 중 오류가 발생했습니다');
                         }
                         
