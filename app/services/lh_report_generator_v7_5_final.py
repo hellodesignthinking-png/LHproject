@@ -138,22 +138,63 @@ class LHReportGeneratorV75Final:
             
             data = kwargs.get('data', {})
             
-            # Generate report HTML
+            # ✨ v8.5: Extract data from API response
+            financial_result = data.get('financial_result', {})
+            lh_scores = data.get('lh_scores', {})
+            visualizations = data.get('visualizations', {})
+            analysis_mode = data.get('analysis_mode', 'STANDARD')
+            
+            # Check if v8.5 data is available
+            has_v85_data = bool(financial_result and lh_scores)
+            
+            if has_v85_data:
+                logger.info("✅ Using v8.5 financial data from API")
+                # Extract v8.5 financial summary
+                financial_summary = financial_result.get('summary', {})
+                unit_count = financial_summary.get('unit_count', 0)
+                cap_rate = financial_summary.get('cap_rate', 0)
+                total_investment = financial_summary.get('total_investment', 0)
+                project_rating = financial_summary.get('project_rating', 'N/A')
+                
+                # Extract v8.5 LH scores
+                total_score = lh_scores.get('total_score', 0)
+                grade = lh_scores.get('grade', 'N/A')
+                
+                logger.info(f"  📊 Total Investment: ₩{total_investment:,.0f}")
+                logger.info(f"  📊 Cap Rate: {cap_rate:.2f}%")
+                logger.info(f"  📊 LH Total Score: {total_score:.1f}/110")
+                logger.info(f"  📊 Grade: {grade}")
+                logger.info(f"  📊 Analysis Mode: {analysis_mode}")
+            else:
+                logger.warning("⚠️  v8.5 data not available, falling back to v7.4 calculation")
+            
+            # Generate report HTML with v8.5 data
             report_html = self._generate_complete_report(
                 data, basic_info, tone, cover, pages
             )
             
             # Get recommendation for metadata
-            financial_analysis = run_full_financial_analysis(
-                land_area=basic_info['land_area'],
-                address=basic_info['address'],
-                unit_type=basic_info['unit_type'],
-                construction_type=basic_info['construction_type'],
-                land_appraisal_price=kwargs.get('land_appraisal_price')  # 🔥 사용자 입력 감정가
-            )
-            lh_sim = self.lh_price_simulator.simulate_lh_purchase_price(
-                financial_analysis, basic_info
-            )
+            # Only recalculate if v8.5 data is not available
+            if not has_v85_data:
+                logger.info("🔄 Calculating financial analysis (fallback)")
+                financial_analysis = run_full_financial_analysis(
+                    land_area=basic_info['land_area'],
+                    address=basic_info['address'],
+                    unit_type=basic_info['unit_type'],
+                    construction_type=basic_info['construction_type'],
+                    land_appraisal_price=kwargs.get('land_appraisal_price')
+                )
+                lh_sim = self.lh_price_simulator.simulate_lh_purchase_price(
+                    financial_analysis, basic_info
+                )
+                cap_rate = financial_analysis['summary']['cap_rate']
+                recommendation = lh_sim['recommendation']
+                profitability_score = lh_sim['profitability_score']
+            else:
+                # Use v8.5 data for metadata
+                financial_analysis = financial_result  # Pass through v8.5 data
+                recommendation = 'GO' if total_score >= 80 else 'CONDITIONAL' if total_score >= 60 else 'REVISE' if total_score >= 40 else 'NO-GO'
+                profitability_score = total_score
             
             # Build success response
             response = {
@@ -164,14 +205,15 @@ class LHReportGeneratorV75Final:
                     "sections": 20,
                     "tone": tone,
                     "cover": cover,
-                    "version": "v7.5 FINAL",
+                    "version": "v8.5 Ultra-Pro" if has_v85_data else "v7.5 FINAL",
                     "generation_time": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                    "recommendation": lh_sim['recommendation'],
+                    "recommendation": recommendation,
                     "address": basic_info['address'],
                     "land_area": basic_info['land_area'],
                     "unit_type": basic_info['unit_type'],
-                    "cap_rate": financial_analysis['summary']['cap_rate'],
-                    "profitability_score": lh_sim['profitability_score']
+                    "cap_rate": cap_rate,
+                    "profitability_score": profitability_score,
+                    "analysis_mode": analysis_mode if has_v85_data else 'STANDARD'
                 }
             }
             
@@ -246,17 +288,40 @@ class LHReportGeneratorV75Final:
             logger.warning(f"⚠️  POI Analysis failed: {str(e)}, continuing without POI data")
             poi_analysis = None
         
-        financial_analysis = run_full_financial_analysis(
-            land_area=land_area,
-            address=address,
-            unit_type=unit_type,
-            construction_type=construction_type,
-            land_appraisal_price=basic_info.get('land_appraisal_price')  # 🔥 사용자 입력 감정가
-        )
+        # ✨ v8.5: Use financial data from API if available
+        financial_result_v85 = data.get('financial_result', {})
+        lh_scores_v85 = data.get('lh_scores', {})
+        analysis_mode = data.get('analysis_mode', 'STANDARD')
         
-        lh_price_sim = self.lh_price_simulator.simulate_lh_purchase_price(
-            financial_analysis, basic_info
-        )
+        if financial_result_v85 and lh_scores_v85:
+            logger.info("✅ Using v8.5 financial data for report generation")
+            financial_analysis = financial_result_v85
+            
+            # Create LH price simulation structure from v8.5 data
+            financial_summary = financial_result_v85.get('summary', {})
+            total_score = lh_scores_v85.get('total_score', 0)
+            
+            lh_price_sim = {
+                'recommendation': 'GO' if total_score >= 80 else 'CONDITIONAL' if total_score >= 60 else 'REVISE' if total_score >= 40 else 'NO-GO',
+                'profitability_score': total_score,
+                'total_score': total_score,
+                'lh_scores': lh_scores_v85,
+                'analysis_mode': analysis_mode,
+                'unit_count': financial_summary.get('unit_count', 0)
+            }
+        else:
+            logger.info("🔄 Calculating financial analysis (no v8.5 data)")
+            financial_analysis = run_full_financial_analysis(
+                land_area=land_area,
+                address=address,
+                unit_type=unit_type,
+                construction_type=construction_type,
+                land_appraisal_price=basic_info.get('land_appraisal_price')
+            )
+            
+            lh_price_sim = self.lh_price_simulator.simulate_lh_purchase_price(
+                financial_analysis, basic_info
+            )
         
         # Merge basic_info into data for risk assessment
         data_with_info = {**data, **basic_info}
@@ -347,12 +412,17 @@ class LHReportGeneratorV75Final:
             'REVISE': '#fd7e14', 'NO-GO': '#dc3545'
         }.get(recommendation, '#6c757d')
         
+        # ✨ v8.5: Determine version label
+        analysis_mode = lh_sim.get('analysis_mode', 'STANDARD')
+        unit_count = lh_sim.get('unit_count', 0)
+        version_label = "ZeroSite v8.5 Ultra-Pro" if analysis_mode else "ZEROSITE v7.5 FINAL"
+        
         html = f"""
         <div class="cover-page-final" style="page-break-after: always; background: #000; color: #fff; 
                                               text-align: center; padding: 0; height: 297mm;">
             <div style="padding-top: 80px;">
                 <div style="font-size: 16pt; color: #999; letter-spacing: 3px; margin-bottom: 20px;">
-                    ZEROSITE v7.5 FINAL
+                    {version_label}
                 </div>
                 <div style="border-top: 2px solid #fff; width: 60%; margin: 0 auto 40px auto;"></div>
                 
@@ -380,7 +450,7 @@ class LHReportGeneratorV75Final:
                     <p>{datetime.now().strftime('%Y년 %m월 %d일')}</p>
                     <p>Classification: Internal Use / LH Submission</p>
                     <p style="margin-top: 20px; font-size: 9pt;">
-                        본 보고서는 ZeroSite v7.5 FINAL 엔진을 사용하여 생성되었습니다.
+                        본 보고서는 {version_label} 엔진을 사용하여 생성되었습니다.
                     </p>
                 </div>
             </div>
