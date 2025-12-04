@@ -501,7 +501,7 @@ class LHReportGeneratorV75Final:
         Generate 4-5 page Executive Summary with administrative tone
         
         Enhanced with:
-        - LH 2025 policy alignment
+        - LH 2025 policy alignment & v8.5 공사비 연동제
         - Detailed financial metrics
         - Risk assessment summary
         - Alternative comparison
@@ -512,10 +512,30 @@ class LHReportGeneratorV75Final:
         land_area = basic_info['land_area']
         unit_type = basic_info['unit_type']
         
+        # ✨ v8.5: Extract data from correct structure
         fin_summary = financial.get('summary', {})
+        capex = financial.get('capex', {})
+        opex = financial.get('opex', {})
+        noi_data = financial.get('noi', {})
+        
+        # Extract v8.5 metrics
         unit_count = fin_summary.get('unit_count', 0)
         cap_rate = fin_summary.get('cap_rate', 0)
         total_investment = fin_summary.get('total_investment', 0)
+        roi = fin_summary.get('roi', 0)
+        irr = fin_summary.get('irr', 0)
+        project_rating = fin_summary.get('project_rating', 'N/A')
+        
+        # v8.5 공사비 연동제 데이터
+        land_appraisal = capex.get('land_appraisal_price', 0)
+        verified_cost = capex.get('verified_construction_cost', 0)
+        lh_purchase_price = capex.get('lh_purchase_price', 0)
+        
+        # Analysis mode
+        analysis_mode = lh_sim.get('analysis_mode', 'STANDARD')
+        lh_scores = lh_sim.get('lh_scores', {})
+        total_lh_score = lh_scores.get('total_score', 0)
+        lh_grade = lh_scores.get('grade', 'N/A')
         
         # Generate rich narrative (target: 15+ paragraphs)
         html = f"""
@@ -529,10 +549,16 @@ class LHReportGeneratorV75Final:
                 <p style="font-size: 12pt; line-height: 1.8; margin-bottom: 0;">
                     본 보고서는 <strong>{address}</strong> 소재 {land_area:,.0f}㎡ 부지를 대상으로 한 
                     LH 신축매입임대 사업의 전략적 타당성을 종합적으로 분석한 결과를 담고 있습니다. 
-                    ZeroSite v7.5 FINAL 분석 프레임워크를 통해 재무 사업성, LH 매입가 시뮬레이션, 
-                    리스크 평가, 대안지 비교 분석을 수행하였으며, 공공기관 제출 가능한 수준의 
-                    전문 컨설팅 보고서로 작성되었습니다.
+                    <strong>ZeroSite v8.5 Ultra-Pro</strong> 분석 엔진을 통해 <strong>공사비 연동제</strong> 기반 
+                    재무 사업성, LH 매입가 시뮬레이션, 리스크 평가, 대안지 비교 분석을 수행하였으며, 
+                    공공기관 제출 가능한 수준의 전문 컨설팅 보고서로 작성되었습니다.
                 </p>
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.3);">
+                    <p style="font-size: 11pt; margin: 5px 0;">📊 분석 모드: <strong>{analysis_mode}</strong> {'(50세대 이상 - 공사비 연동제 적용)' if unit_count >= 50 else '(50세대 미만)'}</p>
+                    <p style="font-size: 11pt; margin: 5px 0;">📈 총 투자비: <strong>{self._format_krw(total_investment)}</strong></p>
+                    <p style="font-size: 11pt; margin: 5px 0;">🏆 LH 평가: <strong>{total_lh_score:.1f}/110점 (등급: {lh_grade})</strong></p>
+                    <p style="font-size: 11pt; margin: 5px 0;">⭐ 프로젝트 등급: <strong>{project_rating}</strong></p>
+                </div>
             </div>
             
             <h3 class="subsection-title">1. 사업 개요 및 평가 목적</h3>
@@ -540,7 +566,11 @@ class LHReportGeneratorV75Final:
             <p class="paragraph" style="text-align: justify; line-height: 1.8;">
                 대상 프로젝트는 총 <strong>{unit_count}세대</strong> 규모의 {unit_type}형 공공임대주택 
                 공급을 목표로 하며, 총 투자비 <strong>{self._format_krw(total_investment)}</strong>이 
-                예상됩니다. 본 사업은 LH 신축매입임대 정책의 핵심 취지인 '민간 건설 역량 활용을 통한 
+                예상됩니다. {'본 사업은 <strong>50세대 이상</strong>으로 <strong>LH 공사비 연동제</strong>가 적용되며, ' if unit_count >= 50 else '본 사업은 50세대 미만으로 일반 매입 방식이 적용되며, '}
+                토지 감정가 <strong>{self._format_krw(land_appraisal)}</strong> + 
+                검증된 공사비 <strong>{self._format_krw(verified_cost)}</strong> = 
+                LH 예상 매입가 <strong>{self._format_krw(lh_purchase_price)}</strong>로 산정되었습니다. 
+                본 사업은 LH 신축매입임대 정책의 핵심 취지인 '민간 건설 역량 활용을 통한 
                 공공주택 공급 확대'에 부합하며, 특히 서울시 주거 취약계층인 {unit_type} 세대를 위한 
                 안정적 주거 공급에 기여할 것으로 평가됩니다.
             </p>
@@ -581,15 +611,45 @@ class LHReportGeneratorV75Final:
                 서울시 평균 대비 23% 높아, 안정적인 임대 수요 확보가 가능할 것으로 분석됩니다.
             </p>
             
-            <h4 style="color: #0047AB; margin-top: 25px;">2.2 재무 사업성 분석</h4>
+            <h4 style="color: #0047AB; margin-top: 25px;">2.2 재무 사업성 분석 (v8.5 공사비 연동제)</h4>
             
             <p class="paragraph" style="text-align: justify; line-height: 1.8;">
-                재무 사업성 분석 결과, Cap Rate는 {cap_rate:.2f}%로 산정되었습니다. 
-                {'이는 LH 목표 기준(4.5%)을 달성한 수준으로, 재무적 타당성이 확보되었다고 평가됩니다.' if cap_rate >= 4.5 else f'이는 LH 목표 기준(4.5%) 대비 {4.5 - cap_rate:.2f}%p 낮은 수준으로, 사업성 개선을 위한 추가 검토가 필요합니다.'}
-                총 투자비는 {self._format_krw(total_investment)}으로, 세대당 
-                {self._format_krw(total_investment/unit_count if unit_count > 0 else 0)}에 해당하며, 
-                이는 LH의 세대당 매입가 상한선인 {self._format_krw(lh_sim['metadata']['lh_price_cap'])}와 
-                비교 시 {'적정 범위 내에 있는 것으로 판단됩니다.' if (total_investment/unit_count if unit_count > 0 else 0) <= lh_sim['metadata']['lh_price_cap'] else '상한선을 초과하여 가격 조정이 필요합니다.'}
+                <strong>v8.5 공사비 연동제 기반 재무 분석</strong> 결과, 본 프로젝트의 재무 구조는 다음과 같습니다:
+            </p>
+            
+            <div style="background: #f8f9fa; padding: 20px; margin: 20px 0; border-left: 4px solid #0047AB;">
+                <h5 style="color: #0047AB; margin-top: 0;">📊 CAPEX (자본 지출)</h5>
+                <p style="margin: 8px 0; line-height: 1.8;">
+                    • 토지 감정가: <strong>{self._format_krw(land_appraisal)}</strong><br/>
+                    • 검증된 공사비 (Verified Cost): <strong>{self._format_krw(verified_cost)}</strong><br/>
+                    • LH 매입가 (공사비 연동): <strong>{self._format_krw(lh_purchase_price)}</strong><br/>
+                    • 총 투자비: <strong>{self._format_krw(total_investment)}</strong><br/>
+                    • 세대당 평균: <strong>{self._format_krw(total_investment/unit_count if unit_count > 0 else 0)}</strong>
+                </p>
+                
+                <h5 style="color: #0047AB; margin-top: 20px;">📈 수익성 지표</h5>
+                <p style="margin: 8px 0; line-height: 1.8;">
+                    • ROI (투자수익률): <strong>{roi:.2f}%</strong> {self._get_roi_comment(roi)}<br/>
+                    • Cap Rate: <strong>{cap_rate:.2f}%</strong> (LH 목표: 4.5%)<br/>
+                    • IRR (내부수익률): <strong>{irr:.2f}%</strong><br/>
+                    • 프로젝트 등급: <strong style="color: {self._get_rating_color(project_rating)};">{project_rating}</strong>
+                </p>
+                
+                <h5 style="color: #0047AB; margin-top: 20px;">🏆 LH 평가 점수 (v8.5 기준)</h5>
+                <p style="margin: 8px 0; line-height: 1.8;">
+                    • Location (입지): <strong>{lh_scores.get('location_score', 0):.1f}/35점</strong><br/>
+                    • Scale (규모): <strong>{lh_scores.get('scale_score', 0):.1f}/20점</strong><br/>
+                    • Financial (재무): <strong>{lh_scores.get('financial_score', 0):.1f}/40점</strong><br/>
+                    • Regulations (규제): <strong>{lh_scores.get('regulations_score', 0):.1f}/15점</strong><br/>
+                    • <strong>총점: {total_lh_score:.1f}/110점 (등급: {lh_grade})</strong>
+                </p>
+            </div>
+            
+            <p class="paragraph" style="text-align: justify; line-height: 1.8;">
+                재무 사업성 종합 평가 결과, Cap Rate는 {cap_rate:.2f}%로 
+                {'LH 목표 기준(4.5%)을 달성한 수준으로, 재무적 타당성이 확보되었다고 평가됩니다.' if cap_rate >= 4.5 else f'LH 목표 기준(4.5%) 대비 {4.5 - cap_rate:.2f}%p 낮은 수준으로, 사업성 개선을 위한 추가 검토가 필요합니다.'}
+                ROI는 {roi:.2f}%로 {self._get_roi_comment(roi)} 프로젝트 등급은 <strong>{project_rating}</strong>로 평가되었으며, 
+                이는 {self._get_rating_description(project_rating)}
             </p>
             
             <p class="paragraph" style="text-align: justify; line-height: 1.8;">
@@ -1444,6 +1504,50 @@ class LHReportGeneratorV75Final:
             weaknesses.append("<li style='margin: 10px 0; font-size: 11pt;'>현재 단계에서 식별된 주요 약점 없음 (추가 실사 필요)</li>")
         
         return "\n".join(weaknesses)
+    
+    def _format_krw(self, amount: float) -> str:
+        """Format amount in Korean Won"""
+        if amount == 0:
+            return "0원"
+        elif amount >= 100_000_000:
+            return f"{amount/100_000_000:.1f}억원"
+        elif amount >= 10_000:
+            return f"{amount/10_000:.0f}만원"
+        else:
+            return f"{amount:.0f}원"
+    
+    def _get_roi_comment(self, roi: float) -> str:
+        """Get ROI evaluation comment"""
+        if roi >= 15:
+            return "(매우 우수 - 고수익 프로젝트)"
+        elif roi >= 10:
+            return "(우수 - 안정적 수익)"
+        elif roi >= 5:
+            return "(양호 - 적정 수익)"
+        elif roi >= 0:
+            return "(부족 - 개선 필요)"
+        else:
+            return "(손실 - 재검토 필수)"
+    
+    def _get_rating_color(self, rating: str) -> str:
+        """Get color for project rating"""
+        colors = {
+            'S': '#28a745', 'A': '#17a2b8', 'B': '#ffc107',
+            'C': '#fd7e14', 'D': '#dc3545', 'N/A': '#6c757d'
+        }
+        return colors.get(rating, '#6c757d')
+    
+    def _get_rating_description(self, rating: str) -> str:
+        """Get description for project rating"""
+        descriptions = {
+            'S': '최상급 프로젝트로 즉시 추진 권장됩니다.',
+            'A': '우수한 프로젝트로 추진이 적극 권장됩니다.',
+            'B': '양호한 프로젝트로 조건부 추진이 가능합니다.',
+            'C': '보통 수준의 프로젝트로 개선 후 추진을 권장합니다.',
+            'D': '미흡한 프로젝트로 전면 재검토가 필요합니다.',
+            'N/A': '평가가 불가능하거나 데이터가 부족합니다.'
+        }
+        return descriptions.get(rating, '평가 정보가 없습니다.')
     
     def _assemble_final_report(self, sections: List[Dict], basic_info: Dict) -> str:
         """Assemble all sections into complete HTML report"""
