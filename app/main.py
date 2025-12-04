@@ -177,12 +177,12 @@ async def analyze_land(request: LandAnalysisRequest):
             # 유형별 점수 매핑 (영문 → 한글)
             type_mapping = {
                 "청년": UnitType.YOUTH.value,
-                "신혼·신생아 I": UnitType.NEWLYWED_I.value,
-                "신혼·신생아 II": UnitType.NEWLYWED_II.value,
+                "신혼·신생아 I": UnitType.NEWLYWED_1.value,
+                "신혼·신생아 II": UnitType.NEWLYWED_2.value,
                 "다자녀": UnitType.MULTI_CHILD.value,
                 "고령자": UnitType.ELDERLY.value,
                 "일반": UnitType.GENERAL.value,
-                "든든전세": UnitType.LONG_TERM_LEASE.value
+                "든든전세": UnitType.SECURE_JEONSE.value
             }
             
             # 각 유형별 점수와 정보 구성
