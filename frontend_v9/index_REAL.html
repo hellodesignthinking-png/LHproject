@@ -190,11 +190,11 @@
                     <div class="mt-6 text-center space-x-4">
                         <button id="generateReportBtn" 
                             class="hidden bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 px-8 rounded-lg transition duration-200 shadow-lg">
-                            📄 HTML 리포트 보기
+                            📄 Expert Edition HTML 리포트
                         </button>
                         <button id="downloadPdfBtn" 
                             class="hidden bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-bold py-3 px-8 rounded-lg transition duration-200 shadow-lg">
-                            📥 PDF 다운로드
+                            📥 Expert Edition PDF 다운로드
                         </button>
                     </div>
                 </div>
@@ -379,7 +379,7 @@
                 alert('❌ 리포트 생성 중 오류: ' + error.message);
             } finally {
                 reportBtn.disabled = false;
-                reportBtn.textContent = '📄 전문가 리포트 생성';
+                reportBtn.textContent = '📄 Expert Edition HTML 리포트';
             }
         });
         
@@ -407,16 +407,28 @@
                 
                 if (response.ok) {
                     const blob = await response.blob();
+                    
+                    // Check blob size to verify it's the new version
+                    const sizeMB = (blob.size / 1024 / 1024).toFixed(2);
+                    console.log(`PDF size: ${blob.size} bytes (${sizeMB} MB)`);
+                    
+                    // Create download with timestamp to avoid cache
+                    const timestamp = Date.now();
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `ZeroSite_Report_${new Date().toISOString().slice(0,10)}.pdf`;
+                    a.download = `ZeroSite_ExpertEdition_${timestamp}.pdf`;
                     document.body.appendChild(a);
                     a.click();
                     window.URL.revokeObjectURL(url);
                     document.body.removeChild(a);
                     
-                    alert('✅ PDF 다운로드 완료!');
+                    // Alert with size info
+                    if (blob.size < 100000) {
+                        alert(`✅ Expert Edition PDF 다운로드 완료!\n크기: ${(blob.size/1024).toFixed(1)} KB (신버전)`);
+                    } else {
+                        alert(`⚠️ PDF 다운로드 완료\n크기: ${sizeMB} MB\n(크기가 큰 경우 구버전일 수 있습니다)`);
+                    }
                 } else {
                     throw new Error('PDF 생성 실패');
                 }
@@ -426,7 +438,7 @@
                 alert('❌ PDF 생성 중 오류: ' + error.message);
             } finally {
                 pdfBtn.disabled = false;
-                pdfBtn.textContent = '📥 PDF 다운로드';
+                pdfBtn.textContent = '📥 Expert Edition PDF 다운로드';
             }
         });
     </script>
