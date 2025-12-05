@@ -57,6 +57,17 @@ try:
 except ImportError:
     UNIT_ESTIMATOR_AVAILABLE = False
     logger.warning("⚠️ UnitEstimatorV9 not available, using fallback estimation")
+
+# 🔥 NEW: Import LocationAnalyzerV11Expert for comprehensive location analysis
+try:
+    from app.location_analysis_v11_expert import (
+        LocationAnalyzerV11Expert,
+        generate_location_analysis_html
+    )
+    LOCATION_ANALYZER_AVAILABLE = True
+except ImportError:
+    LOCATION_ANALYZER_AVAILABLE = False
+    logger.warning("⚠️ LocationAnalyzerV11Expert not available")
     
     # Fallback Narrative Generator (if import fails)
     class NarrativeGeneratorV11Expert:
@@ -261,7 +272,26 @@ class ReportGeneratorV11Expert:
         )
         feasibility_result = feasibility_checker.check_unit_type_feasibility(recommended_type)
         
-        # 4) Narrative Generator (점수 → 문장 변환, v7.5 style)
+        # 🔥 NEW: 4) Location Analyzer (SWOT, Transportation, Education, Amenities)
+        location_analysis = None
+        if LOCATION_ANALYZER_AVAILABLE:
+            logger.info("✅ Using LocationAnalyzerV11Expert for comprehensive location analysis")
+            location_analyzer = LocationAnalyzerV11Expert(
+                address=address,
+                coord={"latitude": latitude, "longitude": longitude},
+                pseudo_data=pseudo_data
+            )
+            location_analysis = location_analyzer.analyze_comprehensive()
+            
+            logger.info(f"✅ Location Analysis Complete:")
+            logger.info(f"   - Overall Score: {location_analysis['overall_score']:.1f}/100")
+            logger.info(f"   - Transportation: {location_analysis['transportation'].total_score:.1f}")
+            logger.info(f"   - Education: {location_analysis['education'].total_score:.1f}")
+            logger.info(f"   - Amenities: {location_analysis['amenities'].total_score:.1f}")
+        else:
+            logger.warning("⚠️ Location Analyzer not available")
+        
+        # 5) Narrative Generator (점수 → 문장 변환, v7.5 style)
         # Generate comprehensive narratives
         lh_narratives = self.narrative_gen.generate_lh_score_narrative(
             lh_eval, analysis_result
@@ -318,7 +348,10 @@ class ReportGeneratorV11Expert:
             pseudo_data=pseudo_data,
             unit_analysis=unit_analysis,
             recommended_type=recommended_type,
-            feasibility_result=feasibility_result
+            feasibility_result=feasibility_result,
+            
+            # 🔥 NEW: Location Analysis (SWOT, Transportation, Education, Amenities)
+            location_analysis=location_analysis
         )
         
         return html
@@ -366,6 +399,9 @@ class ReportGeneratorV11Expert:
         unit_analysis = kwargs.get("unit_analysis", {})
         recommended_type = kwargs.get("recommended_type", "신혼부부I")
         feasibility_result = kwargs.get("feasibility_result", {})
+        
+        # 🔥 NEW: Location Analysis
+        location_analysis = kwargs.get("location_analysis", None)
         
         # Generate specialized sections
         unit_type_matrix_html = self._generate_unit_type_matrix_v75_style(unit_analysis)
@@ -673,6 +709,11 @@ class ReportGeneratorV11Expert:
 </div>
 
 <!-- ============================================================ -->
+<!-- PART 3: LOCATION ANALYSIS (SWOT, Transportation, Education, Amenities) -->
+<!-- ============================================================ -->
+{self._generate_location_section(address, location_analysis) if location_analysis else ''}
+
+<!-- ============================================================ -->
 <!-- PART 4: Unit-Type Suitability Matrix (v11.0 Engine) -->
 <!-- ============================================================ -->
 <div class="page-break">
@@ -885,6 +926,26 @@ class ReportGeneratorV11Expert:
             return f"{recommended_type}이 종합 점수가 가장 높아 권장됩니다."
         
         return reason_text
+    
+    def _generate_location_section(self, address: str, location_analysis: Dict) -> str:
+        """
+        🔥 NEW: Generate comprehensive location analysis section
+        
+        Uses LocationAnalyzerV11Expert results to create:
+        - Transportation infrastructure analysis
+        - Education facilities analysis
+        - Amenities & services analysis
+        - SWOT analysis with strategic recommendations
+        """
+        if not location_analysis:
+            return ""
+        
+        try:
+            from app.location_analysis_v11_expert import generate_location_analysis_html
+            return generate_location_analysis_html(location_analysis, address)
+        except Exception as e:
+            logger.error(f"Error generating location section: {e}")
+            return ""
     
     def _generate_lh_policy_section(
         self, 
