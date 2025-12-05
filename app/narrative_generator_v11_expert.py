@@ -525,7 +525,9 @@ class NarrativeGeneratorV11Expert:
     # ========================================================================
     
     def _format_krw(self, amount: float) -> str:
-        """Format currency in Korean Won"""
+        """Format currency in Korean Won with placeholder handling"""
+        if amount == 0 or amount is None:
+            return "—"  # Hide zero values
         if amount >= 100_000_000:
             return f"{amount / 100_000_000:.1f}억원"
         elif amount >= 10_000:

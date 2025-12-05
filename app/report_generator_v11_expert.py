@@ -641,12 +641,32 @@ class ReportGeneratorV11Expert:
     
     def _format_krw(self, amount: float) -> str:
         """Format currency in Korean Won"""
+        if amount == 0 or amount is None:
+            return "—"  # Hide zero values
         if amount >= 100_000_000:
             return f"{amount / 100_000_000:.1f}억원"
         elif amount >= 10_000:
             return f"{amount / 10_000:,.0f}만원"
         else:
             return f"{amount:,.0f}원"
+    
+    def _format_score(self, score: float) -> str:
+        """Format score with placeholder handling"""
+        if score == 0 or score is None:
+            return "—"
+        return f"{score:.1f}"
+    
+    def _format_percentage(self, value: float) -> str:
+        """Format percentage with placeholder handling"""
+        if value == 0 or value is None:
+            return "—"
+        return f"{value:.2f}%"
+    
+    def _format_coordinate(self, lat: float, lon: float) -> str:
+        """Format coordinates, hide if zero"""
+        if lat == 0 or lon == 0 or lat is None or lon is None:
+            return ""  # Hide invalid coordinates completely
+        return f"{lat:.6f}, {lon:.6f}"
     
     def _generate_unit_type_matrix_v75_style(self, unit_analysis: Dict) -> str:
         """
@@ -683,7 +703,16 @@ class ReportGeneratorV11Expert:
             residential = scores.get("residential", 0)
             economics = scores.get("economics", 0)
             total = scores.get("total", 0)
-            grade = scores.get("grade", "C")
+            grade = scores.get("grade", "—")
+            
+            # Use placeholder-safe formatting
+            demo_str = self._format_score(demographics)
+            trans_str = self._format_score(transport)
+            edu_str = self._format_score(education)
+            amen_str = self._format_score(amenities)
+            resi_str = self._format_score(residential)
+            econ_str = self._format_score(economics)
+            total_str = self._format_score(total)
             
             grade_color = {
                 "A": "#28a745",
@@ -696,14 +725,14 @@ class ReportGeneratorV11Expert:
             html += f"""
                 <tr>
                     <td><strong>{unit_type}</strong></td>
-                    <td>{demographics:.1f}</td>
-                    <td>{transport:.1f}</td>
-                    <td>{education:.1f}</td>
-                    <td>{amenities:.1f}</td>
-                    <td>{residential:.1f}</td>
-                    <td>{economics:.1f}</td>
-                    <td><strong>{total:.1f}</strong></td>
-                    <td><span style="color: {grade_color}; font-weight: bold;">{grade}</span></td>
+                    <td>{demo_str}</td>
+                    <td>{trans_str}</td>
+                    <td>{edu_str}</td>
+                    <td>{amen_str}</td>
+                    <td>{resi_str}</td>
+                    <td>{econ_str}</td>
+                    <td><strong>{total_str}</strong></td>
+                    <td><span style="color: {grade_color}; font-weight: bold;">{grade if grade != '—' else 'N/A'}</span></td>
                 </tr>
             """
         
