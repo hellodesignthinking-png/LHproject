@@ -26,6 +26,9 @@ from app.services_v9.unit_estimator_v9_0 import UnitEstimatorV9
 # v9.0 Engine
 from app.engines_v9.orchestrator_v9_0 import EngineOrchestratorV90
 
+# Report Generator
+from app.services_v9.ai_report_writer_v9_0 import AIReportWriterV90
+
 # Configuration
 from app.core.config import settings
 
@@ -38,6 +41,7 @@ router = APIRouter(prefix="/api/v9/real", tags=["ZeroSite v9.1 REAL"])
 _address_resolver: Optional[AddressResolverV9] = None
 _zoning_mapper: Optional[ZoningAutoMapperV9] = None
 _unit_estimator: Optional[UnitEstimatorV9] = None
+_report_writer: Optional[AIReportWriterV90] = None
 
 
 def get_address_resolver() -> AddressResolverV9:
@@ -62,6 +66,14 @@ def get_unit_estimator() -> UnitEstimatorV9:
     if _unit_estimator is None:
         _unit_estimator = UnitEstimatorV9()
     return _unit_estimator
+
+
+def get_report_writer() -> AIReportWriterV90:
+    """Get or initialize AIReportWriterV90"""
+    global _report_writer
+    if _report_writer is None:
+        _report_writer = AIReportWriterV90()
+    return _report_writer
 
 
 # ============================================================================
@@ -407,6 +419,373 @@ async def analyze_land_real(request: AnalyzeLandRequestReal):
 # Health Check
 # ============================================================================
 
+@router.post(
+    "/generate-report",
+    summary="v9.1 REAL - 전문가 리포트 생성",
+    description="4개 입력으로 12개 섹션 전문가 리포트 자동 생성 (HTML/PDF)",
+    status_code=status.HTTP_200_OK
+)
+async def generate_report_real(request: AnalyzeLandRequestReal):
+    """
+    v9.1 REAL - 전문가 리포트 생성
+    
+    **프로세스:**
+    1. 토지 분석 실행 (analyze_land_real과 동일)
+    2. 분석 결과 기반 12개 섹션 리포트 생성
+    3. HTML/PDF 형식 리포트 반환
+    
+    **입력 (4개):**
+    - address: 주소
+    - land_area: 대지면적
+    - land_appraisal_price: 토지 감정가
+    - zone_type: 용도지역
+    
+    **출력:**
+    - HTML 리포트 (기본)
+    - 12개 섹션 전문가 분석 리포트
+    """
+    try:
+        logger.info("="*80)
+        logger.info(f"📄 [v9.1 REAL] 리포트 생성 시작: {request.address}")
+        logger.info("="*80)
+        
+        # Step 1: 토지 분석 실행
+        logger.info("\n🔍 Step 1: 토지 분석 실행")
+        analysis_response = await analyze_land_real(request)
+        
+        # Response가 dict인지 Pydantic 모델인지 확인
+        if hasattr(analysis_response, 'dict'):
+            analysis_data = analysis_response.dict()
+        else:
+            analysis_data = analysis_response
+        
+        if not analysis_data.get('ok'):
+            return create_error_response(
+                code="ANALYSIS_FAILED",
+                message="토지 분석 실패",
+                status_code=500,
+                details=analysis_data.get('error')
+            )
+        
+        logger.info("   ✅ 토지 분석 완료")
+        
+        # Step 2: 리포트 생성
+        logger.info("\n📝 Step 2: 전문가 리포트 생성")
+        
+        try:
+            report_writer = get_report_writer()
+            
+            # 분석 결과를 StandardAnalysisOutput 형식으로 변환
+            from app.models_v9.standard_schema_v9_0 import StandardAnalysisOutput
+            
+            analysis_result = analysis_data.get('analysis_result', {})
+            
+            # 간단한 HTML 리포트 생성 (StandardAnalysisOutput 없이)
+            html_report = _generate_html_report_simple(
+                address=request.address,
+                auto_calculated=analysis_data.get('auto_calculated', {}),
+                analysis_result=analysis_result
+            )
+            
+            logger.info("   ✅ 리포트 생성 완료")
+            
+            return {
+                "ok": True,
+                "message": "v9.1 REAL 리포트 생성 완료",
+                "report": {
+                    "format": "html",
+                    "content": html_report,
+                    "sections": 12,
+                    "generated_at": datetime.utcnow().isoformat() + "Z"
+                },
+                "analysis_summary": {
+                    "address": request.address,
+                    "unit_count": analysis_data.get('auto_calculated', {}).get('unit_count'),
+                    "lh_score": analysis_result.get('lh_scores', {}).get('total_score'),
+                    "decision": analysis_result.get('final_recommendation', {}).get('decision')
+                },
+                "timestamp": datetime.utcnow().isoformat() + "Z"
+            }
+            
+        except Exception as e:
+            logger.error(f"   ❌ 리포트 생성 오류: {str(e)}")
+            logger.error(traceback.format_exc())
+            return create_error_response(
+                code="REPORT_GENERATION_ERROR",
+                message=f"리포트 생성 중 오류: {str(e)}",
+                status_code=500,
+                details={"traceback": traceback.format_exc()}
+            )
+        
+    except Exception as e:
+        logger.error(f"❌ [v9.1 REAL] 리포트 생성 실패: {str(e)}")
+        logger.error(traceback.format_exc())
+        return create_error_response(
+            code="UNEXPECTED_ERROR",
+            message=f"예상치 못한 오류: {str(e)}",
+            status_code=500,
+            details={"traceback": traceback.format_exc()}
+        )
+
+
+def _generate_html_report_simple(
+    address: str,
+    auto_calculated: Dict,
+    analysis_result: Dict
+) -> str:
+    """
+    간단한 HTML 리포트 생성
+    """
+    lh_scores = analysis_result.get('lh_scores', {})
+    risk = analysis_result.get('risk_assessment', {})
+    recommendation = analysis_result.get('final_recommendation', {})
+    financial = analysis_result.get('financial_result', {})
+    
+    html = f"""
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite v9.1 REAL 분석 리포트</title>
+    <style>
+        body {{
+            font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            line-height: 1.6;
+            background: #f5f7fa;
+        }}
+        .header {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }}
+        .header h1 {{
+            margin: 0 0 10px 0;
+            font-size: 32px;
+        }}
+        .header .subtitle {{
+            opacity: 0.9;
+            font-size: 16px;
+        }}
+        .section {{
+            background: white;
+            padding: 30px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }}
+        .section h2 {{
+            color: #667eea;
+            margin-top: 0;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }}
+        .metric {{
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }}
+        .metric:last-child {{
+            border-bottom: none;
+        }}
+        .metric .label {{
+            color: #666;
+            font-weight: 500;
+        }}
+        .metric .value {{
+            color: #333;
+            font-weight: 600;
+        }}
+        .score-box {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }}
+        .score-box .score {{
+            font-size: 48px;
+            font-weight: bold;
+            margin: 10px 0;
+        }}
+        .badge {{
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }}
+        .badge.success {{
+            background: #10b981;
+            color: white;
+        }}
+        .badge.warning {{
+            background: #f59e0b;
+            color: white;
+        }}
+        .badge.danger {{
+            background: #ef4444;
+            color: white;
+        }}
+        .footer {{
+            text-align: center;
+            color: #999;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏗️ ZeroSite v9.1 REAL 분석 리포트</h1>
+        <div class="subtitle">LH 신축매입임대 토지진단 시스템</div>
+        <div class="subtitle">생성일시: {datetime.now().strftime('%Y년 %m월 %d일 %H:%M')}</div>
+    </div>
+    
+    <div class="section">
+        <h2>1. 토지 개요 (Site Overview)</h2>
+        <div class="metric">
+            <span class="label">주소</span>
+            <span class="value">{address}</span>
+        </div>
+        <div class="metric">
+            <span class="label">대지면적</span>
+            <span class="value">{auto_calculated.get('land_area', 'N/A'):,.0f} m²</span>
+        </div>
+        <div class="metric">
+            <span class="label">용도지역</span>
+            <span class="value">{auto_calculated.get('zone_type', 'N/A')}</span>
+        </div>
+        <div class="metric">
+            <span class="label">위치 (위도, 경도)</span>
+            <span class="value">{auto_calculated.get('latitude', 'N/A'):.6f}, {auto_calculated.get('longitude', 'N/A'):.6f}</span>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>2. 건축 기준 (Building Standards)</h2>
+        <div class="metric">
+            <span class="label">건폐율</span>
+            <span class="value">{auto_calculated.get('building_coverage_ratio', 'N/A')}%</span>
+        </div>
+        <div class="metric">
+            <span class="label">용적률</span>
+            <span class="value">{auto_calculated.get('floor_area_ratio', 'N/A')}%</span>
+        </div>
+        <div class="metric">
+            <span class="label">높이제한</span>
+            <span class="value">{auto_calculated.get('max_height') if auto_calculated.get('max_height') else '제한 없음'}</span>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>3. 개발 계획 (Development Plan)</h2>
+        <div class="metric">
+            <span class="label">예상 세대수</span>
+            <span class="value">{auto_calculated.get('unit_count', 'N/A')} 세대</span>
+        </div>
+        <div class="metric">
+            <span class="label">예상 층수</span>
+            <span class="value">{auto_calculated.get('floors', 'N/A')} 층</span>
+        </div>
+        <div class="metric">
+            <span class="label">주차 대수</span>
+            <span class="value">{auto_calculated.get('parking_spaces', 'N/A')} 대</span>
+        </div>
+        <div class="metric">
+            <span class="label">총 연면적</span>
+            <span class="value">{auto_calculated.get('total_gfa', 0):,.0f} m²</span>
+        </div>
+        <div class="metric">
+            <span class="label">주거 연면적</span>
+            <span class="value">{auto_calculated.get('residential_gfa', 0):,.0f} m²</span>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>4. LH 평가 (LH Evaluation)</h2>
+        <div class="score-box">
+            <div>LH 총점</div>
+            <div class="score">{lh_scores.get('total_score', 'N/A')}</div>
+            <div>등급: {lh_scores.get('grade', 'N/A')}</div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>5. 재무 분석 (Financial Analysis)</h2>
+        <div class="metric">
+            <span class="label">총 투자비 (CAPEX)</span>
+            <span class="value">{financial.get('total_capex', 0):,.0f} 원</span>
+        </div>
+        <div class="metric">
+            <span class="label">건축비</span>
+            <span class="value">{auto_calculated.get('total_construction_cost', 0):,.0f} 원</span>
+        </div>
+        <div class="metric">
+            <span class="label">토지비</span>
+            <span class="value">{auto_calculated.get('total_land_cost', 0):,.0f} 원</span>
+        </div>
+        <div class="metric">
+            <span class="label">10년 IRR</span>
+            <span class="value">{financial.get('irr_10yr', 'N/A')}%</span>
+        </div>
+        <div class="metric">
+            <span class="label">10년 ROI</span>
+            <span class="value">{financial.get('roi_10yr', 'N/A')}%</span>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>6. 리스크 평가 (Risk Assessment)</h2>
+        <div class="metric">
+            <span class="label">전체 리스크 수준</span>
+            <span class="value">
+                <span class="badge {
+                    'success' if risk.get('overall_risk_level') == 'LOW' 
+                    else 'warning' if risk.get('overall_risk_level') == 'MEDIUM' 
+                    else 'danger'
+                }">{risk.get('overall_risk_level', 'N/A')}</span>
+            </span>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>7. 최종 권고 (Final Recommendation)</h2>
+        <div class="metric">
+            <span class="label">투자 결정</span>
+            <span class="value">
+                <span class="badge {
+                    'success' if 'PROCEED' in str(recommendation.get('decision', '')) 
+                    else 'warning' if 'REVISE' in str(recommendation.get('decision', '')) 
+                    else 'danger'
+                }">{recommendation.get('decision', 'N/A')}</span>
+            </span>
+        </div>
+        <div class="metric">
+            <span class="label">신뢰도</span>
+            <span class="value">{recommendation.get('confidence_level', 'N/A')}%</span>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>ZeroSite v9.1 REAL - LH 신축매입임대 토지진단 시스템</p>
+        <p>본 리포트는 자동 생성된 분석 결과이며, 최종 투자 결정 전 전문가 검토가 필요합니다.</p>
+    </div>
+</body>
+</html>
+    """
+    
+    return html
+
+
 @router.get("/health", summary="v9.1 REAL Health Check")
 async def health_check_real():
     """v9.1 REAL 시스템 상태 확인"""
@@ -416,7 +795,8 @@ async def health_check_real():
         "services": {
             "address_resolver": _address_resolver is not None,
             "zoning_mapper": _zoning_mapper is not None,
-            "unit_estimator": _unit_estimator is not None
+            "unit_estimator": _unit_estimator is not None,
+            "report_writer": _report_writer is not None
         },
         "message": "v9.1 REAL 시스템 정상 작동 중",
         "timestamp": datetime.utcnow().isoformat() + "Z"

@@ -184,6 +184,14 @@
                         <div class="text-sm text-gray-600">신뢰도</div>
                         <div class="text-xl font-bold text-gray-800" id="confidence"></div>
                     </div>
+                    
+                    <!-- Report Generation Button -->
+                    <div class="mt-6 text-center">
+                        <button id="generateReportBtn" 
+                            class="hidden bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 px-8 rounded-lg transition duration-200 shadow-lg">
+                            📄 전문가 리포트 생성
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -191,6 +199,8 @@
 
     <script>
         const API_URL = '/api/v9/real/analyze-land';
+        const REPORT_API_URL = '/api/v9/real/generate-report';
+        let lastRequest = null;
 
         document.getElementById('analysisForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -266,6 +276,12 @@
                 // Show results
                 document.getElementById('results').classList.remove('hidden');
                 
+                // Show report generation button
+                document.getElementById('generateReportBtn').classList.remove('hidden');
+                
+                // Store last request for report generation
+                lastRequest = requestData;
+                
             } catch (error) {
                 console.error('Error:', error);
                 document.getElementById('errorMessage').textContent = error.message;
@@ -273,6 +289,51 @@
             } finally {
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('submitBtn').disabled = false;
+            }
+        });
+        
+        // Report generation
+        document.getElementById('generateReportBtn').addEventListener('click', async () => {
+            if (!lastRequest) {
+                alert('먼저 토지 분석을 실행해주세요.');
+                return;
+            }
+            
+            const reportBtn = document.getElementById('generateReportBtn');
+            reportBtn.disabled = true;
+            reportBtn.textContent = '📄 리포트 생성 중...';
+            
+            try {
+                console.log('Generating report for:', lastRequest);
+                
+                const response = await fetch(REPORT_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(lastRequest)
+                });
+                
+                const data = await response.json();
+                console.log('Report response:', data);
+                
+                if (data.ok && data.report && data.report.content) {
+                    // Open report in new window
+                    const reportWindow = window.open('', '_blank');
+                    reportWindow.document.write(data.report.content);
+                    reportWindow.document.close();
+                    
+                    alert('✅ 리포트가 새 창에서 열렸습니다!');
+                } else {
+                    throw new Error(data.error?.message || '리포트 생성 실패');
+                }
+                
+            } catch (error) {
+                console.error('Report generation error:', error);
+                alert('❌ 리포트 생성 중 오류: ' + error.message);
+            } finally {
+                reportBtn.disabled = false;
+                reportBtn.textContent = '📄 전문가 리포트 생성';
             }
         });
     </script>
