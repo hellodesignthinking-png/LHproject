@@ -114,8 +114,8 @@ if frontend_v9_path.exists():
 
 @app.get("/")
 async def root():
-    """메인 페이지 - v9.0 UI로 리다이렉트"""
-    return FileResponse(str(frontend_v9_path / "index.html"))
+    """메인 페이지 - v9.1 REAL UI로 리다이렉트"""
+    return FileResponse(str(frontend_v9_path / "index_REAL.html"))
 
 
 @app.get("/v7")
