@@ -102,19 +102,28 @@ def create_error_response(code: str, message: str, status_code: int = 500, detai
 
 class AnalyzeLandRequestReal(BaseModel):
     """
-    v9.1 REAL - 4개 필수 입력만 받음
+    v9.1 REAL - 4개 필수 입력 + 언어 선택 (v11.0 Enhancement)
     """
     # 필수 4개
     address: str = Field(..., description="주소 (도로명/지번)", example="서울특별시 마포구 월드컵북로 120")
     land_area: float = Field(..., gt=0, description="대지면적 (m²)", example=1000.0)
     land_appraisal_price: float = Field(..., gt=0, description="토지 감정가 (원/m²)", example=9000000)
     zone_type: str = Field(..., description="용도지역", example="제3종일반주거지역")
+    
+    # v11.0 Enhancement: 언어 선택 (선택사항)
+    language: str = Field(default="ko", description="리포트 언어 (ko: 한국어, en: English)", example="ko")
 
     @validator('zone_type')
     def validate_zone_type(cls, v):
         if not v or not v.strip():
             raise ValueError("용도지역은 필수 입력입니다.")
         return v.strip()
+    
+    @validator('language')
+    def validate_language(cls, v):
+        if v not in ['ko', 'en']:
+            raise ValueError("언어는 'ko' 또는 'en'만 가능합니다.")
+        return v
 
 
 class AutoCalculatedFields(BaseModel):
@@ -499,6 +508,8 @@ async def generate_report_real(
             
             # Step 2: Enhance with v7.5-style professional narratives
             from app.content_enhancer_v11 import ContentEnhancerV11
+            from app.i18n.translator import translator
+            
             enhancer = ContentEnhancerV11()
             
             # Prepare analysis data for enhancement
@@ -516,6 +527,13 @@ async def generate_report_real(
                 analysis_data=enhancement_data
             )
             
+            # Step 3: Apply language translation if requested
+            language = getattr(request, 'language', 'ko')  # Default to Korean
+            if language == 'en':
+                logger.info("   🌍 Translating to English...")
+                html_report = translator.translate_report_html(html_report, language='en')
+                logger.info("   ✅ English translation complete")
+            
             # Calculate enhancement stats
             original_size = len(base_html_report)
             enhanced_size = len(html_report)
@@ -523,6 +541,7 @@ async def generate_report_real(
             increase_pct = (increase / original_size * 100) if original_size > 0 else 0
             
             logger.info(f"   🎨 Content Enhanced: {original_size:,} → {enhanced_size:,} chars (+{increase:,}, +{increase_pct:.1f}%)")
+            logger.info(f"   🌍 Language: {language.upper()}")
             logger.info("   ✅ HYBRID v2 Report Complete (v11 Intelligence + v7.5 Narrative Style)")
             
             logger.info("   ✅ 리포트 생성 완료")

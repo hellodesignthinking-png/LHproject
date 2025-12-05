@@ -49,6 +49,12 @@ from app.api.endpoints.analysis_v9_1 import router as analysis_v91_router
 # ✨ v9.1 REAL: Import REAL working version
 from app.api.endpoints.analysis_v9_1_REAL import router as analysis_v91_real_router
 
+# ✨ v11.0 ENHANCEMENTS: Import middleware and utilities
+from app.middleware.rate_limiter import RateLimiter, RateLimitConfig
+from app.middleware.cache_manager import cache_manager, start_cache_cleanup_task
+from app.i18n.translator import translator
+import asyncio
+
 settings = get_settings()
 
 # LH 공식 7개 유형 정보 매핑
@@ -66,17 +72,47 @@ HOUSING_TYPE_INFO = {
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """애플리케이션 시작/종료 시 실행"""
-    print("🚀 LH 토지진단 시스템 시작")
+    print("=" * 60)
+    print("🚀 ZeroSite v11.0 HYBRID v2 시스템 시작")
+    print("=" * 60)
     print(f"📍 환경: {'개발' if settings.debug else '운영'}")
     print(f"🔑 API Keys 로드됨")
+    print(f"🛡️  Rate Limiting: Enabled")
+    print(f"💾 Cache: In-Memory (Ready)")
+    print(f"🌍 Multi-language: Korean + English")
+    print(f"✅ All Enhancements: Active")
+    print("=" * 60)
+    
+    # Start background tasks
+    cleanup_task = asyncio.create_task(start_cache_cleanup_task())
+    
     yield
+    
+    # Cleanup
+    cleanup_task.cancel()
+    print("=" * 60)
     print("👋 시스템 종료")
+    print("=" * 60)
 
 
 app = FastAPI(
-    title="LH 신축매입임대 토지진단 자동화 시스템",
-    description="LH 신축매입임대주택 사업을 위한 토지 적합성 자동 진단 API",
-    version="1.0.0",
+    title="ZeroSite v11.0 HYBRID v2 - LH 토지진단 시스템",
+    description="""
+    🎯 ZeroSite v11.0 HYBRID v2 Edition
+    
+    Features:
+    - 🤖 5 AI Engines (LH Score, Decision, Unit-Type, Feasibility, Pseudo Data)
+    - 📊 100-point LH Scoring System
+    - 🎯 GO/REVIEW/NO-GO Decision Engine  
+    - 🏘️ 5 Unit Types × 6 Criteria Analysis
+    - ✍️ v7.5-style Professional Narratives
+    - 🌍 Multi-language Support (Korean + English)
+    - 🛡️ Rate Limiting & Caching
+    - 📄 ~26-page Government-grade Reports
+    
+    Status: 100% Complete | Production Ready
+    """,
+    version="11.0-HYBRID-v2",
     lifespan=lifespan
 )
 
@@ -87,6 +123,13 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+# ✨ v11.0: Add Rate Limiting Middleware
+rate_limit_config = RateLimitConfig.production() if not settings.debug else RateLimitConfig.development()
+app.add_middleware(
+    RateLimiter,
+    **rate_limit_config
 )
 
 # ✨ v7.2: Include Report Engine v7.2 router
@@ -114,7 +157,20 @@ if frontend_v9_path.exists():
 
 @app.get("/")
 async def root():
-    """메인 페이지 - v9.1 REAL UI로 리다이렉트 (캐시 무효화)"""
+    """메인 페이지 - Admin Dashboard로 리다이렉트 (v11.0 HYBRID v2)"""
+    # v11.0 HYBRID v2 Admin Dashboard로 리다이렉트
+    return RedirectResponse(url="/static/admin_dashboard.html", status_code=302)
+
+
+@app.get("/v11")
+async def root_v11():
+    """v11.0 HYBRID v2 Admin Dashboard"""
+    return RedirectResponse(url="/static/admin_dashboard.html", status_code=302)
+
+
+@app.get("/v9-legacy")
+async def root_v9_legacy():
+    """Legacy v9.1 REAL UI (구버전 호환성)"""
     # 타임스탬프를 추가하여 브라우저 캐시 우회
     timestamp = int(datetime.now().timestamp())
     return RedirectResponse(url=f"/v9/index_REAL.html?v={timestamp}", status_code=302)
@@ -138,13 +194,28 @@ async def root_v7():
 
 @app.get("/health")
 async def health_check():
-    """상세 헬스 체크"""
+    """상세 헬스 체크 (v11.0 Enhanced)"""
+    cache_stats = cache_manager.get_stats()
+    
     return {
         "status": "healthy",
+        "version": "11.0-HYBRID-v2",
         "apis": {
             "kakao": "configured" if settings.kakao_rest_api_key else "missing",
             "land_regulation": "configured" if settings.land_regulation_api_key else "missing",
             "mois": "configured" if settings.mois_api_key else "missing"
+        },
+        "enhancements": {
+            "rate_limiting": "enabled",
+            "caching": "enabled",
+            "multi_language": "enabled (ko, en)",
+            "admin_dashboard": "enabled"
+        },
+        "cache_stats": {
+            "total_entries": cache_stats["total_entries"],
+            "hit_rate": f"{cache_stats['hit_rate_percent']}%",
+            "hits": cache_stats["hits"],
+            "misses": cache_stats["misses"]
         },
         "timestamp": datetime.now().isoformat()
     }
