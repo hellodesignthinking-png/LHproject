@@ -4,7 +4,7 @@ FastAPI 메인 애플리케이션
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import uuid
@@ -114,8 +114,10 @@ if frontend_v9_path.exists():
 
 @app.get("/")
 async def root():
-    """메인 페이지 - v9.1 REAL UI로 리다이렉트"""
-    return FileResponse(str(frontend_v9_path / "index_REAL.html"))
+    """메인 페이지 - v9.1 REAL UI로 리다이렉트 (캐시 무효화)"""
+    # 타임스탬프를 추가하여 브라우저 캐시 우회
+    timestamp = int(datetime.now().timestamp())
+    return RedirectResponse(url=f"/v9/index_REAL.html?v={timestamp}", status_code=302)
 
 
 @app.get("/v7")
