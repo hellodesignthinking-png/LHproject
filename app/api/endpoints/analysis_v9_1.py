@@ -24,11 +24,11 @@ import logging
 # v9.1 Services
 from app.services_v9.address_resolver_v9_0 import AddressResolverV9, AddressInfo
 from app.services_v9.zoning_auto_mapper_v9_0 import ZoningAutoMapperV9, ZoningStandards
-from app.services_v9.unit_estimator_v9_0 import UnitEstimatorV9, UnitEstimationResult
+from app.services_v9.unit_estimator_v9_0 import UnitEstimatorV9, UnitEstimate
 from app.services_v9.normalization_layer_v9_1_enhanced import NormalizationLayerV91
 
 # v9.0 Components (backward compatibility)
-from app.orchestrator_v9.engine_orchestrator_v9_0 import EngineOrchestratorV90
+from app.engines_v9.orchestrator_v9_0 import EngineOrchestratorV90
 from app.models_v9.standard_schema_v9_0 import StandardAnalysisOutput
 
 # Configuration
@@ -50,10 +50,8 @@ def get_address_resolver() -> AddressResolverV9:
     """Get or initialize AddressResolverV9 singleton"""
     global _address_resolver
     if _address_resolver is None:
-        kakao_api_key = getattr(settings, 'KAKAO_REST_API_KEY', None)
-        if not kakao_api_key:
-            logger.warning("KAKAO_REST_API_KEY not configured. Address resolution may fail.")
-        _address_resolver = AddressResolverV9(api_key=kakao_api_key)
+        # AddressResolverV9 automatically gets api_key from settings
+        _address_resolver = AddressResolverV9()
     return _address_resolver
 
 
@@ -741,23 +739,23 @@ async def analyze_land_v91(request: AnalyzeLandRequestV91) -> AnalyzeLandRespons
         
         # CRITICAL FIX 1: Pass ALL estimated values to raw_input for Financial Engine
         if request.unit_count is None:
-            raw_input['unit_count'] = estimation.estimated_units
-            auto_calculated['unit_count'] = estimation.estimated_units
+            raw_input['unit_count'] = estimation.total_units
+            auto_calculated['unit_count'] = estimation.total_units
         
         # CRITICAL FIX 3: Pass GFA and other critical fields to Financial Engine
         # These fields are REQUIRED by Financial Engine but were missing
         raw_input['total_gfa'] = estimation.total_gfa
         raw_input['residential_gfa'] = estimation.residential_gfa
-        raw_input['estimated_floors'] = estimation.estimated_floors
+        raw_input['estimated_floors'] = estimation.floors
         raw_input['parking_spaces'] = estimation.parking_spaces
         
         # Track all auto-calculated fields
-        auto_calculated['estimated_floors'] = estimation.estimated_floors
+        auto_calculated['estimated_floors'] = estimation.floors
         auto_calculated['parking_spaces'] = estimation.parking_spaces
         auto_calculated['total_gfa'] = round(estimation.total_gfa, 2)
         auto_calculated['residential_gfa'] = round(estimation.residential_gfa, 2)
         
-        logger.info(f"[v9.1 API] Auto-calculated units: {estimation.estimated_units} units, {estimation.estimated_floors} floors")
+        logger.info(f"[v9.1 API] Auto-calculated units: {estimation.total_units} units, {estimation.floors} floors")
         logger.info(f"[v9.1 API] GFA calculations: total={estimation.total_gfa:.2f}m², residential={estimation.residential_gfa:.2f}m²")
         
         # CRITICAL FIX 2 & 3: Ensure all required fields for Financial Engine are present
@@ -786,9 +784,17 @@ async def analyze_land_v91(request: AnalyzeLandRequestV91) -> AnalyzeLandRespons
                    f"total_gfa={raw_input.get('total_gfa'):.2f}, "
                    f"construction_cost={raw_input.get('construction_cost_per_sqm', 0):,}")
         
-        orchestrator = EngineOrchestratorV90()
+        # Initialize orchestrator with kakao_api_key
+        kakao_api_key = getattr(settings, 'kakao_rest_api_key', None) or getattr(settings, 'KAKAO_REST_API_KEY', None)
+        if not kakao_api_key:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="KAKAO_REST_API_KEY not configured"
+            )
         
-        analysis_result: StandardAnalysisOutput = await orchestrator.run_full_analysis(raw_input)
+        orchestrator = EngineOrchestratorV90(kakao_api_key=kakao_api_key)
+        
+        analysis_result: StandardAnalysisOutput = await orchestrator.analyze_comprehensive(raw_input)
         
         # Step 3: Build response
         logger.info("[v9.1 API] Step 3: Building response...")
@@ -908,7 +914,7 @@ async def generate_report_v91(
     """
     try:
         from app.services_v9.pdf_renderer_v9_0 import ReportOrchestrator
-        from app.services_v9.orchestrator_v9_0 import EngineOrchestratorV90
+        from app.engines_v9.orchestrator_v9_0 import EngineOrchestratorV90
         from fastapi.responses import Response
         
         logger.info(f"📝 [v9.1] 리포트 생성 요청: {request.address}")
@@ -999,8 +1005,14 @@ async def generate_report_v91(
         
         # 3. EngineOrchestratorV90으로 분석 실행
         logger.info(f"🔍 [v9.1] 전체 분석 실행 (Financial/LH/Risk)...")
-        orchestrator = EngineOrchestratorV90()
-        analysis_output = await orchestrator.run_full_analysis(raw_input)
+        kakao_api_key = getattr(settings, 'kakao_rest_api_key', None) or getattr(settings, 'KAKAO_REST_API_KEY', None)
+        if not kakao_api_key:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="KAKAO_REST_API_KEY not configured"
+            )
+        orchestrator = EngineOrchestratorV90(kakao_api_key=kakao_api_key)
+        analysis_output = await orchestrator.analyze_comprehensive(raw_input)
         
         logger.info(f"✅ [v9.1] 분석 완료: LH Score={analysis_output.get('lh_score', 'N/A')}")
         
