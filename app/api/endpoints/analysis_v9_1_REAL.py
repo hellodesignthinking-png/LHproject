@@ -483,23 +483,23 @@ async def generate_report_real(
             
             analysis_result = analysis_data.get('analysis_result', {})
             
-            # ZeroSite v11.0 Ultra Professional 리포트 생성 (with v10.0 fallback)
+            # ZeroSite v11.0 EXPERT EDITION 리포트 생성 (with v11.0 complete fallback)
             try:
-                # v11.0: LH 100점 점수 + A/B/C/D/F 등급 + GO/NO-GO 판단 + 세대유형 분석
-                from app.report_generator_v11_complete import generate_v11_ultra_pro_report
-                html_report = generate_v11_ultra_pro_report(
+                # v11.0 Expert Edition: v7.5 Form + v11.0 Engine + Strategic Narrative
+                from app.report_generator_v11_expert_api import generate_v11_expert_report
+                html_report = generate_v11_expert_report(
                     address=request.address,
                     land_area=request.land_area,
                     land_appraisal_price=request.land_appraisal_price,
                     zone_type=request.zone_type,
                     analysis_result=analysis_result
                 )
-                logger.info("   ✅ v11.0 Report Generator 사용")
-            except Exception as v11_error:
-                # Fallback to v10.0 if v11.0 fails
-                logger.warning(f"   ⚠️ v11.0 실패 ({str(v11_error)}), v10.0으로 Fallback")
-                from app.report_generator_v10_ultra_pro import generate_v10_ultra_pro_report
-                html_report = generate_v10_ultra_pro_report(
+                logger.info("   ✅ v11.0 EXPERT EDITION Report Generator 사용 (v7.5 Form + v11.0 Engine)")
+            except Exception as v11_expert_error:
+                # Fallback to v11.0 Complete if Expert Edition fails
+                logger.warning(f"   ⚠️ v11.0 Expert Edition 실패 ({str(v11_expert_error)}), v11.0 Complete로 Fallback")
+                from app.report_generator_v11_complete import generate_v11_ultra_pro_report
+                html_report = generate_v11_ultra_pro_report(
                     address=request.address,
                     land_area=request.land_area,
                     land_appraisal_price=request.land_appraisal_price,
