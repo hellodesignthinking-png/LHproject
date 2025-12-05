@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite v9.1 - LH 신축매입임대 토지진단 시스템 (4-Field Input)</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js for reactivity -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        
+        .section-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        
+        .auto-calculated-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        
+        .required-field-marker {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+        
+        .auto-field {
+            background: #f0f9ff;
+            border-color: #93c5fd !important;
+        }
+        
+        .auto-field:focus {
+            border-color: #3b82f6 !important;
+            ring-color: #3b82f6 !important;
+        }
+        
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .feature-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50" x-data="zerositeV91App()">
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-building text-blue-600 text-2xl"></i>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                            ZeroSite
+                            <span class="feature-badge">v9.1 ⚡ NEW</span>
+                        </h1>
+                        <p class="text-xs text-gray-500">60% 입력 감소 (10→4 필드) - LH 신축매입임대 토지진단</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Feature Highlights -->
+        <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-6 mb-6">
+            <h2 class="text-2xl font-bold mb-4">🚀 ZeroSite v9.1 - 자동화 혁신</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-bolt text-3xl"></i>
+                    <div>
+                        <p class="font-semibold">60% 입력 감소</p>
+                        <p class="text-sm opacity-90">10개 → 4개 필드</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-clock text-3xl"></i>
+                    <div>
+                        <p class="font-semibold">80% 시간 단축</p>
+                        <p class="text-sm opacity-90">5분 → 1분 입력</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-magic text-3xl"></i>
+                    <div>
+                        <p class="font-semibold">12개 필드 자동</p>
+                        <p class="text-sm opacity-90">AI 자동 계산</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Form (v9.1 - 4 Fields Only!) -->
+        <div class="section-card">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900 mb-1">토지 정보 입력</h2>
+                    <p class="text-sm text-gray-600">
+                        <span class="required-field-marker">필수 4개 필드만 입력</span>하시면, 
+                        나머지 <strong class="text-blue-600">12개 필드는 자동으로 계산</strong>됩니다!
+                    </p>
+                </div>
+                <div class="text-right">
+                    <p class="text-3xl font-bold text-blue-600">4</p>
+                    <p class="text-xs text-gray-500">필수 입력 필드</p>
+                </div>
+            </div>
+            
+            <form @submit.prevent="analyzeLand">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- CRITICAL 4: Only 4 required fields -->
+                    
+                    <!-- 1. Address (REQUIRED) -->
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-900 mb-2">
+                            <i class="fas fa-map-marker-alt text-blue-600 mr-1"></i>
+                            주소 <span class="required-field-marker">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            x-model="landData.address"
+                            placeholder="예: 서울특별시 마포구 월드컵북로 120"
+                            class="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                            required>
+                        <p class="text-xs text-gray-500 mt-1">
+                            ✨ 위도/경도 자동 변환
+                        </p>
+                    </div>
+                    
+                    <!-- 2. Land Area (REQUIRED) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-900 mb-2">
+                            <i class="fas fa-ruler-combined text-blue-600 mr-1"></i>
+                            대지면적 (㎡) <span class="required-field-marker">*</span>
+                        </label>
+                        <input 
+                            type="number" 
+                            x-model.number="landData.land_area"
+                            placeholder="1000"
+                            class="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                            required>
+                    </div>
+                    
+                    <!-- 3. Land Appraisal Price (REQUIRED) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-900 mb-2">
+                            <i class="fas fa-won-sign text-blue-600 mr-1"></i>
+                            토지 감정가 (원/㎡) <span class="required-field-marker">*</span>
+                        </label>
+                        <input 
+                            type="number" 
+                            x-model.number="landData.land_appraisal_price"
+                            placeholder="9000000"
+                            class="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                            required>
+                        <p class="text-xs text-gray-500 mt-1">
+                            예: 900만원/㎡ → 9000000 입력
+                        </p>
+                    </div>
+                    
+                    <!-- 4. Zone Type (REQUIRED) -->
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-900 mb-2">
+                            <i class="fas fa-layer-group text-blue-600 mr-1"></i>
+                            용도지역 <span class="required-field-marker">*</span>
+                        </label>
+                        <select 
+                            x-model="landData.zone_type"
+                            class="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                            required>
+                            <option value="">선택하세요</option>
+                            <option value="제1종일반주거지역">제1종일반주거지역</option>
+                            <option value="제2종일반주거지역">제2종일반주거지역</option>
+                            <option value="제3종일반주거지역">제3종일반주거지역</option>
+                            <option value="준주거지역">준주거지역</option>
+                            <option value="중심상업지역">중심상업지역</option>
+                            <option value="일반상업지역">일반상업지역</option>
+                            <option value="근린상업지역">근린상업지역</option>
+                            <option value="준공업지역">준공업지역</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">
+                            ✨ 건폐율/용적률 자동 설정
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Auto-Calculated Fields Preview -->
+                <div x-show="autoCalculatedFields && Object.keys(autoCalculatedFields).length > 0" 
+                     class="mt-6 p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
+                    <h3 class="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <i class="fas fa-magic text-blue-600"></i>
+                        자동 계산된 필드 (12개)
+                        <span class="auto-calculated-badge">
+                            <i class="fas fa-check"></i>
+                            AI AUTO
+                        </span>
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                        <div class="bg-white p-2 rounded">
+                            <p class="text-gray-600">위도</p>
+                            <p class="font-semibold text-gray-900" x-text="autoCalculatedFields.latitude?.toFixed(6) || '-'"></p>
+                        </div>
+                        <div class="bg-white p-2 rounded">
+                            <p class="text-gray-600">경도</p>
+                            <p class="font-semibold text-gray-900" x-text="autoCalculatedFields.longitude?.toFixed(6) || '-'"></p>
+                        </div>
+                        <div class="bg-white p-2 rounded">
+                            <p class="text-gray-600">건폐율</p>
+                            <p class="font-semibold text-gray-900" x-text="(autoCalculatedFields.building_coverage_ratio || '-') + '%'"></p>
+                        </div>
+                        <div class="bg-white p-2 rounded">
+                            <p class="text-gray-600">용적률</p>
+                            <p class="font-semibold text-gray-900" x-text="(autoCalculatedFields.floor_area_ratio || '-') + '%'"></p>
+                        </div>
+                        <div class="bg-white p-2 rounded">
+                            <p class="text-gray-600">세대수</p>
+                            <p class="font-semibold text-blue-600" x-text="(autoCalculatedFields.unit_count || '-') + '세대'"></p>
+                        </div>
+                        <div class="bg-white p-2 rounded">
+                            <p class="text-gray-600">층수</p>
+                            <p class="font-semibold text-blue-600" x-text="(autoCalculatedFields.estimated_floors || '-') + '층'"></p>
+                        </div>
+                        <div class="bg-white p-2 rounded">
+                            <p class="text-gray-600">주차대수</p>
+                            <p class="font-semibold text-blue-600" x-text="(autoCalculatedFields.parking_spaces || '-') + '대'"></p>
+                        </div>
+                        <div class="bg-white p-2 rounded">
+                            <p class="text-gray-600">연면적</p>
+                            <p class="font-semibold text-blue-600" x-text="autoCalculatedFields.total_gfa ? autoCalculatedFields.total_gfa.toFixed(0) + '㎡' : '-'"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="mt-6 flex gap-3">
+                    <button 
+                        type="submit"
+                        :disabled="loading"
+                        class="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-lg font-bold text-lg hover:from-blue-700 hover:to-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg">
+                        <i class="fas fa-rocket text-xl"></i>
+                        <span x-text="loading ? '⚡ 분석 중...' : '⚡ 1분 만에 분석 시작'"></span>
+                    </button>
+                    <button 
+                        type="button"
+                        @click="resetForm"
+                        class="px-6 py-4 border-2 border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition">
+                        <i class="fas fa-redo"></i> 초기화
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Loading State -->
+        <div x-show="loading" class="section-card text-center py-12">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <p class="text-gray-600 font-medium text-lg">🤖 AI가 12개 필드를 자동 계산 중...</p>
+            <p class="text-sm text-gray-500 mt-2">주소 해석 → 좌표 변환 → 용도지역 기준 → 세대수 추정 → 재무 분석</p>
+        </div>
+        
+        <!-- Results (same as v9.0, just show auto-calculated fields) -->
+        <div x-show="results && !loading" x-cloak>
+            <div class="section-card bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-300">
+                <h2 class="text-xl font-bold text-gray-900 mb-3">
+                    ✅ 분석 완료! 
+                    <span class="text-green-600">12개 필드 자동 계산 성공</span>
+                </h2>
+                <p class="text-gray-700 mb-4">
+                    입력 시간: <strong class="text-blue-600" x-text="inputTime + '초'"></strong> | 
+                    자동 계산 시간: <strong class="text-purple-600" x-text="analysisTime + '초'"></strong>
+                </p>
+                
+                <!-- Analysis Results Summary -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <p class="text-sm text-gray-600 mb-1">LH 평가점수</p>
+                        <p class="text-2xl font-bold text-blue-600" x-text="results?.lh_score + '/110'"></p>
+                    </div>
+                    
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <p class="text-sm text-gray-600 mb-1">자동 계산 필드</p>
+                        <p class="text-2xl font-bold text-purple-600">12개</p>
+                    </div>
+                    
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <p class="text-sm text-gray-600 mb-1">최종 결정</p>
+                        <p class="text-lg font-bold" 
+                           :class="results?.decision === 'PROCEED' ? 'text-green-600' : 'text-orange-600'"
+                           x-text="results?.decision === 'PROCEED' ? '✓ 진행 권장' : '△ 보완 필요'"></p>
+                    </div>
+                    
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <p class="text-sm text-gray-600 mb-1">입력 효율</p>
+                        <p class="text-2xl font-bold text-green-600">60%↓</p>
+                    </div>
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <a href="#" @click.prevent="viewFullReport" 
+                       class="inline-flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-800">
+                        <i class="fas fa-file-pdf"></i>
+                        전체 리포트 보기
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Error Display -->
+        <div x-show="error" class="section-card bg-red-50 border-l-4 border-red-600" x-cloak>
+            <div class="flex items-start gap-3">
+                <i class="fas fa-exclamation-circle text-red-600 text-xl mt-1"></i>
+                <div>
+                    <h3 class="font-semibold text-red-900 mb-1">오류 발생</h3>
+                    <p class="text-sm text-red-700" x-text="error"></p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="text-center">
+                <p class="text-sm text-gray-500">
+                    © 2024 ZeroSite v9.1 - LH 신축매입임대 토지진단 시스템 (60% 입력 감소, 80% 시간 단축)
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Alpine.js App Logic -->
+    <script>
+        function zerositeV91App() {
+            return {
+                // State
+                landData: {
+                    address: '',
+                    land_area: null,
+                    land_appraisal_price: null,
+                    zone_type: ''
+                },
+                loading: false,
+                results: null,
+                error: null,
+                autoCalculatedFields: {},
+                inputTime: 0,
+                analysisTime: 0,
+                startTime: null,
+                
+                // API Base URL
+                apiBaseUrl: window.location.origin,
+                
+                // Methods
+                async analyzeLand() {
+                    this.loading = true;
+                    this.error = null;
+                    this.results = null;
+                    this.autoCalculatedFields = {};
+                    
+                    const inputEndTime = Date.now();
+                    this.inputTime = this.startTime ? Math.round((inputEndTime - this.startTime) / 1000) : 0;
+                    
+                    const analysisStartTime = Date.now();
+                    
+                    try {
+                        // Call v9.1 API with only 4 fields
+                        const apiPayload = {
+                            address: this.landData.address,
+                            land_area: this.landData.land_area,
+                            land_appraisal_price: this.landData.land_appraisal_price,
+                            zone_type: this.landData.zone_type
+                        };
+                        
+                        console.log('📤 [v9.1] Sending minimal input (4 fields):', apiPayload);
+                        
+                        const response = await fetch(`${this.apiBaseUrl}/api/v9/analyze-land`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(apiPayload)
+                        });
+                        
+                        if (!response.ok) {
+                            let errorMessage = '';
+                            try {
+                                const errorData = await response.json();
+                                if (errorData.detail && Array.isArray(errorData.detail)) {
+                                    const errors = errorData.detail.map(e => `${e.loc.join('.')}: ${e.msg}`).join(', ');
+                                    errorMessage = `입력값 오류: ${errors}`;
+                                } else if (errorData.detail) {
+                                    errorMessage = typeof errorData.detail === 'string' ? errorData.detail : JSON.stringify(errorData.detail);
+                                } else {
+                                    errorMessage = JSON.stringify(errorData);
+                                }
+                            } catch (e) {
+                                errorMessage = await response.text();
+                            }
+                            throw new Error(`API 오류 (${response.status}): ${errorMessage}`);
+                        }
+                        
+                        const responseData = await response.json();
+                        console.log('📥 [v9.1] Response:', responseData);
+                        
+                        if (responseData.success && responseData.data) {
+                            this.results = {
+                                lh_score: responseData.data.lh_scores?.total_score || 0,
+                                decision: responseData.data.final_recommendation?.decision || 'REVISE',
+                                full_data: responseData.data
+                            };
+                            
+                            // Extract auto-calculated fields
+                            this.autoCalculatedFields = responseData.auto_calculated_fields || {};
+                            
+                            console.log('✅ [v9.1] Auto-calculated fields:', this.autoCalculatedFields);
+                            
+                            const analysisEndTime = Date.now();
+                            this.analysisTime = Math.round((analysisEndTime - analysisStartTime) / 1000);
+                        } else {
+                            throw new Error(responseData.message || '분석 결과를 가져올 수 없습니다');
+                        }
+                        
+                    } catch (err) {
+                        this.error = err.message || String(err);
+                        console.error('❌ [v9.1] Analysis error:', err);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                resetForm() {
+                    this.landData = {
+                        address: '',
+                        land_area: null,
+                        land_appraisal_price: null,
+                        zone_type: ''
+                    };
+                    this.results = null;
+                    this.error = null;
+                    this.autoCalculatedFields = {};
+                    this.startTime = Date.now();
+                },
+                
+                viewFullReport() {
+                    alert('전체 리포트 기능은 v9.0 UI를 참조하세요 (index.html)');
+                },
+                
+                init() {
+                    this.startTime = Date.now();
+                    console.log('🚀 ZeroSite v9.1 Frontend initialized (4-field input)');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

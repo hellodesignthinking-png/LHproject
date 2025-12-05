@@ -853,3 +853,195 @@ async def health_check():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Health check failed: {str(e)}"
         )
+
+
+# ============================================================================
+# HIGH 7: Report Generation Endpoint (v9.1 Integration)
+# ============================================================================
+
+@router.post(
+    "/generate-report",
+    summary="리포트 생성 (v9.1)",
+    description="""
+    v9.1 자동 입력 시스템을 사용하여 토지 분석 및 12-section PDF 리포트 생성.
+    
+    HIGH 7: 이 엔드포인트는 v9.1의 자동 계산된 필드를 모두 활용합니다:
+    - 자동 주소 해석 (위도/경도)
+    - 용도지역 기반 BCR/FAR 자동 설정
+    - 세대수, 층수, 주차 자동 계산
+    - Financial/LH/Risk 분석 결과 리포트 포함
+    """
+)
+async def generate_report_v91(
+    request: AnalyzeLandRequestV91,
+    output_format: str = "pdf"
+):
+    """
+    v9.1 리포트 생성 API (HIGH 7: Report Generator 통합)
+    
+    Args:
+        request: v9.1 분석 요청 (4필드 최소 입력)
+            - address: 주소
+            - land_area: 토지 면적
+            - land_appraisal_price: 토지 감정가
+            - zone_type: 용도지역
+        output_format: 출력 포맷 (pdf/html/both)
+        
+    Returns:
+        PDF or HTML report
+        
+    Process:
+        1. v9.1 Normalization Layer로 12개 필드 자동 계산
+        2. EngineOrchestratorV90으로 전체 분석 실행
+        3. AI Report Writer로 12-section 리포트 생성
+        4. PDF/HTML 렌더링
+        
+    Example:
+        >>> curl -X POST "http://localhost:8000/api/v9/generate-report" \\
+        ...   -H "Content-Type: application/json" \\
+        ...   -d '{
+        ...     "address": "서울특별시 마포구 월드컵북로 120",
+        ...     "land_area": 1000.0,
+        ...     "land_appraisal_price": 9000000,
+        ...     "zone_type": "제3종일반주거지역"
+        ...   }'
+    """
+    try:
+        from app.services_v9.pdf_renderer_v9_0 import ReportOrchestrator
+        from app.services_v9.orchestrator_v9_0 import EngineOrchestratorV90
+        from fastapi.responses import Response
+        
+        logger.info(f"📝 [v9.1] 리포트 생성 요청: {request.address}")
+        
+        # 1. Normalization Layer 초기화
+        norm_layer = _get_normalization_layer()
+        
+        # 2. v9.1 자동 입력 처리
+        logger.info(f"🔧 [v9.1] Normalization Layer v9.1 적용...")
+        
+        # 2.1 주소 → 좌표
+        address_info = None
+        if request.address:
+            address_info = await norm_layer.address_resolver.resolve_address(request.address)
+        
+        raw_input = {
+            "address": request.address,
+            "land_area": request.land_area,
+            "land_appraisal_price": request.land_appraisal_price,
+            "zone_type": request.zone_type
+        }
+        
+        auto_calculated = {}
+        
+        if address_info:
+            raw_input['latitude'] = address_info.latitude
+            raw_input['longitude'] = address_info.longitude
+            auto_calculated['latitude'] = address_info.latitude
+            auto_calculated['longitude'] = address_info.longitude
+        
+        # 2.2 용도지역 → BCR/FAR
+        zoning_standards = norm_layer.zoning_mapper.get_zoning_standards(request.zone_type)
+        if zoning_standards:
+            raw_input['building_coverage_ratio'] = zoning_standards.building_coverage_ratio
+            raw_input['floor_area_ratio'] = zoning_standards.floor_area_ratio
+            raw_input['height_limit'] = zoning_standards.height_limit
+            auto_calculated['building_coverage_ratio'] = zoning_standards.building_coverage_ratio
+            auto_calculated['floor_area_ratio'] = zoning_standards.floor_area_ratio
+        
+        # 2.3 세대수 자동 추정
+        bcr = raw_input.get('building_coverage_ratio', 50.0)
+        far = raw_input.get('floor_area_ratio', 300.0)
+        
+        estimation = norm_layer.unit_estimator.estimate_units(
+            land_area=request.land_area,
+            floor_area_ratio=far,
+            building_coverage_ratio=bcr,
+            zone_type=request.zone_type
+        )
+        
+        # CRITICAL FIX: Pass all estimated fields to raw_input
+        raw_input['unit_count'] = estimation.total_units
+        raw_input['total_gfa'] = estimation.total_gfa
+        raw_input['residential_gfa'] = estimation.residential_gfa
+        raw_input['estimated_floors'] = estimation.floors
+        raw_input['parking_spaces'] = estimation.parking_spaces
+        
+        auto_calculated['unit_count'] = estimation.total_units
+        auto_calculated['estimated_floors'] = estimation.floors
+        auto_calculated['parking_spaces'] = estimation.parking_spaces
+        auto_calculated['total_gfa'] = estimation.total_gfa
+        auto_calculated['residential_gfa'] = estimation.residential_gfa
+        
+        # 2.4 건축비 자동 추정
+        if '상업' in request.zone_type:
+            default_construction_cost = 3500000
+        elif '준주거' in request.zone_type:
+            default_construction_cost = 3000000
+        else:
+            default_construction_cost = 2800000
+        
+        raw_input['construction_cost_per_sqm'] = default_construction_cost
+        auto_calculated['construction_cost_per_sqm'] = default_construction_cost
+        
+        # 2.5 토지비 계산
+        total_land_cost = request.land_area * request.land_appraisal_price
+        raw_input['total_land_cost'] = total_land_cost
+        auto_calculated['total_land_cost'] = total_land_cost
+        
+        logger.info(
+            f"✅ [v9.1] 자동 계산 완료:\n"
+            f"   - 좌표: ({raw_input.get('latitude')}, {raw_input.get('longitude')})\n"
+            f"   - BCR/FAR: {raw_input.get('building_coverage_ratio')}/{raw_input.get('floor_area_ratio')}\n"
+            f"   - 세대수: {raw_input.get('unit_count')}세대\n"
+            f"   - 층수: {raw_input.get('estimated_floors')}층\n"
+            f"   - 주차: {raw_input.get('parking_spaces')}대"
+        )
+        
+        # 3. EngineOrchestratorV90으로 분석 실행
+        logger.info(f"🔍 [v9.1] 전체 분석 실행 (Financial/LH/Risk)...")
+        orchestrator = EngineOrchestratorV90()
+        analysis_output = await orchestrator.run_full_analysis(raw_input)
+        
+        logger.info(f"✅ [v9.1] 분석 완료: LH Score={analysis_output.get('lh_score', 'N/A')}")
+        
+        # 4. 리포트 생성
+        logger.info(f"📝 [v9.1] AI Report Writer로 리포트 생성...")
+        report_orchestrator = ReportOrchestrator(ai_provider="local", tone="professional")
+        result = report_orchestrator.generate_full_report(
+            analysis_output,
+            output_format=output_format
+        )
+        
+        logger.info(f"✅ [v9.1] 리포트 생성 완료: {result['report_id']}")
+        
+        # 5. 응답
+        if output_format == "pdf":
+            return Response(
+                content=result["pdf"],
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": f"attachment; filename=report_{result['report_id']}.pdf"
+                }
+            )
+        elif output_format == "html":
+            return Response(
+                content=result["html"],
+                media_type="text/html"
+            )
+        else:  # both
+            return {
+                "report_id": result["report_id"],
+                "pdf_size": len(result["pdf"]),
+                "html_size": len(result["html"]),
+                "auto_calculated_fields": auto_calculated,
+                "timestamp": datetime.utcnow().isoformat() + "Z"
+            }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[v9.1] 리포트 생성 오류: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"리포트 생성 중 오류가 발생했습니다: {str(e)}"
+        )

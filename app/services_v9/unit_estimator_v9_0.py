@@ -105,6 +105,30 @@ class UnitEstimatorV9:
         "84㎡": 0.1    # 10%
     }
     
+    # HIGH 6: Zone-based max floors and parking standards
+    ZONE_MAX_FLOORS = {
+        "제1종일반주거지역": 4,
+        "제2종일반주거지역": 7,
+        "제3종일반주거지역": 15,
+        "준주거지역": 20,
+        "중심상업지역": 30,
+        "일반상업지역": 20,
+        "근린상업지역": 15,
+        "준공업지역": 15
+    }
+    
+    # Parking standards by zone type (spaces per unit)
+    ZONE_PARKING_RATIOS = {
+        "제1종일반주거지역": 0.8,   # 0.8 spaces/unit
+        "제2종일반주거지역": 1.0,   # 1.0 spaces/unit
+        "제3종일반주거지역": 1.0,   # 1.0 spaces/unit
+        "준주거지역": 1.2,          # 1.2 spaces/unit
+        "중심상업지역": 1.5,        # 1.5 spaces/unit
+        "일반상업지역": 1.3,        # 1.3 spaces/unit
+        "근린상업지역": 1.2,        # 1.2 spaces/unit
+        "준공업지역": 1.1           # 1.1 spaces/unit
+    }
+    
     def __init__(self):
         """Initialize UnitEstimatorV9"""
         logger.info("✅ UnitEstimatorV9 initialized")
@@ -115,7 +139,8 @@ class UnitEstimatorV9:
         floor_area_ratio: float,
         building_coverage_ratio: float,
         unit_type_mix: Optional[Dict[str, float]] = None,
-        parking_ratio: float = 1.0
+        parking_ratio: float = 1.0,
+        zone_type: Optional[str] = None
     ) -> UnitEstimate:
         """
         자동 세대수 산정
@@ -138,6 +163,7 @@ class UnitEstimatorV9:
                     "84㎡": 0.1   # 10%
                 }
             parking_ratio: 주차 비율 (세대당 대수, 기본 1.0)
+            zone_type: 용도지역 (HIGH 6: Zone-based max floors and parking)
         
         Returns:
             UnitEstimate: 세대수 산정 결과
@@ -167,8 +193,14 @@ class UnitEstimatorV9:
             f"📊 세대수 자동 산정 시작\n"
             f"   대지면적: {land_area:.2f} m²\n"
             f"   용적률: {floor_area_ratio:.1f}%\n"
-            f"   건폐율: {building_coverage_ratio:.1f}%"
+            f"   건폐율: {building_coverage_ratio:.1f}%\n"
+            f"   용도지역: {zone_type if zone_type else 'Not specified'}"
         )
+        
+        # HIGH 6: Get zone-based parking ratio
+        if zone_type and zone_type in self.ZONE_PARKING_RATIOS:
+            parking_ratio = self.ZONE_PARKING_RATIOS[zone_type]
+            logger.info(f"   용도지역 기반 주차 비율: {parking_ratio} 대/세대")
         
         # 1. 연면적 계산
         total_gfa = land_area * (floor_area_ratio / 100.0)
@@ -202,11 +234,21 @@ class UnitEstimatorV9:
         
         logger.info(f"   ✅ 추정 세대수: {estimated_units}세대")
         
-        # 6. 층수 계산
+        # 6. 층수 계산 (HIGH 6: Apply zone-based max floors)
         if building_footprint > 0:
-            floors = int(total_gfa / building_footprint)
-            # 최소 2층, 최대 20층
-            floors = max(2, min(floors, 20))
+            calculated_floors = int(total_gfa / building_footprint)
+            # 최소 2층
+            floors = max(2, calculated_floors)
+            
+            # HIGH 6: Apply zone-based maximum floors
+            if zone_type and zone_type in self.ZONE_MAX_FLOORS:
+                max_floors = self.ZONE_MAX_FLOORS[zone_type]
+                if floors > max_floors:
+                    logger.info(f"   ⚠️ 층수 제한 적용: {floors}층 → {max_floors}층 (용도지역 기준)")
+                    floors = max_floors
+            else:
+                # 기본 최대 20층
+                floors = min(floors, 20)
         else:
             floors = 5  # 기본값
         

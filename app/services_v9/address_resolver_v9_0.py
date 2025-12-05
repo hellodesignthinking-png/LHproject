@@ -69,29 +69,34 @@ class AddressResolverV9:
         Environment Variables Required:
             - KAKAO_REST_API_KEY: Kakao REST API Key
         """
-        self.kakao_api_key = settings.KAKAO_REST_API_KEY
+        self.kakao_api_key = settings.kakao_rest_api_key
         self.base_url = "https://dapi.kakao.com/v2/local"
         
         if not self.kakao_api_key:
-            logger.error("❌ KAKAO_REST_API_KEY not found in settings")
-            raise ValueError("KAKAO_REST_API_KEY is required")
+            logger.error("❌ kakao_rest_api_key not found in settings")
+            raise ValueError("kakao_rest_api_key is required")
         
         logger.info("✅ AddressResolverV9 initialized")
     
     async def resolve_address(self, address: str) -> Optional[AddressInfo]:
         """
-        주소 정규화 및 좌표 획득
+        주소 정규화 및 좌표 획득 (HIGH 5: Enhanced with fallback strategies)
         
         Process:
         1. Kakao Local API "주소 검색" 호출
-        2. 응답에서 도로명/지번 주소 추출
-        3. 좌표 (위도/경도) 추출
-        4. 법정동 코드 추출
+        2. 실패 시 fallback 전략 적용:
+           - Strategy 1: 도로명 주소로 재시도
+           - Strategy 2: 지번 주소로 재시도
+           - Strategy 3: 키워드 검색으로 재시도
+        3. 응답에서 도로명/지번 주소 추출
+        4. 좌표 (위도/경도) 추출
+        5. 법정동 코드 추출
         
         Args:
-            address: 지번 또는 도로명 주소
+            address: 지번 또는 도로명 주소 (부분 주소 지원)
                 예: "서울 마포구 성산동 123-45"
                 예: "서울특별시 마포구 월드컵북로 120"
+                예: "성산동 123" (부분 주소)
         
         Returns:
             AddressInfo: 정규화된 주소 정보
@@ -102,7 +107,7 @@ class AddressResolverV9:
                 - legal_code: 법정동 코드
                 - administrative_district: 행정구역명
             
-            None: 주소를 찾을 수 없는 경우
+            None: 모든 전략 실패 시
         
         Raises:
             httpx.HTTPError: API 호출 실패
@@ -116,12 +121,45 @@ class AddressResolverV9:
             >>> print(result.latitude, result.longitude)
             37.564123 126.912345
         """
-        if not address or len(address.strip()) < 5:
+        if not address or len(address.strip()) < 3:  # Lowered threshold from 5 to 3
             logger.warning(f"⚠️ 주소가 너무 짧음: {address}")
             return None
         
+        # Normalize input
+        address = address.strip()
+        
+        # Strategy 1: Direct address search
+        result = await self._search_address_direct(address)
+        if result:
+            return result
+        
+        # Strategy 2: Try with keyword search (fallback)
+        logger.info(f"🔄 Fallback: Trying keyword search for: {address}")
+        result = await self._search_address_keyword(address)
+        if result:
+            return result
+        
+        # Strategy 3: Extract and retry with partial address
+        logger.info(f"🔄 Fallback: Trying partial address extraction: {address}")
+        result = await self._search_with_partial_address(address)
+        if result:
+            return result
+        
+        logger.error(f"❌ All search strategies failed for: {address}")
+        return None
+    
+    async def _search_address_direct(self, address: str) -> Optional[AddressInfo]:
+        """
+        Direct address search using Kakao Local API
+        
+        Args:
+            address: Full or partial address
+        
+        Returns:
+            AddressInfo or None
+        """
         try:
-            logger.info(f"📍 주소 검색 시작: {address}")
+            logger.info(f"📍 Direct address search: {address}")
             
             # Kakao Local API 호출
             async with httpx.AsyncClient() as client:
@@ -136,7 +174,7 @@ class AddressResolverV9:
             
             # 결과 검증
             if not data.get("documents"):
-                logger.warning(f"⚠️ 주소를 찾을 수 없음: {address}")
+                logger.warning(f"⚠️ No results found for: {address}")
                 return None
             
             # 첫 번째 결과 사용
@@ -190,8 +228,115 @@ class AddressResolverV9:
             logger.error(f"❌ Kakao API 호출 실패: {e}")
             return None
         
+        except httpx.HTTPError as e:
+            logger.error(f"❌ Direct search HTTP error: {e}")
+            return None
         except Exception as e:
-            logger.error(f"❌ 주소 검색 중 오류: {e}")
+            logger.error(f"❌ Direct search error: {e}")
+            return None
+    
+    async def _search_address_keyword(self, address: str) -> Optional[AddressInfo]:
+        """
+        Keyword-based address search (fallback strategy)
+        
+        Args:
+            address: Address string
+        
+        Returns:
+            AddressInfo or None
+        """
+        try:
+            logger.info(f"🔍 Keyword search: {address}")
+            
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"{self.base_url}/search/keyword.json",
+                    headers={"Authorization": f"KakaoAK {self.kakao_api_key}"},
+                    params={
+                        "query": address,
+                        "category_group_code": ""  # All categories
+                    },
+                    timeout=10.0
+                )
+                response.raise_for_status()
+                data = response.json()
+            
+            if not data.get("documents"):
+                return None
+            
+            # Use first result
+            doc = data["documents"][0]
+            
+            # Extract coordinates
+            x = float(doc.get("x", 0))  # longitude
+            y = float(doc.get("y", 0))  # latitude
+            
+            # Get addresses
+            road_address = doc.get("road_address_name", doc.get("address_name"))
+            parcel_address = doc.get("address_name")
+            
+            if not road_address or not parcel_address:
+                return None
+            
+            address_info = AddressInfo(
+                road_address=road_address,
+                parcel_address=parcel_address,
+                latitude=y,
+                longitude=x,
+                legal_code=None,  # Not available in keyword search
+                administrative_district=doc.get("address_name", "").split()[1] if len(doc.get("address_name", "").split()) > 1 else None
+            )
+            
+            logger.info(f"✅ Keyword search success: {address_info.road_address}")
+            return address_info
+        
+        except Exception as e:
+            logger.error(f"❌ Keyword search error: {e}")
+            return None
+    
+    async def _search_with_partial_address(self, address: str) -> Optional[AddressInfo]:
+        """
+        Extract partial address and retry (last resort fallback)
+        
+        Strategies:
+        - Remove building numbers: "123-45" → search without
+        - Extract district: "서울 마포구" and search
+        
+        Args:
+            address: Original address
+        
+        Returns:
+            AddressInfo or None
+        """
+        try:
+            import re
+            
+            # Strategy: Remove specific numbers (e.g., "123-45", "456")
+            # Keep only district/street names
+            parts = address.split()
+            
+            # Try removing last part if it looks like a number
+            if len(parts) > 2:
+                last_part = parts[-1]
+                if re.match(r'^\d+(-\d+)?$', last_part):  # Matches "123" or "123-45"
+                    partial_address = ' '.join(parts[:-1])
+                    logger.info(f"🔄 Trying without number: {partial_address}")
+                    result = await self._search_address_direct(partial_address)
+                    if result:
+                        return result
+            
+            # Strategy: Try first 2-3 parts (district level)
+            if len(parts) >= 3:
+                district_address = ' '.join(parts[:3])
+                logger.info(f"🔄 Trying district level: {district_address}")
+                result = await self._search_address_keyword(district_address)
+                if result:
+                    return result
+            
+            return None
+        
+        except Exception as e:
+            logger.error(f"❌ Partial address search error: {e}")
             return None
     
     async def reverse_geocode(
