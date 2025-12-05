@@ -492,57 +492,75 @@ async def generate_report_real(
             
             analysis_result = analysis_data.get('analysis_result', {})
             
-            # ZeroSite v11.0 HYBRID v2 Edition (v11 Complete + v7.5 Style Content Enhancement)
-            logger.info("   🚀 Using v11.0 HYBRID v2 Report Generator (Complete + Enhanced)")
+            # ============================================================
+            # 🎨 v7.5 DESIGN RESTORATION + v11.0 AI DATA
+            # ============================================================
+            # Strategy: Use v7.5's beautiful 60-page design with v11.0 AI intelligence
+            logger.info("   🎨 Using v7.5 FINAL Design + v11.0 AI Data")
             
-            # Step 1: Generate v11.0 Complete Report (with all AI engines)
-            from app.report_generator_v11_complete import generate_v11_ultra_pro_report
-            base_html_report = generate_v11_ultra_pro_report(
+            # Step 1: Run v11.0 AI Engines to get latest data
+            logger.info("   🤖 Running v11.0 AI Engines...")
+            from app.report_generator_v11_complete import run_v11_engines
+            
+            v11_engines_result = run_v11_engines(
                 address=request.address,
                 land_area=request.land_area,
                 land_appraisal_price=request.land_appraisal_price,
                 zone_type=request.zone_type,
                 analysis_result=analysis_result
             )
-            logger.info("   ✅ v11.0 Complete Base Report Generated (LH Score + Decision + Matrix)")
+            logger.info("   ✅ v11.0 AI Engines Complete")
             
-            # Step 2: Enhance with v7.5-style professional narratives
-            from app.content_enhancer_v11 import ContentEnhancerV11
-            from app.i18n.translator import translator
+            # Step 2: Convert v11.0 data to v7.5 format
+            logger.info("   🔄 Converting v11.0 data to v7.5 format...")
+            from app.adapters.v11_to_v75_adapter import convert_v11_analysis_to_v75_format
             
-            enhancer = ContentEnhancerV11()
+            v75_formatted_data = convert_v11_analysis_to_v75_format(
+                address=request.address,
+                land_area=request.land_area,
+                land_appraisal_price=request.land_appraisal_price,
+                zone_type=request.zone_type,
+                v11_analysis_result=v11_engines_result
+            )
+            logger.info("   ✅ v11.0 → v7.5 conversion complete")
             
-            # Prepare analysis data for enhancement
-            enhancement_data = {
-                'basic_info': {
-                    'address': request.address,
-                    'land_area': request.land_area,
-                    'zone_type': request.zone_type
-                },
-                'analysis_result': analysis_result
-            }
+            # Step 3: Generate v7.5 beautiful report with v11.0 data
+            logger.info("   🎨 Generating v7.5 FINAL Report (60-page design)...")
+            from app.services.lh_report_generator_v7_5_final import LHReportGeneratorV75Final
             
-            html_report = enhancer.enhance_report(
-                base_html=base_html_report,
-                analysis_data=enhancement_data
+            v75_generator = LHReportGeneratorV75Final()
+            v75_report_result = v75_generator.run(
+                option=4,  # Ultra-Professional
+                tone="administrative",
+                cover="black-minimal",
+                pages=60,
+                address=request.address,
+                land_area=request.land_area,
+                land_appraisal_price=request.land_appraisal_price,
+                data=v75_formatted_data
             )
             
-            # Step 3: Apply language translation if requested
+            if v75_report_result.get('success'):
+                html_report = v75_report_result['html']
+                logger.info("   ✅ v7.5 FINAL Report Generated Successfully")
+                logger.info(f"   📄 Report Size: {len(html_report):,} characters")
+                logger.info(f"   🎨 Design: v7.5 Ultra-Professional (60 pages)")
+                logger.info(f"   🤖 Data: v11.0 AI Engines (latest)")
+            else:
+                error_msg = v75_report_result.get('error', 'Unknown error')
+                logger.error(f"   ❌ v7.5 Report Generation Failed: {error_msg}")
+                raise Exception(f"v7.5 Report Generation Failed: {error_msg}")
+            
+            # Step 4: Apply language translation if requested
             language = getattr(request, 'language', 'ko')  # Default to Korean
             if language == 'en':
                 logger.info("   🌍 Translating to English...")
+                from app.i18n.translator import translator
                 html_report = translator.translate_report_html(html_report, language='en')
                 logger.info("   ✅ English translation complete")
             
-            # Calculate enhancement stats
-            original_size = len(base_html_report)
-            enhanced_size = len(html_report)
-            increase = enhanced_size - original_size
-            increase_pct = (increase / original_size * 100) if original_size > 0 else 0
-            
-            logger.info(f"   🎨 Content Enhanced: {original_size:,} → {enhanced_size:,} chars (+{increase:,}, +{increase_pct:.1f}%)")
             logger.info(f"   🌍 Language: {language.upper()}")
-            logger.info("   ✅ HYBRID v2 Report Complete (v11 Intelligence + v7.5 Narrative Style)")
+            logger.info("   ✅ v7.5 DESIGN + v11.0 DATA Report Complete!")
             
             logger.info("   ✅ 리포트 생성 완료")
             logger.info(f"   🔍 Output format 요청: '{output_format}'")
