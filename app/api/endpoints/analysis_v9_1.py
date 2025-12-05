@@ -345,7 +345,7 @@ async def estimate_units(request: EstimateUnitsRequest) -> EstimateUnitsResponse
                 logger.info(f"[v9.1 API] Auto-filled FAR: {far}%")
         
         # Estimate units
-        estimation: UnitEstimationResult = unit_estimator.estimate_units(
+        estimation: UnitEstimate = unit_estimator.estimate_units(
             land_area=request.land_area,
             floor_area_ratio=far,
             building_coverage_ratio=bcr,
@@ -354,16 +354,16 @@ async def estimate_units(request: EstimateUnitsRequest) -> EstimateUnitsResponse
         
         # Build response data
         response_data = {
-            "estimated_units": estimation.estimated_units,
+            "estimated_units": estimation.total_units,
             "total_gfa": round(estimation.total_gfa, 2),
             "residential_gfa": round(estimation.residential_gfa, 2),
-            "estimated_floors": estimation.estimated_floors,
+            "estimated_floors": estimation.floors,
             "parking_spaces": estimation.parking_spaces,
             "building_coverage_ratio": bcr,
             "floor_area_ratio": far
         }
         
-        logger.info(f"[v9.1 API] Unit estimation completed: {estimation.estimated_units} units")
+        logger.info(f"[v9.1 API] Unit estimation completed: {estimation.total_units} units")
         
         return EstimateUnitsResponse(
             success=True,
@@ -403,7 +403,7 @@ class ZoningStandardsResponse(BaseModel):
                     "zone_type_full": "제3종일반주거지역 (Type 3 General Residential Area)",
                     "building_coverage_ratio": 50.0,
                     "floor_area_ratio": 300.0,
-                    "height_limit": None,
+                    "max_height": None,
                     "parking_ratio": 1.0,
                     "description": "중·고층 공동주택 중심, 높은 용적률"
                 },
@@ -486,7 +486,7 @@ async def get_zoning_standards(zone_type: str) -> ZoningStandardsResponse:
             "zone_type_full": standards.zone_type_full,
             "building_coverage_ratio": standards.building_coverage_ratio,
             "floor_area_ratio": standards.floor_area_ratio,
-            "height_limit": standards.height_limit,
+            "max_height": standards.max_height,
             "parking_ratio": standards.parking_ratio,
             "description": standards.description
         }
@@ -718,9 +718,9 @@ async def analyze_land_v91(request: AnalyzeLandRequestV91) -> AnalyzeLandRespons
                     raw_input['floor_area_ratio'] = zoning_standards.floor_area_ratio
                     auto_calculated['floor_area_ratio'] = zoning_standards.floor_area_ratio
                 
-                if request.height_limit is None and zoning_standards.height_limit:
-                    raw_input['height_limit'] = zoning_standards.height_limit
-                    auto_calculated['height_limit'] = zoning_standards.height_limit
+                if request.height_limit is None and zoning_standards.max_height:
+                    raw_input['height_limit'] = zoning_standards.max_height
+                    auto_calculated['height_limit'] = zoning_standards.max_height
                 
                 logger.info(f"[v9.1 API] Auto-calculated standards: BCR={zoning_standards.building_coverage_ratio}%, FAR={zoning_standards.floor_area_ratio}%")
         
@@ -920,7 +920,7 @@ async def generate_report_v91(
         logger.info(f"📝 [v9.1] 리포트 생성 요청: {request.address}")
         
         # 1. Normalization Layer 초기화
-        norm_layer = _get_normalization_layer()
+        norm_layer = get_normalization_layer()
         
         # 2. v9.1 자동 입력 처리
         logger.info(f"🔧 [v9.1] Normalization Layer v9.1 적용...")
@@ -950,7 +950,9 @@ async def generate_report_v91(
         if zoning_standards:
             raw_input['building_coverage_ratio'] = zoning_standards.building_coverage_ratio
             raw_input['floor_area_ratio'] = zoning_standards.floor_area_ratio
-            raw_input['height_limit'] = zoning_standards.height_limit
+            if zoning_standards.max_height:
+                raw_input['height_limit'] = zoning_standards.max_height
+                auto_calculated['height_limit'] = zoning_standards.max_height
             auto_calculated['building_coverage_ratio'] = zoning_standards.building_coverage_ratio
             auto_calculated['floor_area_ratio'] = zoning_standards.floor_area_ratio
         
