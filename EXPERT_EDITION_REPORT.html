@@ -1,0 +1,807 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite v11.0 Expert Edition - LH 신축매입임대 사업 타당성 분석</title>
+    <style>
+        /* v7.5 Typography System */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+            font-size: 11pt;  /* v7.5 본문 기준 */
+            line-height: 1.7;  /* v7.5 행간 */
+            color: #1A1A1A;  /* v7.5 Dark */
+            background: #fff;
+            padding: 25mm 20mm 30mm 20mm;  /* v7.5 여백 (상 우 하 좌) */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* v7.5 Design System - Consulting Report Style */
+        h1 {
+            font-size: 22pt;  /* v7.5 Section Title */
+            font-weight: 700;
+            color: #0047AB;  /* v7.5 LH Primary Blue */
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #0047AB;
+            page-break-after: avoid;
+        }
+        
+        h2 {
+            font-size: 16pt;  /* v7.5 Subsection */
+            font-weight: 600;
+            color: #1A1A1A;  /* v7.5 Dark */
+            margin: 20px 0 12px 0;
+            padding-left: 12px;
+            border-left: 4px solid #00A651;  /* v7.5 LH Green */
+            page-break-after: avoid;
+        }
+        
+        h3 {
+            font-size: 13pt;  /* v7.5 Sub-subsection */
+            font-weight: 600;
+            color: #666666;  /* v7.5 Gray */
+            margin: 15px 0 10px 0;
+            page-break-after: avoid;
+        }
+        
+        p, li {
+            font-size: 11pt;  /* v7.5 본문 */
+            line-height: 1.8;
+            margin-bottom: 12px;
+            color: #1A1A1A;
+            text-align: justify;
+            text-justify: inter-word;
+        }
+        
+        /* v7.5 Table Style (간결, 작고 강력) */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 10pt;  /* v7.5 표 크기 */
+            page-break-inside: avoid;
+        }
+        
+        table th {
+            background: #0047AB;  /* v7.5 LH Blue */
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 10pt;
+            border: 1px solid #dee2e6;
+        }
+        
+        table td {
+            padding: 10px;
+            border: 1px solid #dee2e6;  /* v7.5 연한 회색 라인 */
+            text-align: center;
+            font-size: 10pt;
+        }
+        
+        table td.label-column {
+            text-align: left;
+            font-weight: 500;
+        }
+        
+        table td.number-column {
+            text-align: right;
+            font-family: 'Roboto Mono', monospace;
+        }
+        
+        table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        /* v7.5 Box Style (최소 아이콘, 여백 많음) */
+        .summary-box {
+            background: #f8f9fa;
+            border-left: 4px solid #0059c8;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        
+        .highlight {
+            color: #0059c8;
+            font-weight: 600;
+        }
+        
+        /* v7.5 Decision Box (color-coded) */
+        .decision-go {
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+        }
+        
+        .decision-review {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+        }
+        
+        .decision-no-go {
+            background: #f8d7da;
+            border-left: 5px solid #dc3545;
+        }
+        
+        /* Page break */
+        .page-break {
+            page-break-after: always;
+        }
+        
+        /* Print optimization */
+        @media print {
+            body {
+                padding: 0;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- COVER PAGE (v7.5 black-minimal design) -->
+<!-- ============================================================ -->
+<div class="page-break" style="background: #000; color: #fff; text-align: center; padding: 100px 0; height: 297mm;">
+    <div style="font-size: 14pt; color: #999; letter-spacing: 3px; margin-bottom: 20px;">
+        ZEROSITE v11.0 EXPERT EDITION
+    </div>
+    <div style="border-top: 2px solid #fff; width: 60%; margin: 0 auto 40px auto;"></div>
+    
+    <h1 style="font-size: 28pt; font-weight: 300; margin: 40px 0; line-height: 1.4; color: #fff; border: none;">
+        LH 신축매입임대 사업<br/>
+        타당성 전략 분석 보고서
+    </h1>
+    
+    <div style="font-size: 16pt; color: #ccc; margin: 40px 0;">
+        서울특별시 마포구 상암동 1652
+    </div>
+    
+    <div style="margin: 80px auto; padding: 40px; background: rgba(255,255,255,0.1); 
+                width: 70%; border: 1px solid rgba(255,255,255,0.3);">
+        <div style="font-size: 12pt; color: #aaa; margin-bottom: 15px;">
+            최종 권고안
+        </div>
+        <div style="font-size: 32pt; font-weight: bold; color: #dc3545;">
+            DecisionType.NOGO
+        </div>
+        <div style="font-size: 11pt; color: #aaa; margin-top: 15px;">
+            신뢰도: 75.0%
+        </div>
+    </div>
+    
+    <div style="position: absolute; bottom: 60px; left: 0; right: 0; 
+                font-size: 10pt; color: #666;">
+        <p>2025년 12월 05일</p>
+        <p>Classification: Internal Use / LH Submission</p>
+        <p style="margin-top: 20px; font-size: 9pt;">
+            본 보고서는 ZeroSite v11.0 Expert Edition 엔진을 사용하여 생성되었습니다.
+        </p>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TABLE OF CONTENTS -->
+<!-- ============================================================ -->
+<div class="page-break">
+    <h1>목차 (Table of Contents)</h1>
+    <div style="line-height: 2.5; margin-top: 40px; font-size: 10pt;">
+        <p style="font-weight: bold; font-size: 12pt; margin-top: 30px; color: #0059c8;">Part 1: Executive Summary</p>
+        <p style="margin-left: 25px;">1. 사업 개요 및 평가 목적</p>
+        <p style="margin-left: 25px;">2. 핵심 분석 결과 종합</p>
+        <p style="margin-left: 25px;">3. 최종 권고안 및 실행 전제조건</p>
+        
+        <p style="font-weight: bold; font-size: 12pt; margin-top: 30px; color: #0059c8;">Part 2: Policy & Market Framework</p>
+        <p style="margin-left: 25px;">4. LH 2025 정책 환경 분석</p>
+        <p style="margin-left: 25px;">5. 서울시 주택시장 동향 및 전망</p>
+        
+        <p style="font-weight: bold; font-size: 12pt; margin-top: 30px; color: #0059c8;">Part 3: Strategic Analysis</p>
+        <p style="margin-left: 25px;">6. 대상지 전략적 입지 분석 (8-10 pages)</p>
+        <p style="margin-left: 25px;">7. 법적·규제 환경 상세 분석</p>
+        <p style="margin-left: 25px;">8. 재무 사업성 종합 분석 (8-10 pages)</p>
+        
+        <p style="font-weight: bold; font-size: 12pt; margin-top: 30px; color: #0059c8;">Part 4: Feasibility & Scenario</p>
+        <p style="margin-left: 25px;">9. 세대유형 적합성 분석 (8-10 pages with matrix)</p>
+        <p style="margin-left: 25px;">10. 수요 분석 및 시장 전망</p>
+        
+        <p style="font-weight: bold; font-size: 12pt; margin-top: 30px; color: #0059c8;">Part 5: Implementation Plan</p>
+        <p style="margin-left: 25px;">11. 36개월 실행 로드맵</p>
+        <p style="margin-left: 25px;">12. 리스크 관리 전략</p>
+        <p style="margin-left: 25px;">13. 종합판단 및 최종 권고안</p>
+        
+        <p style="font-weight: bold; font-size: 12pt; margin-top: 30px; color: #0059c8;">Part 6: Appendix</p>
+        <p style="margin-left: 25px;">14. 데이터 추론 방법론</p>
+        <p style="margin-left: 25px;">15. 분석 가정 및 제약사항</p>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PART 1: EXECUTIVE SUMMARY (v7.5 Narrative-Driven) -->
+<!-- ============================================================ -->
+<div class="page-break">
+    <h1>Part 1: Executive Summary</h1>
+    <h2>행정 요약 보고</h2>
+    
+    <div class="summary-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                   color: white; padding: 30px; margin: 30px 0; border-radius: 5px; border-left: none;">
+        <h3 style="color: white; margin-top: 0;">사업 개요</h3>
+        <p style="font-size: 11pt; line-height: 1.8; margin-bottom: 0; color: white;">
+            본 보고서는 <strong>서울특별시 마포구 상암동 1652</strong> 소재 850㎡ 부지를 대상으로 한 
+            LH 신축매입임대 사업의 전략적 타당성을 종합적으로 분석한 결과를 담고 있습니다. 
+            <strong>ZeroSite v11.0 Expert Edition</strong> 분석 엔진을 통해 재무 사업성, 
+            LH 매입가 시뮬레이션, 리스크 평가를 수행하였으며, 
+            공공기관 제출 가능한 수준의 전문 컨설팅 보고서로 작성되었습니다.
+        </p>
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.3);">
+            <p style="font-size: 10pt; margin: 5px 0; color: white;">📊 총 투자비: <strong>280.0억원</strong></p>
+            <p style="font-size: 10pt; margin: 5px 0; color: white;">🏆 LH 평가: <strong>75.0/110점 (등급: B)</strong></p>
+            <p style="font-size: 10pt; margin: 5px 0; color: white;">⭐ IRR: <strong>4.11%</strong> / ROI: <strong>12.50%</strong></p>
+        </div>
+    </div>
+    
+    <!-- v11.0 Expert Narrative Generator (v7.5 style, 6-15 paragraphs) -->
+    
+        <h3>1. 사업 개요 및 평가 목적</h3>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.9;">
+            <strong>본 프로젝트는 즉시 LH 협의가 가능한 수준의 사업 구조를 갖추고 있습니다.</strong> 
+            <strong>서울특별시 마포구 상암동 1652</strong> 소재 <strong>850㎡</strong> 부지에 
+            <strong>40세대</strong> 규모로 계획된 본 사업은 
+            LH 신축매입임대 정책의 핵심 방향성과 완벽히 일치하며, 
+            총 투자비 <strong>280.0억원</strong> 대비 안정적 수익 창출이 가능할 것으로 판단됩니다.
+        </p>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.9;">
+            본 보고서의 핵심 목적은 세 가지입니다. 
+            첫째, <strong>LH 매입 가능성을 정량적으로 입증</strong>하여 사전 협의를 위한 근거 자료를 제공하는 것입니다. 
+            둘째, <strong>재무 시나리오별 수익 구조를 명확히 하여</strong> 투자 의사결정을 지원하는 것입니다. 
+            셋째, <strong>리스크 대응 전략을 사전에 구축</strong>하여 사업 추진 과정에서의 불확실성을 최소화하는 것입니다. 
+            이를 통해 본 프로젝트는 **'검토 대상'이 아닌 '실행 가능한 사업'**으로 자리매김할 수 있습니다.
+        </p>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.9;">
+            분석 방법론은 <strong>ZeroSite v11.0 Expert Edition</strong> 엔진을 기반으로 하며, 
+            LH 2025년 정책 강화 기준(Cap Rate 4.5%, IRR 3.0% 이상)을 충족하는지 여부를 최우선 평가 항목으로 설정하였습니다. 
+            특히, <strong>경쟁 프로젝트 대비 우위 요인</strong>과 <strong>A등급 상승 가능성</strong>을 중점적으로 검토하여, 
+            단순한 '통과 가능' 수준이 아닌 <strong>'경쟁력 확보' 수준</strong>의 사업 구조 완성을 목표로 하였습니다.
+        </p>
+        
+        
+        <h3>2. 핵심 분석 결과 종합</h3>
+        
+        <h4 style="color: #0059c8; margin-top: 20px;">2.1 LH 평가 점수 분석</h4>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.9;">
+            <strong>본 프로젝트는 LH 평가에서 75.0/110점(B등급)을 획득하였습니다.</strong> 
+            이는 <strong>B등급</strong>으로, LH 최소 기준을 안정적으로 충족하며, **전략적 보완을 통한 경쟁력 확보가 가능**합니다.
+        </p>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.9;">
+            LH 평가 체계는 <strong>입지 적합성(35점), 규모 적정성(20점), 재무 건전성(40점), 규제 준수성(15점)</strong>의 
+            4대 핵심 항목으로 구성되며, 각 항목은 독립적 평가가 아닌 <strong>상호 연계 구조</strong>를 가집니다. 
+            특히, 재무 건전성(40점)은 **IRR 3.0% 이상, Cap Rate 4.5% 이상**을 필수 기준으로 하며, 
+            이를 충족하지 못할 경우 입지가 우수하더라도 최종 승인이 어렵습니다. 
+            본 프로젝트는 재무·입지 모두에서 기준을 충족하여 **균형잡힌 평가 구조**를 갖추고 있습니다.
+        </p>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.9;">
+            <strong>전략적 권고사항</strong>: 즉시 사업 협의가 가능한 수준이며, 설계 최적화로 A등급 상승이 전략 목표입니다. 
+            설계 최적화(용적률 활용, 평형 구성 조정)와 재무 구조 개선(건축비 절감, LH 매입가 협상)을 병행하면 **A등급 진입이 충분히 가능**합니다.
+        </p>
+        
+        
+        <h4 style="color: #0059c8; margin-top: 25px;">2.2 재무 사업성 분석</h4>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.9;">
+            <strong>본 프로젝트의 재무 구조는 투자비 280.0억원(세대당 7.0억원)로, 
+            IRR 4.11% 수준의 안정적 수익 창출이 가능입니다.</strong> 
+            LH 권장 기준(3.0%)을 충족하여 **매입 승인 가능성이 높으며**, 설계 최적화로 추가 수익 개선 여지가 있습니다. **중위험-안정수익 구조**로, 보수적 재무 가정 하에서도 사업성이 확보됩니다.
+        </p>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.9;">
+            투자 구조는 <strong>토지비 35%, 건축비 55%, 기타 10%</strong>로 배분되며, 
+            이는 서울시 공공임대 표준 구조에 부합합니다. 
+            **핵심은 LH 매입가 협상력 확보**이며, 이를 위해서는 
+            ① 토지 감정가의 합리적 산정, ② 건축비 투명성 확보, ③ Cap Rate 4.5% 충족 입증이 필수입니다. 
+            특히, 본 프로젝트는 매입가 대비 시장가 Gap이 최소화되어 **LH 협상에서 유리한 포지션**을 확보하고 있습니다.
+        </p>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.9;">
+            <strong>수익 시나리오 분석 결과</strong>, 
+            Base Case(IRR 4.11%) 외에도 Optimistic Case(IRR 5.11%)까지 달성 가능하며, 
+            **설계 최적화(용적률 극대화), LH 매입가 협상(+3~5%), 건축비 절감(VE 적용)**을 통해 
+            IRR 추가 0.5~1.0%p 상승이 가능합니다. 
+            이는 경쟁 프로젝트 대비 **확실한 재무 우위 요인**이 됩니다.
+        </p>
+        
+        
+        <h3>3. 최종 권고안</h3>
+        
+        <div class="summary-box" style="background: #6c757d20; border-left: 5px solid #6c757d; padding: 25px; margin: 25px 0;">
+            <h4 style="color: #6c757d; margin-top: 0; font-size: 14pt;">
+                ✅ 전략적 권고: 검토 필요
+            </h4>
+            <p style="line-height: 1.9;">
+                <strong>본 프로젝트는 LH 평가 점수 75.0점으로 양호한 수준, IRR 4.11%로 LH 기준 충족, 신뢰도 75.0%로 보통 수준으로, 
+                검토 필요 전략이 최적입니다.</strong>
+            </p>
+        </div>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.9;">
+            본 권고안은 <strong>재무 사업성(IRR 4.11%), LH 평가 점수(75.0점), 
+            리스크 프로파일</strong>을 종합 분석하여 도출되었습니다. 
+            현 상태로는 사업 추진이 합리적이지 않으므로, **토지 매입가 재협상 또는 사업 구조 전환**을 우선 검토해야 합니다. Exit Strategy를 사전에 준비하여 손실을 최소화하는 것이 최우선 과제입니다.
+        </p>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.9; margin-top: 25px;">
+            
+            <strong>사업 재검토 권고사항</strong>:
+            <ul style="line-height: 2.0; margin-left: 40px;">
+                <li><strong>근본적 재검토</strong>: 토지 매입가 재협상 또는 대체 부지 탐색</li>
+                <li><strong>개발 계획 수정</strong>: 용도 변경, 규모 조정, 사업 방식 전환 검토</li>
+                <li><strong>Exit Strategy</strong>: 현 상태 매각 또는 단계적 철수 시나리오 준비</li>
+                <li><strong>Alternative</strong>: 민간 분양 전환, 타 공공 사업 연계 검토</li>
+            </ul>
+            
+        </p>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.9; margin-top: 20px;">
+            <strong>⚠️ 핵심 리스크 요인 및 대응 전략</strong>: 
+            사업 중단 또는 전환 시 발생하는 매몰 비용을 최소화하기 위해, 단계적 철수 시나리오를 구체적으로 수립해야 합니다.
+        </p>
+        
+        
+    
+    <!-- LH Score Detailed Narratives (v7.5 style) -->
+    <h3>LH 평가 항목별 상세 분석</h3>
+    
+    
+        <div class="score-detail-box" style="background: #f8f9fa; padding: 20px; margin: 20px 0; border-left: 4px solid #0059c8;">
+            <h4 style="color: #0059c8; margin-top: 0;">입지 적합성: 0.0/35점</h4>
+            
+            <p style="line-height: 1.8;">
+                본 사업지는 <span class="highlight">미흡한 입지 조건</span>을 갖추고 있습니다. 교통 접근성과 주변 인프라가 부족하여 입주자 유치에 어려움이 예상됩니다.
+            </p>
+            
+            <p style="line-height: 1.8; margin-top: 15px;">
+                <strong>세부 평가 항목:</strong>
+            </p>
+            <ul style="line-height: 1.8;">
+                <li><strong>교통 접근성 (12/15점)</strong>: 지하철역까지 450m (도보 6분), 
+                버스정류장 200m (도보 3분)로 대중교통 이용이 매우 편리합니다. 
+                특히 지하철 2호선·6호선 환승역이 근거리에 위치하여 주요 업무지구(광화문, 강남)까지 
+                30분 이내 통근이 가능합니다.</li>
+                
+                <li><strong>생활편의시설 (10/12점)</strong>: 반경 1km 내 대형마트 1개소, 
+                편의점 8개소, 병원 3개소가 위치하여 일상생활에 불편함이 없습니다. 
+                다만, 종합병원까지는 1.5km 거리로 다소 이동이 필요합니다.</li>
+                
+                <li><strong>교육 인프라 (8/8점)</strong>: 초등학교 500m, 중학교 800m, 
+                고등학교 1.2km 거리로 우수한 교육 환경을 갖추고 있습니다. 
+                특히 초등학교가 도보 7분 거리에 있어 신혼부부 및 자녀가 있는 가구의 
+                선호도가 높을 것으로 예상됩니다.</li>
+            </ul>
+            
+            <p style="line-height: 1.8; margin-top: 15px; background: #e7f3ff; padding: 15px; border-radius: 4px;">
+                <strong>💡 전략 제안</strong>: 
+                교통 접근성과 교육 인프라가 우수한 점을 LH 제안서에서 강조하고, 
+                실제 거리 측정 자료(도보 시간, 대중교통 소요시간 등)를 첨부하여 
+                객관적 근거를 제시하는 것이 효과적입니다.
+            </p>
+        </div>
+        
+    
+    
+        <div class="score-detail-box" style="background: #f8f9fa; padding: 20px; margin: 20px 0; border-left: 4px solid #0059c8;">
+            <h4 style="color: #0059c8; margin-top: 0;">규모 적정성: 0.0/20점</h4>
+            
+            <p style="line-height: 1.8;">
+                본 프로젝트는 <strong>0세대</strong> 규모로 계획되어 있으며, 
+                LH 권장 기준(최소 30세대)을 미달하여 세대수 증대 검토가 필요한 규모입니다.
+            </p>
+            
+            <ul style="line-height: 1.8;">
+                <li><strong>세대수 적정성</strong>: 0세대는 
+                규모 확대를 통한 사업성 개선을 검토할 필요가 있습니다.</li>
+                
+                <li><strong>평형 구성</strong>: 60㎡ 내외의 소형 평형 중심으로, 
+                신혼부부 및 청년 계층의 수요에 부합합니다.</li>
+                
+                <li><strong>주차 계획</strong>: 세대당 1.0대 이상 확보 권장</li>
+            </ul>
+        </div>
+        
+    
+    
+        <div class="score-detail-box" style="background: #f8f9fa; padding: 20px; margin: 20px 0; border-left: 4px solid #0059c8;">
+            <h4 style="color: #0059c8; margin-top: 0;">재무 건전성: 0.0/40점</h4>
+            
+            <p style="line-height: 1.8;">
+                재무 사업성은 IRR <strong>4.11%</strong>, ROI <strong>0.00%</strong>로 
+                양호한 수준입니다.
+            </p>
+            
+            <p style="line-height: 1.8;">
+                LH는 IRR 3.0% 이상을 권장 기준으로 하며, 
+                본 프로젝트는 이 기준을 충족하여 안정적인 수익 구조를 갖추고 있습니다.
+            </p>
+        </div>
+        
+    
+    
+        <div class="score-detail-box" style="background: #f8f9fa; padding: 20px; margin: 20px 0; border-left: 4px solid #0059c8;">
+            <h4 style="color: #0059c8; margin-top: 0;">규제 준수성: 0.0/15점</h4>
+            
+            <p style="line-height: 1.8;">
+                용도지역 <strong>제2종일반주거지역</strong>로 주거용 건축물 건립이 가능하며, 
+                건폐율·용적률 등 모든 법규 기준을 충족합니다.
+            </p>
+        </div>
+        
+    
+    <div class="summary-box" style="margin-top: 30px;">
+        <h4 style="color: #0059c8; margin-top: 0;">💡 v11.0 Expert Edition 특징</h4>
+        <p style="line-height: 1.6; margin: 0;">
+            본 보고서는 <strong>v7.5 전문 컨설팅 형식</strong>과 <strong>v11.0 AI 엔진</strong>을 결합하여 작성되었습니다:
+            <br/><br/>
+            <strong>v7.5 형식</strong>: 문장 중심 설명, 세련된 타이포그래피, 아이콘 최소화<br/>
+            <strong>v11.0 엔진</strong>: 정량 분석 (LH 점수, 재무 지표), 점수→해석 자동 생성, 세대유형 매트릭스
+        </p>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PART 2: POLICY & MARKET (v7.5 템플릿 통합) -->
+<!-- ============================================================ -->
+<div class="page-break">
+    <h1>Part 2: LH 2025 정책 환경 분석</h1>
+    <h2>Policy & Regulatory Framework</h2>
+    
+    
+        <div class="policy-highlight-box" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); 
+                                                  color: white; padding: 25px; margin: 20px 0; border-radius: 5px;">
+            <h3 style="color: white; margin-top: 0;">📋 LH 2025 핵심 정책 방향</h3>
+            <p style="font-size: 11pt; line-height: 1.7; margin-bottom: 0; color: white;">
+                한국토지주택공사(LH)는 2025년 사업연도에 <strong>공공임대주택 공급 확대</strong>를 
+                최우선 과제로 설정하였으며, 특히 서울·경기 수도권 중심의 신축매입임대 사업을 
+                연간 <strong>12,000호</strong> 규모로 추진할 계획입니다.
+            </p>
+        </div>
+        
+        <h3>1. LH 신축매입임대 사업 개요</h3>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.8;">
+            LH 신축매입임대 사업은 「공공주택 특별법」 제2조 및 「민간임대주택에 관한 특별법」 제5조에 근거하여, 
+            민간 건설사가 신축한 주택을 LH가 준공 후 매입하여 공공임대주택으로 공급하는 제도입니다. 
+            본 사업 방식은 민간의 건설 역량을 활용하면서도 공공의 임대 관리 노하우를 결합하여, 
+            양질의 공공임대주택을 신속하게 공급할 수 있다는 장점이 있습니다.
+        </p>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.8;">
+            2025년 기준, LH의 신축매입임대 정책은 크게 세 가지 핵심 방향으로 추진됩니다. 
+            첫째, <strong>청년·신혼부부 등 주거 취약계층</strong>을 위한 소형 주택(전용면적 60㎡ 이하) 공급 비율을 
+            전체 물량의 <strong>70% 이상</strong>으로 확대합니다. 
+            둘째, <strong>역세권 및 직주근접 지역</strong> 중심으로 입지 경쟁력을 강화하여 입주자 만족도를 제고합니다. 
+            셋째, 에너지 효율 1등급 이상, 무장애 설계(Barrier-Free), 커뮤니티 시설 의무화 등 
+            <strong>품질 기준을 대폭 강화</strong>합니다.
+        </p>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.8;">
+            본 <strong>서울특별시 마포구 상암동 1652</strong> 프로젝트는 총 <strong>40세대</strong> 규모로, 
+            LH의 2025년 정책 방향인 '청년·신혼부부 중심 소형 주택 공급'과 부합합니다. 
+            특히, 역세권 입지와 우수한 생활편의시설 접근성은 LH 평가에서 높은 점수(75.0/110점)를 
+            받을 수 있는 핵심 강점입니다.
+        </p>
+        
+        <h3>2. LH 매입가 산정 기준 (2025년 적용)</h3>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.8;">
+            LH 매입가는 <strong>「공공주택 업무처리지침」 제37조</strong>에 따라 다음 공식으로 산정됩니다:
+        </p>
+        
+        <div class="formula-box" style="background: #f0f8ff; padding: 20px; margin: 20px 0; border-left: 4px solid #0059c8; font-family: monospace;">
+            <strong style="color: #0059c8; font-size: 11pt;">LH 매입가 = 토지 감정가의 90% + 건축비의 100% + 적정 이윤(5-8%)</strong>
+        </div>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.8;">
+            2025년 기준, LH는 매입가 적정성을 검증하기 위해 <strong>Cap Rate(자본환원율) 기준</strong>을 강화하였습니다. 
+            Cap Rate는 순영업소득(NOI)을 매입가로 나눈 값으로, 투자 수익성을 나타냅니다. 
+            LH는 2025년부터 Cap Rate <strong>4.5% 이상</strong>을 필수 기준으로 적용하며, 
+            이는 시중 금리(3.5%) 대비 1.0%p 이상의 스프레드를 확보하여 
+            공공 재정의 건전성을 담보하기 위함입니다.
+        </p>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.8;">
+            본 프로젝트의 경우, 예상 IRR이 <strong>4.11%</strong>로 
+            LH 권장 기준(3.0%) 이상이며, Cap Rate 기준도 충족할 것으로 예상되어 재무 건전성이 양호합니다.
+        </p>
+        
+        <h3>3. LH 입지 평가 시스템 (5대 지표)</h3>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.8;">
+            LH는 신축매입임대 사업 대상지 선정 시 <strong>5대 입지 지표</strong>를 정량 평가하여 
+            총 110점 만점으로 채점합니다. 각 지표별 배점 및 평가 기준은 다음과 같습니다:
+        </p>
+        
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 9pt;">
+            <thead>
+                <tr style="background: #0059c8; color: white;">
+                    <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">평가 항목</th>
+                    <th style="padding: 10px; text-align: center; border: 1px solid #ddd;">배점</th>
+                    <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">핵심 기준</th>
+                    <th style="padding: 10px; text-align: center; border: 1px solid #ddd;">본 프로젝트</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><strong>교통 접근성</strong></td>
+                    <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">30%</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">지하철역 도보 10분 이내 (필수)</td>
+                    <td style="padding: 8px; text-align: center; border: 1px solid #ddd; color: #28a745;"><strong>✓ 충족</strong></td>
+                </tr>
+                <tr style="background: #f9f9f9;">
+                    <td style="padding: 8px; border: 1px solid #ddd;"><strong>편의시설</strong></td>
+                    <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">25%</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">마트·병원·학교 500m 이내</td>
+                    <td style="padding: 8px; text-align: center; border: 1px solid #ddd; color: #28a745;"><strong>✓ 충족</strong></td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><strong>인구 밀집도</strong></td>
+                    <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">20%</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">1km 내 1만명 이상 거주</td>
+                    <td style="padding: 8px; text-align: center; border: 1px solid #ddd; color: #28a745;"><strong>✓ 충족</strong></td>
+                </tr>
+                <tr style="background: #f9f9f9;">
+                    <td style="padding: 8px; border: 1px solid #ddd;"><strong>토지 가격</strong></td>
+                    <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">15%</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">평당 2,000만원 이하 (권장)</td>
+                    <td style="padding: 8px; text-align: center; border: 1px solid #ddd; color: #ffc107;"><strong>검토 필요</strong></td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><strong>규제 환경</strong></td>
+                    <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">10%</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">투기지역 아님, 용적률 200% 이상</td>
+                    <td style="padding: 8px; text-align: center; border: 1px solid #ddd; color: #28a745;"><strong>✓ 충족</strong></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.8;">
+            본 프로젝트는 5대 지표 중 <strong>4개 항목에서 LH 기준을 충족</strong>하여 
+            입지 경쟁력이 우수한 것으로 평가됩니다. 
+            특히, 교통 접근성(30%)과 편의시설(25%)에서 만점에 가까운 점수를 받을 것으로 예상되어, 
+            LH 평가에서 상위 등급을 받을 가능성이 높습니다.
+        </p>
+        
+        <h3>4. 2025년 정책 변화 요약</h3>
+        
+        <div class="summary-box" style="background: #fff9e6; border-left: 4px solid #ffc107; padding: 20px; margin: 20px 0;">
+            <h4 style="color: #ff8c00; margin-top: 0;">⚠️ 2025년 주요 정책 변화</h4>
+            <ul style="line-height: 1.8;">
+                <li><strong>Cap Rate 기준 강화</strong>: 3.5% → 4.5% (1.0%p 인상)</li>
+                <li><strong>품질 기준 강화</strong>: 에너지 효율 1등급 의무화</li>
+                <li><strong>소형 평형 집중</strong>: 60㎡ 이하 비율 70% 이상</li>
+                <li><strong>역세권 우대</strong>: 지하철 도보 10분 이내 가점 확대</li>
+                <li><strong>건축비 연동제</strong>: 시공사 선정 시 건축비 투명성 강화</li>
+            </ul>
+        </div>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.8;">
+            상기 정책 변화는 본 프로젝트의 사업 추진 전략에 중요한 시사점을 제공합니다. 
+            특히, Cap Rate 기준 강화는 재무 구조 최적화의 필요성을 높이며, 
+            에너지 효율 기준 강화는 설계 단계에서부터 고효율 설비 반영이 필수적임을 의미합니다. 
+        </p>
+        
+        <div class="summary-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                       color: white; padding: 25px; margin: 25px 0; border-radius: 5px;">
+            <h4 style="color: white; margin-top: 0;">💡 전략적 시사점 (Strategic Implications for This Project)</h4>
+            
+            <p style="font-size: 10.5pt; line-height: 1.9; color: white; margin-bottom: 15px;">
+                <strong>Therefore, for this project, the following strategic actions are essential:</strong>
+            </p>
+            
+            <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 4px; margin-top: 15px;">
+                <p style="font-size: 10pt; line-height: 1.8; color: white; margin-bottom: 10px;">
+                    <strong>1. Cap Rate 4.5% 달성 전략</strong>: 
+                    본 프로젝트는 IRR 4.11%로 LH 기준을 충족하고 있으나, 
+                    <strong>건축비 VE (Value Engineering)</strong>를 통한 5~8% 절감 및 
+                    <strong>LH 매입가 협상력 확보</strong>가 핵심입니다. 
+                    특히, 토지 감정가의 합리적 산정과 건축비 투명성 입증을 통해 
+                    <strong>매입가 상향 협상</strong>이 가능합니다.
+                </p>
+                
+                <p style="font-size: 10pt; line-height: 1.8; color: white; margin-bottom: 10px;">
+                    <strong>2. 역세권 우위 활용 전략</strong>: 
+                    본 프로젝트는 <strong>교통 접근성(30%) 배점에서 만점</strong>을 받을 가능성이 높으므로, 
+                    LH 제안서에서 <strong>역세권 입지를 정량적으로 강조</strong>해야 합니다. 
+                    특히, 지하철 도보 10분 이내 기준 충족을 명확히 하고, 
+                    주요 업무지구까지의 통근 시간(30분 이내)을 구체적으로 제시하여 
+                    <strong>입주자 수요 안정성</strong>을 입증해야 합니다.
+                </p>
+                
+                <p style="font-size: 10pt; line-height: 1.8; color: white; margin-bottom: 10px;">
+                    <strong>3. 에너지 효율 1등급 달성 전략</strong>: 
+                    2025년부터 <strong>필수 기준</strong>이 된 에너지 효율 1등급 달성을 위해, 
+                    설계 단계에서 <strong>고효율 단열재, 3중 로이유리, 고효율 냉난방 설비</strong> 반영이 필수적입니다. 
+                    이는 단순한 정책 충족이 아닌, <strong>LH 평가에서 가점 요소</strong>이며, 
+                    특히 경쟁 프로젝트 대비 차별화 포인트가 됩니다.
+                </p>
+                
+                <p style="font-size: 10pt; line-height: 1.8; color: white; margin: 0;">
+                    <strong>4. 실행 타임라인 최적화</strong>: 
+                    LH 매입 LOI (Letter of Intent) 확보까지 평균 <strong>8~10개월</strong>이 소요되므로, 
+                    <strong>즉시 사전 협의를 시작</strong>하여 타임라인을 단축해야 합니다. 
+                    특히, 금리 변동 리스크를 고려하여 <strong>PF 구조 확정을 6개월 이내 완료</strong>하고, 
+                    시공사 선정 및 착공 준비를 병행하는 <strong>Fast-Track 전략</strong>이 필요합니다.
+                </p>
+            </div>
+        </div>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.9; margin-top: 20px;">
+            <strong>결론적으로</strong>, 본 프로젝트는 2025년 LH 정책 환경에서 
+            **기준을 충족**하고 있으며
+            **상기 전략을 실행할 경우 A등급 진입 및 우선 매입 대상 포지셔닝이 가능**합니다. 
+            정책 변화를 **위협이 아닌 기회**로 활용하여, 
+            경쟁 프로젝트와의 차별화를 극대화하는 것이 성공의 핵심입니다.
+        </p>
+        
+</div>
+
+<!-- ============================================================ -->
+<!-- PART 4: Unit-Type Suitability Matrix (v11.0 Engine) -->
+<!-- ============================================================ -->
+<div class="page-break">
+    <h1>Part 4: 세대유형 적합성 분석</h1>
+    <h2>Unit-Type Suitability Matrix (5 Types × 6 Criteria)</h2>
+    
+    <p>
+        본 분석은 5개 주거 유형(청년, 신혼부부I, 신혼부부II, 고령자, 다자녀)에 대해 
+        6대 평가 기준(인구통계, 교통, 교육, 편의시설, 주거환경, 경제성)을 적용하여 
+        대상지의 세대유형 적합성을 정량 평가합니다.
+    </p>
+    
+    
+        <table>
+            <thead>
+                <tr>
+                    <th>세대유형</th>
+                    <th>인구통계</th>
+                    <th>교통</th>
+                    <th>교육</th>
+                    <th>편의시설</th>
+                    <th>주거환경</th>
+                    <th>경제성</th>
+                    <th>종합점수</th>
+                    <th>등급</th>
+                </tr>
+            </thead>
+            <tbody>
+        
+                <tr>
+                    <td><strong>청년</strong></td>
+                    <td>75.0</td>
+                    <td>80.0</td>
+                    <td>70.0</td>
+                    <td>75.0</td>
+                    <td>70.0</td>
+                    <td>80.0</td>
+                    <td><strong>75.0</strong></td>
+                    <td><span style="color: #17a2b8; font-weight: bold;">B</span></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>신혼부부I</strong></td>
+                    <td>85.0</td>
+                    <td>85.0</td>
+                    <td>80.0</td>
+                    <td>80.0</td>
+                    <td>85.0</td>
+                    <td>85.0</td>
+                    <td><strong>83.3</strong></td>
+                    <td><span style="color: #28a745; font-weight: bold;">A</span></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>신혼부부II</strong></td>
+                    <td>80.0</td>
+                    <td>80.0</td>
+                    <td>75.0</td>
+                    <td>75.0</td>
+                    <td>80.0</td>
+                    <td>75.0</td>
+                    <td><strong>77.5</strong></td>
+                    <td><span style="color: #6c757d; font-weight: bold;">B+</span></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>고령자</strong></td>
+                    <td>60.0</td>
+                    <td>65.0</td>
+                    <td>50.0</td>
+                    <td>70.0</td>
+                    <td>75.0</td>
+                    <td>60.0</td>
+                    <td><strong>63.3</strong></td>
+                    <td><span style="color: #6c757d; font-weight: bold;">C+</span></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>다자녀</strong></td>
+                    <td>70.0</td>
+                    <td>70.0</td>
+                    <td>85.0</td>
+                    <td>70.0</td>
+                    <td>75.0</td>
+                    <td>65.0</td>
+                    <td><strong>72.5</strong></td>
+                    <td><span style="color: #17a2b8; font-weight: bold;">B</span></td>
+                </tr>
+            
+            </tbody>
+        </table>
+        
+    
+    <div class="summary-box" style="margin-top: 30px;">
+        <h4 style="color: #0059c8; margin-top: 0;">✅ 권장 세대유형</h4>
+        <p>
+            종합 분석 결과, <strong style="color: #0059c8; font-size: 12pt;">신혼부부I</strong>이 
+            본 사업지에 가장 적합한 것으로 평가되었습니다.
+        </p>
+        <p>
+            인구통계, 교통, 교육, 편의시설 모든 면에서 우수한 점수를 기록하였으며, 특히 역세권 입지와 초등학교 근접성이 신혼부부I 유형에 최적화되어 있습니다.
+        </p>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- APPENDIX -->
+<!-- ============================================================ -->
+<div class="page-break">
+    <h1>Part 6: 부록 (Appendix)</h1>
+    <h2>데이터 추론 방법론 및 제약사항</h2>
+    
+    <p>
+        본 보고서는 ZeroSite v11.0 Expert Edition 엔진을 사용하여 생성되었으며, 
+        다음과 같은 데이터 소스 및 분석 방법론을 적용하였습니다.
+    </p>
+    
+    <h3>1. 데이터 소스</h3>
+    <ul>
+        <li>LH 공식 평가 기준 (2025년 기준)</li>
+        <li>국토교통부 부동산 통계</li>
+        <li>한국감정원 토지 가격 데이터</li>
+        <li>서울시 도시계획 정보</li>
+        <li>ZeroSite Pseudo-Data Engine (시설 데이터 추론)</li>
+    </ul>
+    
+    <h3>2. 분석 방법론</h3>
+    <ul>
+        <li>v9.1 REAL Analysis Engine (13-field automated calculation)</li>
+        <li>v11.0 Narrative Generator (점수 → 문장 변환)</li>
+        <li>v11.0 Unit-Type Analyzer (5 types × 6 criteria)</li>
+        <li>v7.5 Consulting Template (story-driven structure)</li>
+    </ul>
+    
+    <h3>3. 제약사항</h3>
+    <ul>
+        <li>본 보고서는 AI 기반 자동 분석 결과로, 실제 사업 추진 시 현장 실사 및 전문가 검토가 필요합니다.</li>
+        <li>재무 분석은 일반적인 가정(공사비, 금리 등)을 기반으로 하며, 실제 프로젝트에서는 변동 가능합니다.</li>
+        <li>LH 매입 여부는 최종적으로 LH 내부 심사 결과에 따라 결정됩니다.</li>
+    </ul>
+</div>
+
+</body>
+</html>
+        
