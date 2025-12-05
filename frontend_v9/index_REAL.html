@@ -104,9 +104,9 @@
                 <p id="errorMessage" class="text-red-700"></p>
             </div>
 
-            <!-- Results -->
-            <div id="results" class="hidden space-y-6">
-                <!-- Auto Calculated -->
+            <!-- Results (초기에는 완전히 숨김) -->
+            <div id="results" class="hidden space-y-6" style="display: none;">
+                <!-- Auto Calculated (분석 후에만 표시) -->
                 <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-lg p-6 result-card">
                     <h2 class="text-xl font-bold mb-4 text-gray-800">
                         ✨ 자동 계산된 필드 (13개)
@@ -316,8 +316,10 @@
                         (rec.confidence_level || 'N/A') + '%';
                 }
 
-                // Show results
-                document.getElementById('results').classList.remove('hidden');
+                // Show results (중요: hidden 클래스 제거 AND display 속성 변경)
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.classList.remove('hidden');
+                resultsDiv.style.display = 'block';  // 명시적으로 표시
                 
                 // Show report generation buttons
                 document.getElementById('generateReportBtn').classList.remove('hidden');
