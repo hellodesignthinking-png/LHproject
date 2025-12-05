@@ -10,7 +10,7 @@ Date: 2025-12-05
 Version: v9.1-REAL
 """
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, validator
 from typing import Optional, Dict, Any, List
@@ -425,7 +425,10 @@ async def analyze_land_real(request: AnalyzeLandRequestReal):
     description="4개 입력으로 12개 섹션 전문가 리포트 자동 생성 (HTML/PDF)",
     status_code=status.HTTP_200_OK
 )
-async def generate_report_real(request: AnalyzeLandRequestReal):
+async def generate_report_real(
+    request: AnalyzeLandRequestReal,
+    output_format: str = Query("html", description="출력 형식: html 또는 pdf")
+):
     """
     v9.1 REAL - 전문가 리포트 생성
     
@@ -488,7 +491,29 @@ async def generate_report_real(request: AnalyzeLandRequestReal):
             )
             
             logger.info("   ✅ 리포트 생성 완료")
+            logger.info(f"   🔍 Output format 요청: '{output_format}'")
             
+            # PDF 생성 요청 시
+            if output_format.lower() == "pdf":
+                try:
+                    logger.info("   📄 PDF 변환 시작...")
+                    pdf_bytes = _generate_pdf_from_html(html_report)
+                    logger.info(f"   ✅ PDF 생성 완료: {len(pdf_bytes)} bytes")
+                    
+                    from fastapi.responses import Response
+                    return Response(
+                        content=pdf_bytes,
+                        media_type="application/pdf",
+                        headers={
+                            "Content-Disposition": f"attachment; filename=ZeroSite_Report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                        }
+                    )
+                except Exception as pdf_error:
+                    logger.error(f"   ❌ PDF 생성 실패: {str(pdf_error)}")
+                    # PDF 실패 시 HTML로 fallback
+                    logger.info("   ⚠️ PDF 실패, HTML로 대체")
+            
+            # HTML 응답 (기본)
             return {
                 "ok": True,
                 "message": "v9.1 REAL 리포트 생성 완료",
@@ -528,6 +553,39 @@ async def generate_report_real(request: AnalyzeLandRequestReal):
         )
 
 
+def _generate_pdf_from_html(html_content: str) -> bytes:
+    """
+    HTML을 PDF로 변환 (Playwright 사용)
+    """
+    try:
+        from playwright.sync_api import sync_playwright
+        import tempfile
+        import os
+        
+        with sync_playwright() as p:
+            # Launch browser
+            browser = p.chromium.launch(headless=True)
+            page = browser.new_page()
+            
+            # Set content
+            page.set_content(html_content)
+            
+            # Generate PDF
+            pdf_bytes = page.pdf(
+                format='A4',
+                margin={'top': '2cm', 'right': '2cm', 'bottom': '2cm', 'left': '2cm'},
+                print_background=True
+            )
+            
+            browser.close()
+            
+        return pdf_bytes
+    except Exception as e:
+        logger.error(f"PDF 생성 실패: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise
+
+
 def _generate_html_report_simple(
     address: str,
     auto_calculated: Dict,
@@ -540,6 +598,20 @@ def _generate_html_report_simple(
     risk = analysis_result.get('risk_assessment', {})
     recommendation = analysis_result.get('final_recommendation', {})
     financial = analysis_result.get('financial_result', {})
+    
+    # Helper function for safe formatting
+    def safe_format_number(value, default='N/A', decimal=0):
+        if value is None or value == 'N/A':
+            return default
+        try:
+            if decimal > 0:
+                return f"{float(value):,.{decimal}f}"
+            return f"{float(value):,.0f}"
+        except (ValueError, TypeError):
+            return default
+    
+    def safe_value(value, default='N/A'):
+        return value if value is not None else default
     
     html = f"""
 <!DOCTYPE html>
@@ -658,15 +730,15 @@ def _generate_html_report_simple(
         </div>
         <div class="metric">
             <span class="label">대지면적</span>
-            <span class="value">{auto_calculated.get('land_area', 'N/A'):,.0f} m²</span>
+            <span class="value">{safe_format_number(auto_calculated.get('land_area'), 'N/A', 0)} m²</span>
         </div>
         <div class="metric">
             <span class="label">용도지역</span>
-            <span class="value">{auto_calculated.get('zone_type', 'N/A')}</span>
+            <span class="value">{safe_value(auto_calculated.get('zone_type'), 'N/A')}</span>
         </div>
         <div class="metric">
             <span class="label">위치 (위도, 경도)</span>
-            <span class="value">{auto_calculated.get('latitude', 'N/A'):.6f}, {auto_calculated.get('longitude', 'N/A'):.6f}</span>
+            <span class="value">{safe_format_number(auto_calculated.get('latitude'), 'N/A', 6)}, {safe_format_number(auto_calculated.get('longitude'), 'N/A', 6)}</span>
         </div>
     </div>
     
@@ -702,11 +774,11 @@ def _generate_html_report_simple(
         </div>
         <div class="metric">
             <span class="label">총 연면적</span>
-            <span class="value">{auto_calculated.get('total_gfa', 0):,.0f} m²</span>
+            <span class="value">{safe_format_number(auto_calculated.get('total_gfa'), '0', 0)} m²</span>
         </div>
         <div class="metric">
             <span class="label">주거 연면적</span>
-            <span class="value">{auto_calculated.get('residential_gfa', 0):,.0f} m²</span>
+            <span class="value">{safe_format_number(auto_calculated.get('residential_gfa'), '0', 0)} m²</span>
         </div>
     </div>
     
@@ -723,15 +795,15 @@ def _generate_html_report_simple(
         <h2>5. 재무 분석 (Financial Analysis)</h2>
         <div class="metric">
             <span class="label">총 투자비 (CAPEX)</span>
-            <span class="value">{financial.get('total_capex', 0):,.0f} 원</span>
+            <span class="value">{safe_format_number(financial.get('total_capex'), '0', 0)} 원</span>
         </div>
         <div class="metric">
             <span class="label">건축비</span>
-            <span class="value">{auto_calculated.get('total_construction_cost', 0):,.0f} 원</span>
+            <span class="value">{safe_format_number(auto_calculated.get('total_construction_cost'), '0', 0)} 원</span>
         </div>
         <div class="metric">
             <span class="label">토지비</span>
-            <span class="value">{auto_calculated.get('total_land_cost', 0):,.0f} 원</span>
+            <span class="value">{safe_format_number(auto_calculated.get('total_land_cost'), '0', 0)} 원</span>
         </div>
         <div class="metric">
             <span class="label">10년 IRR</span>
@@ -752,7 +824,7 @@ def _generate_html_report_simple(
                     'success' if risk.get('overall_risk_level') == 'LOW' 
                     else 'warning' if risk.get('overall_risk_level') == 'MEDIUM' 
                     else 'danger'
-                }">{risk.get('overall_risk_level', 'N/A')}</span>
+                }">{safe_value(risk.get('overall_risk_level'))}</span>
             </span>
         </div>
     </div>

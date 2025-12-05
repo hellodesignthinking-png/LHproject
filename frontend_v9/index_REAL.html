@@ -185,11 +185,15 @@
                         <div class="text-xl font-bold text-gray-800" id="confidence"></div>
                     </div>
                     
-                    <!-- Report Generation Button -->
-                    <div class="mt-6 text-center">
+                    <!-- Report Generation Buttons -->
+                    <div class="mt-6 text-center space-x-4">
                         <button id="generateReportBtn" 
                             class="hidden bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 px-8 rounded-lg transition duration-200 shadow-lg">
-                            📄 전문가 리포트 생성
+                            📄 HTML 리포트 보기
+                        </button>
+                        <button id="downloadPdfBtn" 
+                            class="hidden bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-bold py-3 px-8 rounded-lg transition duration-200 shadow-lg">
+                            📥 PDF 다운로드
                         </button>
                     </div>
                 </div>
@@ -276,8 +280,9 @@
                 // Show results
                 document.getElementById('results').classList.remove('hidden');
                 
-                // Show report generation button
+                // Show report generation buttons
                 document.getElementById('generateReportBtn').classList.remove('hidden');
+                document.getElementById('downloadPdfBtn').classList.remove('hidden');
                 
                 // Store last request for report generation
                 lastRequest = requestData;
@@ -292,7 +297,7 @@
             }
         });
         
-        // Report generation
+        // Report generation - HTML
         document.getElementById('generateReportBtn').addEventListener('click', async () => {
             if (!lastRequest) {
                 alert('먼저 토지 분석을 실행해주세요.');
@@ -304,9 +309,9 @@
             reportBtn.textContent = '📄 리포트 생성 중...';
             
             try {
-                console.log('Generating report for:', lastRequest);
+                console.log('Generating HTML report for:', lastRequest);
                 
-                const response = await fetch(REPORT_API_URL, {
+                const response = await fetch(REPORT_API_URL + '?output_format=html', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -334,6 +339,54 @@
             } finally {
                 reportBtn.disabled = false;
                 reportBtn.textContent = '📄 전문가 리포트 생성';
+            }
+        });
+    </script>
+</body>
+</html>
+
+            if (!lastRequest) {
+                alert('먼저 토지 분석을 실행해주세요.');
+                return;
+            }
+            
+            const pdfBtn = document.getElementById('downloadPdfBtn');
+            pdfBtn.disabled = true;
+            pdfBtn.textContent = '📥 PDF 생성 중...';
+            
+            try {
+                console.log('Generating PDF for:', lastRequest);
+                
+                const response = await fetch(REPORT_API_URL + '?output_format=pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(lastRequest)
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `ZeroSite_Report_${new Date().toISOString().slice(0,10)}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    
+                    alert('✅ PDF 다운로드 완료!');
+                } else {
+                    throw new Error('PDF 생성 실패');
+                }
+                
+            } catch (error) {
+                console.error('PDF generation error:', error);
+                alert('❌ PDF 생성 중 오류: ' + error.message);
+            } finally {
+                pdfBtn.disabled = false;
+                pdfBtn.textContent = '📥 PDF 다운로드';
             }
         });
     </script>
