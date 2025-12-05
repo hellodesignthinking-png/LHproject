@@ -500,11 +500,20 @@ async def generate_report_real(
             # Step 2: Enhance with v7.5-style professional narratives
             from app.content_enhancer_v11 import ContentEnhancerV11
             enhancer = ContentEnhancerV11()
+            
+            # Prepare analysis data for enhancement
+            enhancement_data = {
+                'basic_info': {
+                    'address': request.address,
+                    'land_area': request.land_area,
+                    'zone_type': request.zone_type
+                },
+                'analysis_result': analysis_result
+            }
+            
             html_report = enhancer.enhance_report(
-                base_report=base_html_report,
-                address=request.address,
-                land_area=request.land_area,
-                zone_type=request.zone_type
+                base_html=base_html_report,
+                analysis_data=enhancement_data
             )
             
             # Calculate enhancement stats
