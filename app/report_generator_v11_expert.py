@@ -316,44 +316,52 @@ class ReportGeneratorV11Expert:
         }}
         
         body {{
-            font-family: 'Noto Sans KR', sans-serif;
-            font-size: 9.5pt;  /* v7.5 작고 강력한 글자 */
-            line-height: 1.6;
-            color: #333;
+            font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+            font-size: 11pt;  /* v7.5 본문 기준 */
+            line-height: 1.7;  /* v7.5 행간 */
+            color: #1A1A1A;  /* v7.5 Dark */
             background: #fff;
-            padding: 20mm;
+            padding: 25mm 20mm 30mm 20mm;  /* v7.5 여백 (상 우 하 좌) */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }}
         
-        /* v7.5 Design System */
+        /* v7.5 Design System - Consulting Report Style */
         h1 {{
-            font-size: 18pt;
+            font-size: 22pt;  /* v7.5 Section Title */
             font-weight: 700;
-            color: #0059c8;  /* v7.5 Blue */
+            color: #0047AB;  /* v7.5 LH Primary Blue */
             margin-bottom: 20px;
-            border-bottom: 3px solid #0059c8;
-            padding-bottom: 10px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #0047AB;
+            page-break-after: avoid;
         }}
         
         h2 {{
-            font-size: 14pt;
+            font-size: 16pt;  /* v7.5 Subsection */
             font-weight: 600;
-            color: #0059c8;
-            margin: 25px 0 15px 0;
+            color: #1A1A1A;  /* v7.5 Dark */
+            margin: 20px 0 12px 0;
+            padding-left: 12px;
+            border-left: 4px solid #00A651;  /* v7.5 LH Green */
+            page-break-after: avoid;
         }}
         
         h3 {{
-            font-size: 11pt;
+            font-size: 13pt;  /* v7.5 Sub-subsection */
             font-weight: 600;
-            color: #333;
-            margin: 20px 0 10px 0;
+            color: #666666;  /* v7.5 Gray */
+            margin: 15px 0 10px 0;
+            page-break-after: avoid;
         }}
         
         p, li {{
-            font-size: 9.5pt;
+            font-size: 11pt;  /* v7.5 본문 */
             line-height: 1.8;
-            margin-bottom: 10px;
-            color: #333;
+            margin-bottom: 12px;
+            color: #1A1A1A;
             text-align: justify;
+            text-justify: inter-word;
         }}
         
         /* v7.5 Table Style (간결, 작고 강력) */
@@ -361,22 +369,35 @@ class ReportGeneratorV11Expert:
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
-            font-size: 8.5pt;  /* 표는 더 작게 */
+            font-size: 10pt;  /* v7.5 표 크기 */
+            page-break-inside: avoid;
         }}
         
         table th {{
-            background: #0059c8;
+            background: #0047AB;  /* v7.5 LH Blue */
             color: #fff;
-            padding: 8px;
-            text-align: left;
+            padding: 10px;
+            text-align: center;
             font-weight: 600;
-            font-size: 9pt;
+            font-size: 10pt;
+            border: 1px solid #dee2e6;
         }}
         
         table td {{
-            padding: 8px;
-            border: 1px solid #ddd;
-            font-size: 8.5pt;
+            padding: 10px;
+            border: 1px solid #dee2e6;  /* v7.5 연한 회색 라인 */
+            text-align: center;
+            font-size: 10pt;
+        }}
+        
+        table td.label-column {{
+            text-align: left;
+            font-weight: 500;
+        }}
+        
+        table td.number-column {{
+            text-align: right;
+            font-family: 'Roboto Mono', monospace;
         }}
         
         table tr:nth-child(even) {{
