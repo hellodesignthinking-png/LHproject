@@ -726,24 +726,66 @@ async def analyze_land_v91(request: AnalyzeLandRequestV91) -> AnalyzeLandRespons
                 
                 logger.info(f"[v9.1 API] Auto-calculated standards: BCR={zoning_standards.building_coverage_ratio}%, FAR={zoning_standards.floor_area_ratio}%")
         
-        # 1.3 Unit Count Estimation
+        # 1.3 Unit Count Estimation (CRITICAL FIX: Always calculate and pass to analysis)
+        # Get BCR/FAR (either from user input or auto-filled from zoning)
+        bcr = raw_input.get('building_coverage_ratio', 50.0)
+        far = raw_input.get('floor_area_ratio', 300.0)
+        
+        # Always estimate units, floors, parking (even if user provided unit_count)
+        estimation = norm_layer.unit_estimator.estimate_units(
+            land_area=request.land_area,
+            floor_area_ratio=far,
+            building_coverage_ratio=bcr,
+            zone_type=request.zone_type
+        )
+        
+        # CRITICAL FIX 1: Pass ALL estimated values to raw_input for Financial Engine
         if request.unit_count is None:
-            estimation = norm_layer.unit_estimator.estimate_units(
-                land_area=request.land_area,
-                floor_area_ratio=raw_input.get('floor_area_ratio', 300.0),
-                building_coverage_ratio=raw_input.get('building_coverage_ratio', 50.0),
-                zone_type=request.zone_type
-            )
             raw_input['unit_count'] = estimation.estimated_units
             auto_calculated['unit_count'] = estimation.estimated_units
-            auto_calculated['estimated_floors'] = estimation.estimated_floors
-            auto_calculated['parking_spaces'] = estimation.parking_spaces
-            auto_calculated['total_gfa'] = round(estimation.total_gfa, 2)
-            auto_calculated['residential_gfa'] = round(estimation.residential_gfa, 2)
-            logger.info(f"[v9.1 API] Auto-calculated units: {estimation.estimated_units} units, {estimation.estimated_floors} floors")
+        
+        # CRITICAL FIX 3: Pass GFA and other critical fields to Financial Engine
+        # These fields are REQUIRED by Financial Engine but were missing
+        raw_input['total_gfa'] = estimation.total_gfa
+        raw_input['residential_gfa'] = estimation.residential_gfa
+        raw_input['estimated_floors'] = estimation.estimated_floors
+        raw_input['parking_spaces'] = estimation.parking_spaces
+        
+        # Track all auto-calculated fields
+        auto_calculated['estimated_floors'] = estimation.estimated_floors
+        auto_calculated['parking_spaces'] = estimation.parking_spaces
+        auto_calculated['total_gfa'] = round(estimation.total_gfa, 2)
+        auto_calculated['residential_gfa'] = round(estimation.residential_gfa, 2)
+        
+        logger.info(f"[v9.1 API] Auto-calculated units: {estimation.estimated_units} units, {estimation.estimated_floors} floors")
+        logger.info(f"[v9.1 API] GFA calculations: total={estimation.total_gfa:.2f}m², residential={estimation.residential_gfa:.2f}m²")
+        
+        # CRITICAL FIX 2 & 3: Ensure all required fields for Financial Engine are present
+        # Add construction cost estimate if not provided
+        if 'construction_cost_per_sqm' not in raw_input or raw_input.get('construction_cost_per_sqm') is None:
+            # Use default construction cost based on zone type
+            if '상업' in request.zone_type:
+                default_construction_cost = 3500000  # 상업: 350만원/m²
+            elif '준주거' in request.zone_type:
+                default_construction_cost = 3000000  # 준주거: 300만원/m²
+            else:
+                default_construction_cost = 2800000  # 주거: 280만원/m²
+            
+            raw_input['construction_cost_per_sqm'] = default_construction_cost
+            auto_calculated['construction_cost_per_sqm'] = default_construction_cost
+            logger.info(f"[v9.1 API] Auto-set construction cost: {default_construction_cost:,}원/m²")
+        
+        # Calculate total land cost for Financial Engine
+        total_land_cost = request.land_area * request.land_appraisal_price
+        raw_input['total_land_cost'] = total_land_cost
+        auto_calculated['total_land_cost'] = total_land_cost
         
         # Step 2: Run full analysis using v9.0 orchestrator
-        logger.info("[v9.1 API] Step 2: Running full analysis pipeline...")
+        logger.info("[v9.1 API] Step 2: Running full analysis pipeline with auto-calculated fields...")
+        logger.info(f"[v9.1 API] Passing to orchestrator: unit_count={raw_input.get('unit_count')}, "
+                   f"total_gfa={raw_input.get('total_gfa'):.2f}, "
+                   f"construction_cost={raw_input.get('construction_cost_per_sqm', 0):,}")
+        
         orchestrator = EngineOrchestratorV90()
         
         analysis_result: StandardAnalysisOutput = await orchestrator.run_full_analysis(raw_input)
