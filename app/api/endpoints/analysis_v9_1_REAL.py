@@ -483,30 +483,17 @@ async def generate_report_real(
             
             analysis_result = analysis_data.get('analysis_result', {})
             
-            # ZeroSite v11.0 EXPERT EDITION 리포트 생성 (with v11.0 complete fallback)
-            try:
-                # v11.0 Expert Edition: v7.5 Form + v11.0 Engine + Strategic Narrative
-                from app.report_generator_v11_expert_api import generate_v11_expert_report
-                html_report = generate_v11_expert_report(
-                    address=request.address,
-                    land_area=request.land_area,
-                    land_appraisal_price=request.land_appraisal_price,
-                    zone_type=request.zone_type,
-                    analysis_result=analysis_result
-                )
-                logger.info("   ✅ v11.0 EXPERT EDITION Report Generator 사용 (v7.5 Form + v11.0 Engine)")
-            except Exception as v11_expert_error:
-                # Fallback to v11.0 Complete if Expert Edition fails
-                logger.warning(f"   ⚠️ v11.0 Expert Edition 실패 ({str(v11_expert_error)}), v11.0 Complete로 Fallback")
-                from app.report_generator_v11_complete import generate_v11_ultra_pro_report
-                html_report = generate_v11_ultra_pro_report(
-                    address=request.address,
-                    land_area=request.land_area,
-                    land_appraisal_price=request.land_appraisal_price,
-                    zone_type=request.zone_type,
-                    analysis_result=analysis_result
-                )
-                logger.info("   ✅ v10.0 Report Generator 사용 (Fallback)")
+            # ZeroSite v11.0 Complete Edition (with all v11.0 features)
+            logger.info("   🚀 Using v11.0 Complete Report Generator")
+            from app.report_generator_v11_complete import generate_v11_ultra_pro_report
+            html_report = generate_v11_ultra_pro_report(
+                address=request.address,
+                land_area=request.land_area,
+                land_appraisal_price=request.land_appraisal_price,
+                zone_type=request.zone_type,
+                analysis_result=analysis_result
+            )
+            logger.info("   ✅ v11.0 Complete Report Generated (LH Score Table + Decision + Matrix)")
             
             logger.info("   ✅ 리포트 생성 완료")
             logger.info(f"   🔍 Output format 요청: '{output_format}'")

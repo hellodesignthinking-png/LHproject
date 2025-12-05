@@ -951,7 +951,7 @@ def generate_v11_ultra_pro_report(
     v11_html = v11_html.replace("v9.1 + v7.5", "v9.1 + v10.0 + v11.0")
     
     # Inject LH Score Table after Part 6 header
-    part6_marker = '<div class="section-header">6.1 LH 평가 기준</div>'
+    part6_marker = '<div class="section-header">6.1 LH 평가 체계</div>'
     if part6_marker in v11_html:
         v11_html = v11_html.replace(
             part6_marker,
@@ -969,7 +969,7 @@ def generate_v11_ultra_pro_report(
         print("  ✅ Unit-Type Matrix injected into Part 4")
     
     # Inject Decision Result into Part 8
-    part8_marker = '<div class="section-header">8.1 최종 권고사항</div>'
+    part8_marker = '<div class="section-header">8.1 종합 의견</div>'
     if part8_marker in v11_html:
         v11_html = v11_html.replace(
             part8_marker,
