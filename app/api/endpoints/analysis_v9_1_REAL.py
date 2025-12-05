@@ -483,17 +483,38 @@ async def generate_report_real(
             
             analysis_result = analysis_data.get('analysis_result', {})
             
-            # ZeroSite v11.0 Complete Edition (with all v11.0 features)
-            logger.info("   🚀 Using v11.0 Complete Report Generator")
+            # ZeroSite v11.0 HYBRID v2 Edition (v11 Complete + v7.5 Style Content Enhancement)
+            logger.info("   🚀 Using v11.0 HYBRID v2 Report Generator (Complete + Enhanced)")
+            
+            # Step 1: Generate v11.0 Complete Report (with all AI engines)
             from app.report_generator_v11_complete import generate_v11_ultra_pro_report
-            html_report = generate_v11_ultra_pro_report(
+            base_html_report = generate_v11_ultra_pro_report(
                 address=request.address,
                 land_area=request.land_area,
                 land_appraisal_price=request.land_appraisal_price,
                 zone_type=request.zone_type,
                 analysis_result=analysis_result
             )
-            logger.info("   ✅ v11.0 Complete Report Generated (LH Score Table + Decision + Matrix)")
+            logger.info("   ✅ v11.0 Complete Base Report Generated (LH Score + Decision + Matrix)")
+            
+            # Step 2: Enhance with v7.5-style professional narratives
+            from app.content_enhancer_v11 import ContentEnhancerV11
+            enhancer = ContentEnhancerV11()
+            html_report = enhancer.enhance_report(
+                base_report=base_html_report,
+                address=request.address,
+                land_area=request.land_area,
+                zone_type=request.zone_type
+            )
+            
+            # Calculate enhancement stats
+            original_size = len(base_html_report)
+            enhanced_size = len(html_report)
+            increase = enhanced_size - original_size
+            increase_pct = (increase / original_size * 100) if original_size > 0 else 0
+            
+            logger.info(f"   🎨 Content Enhanced: {original_size:,} → {enhanced_size:,} chars (+{increase:,}, +{increase_pct:.1f}%)")
+            logger.info("   ✅ HYBRID v2 Report Complete (v11 Intelligence + v7.5 Narrative Style)")
             
             logger.info("   ✅ 리포트 생성 완료")
             logger.info(f"   🔍 Output format 요청: '{output_format}'")
