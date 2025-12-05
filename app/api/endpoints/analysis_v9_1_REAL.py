@@ -483,8 +483,9 @@ async def generate_report_real(
             
             analysis_result = analysis_data.get('analysis_result', {})
             
-            # 간단한 HTML 리포트 생성 (StandardAnalysisOutput 없이)
-            html_report = _generate_html_report_simple(
+            # ZeroSite v9.1 Ultra-Pro 전문가급 리포트 생성
+            from app.report_generator_v9_1_pro import generate_professional_report
+            html_report = generate_professional_report(
                 address=request.address,
                 auto_calculated=analysis_data.get('auto_calculated', {}),
                 analysis_result=analysis_result
@@ -592,7 +593,8 @@ def _generate_html_report_simple(
     analysis_result: Dict
 ) -> str:
     """
-    간단한 HTML 리포트 생성
+    ZeroSite v9.1 REAL - 전문가급 LH 신축매입임대 타당성 분석 보고서 생성
+    v7.5 구조 기반: 5개 파트, 14개 섹션
     """
     lh_scores = analysis_result.get('lh_scores', {})
     risk = analysis_result.get('risk_assessment', {})
