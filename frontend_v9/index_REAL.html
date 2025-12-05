@@ -79,6 +79,7 @@
                             <option value="일반상업지역">일반상업지역</option>
                             <option value="근린상업지역">근린상업지역</option>
                         </select>
+                        <div id="zone_info" class="mt-2 text-xs text-gray-600 hidden"></div>
                     </div>
 
                     <!-- Submit Button -->
@@ -205,6 +206,44 @@
         const API_URL = '/api/v9/real/analyze-land';
         const REPORT_API_URL = '/api/v9/real/generate-report';
         let lastRequest = null;
+
+        // 용도지역 정보 매핑
+        const ZONE_TYPE_INFO = {
+            "제1종일반주거지역": { bcr: "60%", far: "100-150%", floors: "3-4층", desc: "저층 주거 중심" },
+            "제2종일반주거지역": { bcr: "60%", far: "150-200%", floors: "5-7층", desc: "중층 주거 중심" },
+            "제3종일반주거지역": { bcr: "50%", far: "200-300%", floors: "7-15층", desc: "중고층 주거 중심" },
+            "준주거지역": { bcr: "60-70%", far: "400-500%", floors: "12-20층", desc: "주거+상업 복합" },
+            "중심상업지역": { bcr: "80%", far: "800-1500%", floors: "20-40층", desc: "고층 상업 중심" },
+            "일반상업지역": { bcr: "70-80%", far: "600-1300%", floors: "15-30층", desc: "상업 중심" },
+            "근린상업지역": { bcr: "60-70%", far: "400-900%", floors: "10-20층", desc: "근린 상업 중심" }
+        };
+
+        // 용도지역 선택 시 자동 정보 표시
+        document.getElementById('zone_type').addEventListener('change', function() {
+            const zoneType = this.value;
+            const zoneInfo = document.getElementById('zone_info');
+            
+            if (zoneType && ZONE_TYPE_INFO[zoneType]) {
+                const info = ZONE_TYPE_INFO[zoneType];
+                zoneInfo.innerHTML = `
+                    <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <div class="font-semibold text-blue-800 mb-1">📊 ${zoneType} 예상 기준:</div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div><span class="font-medium">건폐율:</span> ${info.bcr}</div>
+                            <div><span class="font-medium">용적률:</span> ${info.far}</div>
+                            <div><span class="font-medium">가능층수:</span> ${info.floors}</div>
+                            <div><span class="font-medium">특징:</span> ${info.desc}</div>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-600">
+                            ℹ️ 실제 값은 분석 시 자동으로 계산됩니다
+                        </div>
+                    </div>
+                `;
+                zoneInfo.classList.remove('hidden');
+            } else {
+                zoneInfo.classList.add('hidden');
+            }
+        });
 
         document.getElementById('analysisForm').addEventListener('submit', async (e) => {
             e.preventDefault();
