@@ -905,7 +905,59 @@ class ReportGeneratorV11Expert:
             상기 정책 변화는 본 프로젝트의 사업 추진 전략에 중요한 시사점을 제공합니다. 
             특히, Cap Rate 기준 강화는 재무 구조 최적화의 필요성을 높이며, 
             에너지 효율 기준 강화는 설계 단계에서부터 고효율 설비 반영이 필수적임을 의미합니다. 
-            본 보고서는 이러한 2025년 정책 환경을 충분히 반영하여 작성되었습니다.
+        </p>
+        
+        <div class="summary-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                       color: white; padding: 25px; margin: 25px 0; border-radius: 5px;">
+            <h4 style="color: white; margin-top: 0;">💡 전략적 시사점 (Strategic Implications for This Project)</h4>
+            
+            <p style="font-size: 10.5pt; line-height: 1.9; color: white; margin-bottom: 15px;">
+                <strong>Therefore, for this project, the following strategic actions are essential:</strong>
+            </p>
+            
+            <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 4px; margin-top: 15px;">
+                <p style="font-size: 10pt; line-height: 1.8; color: white; margin-bottom: 10px;">
+                    <strong>1. Cap Rate 4.5% 달성 전략</strong>: 
+                    {'본 프로젝트는 IRR ' + f'{irr:.2f}%로 LH 기준을 충족하고 있으나, ' if irr >= 3.0 else '본 프로젝트는 IRR ' + f'{irr:.2f}%로 재무 구조 개선이 필요하며, '}
+                    <strong>건축비 VE (Value Engineering)</strong>를 통한 5~8% 절감 및 
+                    <strong>LH 매입가 협상력 확보</strong>가 핵심입니다. 
+                    특히, 토지 감정가의 합리적 산정과 건축비 투명성 입증을 통해 
+                    <strong>매입가 상향 협상</strong>이 가능합니다.
+                </p>
+                
+                <p style="font-size: 10pt; line-height: 1.8; color: white; margin-bottom: 10px;">
+                    <strong>2. 역세권 우위 활용 전략</strong>: 
+                    본 프로젝트는 <strong>교통 접근성(30%) 배점에서 만점</strong>을 받을 가능성이 높으므로, 
+                    LH 제안서에서 <strong>역세권 입지를 정량적으로 강조</strong>해야 합니다. 
+                    특히, 지하철 도보 10분 이내 기준 충족을 명확히 하고, 
+                    주요 업무지구까지의 통근 시간(30분 이내)을 구체적으로 제시하여 
+                    <strong>입주자 수요 안정성</strong>을 입증해야 합니다.
+                </p>
+                
+                <p style="font-size: 10pt; line-height: 1.8; color: white; margin-bottom: 10px;">
+                    <strong>3. 에너지 효율 1등급 달성 전략</strong>: 
+                    2025년부터 <strong>필수 기준</strong>이 된 에너지 효율 1등급 달성을 위해, 
+                    설계 단계에서 <strong>고효율 단열재, 3중 로이유리, 고효율 냉난방 설비</strong> 반영이 필수적입니다. 
+                    이는 단순한 정책 충족이 아닌, <strong>LH 평가에서 가점 요소</strong>이며, 
+                    특히 경쟁 프로젝트 대비 차별화 포인트가 됩니다.
+                </p>
+                
+                <p style="font-size: 10pt; line-height: 1.8; color: white; margin: 0;">
+                    <strong>4. 실행 타임라인 최적화</strong>: 
+                    LH 매입 LOI (Letter of Intent) 확보까지 평균 <strong>8~10개월</strong>이 소요되므로, 
+                    <strong>즉시 사전 협의를 시작</strong>하여 타임라인을 단축해야 합니다. 
+                    특히, 금리 변동 리스크를 고려하여 <strong>PF 구조 확정을 6개월 이내 완료</strong>하고, 
+                    시공사 선정 및 착공 준비를 병행하는 <strong>Fast-Track 전략</strong>이 필요합니다.
+                </p>
+            </div>
+        </div>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.9; margin-top: 20px;">
+            <strong>결론적으로</strong>, 본 프로젝트는 2025년 LH 정책 환경에서 
+            {'**강력한 경쟁력**을 보유하고 있으며' if lh_score >= 80 else '**기준을 충족**하고 있으며'}
+            {'**상기 전략을 실행할 경우 A등급 진입 및 우선 매입 대상 포지셔닝이 가능**합니다.' if lh_score >= 70 else '**상기 전략을 통한 사업성 개선이 가능**합니다.'} 
+            정책 변화를 **위협이 아닌 기회**로 활용하여, 
+            경쟁 프로젝트와의 차별화를 극대화하는 것이 성공의 핵심입니다.
         </p>
         """
         
