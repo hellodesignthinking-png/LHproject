@@ -1,0 +1,40 @@
+{
+  "notice_id": "2025-005",
+  "title": "2025년 전세임대 신축매입임대 사업 통합 공모",
+  "notice_date": "2025-05-01",
+  "application_deadline": "2025-06-30",
+  "regions": ["서울특별시", "경기도", "인천광역시", "부산광역시", "대구광역시"],
+  "unit_types": {
+    "secure_jeonse": {
+      "min_units": 100,
+      "max_units": 300,
+      "target_ratio": 0.5
+    },
+    "youth": {
+      "min_units": 50,
+      "max_units": 100,
+      "target_ratio": 0.3
+    },
+    "newlywed_2": {
+      "min_units": 30,
+      "max_units": 70,
+      "target_ratio": 0.2
+    }
+  },
+  "location_requirements": {
+    "school_distance": 400,
+    "hospital_distance": 600,
+    "station_distance": 1000,
+    "convenience_distance": 350,
+    "park_distance": 500
+  },
+  "scoring_weights": {
+    "location": 30,
+    "scale": 25,
+    "business": 25,
+    "regulation": 20
+  },
+  "minimum_score": 290,
+  "recommended_score": 320,
+  "extracted_text": "2025년 전세임대 신축매입임대 사업 통합 공모\n\n공모 개요:\n- 접수 기간: 2025년 5월 1일 ~ 6월 30일\n- 대상 지역: 서울, 경기, 인천, 부산, 대구\n- 최소 점수: 290점 이상\n\n세부 유형별 기준:\n1. 전세임대: 100~300호 (50%)\n2. 청년주택: 50~100호 (30%)\n3. 신혼희망타운 II: 30~70호 (20%)\n\nPOI 기준:\n- 학교: 400m 이내\n- 병원: 600m 이내\n- 지하철역: 1,000m 이내\n- 편의시설: 350m 이내\n- 공원: 500m 이내"
+}

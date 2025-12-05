@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  zerosite:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: zerosite:v7.1
+    container_name: zerosite-app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - ENV=production
+      - DEBUG=false
+      - KAKAO_REST_API_KEY=${KAKAO_REST_API_KEY}
+      - LAND_REGULATION_API_KEY=${LAND_REGULATION_API_KEY}
+      - MOIS_API_KEY=${MOIS_API_KEY}
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    networks:
+      - zerosite-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  nginx:
+    image: nginx:alpine
+    container_name: zerosite-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    networks:
+      - zerosite-network
+    depends_on:
+      - zerosite
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  zerosite-network:
+    driver: bridge

@@ -1,0 +1,159 @@
+{
+  "address_resolver": [
+    {
+      "input_address": "서울 마포구 성산동 123-45",
+      "status": "FAILED"
+    },
+    {
+      "input_address": "서울특별시 강남구 테헤란로 123",
+      "road_address": "서울 강남구 테헤란로 123",
+      "parcel_address": "서울 강남구 역삼동 648-23",
+      "latitude": 37.4995539438207,
+      "longitude": 127.031393491745,
+      "legal_code": "1168010100",
+      "status": "SUCCESS"
+    },
+    {
+      "input_address": "서울 송파구 잠실동 123",
+      "road_address": "서울 송파구 올림픽로 49",
+      "parcel_address": "서울 송파구 잠실동 123",
+      "latitude": 37.5115521283839,
+      "longitude": 127.076907018584,
+      "legal_code": "1171010100",
+      "status": "SUCCESS"
+    }
+  ],
+  "zoning_mapper": [
+    {
+      "input_zone": "제3종일반주거지역",
+      "zone_type": "제3종일반주거지역",
+      "building_coverage_ratio": 50.0,
+      "floor_area_ratio": 300.0,
+      "parking_ratio": 1.0,
+      "description": "중고층 주택 위주 지역",
+      "status": "SUCCESS"
+    },
+    {
+      "input_zone": "3종일반",
+      "zone_type": "제3종일반주거지역",
+      "building_coverage_ratio": 50.0,
+      "floor_area_ratio": 300.0,
+      "parking_ratio": 1.0,
+      "description": "중고층 주택 위주 지역",
+      "status": "SUCCESS"
+    },
+    {
+      "input_zone": "준주거지역",
+      "zone_type": "준주거지역",
+      "building_coverage_ratio": 70.0,
+      "floor_area_ratio": 500.0,
+      "parking_ratio": 1.0,
+      "description": "주거 + 상업/업무 복합 지역",
+      "status": "SUCCESS"
+    },
+    {
+      "input_zone": "중심상업지역",
+      "zone_type": "중심상업지역",
+      "building_coverage_ratio": 90.0,
+      "floor_area_ratio": 1500.0,
+      "parking_ratio": 0.5,
+      "description": "도심/부도심 중심 상업 지역",
+      "status": "SUCCESS"
+    },
+    {
+      "input_zone": "준공업지역",
+      "zone_type": "준공업지역",
+      "building_coverage_ratio": 70.0,
+      "floor_area_ratio": 400.0,
+      "parking_ratio": 0.5,
+      "description": "경공업 및 주거/상업 복합 가능",
+      "status": "SUCCESS"
+    }
+  ],
+  "unit_estimator": [
+    {
+      "test_case": "중규모 제3종일반주거지역",
+      "input": {
+        "name": "중규모 제3종일반주거지역",
+        "land_area": 1000.0,
+        "floor_area_ratio": 300.0,
+        "building_coverage_ratio": 50.0
+      },
+      "total_units": 42,
+      "total_gfa": 3000.0,
+      "residential_gfa": 2550.0,
+      "floors": 6,
+      "units_per_floor": 7,
+      "parking_spaces": 42,
+      "unit_type_distribution": {
+        "59㎡": 25,
+        "74㎡": 12,
+        "84㎡": 5
+      },
+      "status": "SUCCESS"
+    },
+    {
+      "test_case": "소규모 제2종일반주거지역",
+      "input": {
+        "name": "소규모 제2종일반주거지역",
+        "land_area": 660.0,
+        "floor_area_ratio": 250.0,
+        "building_coverage_ratio": 60.0
+      },
+      "total_units": 23,
+      "total_gfa": 1650.0,
+      "residential_gfa": 1402.5,
+      "floors": 4,
+      "units_per_floor": 5,
+      "parking_spaces": 23,
+      "unit_type_distribution": {
+        "59㎡": 13,
+        "74㎡": 6,
+        "84㎡": 4
+      },
+      "status": "SUCCESS"
+    },
+    {
+      "test_case": "대규모 준주거지역",
+      "input": {
+        "name": "대규모 준주거지역",
+        "land_area": 2000.0,
+        "floor_area_ratio": 500.0,
+        "building_coverage_ratio": 70.0
+      },
+      "total_units": 141,
+      "total_gfa": 10000.0,
+      "residential_gfa": 8500.0,
+      "floors": 7,
+      "units_per_floor": 20,
+      "parking_spaces": 141,
+      "unit_type_distribution": {
+        "59㎡": 84,
+        "74㎡": 42,
+        "84㎡": 15
+      },
+      "status": "SUCCESS"
+    }
+  ],
+  "integrated_flow": {
+    "input": {
+      "address": "서울특별시 강남구 테헤란로 123",
+      "land_area": 1000.0,
+      "zone_type": "제3종일반주거지역",
+      "total_land_price": 5000000000.0
+    },
+    "auto_calculated": {
+      "latitude": 37.4995539438207,
+      "longitude": 127.031393491745,
+      "road_address": "서울 강남구 테헤란로 123",
+      "building_coverage_ratio": 50.0,
+      "floor_area_ratio": 300.0,
+      "parking_ratio": 1.0,
+      "unit_count": 42,
+      "floors": 6,
+      "parking_spaces": 42,
+      "total_gfa": 3000.0
+    },
+    "status": "SUCCESS"
+  }
+}

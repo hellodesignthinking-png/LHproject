@@ -1,0 +1,246 @@
+{
+  "version": "2024",
+  "effective_date": "2024-01-01",
+  "description": "LH 신축매입임대 기준 (2024년 버전)",
+  
+  "housing_types": {
+    "청년": {
+      "target": "만 19~39세 무주택 청년",
+      "size_range": {"min": 12, "max": 30},
+      "rent_rate": {"min": 60, "max": 80},
+      "period_years": 6,
+      "parking_ratio": 0.5,
+      "floor_height": 2.3,
+      "construction_cost_per_sqm": 280,
+      "demand_weights": {
+        "subway_distance": 30,
+        "university_distance": 30,
+        "youth_ratio": 25,
+        "rent_price": 10,
+        "existing_supply": 5
+      }
+    },
+    "신혼·신생아 I": {
+      "target": "혼인 7년 이내 무주택 신혼부부 (자녀 없음)",
+      "size_range": {"min": 36, "max": 45},
+      "rent_rate": {"min": 70, "max": 85},
+      "period_years": 6,
+      "parking_ratio": 0.7,
+      "floor_height": 2.3,
+      "construction_cost_per_sqm": 300,
+      "demand_weights": {
+        "subway_distance": 25,
+        "university_distance": 10,
+        "youth_ratio": 15,
+        "rent_price": 35,
+        "existing_supply": 15
+      }
+    },
+    "신혼·신생아 II": {
+      "target": "혼인 7년 이내 무주택 신혼부부 (자녀 1명 이상)",
+      "size_range": {"min": 46, "max": 55},
+      "rent_rate": {"min": 70, "max": 85},
+      "period_years": 10,
+      "parking_ratio": 0.8,
+      "floor_height": 2.3,
+      "construction_cost_per_sqm": 310,
+      "demand_weights": {
+        "subway_distance": 20,
+        "university_distance": 5,
+        "youth_ratio": 10,
+        "rent_price": 40,
+        "existing_supply": 25
+      }
+    },
+    "다자녀": {
+      "target": "미성년 자녀 3명 이상 무주택 가구",
+      "size_range": {"min": 56, "max": 65},
+      "rent_rate": {"min": 65, "max": 80},
+      "period_years": 20,
+      "parking_ratio": 1.0,
+      "floor_height": 2.4,
+      "construction_cost_per_sqm": 320,
+      "demand_weights": {
+        "subway_distance": 15,
+        "university_distance": 5,
+        "youth_ratio": 5,
+        "rent_price": 45,
+        "existing_supply": 30
+      }
+    },
+    "고령자": {
+      "target": "만 65세 이상 무주택 고령자",
+      "size_range": {"min": 30, "max": 40},
+      "rent_rate": {"min": 70, "max": 80},
+      "period_years": 20,
+      "parking_ratio": 0.3,
+      "floor_height": 2.5,
+      "construction_cost_per_sqm": 320,
+      "demand_weights": {
+        "subway_distance": 10,
+        "university_distance": 0,
+        "youth_ratio": 0,
+        "rent_price": 50,
+        "existing_supply": 40
+      }
+    },
+    "일반": {
+      "target": "일반 무주택 가구",
+      "size_range": {"min": 30, "max": 60},
+      "rent_rate": {"min": 70, "max": 90},
+      "period_years": 10,
+      "parking_ratio": 0.6,
+      "floor_height": 2.3,
+      "construction_cost_per_sqm": 300,
+      "demand_weights": {
+        "subway_distance": 20,
+        "university_distance": 5,
+        "youth_ratio": 10,
+        "rent_price": 40,
+        "existing_supply": 25
+      }
+    },
+    "든든전세": {
+      "target": "전세보증보험 연동 유형 (청년·신혼 대상)",
+      "size_range": {"min": 30, "max": 55},
+      "rent_rate": {"min": 70, "max": 85},
+      "period_years": 10,
+      "parking_ratio": 0.7,
+      "floor_height": 2.3,
+      "construction_cost_per_sqm": 300,
+      "demand_weights": {
+        "subway_distance": 25,
+        "university_distance": 15,
+        "youth_ratio": 20,
+        "rent_price": 30,
+        "existing_supply": 10
+      }
+    }
+  },
+  
+  "checklist_criteria": {
+    "location": [
+      {
+        "item": "지하철역 접근성",
+        "standard": "800m 이내 우수",
+        "thresholds": {"excellent": 800, "good": 1500, "poor": 9999},
+        "weight": 1.0
+      },
+      {
+        "item": "생활편의시설",
+        "standard": "70점 이상",
+        "thresholds": {"excellent": 70, "good": 50, "poor": 0},
+        "weight": 1.0
+      },
+      {
+        "item": "유해시설 이격",
+        "standard": "주유소 25m, 기타 50m 이내 금지",
+        "critical_distance": 25,
+        "warning_distance": 50,
+        "weight": 1.5
+      },
+      {
+        "item": "학교 접근성",
+        "standard": "500m 이내 우수",
+        "thresholds": {"excellent": 500, "good": 1000, "poor": 9999},
+        "weight": 0.8
+      }
+    ],
+    "scale": [
+      {
+        "item": "세대수",
+        "standard": "30세대 이상",
+        "thresholds": {"excellent": 50, "good": 30, "poor": 0},
+        "weight": 1.2
+      },
+      {
+        "item": "주차대수",
+        "standard": "세대당 0.5대 이상",
+        "thresholds": {"excellent": 0.7, "good": 0.5, "poor": 0},
+        "weight": 1.0
+      },
+      {
+        "item": "층수",
+        "standard": "5~15층 적정",
+        "thresholds": {"min": 5, "max": 15},
+        "weight": 0.8
+      },
+      {
+        "item": "세대 면적",
+        "standard": "25~45㎡",
+        "thresholds": {"min": 25, "max": 45},
+        "weight": 1.0
+      }
+    ],
+    "business": [
+      {
+        "item": "세대당 사업비",
+        "standard": "1.5억원 내외",
+        "target_value": 150000000,
+        "tolerance": 0.1,
+        "weight": 1.2
+      },
+      {
+        "item": "예상 수익률",
+        "standard": "5% 이상",
+        "thresholds": {"excellent": 10, "good": 5, "poor": 0},
+        "weight": 1.0
+      },
+      {
+        "item": "평당 건축비",
+        "standard": "500만원/평 이하",
+        "thresholds": {"excellent": 450, "good": 500, "poor": 600},
+        "weight": 0.9
+      },
+      {
+        "item": "토지비 비중",
+        "standard": "25~45%",
+        "thresholds": {"min": 25, "max": 45},
+        "weight": 0.9
+      }
+    ],
+    "regulation": [
+      {
+        "item": "용도지역",
+        "standard": "주거지역",
+        "allowed_zones": ["주거", "준주거", "상업", "준공업"],
+        "weight": 1.5
+      },
+      {
+        "item": "건폐율",
+        "standard": "법정 한도 이하",
+        "weight": 1.2
+      },
+      {
+        "item": "용적률",
+        "standard": "법정 한도 이하",
+        "weight": 1.2
+      },
+      {
+        "item": "높이제한",
+        "standard": "법정 한도 이하",
+        "weight": 1.0
+      }
+    ]
+  },
+  
+  "grade_thresholds": {
+    "A": 80,
+    "B": 60,
+    "C": 0
+  },
+  
+  "category_weights": {
+    "입지": 30,
+    "규모": 25,
+    "사업성": 30,
+    "법규": 15
+  },
+  
+  "messages": {
+    "grade_A": "우수한 사업입니다. LH 신축매입임대 사업으로 적극 권장합니다.",
+    "grade_B": "양호한 사업입니다. 일부 개선사항 검토 후 LH 매입 추진 가능합니다.",
+    "grade_C": "부적합 사업입니다. 주요 기준 미달로 LH 매입이 어렵습니다.",
+    "critical_hazard": "주유소 25m 이내 위치로 인해 LH 매입 절대 제외 대상입니다."
+  }
+}

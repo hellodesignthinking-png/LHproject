@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 ZeroSite Expert Edition v3.0 (FINAL)</title>
+    
+    <!-- 🔥 ULTRA CACHE PREVENTION 🔥 -->
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+        }
+        
+        .version-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-analyze {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            grid-column: 1 / -1;
+        }
+        
+        .btn-analyze:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-pdf {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-pdf:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .btn-html {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .btn-html:hover {
+            background: #138496;
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .results {
+            display: none;
+            margin-top: 40px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .results.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .result-row:last-child {
+            border-bottom: none;
+        }
+        
+        .result-label {
+            font-weight: 600;
+            color: #666;
+        }
+        
+        .result-value {
+            font-weight: 700;
+            color: #333;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .alert.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="version-badge">✅ v3.0 - FINAL CACHE-FREE VERSION</div>
+            <h1>🎯 ZeroSite Expert Edition</h1>
+            <p class="subtitle">LH 신축매입임대 사업 타당성 분석 (v11.0)</p>
+            <p class="subtitle" style="margin-top: 10px; font-size: 14px;">
+                ⏱️ Loaded: <span id="loadTime"></span>
+            </p>
+        </div>
+        
+        <div id="alertBox" class="alert"></div>
+        
+        <form id="analysisForm">
+            <div class="form-group">
+                <label for="address">📍 주소 (도로명 또는 지번)</label>
+                <input type="text" id="address" required 
+                       placeholder="예: 서울특별시 마포구 상암동 1652">
+            </div>
+            
+            <div class="form-group">
+                <label for="landArea">📐 토지 면적 (㎡)</label>
+                <input type="number" id="landArea" step="0.01" required 
+                       placeholder="예: 850">
+            </div>
+            
+            <div class="form-group">
+                <label for="landPrice">💰 토지 감정가 (원/㎡)</label>
+                <input type="number" id="landPrice" step="1000" required 
+                       placeholder="예: 4500000">
+            </div>
+            
+            <div class="form-group">
+                <label for="zoneType">🏘️ 용도지역</label>
+                <select id="zoneType" required>
+                    <option value="">선택하세요</option>
+                    <option value="제1종일반주거지역">제1종일반주거지역</option>
+                    <option value="제2종일반주거지역" selected>제2종일반주거지역</option>
+                    <option value="제3종일반주거지역">제3종일반주거지역</option>
+                    <option value="준주거지역">준주거지역</option>
+                </select>
+            </div>
+            
+            <div class="button-group">
+                <button type="submit" class="btn-analyze">🚀 분석 시작</button>
+                <button type="button" id="downloadPdf" class="btn-pdf" disabled>
+                    📥 Expert PDF 다운로드
+                </button>
+                <button type="button" id="viewHtml" class="btn-html" disabled>
+                    👁️ HTML 리포트 보기
+                </button>
+            </div>
+        </form>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>분석 중입니다...</p>
+        </div>
+        
+        <div class="results" id="results">
+            <h2 style="margin-bottom: 20px; color: #667eea;">📊 분석 결과</h2>
+            <div id="resultsContent"></div>
+        </div>
+    </div>
+    
+    <script>
+        // 🔥 CACHE-FREE VERSION VALIDATION
+        const loadTime = new Date().toLocaleString('ko-KR');
+        document.getElementById('loadTime').textContent = loadTime;
+        console.log('✅ v3.0 CACHE-FREE VERSION LOADED:', loadTime);
+        
+        const API_BASE = window.location.origin;
+        const REPORT_API_URL = `${API_BASE}/api/v9/real/generate-report`;
+        const ANALYZE_API_URL = `${API_BASE}/api/v9/real/analyze-land`;
+        
+        let currentAnalysisResult = null;
+        
+        const form = document.getElementById('analysisForm');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const resultsContent = document.getElementById('resultsContent');
+        const alertBox = document.getElementById('alertBox');
+        const downloadPdfBtn = document.getElementById('downloadPdf');
+        const viewHtmlBtn = document.getElementById('viewHtml');
+        
+        function showAlert(message, type = 'info') {
+            alertBox.textContent = message;
+            alertBox.className = `alert alert-${type} show`;
+            setTimeout(() => {
+                alertBox.classList.remove('show');
+            }, 5000);
+        }
+        
+        function formatNumber(num) {
+            return new Intl.NumberFormat('ko-KR').format(num);
+        }
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                address: document.getElementById('address').value,
+                land_area: parseFloat(document.getElementById('landArea').value),
+                land_appraisal_price: parseFloat(document.getElementById('landPrice').value),
+                zone_type: document.getElementById('zoneType').value
+            };
+            
+            loading.classList.add('show');
+            results.classList.remove('show');
+            downloadPdfBtn.disabled = true;
+            viewHtmlBtn.disabled = true;
+            
+            try {
+                const response = await fetch(ANALYZE_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    },
+                    body: JSON.stringify(formData),
+                    cache: 'no-store'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                currentAnalysisResult = { ...formData, ...data };
+                
+                displayResults(data);
+                showAlert('✅ 분석이 완료되었습니다!', 'success');
+                downloadPdfBtn.disabled = false;
+                viewHtmlBtn.disabled = false;
+                
+            } catch (error) {
+                console.error('Analysis Error:', error);
+                showAlert('❌ 분석 중 오류가 발생했습니다: ' + error.message, 'error');
+            } finally {
+                loading.classList.remove('show');
+            }
+        });
+        
+        function displayResults(data) {
+            const html = `
+                <div class="result-row">
+                    <span class="result-label">🏠 세대수</span>
+                    <span class="result-value">${data.unit_count || 0}세대</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">🏢 층수</span>
+                    <span class="result-value">${data.floors || 0}층</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">🅿️ 주차대수</span>
+                    <span class="result-value">${data.parking_spaces || 0}대</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">📊 LH 평가 점수</span>
+                    <span class="result-value" style="color: ${getScoreColor(data.lh_score)}">
+                        ${data.lh_score || 0}점 (${data.lh_grade || 'N/A'}등급)
+                    </span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">💡 최종 판정</span>
+                    <span class="result-value" style="color: ${getDecisionColor(data.decision)}">
+                        ${data.decision || 'N/A'}
+                    </span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">🎯 신뢰도</span>
+                    <span class="result-value">${data.confidence || 0}%</span>
+                </div>
+            `;
+            
+            resultsContent.innerHTML = html;
+            results.classList.add('show');
+        }
+        
+        function getScoreColor(score) {
+            if (score >= 80) return '#28a745';
+            if (score >= 60) return '#ffc107';
+            return '#dc3545';
+        }
+        
+        function getDecisionColor(decision) {
+            const colors = {
+                'GO': '#28a745',
+                'REVIEW': '#ffc107',
+                'NOGO': '#dc3545'
+            };
+            return colors[decision] || '#6c757d';
+        }
+        
+        downloadPdfBtn.addEventListener('click', async () => {
+            if (!currentAnalysisResult) {
+                showAlert('❌ 먼저 분석을 수행해주세요.', 'error');
+                return;
+            }
+            
+            showAlert('📥 Expert PDF 생성 중...', 'info');
+            
+            try {
+                const timestamp = Date.now();
+                const response = await fetch(`${REPORT_API_URL}?output_format=pdf&_t=${timestamp}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    },
+                    body: JSON.stringify(currentAnalysisResult),
+                    cache: 'no-store'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`PDF Generation Failed: ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                const size = blob.size;
+                const sizeKB = (size / 1024).toFixed(1);
+                
+                console.log('📦 PDF Size:', sizeKB, 'KB');
+                
+                // 🔥 VERSION CHECK BY SIZE
+                if (size > 500000) { // 500KB 이상 = 구버전 (2.4MB)
+                    showAlert(`⚠️ 경고: 구버전 다운로드됨 (${sizeKB} KB). 브라우저 재시작 후 재시도하세요.`, 'error');
+                    console.error('🚫 OLD VERSION DETECTED:', sizeKB, 'KB');
+                } else { // ~45KB = 신버전
+                    showAlert(`✅ Expert Edition PDF 다운로드 완료! (${sizeKB} KB)`, 'success');
+                    console.log('✅ NEW VERSION CONFIRMED:', sizeKB, 'KB');
+                }
+                
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ZeroSite_ExpertEdition_v3_${timestamp}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+            } catch (error) {
+                console.error('PDF Download Error:', error);
+                showAlert('❌ PDF 다운로드 중 오류 발생: ' + error.message, 'error');
+            }
+        });
+        
+        viewHtmlBtn.addEventListener('click', async () => {
+            if (!currentAnalysisResult) {
+                showAlert('❌ 먼저 분석을 수행해주세요.', 'error');
+                return;
+            }
+            
+            showAlert('📄 HTML 리포트 생성 중...', 'info');
+            
+            try {
+                const timestamp = Date.now();
+                const response = await fetch(`${REPORT_API_URL}?output_format=html&_t=${timestamp}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    },
+                    body: JSON.stringify(currentAnalysisResult),
+                    cache: 'no-store'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTML Generation Failed: ${response.status}`);
+                }
+                
+                const htmlContent = await response.text();
+                const newWindow = window.open('', '_blank');
+                newWindow.document.write(htmlContent);
+                newWindow.document.close();
+                
+                showAlert('✅ HTML 리포트가 새 창에서 열렸습니다!', 'success');
+                
+            } catch (error) {
+                console.error('HTML View Error:', error);
+                showAlert('❌ HTML 리포트 생성 중 오류 발생: ' + error.message, 'error');
+            }
+        });
+        
+        // 🔥 INITIAL TEST DATA (for quick testing)
+        if (window.location.search.includes('test=1')) {
+            document.getElementById('address').value = '서울특별시 마포구 상암동 1652';
+            document.getElementById('landArea').value = '850';
+            document.getElementById('landPrice').value = '4500000';
+            document.getElementById('zoneType').value = '제2종일반주거지역';
+            console.log('✅ TEST DATA LOADED');
+        }
+    </script>
+</body>
+</html>

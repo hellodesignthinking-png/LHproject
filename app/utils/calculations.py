@@ -164,18 +164,20 @@ class BuildingCalculator:
         self,
         land_price: float,
         building_capacity: BuildingCapacity,
-        unit_type: str
+        unit_type: str,
+        land_area: float = 0
     ) -> Dict[str, Any]:
         """
-        LH 매입 타당성 분석
+        LH 매입 타당성 분석 (강화버전)
         
         Args:
             land_price: 토지 가격 (원)
             building_capacity: 건축 규모
             unit_type: 세대 유형
+            land_area: 대지 면적 (㎡)
             
         Returns:
-            타당성 분석 결과
+            상세 타당성 분석 결과
         """
         # 건축비 계산
         cost_info = self.calculate_construction_cost(building_capacity, unit_type)
@@ -184,10 +186,10 @@ class BuildingCalculator:
         total_project_cost = land_price + cost_info['total_cost']
         
         # 세대당 사업비
-        cost_per_unit = total_project_cost / building_capacity.units
+        cost_per_unit = total_project_cost / building_capacity.units if building_capacity.units > 0 else 0
         
         # LH 매입 기준가 (세대당 1억 5천만원 가정)
-        lh_purchase_price_per_unit = 150000000
+        lh_purchase_price_per_unit = 150_000_000
         
         # 매입 가능성 판단
         is_feasible = cost_per_unit <= lh_purchase_price_per_unit * 1.1  # 10% 여유
@@ -195,15 +197,58 @@ class BuildingCalculator:
         # 수익률 계산
         expected_revenue = building_capacity.units * lh_purchase_price_per_unit
         profit = expected_revenue - total_project_cost
-        profit_rate = (profit / total_project_cost) * 100
+        profit_rate = (profit / total_project_cost) * 100 if total_project_cost > 0 else 0
+        
+        # 토지비 비중
+        land_cost_ratio = (land_price / total_project_cost * 100) if total_project_cost > 0 else 0
+        
+        # 건축비 비중
+        construction_cost_ratio = (cost_info['construction_cost'] / total_project_cost * 100) if total_project_cost > 0 else 0
+        
+        # 평균 세대 면적
+        average_unit_area = (building_capacity.total_floor_area * 0.85) / building_capacity.units if building_capacity.units > 0 else 0
+        
+        # ROI (투자수익률)
+        roi = (profit / total_project_cost * 100) if total_project_cost > 0 else 0
+        
+        # 세대당 토지비
+        land_cost_per_unit = land_price / building_capacity.units if building_capacity.units > 0 else 0
+        
+        # 세대당 건축비
+        construction_cost_per_unit = cost_info['construction_cost'] / building_capacity.units if building_capacity.units > 0 else 0
         
         return {
+            # 기본 정보
             "total_project_cost": int(total_project_cost),
             "cost_per_unit": int(cost_per_unit),
             "lh_purchase_price_per_unit": lh_purchase_price_per_unit,
+            
+            # 수익성
             "expected_revenue": int(expected_revenue),
             "profit": int(profit),
             "profit_rate": round(profit_rate, 2),
+            "roi": round(roi, 2),
+            
+            # 비용 구성
+            "land_cost": int(land_price),
+            "land_cost_ratio": round(land_cost_ratio, 2),
+            "land_cost_per_unit": int(land_cost_per_unit),
+            "construction_cost": cost_info['construction_cost'],
+            "construction_cost_ratio": round(construction_cost_ratio, 2),
+            "construction_cost_per_unit": int(construction_cost_per_unit),
+            "additional_cost": cost_info['additional_cost'],
+            
+            # 평형 정보
+            "average_unit_area": round(average_unit_area, 2),
+            "cost_per_pyeong": cost_info['cost_per_pyeong'],
+            
+            # 판정
             "is_feasible": is_feasible,
-            "feasibility_message": "매입 가능" if is_feasible else "사업비 초과"
+            "feasibility_message": "매입 가능" if is_feasible else "사업비 초과",
+            
+            # 추가 지표
+            "units": building_capacity.units,
+            "floors": building_capacity.floors,
+            "parking_spaces": building_capacity.parking_spaces,
+            "land_area": land_area
         }

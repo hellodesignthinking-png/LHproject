@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite v9.1 Ultra-Pro - LH 신축매입임대 사업 타당성 전략 분석 보고서</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', 'Malgun Gothic', Arial, sans-serif;
+            line-height: 1.8;
+            color: #2c3e50;
+            background: #ffffff;
+            font-size: 11pt;
+        }
+        
+        /* Cover Page */
+        .cover-page {
+            page-break-after: always;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 95vh;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+            color: white;
+            text-align: center;
+            padding: 60px 40px;
+            border-radius: 4px;
+        }
+        
+        .cover-page h1 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            letter-spacing: -1px;
+        }
+        
+        .cover-page h2 {
+            font-size: 36px;
+            font-weight: 600;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+        
+        .cover-page .subtitle {
+            font-size: 24px;
+            margin: 30px 0;
+            opacity: 0.95;
+        }
+        
+        .cover-page .decision {
+            font-size: 48px;
+            font-weight: 800;
+            margin: 40px 0;
+            padding: 30px 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 3px solid white;
+            border-radius: 12px;
+            letter-spacing: 2px;
+        }
+        
+        .cover-page .metadata {
+            margin-top: 50px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .cover-page .footer-note {
+            position: absolute;
+            bottom: 40px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        /* Table of Contents */
+        .toc-page {
+            page-break-after: always;
+            padding: 40px;
+        }
+        
+        .toc-page h2 {
+            font-size: 28px;
+            color: #1e3c72;
+            border-bottom: 3px solid #2a5298;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .toc-section {
+            margin: 25px 0;
+        }
+        
+        .toc-part {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2a5298;
+            margin: 20px 0 10px 0;
+        }
+        
+        .toc-item {
+            padding: 8px 0 8px 20px;
+            border-bottom: 1px dotted #ddd;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .toc-item .title {
+            color: #34495e;
+        }
+        
+        .toc-item .page {
+            color: #7f8c8d;
+            font-weight: 600;
+        }
+        
+        /* Part Divider */
+        .part-divider {
+            page-break-before: always;
+            page-break-after: always;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 80px 40px;
+            border-radius: 4px;
+        }
+        
+        .part-divider h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        
+        .part-divider h2 {
+            font-size: 32px;
+            font-weight: 400;
+            opacity: 0.9;
+        }
+        
+        /* Content Sections */
+        .content-section {
+            page-break-before: auto;
+            padding: 30px 40px;
+            margin-bottom: 40px;
+        }
+        
+        .section-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .section-header h2 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .section-header .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .subsection {
+            margin: 25px 0;
+        }
+        
+        .subsection h3 {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-left: 15px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .metric-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .metric-card .label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        
+        .metric-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        
+        .metric-card .unit {
+            font-size: 14px;
+            color: #6c757d;
+            margin-left: 5px;
+        }
+        
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .info-table th,
+        .info-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .info-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+            width: 35%;
+        }
+        
+        .info-table td {
+            color: #212529;
+        }
+        
+        .info-table tr:last-child th,
+        .info-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        /* Score Box */
+        .score-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 30px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .score-box .title {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .score-box .score {
+            font-size: 64px;
+            font-weight: 800;
+            margin: 20px 0;
+        }
+        
+        .score-box .grade {
+            font-size: 28px;
+            font-weight: 600;
+            opacity: 0.95;
+        }
+        
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .badge-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .badge-warning {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .badge-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .badge-info {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        /* Highlight Box */
+        .highlight-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .highlight-box.success {
+            background: #d1e7dd;
+            border-left-color: #198754;
+        }
+        
+        .highlight-box.danger {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+        }
+        
+        .highlight-box.info {
+            background: #cfe2ff;
+            border-left-color: #0d6efd;
+        }
+        
+        /* Footer */
+        .report-footer {
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 2px solid #dee2e6;
+            text-align: center;
+            color: #6c757d;
+            font-size: 11px;
+        }
+        
+        .report-footer p {
+            margin: 5px 0;
+        }
+        
+        /* Print Optimization */
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .content-section {
+                page-break-inside: avoid;
+            }
+            
+            .metric-grid {
+                page-break-inside: avoid;
+            }
+            
+            .score-box {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Cover Page -->
+    <div class="cover-page">
+        <h1>ZeroSite v9.1 Ultra-Pro</h1>
+        <h2>LH 신축매입임대 사업<br/>타당성 전략 분석 보고서</h2>
+        <h2 style="font-size: 32px; margin-top: 40px;">{ADDRESS}</h2>
+        <div class="subtitle">최종 권고안</div>
+        <div class="decision">{DECISION}</div>
+        <div class="metadata">
+            <p style="font-size: 16px;">{GENERATION_DATE}</p>
+            <p style="margin-top: 10px;">Classification: Internal Use / LH Submission</p>
+        </div>
+        <div class="footer-note">
+            본 보고서는 ZeroSite v9.1 Ultra-Pro 엔진을 사용하여 생성되었습니다.
+        </div>
+    </div>
+    
+    <!-- Table of Contents -->
+    <div class="toc-page">
+        <h2>목차 (Table of Contents)</h2>
+        
+        <div class="toc-section">
+            <div class="toc-part">Part 1: Executive Summary</div>
+            <div class="toc-item">
+                <span class="title">1. 사업 개요 및 핵심 결과</span>
+                <span class="page">3</span>
+            </div>
+            <div class="toc-item">
+                <span class="title">2. 최종 권고안 및 실행 전제조건</span>
+                <span class="page">4</span>
+            </div>
+        </div>
+        
+        <div class="toc-section">
+            <div class="toc-part">Part 2: Site Analysis</div>
+            <div class="toc-item">
+                <span class="title">3. 토지 개요 및 입지 분석</span>
+                <span class="page">5</span>
+            </div>
+            <div class="toc-item">
+                <span class="title">4. 법적·규제 환경 분석</span>
+                <span class="page">6</span>
+            </div>
+        </div>
+        
+        <div class="toc-section">
+            <div class="toc-part">Part 3: Development Plan</div>
+            <div class="toc-item">
+                <span class="title">5. 건축 계획 및 개발 규모</span>
+                <span class="page">7</span>
+            </div>
+            <div class="toc-item">
+                <span class="title">6. 세대 구성 및 공간 계획</span>
+                <span class="page">8</span>
+            </div>
+        </div>
+        
+        <div class="toc-section">
+            <div class="toc-part">Part 4: Financial Analysis</div>
+            <div class="toc-item">
+                <span class="title">7. 사업비 추정 및 투자 구조</span>
+                <span class="page">9</span>
+            </div>
+            <div class="toc-item">
+                <span class="title">8. 수익성 분석 (IRR, ROI)</span>
+                <span class="page">10</span>
+            </div>
+            <div class="toc-item">
+                <span class="title">9. LH 평가 및 등급</span>
+                <span class="page">11</span>
+            </div>
+        </div>
+        
+        <div class="toc-section">
+            <div class="toc-part">Part 5: Risk & Recommendation</div>
+            <div class="toc-item">
+                <span class="title">10. 리스크 관리 및 대응 전략</span>
+                <span class="page">12</span>
+            </div>
+            <div class="toc-item">
+                <span class="title">11. 종합판단 및 최종 권고안</span>
+                <span class="page">13</span>
+            </div>
+        </div>
+        
+        <div class="toc-section">
+            <div class="toc-part">Appendix</div>
+            <div class="toc-item">
+                <span class="title">12. 데이터 출처 및 분석 방법론</span>
+                <span class="page">14</span>
+            </div>
+        </div>
+    </div>

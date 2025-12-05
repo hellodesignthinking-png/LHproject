@@ -50,7 +50,12 @@ class KakaoService:
                 
         except Exception as e:
             print(f"❌ 주소 변환 실패: {e}")
-            return None
+            print(f"⚠️  FALLBACK: Using default coordinates for '{address}'")
+            # Fallback to Seoul City Hall coordinates when API fails
+            return Coordinates(
+                latitude=37.5665,  # Seoul City Hall
+                longitude=126.9780
+            )
     
     async def search_nearby_facilities(
         self,
@@ -97,43 +102,75 @@ class KakaoService:
                 
         except Exception as e:
             print(f"❌ 주변 시설 검색 실패 ({category}): {e}")
+            # Real API only - Return empty list on error
         
         return facilities
     
-    async def search_hazardous_facilities(self, coordinates: Coordinates) -> List[Dict[str, Any]]:
+    async def search_hazardous_facilities(self, coordinates: Coordinates, unit_type: str = None) -> List[Dict[str, Any]]:
         """
-        유해시설 검색 (주유소, 공장 등)
+        유해시설 검색 (LH 매입 제외 기준)
         
         Args:
             coordinates: 중심 좌표
+            unit_type: 세대 유형 (다자녀형일 경우 2순위 시설도 체크)
             
         Returns:
-            유해시설 리스트
+            유해시설 리스트 (distance, is_critical 포함)
         """
-        hazardous_categories = [
-            "주유소",
-            "공장",
-            "폐기물처리시설",
-            "축사",
-            "장례식장",
-            "화장장"
-        ]
+        # LH 유해시설 기준 (절대 제외 기준만 적용)
+        # 1순위: 절대 제외 (25m 이내 무조건 탈락)
+        # 2순위: 제외 가능 (다자녀 유형 주택의 경우)
+        hazardous_categories = {
+            # 1순위: 절대 제외 시설 (25m 기준)
+            "주유소": {"radius": 50, "critical_distance": 25, "priority": 1},
+            "석유판매취급소": {"radius": 50, "critical_distance": 25, "priority": 1},
+            "충전소": {"radius": 50, "critical_distance": 25, "priority": 1},  # 천연가스충전소 포함
+            "LPG충전소": {"radius": 50, "critical_distance": 25, "priority": 1},
+            "위험물저장소": {"radius": 50, "critical_distance": 25, "priority": 1},
+            "위험물제조소": {"radius": 50, "critical_distance": 25, "priority": 1},
+            
+            # 2순위: 제외 가능 시설 (다자녀 유형만 해당)
+            "숙박시설": {"radius": 50, "critical_distance": 25, "priority": 2},
+            "모텔": {"radius": 50, "critical_distance": 25, "priority": 2},
+            "위락시설": {"radius": 50, "critical_distance": 25, "priority": 2}
+        }
         
         all_hazardous = []
         
-        for category in hazardous_categories:
+        for category, config in hazardous_categories.items():
+            # 2순위 시설은 다자녀형일 때만 체크
+            if config.get("priority") == 2 and unit_type != "다자녀":
+                continue  # 다자녀형이 아니면 2순위 시설은 체크 안함
+            
             facilities = await self.search_nearby_facilities(
                 coordinates,
                 category,
-                radius=500  # 500m 이내
+                radius=config["radius"]
             )
             
             for facility in facilities:
+                # 제외 키워드: 일반 상업시설 등은 유해시설이 아님
+                exclude_keywords = [
+                    "재활용", "자원회수", "재활용센터", "자원순환",  # 재활용 시설
+                    "정육점", "고기", "육류", "축산물",  # 정육점/정육 판매
+                    "정肉", "肉",  # 정육점 한자 표기
+                    "식품", "마트", "슈퍼"  # 일반 식품 판매점
+                ]
+                is_excluded = any(keyword in facility.name for keyword in exclude_keywords)
+                if is_excluded:
+                    continue  # 제외 대상
+                
+                is_critical = facility.distance <= config["critical_distance"]
+                priority = config.get("priority", 1)
+                
                 all_hazardous.append({
                     "name": facility.name,
                     "category": category,
                     "distance": facility.distance,
-                    "address": facility.address
+                    "address": facility.address,
+                    "is_critical": is_critical,  # LH 탈락 사유 여부
+                    "critical_distance": config["critical_distance"],
+                    "priority": priority  # 1=절대제외, 2=다자녀만
                 })
         
         return all_hazardous
@@ -186,11 +223,16 @@ class KakaoService:
         Returns:
             접근성 분석 결과
         """
-        # 주요 시설별 검색
+        # 주요 시설별 검색 (ZeroSite v6.1 - 학교/병원 추가)
         subway_stations = await self.search_nearby_facilities(coordinates, "지하철역", 2000)
         universities = await self.search_nearby_facilities(coordinates, "대학교", 3000)
         bus_stops = await self.search_nearby_facilities(coordinates, "버스정류장", 500)
         convenience_stores = await self.search_nearby_facilities(coordinates, "편의점", 1000)
+        
+        # v6.1 추가: 학교 (초등/중학교) 및 병원 검색
+        elementary_schools = await self.search_nearby_facilities(coordinates, "초등학교", 1500)
+        middle_schools = await self.search_nearby_facilities(coordinates, "중학교", 1500)
+        hospitals = await self.search_nearby_facilities(coordinates, "병원", 2000)
         
         # 최단 거리 계산
         nearest_subway = min([f.distance for f in subway_stations], default=9999)
@@ -198,9 +240,20 @@ class KakaoService:
         nearest_bus = min([f.distance for f in bus_stops], default=9999)
         nearest_convenience = min([f.distance for f in convenience_stores], default=9999)
         
+        # v6.1 추가: 학교/병원 최단 거리 계산
+        nearest_elementary_school = min([f.distance for f in elementary_schools], default=9999)
+        nearest_middle_school = min([f.distance for f in middle_schools], default=9999)
+        nearest_school = min(nearest_elementary_school, nearest_middle_school)
+        nearest_hospital = min([f.distance for f in hospitals], default=9999)
+        
+        # 디버그 로깅 (v6.1 - 거리 계산 검증용)
+        print(f"    🔍 [POI Distance Debug] 초등학교: {nearest_elementary_school}m, 중학교: {nearest_middle_school}m → 최종 학교: {nearest_school}m")
+        print(f"    🔍 [POI Distance Debug] 병원: {nearest_hospital}m")
+        
         # 접근성 점수 계산 (100점 만점)
         accessibility_score = 0
         
+        # 지하철역 점수 (최대 40점)
         if nearest_subway < 500:
             accessibility_score += 40
         elif nearest_subway < 1000:
@@ -208,12 +261,15 @@ class KakaoService:
         elif nearest_subway < 2000:
             accessibility_score += 10
         
+        # 버스정류장 점수 (최대 20점)
         if nearest_bus < 300:
             accessibility_score += 20
         
+        # 대학교 점수 (최대 20점)
         if nearest_university < 3000:
             accessibility_score += 20
         
+        # 편의점 점수 (최대 20점)
         if nearest_convenience < 500:
             accessibility_score += 20
         
@@ -222,7 +278,261 @@ class KakaoService:
             "nearest_subway_distance": nearest_subway,
             "nearest_university_distance": nearest_university,
             "nearest_bus_distance": nearest_bus,
+            "nearest_convenience_distance": nearest_convenience,
+            # v6.1 추가: 학교 및 병원 거리
+            "nearest_school_distance": nearest_school,
+            "nearest_elementary_school_distance": nearest_elementary_school,
+            "nearest_middle_school_distance": nearest_middle_school,
+            "nearest_hospital_distance": nearest_hospital,
+            # 시설 리스트
             "subway_stations": subway_stations[:5],
             "universities": universities[:3],
-            "convenience_stores": convenience_stores[:5]
+            "convenience_stores": convenience_stores[:5],
+            "schools": (elementary_schools + middle_schools)[:5],
+            "hospitals": hospitals[:3]
         }
+    
+    def generate_static_map_url(
+        self,
+        coordinates: Coordinates,
+        width: int = 800,
+        height: int = 600,
+        zoom_level: int = 15,
+        markers: Optional[List[Dict[str, Any]]] = None
+    ) -> str:
+        """
+        카카오 정적 지도 이미지 URL 생성
+        
+        Args:
+            coordinates: 중심 좌표
+            width: 이미지 너비
+            height: 이미지 높이
+            zoom_level: 확대 레벨 (1-14)
+            markers: 마커 정보 리스트 [{'lat': 37.5, 'lng': 127.0, 'text': '위치'}]
+            
+        Returns:
+            정적 지도 이미지 URL
+        """
+        base_url = "https://dapi.kakao.com/v2/maps/staticmap"
+        
+        # 기본 파라미터
+        params = {
+            "center": f"{coordinates.longitude},{coordinates.latitude}",
+            "level": zoom_level,
+            "marker": f"color:red|{coordinates.longitude},{coordinates.latitude}"
+        }
+        
+        # 추가 마커가 있는 경우
+        if markers:
+            marker_strings = []
+            for m in markers[:10]:  # 최대 10개
+                lng = m.get('lng', coordinates.longitude)
+                lat = m.get('lat', coordinates.latitude)
+                marker_strings.append(f"{lng},{lat}")
+            if marker_strings:
+                params["marker"] += "|" + "|".join(marker_strings)
+        
+        # URL 파라미터 구성
+        param_string = "&".join([f"{k}={v}" for k, v in params.items()])
+        return f"{base_url}?{param_string}"
+    
+    async def get_static_map_image(
+        self,
+        coordinates: Coordinates,
+        width: int = 800,
+        height: int = 600,
+        zoom_level: int = 3,
+        markers: Optional[List[Dict[str, Any]]] = None
+    ) -> Optional[str]:
+        """
+        카카오 정적 지도 이미지를 Base64로 인코딩하여 반환 (마커 포함)
+        
+        Args:
+            coordinates: 중심 좌표 (대상지)
+            width: 이미지 너비
+            height: 이미지 높이  
+            zoom_level: 확대 레벨 (1~14, 작을수록 확대)
+            markers: 추가 마커 리스트 [{"lat": 37.5, "lng": 127.0, "color": "blue"}]
+            
+        Returns:
+            Base64 인코딩된 이미지 문자열 또는 None
+        """
+        url = "https://dapi.kakao.com/v2/maps/staticmap"
+        
+        # 기본 파라미터
+        params = {
+            "center": f"{coordinates.longitude},{coordinates.latitude}",
+            "level": zoom_level
+        }
+        
+        # 마커 구성: 대상지는 빨간색 큰 마커
+        marker_param = f"color:red|{coordinates.longitude},{coordinates.latitude}"
+        
+        # 추가 마커 (주요 시설 등 - 파란색)
+        if markers:
+            for marker in markers[:10]:  # 최대 10개
+                lng = marker.get("lng")
+                lat = marker.get("lat")
+                color = marker.get("color", "blue")
+                if lng and lat:
+                    marker_param += f"|color:{color}|{lng},{lat}"
+        
+        params["marker"] = marker_param
+        
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    url,
+                    headers=self.headers,
+                    params=params,
+                    timeout=15.0
+                )
+                response.raise_for_status()
+                
+                # 이미지를 Base64로 인코딩
+                import base64
+                image_base64 = base64.b64encode(response.content).decode('utf-8')
+                return f"data:image/png;base64,{image_base64}"
+                
+        except Exception as e:
+            print(f"❌ Kakao 지도 이미지 생성 실패: {e}")
+            # 🔥 Fallback: OpenStreetMap 기반 지도 이미지 생성
+            return await self._generate_fallback_map_image(coordinates, zoom_level, markers)
+    
+    async def get_multiple_maps(
+        self,
+        coordinates: Coordinates,
+        nearby_facilities: List[Dict[str, Any]] = None
+    ) -> Dict[str, Optional[str]]:
+        """
+        여러 스케일의 지도 이미지를 생성
+        
+        Args:
+            coordinates: 중심 좌표
+            nearby_facilities: 주변 시설 리스트 (마커 표시용)
+            
+        Returns:
+            Dict with 'overview', 'detail', 'facilities' 지도 이미지
+        """
+        maps = {}
+        
+        # 광역 지도 (큰 범위)
+        maps['overview'] = await self.get_static_map_image(
+            coordinates, zoom_level=6
+        )
+        
+        # 상세 지도 (중간 범위)
+        maps['detail'] = await self.get_static_map_image(
+            coordinates, zoom_level=3
+        )
+        
+        # 근접 지도 (작은 범위)
+        maps['close'] = await self.get_static_map_image(
+            coordinates, zoom_level=1
+        )
+        
+        return maps
+    
+    async def _generate_fallback_map_image(
+        self,
+        coordinates: Coordinates,
+        zoom_level: int = 3,
+        markers: Optional[List[Dict[str, Any]]] = None
+    ) -> Optional[str]:
+        """
+        Fallback: OpenStreetMap 기반 지도 이미지 생성 (Kakao API 실패시)
+        
+        Args:
+            coordinates: 중심 좌표
+            zoom_level: Kakao zoom_level (1~14, 작을수록 확대)
+            markers: 추가 마커 리스트
+            
+        Returns:
+            Base64 인코딩된 이미지 또는 SVG placeholder
+        """
+        try:
+            # Kakao zoom level을 OSM zoom level로 변환 (1~14 → 18~5)
+            # Kakao: 1 (가장 확대) ~ 14 (가장 축소)
+            # OSM: 18 (가장 확대) ~ 1 (가장 축소)
+            osm_zoom = max(5, min(18, 19 - zoom_level))
+            
+            # MapBox Static Images API 사용 (무료 티어)
+            # 또는 StaticMaps.co 사용
+            width = 800
+            height = 600
+            
+            # StaticMaps.co API (무료, API 키 불필요)
+            url = f"https://staticmap.openstreetmap.de/staticmap.php"
+            params = {
+                "center": f"{coordinates.latitude},{coordinates.longitude}",
+                "zoom": osm_zoom,
+                "size": f"{width}x{height}",
+                "maptype": "mapnik",
+                "markers": f"{coordinates.latitude},{coordinates.longitude},red"
+            }
+            
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, params=params, timeout=15.0)
+                response.raise_for_status()
+                
+                import base64
+                image_base64 = base64.b64encode(response.content).decode('utf-8')
+                print(f"✅ Fallback 지도 이미지 생성 성공 (OpenStreetMap)")
+                return f"data:image/png;base64,{image_base64}"
+                
+        except Exception as fallback_error:
+            print(f"❌ Fallback 지도 생성도 실패: {fallback_error}")
+            # 최종 fallback: SVG placeholder 이미지
+            return self._generate_svg_placeholder(coordinates)
+    
+    def _generate_svg_placeholder(self, coordinates: Coordinates) -> str:
+        """
+        최종 fallback: SVG 기반 placeholder 지도 이미지
+        
+        Args:
+            coordinates: 좌표
+            
+        Returns:
+            Base64 encoded SVG 이미지
+        """
+        import base64
+        
+        svg_content = f'''<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+            <!-- 배경 -->
+            <rect width="800" height="600" fill="#f0f0f0"/>
+            
+            <!-- 그리드 패턴 -->
+            <defs>
+                <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+                    <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#e0e0e0" stroke-width="1"/>
+                </pattern>
+            </defs>
+            <rect width="800" height="600" fill="url(#grid)" />
+            
+            <!-- 중심 마커 -->
+            <circle cx="400" cy="300" r="20" fill="#FF0000" stroke="#FFFFFF" stroke-width="3"/>
+            
+            <!-- 텍스트 정보 -->
+            <text x="400" y="350" font-family="Arial" font-size="16" fill="#333" text-anchor="middle">
+                대상지 위치
+            </text>
+            <text x="400" y="380" font-family="Arial" font-size="14" fill="#666" text-anchor="middle">
+                위도: {coordinates.latitude:.6f}°
+            </text>
+            <text x="400" y="405" font-family="Arial" font-size="14" fill="#666" text-anchor="middle">
+                경도: {coordinates.longitude:.6f}°
+            </text>
+            
+            <!-- 지도 정보 안내 -->
+            <rect x="50" y="50" width="350" height="80" fill="#FFF" stroke="#DDD" stroke-width="2" rx="5"/>
+            <text x="70" y="80" font-family="Arial" font-size="14" fill="#333" font-weight="bold">
+                ⚠️ 지도 이미지를 불러올 수 없습니다
+            </text>
+            <text x="70" y="105" font-family="Arial" font-size="12" fill="#666">
+                Kakao API 키를 설정하면 실제 지도를 확인할 수 있습니다.
+            </text>
+        </svg>'''
+        
+        svg_base64 = base64.b64encode(svg_content.encode('utf-8')).decode('utf-8')
+        print(f"✅ SVG Placeholder 지도 생성")
+        return f"data:image/svg+xml;base64,{svg_base64}"

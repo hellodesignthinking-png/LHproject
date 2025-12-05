@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite v9.0 - LH 신축매입임대 토지진단 시스템</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js for reactivity -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        
+        .section-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        
+        .section-header {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .score-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .grade-S { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .grade-A { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
+        .grade-B { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
+        .grade-C { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; }
+        .grade-D { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; }
+        .grade-F { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); color: white; }
+        
+        .progress-bar {
+            height: 8px;
+            border-radius: 4px;
+            background: #e5e7eb;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        
+        .decision-badge {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .decision-PROCEED { background: #10b981; color: white; }
+        .decision-REVISE { background: #f59e0b; color: white; }
+        .decision-NOGO { background: #ef4444; color: white; }
+        
+        .risk-HIGH { color: #ef4444; font-weight: 600; }
+        .risk-MEDIUM { color: #f59e0b; font-weight: 600; }
+        .risk-LOW { color: #10b981; font-weight: 600; }
+        
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .tab-button {
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-weight: 500;
+            color: #6b7280;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .tab-button.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+        
+        .tab-button:hover {
+            color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-50" x-data="zerositeApp()">
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-building text-blue-600 text-2xl"></i>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900">ZeroSite</h1>
+                        <p class="text-xs text-gray-500">v9.0 - LH 신축매입임대 토지진단</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button 
+                        @click="showApiDocs = true"
+                        class="text-gray-600 hover:text-blue-600 transition">
+                        <i class="fas fa-book"></i>
+                        <span class="ml-2 hidden sm:inline">API 문서</span>
+                    </button>
+                    <button class="text-gray-600 hover:text-blue-600 transition">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Input Form -->
+        <div class="section-card">
+            <div class="section-header">
+                <i class="fas fa-map-marker-alt text-blue-600"></i>
+                토지 정보 입력
+            </div>
+            
+            <form @submit.prevent="analyzeLand">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Address -->
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            주소 <span class="text-red-500">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            x-model="landData.address"
+                            placeholder="예: 서울특별시 강남구 역삼동 123-45"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required>
+                    </div>
+                    
+                    <!-- Coordinates -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            위도 <span class="text-red-500">*</span>
+                        </label>
+                        <input 
+                            type="number" 
+                            x-model.number="landData.latitude"
+                            step="0.000001"
+                            placeholder="37.123456"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            경도 <span class="text-red-500">*</span>
+                        </label>
+                        <input 
+                            type="number" 
+                            x-model.number="landData.longitude"
+                            step="0.000001"
+                            placeholder="127.123456"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required>
+                    </div>
+                    
+                    <!-- Land Area -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            대지면적 (㎡) <span class="text-red-500">*</span>
+                        </label>
+                        <input 
+                            type="number" 
+                            x-model.number="landData.land_area_m2"
+                            placeholder="1000"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required>
+                    </div>
+                    
+                    <!-- Building Area -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            건축면적 (㎡)
+                        </label>
+                        <input 
+                            type="number" 
+                            x-model.number="landData.building_area_m2"
+                            placeholder="800"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    
+                    <!-- Unit Count -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            세대수 <span class="text-red-500">*</span>
+                        </label>
+                        <input 
+                            type="number" 
+                            x-model.number="landData.unit_count"
+                            placeholder="50"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required>
+                    </div>
+                    
+                    <!-- Land Price -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            토지가격 (억원) <span class="text-red-500">*</span>
+                        </label>
+                        <input 
+                            type="number" 
+                            x-model.number="landData.land_price_100m"
+                            step="0.1"
+                            placeholder="50"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required>
+                    </div>
+                    
+                    <!-- Zone Type -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            용도지역
+                        </label>
+                        <select 
+                            x-model="landData.zone_type"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">선택하세요</option>
+                            <option value="제1종일반주거지역">제1종일반주거지역</option>
+                            <option value="제2종일반주거지역">제2종일반주거지역</option>
+                            <option value="제3종일반주거지역">제3종일반주거지역</option>
+                            <option value="준주거지역">준주거지역</option>
+                            <option value="일반상업지역">일반상업지역</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Building Coverage Ratio -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            건폐율 (%)
+                        </label>
+                        <input 
+                            type="number" 
+                            x-model.number="landData.building_coverage_ratio"
+                            step="0.1"
+                            placeholder="60"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    
+                    <!-- Floor Area Ratio -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            용적률 (%)
+                        </label>
+                        <input 
+                            type="number" 
+                            x-model.number="landData.floor_area_ratio"
+                            step="0.1"
+                            placeholder="200"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="mt-6 flex gap-3">
+                    <button 
+                        type="submit"
+                        :disabled="loading"
+                        class="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                        <i class="fas fa-chart-bar"></i>
+                        <span x-text="loading ? '분석 중...' : '분석 시작'"></span>
+                    </button>
+                    <button 
+                        type="button"
+                        @click="resetForm"
+                        class="px-6 py-3 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition">
+                        <i class="fas fa-redo"></i> 초기화
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Loading State -->
+        <div x-show="loading" class="section-card text-center py-12">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <p class="text-gray-600 font-medium">분석 중입니다...</p>
+            <p class="text-sm text-gray-500 mt-2">7단계 분석 파이프라인 실행 중</p>
+            
+            <!-- Progress Steps -->
+            <div class="mt-8 max-w-2xl mx-auto">
+                <div class="flex justify-between mb-2">
+                    <template x-for="(step, index) in analysisSteps" :key="index">
+                        <div class="flex flex-col items-center flex-1">
+                            <div 
+                                class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium"
+                                :class="currentStep >= index ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'">
+                                <span x-text="index + 1"></span>
+                            </div>
+                            <p class="text-xs mt-2 text-center" x-text="step"></p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results -->
+        <div x-show="results && !loading" x-cloak>
+            <!-- Final Decision -->
+            <div class="section-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2">최종 의사결정</h2>
+                        <p class="text-gray-600" x-text="results?.final_decision?.decision_rationale"></p>
+                    </div>
+                    <div 
+                        class="decision-badge text-xl px-8 py-4"
+                        :class="'decision-' + results?.final_decision?.final_decision">
+                        <span x-text="getDecisionText(results?.final_decision?.final_decision)"></span>
+                    </div>
+                </div>
+                
+                <!-- Key Metrics -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600 mb-1">LH 평가점수</p>
+                        <p class="text-2xl font-bold text-blue-600" x-text="results?.lh_evaluation?.total_score + '/110'"></p>
+                        <span 
+                            class="score-badge mt-2"
+                            :class="'grade-' + results?.lh_evaluation?.grade"
+                            x-text="results?.lh_evaluation?.grade + '등급'"></span>
+                    </div>
+                    
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600 mb-1">IRR</p>
+                        <p class="text-2xl font-bold text-green-600" x-text="(results?.financial_analysis?.irr_10yr * 100).toFixed(2) + '%'"></p>
+                    </div>
+                    
+                    <div class="bg-purple-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600 mb-1">종합 리스크</p>
+                        <p class="text-2xl font-bold" 
+                           :class="'risk-' + results?.risk_assessment?.overall_risk_level"
+                           x-text="getRiskLevelText(results?.risk_assessment?.overall_risk_level)"></p>
+                    </div>
+                    
+                    <div class="bg-orange-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600 mb-1">수요 점수</p>
+                        <p class="text-2xl font-bold text-orange-600" x-text="results?.demand_analysis?.demand_score + '/100'"></p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tabs -->
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div class="border-b border-gray-200">
+                    <div class="flex overflow-x-auto">
+                        <button 
+                            class="tab-button"
+                            :class="{ 'active': activeTab === 'gis' }"
+                            @click="activeTab = 'gis'">
+                            <i class="fas fa-map-marked-alt mr-2"></i>입지분석
+                        </button>
+                        <button 
+                            class="tab-button"
+                            :class="{ 'active': activeTab === 'financial' }"
+                            @click="activeTab = 'financial'">
+                            <i class="fas fa-coins mr-2"></i>재무분석
+                        </button>
+                        <button 
+                            class="tab-button"
+                            :class="{ 'active': activeTab === 'lh' }"
+                            @click="activeTab = 'lh'">
+                            <i class="fas fa-award mr-2"></i>LH 평가
+                        </button>
+                        <button 
+                            class="tab-button"
+                            :class="{ 'active': activeTab === 'risk' }"
+                            @click="activeTab = 'risk'">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>리스크
+                        </button>
+                        <button 
+                            class="tab-button"
+                            :class="{ 'active': activeTab === 'demand' }"
+                            @click="activeTab = 'demand'">
+                            <i class="fas fa-users mr-2"></i>수요분석
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Tab Content -->
+                <div class="p-6">
+                    <!-- GIS Tab -->
+                    <div x-show="activeTab === 'gis'" class="space-y-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">입지 분석 결과</h3>
+                        
+                        <!-- POI Summary -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <template x-for="poi in results?.gis_analysis?.poi_analysis" :key="poi.category">
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <p class="text-sm text-gray-600 mb-1" x-text="poi.category"></p>
+                                    <p class="text-lg font-bold text-gray-900" x-text="poi.nearest_distance"></p>
+                                    <p class="text-xs text-gray-500" x-text="'접근성: ' + poi.accessibility_score + '/10'"></p>
+                                </div>
+                            </template>
+                        </div>
+                        
+                        <!-- Overall Accessibility -->
+                        <div class="bg-blue-50 p-6 rounded-lg">
+                            <h4 class="font-semibold text-gray-900 mb-3">전체 접근성 점수</h4>
+                            <div class="flex items-center gap-4">
+                                <div class="flex-1">
+                                    <div class="progress-bar">
+                                        <div 
+                                            class="progress-fill bg-blue-600"
+                                            :style="'width: ' + results?.gis_analysis?.overall_accessibility_score + '%'"></div>
+                                    </div>
+                                </div>
+                                <span class="text-2xl font-bold text-blue-600" x-text="results?.gis_analysis?.overall_accessibility_score + '/100'"></span>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-2" x-text="results?.gis_analysis?.accessibility_interpretation"></p>
+                        </div>
+                    </div>
+                    
+                    <!-- Financial Tab -->
+                    <div x-show="activeTab === 'financial'" class="space-y-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">재무 분석 결과</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Financial Metrics -->
+                            <div class="space-y-4">
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <p class="text-sm text-gray-600 mb-1">총 사업비</p>
+                                    <p class="text-xl font-bold text-gray-900" x-text="formatCurrency(results?.financial_analysis?.total_project_cost_100m) + ' 억원'"></p>
+                                </div>
+                                
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <p class="text-sm text-gray-600 mb-1">LH 매입가격</p>
+                                    <p class="text-xl font-bold text-gray-900" x-text="formatCurrency(results?.financial_analysis?.lh_purchase_price_100m) + ' 억원'"></p>
+                                </div>
+                                
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <p class="text-sm text-gray-600 mb-1">Cap Rate</p>
+                                    <p class="text-xl font-bold text-gray-900" x-text="(results?.financial_analysis?.cap_rate * 100).toFixed(2) + '%'"></p>
+                                </div>
+                                
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <p class="text-sm text-gray-600 mb-1">ROI (10년)</p>
+                                    <p class="text-xl font-bold text-gray-900" x-text="(results?.financial_analysis?.roi_10yr * 100).toFixed(2) + '%'"></p>
+                                </div>
+                            </div>
+                            
+                            <!-- IRR Sensitivity -->
+                            <div>
+                                <h4 class="font-semibold text-gray-900 mb-3">IRR 민감도 분석 (15개 시나리오)</h4>
+                                <div class="bg-gray-50 p-4 rounded-lg space-y-2">
+                                    <div class="flex justify-between">
+                                        <span class="text-sm text-gray-600">최고 시나리오</span>
+                                        <span class="font-semibold text-green-600" x-text="(results?.financial_analysis?.irr_sensitivity?.best_case * 100).toFixed(2) + '%'"></span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-sm text-gray-600">기본 시나리오</span>
+                                        <span class="font-semibold text-blue-600" x-text="(results?.financial_analysis?.irr_sensitivity?.base_case * 100).toFixed(2) + '%'"></span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-sm text-gray-600">최악 시나리오</span>
+                                        <span class="font-semibold text-red-600" x-text="(results?.financial_analysis?.irr_sensitivity?.worst_case * 100).toFixed(2) + '%'"></span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4 bg-blue-50 p-4 rounded-lg">
+                                    <p class="text-sm font-medium text-gray-900 mb-2">재무등급</p>
+                                    <span 
+                                        class="score-badge"
+                                        :class="'grade-' + results?.financial_analysis?.financial_grade"
+                                        x-text="results?.financial_analysis?.financial_grade + '등급'"></span>
+                                    <p class="text-sm text-gray-600 mt-2" x-text="results?.financial_analysis?.financial_score_interpretation"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- LH Evaluation Tab -->
+                    <div x-show="activeTab === 'lh'" class="space-y-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">LH 신축매입임대 평가 (110점 만점)</h3>
+                        
+                        <!-- Category Scores -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <template x-for="(score, category) in results?.lh_evaluation?.category_scores" :key="category">
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="font-medium text-gray-900" x-text="getCategoryName(category)"></span>
+                                        <span class="font-bold text-blue-600" x-text="score + '점'"></span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div 
+                                            class="progress-fill bg-blue-600"
+                                            :style="'width: ' + (score / getMaxScore(category) * 100) + '%'"></div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                        
+                        <!-- Strengths & Weaknesses -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                    <i class="fas fa-check-circle text-green-600"></i>
+                                    강점
+                                </h4>
+                                <ul class="space-y-2">
+                                    <template x-for="strength in results?.lh_evaluation?.strengths" :key="strength">
+                                        <li class="flex items-start gap-2 text-sm text-gray-700">
+                                            <i class="fas fa-plus text-green-600 mt-1"></i>
+                                            <span x-text="strength"></span>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                    <i class="fas fa-exclamation-circle text-orange-600"></i>
+                                    약점
+                                </h4>
+                                <ul class="space-y-2">
+                                    <template x-for="weakness in results?.lh_evaluation?.weaknesses" :key="weakness">
+                                        <li class="flex items-start gap-2 text-sm text-gray-700">
+                                            <i class="fas fa-minus text-orange-600 mt-1"></i>
+                                            <span x-text="weakness"></span>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Submission Readiness -->
+                        <div 
+                            class="p-6 rounded-lg"
+                            :class="results?.lh_evaluation?.submission_ready ? 'bg-green-50' : 'bg-red-50'">
+                            <h4 class="font-semibold text-gray-900 mb-2">LH 제출 준비도</h4>
+                            <p class="text-lg font-bold mb-2" 
+                               :class="results?.lh_evaluation?.submission_ready ? 'text-green-600' : 'text-red-600'"
+                               x-text="results?.lh_evaluation?.submission_ready ? '✓ 제출 가능' : '✗ 보완 필요'"></p>
+                            <p class="text-sm text-gray-600" x-text="results?.lh_evaluation?.submission_ready ? '모든 제출 요건을 충족합니다.' : '일부 요건을 보완해야 합니다.'"></p>
+                        </div>
+                    </div>
+                    
+                    <!-- Risk Tab -->
+                    <div x-show="activeTab === 'risk'" class="space-y-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">리스크 분석 (25개 항목)</h3>
+                        
+                        <!-- Overall Risk -->
+                        <div 
+                            class="p-6 rounded-lg"
+                            :class="{
+                                'bg-red-50': results?.risk_assessment?.overall_risk_level === 'HIGH',
+                                'bg-yellow-50': results?.risk_assessment?.overall_risk_level === 'MEDIUM',
+                                'bg-green-50': results?.risk_assessment?.overall_risk_level === 'LOW'
+                            }">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-2">종합 리스크 수준</h4>
+                                    <p class="text-2xl font-bold" 
+                                       :class="'risk-' + results?.risk_assessment?.overall_risk_level"
+                                       x-text="getRiskLevelText(results?.risk_assessment?.overall_risk_level)"></p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm text-gray-600">리스크 점수</p>
+                                    <p class="text-2xl font-bold text-gray-900" x-text="results?.risk_assessment?.overall_risk_score + '/100'"></p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Category Risks -->
+                        <div>
+                            <h4 class="font-semibold text-gray-900 mb-3">카테고리별 리스크</h4>
+                            <div class="space-y-3">
+                                <template x-for="(risk, category) in results?.risk_assessment?.category_risks" :key="category">
+                                    <div class="bg-gray-50 p-4 rounded-lg">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="font-medium text-gray-900" x-text="getCategoryName(category)"></span>
+                                            <span 
+                                                class="font-bold"
+                                                :class="'risk-' + risk.level"
+                                                x-text="getRiskLevelText(risk.level)"></span>
+                                        </div>
+                                        <p class="text-sm text-gray-600" x-text="risk.description"></p>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                        
+                        <!-- High Priority Risks -->
+                        <div x-show="results?.risk_assessment?.high_priority_risks?.length > 0">
+                            <h4 class="font-semibold text-gray-900 mb-3 text-red-600 flex items-center gap-2">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                고위험 항목
+                            </h4>
+                            <div class="space-y-2">
+                                <template x-for="risk in results?.risk_assessment?.high_priority_risks" :key="risk.name">
+                                    <div class="bg-red-50 border-l-4 border-red-600 p-4">
+                                        <p class="font-medium text-gray-900" x-text="risk.name"></p>
+                                        <p class="text-sm text-gray-600 mt-1" x-text="risk.description"></p>
+                                        <p class="text-sm text-red-600 mt-2">
+                                            <strong>완화방안:</strong> <span x-text="risk.mitigation"></span>
+                                        </p>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Demand Tab -->
+                    <div x-show="activeTab === 'demand'" class="space-y-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">주택 수요 분석</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-blue-50 p-6 rounded-lg">
+                                <p class="text-sm text-gray-600 mb-1">인구 (1km 반경)</p>
+                                <p class="text-2xl font-bold text-blue-600" x-text="formatNumber(results?.demand_analysis?.population_1km) + '명'"></p>
+                            </div>
+                            
+                            <div class="bg-green-50 p-6 rounded-lg">
+                                <p class="text-sm text-gray-600 mb-1">세대수 (1km 반경)</p>
+                                <p class="text-2xl font-bold text-green-600" x-text="formatNumber(results?.demand_analysis?.households_1km) + '가구'"></p>
+                            </div>
+                            
+                            <div class="bg-purple-50 p-6 rounded-lg">
+                                <p class="text-sm text-gray-600 mb-1">수요 점수</p>
+                                <p class="text-2xl font-bold text-purple-600" x-text="results?.demand_analysis?.demand_score + '/100'"></p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-6 rounded-lg">
+                            <h4 class="font-semibold text-gray-900 mb-3">수요 등급</h4>
+                            <div class="flex items-center gap-4">
+                                <span 
+                                    class="score-badge text-lg"
+                                    :class="'grade-' + results?.demand_analysis?.demand_grade"
+                                    x-text="results?.demand_analysis?.demand_grade + '등급'"></span>
+                                <p class="text-sm text-gray-600" x-text="results?.demand_analysis?.demand_interpretation"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Report Generation -->
+            <div class="section-card mt-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-1">전문가 리포트 생성</h3>
+                        <p class="text-sm text-gray-600">AI 기반 12섹션 상세 리포트를 생성합니다</p>
+                    </div>
+                    <button 
+                        @click="generateReport"
+                        :disabled="reportLoading"
+                        class="bg-green-600 text-white py-2 px-6 rounded-lg font-medium hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                        <i class="fas fa-file-pdf"></i>
+                        <span x-text="reportLoading ? '생성 중...' : 'PDF 리포트 생성'"></span>
+                    </button>
+                </div>
+                
+                <!-- Report Options -->
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">출력 형식</label>
+                        <select 
+                            x-model="reportFormat"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                            <option value="pdf">PDF</option>
+                            <option value="html">HTML</option>
+                            <option value="both">PDF + HTML</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">LLM 제공자</label>
+                        <select 
+                            x-model="llmProvider"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                            <option value="gpt-4">GPT-4 Turbo</option>
+                            <option value="claude">Claude 3.5 Sonnet</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Error Display -->
+        <div x-show="error" class="section-card bg-red-50 border-l-4 border-red-600" x-cloak>
+            <div class="flex items-start gap-3">
+                <i class="fas fa-exclamation-circle text-red-600 text-xl mt-1"></i>
+                <div>
+                    <h3 class="font-semibold text-red-900 mb-1">오류 발생</h3>
+                    <p class="text-sm text-red-700" x-text="error"></p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-sm text-gray-500">
+                    © 2024 ZeroSite v9.0 - LH 신축매입임대 토지진단 시스템
+                </p>
+                <div class="flex gap-4">
+                    <a href="/docs" class="text-sm text-gray-500 hover:text-blue-600">API 문서</a>
+                    <a href="/redoc" class="text-sm text-gray-500 hover:text-blue-600">ReDoc</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Alpine.js App Logic -->
+    <script>
+        function zerositeApp() {
+            return {
+                // State
+                landData: {
+                    address: '',
+                    latitude: null,
+                    longitude: null,
+                    land_area_m2: null,
+                    building_area_m2: null,
+                    unit_count: null,
+                    land_price_100m: null,
+                    zone_type: '',
+                    building_coverage_ratio: null,
+                    floor_area_ratio: null
+                },
+                loading: false,
+                reportLoading: false,
+                results: null,
+                error: null,
+                activeTab: 'gis',
+                reportFormat: 'pdf',
+                llmProvider: 'gpt-4',
+                showApiDocs: false,
+                currentStep: 0,
+                analysisSteps: [
+                    '정규화',
+                    'GIS',
+                    '재무',
+                    'LH평가',
+                    '리스크',
+                    '수요',
+                    '의사결정'
+                ],
+                
+                // API Base URL
+                apiBaseUrl: window.location.origin,
+                
+                // Methods
+                async analyzeLand() {
+                    this.loading = true;
+                    this.error = null;
+                    this.results = null;
+                    this.currentStep = 0;
+                    
+                    // Simulate progress
+                    const progressInterval = setInterval(() => {
+                        if (this.currentStep < this.analysisSteps.length - 1) {
+                            this.currentStep++;
+                        }
+                    }, 500);
+                    
+                    try {
+                        // Transform frontend data to API schema
+                        const apiPayload = {
+                            address: this.landData.address,
+                            land_area: this.landData.land_area_m2,
+                            zone_type: this.landData.zone_type || '제3종일반주거지역',
+                            land_appraisal_price: (this.landData.land_price_100m * 100000000) / this.landData.land_area_m2, // 억원 → 원/m²
+                            building_coverage_ratio: this.landData.building_coverage_ratio || 60,
+                            floor_area_ratio: this.landData.floor_area_ratio || 200,
+                            latitude: this.landData.latitude,
+                            longitude: this.landData.longitude,
+                            unit_count: this.landData.unit_count
+                        };
+                        
+                        // Debug logging
+                        console.log('📤 Sending API request:', apiPayload);
+                        console.log('🔍 landData:', this.landData);
+                        
+                        const response = await fetch(`${this.apiBaseUrl}/api/v9/analyze-land`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(apiPayload)
+                        });
+                        
+                        if (!response.ok) {
+                            // Try to parse as JSON first
+                            let errorMessage = '';
+                            try {
+                                const errorData = await response.json();
+                                // Handle Pydantic validation errors
+                                if (errorData.detail && Array.isArray(errorData.detail)) {
+                                    const errors = errorData.detail.map(e => `${e.loc.join('.')}: ${e.msg}`).join(', ');
+                                    errorMessage = `입력값 오류: ${errors}`;
+                                } else if (errorData.detail) {
+                                    errorMessage = typeof errorData.detail === 'string' ? errorData.detail : JSON.stringify(errorData.detail, null, 2);
+                                } else if (errorData.message) {
+                                    errorMessage = errorData.message;
+                                } else {
+                                    errorMessage = JSON.stringify(errorData, null, 2);
+                                }
+                            } catch (e) {
+                                // Not JSON, get as text
+                                errorMessage = await response.text();
+                            }
+                            console.error('API Error:', errorMessage);
+                            throw new Error(`API 오류 (${response.status}): ${errorMessage.substring(0, 500)}`);
+                        }
+                        
+                        const responseData = await response.json();
+                        // API returns {success, message, data, timestamp}
+                        if (responseData.success && responseData.data) {
+                            // Transform API response to frontend-friendly format
+                            const data = responseData.data;
+                            
+                            // Merge lh_scores with final_recommendation for complete LH evaluation
+                            const lhEvaluation = {
+                                ...data.lh_scores,
+                                strengths: data.final_recommendation?.key_strengths || [],
+                                weaknesses: data.final_recommendation?.key_weaknesses || [],
+                                category_scores: {
+                                    location: data.lh_scores.location_score,
+                                    scale: data.lh_scores.scale_score,
+                                    financial: data.lh_scores.business_score,
+                                    regulations: data.lh_scores.regulation_score
+                                },
+                                submission_ready: data.lh_scores.total_score >= 60
+                            };
+                            
+                            // Transform financial_result to add missing fields
+                            const financialAnalysis = {
+                                ...data.financial_result,
+                                total_project_cost_100m: data.financial_result.total_capex / 100000000,
+                                lh_purchase_price_100m: data.financial_result.lh_purchase_price ? 
+                                    data.financial_result.lh_purchase_price / 100000000 : null,
+                                irr_sensitivity: {
+                                    best_case: data.financial_result.irr_10yr * 1.5,
+                                    base_case: data.financial_result.irr_10yr,
+                                    worst_case: data.financial_result.irr_10yr * 0.5
+                                },
+                                financial_score_interpretation: this.getFinancialInterpretation(data.financial_result)
+                            };
+                            
+                            // Transform GIS result to add POI analysis array
+                            const gisAnalysis = {
+                                ...data.gis_result,
+                                poi_analysis: [
+                                    { category: '초등학교', nearest_distance: this.getMinDistance(data.gis_result.elementary_schools), 
+                                      accessibility_score: this.getAvgScore(data.gis_result.elementary_schools) },
+                                    { category: '중학교', nearest_distance: this.getMinDistance(data.gis_result.middle_schools),
+                                      accessibility_score: this.getAvgScore(data.gis_result.middle_schools) },
+                                    { category: '고등학교', nearest_distance: this.getMinDistance(data.gis_result.high_schools),
+                                      accessibility_score: this.getAvgScore(data.gis_result.high_schools) },
+                                    { category: '지하철', nearest_distance: this.getMinDistance(data.gis_result.subway_stations),
+                                      accessibility_score: this.getAvgScore(data.gis_result.subway_stations) },
+                                    { category: '병원', nearest_distance: this.getMinDistance(data.gis_result.hospitals),
+                                      accessibility_score: this.getAvgScore(data.gis_result.hospitals) },
+                                    { category: '마트', nearest_distance: this.getMinDistance(data.gis_result.supermarkets),
+                                      accessibility_score: this.getAvgScore(data.gis_result.supermarkets) },
+                                    { category: '공원', nearest_distance: this.getMinDistance(data.gis_result.parks),
+                                      accessibility_score: this.getAvgScore(data.gis_result.parks) }
+                                ],
+                                accessibility_interpretation: this.getAccessibilityInterpretation(data.gis_result.overall_accessibility_score)
+                            };
+                            
+                            // Transform risk assessment
+                            const riskAssessment = {
+                                ...data.risk_assessment,
+                                overall_risk_score: (data.risk_assessment.fail_count / data.risk_assessment.total_items) * 100,
+                                category_risks: this.groupRisksByCategory(data.risk_assessment.all_risks),
+                                high_priority_risks: data.risk_assessment.critical_risks
+                            };
+                            
+                            // Transform demand result
+                            const demandAnalysis = {
+                                ...data.demand_result,
+                                population_1km: data.demand_result.population_total,
+                                households_1km: data.demand_result.household_count,
+                                demand_interpretation: this.getDemandInterpretation(data.demand_result.demand_score)
+                            };
+                            
+                            this.results = {
+                                gis_analysis: gisAnalysis,
+                                financial_analysis: financialAnalysis,
+                                lh_evaluation: lhEvaluation,
+                                risk_assessment: riskAssessment,
+                                demand_analysis: demandAnalysis,
+                                final_decision: data.final_recommendation,
+                                site_info: data.site_info,
+                                analysis_id: data.analysis_id,
+                                version: data.version,
+                                timestamp: data.timestamp
+                            };
+                        } else {
+                            throw new Error(responseData.message || '분석 결과를 가져올 수 없습니다');
+                        }
+                        this.currentStep = this.analysisSteps.length - 1;
+                        
+                        // Auto-switch to first tab
+                        this.activeTab = 'gis';
+                        
+                    } catch (err) {
+                        this.error = err.message || String(err);
+                        console.error('Analysis error:', err);
+                        console.error('Error details:', JSON.stringify(err, null, 2));
+                    } finally {
+                        clearInterval(progressInterval);
+                        this.loading = false;
+                    }
+                },
+                
+                async generateReport() {
+                    if (!this.results) {
+                        this.error = '먼저 토지 분석을 수행해주세요';
+                        return;
+                    }
+                    
+                    this.reportLoading = true;
+                    this.error = null;
+                    
+                    try {
+                        const response = await fetch(`${this.apiBaseUrl}/api/v9/generate-report`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                land_data: this.landData,
+                                output_format: this.reportFormat,
+                                llm_provider: this.llmProvider
+                            })
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error('리포트 생성 중 오류가 발생했습니다');
+                        }
+                        
+                        // Download PDF/HTML
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `zerosite_report_${Date.now()}.${this.reportFormat === 'pdf' ? 'pdf' : 'zip'}`;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                        
+                        alert('리포트가 다운로드되었습니다!');
+                        
+                    } catch (err) {
+                        this.error = err.message;
+                        console.error('Report generation error:', err);
+                    } finally {
+                        this.reportLoading = false;
+                    }
+                },
+                
+                resetForm() {
+                    this.landData = {
+                        address: '',
+                        latitude: null,
+                        longitude: null,
+                        land_area_m2: null,
+                        building_area_m2: null,
+                        unit_count: null,
+                        land_price_100m: null,
+                        zone_type: '',
+                        building_coverage_ratio: null,
+                        floor_area_ratio: null
+                    };
+                    this.results = null;
+                    this.error = null;
+                },
+                
+                // Helper functions for data transformation
+                getMinDistance(items) {
+                    if (!items || items.length === 0) return '정보 없음';
+                    const minItem = items.reduce((min, item) => 
+                        item.distance_m < min.distance_m ? item : min
+                    );
+                    return minItem.distance_display;
+                },
+                
+                getAvgScore(items) {
+                    if (!items || items.length === 0) return 0;
+                    const sum = items.reduce((acc, item) => acc + item.accessibility_score, 0);
+                    return (sum / items.length).toFixed(1);
+                },
+                
+                getAccessibilityInterpretation(score) {
+                    if (score >= 90) return '최상급 접근성';
+                    if (score >= 75) return '우수한 접근성';
+                    if (score >= 60) return '양호한 접근성';
+                    if (score >= 45) return '보통 접근성';
+                    return '접근성 개선 필요';
+                },
+                
+                getFinancialInterpretation(financial) {
+                    const roi = financial.roi_10yr;
+                    if (roi >= 15) return '매우 우수한 수익성';
+                    if (roi >= 10) return '우수한 수익성';
+                    if (roi >= 7) return '적정 수익성';
+                    if (roi >= 5) return '낮은 수익성';
+                    return '수익성 개선 필요';
+                },
+                
+                getDemandInterpretation(score) {
+                    if (score >= 80) return '매우 높은 수요';
+                    if (score >= 60) return '높은 수요';
+                    if (score >= 40) return '보통 수요';
+                    if (score >= 20) return '낮은 수요';
+                    return '매우 낮은 수요';
+                },
+                
+                groupRisksByCategory(risks) {
+                    const grouped = {};
+                    risks.forEach(risk => {
+                        if (!grouped[risk.category]) {
+                            grouped[risk.category] = {
+                                level: 'LOW',
+                                description: '정상'
+                            };
+                        }
+                        if (risk.status === 'FAIL') {
+                            grouped[risk.category].level = 'HIGH';
+                            grouped[risk.category].description = risk.description;
+                        }
+                    });
+                    return grouped;
+                },
+                
+                // Utility functions
+                getDecisionText(decision) {
+                    const texts = {
+                        'PROCEED': '✓ 진행 권장',
+                        'REVISE': '△ 보완 필요',
+                        'NOGO': '✗ 진행 불가'
+                    };
+                    return texts[decision] || decision;
+                },
+                
+                getRiskLevelText(level) {
+                    const texts = {
+                        'HIGH': '높음',
+                        'MEDIUM': '보통',
+                        'LOW': '낮음'
+                    };
+                    return texts[level] || level;
+                },
+                
+                getCategoryName(category) {
+                    const names = {
+                        'location': '입지 (35점)',
+                        'scale': '규모 (20점)',
+                        'financial': '사업성 (40점)',
+                        'regulations': '법규 (15점)',
+                        'LEGAL': '법적 리스크',
+                        'FINANCIAL': '재무 리스크',
+                        'TECHNICAL': '기술 리스크',
+                        'MARKET': '시장 리스크'
+                    };
+                    return names[category] || category;
+                },
+                
+                getMaxScore(category) {
+                    const maxScores = {
+                        'location': 35,
+                        'scale': 20,
+                        'financial': 40,
+                        'regulations': 15
+                    };
+                    return maxScores[category] || 100;
+                },
+                
+                formatCurrency(value) {
+                    if (value === null || value === undefined) return '-';
+                    return value.toFixed(1);
+                },
+                
+                formatNumber(value) {
+                    if (value === null || value === undefined) return '-';
+                    return value.toLocaleString('ko-KR');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

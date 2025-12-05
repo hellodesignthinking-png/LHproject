@@ -1,0 +1,39 @@
+{
+  "notice_id": "2025-001",
+  "title": "2025년 1차 청년주택 신축매입임대 사업 대상지 공모",
+  "notice_date": "2025-01-15",
+  "application_deadline": "2025-02-28",
+  "regions": ["서울특별시", "경기도"],
+  "unit_types": {
+    "youth": {
+      "min_units": 30,
+      "max_units": 100,
+      "target_ratio": 0.4
+    },
+    "newlywed_1": {
+      "min_units": 20,
+      "max_units": 50,
+      "target_ratio": 0.3
+    },
+    "multi_child": {
+      "min_units": 10,
+      "max_units": 30,
+      "target_ratio": 0.3
+    }
+  },
+  "location_requirements": {
+    "school_distance": 400,
+    "hospital_distance": 600,
+    "station_distance": 1000,
+    "park_distance": 500
+  },
+  "scoring_weights": {
+    "location": 30,
+    "scale": 25,
+    "business": 25,
+    "regulation": 20
+  },
+  "minimum_score": 270,
+  "recommended_score": 300,
+  "extracted_text": "2025년 1차 청년주택 신축매입임대 사업 대상지 공모\n\n공모 개요:\n- 접수 기간: 2025년 1월 15일 ~ 2월 28일\n- 대상 지역: 서울특별시, 경기도\n- 최소 점수: 270점 이상\n\n세부 유형별 기준:\n1. 청년주택: 30~100호 (40%)\n2. 신혼희망타운 I: 20~50호 (30%)\n3. 다자녀: 10~30호 (30%)\n\nPOI 기준:\n- 학교: 400m 이내\n- 병원: 600m 이내\n- 지하철역: 1,000m 이내\n- 공원: 500m 이내"
+}
