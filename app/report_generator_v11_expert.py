@@ -40,23 +40,26 @@ Version: 11.0 Expert Edition (v7.5 형식 + v11.0 엔진)
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 
-# v11.0 엔진 (Fallback-first approach for reliability)
-
-# Always use fallback classes for v11.0 Expert Edition (Phase 1)
-class NarrativeGenerator:
-    """Fallback Narrative Generator"""
-    def generate_score_narrative(self, lh_result):
-        return {
-            'location_narrative': '<p>입지 분석 내용 (v11.0 엔진)</p>',
-            'business_narrative': '<p>사업성 분석 내용 (v11.0 엔진)</p>',
-            'policy_narrative': '<p>정책 부합성 분석 내용 (v11.0 엔진)</p>',
-            'financial_narrative': '<p>재무 건전성 분석 내용 (v11.0 엔진)</p>',
-            'risk_narrative': '<p>리스크 분석 내용 (v11.0 엔진)</p>'
-        }
+# v11.0 엔진 (Expert Edition with v7.5 style)
+try:
+    from app.narrative_generator_v11_expert import NarrativeGeneratorV11Expert
+    NARRATIVE_GENERATOR_AVAILABLE = True
+except ImportError:
+    NARRATIVE_GENERATOR_AVAILABLE = False
     
-    def generate_decision_narrative(self, decision, score, grade, risks):
-        color = {'GO': '#28a745', 'REVIEW': '#ffc107', 'NO_GO': '#dc3545'}.get(decision, '#6c757d')
-        return f'<div style="background: {color}20; padding: 20px; border-left: 5px solid {color};"><strong>결정: {decision}</strong></div>'
+    # Fallback Narrative Generator (if import fails)
+    class NarrativeGeneratorV11Expert:
+        """Fallback Narrative Generator"""
+        def generate_executive_summary(self, **kwargs):
+            return '<p>Executive Summary 생성 중...</p>'
+        
+        def generate_lh_score_narrative(self, lh_result, analysis_data):
+            return {
+                'location_narrative': '<p>입지 분석 내용 (v11.0 엔진)</p>',
+                'scale_narrative': '<p>규모 분석 내용 (v11.0 엔진)</p>',
+                'financial_narrative': '<p>재무 건전성 분석 내용 (v11.0 엔진)</p>',
+                'regulations_narrative': '<p>규제 준수성 분석 내용 (v11.0 엔진)</p>'
+            }
 
 class UnitTypeSuitabilityAnalyzer:
     """Fallback Unit-Type Analyzer"""
@@ -111,7 +114,10 @@ class ReportGeneratorV11Expert:
     def __init__(self):
         self.version = "11.0 Expert Edition"
         self.report_date = datetime.now().strftime("%Y년 %m월 %d일")
-        self.narrative_gen = NarrativeGenerator()
+        
+        # Initialize Expert Narrative Generator (v7.5 style)
+        self.narrative_gen = NarrativeGeneratorV11Expert()
+        
         # v7.5 templates (optional, for advanced features)
         try:
             from app.services.narrative_templates_v7_5_final import NarrativeTemplatesV75Final
@@ -196,10 +202,24 @@ class ReportGeneratorV11Expert:
         )
         feasibility_result = feasibility_checker.check_unit_type_feasibility(recommended_type)
         
-        # 4) Narrative Generator (점수 → 문장 변환)
-        lh_narratives = self.narrative_gen.generate_score_narrative(lh_eval)
-        decision_narrative = self.narrative_gen.generate_decision_narrative(
-            decision, lh_score, lh_grade, risk_assess.get("critical_risks", [])
+        # 4) Narrative Generator (점수 → 문장 변환, v7.5 style)
+        # Generate comprehensive narratives
+        lh_narratives = self.narrative_gen.generate_lh_score_narrative(
+            lh_eval, analysis_result
+        )
+        
+        # Generate Executive Summary (v7.5 style: 6-15 paragraphs)
+        executive_summary = self.narrative_gen.generate_executive_summary(
+            address=address,
+            land_area=land_area,
+            unit_count=unit_count,
+            lh_score=lh_score,
+            lh_grade=lh_grade,
+            irr=irr,
+            roi=roi,
+            total_investment=total_investment,
+            decision=decision,
+            confidence=confidence
         )
         
         # ============================================================
@@ -223,10 +243,10 @@ class ReportGeneratorV11Expert:
             npv=npv,
             total_investment=total_investment,
             
-            # Decision + Narrative
+            # Decision + Executive Summary
             decision=decision,
             confidence=confidence,
-            decision_narrative=decision_narrative,
+            executive_summary=executive_summary,
             
             # v11.0 Data
             pseudo_data=pseudo_data,
@@ -267,7 +287,7 @@ class ReportGeneratorV11Expert:
         
         decision = kwargs.get("decision", "REVIEW")
         confidence = kwargs.get("confidence", 0)
-        decision_narrative = kwargs.get("decision_narrative", "")
+        executive_summary = kwargs.get("executive_summary", "")
         
         pseudo_data = kwargs.get("pseudo_data", {})
         unit_analysis = kwargs.get("unit_analysis", {})
@@ -510,61 +530,19 @@ class ReportGeneratorV11Expert:
         </div>
     </div>
     
-    <h3>1. 사업 개요 및 평가 목적</h3>
+    <!-- v11.0 Expert Narrative Generator (v7.5 style, 6-15 paragraphs) -->
+    {executive_summary}
     
-    <p>
-        대상 프로젝트는 총 <strong>{unit_count}세대</strong> 규모의 공공임대주택 
-        공급을 목표로 하며, 총 투자비 <strong>{self._format_krw(total_investment)}</strong>이 
-        예상됩니다. 본 사업은 LH 신축매입임대 정책의 핵심 취지인 '민간 건설 역량 활용을 통한 
-        공공주택 공급 확대'에 부합하며, 서울시 주거 취약계층을 위한 
-        안정적 주거 공급에 기여할 것으로 평가됩니다.
-    </p>
+    <!-- LH Score Detailed Narratives (v7.5 style) -->
+    <h3>LH 평가 항목별 상세 분석</h3>
     
-    <p>
-        평가 목적은 크게 세 가지로 구분됩니다. 첫째, 대상지의 입지 경쟁력 및 LH 평가 기준 
-        적합성을 종합적으로 검토하여 사업 추진 가능성을 판단하는 것입니다. 둘째, 재무 사업성 
-        분석을 통해 LH 매입가 기준 수익성을 평가하고, 시장 가격과의 Gap을 정량화하는 것입니다. 
-        셋째, 주요 리스크 요인을 식별하고 완화 전략을 수립하여, 조건부 승인 시나리오를 
-        구체화하는 것입니다.
-    </p>
+    {lh_narratives.get('location_narrative', '<p>입지 분석 내용 생성 중...</p>')}
     
-    <h3>2. 핵심 분석 결과 종합</h3>
+    {lh_narratives.get('scale_narrative', '<p>규모 분석 내용 생성 중...</p>')}
     
-    <h4 style="color: #0059c8; margin-top: 20px;">2.1 LH 평가 점수 분석 (Narrative-Driven)</h4>
+    {lh_narratives.get('financial_narrative', '<p>재무 건전성 분석 내용 생성 중...</p>')}
     
-    <div class="summary-box">
-        <h4 style="color: #0059c8; margin-top: 0;">📊 LH 종합 평가: {lh_score:.1f}/110점 (등급: {lh_grade})</h4>
-        
-        {lh_narratives.get('location_narrative', '<p>입지 분석 내용 생성 중...</p>')}
-        
-        {lh_narratives.get('business_narrative', '<p>사업성 분석 내용 생성 중...</p>')}
-        
-        {lh_narratives.get('policy_narrative', '<p>정책 부합성 분석 내용 생성 중...</p>')}
-        
-        {lh_narratives.get('financial_narrative', '<p>재무 건전성 분석 내용 생성 중...</p>')}
-        
-        {lh_narratives.get('risk_narrative', '<p>리스크 분석 내용 생성 중...</p>')}
-    </div>
-    
-    <h4 style="color: #0059c8; margin-top: 25px;">2.2 재무 사업성 분석</h4>
-    
-    <p>
-        본 프로젝트의 재무 구조는 다음과 같습니다:
-    </p>
-    
-    <div class="summary-box">
-        <h4 style="color: #0059c8; margin-top: 0;">💰 주요 재무 지표</h4>
-        <ul>
-            <li><strong>총 투자비</strong>: {self._format_krw(total_investment)}</li>
-            <li><strong>IRR (내부수익률)</strong>: {irr:.2f}% {'✓ 양호' if irr >= 3.0 else '✗ 개선필요'}</li>
-            <li><strong>ROI (투자수익률)</strong>: {roi:.2f}%</li>
-            <li><strong>NPV (순현재가치)</strong>: {self._format_krw(npv)}</li>
-        </ul>
-    </div>
-    
-    <h3>3. 최종 권고안</h3>
-    
-    {decision_narrative}
+    {lh_narratives.get('regulations_narrative', '<p>규제 준수성 분석 내용 생성 중...</p>')}
     
     <div class="summary-box" style="margin-top: 30px;">
         <h4 style="color: #0059c8; margin-top: 0;">💡 v11.0 Expert Edition 특징</h4>
