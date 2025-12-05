@@ -43,6 +43,12 @@ from app.routers.report_v7_2 import router as report_v72_router
 # ✨ v9.0: Import Analysis API v9.0 router
 from app.api.endpoints.analysis_v9_0 import router as analysis_v90_router
 
+# ✨ v9.1: Import Analysis API v9.1 router
+from app.api.endpoints.analysis_v9_1 import router as analysis_v91_router
+
+# ✨ v9.1 REAL: Import REAL working version
+from app.api.endpoints.analysis_v9_1_REAL import router as analysis_v91_real_router
+
 settings = get_settings()
 
 # LH 공식 7개 유형 정보 매핑
@@ -88,6 +94,12 @@ app.include_router(report_v72_router)
 
 # ✨ v9.0: Include Analysis API v9.0 router
 app.include_router(analysis_v90_router)
+
+# ✨ v9.1: Include Analysis API v9.1 router
+app.include_router(analysis_v91_router)
+
+# ✨ v9.1 REAL: Include REAL working version router
+app.include_router(analysis_v91_real_router)
 
 # 정적 파일 서빙
 static_path = Path(__file__).parent.parent / "static"
