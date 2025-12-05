@@ -39,6 +39,9 @@ Version: 11.0 Expert Edition (v7.5 형식 + v11.0 엔진)
 
 from typing import Dict, Any, Optional, List
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 # v11.0 엔진 (Expert Edition with v7.5 style)
 try:
@@ -46,6 +49,14 @@ try:
     NARRATIVE_GENERATOR_AVAILABLE = True
 except ImportError:
     NARRATIVE_GENERATOR_AVAILABLE = False
+
+# 🔥 HIGH PRIORITY: Import UnitEstimatorV9 for accurate unit calculation
+try:
+    from app.services_v9.unit_estimator_v9_0 import UnitEstimatorV9, get_unit_estimator
+    UNIT_ESTIMATOR_AVAILABLE = True
+except ImportError:
+    UNIT_ESTIMATOR_AVAILABLE = False
+    logger.warning("⚠️ UnitEstimatorV9 not available, using fallback estimation")
     
     # Fallback Narrative Generator (if import fails)
     class NarrativeGeneratorV11Expert:
@@ -158,12 +169,47 @@ class ReportGeneratorV11Expert:
         bcr = land.get("building_coverage_ratio", 60.0) if land.get("building_coverage_ratio", 0) > 0 else 60.0
         far = land.get("floor_area_ratio", 200.0) if land.get("floor_area_ratio", 0) > 0 else 200.0
         
-        # Development Plan (use real values or estimate from land_area)
-        unit_count = dev_plan.get("unit_count", 60) if dev_plan.get("unit_count", 0) > 0 else max(int(land_area / 25), 40)
-        max_floors = dev_plan.get("max_floors", 15) if dev_plan.get("max_floors", 0) > 0 else 15
-        total_gfa = dev_plan.get("total_gross_floor_area", 8000.0)
-        if total_gfa == 0 or not total_gfa:
-            total_gfa = land_area * (far / 100) * 0.85  # 85% efficiency
+        # 🔥 Development Plan: Use UnitEstimatorV9 for ACCURATE calculation
+        if UNIT_ESTIMATOR_AVAILABLE:
+            logger.info("✅ Using UnitEstimatorV9 for accurate unit calculation")
+            unit_estimator = get_unit_estimator()
+            unit_estimate = unit_estimator.estimate_units(
+                land_area=land_area,
+                floor_area_ratio=far,
+                building_coverage_ratio=bcr,
+                zone_type=zone_type
+            )
+            
+            # 🔥 Use REAL calculated values
+            unit_count = unit_estimate.total_units
+            max_floors = unit_estimate.floors
+            total_gfa = unit_estimate.total_gfa
+            residential_gfa = unit_estimate.residential_gfa
+            parking_spaces = unit_estimate.parking_spaces
+            unit_type_distribution = unit_estimate.unit_type_distribution
+            
+            logger.info(f"✅ Unit Calculation Result:")
+            logger.info(f"   - Total Units: {unit_count}세대")
+            logger.info(f"   - Floors: {max_floors}층")
+            logger.info(f"   - Total GFA: {total_gfa:.2f}m²")
+            logger.info(f"   - Parking: {parking_spaces}대")
+            logger.info(f"   - Distribution: {unit_type_distribution}")
+            
+        else:
+            # Fallback: Simple estimation (old method)
+            logger.warning("⚠️ UnitEstimator not available, using fallback estimation")
+            unit_count = dev_plan.get("unit_count", 60) if dev_plan.get("unit_count", 0) > 0 else max(int(land_area / 25), 40)
+            max_floors = dev_plan.get("max_floors", 15) if dev_plan.get("max_floors", 0) > 0 else 15
+            total_gfa = dev_plan.get("total_gross_floor_area", 8000.0)
+            if total_gfa == 0 or not total_gfa:
+                total_gfa = land_area * (far / 100) * 0.85  # 85% efficiency
+            residential_gfa = total_gfa * 0.85
+            parking_spaces = unit_count
+            unit_type_distribution = {
+                "59㎡": int(unit_count * 0.6),
+                "74㎡": int(unit_count * 0.3),
+                "84㎡": int(unit_count * 0.1)
+            }
         
         # LH Evaluation (use real values)
         lh_score = lh_eval.get("total_score", 75.0) if lh_eval.get("total_score", 0) > 0 else 75.0
@@ -245,6 +291,13 @@ class ReportGeneratorV11Expert:
             land_area=land_area,
             unit_count=unit_count,
             
+            # 🔥 NEW: Development Plan Details (from UnitEstimator)
+            floors=max_floors,
+            parking_spaces=parking_spaces if 'parking_spaces' in locals() else unit_count,
+            total_gfa=total_gfa,
+            residential_gfa=residential_gfa if 'residential_gfa' in locals() else total_gfa * 0.85,
+            unit_type_distribution=unit_type_distribution if 'unit_type_distribution' in locals() else {},
+            
             # LH Score + Narrative
             lh_score=lh_score,
             lh_grade=lh_grade,
@@ -288,6 +341,13 @@ class ReportGeneratorV11Expert:
         address = kwargs.get("address", "")
         land_area = kwargs.get("land_area", 0)
         unit_count = kwargs.get("unit_count", 0)
+        
+        # 🔥 NEW: Development Plan Details (from UnitEstimator)
+        floors = kwargs.get("floors", 0)
+        parking_spaces = kwargs.get("parking_spaces", 0)
+        total_gfa = kwargs.get("total_gfa", 0.0)
+        residential_gfa = kwargs.get("residential_gfa", 0.0)
+        unit_type_distribution = kwargs.get("unit_type_distribution", {})
         
         lh_score = kwargs.get("lh_score", 0)
         lh_grade = kwargs.get("lh_grade", "C")
@@ -557,7 +617,20 @@ class ReportGeneratorV11Expert:
             LH 매입가 시뮬레이션, 리스크 평가를 수행하였으며, 
             공공기관 제출 가능한 수준의 전문 컨설팅 보고서로 작성되었습니다.
         </p>
+        
+        <!-- 🔥 NEW: Development Plan Details -->
         <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.3);">
+            <h4 style="color: white; margin-top: 0; font-size: 11pt;">🏢 개발 계획</h4>
+            <p style="font-size: 10pt; margin: 5px 0; color: white;">🏠 총 세대수: <strong>{unit_count}세대</strong></p>
+            <p style="font-size: 10pt; margin: 5px 0; color: white;">🏢 층수: <strong>{floors}층</strong></p>
+            <p style="font-size: 10pt; margin: 5px 0; color: white;">🅿️ 주차대수: <strong>{parking_spaces}대</strong></p>
+            <p style="font-size: 10pt; margin: 5px 0; color: white;">📐 연면적: <strong>{total_gfa:,.0f}m²</strong></p>
+            
+            {self._format_unit_type_distribution(unit_type_distribution) if unit_type_distribution else ''}
+        </div>
+        
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.3);">
+            <h4 style="color: white; margin-top: 0; font-size: 11pt;">💰 재무 분석</h4>
             <p style="font-size: 10pt; margin: 5px 0; color: white;">📊 총 투자비: <strong>{self._format_krw(total_investment)}</strong></p>
             <p style="font-size: 10pt; margin: 5px 0; color: white;">🏆 LH 평가: <strong>{lh_score:.1f}/110점 (등급: {lh_grade})</strong></p>
             <p style="font-size: 10pt; margin: 5px 0; color: white;">⭐ IRR: <strong>{irr:.2f}%</strong> / ROI: <strong>{roi:.2f}%</strong></p>
@@ -776,6 +849,30 @@ class ReportGeneratorV11Expert:
         """
         
         return html
+    
+    def _format_unit_type_distribution(self, distribution: Dict[str, int]) -> str:
+        """
+        🔥 NEW: Format unit type distribution for display in report
+        
+        Args:
+            distribution: {"59㎡": 25, "74㎡": 15, "84㎡": 5}
+        
+        Returns:
+            HTML string with formatted distribution
+        """
+        if not distribution:
+            return ""
+        
+        html_parts = ['<p style="font-size: 10pt; margin-top: 10px; color: white;"><strong>📋 세대유형 배분:</strong></p>']
+        
+        for unit_type, count in distribution.items():
+            percentage = (count / sum(distribution.values())) * 100 if sum(distribution.values()) > 0 else 0
+            html_parts.append(
+                f'<p style="font-size: 9.5pt; margin: 3px 0 3px 20px; color: white;">'
+                f'• {unit_type}: {count}세대 ({percentage:.1f}%)</p>'
+            )
+        
+        return '\n'.join(html_parts)
     
     def _generate_recommendation_reason(self, unit_analysis: Dict, recommended_type: str) -> str:
         """
