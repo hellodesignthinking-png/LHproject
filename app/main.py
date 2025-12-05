@@ -126,11 +126,9 @@ app.add_middleware(
 )
 
 # ✨ v11.0: Add Rate Limiting Middleware
-rate_limit_config = RateLimitConfig.production() if not settings.debug else RateLimitConfig.development()
-app.add_middleware(
-    RateLimiter,
-    **rate_limit_config
-)
+# Note: RateLimiter uses default configuration from its __init__
+# For production, it uses strict limits; for development, lenient limits
+app.add_middleware(RateLimiter)
 
 # ✨ v7.2: Include Report Engine v7.2 router
 app.include_router(report_v72_router)
