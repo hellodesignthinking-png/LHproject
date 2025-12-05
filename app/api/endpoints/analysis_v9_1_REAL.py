@@ -497,7 +497,7 @@ async def generate_report_real(
             if output_format.lower() == "pdf":
                 try:
                     logger.info("   📄 PDF 변환 시작...")
-                    pdf_bytes = _generate_pdf_from_html(html_report)
+                    pdf_bytes = await _generate_pdf_from_html(html_report)
                     logger.info(f"   ✅ PDF 생성 완료: {len(pdf_bytes)} bytes")
                     
                     from fastapi.responses import Response
@@ -553,31 +553,31 @@ async def generate_report_real(
         )
 
 
-def _generate_pdf_from_html(html_content: str) -> bytes:
+async def _generate_pdf_from_html(html_content: str) -> bytes:
     """
-    HTML을 PDF로 변환 (Playwright 사용)
+    HTML을 PDF로 변환 (Playwright Async API 사용)
     """
     try:
-        from playwright.sync_api import sync_playwright
+        from playwright.async_api import async_playwright
         import tempfile
         import os
         
-        with sync_playwright() as p:
+        async with async_playwright() as p:
             # Launch browser
-            browser = p.chromium.launch(headless=True)
-            page = browser.new_page()
+            browser = await p.chromium.launch(headless=True)
+            page = await browser.new_page()
             
             # Set content
-            page.set_content(html_content)
+            await page.set_content(html_content)
             
             # Generate PDF
-            pdf_bytes = page.pdf(
+            pdf_bytes = await page.pdf(
                 format='A4',
                 margin={'top': '2cm', 'right': '2cm', 'bottom': '2cm', 'left': '2cm'},
                 print_background=True
             )
             
-            browser.close()
+            await browser.close()
             
         return pdf_bytes
     except Exception as e:
