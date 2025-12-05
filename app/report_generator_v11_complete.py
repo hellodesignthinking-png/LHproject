@@ -876,8 +876,13 @@ def generate_v11_ultra_pro_report(
     print("  ✅ Pseudo-Data generated")
     
     # 2. Unit-Type Analyzer
-    unit_analyzer = UnitTypeSuitabilityAnalyzer(address=address, coord=coord)
-    unit_analysis = unit_analyzer.analyze_all_unit_types()
+    unit_analyzer = UnitTypeSuitabilityAnalyzer()
+    unit_analysis = unit_analyzer.analyze_all_types(
+        address=address,
+        coord=coord,
+        zone_type=zone_type,
+        land_area=land_area
+    )
     recommended_type = unit_analysis.get("recommended_type", "general")
     print(f"  ✅ Unit-Type analyzed: {recommended_type}")
     

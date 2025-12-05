@@ -48,24 +48,27 @@ class PseudoDataEngine:
         
         # 초등학교
         elementary_count = int(random.randint(3, 7) * region_multiplier)
-        elementary_list = [
-            f"{self._get_district()}초등학교", f"{self._get_district()}제{i}초등학교"
+        elementary_list = [f"{self._get_district()}초등학교"] + [
+            f"{self._get_district()}제{i}초등학교"
             for i in range(1, elementary_count)
-        ][:elementary_count]
+        ]
+        elementary_list = elementary_list[:elementary_count]
         
         # 중학교
         middle_count = int(random.randint(2, 5) * region_multiplier)
-        middle_list = [
-            f"{self._get_district()}중학교", f"{self._get_district()}제{i}중학교"
+        middle_list = [f"{self._get_district()}중학교"] + [
+            f"{self._get_district()}제{i}중학교"
             for i in range(1, middle_count)
-        ][:middle_count]
+        ]
+        middle_list = middle_list[:middle_count]
         
         # 고등학교
         high_count = int(random.randint(1, 4) * region_multiplier)
-        high_list = [
-            f"{self._get_district()}고등학교", f"{self._get_district()}제{i}고등학교"
+        high_list = [f"{self._get_district()}고등학교"] + [
+            f"{self._get_district()}제{i}고등학교"
             for i in range(1, high_count)
-        ][:high_count]
+        ]
+        high_list = high_list[:high_count]
         
         # 대학교 (특정 지역만)
         universities = []

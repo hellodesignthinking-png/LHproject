@@ -483,15 +483,30 @@ async def generate_report_real(
             
             analysis_result = analysis_data.get('analysis_result', {})
             
-            # ZeroSite v10.0 Ultra Professional 리포트 생성 (v9.1 엔진 + v7.5 구조)
-            from app.report_generator_v10_ultra_pro import generate_v10_ultra_pro_report
-            html_report = generate_v10_ultra_pro_report(
-                address=request.address,
-                land_area=request.land_area,
-                land_appraisal_price=request.land_appraisal_price,
-                zone_type=request.zone_type,
-                analysis_result=analysis_result
-            )
+            # ZeroSite v11.0 Ultra Professional 리포트 생성 (with v10.0 fallback)
+            try:
+                # v11.0: LH 100점 점수 + A/B/C/D/F 등급 + GO/NO-GO 판단 + 세대유형 분석
+                from app.report_generator_v11_complete import generate_v11_ultra_pro_report
+                html_report = generate_v11_ultra_pro_report(
+                    address=request.address,
+                    land_area=request.land_area,
+                    land_appraisal_price=request.land_appraisal_price,
+                    zone_type=request.zone_type,
+                    analysis_result=analysis_result
+                )
+                logger.info("   ✅ v11.0 Report Generator 사용")
+            except Exception as v11_error:
+                # Fallback to v10.0 if v11.0 fails
+                logger.warning(f"   ⚠️ v11.0 실패 ({str(v11_error)}), v10.0으로 Fallback")
+                from app.report_generator_v10_ultra_pro import generate_v10_ultra_pro_report
+                html_report = generate_v10_ultra_pro_report(
+                    address=request.address,
+                    land_area=request.land_area,
+                    land_appraisal_price=request.land_appraisal_price,
+                    zone_type=request.zone_type,
+                    analysis_result=analysis_result
+                )
+                logger.info("   ✅ v10.0 Report Generator 사용 (Fallback)")
             
             logger.info("   ✅ 리포트 생성 완료")
             logger.info(f"   🔍 Output format 요청: '{output_format}'")
