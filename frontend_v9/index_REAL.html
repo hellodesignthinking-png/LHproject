@@ -382,10 +382,9 @@
                 reportBtn.textContent = '📄 전문가 리포트 생성';
             }
         });
-    </script>
-</body>
-</html>
-
+        
+        // PDF Download
+        document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
             if (!lastRequest) {
                 alert('먼저 토지 분석을 실행해주세요.');
                 return;
