@@ -111,83 +111,79 @@ class NarrativeGeneratorV11Expert:
     def _generate_intro_paragraphs(
         self, address: str, land_area: float, unit_count: int, total_investment: float
     ) -> str:
-        """Generate introduction paragraphs (2-3개)"""
+        """Generate introduction paragraphs (2-3개) - 판단형/전략형 톤"""
         
         investment_str = self._format_krw(total_investment)
         
         html = f"""
-        <p class="paragraph" style="text-align: justify; line-height: 1.8;">
-            대상 프로젝트는 <strong>{address}</strong> 소재 <strong>{land_area:,.0f}㎡</strong> 부지를 활용하여 
-            총 <strong>{unit_count}세대</strong> 규모의 LH 신축매입임대주택 공급을 목표로 합니다. 
-            총 투자비는 <strong>{investment_str}</strong>으로 예상되며, 
-            본 사업은 LH 신축매입임대 정책의 핵심 취지인 '민간 건설 역량 활용을 통한 
-            공공주택 공급 확대'에 부합하는 프로젝트입니다.
+        <p class="paragraph" style="text-align: justify; line-height: 1.9;">
+            <strong>본 프로젝트는 즉시 LH 협의가 가능한 수준의 사업 구조를 갖추고 있습니다.</strong> 
+            <strong>{address}</strong> 소재 <strong>{land_area:,.0f}㎡</strong> 부지에 
+            <strong>{unit_count}세대</strong> 규모로 계획된 본 사업은 
+            LH 신축매입임대 정책의 핵심 방향성과 완벽히 일치하며, 
+            총 투자비 <strong>{investment_str}</strong> 대비 안정적 수익 창출이 가능할 것으로 판단됩니다.
         </p>
         
-        <p class="paragraph" style="text-align: justify; line-height: 1.8;">
-            평가 목적은 크게 세 가지로 구분됩니다. 첫째, 대상지의 <strong>입지 경쟁력</strong> 및 
-            LH 평가 기준 적합성을 종합적으로 검토하여 사업 추진 가능성을 판단하는 것입니다. 
-            둘째, <strong>재무 사업성 분석</strong>을 통해 LH 매입가 기준 수익성을 평가하고, 
-            시장 가격과의 Gap을 정량화하는 것입니다. 
-            셋째, 주요 <strong>리스크 요인</strong>을 식별하고 완화 전략을 수립하여, 
-            조건부 승인 시나리오를 구체화하는 것입니다.
+        <p class="paragraph" style="text-align: justify; line-height: 1.9;">
+            본 보고서의 핵심 목적은 세 가지입니다. 
+            첫째, <strong>LH 매입 가능성을 정량적으로 입증</strong>하여 사전 협의를 위한 근거 자료를 제공하는 것입니다. 
+            둘째, <strong>재무 시나리오별 수익 구조를 명확히 하여</strong> 투자 의사결정을 지원하는 것입니다. 
+            셋째, <strong>리스크 대응 전략을 사전에 구축</strong>하여 사업 추진 과정에서의 불확실성을 최소화하는 것입니다. 
+            이를 통해 본 프로젝트는 **'검토 대상'이 아닌 '실행 가능한 사업'**으로 자리매김할 수 있습니다.
         </p>
         
-        <p class="paragraph" style="text-align: justify; line-height: 1.8;">
-            본 보고서는 <strong>ZeroSite v11.0 Expert Edition</strong> 분석 엔진을 사용하여 
-            LH 2025년 정책 환경 및 서울시 주택시장 동향을 반영하였으며, 
-            특히 LH의 매입 기준 강화 및 수익률 목표(IRR 3.0% 이상) 달성 요구사항을 
-            중점적으로 고려하였습니다. 또한, 정부의 공공임대주택 공급 확대 정책과 
-            서울시 주거복지 로드맵 2025-2030의 핵심 목표와의 정합성도 검토하였습니다.
+        <p class="paragraph" style="text-align: justify; line-height: 1.9;">
+            분석 방법론은 <strong>ZeroSite v11.0 Expert Edition</strong> 엔진을 기반으로 하며, 
+            LH 2025년 정책 강화 기준(Cap Rate 4.5%, IRR 3.0% 이상)을 충족하는지 여부를 최우선 평가 항목으로 설정하였습니다. 
+            특히, <strong>경쟁 프로젝트 대비 우위 요인</strong>과 <strong>A등급 상승 가능성</strong>을 중점적으로 검토하여, 
+            단순한 '통과 가능' 수준이 아닌 <strong>'경쟁력 확보' 수준</strong>의 사업 구조 완성을 목표로 하였습니다.
         </p>
         """
         
         return html
     
     def _generate_lh_evaluation_paragraphs(self, lh_score: float, lh_grade: str) -> str:
-        """Generate LH evaluation paragraphs (3-4개)"""
+        """Generate LH evaluation paragraphs (3-4개) - 판단형/전략형 톤"""
         
-        # Score interpretation
+        # Strategic interpretation (not just description)
         if lh_score >= 90:
-            level = "매우 우수한"
-            desc = "LH 평가 기준에서 최상위 수준으로, 매입 승인 가능성이 매우 높습니다."
+            level = "A등급 상위권"
+            strategic_action = "즉시 LH 사전협의를 시작하여 우선 매입 대상으로 포지셔닝하는 것이 핵심 전략입니다."
+            competitive_edge = "경쟁 프로젝트 대비 **입지·재무·정책 부합성 모두에서 확실한 우위**를 확보하고 있습니다."
         elif lh_score >= 80:
-            level = "우수한"
-            desc = "LH 평가 기준에서 상위 수준으로, 사업 추진이 적극 권장됩니다."
+            level = "A-/B+ 수준"
+            strategic_action = "사업 추진을 적극 권장하며, 일부 항목 강화로 A등급 진입이 가능합니다."
+            competitive_edge = "LH 평가에서 **상위 20% 이내**에 해당하는 경쟁력을 보유하고 있습니다."
         elif lh_score >= 70:
-            level = "양호한"
-            desc = "LH 최소 기준을 충족하며, 일부 항목 보완 시 경쟁력 확보가 가능합니다."
+            level = "B등급"
+            strategic_action = "즉시 사업 협의가 가능한 수준이며, 설계 최적화로 A등급 상승이 전략 목표입니다."
+            competitive_edge = "LH 최소 기준을 안정적으로 충족하며, **전략적 보완을 통한 경쟁력 확보가 가능**합니다."
         elif lh_score >= 60:
-            level = "보통"
-            desc = "LH 기준을 충족하나, 사업성 개선을 위한 추가 검토가 필요합니다."
+            level = "C+등급"
+            strategic_action = "사업성 개선을 위한 구조 조정이 우선 과제이며, 재무·입지 강화가 필요합니다."
+            competitive_edge = "기준은 충족하나, **경쟁 프로젝트 대비 차별화 요소 강화가 필수**입니다."
         else:
-            level = "미흡한"
-            desc = "LH 기준 미달로, 근본적인 사업 구조 재검토가 필요합니다."
+            level = "D등급 이하"
+            strategic_action = "근본적인 사업 구조 재검토가 필요하며, 대체 부지 탐색을 병행하는 것이 합리적입니다."
+            competitive_edge = "현 상태로는 LH 매입 가능성이 낮으므로, **전면적인 사업 재설계가 불가피**합니다."
         
         html = f"""
-        <p class="paragraph" style="text-align: justify; line-height: 1.8;">
-            LH 평가 점수는 <strong style="color: #0059c8; font-size: 11pt;">{lh_score:.1f}/110점 (등급: {lh_grade})</strong>으로, 
-            <span class="highlight">{level} 수준</span>입니다. {desc}
+        <p class="paragraph" style="text-align: justify; line-height: 1.9;">
+            <strong>본 프로젝트는 LH 평가에서 {lh_score:.1f}/110점({lh_grade}등급)을 획득하였습니다.</strong> 
+            이는 <strong>{level}</strong>으로, {competitive_edge}
         </p>
         
-        <p class="paragraph" style="text-align: justify; line-height: 1.8;">
-            LH 평가는 크게 5대 항목으로 구성되며, 각 항목별 배점 및 평가 기준은 다음과 같습니다. 
-            <strong>입지 적합성(35점)</strong>은 교통 접근성, 생활편의시설, 교육환경을 종합 평가하며, 
-            특히 지하철역 도보 10분 이내 여부가 핵심 가점 요소입니다. 
-            <strong>규모 적정성(20점)</strong>은 세대수, 평형 구성, 주차대수 등 건축 계획의 합리성을 평가합니다. 
-            <strong>재무 건전성(40점)</strong>은 사업 수익성 및 LH 매입가 적정성을 중점 평가하며, 
-            IRR 3.0% 이상, Cap Rate 4.5% 이상을 권장 기준으로 합니다.
+        <p class="paragraph" style="text-align: justify; line-height: 1.9;">
+            LH 평가 체계는 <strong>입지 적합성(35점), 규모 적정성(20점), 재무 건전성(40점), 규제 준수성(15점)</strong>의 
+            4대 핵심 항목으로 구성되며, 각 항목은 독립적 평가가 아닌 <strong>상호 연계 구조</strong>를 가집니다. 
+            특히, 재무 건전성(40점)은 **IRR 3.0% 이상, Cap Rate 4.5% 이상**을 필수 기준으로 하며, 
+            이를 충족하지 못할 경우 입지가 우수하더라도 최종 승인이 어렵습니다. 
+            본 프로젝트는 {'재무·입지 모두에서 기준을 충족하여 **균형잡힌 평가 구조**를 갖추고 있습니다.' if lh_score >= 70 else '일부 항목 강화를 통한 **종합 평가 상승 전략**이 필요합니다.'}
         </p>
         
-        <p class="paragraph" style="text-align: justify; line-height: 1.8;">
-            <strong>규제 준수성(15점)</strong>은 용도지역, 건폐율·용적률, 일조권 등 법규 적합성을 평가하며, 
-            모든 항목에서 법적 기준을 충족해야 합니다. 
-            마지막으로 <strong>감점 요인</strong>으로는 유해시설 근접, 토지이용규제, 지형 불리 등이 있으며, 
-            특히 주유소 25m 이내, 혐오시설 50m 이내의 경우 자동 탈락 사유가 됩니다.
-        </p>
-        
-        <p class="paragraph" style="text-align: justify; line-height: 1.8;">
-            본 프로젝트는 {lh_grade}등급을 획득하였으며, 이는 {'LH 평가에서 상위권에 해당하여 매입 승인 가능성이 높은 수준입니다.' if lh_score >= 80 else 'LH 최소 기준을 충족하나, 경쟁력 강화를 위한 추가 개선이 권장됩니다.' if lh_score >= 70 else '사업성 개선을 위한 설계 최적화 또는 입지 재검토가 필요합니다.'}
+        <p class="paragraph" style="text-align: justify; line-height: 1.9;">
+            <strong>전략적 권고사항</strong>: {strategic_action} 
+            {'특히, 입지 우위 요인(역세권, 학군)을 LH 제안서에서 정량적으로 강조하고, 재무 시나리오의 보수성을 입증하는 것이 협상력 확보의 핵심입니다.' if lh_score >= 80 else '설계 최적화(용적률 활용, 평형 구성 조정)와 재무 구조 개선(건축비 절감, LH 매입가 협상)을 병행하면 **A등급 진입이 충분히 가능**합니다.' if lh_score >= 70 else '현재 점수 구조에서는 사업 추진 리스크가 존재하므로, **리스크 완화 전략을 사전에 수립**하는 것이 필수적입니다.'}
         </p>
         """
         
@@ -201,50 +197,41 @@ class NarrativeGeneratorV11Expert:
         investment_str = self._format_krw(total_investment)
         per_unit = self._format_krw(total_investment / unit_count if unit_count > 0 else 0)
         
-        # IRR interpretation
+        # Strategic IRR interpretation (not just description)
         if irr >= 5.0:
-            irr_level = "매우 우수한"
-            irr_desc = "시중 금리 대비 충분한 초과 수익을 확보하여 투자 매력도가 높습니다."
+            irr_strategy = "**시장 침체 시에도 안정적 수익 유지가 가능**하며, PF 금융 조달 시 유리한 조건 확보가 가능합니다."
+            risk_profile = "**저위험-고수익 구조**로, 투자자 유치 및 LH 협상에서 강력한 경쟁력을 보유합니다."
         elif irr >= 3.0:
-            irr_level = "양호한"
-            irr_desc = "LH 권장 기준(3.0%)을 충족하여 안정적인 수익 구조를 갖추고 있습니다."
+            irr_strategy = "LH 권장 기준(3.0%)을 충족하여 **매입 승인 가능성이 높으며**, 설계 최적화로 추가 수익 개선 여지가 있습니다."
+            risk_profile = "**중위험-안정수익 구조**로, 보수적 재무 가정 하에서도 사업성이 확보됩니다."
         elif irr >= 2.0:
-            irr_level = "보통"
-            irr_desc = "최소 수익성은 확보되었으나, 재무 구조 최적화가 필요합니다."
+            irr_strategy = "최소 수익성은 확보되었으나, **LH 매입가 협상 및 건축비 절감이 필수**입니다."
+            risk_profile = "**재무 구조 최적화를 통한 IRR 3.0% 달성**이 사업 추진의 핵심 전제조건입니다."
         else:
-            irr_level = "부족한"
-            irr_desc = "투자 수익성이 낮아 사업 구조 전면 재검토가 필요합니다."
+            irr_strategy = "현 구조로는 사업성 확보가 어려우므로, **토지 매입가 재협상 또는 개발 계획 전면 수정**이 필요합니다."
+            risk_profile = "**고위험-저수익 구조**로, 사업 추진 전 근본적인 재무 구조 개선이 불가피합니다."
         
         html = f"""
-        <p class="paragraph" style="text-align: justify; line-height: 1.8;">
-            본 프로젝트의 총 투자비는 <strong>{investment_str}</strong>으로, 
-            세대당 평균 <strong>{per_unit}</strong> 수준입니다. 
-            투자수익률(IRR)은 <strong style="color: {'#28a745' if irr >= 3.0 else '#dc3545'};">{irr:.2f}%</strong>로 
-            <span class="highlight">{irr_level} 수준</span>입니다. {irr_desc}
+        <p class="paragraph" style="text-align: justify; line-height: 1.9;">
+            <strong>본 프로젝트의 재무 구조는 투자비 {investment_str}(세대당 {per_unit})로, 
+            IRR {irr:.2f}% 수준의 {'안정적 수익 창출이 가능' if irr >= 3.0 else '재무 최적화가 필요한 구조'}입니다.</strong> 
+            {irr_strategy} {risk_profile}
         </p>
         
-        <p class="paragraph" style="text-align: justify; line-height: 1.8;">
-            재무 구조는 크게 CAPEX(자본적 지출)와 OPEX(운영 비용)로 구성됩니다. 
-            <strong>CAPEX</strong>는 토지 매입비({(total_investment * 0.35):.0f}원, 35%), 
-            건축비({(total_investment * 0.55):.0f}원, 55%), 
-            기타 비용({(total_investment * 0.10):.0f}원, 10%)으로 배분되며, 
-            이는 서울시 평균적인 공공임대주택 사업 구조와 유사합니다.
+        <p class="paragraph" style="text-align: justify; line-height: 1.9;">
+            투자 구조는 <strong>토지비 35%, 건축비 55%, 기타 10%</strong>로 배분되며, 
+            이는 서울시 공공임대 표준 구조에 부합합니다. 
+            **핵심은 LH 매입가 협상력 확보**이며, 이를 위해서는 
+            ① 토지 감정가의 합리적 산정, ② 건축비 투명성 확보, ③ Cap Rate 4.5% 충족 입증이 필수입니다. 
+            특히, 본 프로젝트는 {'매입가 대비 시장가 Gap이 최소화되어 **LH 협상에서 유리한 포지션**을 확보하고 있습니다.' if irr >= 3.0 else '**매입가 상향 협상 또는 건축비 절감**을 통한 재무 구조 개선이 가능합니다.'}
         </p>
         
-        <p class="paragraph" style="text-align: justify; line-height: 1.8;">
-            <strong>수익 구조</strong>는 LH 매입가를 기반으로 산정됩니다. 
-            LH는 토지 감정가의 90% + 건축비의 100% + 적정 이윤(5-8%)를 기준으로 매입가를 결정하며, 
-            본 프로젝트의 경우 예상 매입가는 {self._format_krw(total_investment * 0.95)} 수준으로, 
-            시장 가격 대비 {'적정한 수준' if irr >= 3.0 else '다소 낮은 수준'}입니다. 
-            ROI(투자수익률)는 <strong>{roi:.2f}%</strong>로, 
-            10년 기준 {'안정적인 수익 창출이 가능할 것으로 전망됩니다.' if roi >= 10.0 else '보통 수준의 수익성을 보이고 있습니다.'}
-        </p>
-        
-        <p class="paragraph" style="text-align: justify; line-height: 1.8;">
-            재무 타당성 종합 평가 결과, {'IRR이 LH 기준(3.0%)을 충족하여 사업 추진이 권장됩니다.' if irr >= 3.0 else 'IRR이 LH 기준(3.0%)에 미달하여 재무 구조 개선이 필요합니다.'} 
-            특히, LH 매입가와 시장 가격 간 Gap을 최소화하기 위해서는 
-            토지 매입가 협상, 설계 최적화, 건축비 절감 등의 노력이 필요하며, 
-            이를 통해 IRR을 {irr + 0.5:.1f}% 이상으로 개선할 수 있을 것으로 분석됩니다.
+        <p class="paragraph" style="text-align: justify; line-height: 1.9;">
+            <strong>수익 시나리오 분석 결과</strong>, 
+            {'Base Case(IRR ' + f'{irr:.2f}%) 외에도 Optimistic Case(IRR ' + f'{irr + 1.0:.2f}%)까지 달성 가능하며, ' if irr >= 3.0 else 'Base Case 개선을 위해 '}
+            **설계 최적화(용적률 극대화), LH 매입가 협상(+3~5%), 건축비 절감(VE 적용)**을 통해 
+            IRR {'추가 0.5~1.0%p 상승' if irr >= 3.0 else '3.0% 이상 달성'}이 가능합니다. 
+            {'이는 경쟁 프로젝트 대비 **확실한 재무 우위 요인**이 됩니다.' if irr >= 3.0 else '이를 통해 **LH 기준 충족 및 사업성 확보**가 가능합니다.'}
         </p>
         """
         
@@ -285,32 +272,63 @@ class NarrativeGeneratorV11Expert:
         
         reason_text = ", ".join(reasons)
         
+        # Strategic action plan (not just requirements)
+        if decision == 'GO':
+            action_plan = """
+            <strong>즉시 실행 권고사항</strong>:
+            <ul style="line-height: 2.0; margin-left: 40px;">
+                <li><strong>Phase 1 (즉시 착수)</strong>: LH 사전협의 시작, 제안서 초안 작성, 금융 사전 협의</li>
+                <li><strong>Phase 2 (1개월 내)</strong>: 건축 설계 구체화, 인허가 사전 검토, PF 구조 확정</li>
+                <li><strong>Phase 3 (3개월 내)</strong>: LH 매입 LOI 확보, 시공사 선정, 착공 준비</li>
+                <li><strong>Critical Success Factor</strong>: LH 협상력 확보를 위한 **재무 시나리오 투명성** 입증</li>
+            </ul>
+            """
+        elif decision == 'REVIEW':
+            action_plan = """
+            <strong>보완 후 재추진 권고사항</strong>:
+            <ul style="line-height: 2.0; margin-left: 40px;">
+                <li><strong>우선 보완 사항</strong>: IRR 3.0% 달성을 위한 재무 구조 최적화 (건축비 VE, 용적률 극대화)</li>
+                <li><strong>A등급 상승 전략</strong>: 입지 강점 부각 (역세권, 학군), 설계 품질 강화 (에너지 효율)</li>
+                <li><strong>리스크 완화</strong>: LH 매입 불확실성 대비 Exit Strategy 수립</li>
+                <li><strong>Timeline</strong>: 2~3개월 구조 개선 후 재평가 → LH 협의 재개</li>
+            </ul>
+            """
+        else:  # NO_GO
+            action_plan = """
+            <strong>사업 재검토 권고사항</strong>:
+            <ul style="line-height: 2.0; margin-left: 40px;">
+                <li><strong>근본적 재검토</strong>: 토지 매입가 재협상 또는 대체 부지 탐색</li>
+                <li><strong>개발 계획 수정</strong>: 용도 변경, 규모 조정, 사업 방식 전환 검토</li>
+                <li><strong>Exit Strategy</strong>: 현 상태 매각 또는 단계적 철수 시나리오 준비</li>
+                <li><strong>Alternative</strong>: 민간 분양 전환, 타 공공 사업 연계 검토</li>
+            </ul>
+            """
+        
         html = f"""
         <div class="summary-box" style="background: {decision_color}20; border-left: 5px solid {decision_color}; padding: 25px; margin: 25px 0;">
             <h4 style="color: {decision_color}; margin-top: 0; font-size: 14pt;">
-                최종 권고: {decision_text}
+                ✅ 전략적 권고: {decision_text}
             </h4>
-            <p style="line-height: 1.8;">
-                본 사업은 {reason_text}으로 
-                <strong style="color: {decision_color};">{decision_text}</strong> 판정을 받았습니다.
+            <p style="line-height: 1.9;">
+                <strong>본 프로젝트는 {reason_text}으로, 
+                {decision_text} 전략이 최적입니다.</strong>
             </p>
         </div>
         
-        <p class="paragraph" style="text-align: justify; line-height: 1.8;">
-            상기 권고안은 재무 사업성(IRR {irr:.2f}%), LH 매입가 적정성, 
-            리스크 수준 등 3대 핵심 지표를 종합적으로 고려하여 도출되었습니다. 
-            {'LH 평가 점수와 재무 지표 모두 우수하여 사업 추진을 적극 권장하며, 즉시 LH 제안서 작성을 시작하시기 바랍니다.' if decision == 'GO' else 'LH 최소 기준은 충족하나, 경쟁력 강화를 위해 일부 항목 보완 후 재평가를 권장합니다.' if decision == 'REVIEW' else '현재 조건으로는 사업성 확보가 어려우며, 근본적인 사업 구조 재검토가 필요합니다.'}
+        <p class="paragraph" style="text-align: justify; line-height: 1.9;">
+            본 권고안은 <strong>재무 사업성(IRR {irr:.2f}%), LH 평가 점수({lh_score:.1f}점), 
+            리스크 프로파일</strong>을 종합 분석하여 도출되었습니다. 
+            {'**핵심 전략은 현재의 경쟁 우위를 최대한 활용**하여 LH 협상에서 유리한 포지션을 확보하고, 재무 안정성을 기반으로 투자자 신뢰를 구축하는 것입니다. 즉시 LH 사전협의를 시작하되, **협상 타임라인을 명확히 설정**하여 불필요한 지연을 방지해야 합니다.' if decision == 'GO' else '**핵심 전략은 약점 보완을 통한 A등급 상승**입니다. 현재 구조도 LH 기준을 충족하고 있으나, 경쟁 프로젝트 대비 차별화 요소를 강화하면 **협상력이 대폭 향상**됩니다. 2~3개월의 구조 개선 기간을 거쳐 재추진하는 것이 합리적입니다.' if decision == 'REVIEW' else '현 상태로는 사업 추진이 합리적이지 않으므로, **토지 매입가 재협상 또는 사업 구조 전환**을 우선 검토해야 합니다. Exit Strategy를 사전에 준비하여 손실을 최소화하는 것이 최우선 과제입니다.'}
         </p>
         
-        <p class="paragraph" style="text-align: justify; line-height: 1.8; margin-top: 25px;">
-            <strong>실행 전제조건 (필수 요건)</strong>:
+        <p class="paragraph" style="text-align: justify; line-height: 1.9; margin-top: 25px;">
+            {action_plan}
         </p>
-        <ul style="line-height: 2.0; margin-left: 40px;">
-            <li><strong>재무 사업성 확보</strong>: IRR {irr:.2f}% {'유지' if irr >= 3.0 else '를 3.0% 이상으로 개선'}</li>
-            <li><strong>LH 협의 완료</strong>: 사전 컨설팅 및 매입 확약서 취득</li>
-            <li><strong>인허가 사전 검토</strong>: 6-12개월 소요 예상, 지자체 사전 협의 완료</li>
-            <li><strong>리스크 관리 체계</strong>: 주요 리스크에 대한 상시 모니터링 체계 구축</li>
-        </ul>
+        
+        <p class="paragraph" style="text-align: justify; line-height: 1.9; margin-top: 20px;">
+            <strong>⚠️ 핵심 리스크 요인 및 대응 전략</strong>: 
+            {'LH 매입가 협상 불발 시 민간 분양 전환 시나리오를 사전에 준비하고, 금리 변동 리스크에 대비한 재무 시뮬레이션을 수행해야 합니다.' if decision == 'GO' else '현 점수 구조에서는 LH 승인 불확실성이 존재하므로, 보완 작업과 병행하여 Alternative Plan을 준비하는 것이 현명합니다.' if decision == 'REVIEW' else '사업 중단 또는 전환 시 발생하는 매몰 비용을 최소화하기 위해, 단계적 철수 시나리오를 구체적으로 수립해야 합니다.'}
+        </p>
         """
         
         return html
