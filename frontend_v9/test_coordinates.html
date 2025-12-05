@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite v9.1 - 위도/경도 변경 테스트</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-blue-600">🗺️ 위도/경도 데이터 변경 테스트</h1>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-xl font-bold mb-4">테스트 주소 선택</h2>
+            <div class="space-y-2">
+                <button onclick="testAddress('서울특별시 마포구 월드컵북로 120', 1000, 9000000, '제3종일반주거지역')" 
+                    class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">
+                    1️⃣ 서울 마포구 (예상: 37.56, 126.91)
+                </button>
+                <button onclick="testAddress('서울특별시 강남구 테헤란로 123', 1000, 15000000, '제3종일반주거지역')" 
+                    class="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">
+                    2️⃣ 서울 강남구 (예상: 37.50, 127.03)
+                </button>
+                <button onclick="testAddress('서울특별시 종로구 세종대로 209', 1000, 12000000, '제3종일반주거지역')" 
+                    class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded">
+                    3️⃣ 서울 종로구 (예상: 37.57, 126.98)
+                </button>
+                <button onclick="testAddress('부산광역시 해운대구 해운대해변로 264', 1000, 10000000, '제2종일반주거지역')" 
+                    class="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded">
+                    4️⃣ 부산 해운대구 (예상: 35.16, 129.16)
+                </button>
+            </div>
+        </div>
+
+        <div id="loading" class="hidden bg-blue-50 p-4 rounded-lg mb-6">
+            <p class="text-center text-blue-600">⏳ 분석 중...</p>
+        </div>
+
+        <div id="result" class="bg-white p-6 rounded-lg shadow-md hidden">
+            <h2 class="text-xl font-bold mb-4">📍 좌표 정보</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-gray-600 text-sm">입력 주소</p>
+                    <p id="address" class="font-bold text-lg"></p>
+                </div>
+                <div>
+                    <p class="text-gray-600 text-sm">법정동코드</p>
+                    <p id="legal_code" class="font-mono text-lg"></p>
+                </div>
+                <div class="col-span-2 bg-blue-50 p-4 rounded">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-blue-800 font-semibold">🌐 위도 (Latitude)</p>
+                            <p id="latitude" class="text-3xl font-bold text-blue-600 font-mono"></p>
+                        </div>
+                        <div>
+                            <p class="text-blue-800 font-semibold">🌐 경도 (Longitude)</p>
+                            <p id="longitude" class="text-3xl font-bold text-blue-600 font-mono"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 border-t pt-4">
+                <h3 class="font-bold mb-2">🏗️ 기타 자동 계산 필드</h3>
+                <div class="grid grid-cols-3 gap-3 text-sm">
+                    <div class="bg-gray-50 p-2 rounded">
+                        <p class="text-gray-600">건폐율</p>
+                        <p id="bcr" class="font-bold"></p>
+                    </div>
+                    <div class="bg-gray-50 p-2 rounded">
+                        <p class="text-gray-600">용적률</p>
+                        <p id="far" class="font-bold"></p>
+                    </div>
+                    <div class="bg-gray-50 p-2 rounded">
+                        <p class="text-gray-600">세대수</p>
+                        <p id="units" class="font-bold"></p>
+                    </div>
+                    <div class="bg-gray-50 p-2 rounded">
+                        <p class="text-gray-600">층수</p>
+                        <p id="floors" class="font-bold"></p>
+                    </div>
+                    <div class="bg-gray-50 p-2 rounded">
+                        <p class="text-gray-600">주차대수</p>
+                        <p id="parking" class="font-bold"></p>
+                    </div>
+                    <div class="bg-gray-50 p-2 rounded">
+                        <p class="text-gray-600">연면적</p>
+                        <p id="total_gfa" class="font-bold"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="analysis" class="mt-6 border-t pt-4 hidden">
+                <h3 class="font-bold mb-2">📊 분석 결과</h3>
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="bg-green-50 p-3 rounded">
+                        <p class="text-gray-600 text-sm">LH Score</p>
+                        <p id="lh_score" class="text-2xl font-bold text-green-600"></p>
+                        <p id="lh_grade" class="text-sm text-gray-500"></p>
+                    </div>
+                    <div class="bg-yellow-50 p-3 rounded">
+                        <p class="text-gray-600 text-sm">위험도</p>
+                        <p id="risk_level" class="font-bold text-yellow-600"></p>
+                    </div>
+                    <div class="bg-blue-50 p-3 rounded">
+                        <p class="text-gray-600 text-sm">최종 판단</p>
+                        <p id="decision" class="font-bold text-blue-600"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="error" class="bg-red-50 border border-red-200 p-4 rounded-lg hidden">
+            <p class="text-red-600 font-bold">❌ 오류 발생</p>
+            <p id="error-message" class="text-red-500"></p>
+        </div>
+
+        <div class="mt-6 bg-gray-100 p-4 rounded">
+            <h3 class="font-bold mb-2">✅ 예상 결과 (검증용)</h3>
+            <ul class="text-sm space-y-1">
+                <li>🔵 마포구: <code>37.5639, 126.9133</code></li>
+                <li>🟢 강남구: <code>37.4996, 127.0314</code></li>
+                <li>🟣 종로구: <code>37.5749, 126.9752</code></li>
+                <li>🟠 해운대구: <code>35.1591, 129.1603</code></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api/v9/real/analyze-land';
+
+        async function testAddress(address, landArea, price, zoneType) {
+            // Reset UI
+            document.getElementById('result').classList.add('hidden');
+            document.getElementById('error').classList.add('hidden');
+            document.getElementById('loading').classList.remove('hidden');
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        address: address,
+                        land_area: landArea,
+                        land_appraisal_price: price,
+                        zone_type: zoneType
+                    })
+                });
+
+                const data = await response.json();
+                console.log('Full Response:', data);
+
+                if (!data.ok) {
+                    throw new Error(data.message || '분석 실패');
+                }
+
+                // Display coordinates
+                const auto = data.auto_calculated;
+                document.getElementById('address').textContent = address;
+                document.getElementById('latitude').textContent = auto.latitude?.toFixed(6) || 'N/A';
+                document.getElementById('longitude').textContent = auto.longitude?.toFixed(6) || 'N/A';
+                document.getElementById('legal_code').textContent = auto.legal_code || 'N/A';
+
+                // Display other fields
+                document.getElementById('bcr').textContent = (auto.building_coverage_ratio || 'N/A') + '%';
+                document.getElementById('far').textContent = (auto.floor_area_ratio || 'N/A') + '%';
+                document.getElementById('units').textContent = auto.unit_count || 'N/A';
+                document.getElementById('floors').textContent = auto.floors || 'N/A';
+                document.getElementById('parking').textContent = auto.parking_spaces || 'N/A';
+                document.getElementById('total_gfa').textContent = (auto.total_gfa || 0).toLocaleString() + ' m²';
+
+                // Display analysis if available
+                if (data.analysis_result) {
+                    const analysis = data.analysis_result;
+                    document.getElementById('analysis').classList.remove('hidden');
+                    
+                    const lh = analysis.lh_scores || {};
+                    document.getElementById('lh_score').textContent = lh.total_score || 'N/A';
+                    document.getElementById('lh_grade').textContent = lh.grade || '';
+                    
+                    const risk = analysis.risk_assessment || {};
+                    document.getElementById('risk_level').textContent = risk.risk_level || 'N/A';
+                    
+                    const rec = analysis.final_recommendation || {};
+                    document.getElementById('decision').textContent = rec.final_decision || 'N/A';
+                }
+
+                document.getElementById('result').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('error-message').textContent = error.message;
+                document.getElementById('error').classList.remove('hidden');
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+            }
+        }
+
+        // Auto-test on load (optional)
+        // window.onload = () => testAddress('서울특별시 마포구 월드컵북로 120', 1000, 9000000, '제3종일반주거지역');
+    </script>
+</body>
+</html>
