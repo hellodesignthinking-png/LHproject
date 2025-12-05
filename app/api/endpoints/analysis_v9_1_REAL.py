@@ -483,11 +483,13 @@ async def generate_report_real(
             
             analysis_result = analysis_data.get('analysis_result', {})
             
-            # ZeroSite v9.1 Ultra-Pro 전문가급 리포트 생성
-            from app.report_generator_v9_1_pro import generate_professional_report
-            html_report = generate_professional_report(
+            # ZeroSite v10.0 Ultra Professional 리포트 생성 (v9.1 엔진 + v7.5 구조)
+            from app.report_generator_v10_ultra_pro import generate_v10_ultra_pro_report
+            html_report = generate_v10_ultra_pro_report(
                 address=request.address,
-                auto_calculated=analysis_data.get('auto_calculated', {}),
+                land_area=request.land_area,
+                land_appraisal_price=request.land_appraisal_price,
+                zone_type=request.zone_type,
                 analysis_result=analysis_result
             )
             
