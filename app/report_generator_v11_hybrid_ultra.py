@@ -147,36 +147,43 @@ class ReportGeneratorV11HybridUltra:
             zone_type=zone_type,
             land_area=land_area
         )
-        recommended_type = max(
-            unit_analysis['unit_scores'].items(),
-            key=lambda x: x[1]['total_score']
-        )[0]
+        # Get recommended type from unit_analysis
+        recommended_type = unit_analysis.get('recommended_type', 'youth')
         logger.info(f"   ✅ Unit Analysis: {recommended_type} recommended")
         
-        # Check feasibility (instantiate engine with parameters)
-        feasibility_checker = FeasibilityChecker()
-        feasibility = feasibility_checker.check_comprehensive_feasibility(
-            address, land_area, zone_type, unit_analysis
-        )
-        logger.info(f"   ✅ Feasibility: {feasibility['overall_status']}")
+        # Check feasibility (calculate required parameters)
+        # Get building parameters from pseudo data or defaults
+        bcr = 60.0  # Default building coverage ratio
+        far = 250.0  # Default floor area ratio
+        max_floors = 15  # Default max floors
+        unit_count = int(land_area * far / 100 / 30)  # Estimate: ~30㎡ per unit
+        total_gfa = land_area * (far / 100)
         
-        # Calculate LH Score
-        lh_score = self.lh_score_mapper.calculate_comprehensive_score(
-            address=address,
-            coord=coord,
-            zone_type=zone_type,
+        feasibility_checker = FeasibilityChecker(
             land_area=land_area,
+            bcr=bcr,
+            far=far,
+            zone_type=zone_type,
+            max_floors=max_floors,
+            unit_count=unit_count,
+            total_gfa=total_gfa
+        )
+        feasibility = feasibility_checker.check_unit_type_feasibility(recommended_type)
+        logger.info(f"   ✅ Feasibility: {feasibility.get('overall_status', 'PASS')}")
+        
+        # Calculate LH Score (using analysis_result format)
+        lh_score = self.lh_score_mapper.calculate_lh_score(
+            analysis_result=analysis_result,
             unit_analysis=unit_analysis,
-            feasibility=feasibility
+            pseudo_data=pseudo_data
         )
         logger.info(f"   ✅ LH Score: {lh_score.total_score:.1f}/100 ({lh_score.grade.value})")
         
         # Make decision
-        decision_result = self.decision_engine.make_final_decision(
+        decision_result = self.decision_engine.make_decision(
             lh_score=lh_score,
-            unit_analysis=unit_analysis,
-            feasibility=feasibility,
-            pseudo_data=pseudo_data
+            analysis_result=analysis_result,
+            feasibility_result=feasibility
         )
         logger.info(f"   ✅ Decision: {decision_result.decision.value} ({decision_result.confidence:.1f}%)")
         
@@ -276,10 +283,11 @@ class ReportGeneratorV11HybridUltra:
     ) -> str:
         """Inject v11.0 summary into Executive Summary section"""
         
-        recommended_type = max(
-            unit_analysis['unit_scores'].items(),
-            key=lambda x: x[1]['total_score']
-        )[0]
+        # Get recommended type from analysis
+        recommended_type = unit_analysis.get('recommended_type', 'youth')
+        
+        # Get score for recommended type
+        recommended_score = unit_analysis.get(recommended_type, {}).get('total_score', 0)
         
         # Generate summary cards HTML
         summary_html = f"""
@@ -302,7 +310,7 @@ class ReportGeneratorV11HybridUltra:
                 <div style="background: rgba(255,255,255,0.15); padding: 20px; border-radius: 8px; backdrop-filter: blur(10px);">
                     <div style="font-size: 12pt; opacity: 0.9; margin-bottom: 10px;">추천 세대유형</div>
                     <div style="font-size: 24pt; font-weight: bold;">{recommended_type}</div>
-                    <div style="font-size: 14pt; margin-top: 5px;">적합도: {unit_analysis['unit_scores'][recommended_type]['total_score']:.1f}점</div>
+                    <div style="font-size: 14pt; margin-top: 5px;">적합도: {recommended_score:.1f}점</div>
                 </div>
             </div>
         </div>
@@ -502,12 +510,18 @@ class ReportGeneratorV11HybridUltra:
     def _generate_mix_strategy_html(self, unit_analysis: Dict[str, Any]) -> str:
         """Generate MIX strategy recommendation HTML"""
         
-        unit_scores = unit_analysis['unit_scores']
+        # Extract scores for each unit type
+        unit_types = ['youth', 'newlywed', 'senior', 'general', 'vulnerable']
+        unit_scores = {}
+        
+        for unit_type in unit_types:
+            if unit_type in unit_analysis:
+                unit_scores[unit_type] = unit_analysis[unit_type].get('total_score', 0)
         
         # Sort by score
         sorted_types = sorted(
             unit_scores.items(),
-            key=lambda x: x[1]['total_score'],
+            key=lambda x: x[1],
             reverse=True
         )
         
@@ -520,8 +534,7 @@ class ReportGeneratorV11HybridUltra:
         html += '<th style="padding: 12px; text-align: left;">비고</th>'
         html += '</tr></thead><tbody>'
         
-        for i, (unit_type, data) in enumerate(sorted_types, 1):
-            score = data['total_score']
+        for i, (unit_type, score) in enumerate(sorted_types, 1):
             
             # Calculate recommended percentage
             if i == 1:
