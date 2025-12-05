@@ -23,6 +23,7 @@ from app.lh_decision_engine_v11 import LHDecisionEngine, DecisionResult
 from app.unit_type_analyzer_v11 import UnitTypeSuitabilityAnalyzer
 from app.pseudo_data_engine_v11 import PseudoDataEngine
 from app.feasibility_checker_v11 import FeasibilityChecker
+from app.narrative_generator_v11 import NarrativeGenerator
 
 
 def generate_lh_score_table_html(lh_score: LHScoreBreakdown) -> str:
