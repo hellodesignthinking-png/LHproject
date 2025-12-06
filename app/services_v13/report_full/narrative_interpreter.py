@@ -88,8 +88,16 @@ class NarrativeInterpreter:
         """
         
         # Extract data
-        address = ctx.get('site', {}).get('address', {}).get('full_address', 'N/A')
-        area = ctx.get('site', {}).get('land_area_sqm', 0)
+        # Handle address - could be nested dict or already a string
+        addr_obj = ctx.get('site', {}).get('address', '')
+        if isinstance(addr_obj, dict):
+            address = addr_obj.get('full_address', 'N/A')
+        elif isinstance(addr_obj, str):
+            address = addr_obj
+        else:
+            address = ctx.get('address', 'N/A')  # Fallback to top-level address
+        
+        area = ctx.get('site', {}).get('land_area_sqm', ctx.get('land_area_sqm', 0))
         
         # Demand
         demand_score = ctx.get('demand', {}).get('overall_score', 0)
@@ -103,11 +111,24 @@ class NarrativeInterpreter:
         market_temp_kr = self.temp_to_korean(market_temp)
         delta_pct = market.get('delta_pct', 0)
         
-        # Financial
+        # Financial - handle both nested and flat structures
         finance = ctx.get('finance', {})
-        capex = finance.get('capex_billion', 0)
-        npv = finance.get('npv_billion', 0)
-        irr = finance.get('irr_percent', 0)
+        
+        # Try nested structure first, then flat structure
+        if 'capex' in finance and isinstance(finance['capex'], dict):
+            capex = finance['capex'].get('total', 0) / 100000000  # Convert to 억원
+        else:
+            capex = finance.get('capex_billion', ctx.get('capex_krw', 0))
+        
+        if 'npv' in finance and isinstance(finance['npv'], dict):
+            npv = finance['npv'].get('public', 0) / 100000000
+        else:
+            npv = finance.get('npv_billion', ctx.get('npv_public_krw', 0))
+        
+        if 'irr' in finance and isinstance(finance['irr'], dict):
+            irr = finance['irr'].get('public', 0)
+        else:
+            irr = finance.get('irr_percent', ctx.get('irr_public_pct', 0))
         
         # Scorecard
         scorecard = ctx.get('scorecard', {})
@@ -684,7 +705,14 @@ LH는 신축매입임대 사업의 적합성을 다음 5개 항목으로 평가�
         delta_pct = market.get('delta_pct', 0)
         trend = market.get('trend', 'stable')
         
-        address = ctx.get('site', {}).get('address', {}).get('full_address', 'N/A')
+        # Handle address safely
+        addr_obj = ctx.get('site', {}).get('address', '')
+        if isinstance(addr_obj, dict):
+            address = addr_obj.get('full_address', 'N/A')
+        elif isinstance(addr_obj, str):
+            address = addr_obj
+        else:
+            address = ctx.get('address', 'N/A')
         
         narrative = f"""
 ## 시장 분석
@@ -906,10 +934,27 @@ LH는 신축매입임대 사업의 적합성을 다음 5개 항목으로 평가�
         """재무 분석 서술 생성"""
         
         finance = ctx.get('finance', {})
-        capex = finance.get('capex_billion', 0)
-        npv = finance.get('npv_billion', 0)
-        irr = finance.get('irr_percent', 0)
-        payback = finance.get('payback_years', 0)
+        
+        # Handle both nested and flat structures
+        if 'capex' in finance and isinstance(finance['capex'], dict):
+            capex = finance['capex'].get('total', 0) / 100000000
+        else:
+            capex = finance.get('capex_billion', ctx.get('capex_krw', 0))
+        
+        if 'npv' in finance and isinstance(finance['npv'], dict):
+            npv = finance['npv'].get('public', 0) / 100000000
+        else:
+            npv = finance.get('npv_billion', ctx.get('npv_public_krw', 0))
+        
+        if 'irr' in finance and isinstance(finance['irr'], dict):
+            irr = finance['irr'].get('public', 0)
+        else:
+            irr = finance.get('irr_percent', ctx.get('irr_public_pct', 0))
+        
+        if 'payback' in finance and isinstance(finance['payback'], dict):
+            payback = finance['payback'].get('years', 0)
+        else:
+            payback = finance.get('payback_years', ctx.get('payback_period_years', 0))
         
         narrative = f"""
 ## 재무 타당성 분석
