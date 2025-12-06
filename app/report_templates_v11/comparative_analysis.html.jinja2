@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Comparative Analysis - {{ decision.address }}</title>
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; padding: 20px; }
+        .comparison { display: flex; gap: 20px; margin: 20px 0; }
+        .option { flex: 1; border: 2px solid #ddd; padding: 15px; border-radius: 8px; }
+        .highlight { background: #e8f5e9; border-color: #4CAF50; }
+    </style>
+</head>
+<body>
+    <h1>개발 전략 비교 분석</h1>
+    <p><strong>대상지:</strong> {{ decision.address }}</p>
+    
+    <h2>전략: {{ decision.strategy }}</h2>
+    
+    <div class="comparison">
+        <div class="option {% if decision.strategy == 'single' %}highlight{% endif %}">
+            <h3>개별 개발</h3>
+            <p><strong>필지:</strong> {{ decision.parcels | length }}개</p>
+        </div>
+        
+        <div class="option {% if decision.strategy == 'merged' %}highlight{% endif %}">
+            <h3>합필 개발</h3>
+            <p><strong>추천:</strong> {{ decision.recommendation }}</p>
+        </div>
+    </div>
+    
+    <h2>재무 지표</h2>
+    <p><strong>ROI:</strong> {{ decision.roi.roi_percent | format_percent }}</p>
+    <p><strong>총 사업비:</strong> {{ decision.capex.total_capex | format_currency }}</p>
+    <p><strong>종합 등급:</strong> {{ decision.final_grade }}</p>
+</body>
+</html>
