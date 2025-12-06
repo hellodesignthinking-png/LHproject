@@ -78,6 +78,46 @@
             margin-bottom: 25px;
         }
         
+        /* Verified Cost Info */
+        .verified-cost-info {
+            background: linear-gradient(135deg, #6B8DD6 0%, #8E37D7 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        
+        .verified-cost-info h3 {
+            font-size: 12pt;
+            font-weight: 600;
+            margin-bottom: 10px;
+            opacity: 0.95;
+        }
+        
+        .verified-cost-info .cost-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .verified-cost-info .cost-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .verified-cost-info .cost-label {
+            font-size: 9pt;
+            opacity: 0.9;
+            margin-bottom: 3px;
+        }
+        
+        .verified-cost-info .cost-value {
+            font-size: 14pt;
+            font-weight: 700;
+        }
+        
         .metric-card {
             background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
             color: white;
@@ -314,6 +354,36 @@
                 <div class="value">{{ decision.capex.total_capex | format_currency }}</div>
             </div>
         </div>
+        
+        <!-- Phase 8: Verified Cost Info (if available) -->
+        {% if decision.verified_cost and decision.verified_cost.available %}
+        <div class="verified-cost-info">
+            <h3>🔖 LH 공식 검증 공사비 (Phase 8)</h3>
+            <div class="cost-details">
+                <div class="cost-item">
+                    <div class="cost-label">단위 공사비</div>
+                    <div class="cost-value">{{ decision.verified_cost.cost_per_m2 | format_currency_short }}/㎡</div>
+                </div>
+                <div class="cost-item">
+                    <div class="cost-label">출처</div>
+                    <div class="cost-value">{{ decision.verified_cost.source }}</div>
+                </div>
+                <div class="cost-item">
+                    <div class="cost-label">검증 연도</div>
+                    <div class="cost-value">{{ decision.verified_cost.year }}년</div>
+                </div>
+                <div class="cost-item">
+                    <div class="cost-label">주거 유형</div>
+                    <div class="cost-value">{{ decision.verified_cost.housing_type }}</div>
+                </div>
+            </div>
+            {% if decision.verified_cost.description %}
+            <p style="margin-top: 10px; font-size: 9pt; opacity: 0.9;">
+                <em>{{ decision.verified_cost.description }}</em>
+            </p>
+            {% endif %}
+        </div>
+        {% endif %}
         
         <!-- Grade Badge -->
         <div style="text-align: center; margin: 25px 0;">

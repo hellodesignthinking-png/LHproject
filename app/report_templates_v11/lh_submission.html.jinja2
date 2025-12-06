@@ -369,6 +369,19 @@
                     <td class="table-label">건축 공사비</td>
                     <td class="table-value">{{ decision.capex.construction_cost | format_currency }}</td>
                 </tr>
+                {% if decision.verified_cost and decision.verified_cost.available %}
+                <tr style="background: #F0F8FF;">
+                    <td class="table-label" style="padding-left: 20px; font-size: 9pt;">
+                        <em>└─ LH 검증 공사비 (㎡당)</em>
+                    </td>
+                    <td class="table-value" style="font-size: 10pt; color: #3498DB;">
+                        {{ decision.verified_cost.cost_per_m2 | format_currency_short }}/㎡
+                        <span style="font-size: 8pt; color: #7F8C8D;">
+                            ({{ decision.verified_cost.source }})
+                        </span>
+                    </td>
+                </tr>
+                {% endif %}
                 <tr>
                     <td class="table-label">설계 감리비</td>
                     <td class="table-value">{{ decision.capex.design_supervision | format_currency }}</td>
