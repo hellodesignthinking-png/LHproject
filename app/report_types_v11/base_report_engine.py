@@ -248,9 +248,10 @@ class BaseReportEngine:
         Returns:
             Rendered HTML string
         """
-        # This will be implemented with Jinja2 in next phase
-        # For now, return placeholder
-        raise NotImplementedError("Template rendering will be implemented in Phase 10.3")
+        from app.report_types_v11.export_engine import ExportEngine
+        
+        engine = ExportEngine(self.output_dir, self.template_dir)
+        return engine.render_html(self.decision, report_type)
     
     def export_pdf(self, report_type: str) -> ReportExportResult:
         """
@@ -262,7 +263,12 @@ class BaseReportEngine:
         Returns:
             Export result with file path
         """
-        raise NotImplementedError("PDF export will be implemented in Phase 10.4")
+        from app.report_types_v11.export_engine import ExportEngine
+        
+        engine = ExportEngine(self.output_dir, self.template_dir)
+        result = engine.export_pdf(self.decision, report_type)
+        self.generation_log.append(result)
+        return result
     
     def export_html(self, report_type: str) -> ReportExportResult:
         """
@@ -274,7 +280,12 @@ class BaseReportEngine:
         Returns:
             Export result with file path
         """
-        raise NotImplementedError("HTML export will be implemented in Phase 10.5")
+        from app.report_types_v11.export_engine import ExportEngine
+        
+        engine = ExportEngine(self.output_dir, self.template_dir)
+        result = engine.export_html(self.decision, report_type)
+        self.generation_log.append(result)
+        return result
     
     def export_json(self, report_type: str) -> ReportExportResult:
         """
