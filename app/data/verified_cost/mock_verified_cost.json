@@ -1,0 +1,229 @@
+{
+  "version": "1.0",
+  "year": 2025,
+  "last_updated": "2025-12-06",
+  "source": "LH Official Cost Index (Mock)",
+  "note": "Mock data for Phase 8 development. Production will use LH API.",
+  
+  "regions": {
+    "seoul": {
+      "region_name": "서울특별시",
+      "housing_types": {
+        "Youth": {
+          "cost_per_m2": 2520000,
+          "description": "청년주택 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기"]
+        },
+        "Newlyweds_TypeI": {
+          "cost_per_m2": 2410000,
+          "description": "신혼I형 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "방범시설"]
+        },
+        "Newlyweds_TypeII": {
+          "cost_per_m2": 2450000,
+          "description": "신혼II형 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "방범시설", "키즈존"]
+        },
+        "MultiChild": {
+          "cost_per_m2": 2480000,
+          "description": "다자녀가구 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "방범시설", "키즈존", "놀이터"]
+        },
+        "Senior": {
+          "cost_per_m2": 2380000,
+          "description": "고령자주택 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "배리어프리", "응급호출"]
+        }
+      }
+    },
+    
+    "gyeonggi": {
+      "region_name": "경기도",
+      "housing_types": {
+        "Youth": {
+          "cost_per_m2": 2310000,
+          "description": "청년주택 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기"]
+        },
+        "Newlyweds_TypeI": {
+          "cost_per_m2": 2210000,
+          "description": "신혼I형 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "방범시설"]
+        },
+        "Newlyweds_TypeII": {
+          "cost_per_m2": 2250000,
+          "description": "신혼II형 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "방범시설", "키즈존"]
+        },
+        "MultiChild": {
+          "cost_per_m2": 2280000,
+          "description": "다자녀가구 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "방범시설", "키즈존", "놀이터"]
+        },
+        "Senior": {
+          "cost_per_m2": 2180000,
+          "description": "고령자주택 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "배리어프리", "응급호출"]
+        }
+      }
+    },
+    
+    "incheon": {
+      "region_name": "인천광역시",
+      "housing_types": {
+        "Youth": {
+          "cost_per_m2": 2280000,
+          "description": "청년주택 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기"]
+        },
+        "Newlyweds_TypeI": {
+          "cost_per_m2": 2180000,
+          "description": "신혼I형 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "방범시설"]
+        },
+        "Newlyweds_TypeII": {
+          "cost_per_m2": 2220000,
+          "description": "신혼II형 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "방범시설", "키즈존"]
+        },
+        "MultiChild": {
+          "cost_per_m2": 2250000,
+          "description": "다자녀가구 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "방범시설", "키즈존", "놀이터"]
+        },
+        "Senior": {
+          "cost_per_m2": 2150000,
+          "description": "고령자주택 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "배리어프리", "응급호출"]
+        }
+      }
+    },
+    
+    "busan": {
+      "region_name": "부산광역시",
+      "housing_types": {
+        "Youth": {
+          "cost_per_m2": 2200000,
+          "description": "청년주택 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기"]
+        },
+        "Newlyweds_TypeI": {
+          "cost_per_m2": 2100000,
+          "description": "신혼I형 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "방범시설"]
+        },
+        "Newlyweds_TypeII": {
+          "cost_per_m2": 2140000,
+          "description": "신혼II형 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "방범시설", "키즈존"]
+        },
+        "MultiChild": {
+          "cost_per_m2": 2170000,
+          "description": "다자녀가구 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "방범시설", "키즈존", "놀이터"]
+        },
+        "Senior": {
+          "cost_per_m2": 2080000,
+          "description": "고령자주택 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "배리어프리", "응급호출"]
+        }
+      }
+    },
+    
+    "daegu": {
+      "region_name": "대구광역시",
+      "housing_types": {
+        "Youth": {
+          "cost_per_m2": 2150000,
+          "description": "청년주택 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기"]
+        },
+        "Newlyweds_TypeI": {
+          "cost_per_m2": 2050000,
+          "description": "신혼I형 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "방범시설"]
+        },
+        "Newlyweds_TypeII": {
+          "cost_per_m2": 2090000,
+          "description": "신혼II형 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "방범시설", "키즈존"]
+        },
+        "MultiChild": {
+          "cost_per_m2": 2120000,
+          "description": "다자녀가구 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "방범시설", "키즈존", "놀이터"]
+        },
+        "Senior": {
+          "cost_per_m2": 2030000,
+          "description": "고령자주택 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "배리어프리", "응급호출"]
+        }
+      }
+    },
+    
+    "gwangju": {
+      "region_name": "광주광역시",
+      "housing_types": {
+        "Youth": {
+          "cost_per_m2": 2100000,
+          "description": "청년주택 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기"]
+        },
+        "Newlyweds_TypeI": {
+          "cost_per_m2": 2000000,
+          "description": "신혼I형 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "방범시설"]
+        },
+        "Newlyweds_TypeII": {
+          "cost_per_m2": 2040000,
+          "description": "신혼II형 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "방범시설", "키즈존"]
+        },
+        "MultiChild": {
+          "cost_per_m2": 2070000,
+          "description": "다자녀가구 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "방범시설", "키즈존", "놀이터"]
+        },
+        "Senior": {
+          "cost_per_m2": 1980000,
+          "description": "고령자주택 표준공사비",
+          "includes": ["기본 공사비", "전기설비", "급배수설비", "승강기", "배리어프리", "응급호출"]
+        }
+      }
+    }
+  },
+  
+  "region_mapping": {
+    "서울": "seoul",
+    "서울특별시": "seoul",
+    "경기": "gyeonggi",
+    "경기도": "gyeonggi",
+    "인천": "incheon",
+    "인천광역시": "incheon",
+    "부산": "busan",
+    "부산광역시": "busan",
+    "대구": "daegu",
+    "대구광역시": "daegu",
+    "광주": "gwangju",
+    "광주광역시": "gwangju"
+  },
+  
+  "notes": {
+    "cost_includes": [
+      "토목공사비",
+      "건축공사비",
+      "기계설비공사비",
+      "전기설비공사비",
+      "조경공사비",
+      "부대공사비"
+    ],
+    "cost_excludes": [
+      "토지 매입비",
+      "설계 감리비",
+      "금융 비용",
+      "부가가치세"
+    ],
+    "update_frequency": "분기별 (3개월)",
+    "accuracy": "±3% 범위 내"
+  }
+}

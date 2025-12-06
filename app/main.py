@@ -49,6 +49,9 @@ from app.api.endpoints.analysis_v9_1 import router as analysis_v91_router
 # ✨ v9.1 REAL: Import REAL working version
 from app.api.endpoints.analysis_v9_1_REAL import router as analysis_v91_real_router
 
+# ✨ v11.0: Import Phase 11 Report API
+from app.api.endpoints.report_v11 import router as report_v11_router
+
 settings = get_settings()
 
 # LH 공식 7개 유형 정보 매핑
@@ -94,6 +97,9 @@ app.include_router(report_v72_router)
 
 # ✨ v9.0: Include Analysis API v9.0 router
 app.include_router(analysis_v90_router)
+
+# ✨ v11.0: Include Phase 11 Report API
+app.include_router(report_v11_router)
 
 # ✨ v9.1: Include Analysis API v9.1 router
 app.include_router(analysis_v91_router)
