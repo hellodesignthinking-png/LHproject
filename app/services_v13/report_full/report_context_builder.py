@@ -58,8 +58,9 @@ try:
 except ImportError:
     MARKET_DATA_AVAILABLE = False
 
-# Narrative Interpreter
+# Narrative Interpreter & Policy Reference DB
 from app.services_v13.report_full.narrative_interpreter import NarrativeInterpreter
+from app.services_v13.report_full.policy_reference_db import PolicyReferenceDB
 
 # Phase 2: Competitive Analysis & Risk Enhancement
 try:
@@ -243,10 +244,11 @@ class ReportContextBuilder:
         else:
             self.risk_enhancer = None
         
-        # Narrative Interpreter
+        # Narrative Interpreter & Policy Reference DB (Phase A)
         self.narrative_interpreter = NarrativeInterpreter()
+        self.policy_db = PolicyReferenceDB()
         
-        logger.info("✅ ReportContextBuilder initialized with all Phase engines")
+        logger.info("✅ ReportContextBuilder initialized with all Phase engines (including Narrative Layer)")
     
     def build_context(
         self,
@@ -2175,14 +2177,33 @@ class ReportContextBuilder:
             
             # Update metadata for Expert Edition
             context['metadata']['report_type'] = 'LH_SUBMISSION_EXPERT_EDITION_V3'
-            context['metadata']['page_count_estimated'] = '45-60'
-            context['metadata']['version'] = 'ZeroSite v13.0 Expert Edition'
+            context['metadata']['page_count_estimated'] = '60-70'
+            context['metadata']['version'] = 'ZeroSite v13.0 Expert Edition with Narrative Layer'
             
             logger.info("✅ EXPERT EDITION CONTEXT complete")
             
         except Exception as e:
             logger.error(f"Expert analysis generation failed: {e}")
             logger.warning("Falling back to Full Edition context")
+        
+        # Step 4: Generate Narrative Layer (Phase A - NEW)
+        try:
+            logger.info("📝 Generating Narrative Layer...")
+            
+            # Use the master method to generate all narratives at once
+            context['narratives'] = self.narrative_interpreter.generate_all_narratives(context)
+            
+            # Add policy references
+            context['references'] = self.policy_db.get_all_references()
+            context['policy_summary'] = self.policy_db.get_policy_summary()
+            
+            logger.info("✅ Phase A: Narrative Layer generated (8 sections + references)")
+            
+        except Exception as e:
+            logger.error(f"Narrative generation failed: {e}")
+            logger.warning("Report will be generated without narrative layer")
+            context['narratives'] = {}
+            context['references'] = []
         
         return context
     
