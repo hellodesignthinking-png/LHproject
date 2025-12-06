@@ -385,6 +385,42 @@
         </div>
         {% endif %}
         
+        <!-- Phase 2.5: Enhanced Financial Metrics (if available) -->
+        {% if decision.roi.npv_public or decision.roi.payback_period_years %}
+        <div style="background: linear-gradient(135deg, #2ECC71 0%, #27AE60 100%); color: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 25px;">
+            <h3 style="font-size: 12pt; font-weight: 600; margin-bottom: 10px;">💰 고급 재무 지표 (Phase 2.5)</h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px;">
+                {% if decision.roi.npv_public %}
+                <div style="background: rgba(255, 255, 255, 0.15); padding: 10px; border-radius: 5px;">
+                    <div style="font-size: 9pt; opacity: 0.9; margin-bottom: 3px;">NPV (공공부문 2%)</div>
+                    <div style="font-size: 14pt; font-weight: 700;">{{ decision.roi.npv_public | format_currency_short }}</div>
+                </div>
+                {% endif %}
+                {% if decision.roi.npv_private %}
+                <div style="background: rgba(255, 255, 255, 0.15); padding: 10px; border-radius: 5px;">
+                    <div style="font-size: 9pt; opacity: 0.9; margin-bottom: 3px;">NPV (민간부문 5.5%)</div>
+                    <div style="font-size: 14pt; font-weight: 700;">{{ decision.roi.npv_private | format_currency_short }}</div>
+                </div>
+                {% endif %}
+                {% if decision.roi.payback_period_years %}
+                <div style="background: rgba(255, 255, 255, 0.15); padding: 10px; border-radius: 5px;">
+                    <div style="font-size: 9pt; opacity: 0.9; margin-bottom: 3px;">투자회수기간</div>
+                    <div style="font-size: 14pt; font-weight: 700;">{{ decision.roi.payback_period_years | format_number(1) }}년</div>
+                </div>
+                {% endif %}
+                {% if decision.roi.irr_public_percent %}
+                <div style="background: rgba(255, 255, 255, 0.15); padding: 10px; border-radius: 5px;">
+                    <div style="font-size: 9pt; opacity: 0.9; margin-bottom: 3px;">IRR (내부수익률)</div>
+                    <div style="font-size: 14pt; font-weight: 700;">{{ decision.roi.irr_public_percent | format_percent(1) }}</div>
+                </div>
+                {% endif %}
+            </div>
+            <p style="margin-top: 10px; font-size: 9pt; opacity: 0.9;">
+                <em>* NPV: 순현재가치 | 투자회수기간: 초기 투자금 회수까지 소요 기간 | IRR: 내부수익률 (공공 2% vs 민간 5.5% 기준)</em>
+            </p>
+        </div>
+        {% endif %}
+        
         <!-- Grade Badge -->
         <div style="text-align: center; margin: 25px 0;">
             <div class="grade-badge grade-{{ decision.final_grade }}">

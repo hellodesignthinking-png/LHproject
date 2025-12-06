@@ -28,6 +28,15 @@ except ImportError:
     VERIFIED_COST_AVAILABLE = False
     print("Warning: Phase 8 Verified Cost not available")
 
+# Phase 2.5: Enhanced Financial Metrics (NPV, Payback, IRR)
+try:
+    from app.services_v2.financial_enhanced import FinancialEnhanced
+    from config.financial_parameters import load_financial_parameters
+    ENHANCED_METRICS_AVAILABLE = True
+except ImportError:
+    ENHANCED_METRICS_AVAILABLE = False
+    print("Warning: Phase 2.5 Enhanced Financial Metrics not available")
+
 logger = logging.getLogger(__name__)
 
 
@@ -440,6 +449,39 @@ class FinancialEngine:
             
             result['irr_percent'] = irr * 100 if irr else 0
             result['npv'] = npv
+            
+            # 🔥 Phase 2.5: Enhanced Financial Metrics (NPV, Payback, IRR)
+            if ENHANCED_METRICS_AVAILABLE:
+                try:
+                    # Load financial parameters
+                    params = load_financial_parameters()
+                    discount_rate_public = params.get('discount_rate_public', 0.02)
+                    discount_rate_private = params.get('discount_rate_private', 0.055)
+                    
+                    # Calculate enhanced metrics using Phase 8 CAPEX
+                    enhanced = FinancialEnhanced.calculate_all_metrics(
+                        cashflows=cash_flows,
+                        capex=total_capex,
+                        discount_rate_public=discount_rate_public,
+                        discount_rate_private=discount_rate_private
+                    )
+                    
+                    # Add to result (additive, no breaking changes)
+                    result['npv_public'] = enhanced['npv']
+                    result['npv_private'] = enhanced['npv_private']
+                    result['payback_period_years'] = enhanced['payback']
+                    result['irr_public_percent'] = enhanced['irr_public']
+                    result['irr_private_percent'] = enhanced['irr_private']
+                    
+                    # Add interpretation flags
+                    result['npv_positive'] = enhanced['npv'] > 0
+                    result['payback_acceptable'] = enhanced['payback'] <= 10.0  # 10 years threshold
+                    result['irr_vs_public_rate'] = enhanced['irr'] - (discount_rate_public * 100)
+                    result['irr_vs_private_rate'] = enhanced['irr'] - (discount_rate_private * 100)
+                    
+                    logger.info(f"✅ Phase 2.5: NPV={enhanced['npv']/1e8:.1f}억, Payback={enhanced['payback']:.1f}yr, IRR={enhanced['irr']:.1f}%")
+                except Exception as e:
+                    logger.warning(f"Phase 2.5 Enhanced Metrics calculation failed: {e}")
         
         return result
     

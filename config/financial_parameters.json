@@ -1,0 +1,31 @@
+{
+  "version": "1.0",
+  "last_updated": "2025-12-06",
+  "description": "Financial parameters for ZeroSite Phase 2.5 Enhanced Metrics",
+  
+  "discount_rates": {
+    "public": {
+      "rate": 0.02,
+      "description": "Public sector discount rate (2%)",
+      "rationale": "Government projects use lower discount rates reflecting social benefits and lower risk tolerance",
+      "typical_use": "LH public housing, government infrastructure"
+    },
+    "private": {
+      "rate": 0.055,
+      "description": "Private sector discount rate (5.5%)",
+      "rationale": "Commercial projects use higher rates reflecting opportunity cost of capital and market risk",
+      "typical_use": "Private development, investment analysis"
+    }
+  },
+  
+  "discount_rate_public": 0.02,
+  "discount_rate_private": 0.055,
+  
+  "notes": [
+    "Public discount rate: 2% (LH standard for public housing projects)",
+    "Private discount rate: 5.5% (Market average for real estate development)",
+    "These rates are configurable and should be adjusted based on market conditions",
+    "Public rate reflects social welfare considerations",
+    "Private rate reflects commercial viability"
+  ]
+}
