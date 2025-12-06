@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite MVP - 토지 분석</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .result-card {
+            transition: all 0.3s ease;
+        }
+        .result-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">🏗️ ZeroSite MVP</h1>
+            <p class="text-gray-600">토지 입력 → 건축규모 → 세대분석 → LH심사 → 리포트</p>
+        </div>
+
+        <!-- Input Form -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">📍 토지 정보 입력</h2>
+            
+            <form id="analysisForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">주소 *</label>
+                    <input 
+                        type="text" 
+                        id="address" 
+                        name="address"
+                        placeholder="예: 서울특별시 강남구 테헤란로 123"
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">대지면적 (m²) *</label>
+                        <input 
+                            type="number" 
+                            id="land_area" 
+                            name="land_area"
+                            placeholder="850"
+                            required
+                            min="100"
+                            step="0.01"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">토지 감정가 (만원)</label>
+                        <input 
+                            type="number" 
+                            id="land_appraisal_price" 
+                            name="land_appraisal_price"
+                            placeholder="4500000"
+                            step="1"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">용도지역</label>
+                    <select 
+                        id="zone_type" 
+                        name="zone_type"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                        <option value="">자동 감지</option>
+                        <option value="제1종일반주거지역">제1종일반주거지역</option>
+                        <option value="제2종일반주거지역">제2종일반주거지역</option>
+                        <option value="제3종일반주거지역">제3종일반주거지역</option>
+                        <option value="준주거지역">준주거지역</option>
+                        <option value="중심상업지역">중심상업지역</option>
+                        <option value="일반상업지역">일반상업지역</option>
+                        <option value="근린상업지역">근린상업지역</option>
+                        <option value="준공업지역">준공업지역</option>
+                    </select>
+                </div>
+
+                <div class="flex gap-4">
+                    <button 
+                        type="submit" 
+                        id="analyzeBtn"
+                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
+                    >
+                        🔍 분석 시작
+                    </button>
+                    <button 
+                        type="button" 
+                        id="downloadBtn"
+                        class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 hidden"
+                    >
+                        📄 리포트 다운로드
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="hidden bg-white rounded-lg shadow-md p-8 text-center">
+            <div class="loader mx-auto mb-4"></div>
+            <p class="text-gray-600">분석 중입니다... (약 5-10초 소요)</p>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results" class="hidden space-y-4">
+            <!-- Card 1: Building Scale -->
+            <div class="result-card bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">🏗️ 건축 규모</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-600">총 연면적</p>
+                        <p id="total_gfa" class="text-2xl font-bold text-blue-600">-</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">세대수</p>
+                        <p id="max_units" class="text-2xl font-bold text-blue-600">-</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">층수</p>
+                        <p id="floor_count" class="text-2xl font-bold text-blue-600">-</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">주차대수</p>
+                        <p id="parking_required" class="text-2xl font-bold text-blue-600">-</p>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-600">건폐율:</span>
+                            <span id="bcr" class="font-semibold ml-2">-</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">용적률:</span>
+                            <span id="far" class="font-semibold ml-2">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Unit Analysis -->
+            <div class="result-card bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">🏘️ 세대 유형 분석</h3>
+                <div class="space-y-2">
+                    <div>
+                        <p class="text-sm text-gray-600">추천 유형</p>
+                        <p id="unit_type" class="text-xl font-bold text-green-600">-</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600 mb-2">분석 사유</p>
+                        <p id="unit_reasoning" class="text-sm text-gray-700">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: LH Evaluation -->
+            <div class="result-card bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">📊 LH 심사 결과</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="text-center">
+                        <p class="text-sm text-gray-600">종합 점수</p>
+                        <p id="lh_score" class="text-3xl font-bold text-blue-600">-</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-sm text-gray-600">등급</p>
+                        <p id="lh_grade" class="text-3xl font-bold text-green-600">-</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-sm text-gray-600">판정</p>
+                        <p id="lh_decision" class="text-3xl font-bold text-purple-600">-</p>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <p class="text-sm text-gray-600 mb-2">주요 사유</p>
+                    <p id="lh_reasons" class="text-sm text-gray-700">-</p>
+                </div>
+            </div>
+
+            <!-- Card 4: Summary -->
+            <div class="result-card bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-md p-6 text-white">
+                <h3 class="text-lg font-semibold mb-2">✅ 분석 완료</h3>
+                <p class="text-sm opacity-90">분석 시간: <span id="exec_time">-</span>ms</p>
+                <p class="text-sm opacity-90 mt-1">상세 리포트를 확인하려면 "리포트 다운로드" 버튼을 클릭하세요.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentAnalysisData = null;
+
+        document.getElementById('analysisForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Get form data
+            const formData = {
+                address: document.getElementById('address').value,
+                land_area: parseFloat(document.getElementById('land_area').value),
+                land_appraisal_price: document.getElementById('land_appraisal_price').value 
+                    ? parseFloat(document.getElementById('land_appraisal_price').value)
+                    : null,
+                zone_type: document.getElementById('zone_type').value || null,
+                output_format: "json"
+            };
+
+            // Show loading
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('downloadBtn').classList.add('hidden');
+
+            try {
+                // Call API
+                const response = await fetch('/api/mvp/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.ok) {
+                    currentAnalysisData = result.data;
+                    displayResults(result.data, result.execution_time_ms);
+                    document.getElementById('downloadBtn').classList.remove('hidden');
+                } else {
+                    alert('분석 실패: ' + (result.error?.message || '알 수 없는 오류'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('분석 중 오류가 발생했습니다: ' + error.message);
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+            }
+        });
+
+        document.getElementById('downloadBtn').addEventListener('click', async () => {
+            if (!currentAnalysisData) return;
+
+            const formData = {
+                address: currentAnalysisData.land_input.address,
+                land_area: currentAnalysisData.land_input.land_area,
+                land_appraisal_price: currentAnalysisData.land_input.land_appraisal_price,
+                zone_type: currentAnalysisData.land_input.zone_type,
+                output_format: "pdf"
+            };
+
+            try {
+                const response = await fetch('/api/mvp/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `zerosite_report_${Date.now()}.html`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                } else {
+                    alert('리포트 생성 실패');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('리포트 다운로드 중 오류가 발생했습니다.');
+            }
+        });
+
+        function displayResults(data, execTime) {
+            // Building Scale
+            document.getElementById('total_gfa').textContent = 
+                Math.round(data.building_scale.total_gross_area).toLocaleString() + ' m²';
+            document.getElementById('max_units').textContent = 
+                data.building_scale.max_units + ' 세대';
+            document.getElementById('floor_count').textContent = 
+                data.building_scale.floor_count + ' 층';
+            document.getElementById('parking_required').textContent = 
+                data.building_scale.parking_required + ' 대';
+            document.getElementById('bcr').textContent = 
+                data.building_scale.building_coverage_ratio + '%';
+            document.getElementById('far').textContent = 
+                data.building_scale.floor_area_ratio + '%';
+
+            // Unit Analysis
+            if (data.unit_analysis) {
+                document.getElementById('unit_type').textContent = 
+                    data.unit_analysis.recommended_type || '-';
+                document.getElementById('unit_reasoning').textContent = 
+                    data.unit_analysis.reasoning || '-';
+            }
+
+            // LH Evaluation
+            if (data.lh_evaluation) {
+                document.getElementById('lh_score').textContent = 
+                    Math.round(data.lh_evaluation.total_score || 0) + ' / 100';
+                document.getElementById('lh_grade').textContent = 
+                    data.lh_evaluation.grade || '-';
+                document.getElementById('lh_decision').textContent = 
+                    data.lh_evaluation.decision || '-';
+                document.getElementById('lh_reasons').textContent = 
+                    data.lh_evaluation.key_reasons || '-';
+            }
+
+            // Execution time
+            document.getElementById('exec_time').textContent = execTime;
+
+            // Show results
+            document.getElementById('results').classList.remove('hidden');
+        }
+
+        // Load test data
+        window.addEventListener('load', () => {
+            document.getElementById('address').value = '서울특별시 강남구 테헤란로 123';
+            document.getElementById('land_area').value = '850';
+            document.getElementById('land_appraisal_price').value = '4500000';
+            document.getElementById('zone_type').value = '제2종일반주거지역';
+        });
+    </script>
+</body>
+</html>
