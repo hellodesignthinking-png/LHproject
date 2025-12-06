@@ -139,34 +139,49 @@ def run_v11_engines(
                     },
                     'feasibility': {
                         'far_bcr_adequacy': lh_score.far_bcr_adequacy,
-                        'unit_count_feasibility': lh_score.unit_count_feasibility,
-                        'parking_adequacy': lh_score.parking_adequacy,
+                        'unit_count_adequacy': lh_score.unit_count_adequacy,
+                        'land_price_adequacy': lh_score.land_price_adequacy,
                         'feasibility_total': lh_score.feasibility_total
                     },
-                    'market': {
-                        'demand_potential': lh_score.demand_potential,
-                        'competition_level': lh_score.competition_level,
-                        'price_competitiveness': lh_score.price_competitiveness,
-                        'market_total': lh_score.market_total
+                    'policy': {
+                        'zone_suitability': lh_score.zone_suitability,
+                        'housing_policy_alignment': lh_score.housing_policy_alignment,
+                        'unit_type_suitability': lh_score.unit_type_suitability,
+                        'policy_total': lh_score.policy_total
                     },
                     'financial': {
-                        'profitability': lh_score.profitability,
-                        'lh_purchase_gap': lh_score.lh_purchase_gap,
+                        'irr_roi_level': lh_score.irr_roi_level,
+                        'payback_period': lh_score.payback_period,
+                        'financing_feasibility': lh_score.financing_feasibility,
                         'financial_total': lh_score.financial_total
                     },
-                    'regulatory': {
-                        'legal_compliance': lh_score.legal_compliance,
-                        'lh_policy_fit': lh_score.lh_policy_fit,
-                        'regulatory_total': lh_score.regulatory_total
+                    'risk': {
+                        'legal_risk': lh_score.legal_risk,
+                        'market_risk': lh_score.market_risk,
+                        'construction_risk': lh_score.construction_risk,
+                        'risk_total': lh_score.risk_total
                     }
                 }
             },
             'decision': {
-                'decision': decision.decision,
+                'decision': decision.decision.value,
                 'confidence': decision.confidence,
-                'reasoning': decision.reasoning,
-                'risks': decision.risks,
-                'opportunities': decision.opportunities
+                'primary_reason': decision.primary_reason,
+                'supporting_reasons': decision.supporting_reasons,
+                'critical_risks': [
+                    {
+                        'category': risk.category,
+                        'description': risk.description,
+                        'impact': risk.impact,
+                        'mitigation': risk.mitigation
+                    } for risk in decision.critical_risks
+                ],
+                'risk_level': decision.risk_level.value,
+                'financial_viability': decision.financial_viability,
+                'improvement_strategies': decision.improvement_strategies,
+                'priority_actions': decision.priority_actions,
+                'executive_summary': decision.executive_summary,
+                'next_steps': decision.next_steps
             },
             'unit_analysis': unit_analysis,
             'pseudo_data': pseudo_data,

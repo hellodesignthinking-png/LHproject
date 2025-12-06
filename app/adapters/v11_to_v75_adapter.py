@@ -97,6 +97,9 @@ class V11ToV75Adapter:
         # Build visualizations (optional, can be empty)
         visualizations = {}
         
+        # Extract unit count for top-level access
+        unit_count = pseudo_data_v11.get('unit_count', feasibility_v11.get('unit_count', 30))
+        
         # Assemble v7.5 format data
         v75_data = {
             'financial_result': financial_result,
@@ -105,6 +108,7 @@ class V11ToV75Adapter:
             'analysis_mode': 'v11.0_AI_ENGINE',
             'basic_info': basic_info,
             'recommendation': decision_v75,
+            'unit_count': unit_count,  # Top-level unit_count for v7.5
             'v11_source': v11_data  # Keep original v11.0 data for reference
         }
         
@@ -237,6 +241,28 @@ class V11ToV75Adapter:
             'gap_analysis': {
                 'gap_amount': pseudo_data.get('lh_gap', 0),
                 'gap_percentage': pseudo_data.get('lh_gap_pct', 0)
+            },
+            # v7.5 expects 'returns' structure
+            'returns': {
+                'cap_rate_percent': cap_rate,
+                'roi_percent': roi,
+                'irr_percent': irr,
+                'payback_years': 10.0 / (roi / 100) if roi > 0 else 99.0
+            },
+            # v7.5 expects 'capex' structure
+            'capex': {
+                'total_capex': total_investment,
+                'land_acquisition': land_cost,
+                'construction': construction_cost,
+                'soft_costs': construction_cost * 0.1,  # 10% estimate
+                'unit_count': unit_count  # v7.5 looks for unit_count here
+            },
+            # v7.5 expects 'noi' (Net Operating Income) structure
+            'noi': {
+                'noi': total_investment * (cap_rate / 100),  # v7.5 looks for 'noi' key
+                'annual_noi': total_investment * (cap_rate / 100),
+                'noi_margin_percent': 35.0,  # Typical margin
+                'gross_revenue': total_investment * (cap_rate / 100) / 0.35
             }
         }
     
@@ -265,26 +291,37 @@ class V11ToV75Adapter:
         - grade: str (A/B/C/D/F)
         - breakdown: dict of category scores
         """
-        # Get v11.0 breakdown
+        # Get v11.0 breakdown (already in dict format from run_v11_engines)
         breakdown_v11 = lh_score_v11.get('breakdown', {})
         
-        # Convert each category score (multiply by 1.1)
+        # v11.0 breakdown structure:
+        # {
+        #   'location': {'transportation_access': X, 'living_convenience': Y, ...},
+        #   'feasibility': {'far_bcr_adequacy': A, 'unit_count_feasibility': B, ...},
+        #   'market': {...},
+        #   'financial': {...}
+        # }
+        
+        # Convert to v7.5 flat structure (multiply each score by 1.1)
         breakdown_v75 = {}
-        for category, score_data in breakdown_v11.items():
-            if isinstance(score_data, dict):
-                score_100 = score_data.get('score', 0)
-                max_100 = score_data.get('max_points', 0)
-                breakdown_v75[category] = {
-                    'score': round(score_100 * 1.1, 1),
-                    'max_points': round(max_100 * 1.1, 1),
-                    'percentage': score_data.get('percentage', 0)
-                }
+        
+        # Flatten nested structure
+        for category, sub_scores in breakdown_v11.items():
+            if isinstance(sub_scores, dict):
+                for key, value in sub_scores.items():
+                    if isinstance(value, (int, float)):
+                        # Convert score to 110-point system
+                        breakdown_v75[key] = {
+                            'score': round(value * 1.1, 1),
+                            'category': category
+                        }
         
         return {
             'total_score': total_score_v75,
             'max_score': 110,
             'grade': grade_v75,
-            'breakdown': breakdown_v75
+            'breakdown': breakdown_v75,
+            'breakdown_by_category': breakdown_v11  # Keep original nested structure
         }
 
 
