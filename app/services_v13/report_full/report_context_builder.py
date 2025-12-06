@@ -58,6 +58,9 @@ try:
 except ImportError:
     MARKET_DATA_AVAILABLE = False
 
+# Narrative Interpreter
+from app.services_v13.report_full.narrative_interpreter import NarrativeInterpreter
+
 logger = logging.getLogger(__name__)
 
 
@@ -216,6 +219,9 @@ class ReportContextBuilder:
         else:
             self.market_analyzer = None
         
+        # Narrative Interpreter
+        self.narrative_interpreter = NarrativeInterpreter()
+        
         logger.info("✅ ReportContextBuilder initialized with all Phase engines")
     
     def build_context(
@@ -292,6 +298,9 @@ class ReportContextBuilder:
         
         # 8. Build Final Decision
         context['decision'] = self._build_decision_section(context)
+        
+        # 9. Generate Narrative Interpretations (NEW!)
+        context['narratives'] = self.narrative_interpreter.generate_all_narratives(context)
         
         logger.info(f"✅ REPORT_CONTEXT complete for {address}")
         return context
@@ -834,175 +843,4 @@ class ReportContextBuilder:
                 'level': 'YELLOW',
                 'description': '대규모 프로젝트로 공사비 관리 중요',
                 'mitigation': 'CM/감리 체계 강화, 단계별 점검',
-                'impact': '공사비 10% 초과 시 수익성 악화'
-            }
-        else:
-            return {
-                'level': 'GREEN',
-                'description': '공사비 규모 적정',
-                'mitigation': '표준 감리 체계 적용',
-                'impact': '리스크 관리 가능'
-            }
-    
-    def _assess_financial_risk(self, finance: Dict[str, Any]) -> Dict[str, Any]:
-        """Assess financial risk"""
-        npv_public = finance['npv']['public']
-        irr_public = finance['irr']['public']
-        payback = finance['payback']['years']
-        
-        # Multiple risk factors
-        risk_flags = []
-        
-        if npv_public < 0:
-            risk_flags.append('NPV 음수')
-        if irr_public < 2.0:  # Below LH target
-            risk_flags.append('IRR 미달')
-        if payback > 12:  # Too long
-            risk_flags.append('회수기간 장기')
-        
-        if len(risk_flags) >= 2:
-            return {
-                'level': 'RED',
-                'description': f"재무 리스크 다수: {', '.join(risk_flags)}",
-                'mitigation': '재무 구조 재설계 필요',
-                'impact': '사업 타당성 재검토 필요'
-            }
-        elif len(risk_flags) == 1:
-            return {
-                'level': 'YELLOW',
-                'description': f"재무 리스크 존재: {risk_flags[0]}",
-                'mitigation': '수익성 개선 방안 검토',
-                'impact': '조건부 진행 가능'
-            }
-        else:
-            return {
-                'level': 'GREEN',
-                'description': '재무 건전성 양호',
-                'mitigation': '안정적 수익 구조',
-                'impact': '재무 리스크 낮음'
-            }
-    
-    def _build_decision_section(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        """Build final GO/NO-GO decision section"""
-        
-        finance = context['finance']
-        market = context['market']
-        risk = context['risk_analysis']
-        
-        # Decision logic
-        npv_public = finance['npv']['public']
-        irr_public = finance['irr']['public']
-        payback = finance['payback']['years']
-        market_signal = market['signal']
-        overall_risk = risk['overall_level']
-        
-        # GO/NO-GO rules
-        blocking_conditions = []
-        warning_conditions = []
-        
-        # Rule 1: Market
-        if market_signal == 'OVERVALUED':
-            blocking_conditions.append('시장 대비 고평가 상태')
-        
-        # Rule 2: NPV
-        if npv_public < 0:
-            blocking_conditions.append('NPV 음수 (수익성 미달)')
-        
-        # Rule 3: Payback
-        if payback > 12:
-            blocking_conditions.append('회수기간 12년 초과')
-        
-        # Rule 4: IRR
-        if irr_public < 1.5:
-            warning_conditions.append('IRR 1.5% 미만')
-        
-        # Rule 5: Risk
-        if overall_risk == 'HIGH':
-            warning_conditions.append('종합 리스크 높음')
-        
-        # Decision
-        if len(blocking_conditions) >= 2:
-            decision = 'NO-GO'
-            confidence = 'high'
-            reasoning = blocking_conditions + ['사업 타당성 확보 어려움']
-        elif len(blocking_conditions) == 1:
-            decision = 'REVISE'
-            confidence = 'medium'
-            reasoning = blocking_conditions + warning_conditions + ['조건 개선 후 재검토 필요']
-        elif len(warning_conditions) >= 1:
-            decision = 'CONDITIONAL'
-            confidence = 'medium'
-            reasoning = warning_conditions + ['조건 충족 시 진행 가능', '지속 모니터링 필요']
-        else:
-            decision = 'GO'
-            confidence = 'high'
-            reasoning = [
-                f'NPV(공공형) {npv_public / 1e8:.1f}억원 양수',
-                f'IRR {irr_public:.1f}% 목표 달성',
-                f'시장 상황 {market_signal} (양호)',
-                '종합 타당성 확보'
-            ]
-        
-        result = {
-            'recommendation': decision,
-            'reasoning': reasoning[:3],  # Top 3 reasons
-            'confidence': confidence
-        }
-        
-        if decision == 'CONDITIONAL':
-            result['conditions'] = warning_conditions
-        
-        return result
-    
-    # Helper methods
-    
-    def _generate_project_code(self, address: str) -> str:
-        """Generate unique project code"""
-        parts = address.split()
-        region_code = ''.join([p[0] for p in parts[:2]]) if len(parts) >= 2 else 'XX'
-        date_code = datetime.now().strftime('%Y%m%d')
-        return f"LH-{region_code}-{date_code}"
-    
-    def _extract_region(self, address: str) -> str:
-        """Extract region from address"""
-        address_lower = address.lower()
-        if '서울' in address or 'seoul' in address_lower:
-            return 'seoul'
-        elif '경기' in address or 'gyeonggi' in address_lower:
-            return 'gyeonggi'
-        elif '인천' in address or 'incheon' in address_lower:
-            return 'incheon'
-        else:
-            return 'other'
-    
-    def _translate_housing_type(self, housing_type: str) -> str:
-        """Translate housing type to Korean"""
-        translations = {
-            'youth': '청년형',
-            'newlyweds': '신혼부부형',
-            'newlyweds_growth': '신혼부부 성장형',
-            'multichild': '다자녀형',
-            'senior': '고령자형'
-        }
-        return translations.get(housing_type, '청년형')
-
-
-# Convenience function
-def build_report_context(
-    address: str,
-    land_area_sqm: float,
-    **kwargs
-) -> Dict[str, Any]:
-    """
-    Quick function to build REPORT_CONTEXT
-    
-    Args:
-        address: Target site address
-        land_area_sqm: Land area in square meters
-        **kwargs: Additional parameters
-    
-    Returns:
-        Complete REPORT_CONTEXT dictionary
-    """
-    builder = ReportContextBuilder()
-    return builder.build_context(address, land_area_sqm, **kwargs)
+          
