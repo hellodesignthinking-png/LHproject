@@ -61,6 +61,13 @@ except ImportError:
 # Narrative Interpreter
 from app.services_v13.report_full.narrative_interpreter import NarrativeInterpreter
 
+# Phase 2: Competitive Analysis
+try:
+    from app.services_v13.report_full.competitive_analyzer import CompetitiveAnalyzer
+    COMPETITIVE_ANALYSIS_AVAILABLE = True
+except ImportError:
+    COMPETITIVE_ANALYSIS_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 
@@ -218,6 +225,12 @@ class ReportContextBuilder:
             self.market_analyzer = MarketSignalAnalyzer()
         else:
             self.market_analyzer = None
+        
+        # Phase 2: Competitive Analysis
+        if COMPETITIVE_ANALYSIS_AVAILABLE:
+            self.competitive_analyzer = CompetitiveAnalyzer()
+        else:
+            self.competitive_analyzer = None
         
         # Narrative Interpreter
         self.narrative_interpreter = NarrativeInterpreter()
@@ -2090,6 +2103,32 @@ class ReportContextBuilder:
             'decision_summary': self._generate_decision_summary(context)
         }
         logger.info("✅ Phase 1, Task 1.1: Executive Summary Scorecard calculated")
+        
+        # Step 2.1: Perform Competitive Analysis (Phase 2, Task 2.1)
+        if self.competitive_analyzer:
+            try:
+                project_housing_type = context.get('demand', {}).get('recommended_type', 'youth')
+                project_avg_rent = 8000  # Default estimate, in production get from finance data
+                
+                # Try to get actual rent from finance data
+                if 'finance' in context and 'revenue' in context['finance']:
+                    land_area = context.get('site', {}).get('land_area_sqm', 500)
+                    total_units = int(land_area / 40)  # Rough estimate: 40sqm per unit
+                    annual_revenue = context['finance']['revenue']['annual_rental']
+                    avg_unit_size = 40  # Default
+                    if total_units > 0 and avg_unit_size > 0:
+                        project_avg_rent = (annual_revenue / total_units) / avg_unit_size / 12  # Monthly rent per sqm
+                
+                context['competitive_analysis'] = self.competitive_analyzer.analyze_competition(
+                    address=address,
+                    coordinates=coordinates,
+                    project_housing_type=project_housing_type,
+                    project_avg_rent=project_avg_rent
+                )
+                logger.info("✅ Phase 2, Task 2.1: Competitive Analysis completed")
+            except Exception as e:
+                logger.warning(f"Competitive analysis failed: {e}")
+                context['competitive_analysis'] = {'total_competitors': 0, 'projects': []}
         
         # Step 3: Generate Expert Edition layers
         try:
