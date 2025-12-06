@@ -718,6 +718,40 @@
             color: var(--lh-primary-blue);
         }
 
+        /* Phase B: Chart visualization styles */
+        .chart-container {
+            width: 100%;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+
+        .chart-image {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            border: 1px solid var(--lh-gray-light);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .chart-caption {
+            font-size: 9pt;
+            color: var(--lh-gray);
+            text-align: center;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        .chart-description {
+            font-size: 10pt;
+            color: var(--lh-gray-dark);
+            margin: 15px 0;
+            line-height: 1.6;
+            padding: 10px 15px;
+            background: var(--lh-light-bg);
+            border-left: 3px solid var(--lh-primary-blue);
+        }
+
         .academic-content em {
             font-style: italic;
             color: var(--lh-gray-medium);
@@ -1323,6 +1357,23 @@
             </tfoot>
         </table>
     </div>
+    
+    <!-- Phase B: Competitive Analysis Table -->
+    {% if charts and charts.competitive_analysis %}
+    <div class="content-block">
+        <h3 class="content-title">4.4 경쟁 프로젝트 비교 분석</h3>
+        <div class="chart-description">
+            인근 경쟁 프로젝트와의 가격, 거리, 세대수, 준공년도를 비교 분석한 표입니다.
+            시장 내 경쟁력을 평가하고 가격 포지셔닝 전략을 수립하는데 활용됩니다.
+        </div>
+        <div class="chart-container">
+            <img src="{{ charts.competitive_analysis }}" class="chart-image" alt="Competitive Analysis">
+            <p class="chart-caption">표 4-1. 경쟁 프로젝트 비교 분석 (가격/거리/세대수/준공년도)</p>
+        </div>
+    </div>
+    {% endif %}
+    <!-- End Phase B Competitive Analysis -->
+    
 </div>
 
 <!-- ============================================================
@@ -1528,6 +1579,57 @@
             </tbody>
         </table>
     </div>
+    
+    <!-- Phase B: New Visualization Charts -->
+    {% if charts %}
+    
+    <!-- 6.5 Financial Scorecard -->
+    {% if charts.financial_scorecard %}
+    <div class="content-block">
+        <h3 class="content-title">6.5 재무 성과 지표 (Financial Scorecard)</h3>
+        <div class="chart-description">
+            5개 핵심 재무 KPI와 종합 등급을 한눈에 확인할 수 있는 시각적 대시보드입니다.
+        </div>
+        <div class="chart-container">
+            <img src="{{ charts.financial_scorecard }}" class="chart-image" alt="Financial Scorecard">
+            <p class="chart-caption">그림 6-1. 재무 성과 지표 (CAPEX, NPV, IRR, Payback, ROI)</p>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- 6.6 NPV Tornado Chart -->
+    {% if charts.npv_tornado %}
+    <div class="content-block">
+        <h3 class="content-title">6.6 NPV 민감도 분석 (Tornado Chart)</h3>
+        <div class="chart-description">
+            주요 변수별 ±10% 변동 시 NPV에 미치는 영향을 시각화한 토네이도 차트입니다.
+            변수별 민감도 순위를 확인하여 리스크 관리 우선순위를 파악할 수 있습니다.
+        </div>
+        <div class="chart-container">
+            <img src="{{ charts.npv_tornado }}" class="chart-image" alt="NPV Tornado Chart">
+            <p class="chart-caption">그림 6-2. NPV 민감도 분석 (변수별 영향도 순위)</p>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- 6.7 30-Year Cashflow Chart -->
+    {% if charts.cashflow_30year %}
+    <div class="content-block">
+        <h3 class="content-title">6.7 30년 장기 현금흐름 분석</h3>
+        <div class="chart-description">
+            30년간의 수익, 지출, 순현금흐름 추이를 시각화한 차트입니다.
+            투자 회수 시점과 장기 수익성을 직관적으로 확인할 수 있습니다.
+        </div>
+        <div class="chart-container">
+            <img src="{{ charts.cashflow_30year }}" class="chart-image" alt="30-Year Cashflow Chart">
+            <p class="chart-caption">그림 6-3. 30년 현금흐름 추이 (연간 수익/지출 및 누적 현금흐름)</p>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% endif %}
+    <!-- End Phase B Charts -->
+    
 </div>
 
 <!-- ============================================================
@@ -1638,6 +1740,23 @@
             <p>{{ implementation_roadmap.critical_path | default('전체 프로젝트는 36개월 내 완료 가능하며, 4개 핵심 단계로 구성됩니다.') }}</p>
         </div>
     </div>
+    
+    <!-- Phase B: Gantt Chart -->
+    {% if charts and charts.gantt_chart %}
+    <div class="content-block">
+        <h3 class="content-title">8.3 36개월 프로젝트 일정표 (Gantt Chart)</h3>
+        <div class="chart-description">
+            전체 36개월 프로젝트 일정을 시각화한 Gantt Chart입니다.
+            준비, 착공, 시공, 준공 4개 단계의 주요 마일스톤과 일정을 확인할 수 있습니다.
+        </div>
+        <div class="chart-container">
+            <img src="{{ charts.gantt_chart }}" class="chart-image" alt="Gantt Chart">
+            <p class="chart-caption">그림 8-1. 36개월 프로젝트 로드맵 (단계별 마일스톤)</p>
+        </div>
+    </div>
+    {% endif %}
+    <!-- End Phase B Gantt Chart -->
+    
 </div>
 
 <!-- ============================================================
