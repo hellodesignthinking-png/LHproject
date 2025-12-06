@@ -598,16 +598,20 @@ class ReportContextBuilder:
         
         if should_calculate_metrics:
             try:
-                # Generate 10-year cash flow
-                project_period_years = 10
+                # Phase 1, Task 1.4: Generate 30-year cash flow (extended from 10 years)
+                project_period_years = 30
                 
-                # Model: Year 1 = 85% of stabilized, Year 2+ = 100% stabilized
+                # Model: Year 1 = 85% of stabilized, Year 2-30 = 100% stabilized
+                # Include annual 2% revenue growth from Year 6 onwards
                 annual_cashflows = []
                 for year in range(project_period_years):
                     if year == 0:  # Year 1
                         cf = stabilized_noi * 0.85  # Ramp-up period
-                    else:  # Year 2+
+                    elif year <= 4:  # Year 2-5: stabilized
                         cf = stabilized_noi
+                    else:  # Year 6-30: with 2% annual growth
+                        growth_factor = (1.02) ** (year - 4)  # 2% compounding from Year 6
+                        cf = stabilized_noi * growth_factor
                     annual_cashflows.append(cf)
                 
                 # Calculate NPV
@@ -668,7 +672,7 @@ class ReportContextBuilder:
                 finance['irr']['market'] = irr_value * 1.2 * 100 if irr_value else 0  # Estimated market IRR
                 finance['payback']['years'] = payback if payback else 0
                 
-                # Build cash flow table
+                # Build cash flow table (30 years)
                 cumulative = -capex_total
                 finance['cashflow'] = []
                 for year in range(1, project_period_years + 1):
@@ -680,7 +684,17 @@ class ReportContextBuilder:
                         'cumulative': cumulative
                     })
                 
-                logger.info(f"✅ Enhanced metrics: NPV={npv_public/1e8:.1f}억, IRR={irr_value*100:.2f}%, Payback={payback:.1f}y")
+                # Phase 1, Task 1.5: Add Key Financial Ratios (DSCR, LTV, ROI, ROE)
+                finance['ratios'] = self._calculate_financial_ratios(
+                    capex_total, 
+                    stabilized_noi, 
+                    annual_revenue, 
+                    annual_opex,
+                    npv_public,
+                    finance['capex']
+                )
+                
+                logger.info(f"✅ Enhanced metrics (30yr): NPV={npv_public/1e8:.1f}억, IRR={irr_value*100:.2f}%, Payback={payback:.1f}y")
             except Exception as e:
                 logger.warning(f"Enhanced metrics calculation failed: {e}")
                 import traceback
@@ -688,6 +702,217 @@ class ReportContextBuilder:
         
         return finance
     
+    def _calculate_financial_ratios(
+        self,
+        capex: float,
+        noi: float,
+        revenue: float,
+        opex: float,
+        npv: float,
+        capex_breakdown: Dict[str, float]
+    ) -> Dict[str, Any]:
+        """
+        Calculate key financial ratios
+        
+        Phase 1, Task 1.5: Add Financial Ratios (DSCR, LTV, ROI, ROE)
+        
+        Ratios:
+        1. DSCR (Debt Service Coverage Ratio): NOI / Annual Debt Service
+        2. LTV (Loan-to-Value): Loan Amount / Total Asset Value
+        3. ROI (Return on Investment): (Net Profit / Total Investment) × 100
+        4. ROE (Return on Equity): (Net Income / Equity) × 100
+        
+        Returns:
+            Dictionary with ratio values, grades, and interpretations
+        """
+        # Assumptions for calculation
+        loan_ratio = 0.70  # 70% LTV (typical for LH projects)
+        interest_rate = 0.025  # 2.5% interest rate
+        loan_term_years = 20  # 20-year loan term
+        
+        # Calculate loan-related values
+        loan_amount = capex * loan_ratio
+        equity = capex * (1 - loan_ratio)
+        
+        # Annual debt service (principal + interest, simplified)
+        # Using amortization formula: P * [r(1+r)^n] / [(1+r)^n - 1]
+        r = interest_rate
+        n = loan_term_years
+        if r > 0:
+            annual_debt_service = loan_amount * (r * (1 + r)**n) / ((1 + r)**n - 1)
+        else:
+            annual_debt_service = loan_amount / n
+        
+        # 1. DSCR (Debt Service Coverage Ratio)
+        dscr = noi / annual_debt_service if annual_debt_service > 0 else 0
+        dscr_grade = self._grade_dscr(dscr)
+        
+        # 2. LTV (Loan-to-Value)
+        ltv_pct = loan_ratio * 100
+        ltv_grade = self._grade_ltv(ltv_pct)
+        
+        # 3. ROI (Return on Investment) - Annual ROI
+        # ROI = (Annual Net Income / Total Investment) × 100
+        annual_net_income = noi - annual_debt_service  # After debt service
+        roi_annual = (annual_net_income / capex * 100) if capex > 0 else 0
+        
+        # Cumulative ROI over project life (30 years)
+        total_net_income = annual_net_income * 30  # Simplified
+        roi_cumulative = (total_net_income / capex * 100) if capex > 0 else 0
+        roi_grade = self._grade_roi(roi_annual)
+        
+        # 4. ROE (Return on Equity) - Annual ROE
+        # ROE = (Net Income / Equity) × 100
+        roe_annual = (annual_net_income / equity * 100) if equity > 0 else 0
+        roe_grade = self._grade_roe(roe_annual)
+        
+        # Additional ratios
+        # 5. Cap Rate (Capitalization Rate)
+        property_value = capex * 1.1  # Assume 10% appreciation
+        cap_rate = (noi / property_value * 100) if property_value > 0 else 0
+        
+        # 6. Operating Expense Ratio (OER)
+        oer = (opex / revenue * 100) if revenue > 0 else 0
+        
+        return {
+            'dscr': {
+                'value': round(dscr, 2),
+                'grade': dscr_grade,
+                'description': f"부채상환비율 {dscr:.2f}배, {dscr_grade} 등급",
+                'interpretation': self._interpret_dscr(dscr),
+                'benchmark': '1.25배 이상 권장 (LH 기준)'
+            },
+            'ltv': {
+                'value': round(ltv_pct, 1),
+                'grade': ltv_grade,
+                'description': f"담보인정비율 {ltv_pct:.1f}%, {ltv_grade} 등급",
+                'loan_amount': loan_amount,
+                'loan_amount_kr': f"{loan_amount / 1e8:.1f}억원",
+                'equity': equity,
+                'equity_kr': f"{equity / 1e8:.1f}억원",
+                'interpretation': self._interpret_ltv(ltv_pct),
+                'benchmark': '70% 이하 권장'
+            },
+            'roi': {
+                'annual': round(roi_annual, 2),
+                'cumulative_30yr': round(roi_cumulative, 1),
+                'grade': roi_grade,
+                'description': f"연간 투자수익률 {roi_annual:.2f}%, 30년 누적 {roi_cumulative:.1f}%",
+                'interpretation': self._interpret_roi(roi_annual),
+                'benchmark': '3% 이상 권장'
+            },
+            'roe': {
+                'annual': round(roe_annual, 2),
+                'grade': roe_grade,
+                'description': f"자기자본이익률 {roe_annual:.2f}%",
+                'interpretation': self._interpret_roe(roe_annual),
+                'benchmark': '5% 이상 권장'
+            },
+            'cap_rate': {
+                'value': round(cap_rate, 2),
+                'description': f"자본환원율 {cap_rate:.2f}%",
+                'interpretation': '부동산 투자 수익률 지표'
+            },
+            'oer': {
+                'value': round(oer, 1),
+                'description': f"운영비율 {oer:.1f}%",
+                'interpretation': '낮을수록 운영 효율성 높음'
+            },
+            'debt_service': {
+                'annual': annual_debt_service,
+                'annual_kr': f"{annual_debt_service / 1e8:.2f}억원/년",
+                'description': f"연간 부채상환액 {annual_debt_service / 1e8:.2f}억원"
+            }
+        }
+    
+    def _grade_dscr(self, dscr: float) -> str:
+        \"\"\"Grade DSCR ratio\"\"\"
+        if dscr >= 1.5:
+            return 'A'
+        elif dscr >= 1.25:
+            return 'B'
+        elif dscr >= 1.0:
+            return 'C'
+        else:
+            return 'D'
+    
+    def _grade_ltv(self, ltv_pct: float) -> str:
+        \"\"\"Grade LTV ratio\"\"\"
+        if ltv_pct <= 60:
+            return 'A'
+        elif ltv_pct <= 70:
+            return 'B'
+        elif ltv_pct <= 80:
+            return 'C'
+        else:
+            return 'D'
+    
+    def _grade_roi(self, roi_annual: float) -> str:
+        \"\"\"Grade ROI\"\"\"
+        if roi_annual >= 5.0:
+            return 'A'
+        elif roi_annual >= 3.0:
+            return 'B'
+        elif roi_annual >= 1.0:
+            return 'C'
+        else:
+            return 'D'
+    
+    def _grade_roe(self, roe_annual: float) -> str:
+        \"\"\"Grade ROE\"\"\"
+        if roe_annual >= 10.0:
+            return 'A'
+        elif roe_annual >= 7.0:
+            return 'B'
+        elif roe_annual >= 5.0:
+            return 'C'
+        else:
+            return 'D'
+    
+    def _interpret_dscr(self, dscr: float) -> str:
+        \"\"\"Interpret DSCR value\"\"\"
+        if dscr >= 1.5:
+            return "매우 안정적인 부채 상환 능력"
+        elif dscr >= 1.25:
+            return "안정적인 부채 상환 능력 (LH 기준 충족)"
+        elif dscr >= 1.0:
+            return "최소 부채 상환 가능, 리스크 주의"
+        else:
+            return "부채 상환 불가능, 사업 재구조화 필요"
+    
+    def _interpret_ltv(self, ltv_pct: float) -> str:
+        \"\"\"Interpret LTV value\"\"\"
+        if ltv_pct <= 60:
+            return "매우 보수적인 레버리지, 재무 안정성 높음"
+        elif ltv_pct <= 70:
+            return "적정 레버리지 수준, 재무 건전성 양호"
+        elif ltv_pct <= 80:
+            return "높은 레버리지, 재무 리스크 주의 필요"
+        else:
+            return "과도한 레버리지, 재무 리스크 매우 높음"
+    
+    def _interpret_roi(self, roi_annual: float) -> str:
+        \"\"\"Interpret ROI value\"\"\"
+        if roi_annual >= 5.0:
+            return "우수한 투자 수익률, 투자 매력도 높음"
+        elif roi_annual >= 3.0:
+            return "양호한 투자 수익률, 투자 가치 있음"
+        elif roi_annual >= 1.0:
+            return "보통 수준의 수익률, 신중한 검토 필요"
+        else:
+            return "낮은 수익률, 투자 재검토 필요"
+    
+    def _interpret_roe(self, roe_annual: float) -> str:
+        \"\"\"Interpret ROE value\"\"\"
+        if roe_annual >= 10.0:
+            return "탁월한 자기자본 수익률"
+        elif roe_annual >= 7.0:
+            return "우수한 자기자본 수익률"
+        elif roe_annual >= 5.0:
+            return "양호한 자기자본 수익률"
+        else:
+            return "낮은 자기자본 수익률"
+
     def _build_market_section(self, address: str, zerosite_value: float) -> Dict[str, Any]:
         """Build market analysis section (Phase 7.7)
         
