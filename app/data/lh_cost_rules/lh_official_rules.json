@@ -1,0 +1,306 @@
+{
+  "version": "2025.1",
+  "last_updated": "2025-12-06",
+  "description": "LH Official Construction Cost Rules and Regulations",
+  "source": "LH Corporation Construction Cost Standards 2025",
+  "reference": "LH 공공주택 사업비 산정 기준 (2025년 1월)",
+  
+  "base_rules": {
+    "design_fee": {
+      "description": "설계비 (Design Fee)",
+      "rate_range": {
+        "min": 0.08,
+        "standard": 0.10,
+        "max": 0.12
+      },
+      "basis": "percentage of construction cost",
+      "notes": [
+        "Standard rate: 10% of construction cost",
+        "Varies by project complexity",
+        "Includes architectural, structural, MEP design"
+      ]
+    },
+    
+    "supervision_fee": {
+      "description": "감리비 (Construction Supervision Fee)",
+      "rate_range": {
+        "min": 0.03,
+        "standard": 0.04,
+        "max": 0.05
+      },
+      "basis": "percentage of construction cost",
+      "notes": [
+        "Standard rate: 4% of construction cost",
+        "Full-time supervisor required for projects > 50 units"
+      ]
+    },
+    
+    "general_management": {
+      "description": "일반관리비 (General Management Cost)",
+      "rate": 0.05,
+      "basis": "percentage of total hard cost",
+      "notes": [
+        "Fixed at 5%",
+        "Covers project management, administration"
+      ]
+    },
+    
+    "contingency": {
+      "description": "예비비 (Contingency)",
+      "rate_range": {
+        "min": 0.05,
+        "standard": 0.10,
+        "max": 0.15
+      },
+      "basis": "percentage of total project cost",
+      "notes": [
+        "Standard: 10%",
+        "Increased for complex sites",
+        "Covers unforeseen costs"
+      ]
+    },
+    
+    "vat": {
+      "description": "부가가치세 (VAT)",
+      "rate": 0.10,
+      "basis": "percentage of total cost",
+      "exemptions": [
+        "Land acquisition (exempt)",
+        "Residential rental housing (reduced rate)"
+      ]
+    }
+  },
+  
+  "site_conditions": {
+    "description": "Site-specific cost adjustments",
+    "urban": {
+      "coefficient": 1.03,
+      "description": "도심지 (Urban area)",
+      "factors": [
+        "Limited site access",
+        "Noise restrictions",
+        "Traffic management",
+        "Higher labor cost"
+      ]
+    },
+    "suburban": {
+      "coefficient": 1.0,
+      "description": "준도심 (Suburban area)",
+      "factors": ["Standard conditions"]
+    },
+    "rural": {
+      "coefficient": 0.97,
+      "description": "외곽지역 (Rural area)",
+      "factors": [
+        "Better site access",
+        "Lower labor cost",
+        "Longer material transport"
+      ]
+    },
+    "island": {
+      "coefficient": 1.08,
+      "description": "도서지역 (Island area)",
+      "factors": [
+        "Difficult access",
+        "Material transport cost",
+        "Limited labor supply"
+      ]
+    }
+  },
+  
+  "underground_floors": {
+    "description": "Underground floor construction cost addition",
+    "cost_per_floor_per_m2": 180000,
+    "notes": [
+        "180,000원/㎡ per underground floor",
+        "Includes excavation, retaining walls, waterproofing",
+        "Higher cost for deeper floors"
+    ],
+    "by_depth": {
+      "B1": 180000,
+      "B2": 220000,
+      "B3": 280000,
+      "B4_plus": 350000
+    }
+  },
+  
+  "construction_class": {
+    "description": "Construction quality class differential",
+    "classes": {
+      "A": {
+        "coefficient": 1.15,
+        "description": "최고급 (Premium)",
+        "features": [
+          "High-end finishes",
+          "Advanced building systems",
+          "Premium materials"
+        ],
+        "typical_use": "High-end residential, landmark projects"
+      },
+      "B": {
+        "coefficient": 1.0,
+        "description": "고급 (High-quality)",
+        "features": [
+          "Quality finishes",
+          "Standard modern systems",
+          "Good materials"
+        ],
+        "typical_use": "LH public housing standard"
+      },
+      "C": {
+        "coefficient": 0.92,
+        "description": "중급 (Standard)",
+        "features": [
+          "Basic quality finishes",
+          "Standard systems",
+          "Economical materials"
+        ],
+        "typical_use": "Budget public housing"
+      },
+      "D": {
+        "coefficient": 0.85,
+        "description": "보급형 (Economy)",
+        "features": [
+          "Minimal finishes",
+          "Basic systems",
+          "Low-cost materials"
+        ],
+        "typical_use": "Emergency housing"
+      }
+    },
+    "lh_standard": "B"
+  },
+  
+  "regional_labor_cost": {
+    "description": "Regional labor cost differentials",
+    "seoul": {
+      "coefficient": 1.08,
+      "description": "서울 (highest labor cost)"
+    },
+    "gyeonggi": {
+      "coefficient": 1.03,
+      "description": "경기도"
+    },
+    "metropolitan": {
+      "coefficient": 1.00,
+      "description": "광역시 (Busan, Daegu, Incheon, etc.)"
+    },
+    "provincial": {
+      "coefficient": 0.95,
+      "description": "지방 (Provincial cities)"
+    },
+    "rural": {
+      "coefficient": 0.90,
+      "description": "농촌 (Rural areas)"
+    }
+  },
+  
+  "seasonal_adjustment": {
+    "description": "Seasonal construction cost adjustment",
+    "winter": {
+      "months": [12, 1, 2],
+      "coefficient": 1.05,
+      "reason": "Cold weather protection, heating, snow removal"
+    },
+    "summer": {
+      "months": [7, 8],
+      "coefficient": 1.02,
+      "reason": "Heat protection, rain delays"
+    },
+    "spring_fall": {
+      "months": [3, 4, 5, 6, 9, 10, 11],
+      "coefficient": 1.0,
+      "reason": "Optimal construction weather"
+    }
+  },
+  
+  "special_requirements": {
+    "seismic_design": {
+      "description": "내진설계 (Seismic design)",
+      "cost_addition_rate": 0.03,
+      "required_for": [
+        "Buildings > 3 floors",
+        "Public facilities",
+        "Seismic zones"
+      ]
+    },
+    "energy_efficiency": {
+      "description": "에너지효율 1등급 (Energy Efficiency Grade 1)",
+      "cost_addition_rate": 0.05,
+      "benefits": [
+        "Lower operating costs",
+        "LH incentives",
+        "Carbon credit eligible"
+      ]
+    },
+    "barrier_free": {
+      "description": "장애인 편의시설 (Barrier-free design)",
+      "cost_addition_rate": 0.02,
+      "required": "All public housing"
+    },
+    "smart_home": {
+      "description": "스마트홈 시스템 (Smart home system)",
+      "cost_addition_rate": 0.04,
+      "features": [
+        "IoT integration",
+        "Energy management",
+        "Security systems"
+      ]
+    }
+  },
+  
+  "lh_public_housing_standards": {
+    "description": "LH 공공주택 표준 (LH Public Housing Standards)",
+    "minimum_unit_size": {
+      "youth": 19,
+      "newlyweds_type1": 29,
+      "newlyweds_type2": 36,
+      "multichild": 45,
+      "senior": 25
+    },
+    "required_facilities": [
+      "Elevator (buildings > 5 floors)",
+      "Parking (0.7 spaces per unit minimum)",
+      "Community facilities (2% of GFA)",
+      "Disaster prevention systems",
+      "Accessibility features"
+    ],
+    "quality_standards": {
+      "construction_class": "B (고급)",
+      "finishes": "Standard quality",
+      "insulation": "Energy Grade 1+",
+      "soundproofing": "Enhanced (60dB+)"
+    }
+  },
+  
+  "calculation_formula": {
+    "description": "LH Official Cost Calculation Formula",
+    "formula": "Total LH Cost = (Base Construction Cost × Construction Class × Site Condition × Regional Labor × Seasonal) + Design Fee + Supervision Fee + General Management + Underground Addition + Special Requirements + Contingency + VAT",
+    "example": {
+      "base_construction_cost": 10000000000,
+      "construction_class": 1.0,
+      "site_condition": 1.03,
+      "regional_labor": 1.08,
+      "seasonal": 1.0,
+      "subtotal_construction": 11124000000,
+      "design_fee": 1112400000,
+      "supervision_fee": 444960000,
+      "general_management": 556200000,
+      "underground_addition": 0,
+      "special_requirements": 667440000,
+      "subtotal_before_contingency": 13905000000,
+      "contingency": 1390500000,
+      "subtotal_before_vat": 15295500000,
+      "vat": 1529550000,
+      "total_lh_cost": 16825050000
+    }
+  },
+  
+  "notes": [
+    "All rates and coefficients based on LH 2025 standards",
+    "Subject to quarterly review and adjustment",
+    "Regional and seasonal adjustments can be combined",
+    "Special requirements are project-specific",
+    "Actual costs may vary based on market conditions"
+  ]
+}

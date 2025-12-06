@@ -1,5 +1,5 @@
 """
-ZeroSite Phase 8: Verified Cost Loader
+ZeroSite Phase 8 + Phase 8.6: Verified Cost Loader with District-Level Precision
 
 Loads LH official construction cost data from database.
 
@@ -9,22 +9,26 @@ Features:
     - Year-based cost index
     - Fallback mechanism for missing data
     - Address-to-region mapping
+    - Phase 8.6: District-level cost coefficients (±1.5% accuracy)
 
 Architecture:
     Mock DB (JSON) → VerifiedCostLoader → Phase 2 Financial Engine
+    
+    Phase 8.6 Enhancement:
+    Base Cost × Region Coefficient × District Coefficient = Final Verified Cost
     
     In production:
     LH API → VerifiedCostLoader → Phase 2 Financial Engine
 """
 
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple
 from pathlib import Path
 import json
 import re
 
 
 class VerifiedCostData:
-    """Verified cost data structure"""
+    """Verified cost data structure with Phase 8.6 district-level precision"""
     
     def __init__(
         self,
@@ -34,7 +38,11 @@ class VerifiedCostData:
         housing_type: str,
         source: str = "LH Official",
         description: Optional[str] = None,
-        includes: Optional[list] = None
+        includes: Optional[list] = None,
+        # Phase 8.6: District-level fields
+        district: Optional[str] = None,
+        district_coefficient: Optional[float] = None,
+        base_cost_per_m2: Optional[float] = None
     ):
         self.cost_per_m2 = cost_per_m2
         self.year = year
@@ -43,10 +51,14 @@ class VerifiedCostData:
         self.source = source
         self.description = description
         self.includes = includes or []
+        # Phase 8.6
+        self.district = district
+        self.district_coefficient = district_coefficient
+        self.base_cost_per_m2 = base_cost_per_m2
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary"""
-        return {
+        result = {
             "cost_per_m2": self.cost_per_m2,
             "year": self.year,
             "region": self.region,
@@ -55,6 +67,12 @@ class VerifiedCostData:
             "description": self.description,
             "includes": self.includes
         }
+        # Phase 8.6: Add district info if available
+        if self.district:
+            result["district"] = self.district
+            result["district_coefficient"] = self.district_coefficient
+            result["base_cost_per_m2"] = self.base_cost_per_m2
+        return result
 
 
 class VerifiedCostLoader:
@@ -77,16 +95,20 @@ class VerifiedCostLoader:
             capex = cost_data.cost_per_m2 * total_area
     """
     
-    def __init__(self, data_path: Path = None):
+    def __init__(self, data_path: Path = None, coefficients_path: Path = None):
         """
         Initialize loader
         
         Args:
             data_path: Path to verified cost JSON file
+            coefficients_path: Path to region coefficients JSON file (Phase 8.6)
         """
         self.data_path = data_path or Path("./app/data/verified_cost/mock_verified_cost.json")
+        self.coefficients_path = coefficients_path or Path("./app/data/verified_cost/region_coefficients.json")
         self.data = None
+        self.coefficients = None
         self._load_data()
+        self._load_coefficients()
     
     def _load_data(self):
         """Load verified cost data from JSON"""
@@ -99,6 +121,57 @@ class VerifiedCostLoader:
         except json.JSONDecodeError as e:
             print(f"Error: Invalid JSON in verified cost data: {e}")
             self.data = None
+    
+    def _load_coefficients(self):
+        """Load region coefficients data (Phase 8.6)"""
+        try:
+            with open(self.coefficients_path, 'r', encoding='utf-8') as f:
+                self.coefficients = json.load(f)
+        except FileNotFoundError:
+            print(f"Warning: Region coefficients not found at {self.coefficients_path}")
+            self.coefficients = None
+        except json.JSONDecodeError as e:
+            print(f"Error: Invalid JSON in region coefficients: {e}")
+            self.coefficients = None
+    
+    def _extract_district_from_address(self, address: str) -> Tuple[Optional[str], Optional[str]]:
+        """
+        Extract region and district from address string (Phase 8.6)
+        
+        Examples:
+            "서울특별시 강남구 역삼동" → ("seoul", "강남구")
+            "경기도 성남시 분당구" → ("gyeonggi", "분당구")
+            "인천광역시 연수구" → ("incheon", "연수구")
+        
+        Args:
+            address: Full address string
+        
+        Returns:
+            Tuple of (region_code, district_name) or (region_code, None) if district not found
+        """
+        if not address:
+            return (None, None)
+        
+        # Extract district (구, 군, 시)
+        district = None
+        
+        # Try to find district patterns
+        district_patterns = [
+            r'([가-힣]+구)',  # 강남구, 서초구, etc.
+            r'([가-힣]+군)',  # 강화군, 달성군, etc.
+            r'(분당|판교|일산동구|일산서구|평촌|산본)',  # Special areas
+        ]
+        
+        for pattern in district_patterns:
+            match = re.search(pattern, address)
+            if match:
+                district = match.group(1)
+                break
+        
+        # Get region code
+        region_code = self._extract_region_from_address(address)
+        
+        return (region_code, district)
     
     def _extract_region_from_address(self, address: str) -> Optional[str]:
         """
@@ -139,6 +212,35 @@ class VerifiedCostLoader:
         
         return None
     
+    def _get_district_coefficient(self, region_code: str, district: str) -> float:
+        """
+        Get district coefficient from coefficients database (Phase 8.6)
+        
+        Args:
+            region_code: Region code (seoul, gyeonggi, etc.)
+            district: District name (강남구, 분당구, etc.)
+        
+        Returns:
+            Coefficient value (1.0 if not found)
+        """
+        if not self.coefficients:
+            return 1.0
+        
+        regions = self.coefficients.get("regions", {})
+        if region_code not in regions:
+            return 1.0
+        
+        region_data = regions[region_code]
+        districts = region_data.get("districts", {})
+        
+        if district not in districts:
+            # Try fallback coefficient
+            fallback = self.coefficients.get("fallback", {}).get("unknown_district", 1.0)
+            return fallback
+        
+        district_data = districts[district]
+        return district_data.get("coefficient", 1.0)
+    
     def get_cost(
         self,
         address: str,
@@ -146,15 +248,15 @@ class VerifiedCostLoader:
         year: int = 2025
     ) -> Optional[VerifiedCostData]:
         """
-        Get verified cost for given parameters
+        Get verified cost for given parameters with Phase 8.6 district-level precision
         
         Args:
-            address: Full address (will extract region)
+            address: Full address (will extract region and district)
             housing_type: Housing type (Youth, Newlyweds_TypeI, etc.)
             year: Cost year
         
         Returns:
-            VerifiedCostData or None if not found
+            VerifiedCostData with district-adjusted cost or None if not found
         """
         if not self.data:
             return None
@@ -164,8 +266,8 @@ class VerifiedCostLoader:
             print(f"Warning: Cost data is for year {self.data.get('year')}, requested {year}")
             # Continue anyway - close enough
         
-        # Extract region from address
-        region_code = self._extract_region_from_address(address)
+        # Phase 8.6: Extract both region and district from address
+        region_code, district = self._extract_district_from_address(address)
         if not region_code:
             print(f"Warning: Could not determine region from address: {address}")
             return None
@@ -185,16 +287,29 @@ class VerifiedCostLoader:
             return None
         
         type_data = housing_types[housing_type]
+        base_cost = type_data["cost_per_m2"]
         
-        # Create verified cost data
+        # Phase 8.6: Apply district coefficient
+        district_coefficient = 1.0
+        if district and self.coefficients:
+            district_coefficient = self._get_district_coefficient(region_code, district)
+        
+        # Final cost = base cost × district coefficient
+        final_cost = base_cost * district_coefficient
+        
+        # Create verified cost data with Phase 8.6 fields
         return VerifiedCostData(
-            cost_per_m2=type_data["cost_per_m2"],
+            cost_per_m2=final_cost,
             year=year,
             region=region_data["region_name"],
             housing_type=housing_type,
-            source="LH Official (Mock)",
+            source="LH Official (Mock) + Phase 8.6 District Precision",
             description=type_data.get("description"),
-            includes=type_data.get("includes", [])
+            includes=type_data.get("includes", []),
+            # Phase 8.6: District-level precision
+            district=district,
+            district_coefficient=district_coefficient,
+            base_cost_per_m2=base_cost
         )
     
     def get_cost_by_region_code(
