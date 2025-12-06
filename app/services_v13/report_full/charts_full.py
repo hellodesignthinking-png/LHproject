@@ -1,14 +1,21 @@
 """
-Phase 10.5: Advanced Chart Generator for Full LH Report
+Phase 10.5 + Phase B: Advanced Chart Generator for Full LH Report
 Generates professional charts for financial analysis visualization
 
-Charts:
+Existing Charts (Phase 10.5):
 - CAPEX Breakdown (Pie Chart)
 - NPV Discount Curve (Line Chart)
 - IRR Sensitivity Table
 - OpEx vs Revenue Timeline (Bar Chart)
-- Market Signal Comparison (Radar Chart)
-- Demand Score Heatmap
+- Market Signal Comparison (Gauge Chart)
+- Demand Score Bar Chart
+
+New Charts (Phase B):
+- Gantt Chart (36-Month Project Roadmap)
+- NPV Tornado Chart (Sensitivity Analysis)
+- Financial Scorecard (Visual KPI Dashboard)
+- Competitive Analysis Table (Market Comparison)
+- 30-Year Cashflow Chart (Long-term Projection)
 """
 
 import matplotlib
@@ -328,6 +335,376 @@ class ChartGenerator:
         plt.tight_layout()
         return self._save_or_encode(fig, filename)
     
+    # ============================================================
+    # Phase B: New Visualization Methods
+    # ============================================================
+    
+    def generate_gantt_chart(
+        self,
+        milestones: List[Dict[str, Any]],
+        filename: str = "gantt_chart.png"
+    ) -> str:
+        """
+        Generate 36-month project roadmap Gantt chart
+        
+        Args:
+            milestones: List of milestone dictionaries with keys:
+                       - 'name': Milestone name (str)
+                       - 'start_month': Start month (int, 0-35)
+                       - 'duration': Duration in months (int)
+                       - 'phase': Phase name (str)
+            filename: Output filename
+            
+        Returns:
+            File path or base64 string
+        """
+        fig, ax = plt.subplots(figsize=(14, 8))
+        
+        # Phase colors
+        phase_colors = {
+            '준비단계': LH_BLUE,
+            '착공단계': LH_GREEN,
+            '시공단계': LH_ORANGE,
+            '준공단계': LH_GRAY
+        }
+        
+        # Sort milestones by start month
+        sorted_milestones = sorted(milestones, key=lambda x: x['start_month'])
+        
+        # Plot each milestone as a horizontal bar
+        for i, milestone in enumerate(sorted_milestones):
+            start = milestone['start_month']
+            duration = milestone['duration']
+            phase = milestone.get('phase', '기타')
+            color = phase_colors.get(phase, LH_GRAY)
+            
+            ax.barh(i, duration, left=start, height=0.6, 
+                   color=color, alpha=0.7, edgecolor='black', linewidth=1)
+            
+            # Add milestone name
+            ax.text(start + duration/2, i, milestone['name'],
+                   ha='center', va='center', fontsize=9, fontweight='bold',
+                   color='white' if duration > 3 else 'black')
+        
+        # Formatting
+        ax.set_yticks(range(len(sorted_milestones)))
+        ax.set_yticklabels([m['name'] for m in sorted_milestones], fontsize=9)
+        ax.set_xlabel('개월 (Month)', fontsize=11, fontweight='bold')
+        ax.set_title('36개월 프로젝트 로드맵 (Project Roadmap)', 
+                     fontsize=14, fontweight='bold', pad=20)
+        ax.set_xlim(0, 36)
+        ax.grid(True, axis='x', alpha=0.3, linestyle='--')
+        
+        # Add phase markers every 12 months
+        for month in [0, 12, 24, 36]:
+            ax.axvline(x=month, color=LH_RED, linestyle='--', linewidth=1.5, alpha=0.5)
+            if month < 36:
+                ax.text(month + 6, len(sorted_milestones) - 0.5, f'Year {month//12 + 1}',
+                       ha='center', va='top', fontsize=10, fontweight='bold',
+                       bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.7))
+        
+        # Legend
+        legend_elements = [plt.Rectangle((0,0),1,1, facecolor=color, alpha=0.7, edgecolor='black')
+                          for phase, color in phase_colors.items()]
+        ax.legend(legend_elements, phase_colors.keys(), 
+                 loc='upper right', fontsize=9, title='단계 (Phase)')
+        
+        plt.tight_layout()
+        return self._save_or_encode(fig, filename)
+    
+    def generate_npv_tornado_chart(
+        self,
+        sensitivity_data: Dict[str, Dict[str, float]],
+        base_npv: float,
+        filename: str = "npv_tornado.png"
+    ) -> str:
+        """
+        Generate NPV Tornado chart for sensitivity analysis
+        
+        Args:
+            sensitivity_data: Dictionary with format:
+                {
+                    'variable_name': {
+                        'low': npv_value_at_-10%,
+                        'high': npv_value_at_+10%
+                    },
+                    ...
+                }
+            base_npv: Base case NPV value
+            filename: Output filename
+            
+        Returns:
+            File path or base64 string
+        """
+        fig, ax = plt.subplots(figsize=(12, 8))
+        
+        # Calculate impacts
+        impacts = []
+        for var_name, values in sensitivity_data.items():
+            low_impact = values['low'] - base_npv
+            high_impact = values['high'] - base_npv
+            total_range = abs(high_impact - low_impact)
+            impacts.append({
+                'name': var_name,
+                'low': low_impact,
+                'high': high_impact,
+                'range': total_range
+            })
+        
+        # Sort by total range (most sensitive first)
+        impacts = sorted(impacts, key=lambda x: x['range'], reverse=True)
+        
+        # Plot tornado bars
+        y_pos = np.arange(len(impacts))
+        for i, impact in enumerate(impacts):
+            # Low side (left, red)
+            ax.barh(i, abs(impact['low']), left=min(0, impact['low']), 
+                   height=0.8, color=LH_RED, alpha=0.7, label='하향 (-10%)' if i == 0 else '')
+            # High side (right, green)
+            ax.barh(i, abs(impact['high']), left=max(0, impact['high'] - abs(impact['high'])), 
+                   height=0.8, color=LH_GREEN, alpha=0.7, label='상향 (+10%)' if i == 0 else '')
+            
+            # Add range labels
+            ax.text(impact['low'] - 5, i, f'{impact["low"]:.1f}억',
+                   ha='right', va='center', fontsize=9, fontweight='bold')
+            ax.text(impact['high'] + 5, i, f'{impact["high"]:.1f}억',
+                   ha='left', va='center', fontsize=9, fontweight='bold')
+        
+        # Add base NPV line
+        ax.axvline(x=0, color=LH_BLUE, linestyle='-', linewidth=2.5, 
+                  label=f'기준 NPV ({base_npv:.1f}억)')
+        
+        # Formatting
+        ax.set_yticks(y_pos)
+        ax.set_yticklabels([imp['name'] for imp in impacts], fontsize=10)
+        ax.set_xlabel('NPV 변동 (억원)', fontsize=11, fontweight='bold')
+        ax.set_title('NPV 민감도 분석 (Tornado Chart)\n변수별 ±10% 변동 시 NPV 영향', 
+                     fontsize=14, fontweight='bold', pad=20)
+        ax.legend(loc='lower right', fontsize=9)
+        ax.grid(True, axis='x', alpha=0.3, linestyle='--')
+        
+        plt.tight_layout()
+        return self._save_or_encode(fig, filename)
+    
+    def generate_financial_scorecard(
+        self,
+        kpis: Dict[str, Any],
+        filename: str = "financial_scorecard.png"
+    ) -> str:
+        """
+        Generate visual Financial Scorecard with key KPIs
+        
+        Args:
+            kpis: Dictionary with KPI values:
+                {
+                    'capex': float,  # 총 투자비 (억원)
+                    'npv': float,    # 순현재가치 (억원)
+                    'irr': float,    # 내부수익률 (%)
+                    'payback': float, # 회수기간 (년)
+                    'roi': float,    # 투자수익률 (%)
+                    'grade': str     # 종합등급 (A+, A, B+, etc.)
+                }
+            filename: Output filename
+            
+        Returns:
+            File path or base64 string
+        """
+        fig = plt.figure(figsize=(14, 8))
+        gs = fig.add_gridspec(3, 3, hspace=0.4, wspace=0.3)
+        
+        # Title
+        fig.suptitle('재무 성과 지표 (Financial Scorecard)', 
+                    fontsize=16, fontweight='bold', y=0.98)
+        
+        # KPI Cards
+        kpi_configs = [
+            {'key': 'capex', 'label': '총 투자비\n(CAPEX)', 'unit': '억원', 'color': LH_BLUE},
+            {'key': 'npv', 'label': '순현재가치\n(NPV)', 'unit': '억원', 'color': LH_GREEN},
+            {'key': 'irr', 'label': '내부수익률\n(IRR)', 'unit': '%', 'color': LH_ORANGE},
+            {'key': 'payback', 'label': '투자회수기간\n(Payback)', 'unit': '년', 'color': LH_GRAY},
+            {'key': 'roi', 'label': '투자수익률\n(ROI)', 'unit': '%', 'color': LH_LIGHT_BLUE},
+        ]
+        
+        for i, config in enumerate(kpi_configs):
+            row = i // 3
+            col = i % 3
+            ax = fig.add_subplot(gs[row, col])
+            
+            value = kpis.get(config['key'], 0)
+            
+            # Draw KPI card
+            ax.text(0.5, 0.7, config['label'], 
+                   ha='center', va='center', fontsize=12, fontweight='bold',
+                   transform=ax.transAxes)
+            ax.text(0.5, 0.3, f"{value:.1f}{config['unit']}", 
+                   ha='center', va='center', fontsize=20, fontweight='bold',
+                   color=config['color'], transform=ax.transAxes)
+            
+            # Add background color
+            ax.add_patch(plt.Rectangle((0, 0), 1, 1, 
+                                      facecolor=config['color'], alpha=0.1,
+                                      transform=ax.transAxes))
+            
+            ax.set_xlim(0, 1)
+            ax.set_ylim(0, 1)
+            ax.axis('off')
+        
+        # Overall Grade (bottom center, larger)
+        ax_grade = fig.add_subplot(gs[2, :])
+        grade = kpis.get('grade', 'B+')
+        
+        # Grade color
+        grade_colors = {
+            'A+': LH_GREEN, 'A': LH_GREEN, 'A-': LH_LIGHT_BLUE,
+            'B+': LH_BLUE, 'B': LH_BLUE, 'B-': LH_ORANGE,
+            'C+': LH_ORANGE, 'C': LH_RED
+        }
+        grade_color = grade_colors.get(grade, LH_GRAY)
+        
+        ax_grade.text(0.5, 0.5, f'종합 등급: {grade}', 
+                     ha='center', va='center', fontsize=28, fontweight='bold',
+                     color=grade_color, transform=ax_grade.transAxes,
+                     bbox=dict(boxstyle='round,pad=0.5', facecolor=grade_color, 
+                              alpha=0.2, edgecolor=grade_color, linewidth=3))
+        
+        ax_grade.set_xlim(0, 1)
+        ax_grade.set_ylim(0, 1)
+        ax_grade.axis('off')
+        
+        return self._save_or_encode(fig, filename)
+    
+    def generate_competitive_analysis_table(
+        self,
+        competitors: List[Dict[str, Any]],
+        current_project: Dict[str, Any],
+        filename: str = "competitive_analysis.png"
+    ) -> str:
+        """
+        Generate Competitive Analysis comparison table
+        
+        Args:
+            competitors: List of competitor project dictionaries:
+                [{
+                    'name': str,
+                    'price': float,  # 분양가/임대료 (만원)
+                    'distance': float,  # 거리 (km)
+                    'units': int,  # 세대수
+                    'completion': str  # 준공년도
+                }, ...]
+            current_project: Current project data (same format as competitors)
+            filename: Output filename
+            
+        Returns:
+            File path or base64 string
+        """
+        fig, ax = plt.subplots(figsize=(14, 6))
+        
+        # Prepare table data
+        columns = ['프로젝트', '가격\n(만원)', '거리\n(km)', '세대수', '준공년도']
+        
+        # Add current project at top
+        all_projects = [current_project] + competitors
+        table_data = []
+        for proj in all_projects:
+            table_data.append([
+                proj['name'],
+                f"{proj['price']:.0f}",
+                f"{proj['distance']:.1f}",
+                f"{proj['units']:,}",
+                proj['completion']
+            ])
+        
+        # Create table
+        table = ax.table(cellText=table_data, colLabels=columns,
+                        cellLoc='center', loc='center',
+                        colColours=[LH_BLUE]*len(columns))
+        
+        # Style table
+        table.auto_set_font_size(False)
+        table.set_fontsize(10)
+        table.scale(1, 2.5)
+        
+        # Highlight current project (first row)
+        for i in range(len(columns)):
+            cell = table[(1, i)]  # Row 1 (after header)
+            cell.set_facecolor(LH_LIGHT_BLUE)
+            cell.set_alpha(0.3)
+            cell.set_text_props(weight='bold')
+        
+        # Header styling
+        for i in range(len(columns)):
+            cell = table[(0, i)]
+            cell.set_facecolor(LH_BLUE)
+            cell.set_text_props(weight='bold', color='white')
+        
+        ax.set_title('경쟁 프로젝트 비교 분석 (Competitive Analysis)', 
+                    fontsize=14, fontweight='bold', pad=20)
+        ax.axis('off')
+        
+        plt.tight_layout()
+        return self._save_or_encode(fig, filename)
+    
+    def generate_30year_cashflow_chart(
+        self,
+        years: List[int],
+        revenues: List[float],
+        expenses: List[float],
+        net_cashflows: List[float],
+        filename: str = "30year_cashflow.png"
+    ) -> str:
+        """
+        Generate 30-year cashflow projection chart
+        
+        Args:
+            years: List of years (0-29 for 30 years)
+            revenues: Annual revenues (억원)
+            expenses: Annual expenses (억원)
+            net_cashflows: Annual net cashflows (억원)
+            filename: Output filename
+            
+        Returns:
+            File path or base64 string
+        """
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10), 
+                                       gridspec_kw={'height_ratios': [2, 1]})
+        
+        # Top chart: Stacked area for revenues and expenses
+        ax1.fill_between(years, 0, revenues, color=LH_GREEN, alpha=0.3, label='수익 (Revenue)')
+        ax1.fill_between(years, 0, [-e for e in expenses], color=LH_RED, alpha=0.3, label='지출 (Expense)')
+        ax1.plot(years, revenues, color=LH_GREEN, linewidth=2, marker='o', markersize=3)
+        ax1.plot(years, [-e for e in expenses], color=LH_RED, linewidth=2, marker='o', markersize=3)
+        
+        ax1.axhline(y=0, color=LH_GRAY, linestyle='-', linewidth=1)
+        ax1.set_ylabel('연간 금액 (억원)', fontsize=11, fontweight='bold')
+        ax1.set_title('30년 현금흐름 분석 (30-Year Cashflow Projection)', 
+                     fontsize=14, fontweight='bold', pad=20)
+        ax1.legend(loc='upper left', fontsize=10)
+        ax1.grid(True, alpha=0.3, linestyle='--')
+        
+        # Bottom chart: Net cashflow bars
+        colors = [LH_GREEN if cf > 0 else LH_RED for cf in net_cashflows]
+        ax2.bar(years, net_cashflows, color=colors, alpha=0.6, edgecolor='black', linewidth=0.5)
+        ax2.axhline(y=0, color=LH_GRAY, linestyle='-', linewidth=1.5)
+        
+        # Add cumulative line
+        cumulative_cf = np.cumsum(net_cashflows)
+        ax2.plot(years, cumulative_cf, color=LH_BLUE, linewidth=2.5, 
+                marker='o', markersize=4, label='누적 현금흐름')
+        
+        ax2.set_xlabel('연도 (Year)', fontsize=11, fontweight='bold')
+        ax2.set_ylabel('순현금흐름 (억원)', fontsize=11, fontweight='bold')
+        ax2.legend(loc='upper left', fontsize=10)
+        ax2.grid(True, alpha=0.3, linestyle='--', axis='y')
+        
+        # Add decade markers
+        for decade in [0, 10, 20, 30]:
+            if decade < 30:
+                ax1.axvline(x=decade, color=LH_ORANGE, linestyle='--', linewidth=1, alpha=0.5)
+                ax2.axvline(x=decade, color=LH_ORANGE, linestyle='--', linewidth=1, alpha=0.5)
+        
+        plt.tight_layout()
+        return self._save_or_encode(fig, filename)
+    
     def _save_or_encode(self, fig, filename: str) -> str:
         """
         Save figure to file or encode as base64
@@ -361,7 +738,7 @@ def generate_all_financial_charts(
     output_dir: Optional[Path] = None
 ) -> Dict[str, str]:
     """
-    Generate all financial charts at once
+    Generate all financial charts at once (Phase 10.5 + Phase B)
     
     Args:
         financial_data: Complete financial analysis data
@@ -372,6 +749,8 @@ def generate_all_financial_charts(
     """
     generator = ChartGenerator(output_dir)
     charts = {}
+    
+    # ===== Phase 10.5 Charts =====
     
     # CAPEX Breakdown
     if 'capex_breakdown' in financial_data:
@@ -400,6 +779,56 @@ def generate_all_financial_charts(
             financial_data['years'],
             financial_data['revenues'],
             financial_data['opex']
+        )
+    
+    # Market Signal
+    if all(k in financial_data for k in ['zerosite_value', 'market_avg']):
+        charts['market_signal'] = generator.generate_market_signal_gauge(
+            financial_data['zerosite_value'],
+            financial_data['market_avg']
+        )
+    
+    # Demand Scores
+    if 'demand_scores' in financial_data:
+        charts['demand_scores'] = generator.generate_demand_score_bar(
+            financial_data['demand_scores']
+        )
+    
+    # ===== Phase B Charts =====
+    
+    # Gantt Chart (36-month roadmap)
+    if 'milestones' in financial_data:
+        charts['gantt_chart'] = generator.generate_gantt_chart(
+            financial_data['milestones']
+        )
+    
+    # NPV Tornado Chart (sensitivity analysis)
+    if 'sensitivity_data' in financial_data and 'base_npv' in financial_data:
+        charts['npv_tornado'] = generator.generate_npv_tornado_chart(
+            financial_data['sensitivity_data'],
+            financial_data['base_npv']
+        )
+    
+    # Financial Scorecard (visual KPI dashboard)
+    if 'kpis' in financial_data:
+        charts['financial_scorecard'] = generator.generate_financial_scorecard(
+            financial_data['kpis']
+        )
+    
+    # Competitive Analysis Table
+    if 'competitors' in financial_data and 'current_project' in financial_data:
+        charts['competitive_analysis'] = generator.generate_competitive_analysis_table(
+            financial_data['competitors'],
+            financial_data['current_project']
+        )
+    
+    # 30-Year Cashflow Chart
+    if all(k in financial_data for k in ['years_30', 'revenues_30', 'expenses_30', 'net_cashflows_30']):
+        charts['cashflow_30year'] = generator.generate_30year_cashflow_chart(
+            financial_data['years_30'],
+            financial_data['revenues_30'],
+            financial_data['expenses_30'],
+            financial_data['net_cashflows_30']
         )
     
     return charts
