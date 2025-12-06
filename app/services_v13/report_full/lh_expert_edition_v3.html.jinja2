@@ -674,6 +674,88 @@
             color: var(--lh-gray-dark);
         }
 
+        /* Phase A: Markdown formatting support in narratives */
+        .academic-content h2 {
+            font-size: 14pt;
+            font-weight: 700;
+            color: var(--lh-primary-blue);
+            margin-top: 30px;
+            margin-bottom: 15px;
+            page-break-after: avoid;
+        }
+
+        .academic-content h3 {
+            font-size: 12pt;
+            font-weight: 600;
+            color: var(--lh-secondary-blue);
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .academic-content h4 {
+            font-size: 11pt;
+            font-weight: 600;
+            color: var(--lh-gray-dark);
+            margin-top: 15px;
+            margin-bottom: 8px;
+        }
+
+        .academic-content p {
+            margin-bottom: 12px;
+        }
+
+        .academic-content ul, .academic-content ol {
+            margin: 12px 0;
+            padding-left: 30px;
+        }
+
+        .academic-content li {
+            margin-bottom: 6px;
+        }
+
+        .academic-content strong {
+            font-weight: 700;
+            color: var(--lh-primary-blue);
+        }
+
+        .academic-content em {
+            font-style: italic;
+            color: var(--lh-gray-medium);
+        }
+
+        .academic-content hr {
+            border: none;
+            border-top: 2px solid var(--lh-light-blue);
+            margin: 20px 0;
+        }
+
+        .academic-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .academic-content table th {
+            background: var(--lh-primary-blue);
+            color: var(--lh-white);
+            padding: 10px;
+            text-align: left;
+            font-weight: 700;
+        }
+
+        .academic-content table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--lh-gray-light);
+        }
+
+        .academic-content blockquote {
+            border-left: 4px solid var(--lh-accent-gold);
+            padding-left: 20px;
+            margin: 15px 0;
+            color: var(--lh-gray-medium);
+            font-style: italic;
+        }
+
         .academic-list {
             list-style-type: none;
             padding-left: 0;
@@ -912,14 +994,20 @@
         {% endif %}
         
         <div class="executive-narrative">
-            <strong>종합 평가:</strong><br>
-            {{ narratives.executive_summary.what | default('종합 분석을 수행하였습니다.') }}
-            <br><br>
-            <strong>주요 시사점:</strong><br>
-            {{ narratives.executive_summary.so_what | default('프로젝트 타당성을 검토하였습니다.') }}
-            <br><br>
-            <strong>권고사항:</strong><br>
-            {{ narratives.executive_summary.why | default('상세 분석을 권장합니다.') }}
+            {% if narratives and narratives.executive_summary %}
+                <!-- Phase A: Auto-generated Strategic Narrative -->
+                {{ narratives.executive_summary | safe }}
+            {% else %}
+                <!-- Fallback if narrative not available -->
+                <strong>종합 평가:</strong><br>
+                종합 분석을 수행하였습니다.
+                <br><br>
+                <strong>주요 시사점:</strong><br>
+                프로젝트 타당성을 검토하였습니다.
+                <br><br>
+                <strong>권고사항:</strong><br>
+                상세 분석을 권장합니다.
+            {% endif %}
         </div>
     </div>
 </div>
@@ -1092,14 +1180,20 @@
         <h3 class="content-title">3.2 What-So What-Why 분석</h3>
         
         <div class="academic-content">
-            <p><strong>📊 What (현황 분석):</strong></p>
-            <p>{{ narratives.demand.what | default('AI 수요 예측 엔진을 통해 대상지의 주택 수요를 분석하였습니다.') }}</p>
-            
-            <p class="mt-20"><strong>💡 So What (시사점):</strong></p>
-            <p>{{ narratives.demand.so_what | default('분석 결과를 바탕으로 최적의 주택유형을 도출하였습니다.') }}</p>
-            
-            <p class="mt-20"><strong>🎯 Why (근거):</strong></p>
-            <p>{{ narratives.demand.why | default('서울시 평균 대비 수요 점수를 비교 분석하였습니다.') }}</p>
+            {% if narratives and narratives.demand_analysis %}
+                <!-- Phase A: Auto-generated Demand Analysis Narrative -->
+                {{ narratives.demand_analysis | safe }}
+            {% else %}
+                <!-- Fallback if narrative not available -->
+                <p><strong>📊 What (현황 분석):</strong></p>
+                <p>{{ narratives.demand.what | default('AI 수요 예측 엔진을 통해 대상지의 주택 수요를 분석하였습니다.') }}</p>
+                
+                <p class="mt-20"><strong>💡 So What (시사점):</strong></p>
+                <p>{{ narratives.demand.so_what | default('분석 결과를 바탕으로 최적의 주택유형을 도출하였습니다.') }}</p>
+                
+                <p class="mt-20"><strong>🎯 Why (근거):</strong></p>
+                <p>{{ narratives.demand.why | default('서울시 평균 대비 수요 점수를 비교 분석하였습니다.') }}</p>
+            {% endif %}
         </div>
     </div>
     
@@ -1170,14 +1264,20 @@
         <h3 class="content-title">4.2 Market Intelligence Narrative</h3>
         
         <div class="academic-content">
-            <p><strong>📊 What (현황):</strong></p>
-            <p>{{ narratives.market.what | default('시장 신호 분석 엔진을 통해 대상지의 시장 가치를 평가하였습니다.') }}</p>
-            
-            <p class="mt-20"><strong>💡 So What (시사점):</strong></p>
-            <p>{{ narratives.market.so_what | default('ZeroSite 산정가와 시장 평균가를 비교한 결과를 도출하였습니다.') }}</p>
-            
-            <p class="mt-20"><strong>🎯 Why (투자 권고):</strong></p>
-            <p>{{ narratives.market.why | default('시장 분석 결과를 바탕으로 투자 전략을 제시합니다.') }}</p>
+            {% if narratives and narratives.market_analysis %}
+                <!-- Phase A: Auto-generated Market Analysis Narrative -->
+                {{ narratives.market_analysis | safe }}
+            {% else %}
+                <!-- Fallback if narrative not available -->
+                <p><strong>📊 What (현황):</strong></p>
+                <p>{{ narratives.market.what | default('시장 신호 분석 엔진을 통해 대상지의 시장 가치를 평가하였습니다.') }}</p>
+                
+                <p class="mt-20"><strong>💡 So What (시사점):</strong></p>
+                <p>{{ narratives.market.so_what | default('ZeroSite 산정가와 시장 평균가를 비교한 결과를 도출하였습니다.') }}</p>
+                
+                <p class="mt-20"><strong>🎯 Why (투자 권고):</strong></p>
+                <p>{{ narratives.market.why | default('시장 분석 결과를 바탕으로 투자 전략을 제시합니다.') }}</p>
+            {% endif %}
         </div>
     </div>
     
@@ -1345,14 +1445,20 @@
         <h3 class="content-title">6.2 Financial Narrative</h3>
         
         <div class="academic-content">
-            <p><strong>📊 What (재무 현황):</strong></p>
-            <p>{{ narratives.financial.what | default('Enhanced Financial Metrics 엔진을 통해 NPV, IRR, 회수기간을 산정하였습니다.') }}</p>
-            
-            <p class="mt-20"><strong>💡 So What (시사점):</strong></p>
-            <p>{{ narratives.financial.so_what | default('공공임대 사업의 재무적 타당성을 평가하였습니다.') }}</p>
-            
-            <p class="mt-20"><strong>🎯 Why (근거):</strong></p>
-            <p>{{ narratives.financial.why | default('장기 현금흐름 분석을 바탕으로 투자 결정을 지원합니다.') }}</p>
+            {% if narratives and narratives.financial_analysis %}
+                <!-- Phase A: Auto-generated Financial Analysis Narrative -->
+                {{ narratives.financial_analysis | safe }}
+            {% else %}
+                <!-- Fallback if narrative not available -->
+                <p><strong>📊 What (재무 현황):</strong></p>
+                <p>{{ narratives.financial.what | default('Enhanced Financial Metrics 엔진을 통해 NPV, IRR, 회수기간을 산정하였습니다.') }}</p>
+                
+                <p class="mt-20"><strong>💡 So What (시사점):</strong></p>
+                <p>{{ narratives.financial.so_what | default('공공임대 사업의 재무적 타당성을 평가하였습니다.') }}</p>
+                
+                <p class="mt-20"><strong>🎯 Why (근거):</strong></p>
+                <p>{{ narratives.financial.why | default('장기 현금흐름 분석을 바탕으로 투자 결정을 지원합니다.') }}</p>
+            {% endif %}
         </div>
     </div>
     
@@ -1435,44 +1541,54 @@
         <div class="section-subtitle">Comprehensive National Housing Policy Impact Assessment</div>
     </div>
     
-    <div class="content-block">
-        <h3 class="content-title">7.1 정책 개요</h3>
-        <div class="academic-content">
-            <p>{{ policy_framework.national_context | default('국토교통부 및 LH공사의 청년주택 정책을 종합적으로 분석하였습니다.') }}</p>
-        </div>
-    </div>
-    
-    {% for category in policy_framework.categories %}
-    <div class="policy-category">
-        <h3 class="policy-category-title">{{ category.title }}</h3>
-        
-        {% for policy in category.policies %}
-        <div class="policy-item">
-            <div class="policy-item-title">{{ policy.name }}</div>
-            <div class="policy-item-description">{{ policy.description }}</div>
-            
-            {% if policy.impact_level == 'high' %}
-                <span class="policy-impact-badge impact-high">HIGH IMPACT</span>
-            {% elif policy.impact_level == 'medium' %}
-                <span class="policy-impact-badge impact-medium">MEDIUM IMPACT</span>
-            {% else %}
-                <span class="policy-impact-badge impact-low">LOW IMPACT</span>
-            {% endif %}
-            
-            <div class="policy-item-description mt-20">
-                <strong>영향 분석:</strong> {{ policy.impact_analysis }}
+    {% if narratives and narratives.policy_framework %}
+        <!-- Phase A: Auto-generated Policy Framework Narrative -->
+        <div class="content-block">
+            <div class="academic-content">
+                {{ narratives.policy_framework | safe }}
             </div>
         </div>
-        {% endfor %}
-    </div>
-    {% endfor %}
-    
-    <div class="content-block">
-        <h3 class="content-title">7.2 종합 정책 시사점</h3>
-        <div class="academic-content">
-            <p>{{ policy_framework.summary | default('대상지는 현행 청년주택 정책 프레임워크 내에서 개발 가능성이 높습니다.') }}</p>
+    {% else %}
+        <!-- Fallback if narrative not available -->
+        <div class="content-block">
+            <h3 class="content-title">7.1 정책 개요</h3>
+            <div class="academic-content">
+                <p>{{ policy_framework.national_context | default('국토교통부 및 LH공사의 청년주택 정책을 종합적으로 분석하였습니다.') }}</p>
+            </div>
         </div>
-    </div>
+        
+        {% for category in policy_framework.categories %}
+        <div class="policy-category">
+            <h3 class="policy-category-title">{{ category.title }}</h3>
+            
+            {% for policy in category.policies %}
+            <div class="policy-item">
+                <div class="policy-item-title">{{ policy.name }}</div>
+                <div class="policy-item-description">{{ policy.description }}</div>
+                
+                {% if policy.impact_level == 'high' %}
+                    <span class="policy-impact-badge impact-high">HIGH IMPACT</span>
+                {% elif policy.impact_level == 'medium' %}
+                    <span class="policy-impact-badge impact-medium">MEDIUM IMPACT</span>
+                {% else %}
+                    <span class="policy-impact-badge impact-low">LOW IMPACT</span>
+                {% endif %}
+                
+                <div class="policy-item-description mt-20">
+                    <strong>영향 분석:</strong> {{ policy.impact_analysis }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+        
+        <div class="content-block">
+            <h3 class="content-title">7.2 종합 정책 시사점</h3>
+            <div class="academic-content">
+                <p>{{ policy_framework.summary | default('대상지는 현행 청년주택 정책 프레임워크 내에서 개발 가능성이 높습니다.') }}</p>
+            </div>
+        </div>
+    {% endif %}
 </div>
 
 <!-- ============================================================
@@ -1486,25 +1602,35 @@
         <div class="section-subtitle">Detailed Project Timeline with 13 Critical Milestones</div>
     </div>
     
-    {% for phase in implementation_roadmap.phases %}
-    <div class="roadmap-phase">
-        <div class="roadmap-phase-header">
-            <div class="roadmap-phase-number">{{ loop.index }}</div>
-            <div class="roadmap-phase-title">{{ phase.title }}</div>
-            <div class="roadmap-phase-duration">{{ phase.duration }}</div>
-        </div>
-        
-        <div class="roadmap-milestones">
-            {% for milestone in phase.milestones %}
-            <div class="roadmap-milestone">
-                <div class="roadmap-milestone-icon">{{ loop.index }}</div>
-                <div class="roadmap-milestone-text">{{ milestone.name }}</div>
-                <div class="roadmap-milestone-duration">{{ milestone.duration }}</div>
+    {% if narratives and narratives.roadmap %}
+        <!-- Phase A: Auto-generated Roadmap Narrative -->
+        <div class="content-block">
+            <div class="academic-content">
+                {{ narratives.roadmap | safe }}
             </div>
-            {% endfor %}
         </div>
-    </div>
-    {% endfor %}
+    {% else %}
+        <!-- Fallback if narrative not available -->
+        {% for phase in implementation_roadmap.phases %}
+        <div class="roadmap-phase">
+            <div class="roadmap-phase-header">
+                <div class="roadmap-phase-number">{{ loop.index }}</div>
+                <div class="roadmap-phase-title">{{ phase.title }}</div>
+                <div class="roadmap-phase-duration">{{ phase.duration }}</div>
+            </div>
+            
+            <div class="roadmap-milestones">
+                {% for milestone in phase.milestones %}
+                <div class="roadmap-milestone">
+                    <div class="roadmap-milestone-icon">{{ loop.index }}</div>
+                    <div class="roadmap-milestone-text">{{ milestone.name }}</div>
+                    <div class="roadmap-milestone-duration">{{ milestone.duration }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
     
     <div class="content-block">
         <h3 class="content-title">8.2 Critical Path Analysis</h3>
@@ -1525,52 +1651,61 @@
         <div class="section-subtitle">Research-Grade Summary & Future Research Directions</div>
     </div>
     
-    <div class="academic-abstract">
-        <strong>Abstract (초록)</strong><br><br>
-        {{ academic_conclusion.abstract | default('본 연구는 ZeroSite Expert Edition v3 분석 프레임워크를 활용하여 청년주택 개발타당성을 학술적 관점에서 검토하였습니다.') }}
-    </div>
-    
-    <div class="academic-subsection">
-        <h3 class="academic-subsection-title">9.1 연구 방법론 (Methodology)</h3>
-        <div class="academic-content">
-            {{ academic_conclusion.methodology | default('본 분석은 Phase 2.5 (재무), Phase 6.8 (수요), Phase 7.7 (시장) 엔진을 통합한 다층 분석 프레임워크를 적용하였습니다.') }}
+    {% if narratives and narratives.academic_conclusion %}
+        <!-- Phase A: Auto-generated Academic Conclusion Narrative -->
+        <div class="content-block">
+            <div class="academic-content">
+                {{ narratives.academic_conclusion | safe }}
+            </div>
         </div>
-    </div>
-    
-    <div class="academic-subsection">
-        <h3 class="academic-subsection-title">9.2 논의 (Discussion)</h3>
-        <div class="academic-content">
-            {{ academic_conclusion.discussion | default('재무적 타당성, 시장 수요, 정책 부합성을 종합적으로 검토한 결과, 본 프로젝트는 추가 검토가 필요합니다.') }}
+    {% else %}
+        <!-- Fallback if narrative not available -->
+        <div class="academic-abstract">
+            <strong>Abstract (초록)</strong><br><br>
+            {{ academic_conclusion.abstract | default('본 연구는 ZeroSite Expert Edition v3 분석 프레임워크를 활용하여 청년주택 개발타당성을 학술적 관점에서 검토하였습니다.') }}
         </div>
-    </div>
-    
-    <div class="academic-subsection">
-        <h3 class="academic-subsection-title">9.3 시사점 (Implications)</h3>
-        <div class="academic-content">
-            <ul class="academic-list">
-                {% for implication in academic_conclusion.implications %}
-                <li>{{ implication }}</li>
-                {% endfor %}
-            </ul>
+        
+        <div class="academic-subsection">
+            <h3 class="academic-subsection-title">9.1 연구 방법론 (Methodology)</h3>
+            <div class="academic-content">
+                {{ academic_conclusion.methodology | default('본 분석은 Phase 2.5 (재무), Phase 6.8 (수요), Phase 7.7 (시장) 엔진을 통합한 다층 분석 프레임워크를 적용하였습니다.') }}
+            </div>
         </div>
-    </div>
-    
-    <div class="academic-subsection">
-        <h3 class="academic-subsection-title">9.4 연구의 한계 (Limitations)</h3>
-        <div class="academic-content">
-            <ul class="academic-list">
-                {% for limitation in academic_conclusion.limitations %}
-                <li>{{ limitation }}</li>
-                {% endfor %}
-            </ul>
+        
+        <div class="academic-subsection">
+            <h3 class="academic-subsection-title">9.2 논의 (Discussion)</h3>
+            <div class="academic-content">
+                {{ academic_conclusion.discussion | default('재무적 타당성, 시장 수요, 정책 부합성을 종합적으로 검토한 결과, 본 프로젝트는 추가 검토가 필요합니다.') }}
+            </div>
         </div>
-    </div>
-    
-    <div class="academic-subsection">
-        <h3 class="academic-subsection-title">9.5 향후 연구 방향 (Future Research)</h3>
-        <div class="academic-content">
-            <ul class="academic-list">
-                {% for research in academic_conclusion.future_research %}
+        
+        <div class="academic-subsection">
+            <h3 class="academic-subsection-title">9.3 시사점 (Implications)</h3>
+            <div class="academic-content">
+                <ul class="academic-list">
+                    {% for implication in academic_conclusion.implications %}
+                    <li>{{ implication }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        
+        <div class="academic-subsection">
+            <h3 class="academic-subsection-title">9.4 연구의 한계 (Limitations)</h3>
+            <div class="academic-content">
+                <ul class="academic-list">
+                    {% for limitation in academic_conclusion.limitations %}
+                    <li>{{ limitation }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        
+        <div class="academic-subsection">
+            <h3 class="academic-subsection-title">9.5 향후 연구 방향 (Future Research)</h3>
+            <div class="academic-content">
+                <ul class="academic-list">
+                    {% for research in academic_conclusion.future_research %}
                 <li>{{ research }}</li>
                 {% endfor %}
             </ul>
@@ -1602,8 +1737,18 @@
         </div>
     </div>
     
+    {% if narratives and narratives.risk_analysis %}
+        <!-- Phase A: Auto-generated Risk Analysis Narrative -->
+        <div class="content-block">
+            <h3 class="content-title">10.2 Risk Analysis Narrative</h3>
+            <div class="academic-content">
+                {{ narratives.risk_analysis | safe }}
+            </div>
+        </div>
+    {% endif %}
+    
     <div class="content-block">
-        <h3 class="content-title">10.2 주요 리스크 상세 분석</h3>
+        <h3 class="content-title">10.3 주요 리스크 상세 분석</h3>
         
         <table class="data-table">
             <thead>
