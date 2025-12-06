@@ -1051,6 +1051,350 @@ class ReportContextBuilder:
             'conditions': conditions if recommendation in ['CONDITIONAL', 'REVISE'] else None
         }
 
+    def calculate_scorecard(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Calculate comprehensive 5-category scorecard for Executive Summary
+        
+        Phase 1, Task 1.1: Executive Summary Dashboard - Scorecard Logic
+        
+        Categories (100-point scale each):
+        1. Location Score (입지 점수): Distance to facilities, transportation, amenities
+        2. Finance Score (재무 점수): NPV, IRR, Payback, profitability
+        3. Market Score (시장 점수): Market signal, demand, competition
+        4. Risk Score (리스크 점수): Overall risk level, mitigation capability
+        5. Policy Score (정책 점수): Alignment with LH priorities, compliance
+        
+        Returns:
+            {
+                'location': {'score': 85, 'grade': 'A', 'description': '...'},
+                'finance': {'score': 72, 'grade': 'B', 'description': '...'},
+                'market': {'score': 68, 'grade': 'B', 'description': '...'},
+                'risk': {'score': 80, 'grade': 'A', 'description': '...'},
+                'policy': {'score': 75, 'grade': 'B', 'description': '...'},
+                'overall': {'score': 76, 'grade': 'B', 'recommendation': 'GO|CONDITIONAL|REVISE|NO-GO'}
+            }
+        """
+        logger.info("📊 Calculating comprehensive scorecard...")
+        
+        scorecard = {
+            'location': self._calculate_location_score(context),
+            'finance': self._calculate_finance_score(context),
+            'market': self._calculate_market_score(context),
+            'risk': self._calculate_risk_score(context),
+            'policy': self._calculate_policy_score(context)
+        }
+        
+        # Calculate overall score (weighted average)
+        weights = {
+            'location': 0.15,
+            'finance': 0.35,  # Highest weight: financial viability is critical
+            'market': 0.25,
+            'risk': 0.15,
+            'policy': 0.10
+        }
+        
+        overall_score = sum(
+            scorecard[category]['score'] * weights[category]
+            for category in weights
+        )
+        
+        # Determine overall grade and recommendation
+        overall_grade = self._score_to_grade(overall_score)
+        overall_recommendation = self._scorecard_to_recommendation(scorecard, overall_score)
+        
+        scorecard['overall'] = {
+            'score': round(overall_score, 1),
+            'grade': overall_grade,
+            'recommendation': overall_recommendation,
+            'confidence': self._calculate_confidence_level(scorecard)
+        }
+        
+        logger.info(f"✅ Scorecard calculated: Overall {overall_score:.1f} ({overall_grade}) - {overall_recommendation}")
+        return scorecard
+    
+    def _calculate_location_score(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate location score (입지 점수)"""
+        demand = context.get('demand', {})
+        demand_score = demand.get('overall_score', 60.0)
+        
+        # Base score from demand model (reflects location characteristics)
+        location_score = demand_score
+        
+        # Adjust based on land area (larger = better for multi-housing)
+        land_area = context.get('site', {}).get('land_area_sqm', 500)
+        if land_area >= 1000:
+            location_score += 5  # Bonus for large sites
+        elif land_area < 300:
+            location_score -= 10  # Penalty for very small sites
+        
+        # Cap at 100
+        location_score = min(100, max(0, location_score))
+        
+        grade = self._score_to_grade(location_score)
+        description = self._generate_location_description(location_score, demand)
+        
+        return {
+            'score': round(location_score, 1),
+            'grade': grade,
+            'description': description
+        }
+    
+    def _calculate_finance_score(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate finance score (재무 점수)"""
+        finance = context.get('finance', {})
+        npv = finance.get('npv', {}).get('public', 0)
+        irr = finance.get('irr', {}).get('public', 0)
+        payback = finance.get('payback', {}).get('years', 999)
+        capex = finance.get('capex', {}).get('total', 1)
+        
+        # NPV score (50 points max)
+        npv_ratio = npv / capex if capex > 0 else -1
+        if npv_ratio >= 0.15:  # 15% return
+            npv_score = 50
+        elif npv_ratio >= 0.05:  # 5-15% return
+            npv_score = 30 + (npv_ratio - 0.05) * 200  # Scale 30-50
+        elif npv_ratio >= -0.05:  # -5% to 5%
+            npv_score = 20 + (npv_ratio + 0.05) * 100  # Scale 20-30
+        else:  # < -5%
+            npv_score = max(0, 20 + npv_ratio * 100)  # Scale 0-20
+        
+        # IRR score (30 points max)
+        if irr >= 5.0:  # Excellent
+            irr_score = 30
+        elif irr >= 2.87:  # Above LH discount rate
+            irr_score = 20 + (irr - 2.87) * 4.7  # Scale 20-30
+        elif irr >= 0:  # Positive but low
+            irr_score = 10 + (irr / 2.87) * 10  # Scale 10-20
+        else:  # Negative
+            irr_score = max(0, 10 + irr * 2)  # Scale 0-10
+        
+        # Payback score (20 points max)
+        if payback <= 8:  # Excellent
+            payback_score = 20
+        elif payback <= 15:  # Acceptable
+            payback_score = 10 + (15 - payback) * 1.43  # Scale 10-20
+        elif payback < 999:  # Poor but achievable
+            payback_score = max(0, 10 - (payback - 15) * 0.5)
+        else:  # No payback
+            payback_score = 0
+        
+        finance_score = npv_score + irr_score + payback_score
+        grade = self._score_to_grade(finance_score)
+        description = self._generate_finance_description(finance_score, npv, irr, payback)
+        
+        return {
+            'score': round(finance_score, 1),
+            'grade': grade,
+            'description': description,
+            'components': {
+                'npv_score': round(npv_score, 1),
+                'irr_score': round(irr_score, 1),
+                'payback_score': round(payback_score, 1)
+            }
+        }
+    
+    def _calculate_market_score(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate market score (시장 점수)"""
+        market = context.get('market', {})
+        signal = market.get('signal', 'FAIR')
+        delta_pct = market.get('delta_pct', 0.0)
+        demand = context.get('demand', {})
+        demand_score = demand.get('overall_score', 60.0)
+        
+        # Market signal score (50 points max)
+        if signal == 'UNDERVALUED':
+            signal_score = 40 + min(10, abs(delta_pct) / 2)  # 40-50 points
+        elif signal == 'FAIR':
+            signal_score = 30 + (5 - abs(delta_pct)) * 2  # 30-40 points
+        else:  # OVERVALUED
+            signal_score = max(0, 30 - abs(delta_pct) * 2)  # 0-30 points
+        
+        # Demand score (50 points max, normalized from demand model)
+        demand_component = (demand_score / 100) * 50
+        
+        market_score = signal_score + demand_component
+        grade = self._score_to_grade(market_score)
+        description = self._generate_market_description(market_score, signal, demand_score)
+        
+        return {
+            'score': round(market_score, 1),
+            'grade': grade,
+            'description': description,
+            'components': {
+                'signal_score': round(signal_score, 1),
+                'demand_score': round(demand_component, 1)
+            }
+        }
+    
+    def _calculate_risk_score(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate risk score (리스크 점수) - higher = safer"""
+        risk_analysis = context.get('risk_analysis', {})
+        overall_level = risk_analysis.get('overall_level', 'MEDIUM')
+        
+        legal = risk_analysis.get('legal', {}).get('level', 'GREEN')
+        market_risk = risk_analysis.get('market', {}).get('level', 'GREEN')
+        construction = risk_analysis.get('construction', {}).get('level', 'GREEN')
+        financial = risk_analysis.get('financial', {}).get('level', 'GREEN')
+        
+        # Convert risk levels to scores (GREEN=100, YELLOW=60, RED=20)
+        def risk_level_to_score(level):
+            return {'GREEN': 100, 'YELLOW': 60, 'RED': 20}.get(level, 60)
+        
+        # Average of all risk categories
+        risk_score = (
+            risk_level_to_score(legal) * 0.20 +
+            risk_level_to_score(market_risk) * 0.30 +
+            risk_level_to_score(construction) * 0.25 +
+            risk_level_to_score(financial) * 0.25
+        )
+        
+        grade = self._score_to_grade(risk_score)
+        description = self._generate_risk_description(risk_score, overall_level)
+        
+        return {
+            'score': round(risk_score, 1),
+            'grade': grade,
+            'description': description
+        }
+    
+    def _calculate_policy_score(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate policy alignment score (정책 점수)"""
+        demand = context.get('demand', {})
+        recommended_type = demand.get('recommended_type', 'youth')
+        land_area = context.get('site', {}).get('land_area_sqm', 500)
+        finance = context.get('finance', {})
+        npv = finance.get('npv', {}).get('public', 0)
+        
+        # Base score: 60 (neutral)
+        policy_score = 60
+        
+        # LH priority housing types (청년형, 신혼부부형 get bonus)
+        if recommended_type in ['youth', 'newlyweds', 'newlyweds_growth']:
+            policy_score += 15  # Priority type bonus
+        
+        # Optimal land size (500-2000 sqm)
+        if 500 <= land_area <= 2000:
+            policy_score += 15  # Ideal size bonus
+        elif land_area > 2000:
+            policy_score += 5  # Large but manageable
+        else:
+            policy_score -= 10  # Too small
+        
+        # Positive social value (positive NPV)
+        if npv >= 0:
+            policy_score += 10  # Financially sustainable
+        
+        policy_score = min(100, max(0, policy_score))
+        grade = self._score_to_grade(policy_score)
+        description = self._generate_policy_description(policy_score, recommended_type)
+        
+        return {
+            'score': round(policy_score, 1),
+            'grade': grade,
+            'description': description
+        }
+    
+    def _score_to_grade(self, score: float) -> str:
+        """Convert numeric score to letter grade"""
+        if score >= 90:
+            return 'A+'
+        elif score >= 85:
+            return 'A'
+        elif score >= 80:
+            return 'A-'
+        elif score >= 75:
+            return 'B+'
+        elif score >= 70:
+            return 'B'
+        elif score >= 65:
+            return 'B-'
+        elif score >= 60:
+            return 'C+'
+        elif score >= 55:
+            return 'C'
+        elif score >= 50:
+            return 'C-'
+        elif score >= 40:
+            return 'D'
+        else:
+            return 'F'
+    
+    def _scorecard_to_recommendation(self, scorecard: Dict[str, Any], overall_score: float) -> str:
+        """Convert scorecard to GO/CONDITIONAL/REVISE/NO-GO recommendation"""
+        finance_score = scorecard['finance']['score']
+        risk_score = scorecard['risk']['score']
+        market_score = scorecard['market']['score']
+        
+        # Critical thresholds
+        if finance_score >= 70 and risk_score >= 70 and overall_score >= 75:
+            return 'GO'
+        elif finance_score >= 50 and risk_score >= 60 and overall_score >= 60:
+            return 'CONDITIONAL'
+        elif finance_score >= 35 and overall_score >= 45:
+            return 'REVISE'
+        else:
+            return 'NO-GO'
+    
+    def _calculate_confidence_level(self, scorecard: Dict[str, Any]) -> str:
+        """Calculate confidence level based on score variance"""
+        scores = [scorecard[cat]['score'] for cat in ['location', 'finance', 'market', 'risk', 'policy']]
+        score_variance = max(scores) - min(scores)
+        
+        if score_variance <= 15:
+            return 'high'  # Consistent scores
+        elif score_variance <= 30:
+            return 'medium'
+        else:
+            return 'low'  # High variance = uncertainty
+    
+    def _generate_location_description(self, score: float, demand: Dict[str, Any]) -> str:
+        """Generate location score description"""
+        if score >= 80:
+            return f"우수한 입지 조건, {demand.get('recommended_type_kr', '청년형')} 수요 최적지"
+        elif score >= 60:
+            return f"양호한 입지 조건, {demand.get('recommended_type_kr', '청년형')} 수요 적합"
+        else:
+            return "입지 조건 개선 필요, 수요 확보에 어려움 예상"
+    
+    def _generate_finance_description(self, score: float, npv: float, irr: float, payback: float) -> str:
+        """Generate finance score description"""
+        if score >= 70:
+            return f"양호한 재무 구조 (NPV {npv/1e8:.1f}억, IRR {irr:.1f}%)"
+        elif score >= 50:
+            return f"보통 수준의 수익성 (NPV {npv/1e8:.1f}억, IRR {irr:.1f}%)"
+        else:
+            return f"재무적 타당성 부족 (NPV {npv/1e8:.1f}억, 개선 필요)"
+    
+    def _generate_market_description(self, score: float, signal: str, demand_score: float) -> str:
+        """Generate market score description"""
+        signal_kr = {'UNDERVALUED': '저평가', 'FAIR': '적정', 'OVERVALUED': '고평가'}.get(signal, '적정')
+        if score >= 70:
+            return f"시장 진입 최적 ({signal_kr}, 수요 {demand_score:.0f}점)"
+        elif score >= 50:
+            return f"시장 상황 양호 ({signal_kr}, 수요 {demand_score:.0f}점)"
+        else:
+            return f"시장 진입 신중 (시장 {signal_kr}, 수요 개선 필요)"
+    
+    def _generate_risk_description(self, score: float, level: str) -> str:
+        """Generate risk score description"""
+        level_kr = {'LOW': '낮음', 'MEDIUM': '보통', 'HIGH': '높음'}.get(level, '보통')
+        if score >= 80:
+            return f"안정적 리스크 수준 (전반적 리스크: {level_kr})"
+        elif score >= 60:
+            return f"관리 가능한 리스크 (전반적 리스크: {level_kr})"
+        else:
+            return f"높은 리스크, 완화 조치 필수 (전반적 리스크: {level_kr})"
+    
+    def _generate_policy_description(self, score: float, housing_type: str) -> str:
+        """Generate policy score description"""
+        type_kr = self._translate_housing_type(housing_type)
+        if score >= 75:
+            return f"LH 정책 방향과 높은 부합성 ({type_kr})"
+        elif score >= 60:
+            return f"LH 정책 방향과 부합 ({type_kr})"
+        else:
+            return f"정책 적합성 보완 필요 ({type_kr})"
+
     def build_expert_context(
         self,
         address: str,
@@ -1064,6 +1408,7 @@ class ReportContextBuilder:
         Build EXPERT EDITION CONTEXT (v3) with additional analysis layers
         
         This extends build_context() with:
+        - Executive Summary Dashboard with Comprehensive Scorecard (Phase 1)
         - Policy Framework Analysis (8-10 pages)
         - 36-Month Implementation Roadmap (2-3 pages)
         - Academic Conclusion (4-6 pages)
@@ -1088,7 +1433,15 @@ class ReportContextBuilder:
             additional_params=additional_params
         )
         
-        # Step 2: Generate Expert Edition layers
+        # Step 2: Calculate Executive Summary Scorecard (Phase 1, Task 1.1)
+        context['executive_summary'] = {
+            'scorecard': self.calculate_scorecard(context),
+            'key_metrics': self._extract_key_metrics(context),
+            'decision_summary': self._generate_decision_summary(context)
+        }
+        logger.info("✅ Phase 1, Task 1.1: Executive Summary Scorecard calculated")
+        
+        # Step 3: Generate Expert Edition layers
         try:
             from app.services_v13.report_full.policy_generator import PolicyGenerator
             from app.services_v13.report_full.roadmap_generator import RoadmapGenerator
@@ -1115,3 +1468,80 @@ class ReportContextBuilder:
             logger.warning("Falling back to Full Edition context")
         
         return context
+    
+    def _extract_key_metrics(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract key metrics for Executive Summary dashboard"""
+        finance = context.get('finance', {})
+        market = context.get('market', {})
+        demand = context.get('demand', {})
+        
+        return {
+            'capex': finance.get('capex', {}).get('total', 0),
+            'npv': finance.get('npv', {}).get('public', 0),
+            'irr': finance.get('irr', {}).get('public', 0),
+            'payback': finance.get('payback', {}).get('years', 0),
+            'market_signal': market.get('signal', 'FAIR'),
+            'demand_score': demand.get('overall_score', 60.0),
+            'housing_type': demand.get('recommended_type_kr', '청년형')
+        }
+    
+    def _generate_decision_summary(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate concise decision summary for Executive Summary"""
+        decision = context.get('decision', {})
+        scorecard = context.get('executive_summary', {}).get('scorecard', {})
+        overall = scorecard.get('overall', {})
+        
+        return {
+            'recommendation': decision.get('recommendation', 'CONDITIONAL'),
+            'confidence': decision.get('confidence', 'medium'),
+            'overall_score': overall.get('score', 60.0),
+            'overall_grade': overall.get('grade', 'C+'),
+            'key_strengths': self._identify_key_strengths(scorecard),
+            'key_concerns': self._identify_key_concerns(scorecard)
+        }
+    
+    def _identify_key_strengths(self, scorecard: Dict[str, Any]) -> List[str]:
+        """Identify top 3 strengths from scorecard"""
+        if not scorecard:
+            return []
+        
+        categories = {k: v['score'] for k, v in scorecard.items() if k != 'overall'}
+        sorted_categories = sorted(categories.items(), key=lambda x: x[1], reverse=True)
+        
+        strengths = []
+        cat_kr = {
+            'location': '입지',
+            'finance': '재무',
+            'market': '시장',
+            'risk': '리스크 관리',
+            'policy': '정책 부합성'
+        }
+        
+        for cat, score in sorted_categories[:3]:
+            if score >= 70:
+                strengths.append(f"{cat_kr.get(cat, cat)}: {scorecard[cat]['grade']} ({score:.0f}점)")
+        
+        return strengths if strengths else ['현재 특이 강점 없음']
+    
+    def _identify_key_concerns(self, scorecard: Dict[str, Any]) -> List[str]:
+        """Identify top 3 concerns from scorecard"""
+        if not scorecard:
+            return []
+        
+        categories = {k: v['score'] for k, v in scorecard.items() if k != 'overall'}
+        sorted_categories = sorted(categories.items(), key=lambda x: x[1])
+        
+        concerns = []
+        cat_kr = {
+            'location': '입지',
+            'finance': '재무',
+            'market': '시장',
+            'risk': '리스크',
+            'policy': '정책 부합성'
+        }
+        
+        for cat, score in sorted_categories[:3]:
+            if score < 60:
+                concerns.append(f"{cat_kr.get(cat, cat)}: {scorecard[cat]['grade']} ({score:.0f}점)")
+        
+        return concerns if concerns else ['현재 특이 우려사항 없음']
