@@ -85,7 +85,9 @@ class CompetitiveAnalyzer:
         address: str,
         coordinates: Optional[Tuple[float, float]],
         project_housing_type: str,
-        project_avg_rent: float
+        project_avg_rent: float,
+        project_amenities_score: int = 75,
+        project_unit_size: float = 40.0
     ) -> Dict[str, Any]:
         """
         Analyze competitive projects within 1km
@@ -95,6 +97,8 @@ class CompetitiveAnalyzer:
             coordinates: (lat, lon) tuple
             project_housing_type: Our project's housing type
             project_avg_rent: Our project's average rent per sqm
+            project_amenities_score: Our project's amenities score (0-100)
+            project_unit_size: Our project's average unit size
         
         Returns:
             Competitive analysis results with 3-5 projects
@@ -124,6 +128,18 @@ class CompetitiveAnalyzer:
             ),
             'recommendations': self._generate_recommendations(
                 project_avg_rent,
+                project_housing_type,
+                competitive_projects
+            ),
+            # Phase 2, Task 2.2: Price Comparison & Differentiation Strategy
+            'price_comparison': self._generate_price_comparison(
+                project_avg_rent,
+                project_unit_size,
+                competitive_projects
+            ),
+            'differentiation_strategy': self._generate_differentiation_strategy(
+                project_avg_rent,
+                project_amenities_score,
                 project_housing_type,
                 competitive_projects
             )
@@ -444,3 +460,227 @@ class CompetitiveAnalyzer:
             return '인천'
         else:
             return '기타'
+    
+    def _generate_price_comparison(
+        self,
+        project_rent: float,
+        project_unit_size: float,
+        competitors: List[CompetitiveProject]
+    ) -> Dict[str, Any]:
+        """
+        Phase 2, Task 2.2: Detailed Price Comparison
+        
+        Generate comprehensive price comparison table with:
+        - Rent per sqm comparison
+        - Monthly rent comparison (for average unit)
+        - Price difference percentage
+        - Value ranking
+        """
+        if not competitors:
+            return {
+                'comparison_table': [],
+                'summary': '경쟁사 정보 부족'
+            }
+        
+        # Build comparison table
+        comparison_table = []
+        
+        # Add competitors
+        for comp in competitors:
+            monthly_rent_competitor = comp.avg_rent_per_sqm * comp.avg_unit_size_sqm
+            comparison_table.append({
+                'project_name': comp.name,
+                'rent_per_sqm': comp.avg_rent_per_sqm,
+                'rent_per_sqm_kr': f"{comp.avg_rent_per_sqm:,.0f}원/㎡",
+                'unit_size_sqm': comp.avg_unit_size_sqm,
+                'monthly_rent': monthly_rent_competitor,
+                'monthly_rent_kr': f"{monthly_rent_competitor:,.0f}원/월",
+                'is_our_project': False
+            })
+        
+        # Add our project
+        monthly_rent_ours = project_rent * project_unit_size
+        comparison_table.append({
+            'project_name': '우리 프로젝트',
+            'rent_per_sqm': project_rent,
+            'rent_per_sqm_kr': f"{project_rent:,.0f}원/㎡",
+            'unit_size_sqm': project_unit_size,
+            'monthly_rent': monthly_rent_ours,
+            'monthly_rent_kr': f"{monthly_rent_ours:,.0f}원/월",
+            'is_our_project': True
+        })
+        
+        # Sort by rent per sqm
+        comparison_table_sorted = sorted(comparison_table, key=lambda x: x['rent_per_sqm'])
+        
+        # Add rankings and price differences
+        market_avg_rent = sum(c.avg_rent_per_sqm for c in competitors) / len(competitors)
+        for i, item in enumerate(comparison_table_sorted, 1):
+            item['rank'] = i
+            item['rank_kr'] = f"{i}위"
+            diff_pct = ((item['rent_per_sqm'] - market_avg_rent) / market_avg_rent) * 100
+            item['diff_from_market_pct'] = diff_pct
+            item['diff_from_market_kr'] = f"{diff_pct:+.1f}%"
+        
+        # Generate summary
+        our_rank = next((i['rank'] for i in comparison_table_sorted if i['is_our_project']), 0)
+        total_projects = len(comparison_table_sorted)
+        
+        if our_rank == 1:
+            summary = f"가장 저렴한 가격 ({total_projects}개 중 1위). 강력한 가격 경쟁력"
+        elif our_rank <= total_projects // 2:
+            summary = f"시장 대비 저렴한 가격 ({total_projects}개 중 {our_rank}위). 가성비 우수"
+        elif our_rank == total_projects:
+            summary = f"가장 높은 가격 ({total_projects}개 중 {our_rank}위). 프리미엄 포지셔닝"
+        else:
+            summary = f"시장 평균 이상 가격 ({total_projects}개 중 {our_rank}위). 차별화된 가치 제공 필요"
+        
+        return {
+            'comparison_table': comparison_table_sorted,
+            'our_rank': our_rank,
+            'total_projects': total_projects,
+            'market_avg_rent': market_avg_rent,
+            'market_avg_rent_kr': f"{market_avg_rent:,.0f}원/㎡",
+            'summary': summary
+        }
+    
+    def _generate_differentiation_strategy(
+        self,
+        project_rent: float,
+        project_amenities_score: int,
+        project_type: str,
+        competitors: List[CompetitiveProject]
+    ) -> Dict[str, Any]:
+        """
+        Phase 2, Task 2.2: Differentiation Strategy
+        
+        Generate 3 key differentiation strategies based on:
+        - Price positioning
+        - Amenities comparison
+        - Target demographic focus
+        """
+        if not competitors:
+            return {
+                'strategies': [
+                    {'title': '시장 선점 전략', 'description': '경쟁사 부재로 시장 선점 기회'},
+                    {'title': '품질 차별화', 'description': '우수한 시설과 서비스로 시장 기준 설정'},
+                    {'title': '브랜드 구축', 'description': 'LH 신축매입임대 대표 프로젝트로 포지셔닝'}
+                ]
+            }
+        
+        market_avg_rent = sum(c.avg_rent_per_sqm for c in competitors) / len(competitors)
+        rent_ratio = project_rent / market_avg_rent if market_avg_rent > 0 else 1.0
+        
+        avg_amenities = sum(c.amenities_score for c in competitors) / len(competitors)
+        amenities_advantage = project_amenities_score - avg_amenities
+        
+        strategies = []
+        
+        # Strategy 1: Price-based differentiation
+        if rent_ratio < 0.95:
+            strategies.append({
+                'title': '가성비 리더십 전략',
+                'description': f"시장 대비 {(1-rent_ratio)*100:.1f}% 저렴한 가격으로 가성비 중심 마케팅. "
+                              f"합리적 소비를 중시하는 {self._translate_type(project_type)} 타겟층에 최적화",
+                'key_actions': [
+                    '가격 경쟁력을 전면에 내세운 마케팅',
+                    '월 임대료 절감액 구체적 수치화 (vs 경쟁사)',
+                    '실속형 주거 브랜드 이미지 구축'
+                ]
+            })
+        elif rent_ratio > 1.05:
+            strategies.append({
+                'title': '프리미엄 가치 전략',
+                'description': f"시장 대비 {(rent_ratio-1)*100:.1f}% 높은 가격을 정당화할 차별화된 가치 제공. "
+                              f"우수한 편의시설과 서비스로 프리미엄 정당화",
+                'key_actions': [
+                    '최신 설비 및 스마트홈 시스템 강조',
+                    '프리미엄 커뮤니티 시설 (라운지, 피트니스, 스터디룸)',
+                    '입주민 전용 서비스 (청소, 세탁, 택배 등)'
+                ]
+            })
+        else:
+            strategies.append({
+                'title': '가치 균형 전략',
+                'description': f"시장 평균 가격대에서 품질과 서비스로 차별화. "
+                              f"합리적 가격 + 우수한 주거 환경 조합",
+                'key_actions': [
+                    '가격 대비 최고의 주거 품질 강조',
+                    '균형잡힌 가격-품질 비율 마케팅',
+                    '장기 거주 만족도 중심 커뮤니케이션'
+                ]
+            })
+        
+        # Strategy 2: Amenities-based differentiation
+        if amenities_advantage > 10:
+            strategies.append({
+                'title': '시설 우위 전략',
+                'description': f"경쟁사 대비 우수한 편의시설 (점수: {project_amenities_score} vs 평균 {avg_amenities:.0f}). "
+                              f"커뮤니티 중심 주거 문화 조성",
+                'key_actions': [
+                    '편의시설 투어 및 체험 프로그램 운영',
+                    '커뮤니티 이벤트 정기 개최',
+                    '입주민 만족도 데이터 적극 활용'
+                ]
+            })
+        else:
+            strategies.append({
+                'title': '서비스 차별화 전략',
+                'description': f"하드웨어 대신 소프트웨어(서비스)로 차별화. "
+                              f"입주민 맞춤형 생활 지원 서비스 제공",
+                'key_actions': [
+                    '입주민 전용 생활 플랫폼 구축',
+                    '정기 생활 편의 서비스 제공 (청소, 세탁 등)',
+                    '커뮤니티 매니저를 통한 생활 밀착 지원'
+                ]
+            })
+        
+        # Strategy 3: Target demographic differentiation
+        type_strategies = {
+            'youth': {
+                'title': '청년 라이프스타일 전략',
+                'description': '청년 1인 가구 맞춤형 주거 환경과 커뮤니티 조성. 네트워킹과 자기계발 지원',
+                'key_actions': [
+                    '청년 네트워킹 이벤트 정기 개최',
+                    '스터디룸 및 공유 오피스 운영',
+                    '커리어 멘토링 프로그램 연계'
+                ]
+            },
+            'newlyweds': {
+                'title': '신혼부부 케어 전략',
+                'description': '신혼부부의 새로운 시작을 지원하는 따뜻한 커뮤니티. 육아 준비 지원',
+                'key_actions': [
+                    '신혼부부 전용 커뮤니티 공간',
+                    '육아 관련 정보 공유 및 지원',
+                    '부부 친화적 편의시설 강화'
+                ]
+            },
+            'senior': {
+                'title': '시니어 케어 전략',
+                'description': '어르신 맞춤형 안전하고 편리한 주거 환경. 건강과 여가 지원',
+                'key_actions': [
+                    '배리어프리(무장애) 설계 강화',
+                    '건강 케어 프로그램 운영',
+                    '여가 및 취미 활동 지원'
+                ]
+            }
+        }
+        
+        if project_type in type_strategies:
+            strategies.append(type_strategies[project_type])
+        else:
+            strategies.append({
+                'title': '맞춤형 주거 전략',
+                'description': f'{self._translate_type(project_type)} 특성을 고려한 맞춤형 주거 서비스',
+                'key_actions': [
+                    '입주민 수요 조사를 통한 서비스 개선',
+                    '타겟층 맞춤형 편의시설 운영',
+                    '생활 패턴 분석 기반 서비스 제공'
+                ]
+            })
+        
+        return {
+            'strategies': strategies,
+            'total_strategies': len(strategies),
+            'focus': '가격, 시설, 타겟층 3축 차별화'
+        }
