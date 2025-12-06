@@ -989,6 +989,9 @@ class ReportContextBuilder:
             )
         }
         
+        # Phase 1, Task 1.3: NPV Tornado Diagram data
+        tornado_data = self._generate_tornado_diagram_data(base, finance_data)
+        
         return {
             'base': base,
             'best_case': best_case,
@@ -996,8 +999,214 @@ class ReportContextBuilder:
             'pessimistic': pessimistic,
             'worst_case': worst_case,
             'sensitivity_analysis': sensitivity_analysis,
-            'comparison_table': scenario_comparison_table
+            'comparison_table': scenario_comparison_table,
+            'tornado_diagram': tornado_data  # NEW: Phase 1, Task 1.3
         }
+    
+    def _generate_tornado_diagram_data(self, base_scenario: Dict[str, Any], finance_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Generate NPV Tornado Diagram data
+        
+        Phase 1, Task 1.3: NPV Tornado Diagram
+        
+        Tests impact of ±10% change in key variables on NPV:
+        - Construction Cost (공사비)
+        - Land Cost (토지비)
+        - Rental Revenue (임대수익)
+        - Occupancy Rate (입주율)
+        - Operating Expenses (운영비)
+        - Discount Rate (할인율)
+        
+        Returns data sorted by impact magnitude (largest impact first)
+        for creating a horizontal bar chart (Tornado diagram)
+        """
+        logger.info("📊 Generating NPV Tornado Diagram data...")
+        
+        base_capex = base_scenario['capex']
+        base_revenue = base_scenario['revenue']
+        base_npv = base_scenario['npv_public']
+        base_opex = finance_data['opex']['annual']
+        
+        construction_cost = finance_data['capex']['construction']
+        land_cost = finance_data['capex']['land']
+        base_occupancy = finance_data['revenue']['occupancy_rate']
+        base_discount_rate = 0.0287  # 2.87% LH official rate
+        
+        # Helper to calculate NPV with one variable changed
+        def calc_npv_with_change(variable, change_pct):
+            """Calculate NPV with one variable changed by change_pct"""
+            if variable == 'construction_cost':
+                adj_capex = base_capex + (construction_cost * change_pct / 100)
+            elif variable == 'land_cost':
+                adj_capex = base_capex + (land_cost * change_pct / 100)
+            elif variable == 'rental_revenue':
+                adj_revenue = base_revenue * (1 + change_pct / 100)
+                adj_capex = base_capex
+            elif variable == 'occupancy_rate':
+                # Occupancy: change_pct is actual percentage points (e.g., +10%p means 95% -> 105%)
+                new_occupancy = base_occupancy + change_pct
+                adj_revenue = base_revenue * (new_occupancy / base_occupancy)
+                adj_capex = base_capex
+            elif variable == 'opex':
+                adj_opex = base_opex * (1 + change_pct / 100)
+                adj_capex = base_capex
+                adj_revenue = base_revenue
+            elif variable == 'discount_rate':
+                # Change discount rate by change_pct (e.g., +10% of 2.87% = 3.157%)
+                adj_discount_rate = base_discount_rate * (1 + change_pct / 100)
+                adj_capex = base_capex
+            else:
+                adj_capex = base_capex
+            
+            # Recalculate NPV
+            if variable == 'construction_cost' or variable == 'land_cost':
+                # Only CAPEX changed
+                return base_npv - (adj_capex - base_capex)
+            elif variable == 'rental_revenue':
+                # Revenue changed
+                noi_change = adj_revenue - base_revenue
+                npv_change = noi_change * 8  # Approx 8-year NPV factor
+                return base_npv + npv_change
+            elif variable == 'occupancy_rate':
+                # Occupancy changed
+                noi_change = adj_revenue - base_revenue
+                npv_change = noi_change * 8
+                return base_npv + npv_change
+            elif variable == 'opex':
+                # OpEx changed (inverse relationship with NOI)
+                noi_change = -(adj_opex - base_opex)
+                npv_change = noi_change * 8
+                return base_npv + npv_change
+            elif variable == 'discount_rate':
+                # Discount rate changed - recalculate NPV with new rate
+                annual_noi = base_revenue - base_opex
+                annual_cashflows = [annual_noi * 0.85] + [annual_noi] * 9  # Year 1 ramp-up, Year 2-10 stabilized
+                npv = sum([cf / ((1 + adj_discount_rate) ** (i + 1)) for i, cf in enumerate(annual_cashflows)]) - base_capex
+                return npv
+            else:
+                return base_npv
+        
+        # Test each variable at ±10% (or ±10%p for occupancy)
+        variables = {
+            'construction_cost': {
+                'name_kr': '공사비',
+                'name_en': 'Construction Cost',
+                'test_range': 10  # ±10%
+            },
+            'land_cost': {
+                'name_kr': '토지비',
+                'name_en': 'Land Cost',
+                'test_range': 10  # ±10%
+            },
+            'rental_revenue': {
+                'name_kr': '임대수익',
+                'name_en': 'Rental Revenue',
+                'test_range': 10  # ±10%
+            },
+            'occupancy_rate': {
+                'name_kr': '입주율',
+                'name_en': 'Occupancy Rate',
+                'test_range': 10  # ±10%p (e.g., 95% ± 10%p = 85%-105%)
+            },
+            'opex': {
+                'name_kr': '운영비',
+                'name_en': 'Operating Expenses',
+                'test_range': 10  # ±10%
+            },
+            'discount_rate': {
+                'name_kr': '할인율',
+                'name_en': 'Discount Rate',
+                'test_range': 10  # ±10% of rate (2.87% ± 10% = 2.58%-3.16%)
+            }
+        }
+        
+        # Calculate NPV swing for each variable
+        results = []
+        for var_key, var_info in variables.items():
+            test_range = var_info['test_range']
+            
+            # Calculate NPV at +test_range%
+            npv_high = calc_npv_with_change(var_key, +test_range)
+            
+            # Calculate NPV at -test_range%
+            npv_low = calc_npv_with_change(var_key, -test_range)
+            
+            # Calculate swing (total NPV change from low to high)
+            npv_swing = npv_high - npv_low
+            
+            # Determine which direction is favorable
+            if var_key in ['rental_revenue', 'occupancy_rate']:
+                # Higher is better
+                favorable_direction = 'positive'
+                npv_favorable = npv_high
+                npv_unfavorable = npv_low
+            elif var_key in ['construction_cost', 'land_cost', 'opex', 'discount_rate']:
+                # Lower is better
+                favorable_direction = 'negative'
+                npv_favorable = npv_low
+                npv_unfavorable = npv_high
+            else:
+                favorable_direction = 'neutral'
+                npv_favorable = max(npv_high, npv_low)
+                npv_unfavorable = min(npv_high, npv_low)
+            
+            results.append({
+                'variable': var_key,
+                'name_kr': var_info['name_kr'],
+                'name_en': var_info['name_en'],
+                'npv_base': base_npv,
+                'npv_high': npv_high,
+                'npv_low': npv_low,
+                'npv_swing': abs(npv_swing),  # Absolute swing for sorting
+                'npv_swing_kr': f"{abs(npv_swing) / 1e8:.1f}억원",
+                'impact_pct': abs(npv_swing / base_npv * 100) if base_npv != 0 else 0,
+                'favorable_direction': favorable_direction,
+                'npv_favorable': npv_favorable,
+                'npv_unfavorable': npv_unfavorable,
+                'test_range': test_range
+            })
+        
+        # Sort by NPV swing (largest impact first)
+        results_sorted = sorted(results, key=lambda x: x['npv_swing'], reverse=True)
+        
+        # Generate summary
+        top_3_variables = [r['name_kr'] for r in results_sorted[:3]]
+        total_potential_swing = sum(r['npv_swing'] for r in results_sorted)
+        
+        tornado_summary = {
+            'top_impact_variables': top_3_variables,
+            'top_impact_summary': f"상위 3개 변수: {', '.join(top_3_variables)}",
+            'total_potential_swing': total_potential_swing,
+            'total_potential_swing_kr': f"{total_potential_swing / 1e8:.1f}억원",
+            'recommendation': self._generate_tornado_recommendation(results_sorted)
+        }
+        
+        logger.info(f"✅ Tornado data generated: Top variables = {', '.join(top_3_variables)}")
+        
+        return {
+            'variables': results_sorted,
+            'summary': tornado_summary,
+            'base_npv': base_npv,
+            'base_npv_kr': f"{base_npv / 1e8:.1f}억원"
+        }
+    
+    def _generate_tornado_recommendation(self, sorted_results: List[Dict[str, Any]]) -> str:
+        """Generate recommendation based on tornado analysis"""
+        if not sorted_results:
+            return "변수 영향도 분석 데이터 없음"
+        
+        top_var = sorted_results[0]
+        top_name = top_var['name_kr']
+        top_impact = top_var['npv_swing'] / 1e8
+        
+        if top_var['favorable_direction'] == 'negative':
+            # Cost variable (lower is better)
+            return f"{top_name} 관리가 가장 중요 (±10% 변동 시 NPV {top_impact:.1f}억원 변동). {top_name} 절감 전략 최우선 추진 필요"
+        elif top_var['favorable_direction'] == 'positive':
+            # Revenue variable (higher is better)
+            return f"{top_name} 확보가 가장 중요 (±10% 변동 시 NPV {top_impact:.1f}억원 변동). {top_name} 증대 전략 최우선 추진 필요"
+        else:
+            return f"{top_name}이(가) NPV에 가장 큰 영향 (±10% 변동 시 NPV {top_impact:.1f}억원 변동)"
     
     def _calculate_break_even(self, base_scenario: Dict[str, Any], finance_data: Dict[str, Any]) -> Dict[str, Any]:
         """Calculate break-even points for key variables"""
