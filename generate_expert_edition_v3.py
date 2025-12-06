@@ -117,23 +117,24 @@ def generate_expert_edition_v3(
     finance = context.get('finance', {})
     cost = context.get('cost', {})
     
-    # Flatten key metrics for template
-    context['floor_area_ratio'] = site.get('floor_area_ratio', 200.0)
-    context['building_coverage'] = site.get('building_coverage', 50.0)
-    context['building_area_sqm'] = site.get('building_area_sqm', land_area_sqm * 0.5)
-    context['total_floor_area_sqm'] = site.get('total_floor_area_sqm', land_area_sqm * 2.0)
-    context['building_height_m'] = site.get('building_height_m', 35.0)
-    context['max_building_coverage'] = zoning.get('max_building_coverage', 60.0)
-    context['max_floor_area_ratio'] = zoning.get('max_floor_area_ratio', 250.0)
-    context['max_height_m'] = zoning.get('max_height_m', 35.0)
-    context['zone_type'] = zone_type
+    # FIX: Use CORRECT keys from zoning section
+    # zoning section has: bcr, far, building_area, gross_floor_area, max_height
+    context['floor_area_ratio'] = zoning.get('far', 200.0)  # FIX: was site.get('floor_area_ratio')
+    context['building_coverage'] = zoning.get('bcr', 60.0)  # FIX: was site.get('building_coverage')
+    context['building_area_sqm'] = zoning.get('building_area', land_area_sqm * 0.6)  # FIX
+    context['total_floor_area_sqm'] = zoning.get('gross_floor_area', land_area_sqm * 2.0)  # FIX
+    context['building_height_m'] = zoning.get('max_height', 35.0)  # FIX
+    context['max_building_coverage'] = 60.0  # Legal limit for Type 2 Residential
+    context['max_floor_area_ratio'] = 250.0  # Legal limit for Type 2 Residential
+    context['max_height_m'] = 35.0  # Legal limit
+    context['zone_type'] = zoning.get('zone_type', zone_type)  # FIX: get from context first
     context['land_category'] = '대'
     
-    # Demand metrics
-    context['demand_score'] = demand.get('overall_score', 0.0)
-    context['recommended_housing_type'] = demand.get('recommended_type', '청년형')
-    context['demand_confidence'] = demand.get('confidence', 85.0)
-    context['recommended_units'] = demand.get('recommended_units', 0)
+    # Demand metrics (Phase 6.8)
+    context['demand_score'] = demand.get('overall_score', 60.0)  # FIX: default to 60 not 0
+    context['recommended_housing_type'] = demand.get('recommended_type_kr', demand.get('recommended_type', '청년형'))
+    context['demand_confidence'] = 85.0 if demand.get('confidence_level') == 'high' else 70.0  # FIX: confidence_level not confidence
+    context['recommended_units'] = demand.get('recommended_units', int(land_area_sqm / 20))  # Estimate from area
     # Fix housing_types structure
     housing_types_raw = demand.get('all_scores', {})
     if isinstance(housing_types_raw, dict):
@@ -144,22 +145,28 @@ def generate_expert_edition_v3(
     else:
         context['housing_types'] = []
     
-    # Market metrics
+    # Market metrics (Phase 7.7)
     context['market_signal'] = market.get('signal', 'FAIR')
     context['market_temperature'] = market.get('temperature', 'STABLE')
     context['market_delta_pct'] = market.get('delta_pct', 0.0)
+    # Market values are already per sqm, convert KRW → 만원 (divide by 10000)
     zerosite_val = market.get('zerosite_value_per_sqm', 0.0)
     market_val = market.get('market_avg_price_per_sqm', 0.0)
-    context['zerosite_value_per_sqm'] = zerosite_val / 10000 if zerosite_val > 1000 else zerosite_val
-    context['market_avg_price_per_sqm'] = market_val / 10000 if market_val > 1000 else market_val
+    context['zerosite_value_per_sqm'] = zerosite_val / 10000 if zerosite_val > 0 else 0
+    context['market_avg_price_per_sqm'] = market_val / 10000 if market_val > 0 else 0
     
-    # Financial metrics (convert to 억원)
+    # Financial metrics (ALL values from engine are in KRW, convert to 억원)
+    # 1억원 = 100,000,000 KRW
     capex_raw = finance.get('capex', {}).get('total', 0.0)
     npv_raw = finance.get('npv', {}).get('public', 0.0)
-    context['capex_krw'] = capex_raw / 100000000 if capex_raw > 100000000 else capex_raw
-    context['npv_public_krw'] = npv_raw / 100000000 if abs(npv_raw) > 100000000 else npv_raw
-    context['irr_public_pct'] = finance.get('irr', {}).get('public', 0.0)
-    context['payback_period_years'] = finance.get('payback', {}).get('years', 0.0)
+    irr_raw = finance.get('irr', {}).get('public', 0.0)
+    payback_raw = finance.get('payback', {}).get('years', 0.0)
+    
+    # Convert KRW → 억원 (always divide by 100000000)
+    context['capex_krw'] = capex_raw / 100000000  # FIX: always convert
+    context['npv_public_krw'] = npv_raw / 100000000  # FIX: always convert
+    context['irr_public_pct'] = irr_raw  # Already in percentage
+    context['payback_period_years'] = payback_raw if payback_raw != float('inf') else 999  # FIX: inf → 999
     # Fix cashflow structure
     cashflow_raw = finance.get('cashflow', [])
     context['cash_flow_table'] = [
@@ -173,13 +180,14 @@ def generate_expert_edition_v3(
         for i, cf in enumerate(cashflow_raw)
     ]
     
-    # Cost metrics
+    # Cost metrics (Phase 8) - ALL values in KRW, convert to 억원 and 만원/㎡
     total_const_cost = cost.get('construction', {}).get('total', 0.0)
     per_sqm_cost = cost.get('construction', {}).get('per_sqm', 0.0)
-    context['total_construction_cost_krw'] = total_const_cost / 100000000 if total_const_cost > 100000000 else total_const_cost
-    context['cost_per_sqm_krw'] = per_sqm_cost / 10000 if per_sqm_cost > 10000 else per_sqm_cost
+    context['total_construction_cost_krw'] = total_const_cost / 100000000  # KRW → 억원
+    context['cost_per_sqm_krw'] = per_sqm_cost / 10000  # KRW/㎡ → 만원/㎡
     context['cost_confidence'] = cost.get('verification', {}).get('confidence', 85.0)
     
+    # Cost breakdown (all in 억원)
     breakdown = cost.get('construction', {}).get('breakdown', {})
     context['direct_cost_krw'] = breakdown.get('direct', 0.0) / 100000000
     context['indirect_cost_krw'] = breakdown.get('indirect', 0.0) / 100000000
@@ -300,13 +308,13 @@ def main():
     print(f"   Size: {result['file_size_kb']:.1f}KB")
     print(f"   Pages: {result['page_count_estimate']}")
     
-    # Financial Summary
-    finance = result['context'].get('finance', {})
+    # Financial Summary (FIX: these keys are in root context, not in finance)
+    ctx = result['context']
     print()
     print("💰 Financial Summary:")
-    print(f"   CAPEX: {finance.get('capex_krw', 0):.2f}억원")
-    print(f"   NPV: {finance.get('npv_public_krw', 0):.2f}억원")
-    print(f"   IRR: {finance.get('irr_public_pct', 0):.2f}%")
+    print(f"   CAPEX: {ctx.get('capex_krw', 0):.2f}억원")
+    print(f"   NPV: {ctx.get('npv_public_krw', 0):.2f}억원")
+    print(f"   IRR: {ctx.get('irr_public_pct', 0):.2f}%")
     
     # Decision
     decision_val = result['context'].get('decision', 'N/A')
