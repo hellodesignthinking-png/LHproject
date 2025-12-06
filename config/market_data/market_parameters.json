@@ -1,0 +1,90 @@
+{
+  "version": "1.0",
+  "last_updated": "2025-12-06",
+  "description": "Market data parameters for ZeroSite Phase 7.7 Real-Time Market Data",
+  
+  "signal_thresholds": {
+    "undervalued": -0.10,
+    "overvalued": 0.10,
+    "description": "Price delta thresholds for market signals"
+  },
+  
+  "market_categories": {
+    "hot": {
+      "vacancy_rate_max": 0.05,
+      "transaction_volume_min": 100,
+      "price_trend": "up"
+    },
+    "stable": {
+      "vacancy_rate_max": 0.10,
+      "transaction_volume_min": 50,
+      "price_trend": "flat"
+    },
+    "cold": {
+      "vacancy_rate_min": 0.10,
+      "transaction_volume_max": 50,
+      "price_trend": "down"
+    }
+  },
+  
+  "mock_data": {
+    "enabled": true,
+    "description": "Mock market data for testing before external API integration",
+    "regions": {
+      "gangnam": {
+        "avg_price_per_m2": 4500000,
+        "median_price_per_m2": 4300000,
+        "listing_avg_price_per_m2": 4600000,
+        "vacancy_rate": 0.03,
+        "transaction_volume": 150,
+        "price_trend": "up",
+        "supply_volume": 120,
+        "avg_deposit": 300000000,
+        "avg_monthly_rent": 1500000
+      },
+      "bundang": {
+        "avg_price_per_m2": 3800000,
+        "median_price_per_m2": 3700000,
+        "listing_avg_price_per_m2": 3900000,
+        "vacancy_rate": 0.06,
+        "transaction_volume": 80,
+        "price_trend": "flat",
+        "supply_volume": 100,
+        "avg_deposit": 250000000,
+        "avg_monthly_rent": 1200000
+      },
+      "gyeongbuk": {
+        "avg_price_per_m2": 1800000,
+        "median_price_per_m2": 1700000,
+        "listing_avg_price_per_m2": 1850000,
+        "vacancy_rate": 0.12,
+        "transaction_volume": 30,
+        "price_trend": "down",
+        "supply_volume": 50,
+        "avg_deposit": 80000000,
+        "avg_monthly_rent": 400000
+      },
+      "default": {
+        "avg_price_per_m2": 2500000,
+        "median_price_per_m2": 2400000,
+        "listing_avg_price_per_m2": 2550000,
+        "vacancy_rate": 0.08,
+        "transaction_volume": 60,
+        "price_trend": "flat",
+        "supply_volume": 70,
+        "avg_deposit": 150000000,
+        "avg_monthly_rent": 800000
+      }
+    }
+  },
+  
+  "api_config": {
+    "molit_api": {
+      "endpoint": "http://openapi.molit.go.kr",
+      "timeout": 10,
+      "retry_count": 3
+    },
+    "cache_ttl": 3600,
+    "fallback_to_mock": true
+  }
+}

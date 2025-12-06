@@ -1,0 +1,94 @@
+{
+  "version": "1.0",
+  "last_updated": "2025-12-06",
+  "description": "Demand scoring weights for ZeroSite Phase 6.8 Local Demand Model",
+  
+  "housing_types": {
+    "youth": {
+      "description": "청년형 (Youth Housing)",
+      "target_age": "20-34",
+      "weights": {
+        "age_20_34_ratio": 0.25,
+        "commute_time": 0.15,
+        "education_facilities": 0.10,
+        "cultural_facilities": 0.10,
+        "job_centers_nearby": 0.15,
+        "rent_burden_index": 0.10,
+        "supply_competition": 0.15
+      },
+      "threshold": 60
+    },
+    
+    "newlyweds": {
+      "description": "신혼부부형 (Newlyweds Housing)",
+      "target_age": "25-39",
+      "weights": {
+        "daycare_count": 0.25,
+        "school_count": 0.15,
+        "family_income_ratio": 0.15,
+        "playground": 0.10,
+        "rent_burden_index": 0.15,
+        "supply_competition": 0.10,
+        "safety_index": 0.10
+      },
+      "threshold": 65
+    },
+    
+    "newlyweds_growth": {
+      "description": "신혼 성장형 (Newlyweds Growth)",
+      "target_age": "30-44",
+      "weights": {
+        "school_count": 0.25,
+        "daycare_count": 0.20,
+        "job_centers": 0.15,
+        "education_quality": 0.15,
+        "playground": 0.10,
+        "rent_burden_index": 0.10,
+        "supply_competition": 0.05
+      },
+      "threshold": 65
+    },
+    
+    "multi_child": {
+      "description": "다자녀형 (Multi-Child Housing)",
+      "target_age": "30-54",
+      "weights": {
+        "multi_child_ratio": 0.25,
+        "school_count": 0.20,
+        "daycare_count": 0.15,
+        "job_centers": 0.10,
+        "playground": 0.10,
+        "rent_burden": 0.10,
+        "supply_competition": 0.10
+      },
+      "threshold": 55
+    },
+    
+    "senior": {
+      "description": "고령자형 (Senior Housing)",
+      "target_age": "65+",
+      "weights": {
+        "senior_ratio": 0.30,
+        "hospital_count": 0.20,
+        "welfare_centers": 0.15,
+        "safety_index": 0.15,
+        "park_area": 0.10,
+        "barrier_free_infra": 0.10
+      },
+      "threshold": 50
+    }
+  },
+  
+  "normalization": {
+    "method": "min_max",
+    "range": [0, 100],
+    "missing_value_strategy": "zero_fill"
+  },
+  
+  "notes": [
+    "Weights sum to 1.0 for each housing type",
+    "Scores are normalized to 0-100 scale",
+    "Threshold indicates minimum viable score for recommendation",
+    "Missing values are filled with 0 (conservative approach)"
+  ]
+}
