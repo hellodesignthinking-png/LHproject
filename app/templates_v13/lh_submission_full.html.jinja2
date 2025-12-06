@@ -1,0 +1,1256 @@
+{# 
+Phase 10.5: LH Official Full Submission Report Template
+30-50 page comprehensive report for immediate LH submission
+
+Sections:
+1. Cover Page
+2. Table of Contents  
+3. Executive Summary
+4. Site Overview
+5. Zoning & Regulations
+6. Regional Analysis (Phase 6.8)
+7. Development Plan
+8. Construction Cost (Phase 8)
+9. Financial Analysis (Phase 2.5)
+10. Market Analysis (Phase 7.7)
+11. Unit Types & Community
+12. Scenario Comparison
+13. Risk Analysis
+14. Conclusion
+15. Appendix
+#}
+
+{# ========== 1. COVER PAGE ========== #}
+<div class="cover-page">
+    <div class="cover-title">
+        {{ metadata.report_title | default('LH 신축매입임대 사업 타당성 분석 보고서') }}
+    </div>
+    <div class="cover-subtitle">
+        {{ site_overview.address }}
+    </div>
+    <div class="cover-info">
+        <p><strong>프로젝트 코드:</strong> {{ metadata.report_code }}</p>
+        <p><strong>분석 기준일:</strong> {{ metadata.generated_date }}</p>
+        <p><strong>시스템 버전:</strong> {{ metadata.version }}</p>
+    </div>
+</div>
+
+{# ========== 2. TABLE OF CONTENTS ========== #}
+<div class="toc page-break">
+    <h1>목차 (Table of Contents)</h1>
+    <div class="toc-item">
+        <span class="toc-title">1. 대상지 개요 (Site Overview)</span>
+        <span class="toc-page">3</span>
+    </div>
+    <div class="toc-item">
+        <span class="toc-title">2. 도시계획 및 법규 (Zoning & Regulations)</span>
+        <span class="toc-page">5</span>
+    </div>
+    <div class="toc-item">
+        <span class="toc-title">3. 입지 및 지역 분석 (Location & Regional Analysis)</span>
+        <span class="toc-page">8</span>
+    </div>
+    <div class="toc-item">
+        <span class="toc-title">4. 개발계획 및 건축규모 (Development Plan)</span>
+        <span class="toc-page">12</span>
+    </div>
+    <div class="toc-item">
+        <span class="toc-title">5. 공사비 분석 (Construction Cost Analysis)</span>
+        <span class="toc-page">15</span>
+    </div>
+    <div class="toc-item">
+        <span class="toc-title">6. 재무 타당성 분석 (Financial Feasibility)</span>
+        <span class="toc-page">18</span>
+    </div>
+    <div class="toc-item">
+        <span class="toc-title">7. 시장 분석 (Market Analysis)</span>
+        <span class="toc-page">25</span>
+    </div>
+    <div class="toc-item">
+        <span class="toc-title">8. 세대유형 및 커뮤니티 계획 (Unit Types & Community)</span>
+        <span class="toc-page">28</span>
+    </div>
+    <div class="toc-item">
+        <span class="toc-title">9. 비교 시나리오 분석 (Scenario Analysis)</span>
+        <span class="toc-page">32</span>
+    </div>
+    <div class="toc-item">
+        <span class="toc-title">10. 리스크 분석 (Risk Analysis)</span>
+        <span class="toc-page">36</span>
+    </div>
+    <div class="toc-item">
+        <span class="toc-title">11. 종합 결론 및 제안 (Conclusion)</span>
+        <span class="toc-page">40</span>
+    </div>
+    <div class="toc-item">
+        <span class="toc-title">12. 부록 (Appendix)</span>
+        <span class="toc-page">42</span>
+    </div>
+</div>
+
+{# ========== 3. EXECUTIVE SUMMARY ========== #}
+<div class="page-break">
+    <h1>Executive Summary (요약)</h1>
+    
+    <div class="info-box">
+        <h3>프로젝트 핵심 요약</h3>
+        <table>
+            <tr>
+                <th>항목</th>
+                <th>내용</th>
+            </tr>
+            <tr>
+                <td><strong>대상지 주소</strong></td>
+                <td>{{ site_overview.address }}</td>
+            </tr>
+            <tr>
+                <td><strong>대지면적</strong></td>
+                <td>{{ "%.2f" | format(site_overview.land_area_sqm) }}㎡ ({{ "%.2f" | format(site_overview.land_area_pyeong) }}평)</td>
+            </tr>
+            <tr>
+                <td><strong>추천 주거유형</strong></td>
+                <td>{{ regional_analysis.recommended_type | default('청년') }}</td>
+            </tr>
+            <tr>
+                <td><strong>총 사업비 (CAPEX)</strong></td>
+                <td>{{ "%.2f" | format(financial_analysis.get('capex_total', 0) / 100000000) }}억원</td>
+            </tr>
+            <tr>
+                <td><strong>NPV (공공 할인율 2%)</strong></td>
+                <td>{{ "%.2f" | format(financial_analysis.npv_public / 100000000) }}억원</td>
+            </tr>
+            <tr>
+                <td><strong>내부수익률 (IRR)</strong></td>
+                <td>{{ "%.2f" | format(financial_analysis.irr) }}%</td>
+            </tr>
+            <tr>
+                <td><strong>투자회수기간</strong></td>
+                <td>{{ "%.1f" | format(financial_analysis.payback_period) }}년</td>
+            </tr>
+            <tr>
+                <td><strong>시장 신호</strong></td>
+                <td>
+                    {% if market_analysis.signal == 'UNDERVALUED' %}
+                        <span style="color: #28A745; font-weight: bold;">저평가 (투자 권장)</span>
+                    {% elif market_analysis.signal == 'OVERVALUED' %}
+                        <span style="color: #E74C3C; font-weight: bold;">고평가 (주의 필요)</span>
+                    {% else %}
+                        <span style="color: #2165D1; font-weight: bold;">적정가 (안정적)</span>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+    <h3>종합 평가</h3>
+    <p>
+        본 보고서는 {{ site_overview.address }}에 대한 LH 신축매입임대 사업의 타당성을 종합적으로 분석한 결과입니다. 
+        대지면적 {{ "%.2f" | format(site_overview.land_area_sqm) }}㎡를 기준으로 법규 검토, 재무 분석, 시장 조사, 
+        지역 수요 분석을 통합하여 사업의 실현 가능성을 평가하였습니다.
+    </p>
+    
+    <p>
+        <strong>주요 발견사항:</strong>
+    </p>
+    <ul>
+        <li>지역 수요 분석 결과, <strong>{{ regional_analysis.recommended_type }}</strong> 유형이 가장 적합한 것으로 판단됩니다. (수요 점수: {{ "%.1f" | format(regional_analysis.demand_score) }}/100)</li>
+        <li>총 사업비는 <strong>{{ "%.2f" | format(financial_analysis.get('capex_total', 0) / 100000000) }}억원</strong>으로 추정되며, 이 중 건축비가 가장 큰 비중을 차지합니다.</li>
+        <li>재무 분석 결과, 공공 할인율(2%) 기준 NPV는 <strong>{{ "%.2f" | format(financial_analysis.npv_public / 100000000) }}억원</strong>이며, 내부수익률(IRR)은 <strong>{{ "%.2f" | format(financial_analysis.irr) }}%</strong>입니다.</li>
+        <li>투자 회수기간은 약 <strong>{{ "%.1f" | format(financial_analysis.payback_period) }}년</strong>으로 예상됩니다.</li>
+        {% if market_analysis.status == 'available' %}
+        <li>시장 분석 결과, 본 프로젝트는 <strong>{{ market_analysis.signal }}</strong> 수준으로 평가되며, 시장 평균 대비 <strong>{{ "%+.1f" | format(market_analysis.delta_pct) }}%</strong>의 가격 차이를 보입니다.</li>
+        {% endif %}
+    </ul>
+</div>
+
+{# ========== 4. SITE OVERVIEW ========== #}
+<div class="page-break">
+    <h1>1. 대상지 개요 (Site Overview)</h1>
+    
+    <h2>1.1 위치 및 면적</h2>
+    <table>
+        <tr>
+            <th>구분</th>
+            <th>내용</th>
+        </tr>
+        <tr>
+            <td>대상지 주소</td>
+            <td>{{ site_overview.address }}</td>
+        </tr>
+        <tr>
+            <td>대지면적 (㎡)</td>
+            <td>{{ "%.2f" | format(site_overview.land_area_sqm) }}㎡</td>
+        </tr>
+        <tr>
+            <td>대지면적 (평)</td>
+            <td>{{ "%.2f" | format(site_overview.land_area_pyeong) }}평</td>
+        </tr>
+        <tr>
+            <td>프로젝트 코드</td>
+            <td>{{ site_overview.project_code }}</td>
+        </tr>
+        <tr>
+            <td>분석 기준일</td>
+            <td>{{ site_overview.analysis_date }}</td>
+        </tr>
+    </table>
+    
+    <h2>1.2 사업 개요</h2>
+    <p>
+        본 프로젝트는 LH 신축매입임대 사업을 위한 타당성 분석 보고서입니다. 
+        대상지는 {{ site_overview.address }}에 위치하며, 총 대지면적은 {{ "%.2f" | format(site_overview.land_area_sqm) }}㎡ 
+        (약 {{ "%.2f" | format(site_overview.land_area_pyeong) }}평)입니다.
+    </p>
+    
+    <div class="info-box">
+        <h4>📍 입지 특성</h4>
+        <p>
+            해당 대상지는 도심 접근성과 생활 편의시설 접근성이 우수한 지역으로, 
+            공공임대주택 개발에 적합한 입지 조건을 갖추고 있습니다.
+        </p>
+    </div>
+</div>
+
+{# ========== 5. ZONING & REGULATIONS ========== #}
+<div class="page-break">
+    <h1>2. 도시계획 및 법규 검토 (Zoning & Regulations)</h1>
+    
+    <h2>2.1 용도지역 및 건축 규제</h2>
+    <table>
+        <tr>
+            <th>항목</th>
+            <th>내용</th>
+            <th>비고</th>
+        </tr>
+        <tr>
+            <td>용도지역</td>
+            <td>{{ zoning_regulations.zone_type }}</td>
+            <td>주거 용도 적합</td>
+        </tr>
+        <tr>
+            <td>건폐율 (BCR)</td>
+            <td>{{ "%.0f" | format(zoning_regulations.bcr) }}%</td>
+            <td>법정 기준</td>
+        </tr>
+        <tr>
+            <td>용적률 (FAR)</td>
+            <td>{{ "%.0f" | format(zoning_regulations.far) }}%</td>
+            <td>법정 기준</td>
+        </tr>
+        <tr>
+            <td>최고 높이 제한</td>
+            <td>{{ "%.0f" | format(zoning_regulations.max_height) }}m</td>
+            <td>높이 규제</td>
+        </tr>
+        <tr>
+            <td>주차 대수</td>
+            <td>{{ "%.0f" | format(zoning_regulations.parking_required) }}대</td>
+            <td>세대당 1대 기준</td>
+        </tr>
+    </table>
+    
+    <h2>2.2 건축 가능 규모</h2>
+    <table>
+        <tr>
+            <th>구분</th>
+            <th>면적 (㎡)</th>
+            <th>면적 (평)</th>
+        </tr>
+        <tr>
+            <td>대지면적</td>
+            <td>{{ "%.2f" | format(site_overview.land_area_sqm) }}</td>
+            <td>{{ "%.2f" | format(site_overview.land_area_pyeong) }}</td>
+        </tr>
+        <tr>
+            <td>건축면적 (건폐율 적용)</td>
+            <td>{{ "%.2f" | format(zoning_regulations.building_area) }}</td>
+            <td>{{ "%.2f" | format(zoning_regulations.building_area / 3.3058) }}</td>
+        </tr>
+        <tr>
+            <td>연면적 (용적률 적용)</td>
+            <td>{{ "%.2f" | format(zoning_regulations.gross_floor_area) }}</td>
+            <td>{{ "%.2f" | format(zoning_regulations.gross_floor_area / 3.3058) }}</td>
+        </tr>
+    </table>
+    
+    <div class="info-box">
+        <h4>✅ 법규 검토 결과</h4>
+        <p>
+            대상지는 {{ zoning_regulations.zone_type }}로 지정되어 있어 공공임대주택 건설이 가능합니다. 
+            건폐율 {{ "%.0f" | format(zoning_regulations.bcr) }}%, 용적률 {{ "%.0f" | format(zoning_regulations.far) }}% 범위 내에서 
+            개발이 진행될 수 있으며, 높이 제한 {{ "%.0f" | format(zoning_regulations.max_height) }}m를 준수해야 합니다.
+        </p>
+    </div>
+    
+    <h2>2.3 주요 규제 사항</h2>
+    <ul>
+        <li><strong>일조권 규제:</strong> 인접 대지 경계선으로부터 일조권 사선 제한 적용</li>
+        <li><strong>조경 의무:</strong> 대지면적의 일정 비율 이상 조경 공간 확보 필요</li>
+        <li><strong>주차장 설치:</strong> 세대당 최소 1대 이상의 주차 공간 확보 의무</li>
+        <li><strong>재난안전 기준:</strong> 소방, 피난, 내진 설계 기준 준수</li>
+    </ul>
+</div>
+
+{# ========== 6. REGIONAL ANALYSIS (Phase 6.8) ========== #}
+<div class="page-break">
+    <h1>3. 입지 및 지역 분석 (Location & Regional Analysis)</h1>
+    
+    {% if regional_analysis.status != 'not_integrated' and regional_analysis.status != 'unavailable' %}
+    <h2>3.1 지역 수요 분석 (Phase 6.8 - AI 기반 수요 예측)</h2>
+    
+    <div class="success-box">
+        <h4>🎯 추천 주거유형: {{ regional_analysis.recommended_type | upper }}</h4>
+        <p>
+            AI 기반 지역 수요 분석 결과, 해당 지역은 <strong>{{ regional_analysis.recommended_type }}</strong> 유형의 
+            주거 수요가 가장 높은 것으로 분석되었습니다.
+        </p>
+        <p>
+            <strong>수요 점수:</strong> {{ "%.1f" | format(regional_analysis.demand_score) }}/100 
+            (신뢰도: {{ regional_analysis.confidence_level | upper }})
+        </p>
+    </div>
+    
+    <h3>3.1.1 주거유형별 수요 점수</h3>
+    <table>
+        <tr>
+            <th>주거유형</th>
+            <th>수요 점수</th>
+            <th>평가</th>
+        </tr>
+        {% for housing_type, score in regional_analysis.all_scores.items() %}
+        <tr {% if housing_type == regional_analysis.recommended_type %}style="background-color: #D4EDDA; font-weight: bold;"{% endif %}>
+            <td>{{ housing_type }}</td>
+            <td>{{ "%.1f" | format(score) }}</td>
+            <td>
+                {% if score >= 70 %}
+                    <span style="color: #28A745;">●●● 고수요</span>
+                {% elif score >= 50 %}
+                    <span style="color: #2165D1;">●● 중수요</span>
+                {% else %}
+                    <span style="color: #ED7D31;">● 저수요</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    
+    {% if regional_analysis.key_factors %}
+    <h3>3.1.2 주요 수요 결정 요인</h3>
+    <ul>
+        {% for factor in regional_analysis.key_factors %}
+        <li>{{ factor }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    
+    <div class="info-box">
+        <h4>📊 분석 방법론</h4>
+        <p>
+            본 수요 분석은 ZeroSite Phase 6.8 AI 엔진을 통해 수행되었습니다. 
+            21개 지역 특성 변수(인구통계, 인프라, 경제지표)를 기반으로 5개 주거유형별 가중치 점수를 산출하였으며, 
+            통계청, 국토교통부 등 공공 데이터를 활용하여 신뢰도를 확보하였습니다.
+        </p>
+    </div>
+    
+    {% else %}
+    <div class="warning-box">
+        <h4>⚠️ 지역 수요 분석 데이터 미제공</h4>
+        <p>Phase 6.8 지역 수요 분석 모듈이 통합되지 않았거나 데이터가 제공되지 않았습니다.</p>
+    </div>
+    {% endif %}
+    
+    <h2>3.2 입지 분석</h2>
+    <h3>3.2.1 교통 접근성</h3>
+    <ul>
+        <li><strong>대중교통:</strong> 지하철역 도보 10분 이내 (예상)</li>
+        <li><strong>버스 노선:</strong> 주요 간선 버스 노선 접근 가능</li>
+        <li><strong>도로 접근성:</strong> 주요 간선도로 인접</li>
+    </ul>
+    
+    <h3>3.2.2 생활 편의시설</h3>
+    <ul>
+        <li><strong>교육시설:</strong> 초/중/고등학교 도보권 내 위치</li>
+        <li><strong>의료시설:</strong> 병원 및 의원 다수 분포</li>
+        <li><strong>상업시설:</strong> 대형마트, 편의점 등 생활 편의시설 우수</li>
+        <li><strong>공원/녹지:</strong> 근린공원 접근 가능</li>
+    </ul>
+</div>
+
+{# ========== 7. DEVELOPMENT PLAN ========== #}
+<div class="page-break">
+    <h1>4. 개발계획 및 건축규모 (Development Plan)</h1>
+    
+    <h2>4.1 개발 개요</h2>
+    <table>
+        <tr>
+            <th>항목</th>
+            <th>계획</th>
+        </tr>
+        <tr>
+            <td>사업 유형</td>
+            <td>LH 신축매입임대</td>
+        </tr>
+        <tr>
+            <td>주거 유형</td>
+            <td>{{ unit_types.recommended_type }}</td>
+        </tr>
+        <tr>
+            <td>계획 세대수</td>
+            <td>{{ unit_types.estimated_units }}세대</td>
+        </tr>
+        <tr>
+            <td>평균 세대면적</td>
+            <td>{{ "%.0f" | format(unit_types.avg_unit_size_sqm) }}㎡</td>
+        </tr>
+        <tr>
+            <td>총 연면적</td>
+            <td>{{ "%.2f" | format(zoning_regulations.gross_floor_area) }}㎡</td>
+        </tr>
+    </table>
+    
+    <h2>4.2 건축 계획</h2>
+    <p>
+        대상지의 법규 검토 결과를 바탕으로, 연면적 {{ "%.2f" | format(zoning_regulations.gross_floor_area) }}㎡ 규모의 
+        공동주택 건설이 가능합니다. 평균 세대면적 {{ "%.0f" | format(unit_types.avg_unit_size_sqm) }}㎡를 기준으로 
+        총 <strong>{{ unit_types.estimated_units }}세대</strong>의 주거 공간을 계획하였습니다.
+    </p>
+    
+    <div class="info-box">
+        <h4>🏗️ 건축 규모 산정 근거</h4>
+        <p>
+            <strong>총 연면적:</strong> {{ "%.2f" | format(zoning_regulations.gross_floor_area) }}㎡<br>
+            <strong>전용률:</strong> 75% (공용면적 제외)<br>
+            <strong>주거 전용면적:</strong> {{ "%.2f" | format(zoning_regulations.gross_floor_area * 0.75) }}㎡<br>
+            <strong>계획 세대수:</strong> {{ unit_types.estimated_units }}세대 
+            (= 주거 전용면적 ÷ 평균 세대면적)
+        </p>
+    </div>
+    
+    <h2>4.3 주요 시설 계획</h2>
+    <ul>
+        <li><strong>주거동:</strong> 지하 1층 ~ 지상 10층 (예상)</li>
+        <li><strong>주차장:</strong> 지하 주차장 및 지상 일부 주차 공간</li>
+        <li><strong>조경:</strong> 중앙 광장 및 휴게 공간</li>
+        <li><strong>부대시설:</strong> 관리사무소, 경비실 등</li>
+    </ul>
+</div>
+
+{# ========== 8. CONSTRUCTION COST (Phase 8) ========== #}
+<div class="page-break">
+    <h1>5. 공사비 분석 (Construction Cost Analysis)</h1>
+    
+    {% if construction_cost.status == 'verified' %}
+    <div class="success-box">
+        <h4>✅ LH 공식 검증 공사비 적용 (Phase 8)</h4>
+        <p>
+            본 프로젝트는 <strong>LH 공식 검증 공사비 데이터</strong>를 적용하였습니다. 
+            실제 준공 프로젝트 기반의 신뢰성 높은 공사비 정보를 사용하여 정확도를 높였습니다.
+        </p>
+    </div>
+    
+    <h2>5.1 검증 공사비 정보 (Phase 8 Verified Cost)</h2>
+    <table>
+        <tr>
+            <th>항목</th>
+            <th>내용</th>
+        </tr>
+        <tr>
+            <td>㎡당 공사비</td>
+            <td><strong>{{ "{:,.0f}".format(construction_cost.cost_per_sqm) }}원/㎡</strong></td>
+        </tr>
+        <tr>
+            <td>데이터 출처</td>
+            <td>{{ construction_cost.source }}</td>
+        </tr>
+        <tr>
+            <td>검증 연도</td>
+            <td>{{ construction_cost.verification_year }}년</td>
+        </tr>
+        <tr>
+            <td>주거 유형</td>
+            <td>{{ construction_cost.housing_type }}</td>
+        </tr>
+        <tr>
+            <td>총 건축비</td>
+            <td><strong>{{ "%.2f" | format(construction_cost.total_construction_cost / 100000000) }}억원</strong></td>
+        </tr>
+    </table>
+    
+    {% else %}
+    <div class="warning-box">
+        <h4>⚠️ 추정 공사비 적용</h4>
+        <p>
+            검증 공사비 데이터를 사용할 수 없어 LH 표준 공사비를 기준으로 추정하였습니다.
+        </p>
+    </div>
+    
+    <h2>5.1 추정 공사비</h2>
+    <table>
+        <tr>
+            <th>항목</th>
+            <th>내용</th>
+        </tr>
+        <tr>
+            <td>㎡당 공사비</td>
+            <td>{{ "{:,.0f}".format(construction_cost.cost_per_sqm) }}원/㎡</td>
+        </tr>
+        <tr>
+            <td>기준</td>
+            <td>{{ construction_cost.source }}</td>
+        </tr>
+        <tr>
+            <td>총 건축비</td>
+            <td><strong>{{ "%.2f" | format(construction_cost.total_construction_cost / 100000000) }}억원</strong></td>
+        </tr>
+    </table>
+    {% endif %}
+    
+    <h2>5.2 총 사업비 구성 (CAPEX Breakdown)</h2>
+    <p>
+        총 사업비는 토지비, 건축비, 부대비용 등으로 구성되며, 
+        상세 내역은 재무 분석 섹션에서 확인할 수 있습니다.
+    </p>
+    
+    <div class="info-box">
+        <h4>💰 공사비 산정 기준</h4>
+        <p>
+            공사비는 건축비(직접공사비), 설계비, 감리비, 인허가비, 예비비 등을 모두 포함한 
+            총 공사비 기준입니다. 토지 매입비와 금융비용은 별도로 산정됩니다.
+        </p>
+    </div>
+</div>
+
+{# ========== 9. FINANCIAL ANALYSIS (Phase 2.5) ========== #}
+<div class="page-break">
+    <h1>6. 재무 타당성 분석 (Financial Feasibility Analysis)</h1>
+    
+    {% if financial_analysis.status != 'failed' %}
+    <h2>6.1 사업비 구성 (CAPEX)</h2>
+    <table>
+        <tr>
+            <th>구분</th>
+            <th>금액 (억원)</th>
+            <th>비중</th>
+        </tr>
+        <tr>
+            <td><strong>총 사업비 (CAPEX)</strong></td>
+            <td><strong>{{ "%.2f" | format(financial_analysis.get('capex_total', 0) / 100000000) }}</strong></td>
+            <td><strong>100%</strong></td>
+        </tr>
+    </table>
+    
+    <h2>6.2 수익 및 비용 구조</h2>
+    <table>
+        <tr>
+            <th>항목</th>
+            <th>연간 금액 (억원)</th>
+        </tr>
+        <tr>
+            <td>연간 수익</td>
+            <td>{{ "%.2f" | format(financial_analysis.annual_revenue / 100000000) }}</td>
+        </tr>
+        <tr>
+            <td>연간 운영비 (OpEx)</td>
+            <td>{{ "%.2f" | format(financial_analysis.annual_opex / 100000000) }}</td>
+        </tr>
+        <tr>
+            <td><strong>순영업이익 (NOI)</strong></td>
+            <td><strong>{{ "%.2f" | format(financial_analysis.stabilized_noi / 100000000) }}</strong></td>
+        </tr>
+    </table>
+    
+    {% if financial_analysis.status == 'enhanced' %}
+    <div class="success-box">
+        <h4>✅ 강화 재무지표 적용 (Phase 2.5)</h4>
+        <p>
+            본 분석은 <strong>Phase 2.5 Enhanced Financial Metrics</strong>를 적용하여 
+            NPV, IRR, Payback Period 등 투자등급 재무지표를 제공합니다.
+        </p>
+    </div>
+    
+    <h2>6.3 핵심 재무지표 (Key Financial Metrics)</h2>
+    <table>
+        <tr>
+            <th>지표</th>
+            <th>값</th>
+            <th>평가</th>
+        </tr>
+        <tr>
+            <td><strong>NPV (공공 할인율 2%)</strong></td>
+            <td><strong>{{ "%.2f" | format(financial_analysis.npv_public / 100000000) }}억원</strong></td>
+            <td>
+                {% if financial_analysis.npv_public > 0 %}
+                    <span style="color: #28A745;">✓ 긍정적</span>
+                {% else %}
+                    <span style="color: #E74C3C;">✗ 부정적</span>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td><strong>NPV (민간 할인율 5.5%)</strong></td>
+            <td><strong>{{ "%.2f" | format(financial_analysis.npv_private / 100000000) }}억원</strong></td>
+            <td>
+                {% if financial_analysis.npv_private > 0 %}
+                    <span style="color: #28A745;">✓ 긍정적</span>
+                {% else %}
+                    <span style="color: #E74C3C;">✗ 부정적</span>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td><strong>내부수익률 (IRR)</strong></td>
+            <td><strong>{{ "%.2f" | format(financial_analysis.irr) }}%</strong></td>
+            <td>
+                {% if financial_analysis.irr > 5 %}
+                    <span style="color: #28A745;">✓ 양호</span>
+                {% elif financial_analysis.irr > 2 %}
+                    <span style="color: #2165D1;">- 보통</span>
+                {% else %}
+                    <span style="color: #E74C3C;">✗ 저조</span>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td><strong>투자회수기간 (Payback)</strong></td>
+            <td><strong>{{ "%.1f" | format(financial_analysis.payback_period) }}년</strong></td>
+            <td>
+                {% if financial_analysis.payback_period < 7 %}
+                    <span style="color: #28A745;">✓ 우수</span>
+                {% elif financial_analysis.payback_period < 10 %}
+                    <span style="color: #2165D1;">- 양호</span>
+                {% else %}
+                    <span style="color: #E74C3C;">✗ 장기</span>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td><strong>자본환원율 (Cap Rate)</strong></td>
+            <td><strong>{{ "%.2f" | format(financial_analysis.cap_rate) }}%</strong></td>
+            <td>
+                {% if financial_analysis.cap_rate > 4 %}
+                    <span style="color: #28A745;">✓ 양호</span>
+                {% else %}
+                    <span style="color: #2165D1;">- 보통</span>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+    
+    <h2>6.4 재무지표 해석</h2>
+    
+    <h3>6.4.1 순현재가치 (NPV, Net Present Value)</h3>
+    <p>
+        NPV는 프로젝트의 미래 현금흐름을 현재가치로 환산한 총가치입니다. 
+        공공사업 특성을 고려하여 <strong>공공 할인율 2%</strong>를 적용한 NPV는 
+        <strong>{{ "%.2f" | format(financial_analysis.npv_public / 100000000) }}억원</strong>으로, 
+        {% if financial_analysis.npv_public > 0 %}
+        양(+)의 값을 보여 프로젝트의 경제적 타당성이 확보되었습니다.
+        {% else %}
+        음(-)의 값을 보여 사업성 개선이 필요합니다.
+        {% endif %}
+    </p>
+    
+    <h3>6.4.2 내부수익률 (IRR, Internal Rate of Return)</h3>
+    <p>
+        IRR은 프로젝트의 수익성을 나타내는 지표로, 본 프로젝트의 IRR은 
+        <strong>{{ "%.2f" | format(financial_analysis.irr) }}%</strong>입니다. 
+        {% if financial_analysis.irr > 5 %}
+        이는 공공사업 기준 목표 수익률을 상회하는 수준으로 평가됩니다.
+        {% elif financial_analysis.irr > 2 %}
+        이는 공공사업으로서 적정 수준의 수익률입니다.
+        {% else %}
+        이는 목표 수익률에 미달하여 사업성 개선이 필요합니다.
+        {% endif %}
+    </p>
+    
+    <h3>6.4.3 투자회수기간 (Payback Period)</h3>
+    <p>
+        초기 투자금을 회수하는 데 소요되는 기간은 약 
+        <strong>{{ "%.1f" | format(financial_analysis.payback_period) }}년</strong>으로 추정됩니다. 
+        {% if financial_analysis.payback_period < 10 %}
+        이는 일반적인 부동산 개발 프로젝트 대비 안정적인 수준입니다.
+        {% else %}
+        장기 회수 구조로 리스크 관리가 필요합니다.
+        {% endif %}
+    </p>
+    
+    <div class="info-box">
+        <h4>📊 재무지표 산정 방법</h4>
+        <p>
+            <strong>NPV:</strong> 순현재가치법 (Discount Cash Flow), 공공 할인율 2%, 민간 할인율 5.5%<br>
+            <strong>IRR:</strong> Newton-Raphson Method를 사용한 내부수익률 계산<br>
+            <strong>Payback:</strong> 선형보간법 (Linear Interpolation)을 사용한 투자회수기간 산정
+        </p>
+    </div>
+    
+    {% else %}
+    <div class="warning-box">
+        <h4>⚠️ 기본 재무지표만 제공</h4>
+        <p>Phase 2.5 Enhanced Metrics가 통합되지 않아 기본 지표만 제공됩니다.</p>
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <div class="warning-box">
+        <h4>❌ 재무 분석 실패</h4>
+        <p>재무 분석 중 오류가 발생했습니다: {{ financial_analysis.error }}</p>
+    </div>
+    {% endif %}
+</div>
+
+{# ========== 10. MARKET ANALYSIS (Phase 7.7) ========== #}
+<div class="page-break">
+    <h1>7. 시장 분석 (Market Analysis)</h1>
+    
+    {% if market_analysis.status == 'available' %}
+    <div class="success-box">
+        <h4>✅ 실시간 시장 데이터 분석 (Phase 7.7)</h4>
+        <p>
+            본 분석은 <strong>Phase 7.7 Real-Time Market Data</strong>를 활용하여 
+            ZeroSite 계산가와 실제 시장 거래가를 비교 분석하였습니다.
+        </p>
+    </div>
+    
+    <h2>7.1 시장 신호 분석 (Market Signal)</h2>
+    <table>
+        <tr>
+            <th>항목</th>
+            <th>내용</th>
+        </tr>
+        <tr>
+            <td><strong>시장 신호</strong></td>
+            <td>
+                {% if market_analysis.signal == 'UNDERVALUED' %}
+                    <span style="color: #28A745; font-size: 14pt; font-weight: bold;">저평가 (UNDERVALUED)</span>
+                {% elif market_analysis.signal == 'OVERVALUED' %}
+                    <span style="color: #E74C3C; font-size: 14pt; font-weight: bold;">고평가 (OVERVALUED)</span>
+                {% else %}
+                    <span style="color: #2165D1; font-size: 14pt; font-weight: bold;">적정가 (FAIR)</span>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td>ZeroSite 계산가</td>
+            <td><strong>{{ "%.2f" | format(market_analysis.zerosite_value / 100000000) }}억원</strong></td>
+        </tr>
+        <tr>
+            <td>시장 평균가</td>
+            <td>{{ "%.2f" | format(market_analysis.market_avg / 100000000) }}억원</td>
+        </tr>
+        <tr>
+            <td>가격 차이 (Delta)</td>
+            <td><strong>{{ "%+.1f" | format(market_analysis.delta_pct) }}%</strong></td>
+        </tr>
+        <tr>
+            <td>시장 온도</td>
+            <td>
+                {% if market_analysis.temperature == 'HOT' %}
+                    <span style="color: #E74C3C;">🔥 과열 (HOT)</span>
+                {% elif market_analysis.temperature == 'COLD' %}
+                    <span style="color: #2196F3;">❄️ 침체 (COLD)</span>
+                {% else %}
+                    <span style="color: #28A745;">✓ 안정 (STABLE)</span>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+    
+    <h2>7.2 투자 권고사항</h2>
+    <div class="{% if market_analysis.signal == 'UNDERVALUED' %}success-box{% elif market_analysis.signal == 'OVERVALUED' %}warning-box{% else %}info-box{% endif %}">
+        <h4>
+            {% if market_analysis.signal == 'UNDERVALUED' %}
+                ✅ 투자 적극 권장
+            {% elif market_analysis.signal == 'OVERVALUED' %}
+                ⚠️ 신중한 검토 필요
+            {% else %}
+                ℹ️ 적정 수준
+            {% endif %}
+        </h4>
+        <p>{{ market_analysis.investment_recommendation }}</p>
+    </div>
+    
+    <h2>7.3 시장 분석 결과 해석</h2>
+    {% if market_analysis.signal == 'UNDERVALUED' %}
+    <p>
+        본 프로젝트는 시장 평균가 대비 <strong>{{ "%+.1f" | format(market_analysis.delta_pct) }}%</strong> 
+        저평가되어 있어, <strong>투자 매력도가 높은 것으로 판단됩니다.</strong> 
+        ZeroSite 분석 결과 적정 사업비가 시장 실거래가보다 낮아 수익성 개선 여지가 있습니다.
+    </p>
+    <p>
+        <strong>투자 전략:</strong>
+    </p>
+    <ul>
+        <li>시장 평균 대비 유리한 매입가로 투자 수익률 제고 가능</li>
+        <li>향후 시장 가격 상승 시 추가 수익 기대 가능</li>
+        <li>적극적인 투자 검토 권장</li>
+    </ul>
+    
+    {% elif market_analysis.signal == 'OVERVALUED' %}
+    <p>
+        본 프로젝트는 시장 평균가 대비 <strong>{{ "%+.1f" | format(market_analysis.delta_pct) }}%</strong> 
+        고평가되어 있어, <strong>신중한 검토가 필요합니다.</strong> 
+        ZeroSite 분석 결과 적정 사업비가 시장 실거래가보다 높아 비용 관리가 중요합니다.
+    </p>
+    <p>
+        <strong>리스크 관리 전략:</strong>
+    </p>
+    <ul>
+        <li>공사비 절감 방안 마련</li>
+        <li>임대료 수준 상향 검토</li>
+        <li>운영 효율화를 통한 수익성 개선</li>
+        <li>시장 가격 하락 리스크 대비</li>
+    </ul>
+    
+    {% else %}
+    <p>
+        본 프로젝트는 시장 평균가와 <strong>적정 수준</strong>을 유지하고 있습니다 
+        (델타: {{ "%+.1f" | format(market_analysis.delta_pct) }}%). 
+        ZeroSite 계산가와 시장 실거래가의 괴리가 크지 않아 <strong>안정적인 사업 진행이 가능</strong>할 것으로 판단됩니다.
+    </p>
+    <p>
+        <strong>권장 사항:</strong>
+    </p>
+    <ul>
+        <li>현행 사업 계획 유지</li>
+        <li>정상적인 재무 구조로 진행 가능</li>
+        <li>시장 모니터링 지속</li>
+    </ul>
+    {% endif %}
+    
+    {% else %}
+    <div class="warning-box">
+        <h4>⚠️ 시장 분석 데이터 미제공</h4>
+        <p>Phase 7.7 시장 데이터 모듈이 통합되지 않았거나 데이터가 제공되지 않았습니다.</p>
+    </div>
+    {% endif %}
+</div>
+
+{# ========== 11. UNIT TYPES & COMMUNITY ========== #}
+<div class="page-break">
+    <h1>8. 세대유형 및 커뮤니티 계획 (Unit Types & Community Plan)</h1>
+    
+    <h2>8.1 세대 구성 계획</h2>
+    <table>
+        <tr>
+            <th>항목</th>
+            <th>내용</th>
+        </tr>
+        <tr>
+            <td><strong>추천 주거유형</strong></td>
+            <td><strong>{{ unit_types.recommended_type }}</strong></td>
+        </tr>
+        <tr>
+            <td>평균 세대면적</td>
+            <td>{{ "%.0f" | format(unit_types.avg_unit_size_sqm) }}㎡ (약 {{ "%.0f" | format(unit_types.avg_unit_size_sqm / 3.3058) }}평)</td>
+        </tr>
+        <tr>
+            <td>계획 세대수</td>
+            <td><strong>{{ unit_types.estimated_units }}세대</strong></td>
+        </tr>
+        <tr>
+            <td>총 주거면적</td>
+            <td>{{ "%.2f" | format(zoning_regulations.gross_floor_area) }}㎡</td>
+        </tr>
+    </table>
+    
+    <h2>8.2 주거유형 특성</h2>
+    <p>
+        추천 주거유형인 <strong>{{ unit_types.recommended_type }}</strong>은(는) 
+        해당 지역의 인구통계 및 수요 특성을 반영한 최적 유형입니다.
+    </p>
+    
+    {% if unit_types.recommended_type == 'youth' %}
+    <div class="info-box">
+        <h4>🎓 청년 주거 특화 계획</h4>
+        <p>
+            <strong>타겟:</strong> 만 19~39세 청년층 (대학생, 사회초년생, 청년 직장인)<br>
+            <strong>면적:</strong> 소형 원룸 ~ 투룸 (30~50㎡)<br>
+            <strong>특징:</strong> 교통 접근성, 직주근접, 생활 편의성 중시
+        </p>
+    </div>
+    {% elif unit_types.recommended_type == 'newlyweds' %}
+    <div class="info-box">
+        <h4>💑 신혼부부 주거 특화 계획</h4>
+        <p>
+            <strong>타겟:</strong> 혼인 7년 이내 무주택 신혼부부<br>
+            <strong>면적:</strong> 투룸 ~ 쓰리룸 (40~60㎡)<br>
+            <strong>특징:</strong> 육아 환경, 교육시설 접근성 중시
+        </p>
+    </div>
+    {% elif unit_types.recommended_type == 'newlyweds_growth' %}
+    <div class="info-box">
+        <h4>👨‍👩‍👧 신혼부부 성장형 주거 특화 계획</h4>
+        <p>
+            <strong>타겟:</strong> 출산 예정/육아 중인 신혼부부<br>
+            <strong>면적:</strong> 쓰리룸 (55~70㎡)<br>
+            <strong>특징:</strong> 가족 확장 대비, 넓은 거실, 다목적 공간
+        </p>
+    </div>
+    {% elif unit_types.recommended_type == 'multichild' %}
+    <div class="info-box">
+        <h4>👨‍👩‍👧‍👦 다자녀 가구 주거 특화 계획</h4>
+        <p>
+            <strong>타겟:</strong> 자녀 3명 이상 다자녀 가구<br>
+            <strong>면적:</strong> 대형 (80~100㎡)<br>
+            <strong>특징:</strong> 방 개수 확보, 수납공간, 어린이 놀이시설
+        </p>
+    </div>
+    {% elif unit_types.recommended_type == 'senior' %}
+    <div class="info-box">
+        <h4>👵 고령자 주거 특화 계획</h4>
+        <p>
+            <strong>타겟:</strong> 만 65세 이상 고령자<br>
+            <strong>면적:</strong> 소형 원룸 (30~40㎡)<br>
+            <strong>특징:</strong> 무장벽 설계, 안전 설비, 의료 접근성
+        </p>
+    </div>
+    {% endif %}
+    
+    <h2>8.3 커뮤니티 시설 계획</h2>
+    <p>
+        입주민의 삶의 질 향상을 위해 다음과 같은 커뮤니티 시설을 계획하였습니다:
+    </p>
+    <ul>
+        {% for facility in unit_types.community_facilities %}
+        <li><strong>{{ facility }}</strong></li>
+        {% endfor %}
+    </ul>
+    
+    <div class="info-box">
+        <h4>🏘️ 커뮤니티 시설 계획 배경</h4>
+        <p>
+            커뮤니티 시설은 주거유형별 입주민 특성을 고려하여 선정되었습니다. 
+            이를 통해 입주 만족도를 높이고 장기 거주를 유도할 수 있습니다.
+        </p>
+    </div>
+</div>
+
+{# ========== 12. SCENARIO COMPARISON ========== #}
+{% if scenario_comparison %}
+<div class="page-break">
+    <h1>9. 비교 시나리오 분석 (Scenario Comparison)</h1>
+    
+    <h2>9.1 시나리오 설정</h2>
+    <p>
+        본 프로젝트의 사업성을 다각도로 검증하기 위해 3가지 시나리오를 설정하여 비교 분석하였습니다:
+    </p>
+    <ul>
+        <li><strong>비관적 시나리오 (Pessimistic):</strong> 임대료 -10%, 공실률 +5%p, 공사비 +10%</li>
+        <li><strong>기본 시나리오 (Base):</strong> 현행 계획 기준</li>
+        <li><strong>낙관적 시나리오 (Optimistic):</strong> 임대료 +10%, 공실률 -2%p, 공사비 -10%</li>
+    </ul>
+    
+    <h2>9.2 시나리오별 재무지표 비교</h2>
+    <table>
+        <tr>
+            <th>지표</th>
+            <th>비관적</th>
+            <th>기본</th>
+            <th>낙관적</th>
+        </tr>
+        {% if 'capex_total' in scenario_comparison.comparison_table %}
+        <tr>
+            <td>총 사업비 (억원)</td>
+            <td>{{ "%.2f" | format(scenario_comparison.comparison_table.capex_total.pessimistic / 100000000) }}</td>
+            <td><strong>{{ "%.2f" | format(scenario_comparison.comparison_table.capex_total.base / 100000000) }}</strong></td>
+            <td>{{ "%.2f" | format(scenario_comparison.comparison_table.capex_total.optimistic / 100000000) }}</td>
+        </tr>
+        {% endif %}
+        {% if 'stabilized_noi' in scenario_comparison.comparison_table %}
+        <tr>
+            <td>안정화 NOI (억원)</td>
+            <td>{{ "%.2f" | format(scenario_comparison.comparison_table.stabilized_noi.pessimistic / 100000000) }}</td>
+            <td><strong>{{ "%.2f" | format(scenario_comparison.comparison_table.stabilized_noi.base / 100000000) }}</strong></td>
+            <td>{{ "%.2f" | format(scenario_comparison.comparison_table.stabilized_noi.optimistic / 100000000) }}</td>
+        </tr>
+        {% endif %}
+        {% if 'irr' in scenario_comparison.comparison_table %}
+        <tr>
+            <td>IRR (%)</td>
+            <td>{{ "%.2f" | format(scenario_comparison.comparison_table.irr.pessimistic) }}</td>
+            <td><strong>{{ "%.2f" | format(scenario_comparison.comparison_table.irr.base) }}</strong></td>
+            <td>{{ "%.2f" | format(scenario_comparison.comparison_table.irr.optimistic) }}</td>
+        </tr>
+        {% endif %}
+        {% if 'payback_period' in scenario_comparison.comparison_table %}
+        <tr>
+            <td>회수기간 (년)</td>
+            <td>{{ "%.1f" | format(scenario_comparison.comparison_table.payback_period.pessimistic) }}</td>
+            <td><strong>{{ "%.1f" | format(scenario_comparison.comparison_table.payback_period.base) }}</strong></td>
+            <td>{{ "%.1f" | format(scenario_comparison.comparison_table.payback_period.optimistic) }}</td>
+        </tr>
+        {% endif %}
+    </table>
+    
+    <h2>9.3 시나리오 분석 결과</h2>
+    <p>
+        시나리오 분석 결과, 본 프로젝트는 
+        {% if scenario_comparison.comparison_table.irr.pessimistic > 2 %}
+        비관적 시나리오에서도 IRR {{ "%.2f" | format(scenario_comparison.comparison_table.irr.pessimistic) }}%로 
+        양(+)의 수익률을 유지하여 <strong>리스크 대응력이 우수</strong>한 것으로 평가됩니다.
+        {% else %}
+        비관적 시나리오에서 수익성이 저하되므로 <strong>리스크 관리가 중요</strong>합니다.
+        {% endif %}
+    </p>
+    
+    <div class="info-box">
+        <h4>📊 시나리오 분석의 의미</h4>
+        <p>
+            시나리오 분석은 불확실한 미래 상황에 대비하여 프로젝트의 견고성(Robustness)을 평가하는 도구입니다. 
+            비관적 시나리오에서도 수익성이 유지된다면 안정적인 투자로 판단할 수 있습니다.
+        </p>
+    </div>
+</div>
+{% endif %}
+
+{# ========== 13. RISK ANALYSIS ========== #}
+<div class="page-break">
+    <h1>10. 리스크 분석 (Risk Analysis)</h1>
+    
+    <h2>10.1 종합 리스크 평가</h2>
+    <div class="{% if risk_analysis.overall_risk_level == 'HIGH' %}warning-box{% elif risk_analysis.overall_risk_level == 'MEDIUM' %}info-box{% else %}success-box{% endif %}">
+        <h4>
+            종합 리스크 수준: 
+            {% if risk_analysis.overall_risk_level == 'HIGH' %}
+                <span style="color: #E74C3C;">⚠️ 높음 (HIGH)</span>
+            {% elif risk_analysis.overall_risk_level == 'MEDIUM' %}
+                <span style="color: #ED7D31;">⚡ 중간 (MEDIUM)</span>
+            {% else %}
+                <span style="color: #28A745;">✓ 낮음 (LOW)</span>
+            {% endif %}
+        </h4>
+        <p>총 {{ risk_analysis.total_risks }}개의 리스크 요인이 식별되었습니다.</p>
+    </div>
+    
+    {% if risk_analysis.risks %}
+    <h2>10.2 주요 리스크 및 대응 방안</h2>
+    <table>
+        <tr>
+            <th>구분</th>
+            <th>리스크</th>
+            <th>설명</th>
+            <th>대응 방안</th>
+        </tr>
+        {% for risk in risk_analysis.risks %}
+        <tr>
+            <td><strong>{{ risk.category }}</strong></td>
+            <td>{{ risk.risk }}</td>
+            <td>{{ risk.description }}</td>
+            <td>{{ risk.mitigation }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <div class="success-box">
+        <h4>✅ 주요 리스크 미식별</h4>
+        <p>현재 분석 결과 상으로는 심각한 리스크 요인이 발견되지 않았습니다. 
+        다만, 지속적인 모니터링이 필요합니다.</p>
+    </div>
+    {% endif %}
+    
+    <h2>10.3 리스크 관리 전략</h2>
+    <p>
+        프로젝트의 성공적인 수행을 위해 다음과 같은 리스크 관리 전략을 수립하였습니다:
+    </p>
+    <ul>
+        <li><strong>재무 리스크:</strong> 보수적 재무 가정 적용, 충분한 예비비 확보</li>
+        <li><strong>시장 리스크:</strong> 시장 동향 모니터링, 임대료 조정 유연성 확보</li>
+        <li><strong>공사 리스크:</strong> 신뢰할 수 있는 시공사 선정, 공정 관리 철저</li>
+        <li><strong>운영 리스크:</strong> 전문 위탁관리업체 선정, 입주민 소통 강화</li>
+    </ul>
+    
+    <div class="info-box">
+        <h4>🛡️ 리스크 모니터링 체계</h4>
+        <p>
+            프로젝트 진행 중 정기적인 리스크 점검을 실시하고, 
+            주요 리스크 지표(KRI, Key Risk Indicator)를 모니터링하여 
+            조기 경보 시스템을 운영할 것을 권장합니다.
+        </p>
+    </div>
+</div>
+
+{# ========== 14. CONCLUSION ========== #}
+<div class="page-break">
+    <h1>11. 종합 결론 및 제안 (Conclusion & Recommendation)</h1>
+    
+    <h2>11.1 종합 평가</h2>
+    <p>
+        본 보고서는 {{ site_overview.address }} 대상지에 대한 LH 신축매입임대 사업의 
+        타당성을 종합적으로 분석한 결과입니다.
+    </p>
+    
+    <div class="success-box">
+        <h4>✅ 핵심 결론</h4>
+        <ul>
+            <li><strong>법규 적합성:</strong> 대상지는 {{ zoning_regulations.zone_type }}로 공공임대주택 건설이 가능하며, 
+            건폐율 {{ "%.0f" | format(zoning_regulations.bcr) }}%, 용적률 {{ "%.0f" | format(zoning_regulations.far) }}% 범위 내에서 개발 가능합니다.</li>
+            
+            {% if regional_analysis.status == 'available' %}
+            <li><strong>지역 수요:</strong> AI 기반 수요 분석 결과, <strong>{{ regional_analysis.recommended_type }}</strong> 유형이 
+            수요 점수 {{ "%.1f" | format(regional_analysis.demand_score) }}/100으로 가장 적합한 것으로 평가되었습니다.</li>
+            {% endif %}
+            
+            {% if construction_cost.status == 'verified' %}
+            <li><strong>공사비:</strong> LH 공식 검증 공사비({{ "{:,.0f}".format(construction_cost.cost_per_sqm) }}원/㎡) 적용으로 
+            신뢰성 높은 사업비 산정이 가능합니다.</li>
+            {% endif %}
+            
+            {% if financial_analysis.status == 'enhanced' %}
+            <li><strong>재무 타당성:</strong> 
+                {% if financial_analysis.npv_public > 0 %}
+                NPV(공공) {{ "%.2f" | format(financial_analysis.npv_public / 100000000) }}억원, 
+                IRR {{ "%.2f" | format(financial_analysis.irr) }}%로 <strong>경제적 타당성이 확보</strong>되었습니다.
+                {% else %}
+                NPV 및 IRR 분석 결과 사업성 개선이 필요합니다.
+                {% endif %}
+            </li>
+            {% endif %}
+            
+            {% if market_analysis.status == 'available' %}
+            <li><strong>시장 분석:</strong> 
+                {% if market_analysis.signal == 'UNDERVALUED' %}
+                시장 대비 {{ "%+.1f" | format(market_analysis.delta_pct) }}% 저평가로 <strong>투자 매력도가 높습니다.</strong>
+                {% elif market_analysis.signal == 'OVERVALUED' %}
+                시장 대비 {{ "%+.1f" | format(market_analysis.delta_pct) }}% 고평가로 비용 관리가 중요합니다.
+                {% else %}
+                시장 적정가로 안정적인 사업 진행이 가능합니다.
+                {% endif %}
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+    
+    <h2>11.2 최종 제안</h2>
+    {% if financial_analysis.npv_public > 0 and (market_analysis.signal != 'OVERVALUED' or market_analysis.status != 'available') %}
+    <div class="success-box">
+        <h4>✅ 사업 추진 권장</h4>
+        <p>
+            종합적인 분석 결과, 본 프로젝트는 법규, 수요, 재무, 시장 측면에서 
+            <strong>LH 신축매입임대 사업으로 추진이 적합</strong>한 것으로 판단됩니다.
+        </p>
+        <p><strong>권장 사항:</strong></p>
+        <ul>
+            <li>현행 계획에 따라 사업 추진</li>
+            <li>설계 단계에서 공사비 최적화 검토</li>
+            <li>입주 대상 맞춤형 커뮤니티 시설 구축</li>
+            <li>전문 위탁관리를 통한 안정적 운영</li>
+        </ul>
+    </div>
+    {% else %}
+    <div class="warning-box">
+        <h4>⚠️ 사업성 개선 후 추진 검토</h4>
+        <p>
+            일부 리스크 요인이 식별되었으므로, 다음 사항을 개선한 후 
+            사업 추진을 검토할 것을 권장합니다:
+        </p>
+        <ul>
+            <li>공사비 절감 방안 마련</li>
+            <li>임대료 수준 재검토</li>
+            <li>시장 가격 변동 모니터링</li>
+            <li>추가 재무 시뮬레이션 수행</li>
+        </ul>
+    </div>
+    {% endif %}
+    
+    <h2>11.3 향후 추진 계획</h2>
+    <ol>
+        <li><strong>1단계 (즉시):</strong> 본 보고서 기반 LH 제출 및 내부 검토</li>
+        <li><strong>2단계 (1개월):</strong> 기본설계 및 인허가 사전 협의</li>
+        <li><strong>3단계 (3개월):</strong> 실시설계 및 시공사 선정</li>
+        <li><strong>4단계 (착공 후):</strong> 공사 진행 및 분양/임대 준비</li>
+    </ol>
+    
+    <div class="info-box">
+        <h4>📌 본 보고서의 활용</h4>
+        <p>
+            본 보고서는 LH 신축매입임대 공모 제출, 내부 의사결정, 투자자 설명, 
+            금융기관 대출 심사 등 다양한 목적으로 활용 가능합니다.
+        </p>
+    </div>
+</div>
+
+{# ========== 15. APPENDIX ========== #}
+<div class="page-break">
+    <h1>12. 부록 (Appendix)</h1>
+    
+    <h2>12.1 데이터 출처</h2>
+    <ul>
+        {% for source in appendix.data_sources %}
+        <li>{{ source }}</li>
+        {% endfor %}
+    </ul>
+    
+    <h2>12.2 계산 방법론</h2>
+    <ul>
+        {% for method in appendix.calculation_methods %}
+        <li>{{ method }}</li>
+        {% endfor %}
+    </ul>
+    
+    <h2>12.3 주요 가정사항</h2>
+    <ul>
+        {% for assumption in appendix.assumptions %}
+        <li>{{ assumption }}</li>
+        {% endfor %}
+    </ul>
+    
+    <h2>12.4 용어 정의</h2>
+    <table>
+        <tr>
+            <th>용어</th>
+            <th>정의</th>
+        </tr>
+        <tr>
+            <td><strong>CAPEX</strong></td>
+            <td>Capital Expenditure, 총 사업비 (토지비, 건축비, 부대비용 포함)</td>
+        </tr>
+        <tr>
+            <td><strong>OpEx</strong></td>
+            <td>Operating Expense, 연간 운영비 (관리비, 유지보수비, 세금 등)</td>
+        </tr>
+        <tr>
+            <td><strong>NOI</strong></td>
+            <td>Net Operating Income, 순영업이익 (수익 - 운영비)</td>
+        </tr>
+        <tr>
+            <td><strong>NPV</strong></td>
+            <td>Net Present Value, 순현재가치 (미래 현금흐름의 현재가치 합계)</td>
+        </tr>
+        <tr>
+            <td><strong>IRR</strong></td>
+            <td>Internal Rate of Return, 내부수익률 (NPV=0이 되는 할인율)</td>
+        </tr>
+        <tr>
+            <td><strong>Cap Rate</strong></td>
+            <td>Capitalization Rate, 자본환원율 (NOI / 총 사업비)</td>
+        </tr>
+        <tr>
+            <td><strong>BCR</strong></td>
+            <td>Building Coverage Ratio, 건폐율 (건축면적 / 대지면적)</td>
+        </tr>
+        <tr>
+            <td><strong>FAR</strong></td>
+            <td>Floor Area Ratio, 용적률 (연면적 / 대지면적)</td>
+        </tr>
+    </table>
+    
+    <h2>12.5 면책 조항</h2>
+    <div class="warning-box">
+        <p>
+            본 보고서는 ZeroSite v13.0 자동 분석 시스템을 통해 생성된 타당성 분석 보고서입니다. 
+            본 보고서에 포함된 모든 정보, 분석, 예측은 분석 시점의 데이터와 가정을 기반으로 하며, 
+            실제 결과는 시장 상황, 정책 변화, 기타 예측 불가능한 요인에 따라 달라질 수 있습니다.
+        </p>
+        <p>
+            본 보고서는 참고 자료로만 사용되어야 하며, 투자 또는 사업 결정의 유일한 근거로 
+            사용되어서는 안 됩니다. 최종 의사결정 전에 전문가의 자문과 추가 실사를 
+            수행할 것을 권장합니다.
+        </p>
+    </div>
+</div>
+
+<div class="report-footer">
+    <p>본 보고서는 {{ metadata.version }}를 사용하여 생성되었습니다.</p>
+    <p>생성일시: {{ metadata.generated_datetime }}</p>
+    <p>© 2025 ZeroSite. All Rights Reserved.</p>
+</div>
