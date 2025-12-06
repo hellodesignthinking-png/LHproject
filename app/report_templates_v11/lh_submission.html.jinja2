@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>LH 신축매입임대주택 사업 타당성 보고서</title>
+    <link rel="stylesheet" href="../report_styles_v11/lh_submission.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 11pt;
+            line-height: 1.8;
+            color: #2C3E50;
+        }
+        
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 25mm 20mm;
+            margin: 0 auto;
+            background: white;
+            page-break-after: always;
+        }
+        
+        /* Cover Page */
+        .cover-page {
+            text-align: center;
+            padding-top: 80mm;
+        }
+        
+        .cover-title {
+            font-size: 32pt;
+            font-weight: 700;
+            color: #003A70;
+            margin-bottom: 40mm;
+            line-height: 1.4;
+        }
+        
+        .cover-subtitle {
+            font-size: 18pt;
+            color: #555;
+            margin-bottom: 50mm;
+        }
+        
+        .cover-info {
+            font-size: 13pt;
+            text-align: right;
+            color: #333;
+            line-height: 2;
+        }
+        
+        /* Header */
+        .report-header {
+            border-bottom: 3px solid #003A70;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .report-header h1 {
+            font-size: 20pt;
+            font-weight: 700;
+            color: #003A70;
+        }
+        
+        /* Section */
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 16pt;
+            font-weight: 700;
+            color: #003A70;
+            padding: 10px 15px;
+            background: #E6F2FF;
+            border-left: 5px solid #003A70;
+            margin-bottom: 15px;
+        }
+        
+        .subsection-title {
+            font-size: 13pt;
+            font-weight: 600;
+            color: #2C3E50;
+            margin: 15px 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #ECF0F1;
+        }
+        
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 10pt;
+        }
+        
+        th {
+            background: #003A70;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #ECF0F1;
+        }
+        
+        tr:hover {
+            background: #F8F9FA;
+        }
+        
+        .table-label {
+            font-weight: 600;
+            color: #555;
+            width: 30%;
+        }
+        
+        .table-value {
+            color: #2C3E50;
+        }
+        
+        /* Score Box */
+        .score-box {
+            display: inline-block;
+            background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 24pt;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        /* Grade Badge */
+        .grade-badge {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            line-height: 60px;
+            text-align: center;
+            border-radius: 50%;
+            font-size: 28pt;
+            font-weight: 700;
+            color: white;
+            background: linear-gradient(135deg, #27AE60 0%, #2ECC71 100%);
+        }
+        
+        /* Community Section */
+        .community-box {
+            background: #F8F9FA;
+            border: 2px solid #3498DB;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .community-box h4 {
+            color: #3498DB;
+            font-size: 13pt;
+            margin-bottom: 10px;
+        }
+        
+        .facility-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin: 10px 0;
+        }
+        
+        .facility-item {
+            background: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            border-left: 3px solid #3498DB;
+            font-size: 10pt;
+        }
+        
+        /* Footer */
+        .page-footer {
+            position: fixed;
+            bottom: 15mm;
+            left: 20mm;
+            right: 20mm;
+            text-align: center;
+            font-size: 9pt;
+            color: #95A5A6;
+            border-top: 1px solid #ECF0F1;
+            padding-top: 10px;
+        }
+        
+        @media print {
+            .page { margin: 0; box-shadow: none; }
+            .page-footer { position: fixed; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Cover Page -->
+    <div class="page cover-page">
+        <div class="cover-title">
+            LH 신축매입임대주택<br>
+            사업 타당성 분석 보고서
+        </div>
+        <div class="cover-subtitle">
+            {{ decision.address }}
+        </div>
+        <div class="cover-info">
+            <p><strong>분석 ID:</strong> {{ decision.analysis_id }}</p>
+            <p><strong>분석 일시:</strong> {{ decision.created_at | format_datetime }}</p>
+            <p><strong>주거 유형:</strong> {{ decision.recommended_type }}</p>
+            <p><strong>개발 전략:</strong> {{ "개별 개발" if decision.strategy == "single" else "합필 개발" }}</p>
+        </div>
+    </div>
+    
+    <!-- Page 1: Basic Information -->
+    <div class="page">
+        <div class="report-header">
+            <h1>1. 토지 기본정보</h1>
+        </div>
+        
+        <div class="section">
+            <div class="subsection-title">1.1 대상지 개요</div>
+            <table>
+                <tr>
+                    <td class="table-label">주소</td>
+                    <td class="table-value">{{ decision.address }}</td>
+                </tr>
+                <tr>
+                    <td class="table-label">필지 수</td>
+                    <td class="table-value">{{ decision.parcels | length }}필지</td>
+                </tr>
+                <tr>
+                    <td class="table-label">총 면적</td>
+                    <td class="table-value">
+                        {% set total_area = decision.parcels | sum(attribute='land_area') %}
+                        {{ total_area | format_area }}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="table-label">용도지역</td>
+                    <td class="table-value">{{ decision.parcels[0].land_use_zone }}</td>
+                </tr>
+                <tr>
+                    <td class="table-label">건폐율</td>
+                    <td class="table-value">{{ decision.parcels[0].building_coverage_ratio | format_percent(0) }}</td>
+                </tr>
+                <tr>
+                    <td class="table-label">용적률</td>
+                    <td class="table-value">{{ decision.parcels[0].floor_area_ratio | format_percent(0) }}</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="section">
+            <div class="subsection-title">1.2 건축 가능 규모</div>
+            <table>
+                <tr>
+                    <td class="table-label">최대 건축면적</td>
+                    <td class="table-value">{{ decision.scale.max_building_area | format_area }}</td>
+                </tr>
+                <tr>
+                    <td class="table-label">최대 연면적</td>
+                    <td class="table-value">{{ decision.scale.max_floor_area | format_area }}</td>
+                </tr>
+                <tr>
+                    <td class="table-label">예상 세대수</td>
+                    <td class="table-value">{{ decision.scale.estimated_units }}세대</td>
+                </tr>
+                <tr>
+                    <td class="table-label">평균 전용면적</td>
+                    <td class="table-value">{{ decision.scale.avg_unit_size | format_area }}</td>
+                </tr>
+                <tr>
+                    <td class="table-label">예상 층수</td>
+                    <td class="table-value">지상 {{ decision.scale.total_floors }}층</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Page 2: LH Evaluation Scores -->
+    <div class="page">
+        <div class="report-header">
+            <h1>2. LH 심사기준 평가</h1>
+        </div>
+        
+        <div class="section">
+            <div class="subsection-title">2.1 항목별 점수</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>평가 항목</th>
+                        <th style="text-align: center;">배점</th>
+                        <th style="text-align: center;">취득 점수</th>
+                        <th style="text-align: center;">달성률</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="table-label">입지 여건</td>
+                        <td style="text-align: center;">25점</td>
+                        <td style="text-align: center;">{{ decision.lh_score.location_score | format_number(1) }}점</td>
+                        <td style="text-align: center;">{{ (decision.lh_score.location_score / 25 * 100) | format_percent(0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="table-label">교통 접근성</td>
+                        <td style="text-align: center;">20점</td>
+                        <td style="text-align: center;">{{ decision.lh_score.transportation_score | format_number(1) }}점</td>
+                        <td style="text-align: center;">{{ (decision.lh_score.transportation_score / 20 * 100) | format_percent(0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="table-label">교육 환경</td>
+                        <td style="text-align: center;">20점</td>
+                        <td style="text-align: center;">{{ decision.lh_score.education_score | format_number(1) }}점</td>
+                        <td style="text-align: center;">{{ (decision.lh_score.education_score / 20 * 100) | format_percent(0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="table-label">생활 편의시설</td>
+                        <td style="text-align: center;">15점</td>
+                        <td style="text-align: center;">{{ decision.lh_score.amenities_score | format_number(1) }}점</td>
+                        <td style="text-align: center;">{{ (decision.lh_score.amenities_score / 15 * 100) | format_percent(0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="table-label">수요 적합성</td>
+                        <td style="text-align: center;">20점</td>
+                        <td style="text-align: center;">{{ decision.lh_score.demand_score | format_number(1) }}점</td>
+                        <td style="text-align: center;">{{ (decision.lh_score.demand_score / 20 * 100) | format_percent(0) }}</td>
+                    </tr>
+                    <tr style="background: #E6F2FF; font-weight: 700;">
+                        <td>총점</td>
+                        <td style="text-align: center;">100점</td>
+                        <td style="text-align: center;">{{ decision.lh_score.total_score | format_number(1) }}점</td>
+                        <td style="text-align: center;">{{ decision.lh_score.total_score | format_percent(0) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="section" style="text-align: center; margin: 30px 0;">
+            <div class="subsection-title">2.2 종합 등급</div>
+            <div style="margin: 20px 0;">
+                <div class="grade-badge">{{ decision.final_grade }}</div>
+            </div>
+            <div style="font-size: 16pt; font-weight: 600; color: #003A70;">
+                {{ decision.final_grade | grade_text }} ({{ decision.lh_score.grade }})
+            </div>
+        </div>
+    </div>
+    
+    <!-- Page 3: Financial Analysis -->
+    <div class="page">
+        <div class="report-header">
+            <h1>3. 사업비 및 수익성 분석</h1>
+        </div>
+        
+        <div class="section">
+            <div class="subsection-title">3.1 총 사업비 (CAPEX)</div>
+            <table>
+                <tr>
+                    <td class="table-label">토지 매입비</td>
+                    <td class="table-value">{{ decision.capex.land_acquisition | format_currency }}</td>
+                </tr>
+                <tr>
+                    <td class="table-label">건축 공사비</td>
+                    <td class="table-value">{{ decision.capex.construction_cost | format_currency }}</td>
+                </tr>
+                <tr>
+                    <td class="table-label">설계 감리비</td>
+                    <td class="table-value">{{ decision.capex.design_supervision | format_currency }}</td>
+                </tr>
+                <tr>
+                    <td class="table-label">금융 비용</td>
+                    <td class="table-value">{{ decision.capex.financing_cost | format_currency }}</td>
+                </tr>
+                <tr>
+                    <td class="table-label">예비비</td>
+                    <td class="table-value">{{ decision.capex.contingency | format_currency }}</td>
+                </tr>
+                <tr style="background: #E6F2FF; font-weight: 700;">
+                    <td>총 사업비</td>
+                    <td>{{ decision.capex.total_capex | format_currency }}</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="section">
+            <div class="subsection-title">3.2 수익성 지표</div>
+            <table>
+                <tr>
+                    <td class="table-label">ROI (투자수익률)</td>
+                    <td class="table-value" style="font-weight: 700; color: #27AE60;">{{ decision.roi.roi_percent | format_percent(2) }}</td>
+                </tr>
+                <tr>
+                    <td class="table-label">IRR (내부수익률)</td>
+                    <td class="table-value" style="font-weight: 700; color: #27AE60;">{{ decision.roi.irr_percent | format_percent(2) }}</td>
+                </tr>
+                <tr>
+                    <td class="table-label">NPV (순현재가치)</td>
+                    <td class="table-value">{{ decision.roi.npv | format_currency }}</td>
+                </tr>
+                <tr>
+                    <td class="table-label">회수 기간</td>
+                    <td class="table-value">{{ (decision.roi.payback_period_months / 12) | format_number(1) }}년</td>
+                </tr>
+                <tr>
+                    <td class="table-label">연간 임대 수익</td>
+                    <td class="table-value">{{ decision.roi.annual_rental_income | format_currency }}</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="section">
+            <div class="subsection-title">3.3 감정평가 (Phase 7)</div>
+            <table>
+                <tr>
+                    <td class="table-label">㎡당 추정가</td>
+                    <td class="table-value">{{ decision.comparable_valuation.estimated_price_per_m2 | format_currency }}</td>
+                </tr>
+                <tr>
+                    <td class="table-label">총 추정가</td>
+                    <td class="table-value">{{ decision.comparable_valuation.estimated_total_price | format_currency }}</td>
+                </tr>
+                <tr>
+                    <td class="table-label">신뢰도</td>
+                    <td class="table-value">{{ (decision.comparable_valuation.confidence_level * 100) | format_percent(0) }}</td>
+                </tr>
+                <tr>
+                    <td class="table-label">비교 거래 건수</td>
+                    <td class="table-value">{{ decision.comparable_valuation.comparable_transactions }}건</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Page 4: Community Module -->
+    {% if decision.community %}
+    <div class="page">
+        <div class="report-header">
+            <h1>4. 커뮤니티 시설 계획</h1>
+        </div>
+        
+        <div class="section">
+            <div class="community-box">
+                <h4>{{ decision.community.module_name }}</h4>
+                <p style="margin: 10px 0; line-height: 1.8;">{{ decision.community.narrative }}</p>
+                
+                <div class="subsection-title" style="font-size: 11pt; margin-top: 15px;">제공 시설</div>
+                <div class="facility-list">
+                    {% for facility in decision.community.facilities %}
+                    <div class="facility-item">{{ facility }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="subsection-title" style="font-size: 11pt; margin-top: 15px;">기대 효과</div>
+                <ul style="margin: 10px 0 10px 20px;">
+                    {% for benefit in decision.community.benefits %}
+                    <li style="padding: 5px 0;">{{ benefit }}</li>
+                    {% endfor %}
+                </ul>
+                
+                <table style="margin-top: 15px;">
+                    <tr>
+                        <td class="table-label">소요 면적</td>
+                        <td class="table-value">{{ decision.community.space_requirement_m2 | format_area }}</td>
+                    </tr>
+                    <tr>
+                        <td class="table-label">추정 비용</td>
+                        <td class="table-value">{{ decision.community.estimated_cost | format_currency }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Page 5: Conclusion -->
+    <div class="page">
+        <div class="report-header">
+            <h1>5. 종합 의견</h1>
+        </div>
+        
+        <div class="section">
+            <div class="subsection-title">5.1 사업 추진 의견</div>
+            <div style="text-align: center; margin: 20px 0;">
+                <div class="score-box">
+                    {% if decision.recommendation == "GO" %}
+                        ✓ 사업 추진 권장
+                    {% elif decision.recommendation == "IMPROVE" %}
+                        ⚠ 보완 후 재검토
+                    {% else %}
+                        ✗ 사업 추진 비권장
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="subsection-title">5.2 핵심 강점</div>
+            <ul style="margin: 10px 0 10px 20px;">
+                {% for strength in decision.key_strengths %}
+                <li style="padding: 5px 0;">{{ strength }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <div class="section">
+            <div class="subsection-title">5.3 주요 약점</div>
+            <ul style="margin: 10px 0 10px 20px;">
+                {% for weakness in decision.key_weaknesses %}
+                <li style="padding: 5px 0;">{{ weakness }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <div class="section">
+            <div class="subsection-title">5.4 향후 조치사항</div>
+            <ol style="margin: 10px 0 10px 20px;">
+                {% for step in decision.next_steps %}
+                <li style="padding: 5px 0;">{{ step }}</li>
+                {% endfor %}
+            </ol>
+        </div>
+        
+        <div style="margin-top: 50px; text-align: center; padding: 20px; background: #F8F9FA; border-radius: 10px;">
+            <p style="font-size: 10pt; color: #7F8C8D;">본 보고서는 ZeroSite AI 분석 시스템을 통해 생성되었습니다.</p>
+            <p style="font-size: 9pt; color: #95A5A6; margin-top: 5px;">
+                보고서 ID: {{ decision.analysis_id }} | 생성일시: {{ decision.created_at | format_datetime }}
+            </p>
+        </div>
+    </div>
+</body>
+</html>
