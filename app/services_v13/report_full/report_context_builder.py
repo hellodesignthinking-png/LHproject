@@ -61,12 +61,18 @@ except ImportError:
 # Narrative Interpreter
 from app.services_v13.report_full.narrative_interpreter import NarrativeInterpreter
 
-# Phase 2: Competitive Analysis
+# Phase 2: Competitive Analysis & Risk Enhancement
 try:
     from app.services_v13.report_full.competitive_analyzer import CompetitiveAnalyzer
     COMPETITIVE_ANALYSIS_AVAILABLE = True
 except ImportError:
     COMPETITIVE_ANALYSIS_AVAILABLE = False
+
+try:
+    from app.services_v13.report_full.risk_enhancer import RiskEnhancer
+    RISK_ENHANCEMENT_AVAILABLE = True
+except ImportError:
+    RISK_ENHANCEMENT_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -226,11 +232,16 @@ class ReportContextBuilder:
         else:
             self.market_analyzer = None
         
-        # Phase 2: Competitive Analysis
+        # Phase 2: Competitive Analysis & Risk Enhancement
         if COMPETITIVE_ANALYSIS_AVAILABLE:
             self.competitive_analyzer = CompetitiveAnalyzer()
         else:
             self.competitive_analyzer = None
+        
+        if RISK_ENHANCEMENT_AVAILABLE:
+            self.risk_enhancer = RiskEnhancer()
+        else:
+            self.risk_enhancer = None
         
         # Narrative Interpreter
         self.narrative_interpreter = NarrativeInterpreter()
@@ -2104,7 +2115,7 @@ class ReportContextBuilder:
         }
         logger.info("✅ Phase 1, Task 1.1: Executive Summary Scorecard calculated")
         
-        # Step 2.1: Perform Competitive Analysis (Phase 2, Task 2.1)
+        # Step 2.1: Perform Competitive Analysis (Phase 2, Tasks 2.1-2.2)
         if self.competitive_analyzer:
             try:
                 project_housing_type = context.get('demand', {}).get('recommended_type', 'youth')
@@ -2123,12 +2134,29 @@ class ReportContextBuilder:
                     address=address,
                     coordinates=coordinates,
                     project_housing_type=project_housing_type,
-                    project_avg_rent=project_avg_rent
+                    project_avg_rent=project_avg_rent,
+                    project_amenities_score=75,  # Default, could be parameterized
+                    project_unit_size=avg_unit_size
                 )
-                logger.info("✅ Phase 2, Task 2.1: Competitive Analysis completed")
+                logger.info("✅ Phase 2, Tasks 2.1-2.2: Competitive Analysis + Price/Differentiation completed")
             except Exception as e:
                 logger.warning(f"Competitive analysis failed: {e}")
                 context['competitive_analysis'] = {'total_competitors': 0, 'projects': []}
+        
+        # Step 2.2: Enhance Risk Analysis (Phase 2, Tasks 2.3-2.5)
+        if self.risk_enhancer and 'risk_analysis' in context:
+            try:
+                enhanced_risks = self.risk_enhancer.enhance_risk_analysis(
+                    base_risk_analysis=context['risk_analysis'],
+                    finance_data=context.get('finance', {}),
+                    market_data=context.get('market', {}),
+                    demand_data=context.get('demand', {})
+                )
+                # Merge enhanced risks back into context
+                context['risk_analysis']['enhanced'] = enhanced_risks
+                logger.info("✅ Phase 2, Tasks 2.3-2.5: Enhanced Risk Analysis (Matrix + Top10 + Exit) completed")
+            except Exception as e:
+                logger.warning(f"Risk enhancement failed: {e}")
         
         # Step 3: Generate Expert Edition layers
         try:
