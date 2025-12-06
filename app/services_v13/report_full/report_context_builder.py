@@ -1050,3 +1050,68 @@ class ReportContextBuilder:
             'confidence': confidence,
             'conditions': conditions if recommendation in ['CONDITIONAL', 'REVISE'] else None
         }
+
+    def build_expert_context(
+        self,
+        address: str,
+        land_area_sqm: float,
+        coordinates: Optional[Tuple[float, float]] = None,
+        multi_parcel: bool = False,
+        parcels: Optional[List[Dict[str, Any]]] = None,
+        additional_params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        Build EXPERT EDITION CONTEXT (v3) with additional analysis layers
+        
+        This extends build_context() with:
+        - Policy Framework Analysis (8-10 pages)
+        - 36-Month Implementation Roadmap (2-3 pages)
+        - Academic Conclusion (4-6 pages)
+        
+        Total expected output: 45-60 pages (Expert Edition)
+        
+        Args:
+            Same as build_context()
+        
+        Returns:
+            Extended REPORT_CONTEXT with expert analysis layers
+        """
+        logger.info(f"🎓 Building EXPERT EDITION CONTEXT for: {address}")
+        
+        # Step 1: Build base context using existing method
+        context = self.build_context(
+            address=address,
+            land_area_sqm=land_area_sqm,
+            coordinates=coordinates,
+            multi_parcel=multi_parcel,
+            parcels=parcels,
+            additional_params=additional_params
+        )
+        
+        # Step 2: Generate Expert Edition layers
+        try:
+            from app.services_v13.report_full.policy_generator import PolicyGenerator
+            from app.services_v13.report_full.roadmap_generator import RoadmapGenerator
+            from app.services_v13.report_full.academic_generator import AcademicGenerator
+            
+            policy_gen = PolicyGenerator()
+            roadmap_gen = RoadmapGenerator()
+            academic_gen = AcademicGenerator()
+            
+            # Generate expert analysis
+            context['policy_framework'] = policy_gen.generate_policy_analysis(context)
+            context['implementation_roadmap'] = roadmap_gen.generate_roadmap(context)
+            context['academic_conclusion'] = academic_gen.generate_academic_conclusion(context)
+            
+            # Update metadata for Expert Edition
+            context['metadata']['report_type'] = 'LH_SUBMISSION_EXPERT_EDITION_V3'
+            context['metadata']['page_count_estimated'] = '45-60'
+            context['metadata']['version'] = 'ZeroSite v13.0 Expert Edition'
+            
+            logger.info("✅ EXPERT EDITION CONTEXT complete")
+            
+        except Exception as e:
+            logger.error(f"Expert analysis generation failed: {e}")
+            logger.warning("Falling back to Full Edition context")
+        
+        return context
