@@ -843,4 +843,132 @@ class ReportContextBuilder:
                 'level': 'YELLOW',
                 'description': '대규모 프로젝트로 공사비 관리 중요',
                 'mitigation': 'CM/감리 체계 강화, 단계별 점검',
-          
+                'impact': '공사비 증가 리스크'
+            }
+        else:
+            return {
+                'level': 'GREEN',
+                'description': '표준 규모의 공사 리스크',
+                'mitigation': '일반 감리 및 품질 관리',
+                'impact': '낮음'
+            }
+    
+    def _assess_financial_risk(self, finance: Dict[str, Any]) -> Dict[str, Any]:
+        """Assess financial risk"""
+        npv = finance['npv']['public']
+        irr = finance['irr']['public']
+        
+        if npv < 0 or irr < 0:
+            return {
+                'level': 'RED',
+                'description': '재무적 타당성 부족',
+                'mitigation': '사업 구조 재설계 필요',
+                'impact': '사업 중단 가능'
+            }
+        elif irr < 2.0:
+            return {
+                'level': 'YELLOW',
+                'description': '낮은 수익률',
+                'mitigation': '비용 절감 및 수익 개선 필요',
+                'impact': '수익성 개선 요구'
+            }
+        else:
+            return {
+                'level': 'GREEN',
+                'description': '양호한 재무 구조',
+                'mitigation': '현 수준 유지',
+                'impact': '안정적'
+            }
+    
+    def _translate_housing_type(self, housing_type: str) -> str:
+        """Translate English housing type to Korean"""
+        type_map = {
+            'youth': '청년형',
+            'newlyweds': '신혼부부형',
+            'newlyweds_growth': '신혼부부 성장형',
+            'multichild': '다자녀형',
+            'senior': '고령자형'
+        }
+        return type_map.get(housing_type, housing_type)
+    
+    def _extract_region(self, address: str) -> str:
+        """Extract region from address"""
+        if '서울' in address:
+            return '서울'
+        elif '경기' in address:
+            return '경기'
+        elif '인천' in address:
+            return '인천'
+        else:
+            return '기타'
+    
+    def _get_coordinates(self, address: str) -> tuple:
+        """Get coordinates for address (stub)"""
+        # Default Seoul coordinates
+        return (37.5665, 126.9780)
+    
+    def _generate_project_code(self, address: str) -> str:
+        """Generate unique project code"""
+        timestamp = datetime.now().strftime('%Y%m%d')
+        address_hash = hash(address) % 10000
+        return f"ZS-{timestamp}-{address_hash:04d}"
+    
+    def _build_decision_section(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Build final decision section"""
+        npv = context['finance']['npv']['public']
+        irr = context['finance']['irr']['public']
+        overall_risk = context['risk_analysis']['overall_level']
+        demand_score = context['demand']['overall_score']
+        
+        # Decision logic
+        if npv >= 0 and irr >= 2.0 and overall_risk == 'LOW':
+            recommendation = 'GO'
+            confidence = 'high'
+            reasoning = [
+                f'긍정적 NPV ({npv/100_000_000:+.2f}억원)로 재무적 타당성 확보',
+                f'IRR {irr:.2f}%로 목표 수익률 달성',
+                '전반적인 리스크 수준이 낮아 안정적 추진 가능'
+            ]
+            conditions = []
+        elif npv >= 0 and irr >= 1.5:
+            recommendation = 'CONDITIONAL'
+            confidence = 'medium'
+            reasoning = [
+                f'NPV {npv/100_000_000:+.2f}억원으로 수익성 있으나 낮은 수준',
+                '리스크 관리 강화 필요',
+                '시장 조건 개선 시 추진 가능'
+            ]
+            conditions = [
+                '공사비 10% 절감',
+                '임대료 5% 상향 검토',
+                '리스크 완화 조치 이행'
+            ]
+        elif npv < 0 and npv > -50_000_000_00:  # -50억원 이하
+            recommendation = 'REVISE'
+            confidence = 'medium'
+            reasoning = [
+                f'NPV {npv/100_000_000:+.2f}억원으로 재무적 타당성 부족',
+                '사업 구조 대폭 개선 필요',
+                '대지 규모 확대 또는 개발 계획 변경 권장'
+            ]
+            conditions = [
+                '대지 면적 최소 2배 확대',
+                '인근 필지 병합 검토',
+                '개발 계획 전면 재설계'
+            ]
+        else:
+            recommendation = 'NO-GO'
+            confidence = 'high'
+            reasoning = [
+                f'NPV {npv/100_000_000:+.2f}억원으로 심각한 재무적 손실 예상',
+                f'IRR {irr:.2f}%로 투자 회수 불가능',
+                '현 조건에서는 사업 추진 불가'
+            ]
+            conditions = []
+        
+        return {
+            'recommendation': recommendation,
+            'reasoning': reasoning,
+            'confidence': confidence,
+            'conditions': conditions if recommendation in ['CONDITIONAL', 'REVISE'] else None
+        }
