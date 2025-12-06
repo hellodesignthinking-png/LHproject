@@ -19,7 +19,7 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 from dataclasses import dataclass, asdict
 
-from app.config.mvp_config import get_mvp_config
+from app.mvp_config_pkg.mvp_config import get_mvp_config
 from app.services_v9.address_resolver_v9_0 import AddressResolverV9
 from app.services_v9.zoning_auto_mapper_v9_0 import ZoningAutoMapperV9
 

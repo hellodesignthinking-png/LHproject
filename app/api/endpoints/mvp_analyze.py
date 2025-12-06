@@ -340,7 +340,7 @@ async def mvp_analyze(request: MVPAnalyzeRequest):
 )
 async def get_mvp_config():
     """Get current MVP configuration"""
-    from app.config.mvp_config import get_mvp_config
+    from app.mvp_config_pkg.mvp_config import get_mvp_config
     
     config = get_mvp_config()
     
@@ -370,7 +370,7 @@ async def get_mvp_config():
 )
 async def update_mvp_config(updates: Dict[str, Any]):
     """Update MVP configuration"""
-    from app.config.mvp_config import update_mvp_config
+    from app.mvp_config_pkg.mvp_config import update_mvp_config
     
     try:
         updated_config = update_mvp_config(**updates)
