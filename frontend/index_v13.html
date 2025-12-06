@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite v13.0 - LH 신축매입임대 보고서 생성</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 60px 50px;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .logo h1 {
+            color: #2165D1;
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .logo .version {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        
+        .form-group {
+            margin-bottom: 30px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 18px 20px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        
+        .form-group input[type="text"]:focus {
+            outline: none;
+            border-color: #2165D1;
+            box-shadow: 0 0 0 3px rgba(33, 101, 209, 0.1);
+        }
+        
+        .form-group input[type="text"]::placeholder {
+            color: #999;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            cursor: pointer;
+        }
+        
+        .checkbox-group label {
+            color: #555;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        
+        .btn-generate {
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(135deg, #2165D1 0%, #1a4fa0 100%);
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(33, 101, 209, 0.4);
+        }
+        
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(33, 101, 209, 0.5);
+        }
+        
+        .btn-generate:active {
+            transform: translateY(0);
+        }
+        
+        .btn-generate:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        .info-box {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-left: 4px solid #2165D1;
+            border-radius: 8px;
+        }
+        
+        .info-box h3 {
+            color: #2165D1;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        .info-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .info-box li {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .info-box li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #2165D1;
+            font-weight: bold;
+        }
+        
+        .error-message {
+            display: none;
+            padding: 15px;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            color: #856404;
+            margin-bottom: 20px;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>ZeroSite</h1>
+            <div class="version">v13.0 - LH Official Report Generator</div>
+        </div>
+        
+        <div class="subtitle">
+            주소를 입력하시면<br>
+            <strong>30-50페이지 LH 공식 제출 보고서</strong>를 생성합니다
+        </div>
+        
+        <div class="error-message" id="errorMessage"></div>
+        
+        <form id="reportForm">
+            <div class="form-group">
+                <label for="address">대상지 주소 *</label>
+                <input 
+                    type="text" 
+                    id="address" 
+                    name="address" 
+                    placeholder="예: 서울시 강남구 역삼동 123" 
+                    required
+                    autocomplete="off"
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="landArea">대지면적 (㎡) *</label>
+                <input 
+                    type="text" 
+                    id="landArea" 
+                    name="landArea" 
+                    placeholder="예: 500" 
+                    required
+                    autocomplete="off"
+                >
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="merge" name="merge">
+                <label for="merge">다필지 합필 분석</label>
+            </div>
+            
+            <button type="submit" class="btn-generate" id="generateBtn">
+                📊 LH 보고서 생성하기
+            </button>
+        </form>
+        
+        <div class="info-box">
+            <h3>📦 보고서에 포함되는 내용</h3>
+            <ul>
+                <li>재무 타당성 분석 (NPV, IRR, Payback)</li>
+                <li>지역 수요 분석 (AI 기반)</li>
+                <li>시장 분석 (실시간 시장 신호)</li>
+                <li>LH 공식 검증 공사비</li>
+                <li>15개 섹션 종합 분석</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        const form = document.getElementById('reportForm');
+        const generateBtn = document.getElementById('generateBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Validate inputs
+            const address = document.getElementById('address').value.trim();
+            const landArea = document.getElementById('landArea').value.trim();
+            const merge = document.getElementById('merge').checked;
+            
+            if (!address) {
+                showError('주소를 입력해주세요.');
+                return;
+            }
+            
+            if (!landArea || isNaN(landArea) || parseFloat(landArea) <= 0) {
+                showError('올바른 대지면적을 입력해주세요.');
+                return;
+            }
+            
+            // Disable button
+            generateBtn.disabled = true;
+            generateBtn.textContent = '보고서 생성 중...';
+            
+            try {
+                // Call API
+                const response = await fetch('/api/v13/report', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        address: address,
+                        land_area_sqm: parseFloat(landArea),
+                        merge: merge
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('보고서 생성에 실패했습니다.');
+                }
+                
+                const data = await response.json();
+                
+                // Redirect to progress page
+                window.location.href = `/progress.html?report_id=${data.report_id}`;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showError('보고서 생성 중 오류가 발생했습니다. 다시 시도해주세요.');
+                generateBtn.disabled = false;
+                generateBtn.textContent = '📊 LH 보고서 생성하기';
+            }
+        });
+        
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+            setTimeout(() => {
+                errorMessage.classList.remove('show');
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

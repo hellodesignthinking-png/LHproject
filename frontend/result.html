@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite - 보고서 완성</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 60px 50px;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        .success-icon {
+            text-align: center;
+            font-size: 80px;
+            margin-bottom: 30px;
+            animation: scaleIn 0.5s ease-out;
+        }
+        
+        @keyframes scaleIn {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .logo h1 {
+            color: #2165D1;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        
+        .success-message {
+            text-align: center;
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        
+        .sub-message {
+            text-align: center;
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 40px;
+        }
+        
+        .summary-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .summary-title {
+            font-size: 20px;
+            color: #2165D1;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .summary-title::before {
+            content: "📊";
+            margin-right: 10px;
+            font-size: 24px;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .summary-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #2165D1;
+        }
+        
+        .summary-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .summary-value {
+            font-size: 24px;
+            color: #333;
+            font-weight: 700;
+        }
+        
+        .summary-value.positive {
+            color: #28a745;
+        }
+        
+        .summary-value.negative {
+            color: #dc3545;
+        }
+        
+        .summary-value.neutral {
+            color: #2165D1;
+        }
+        
+        .btn-download {
+            width: 100%;
+            padding: 22px;
+            background: linear-gradient(135deg, #28a745 0%, #20833a 100%);
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.5);
+        }
+        
+        .btn-download::before {
+            content: "📥";
+            margin-right: 10px;
+            font-size: 24px;
+        }
+        
+        .btn-new-report {
+            width: 100%;
+            padding: 18px;
+            background: white;
+            color: #2165D1;
+            font-size: 16px;
+            font-weight: 600;
+            border: 2px solid #2165D1;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-new-report:hover {
+            background: #2165D1;
+            color: white;
+        }
+        
+        .report-info {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .report-info h3 {
+            color: #856404;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        .report-info ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .report-info li {
+            color: #856404;
+            font-size: 14px;
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .report-info li:before {
+            content: "•";
+            position: absolute;
+            left: 5px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2165D1;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>보고서 정보를 불러오는 중...</p>
+        </div>
+        
+        <div id="content" style="display: none;">
+            <div class="success-icon">✅</div>
+            
+            <div class="logo">
+                <h1>ZeroSite v13.0</h1>
+            </div>
+            
+            <div class="success-message">
+                보고서 생성 완료!
+            </div>
+            
+            <div class="sub-message">
+                30-50페이지 LH 공식 제출 보고서가 준비되었습니다
+            </div>
+            
+            <div class="summary-section">
+                <div class="summary-title">핵심 요약</div>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <div class="summary-label">주소</div>
+                        <div class="summary-value neutral" id="address">-</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">추천 유형</div>
+                        <div class="summary-value neutral" id="housingType">-</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">NPV (공공 2%)</div>
+                        <div class="summary-value" id="npv">-</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">IRR</div>
+                        <div class="summary-value" id="irr">-</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">투자회수기간</div>
+                        <div class="summary-value neutral" id="payback">-</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">시장 신호</div>
+                        <div class="summary-value" id="marketSignal">-</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="report-info">
+                <h3>📦 보고서 포함 내용</h3>
+                <ul>
+                    <li>15개 섹션 종합 분석</li>
+                    <li>재무 타당성 분석 (NPV, IRR, Payback Period)</li>
+                    <li>AI 기반 지역 수요 분석 (Phase 6.8)</li>
+                    <li>실시간 시장 분석 (Phase 7.7)</li>
+                    <li>LH 공식 검증 공사비 (Phase 8)</li>
+                    <li>시나리오 비교 및 리스크 분석</li>
+                </ul>
+            </div>
+            
+            <button class="btn-download" id="downloadBtn">
+                LH 공식 보고서 다운로드 (PDF)
+            </button>
+            
+            <button class="btn-new-report" onclick="window.location.href='/index_v13.html'">
+                새로운 보고서 생성하기
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        // Get report_id from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const reportId = urlParams.get('report_id');
+        
+        if (!reportId) {
+            alert('잘못된 접근입니다.');
+            window.location.href = '/index_v13.html';
+        }
+        
+        // Load report summary
+        async function loadReportSummary() {
+            try {
+                const response = await fetch(`/api/v13/report/${reportId}/summary`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load report summary');
+                }
+                
+                const data = await response.json();
+                
+                // Update UI with summary data
+                document.getElementById('address').textContent = data.address || '-';
+                document.getElementById('housingType').textContent = data.housing_type || '-';
+                
+                // NPV
+                const npv = data.npv_public || 0;
+                const npvElement = document.getElementById('npv');
+                npvElement.textContent = `${(npv / 100000000).toFixed(2)}억원`;
+                npvElement.classList.add(npv > 0 ? 'positive' : 'negative');
+                
+                // IRR
+                const irr = data.irr || 0;
+                const irrElement = document.getElementById('irr');
+                irrElement.textContent = `${irr.toFixed(2)}%`;
+                irrElement.classList.add(irr > 5 ? 'positive' : irr > 2 ? 'neutral' : 'negative');
+                
+                // Payback
+                const payback = data.payback_period || 0;
+                document.getElementById('payback').textContent = `${payback.toFixed(1)}년`;
+                
+                // Market Signal
+                const signal = data.market_signal || 'FAIR';
+                const signalElement = document.getElementById('marketSignal');
+                signalElement.textContent = signal;
+                signalElement.classList.add(
+                    signal === 'UNDERVALUED' ? 'positive' : 
+                    signal === 'OVERVALUED' ? 'negative' : 'neutral'
+                );
+                
+                // Show content
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error loading summary:', error);
+                alert('보고서 정보를 불러오는데 실패했습니다.');
+            }
+        }
+        
+        // Download PDF
+        document.getElementById('downloadBtn').addEventListener('click', async () => {
+            try {
+                const button = document.getElementById('downloadBtn');
+                button.disabled = true;
+                button.textContent = '다운로드 중...';
+                
+                const response = await fetch(`/api/v13/report/${reportId}`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to download report');
+                }
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `LH_Report_${reportId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                button.disabled = false;
+                button.innerHTML = '📥 LH 공식 보고서 다운로드 (PDF)';
+                
+            } catch (error) {
+                console.error('Error downloading report:', error);
+                alert('보고서 다운로드에 실패했습니다.');
+                const button = document.getElementById('downloadBtn');
+                button.disabled = false;
+                button.innerHTML = '📥 LH 공식 보고서 다운로드 (PDF)';
+            }
+        });
+        
+        // Load summary on page load
+        loadReportSummary();
+    </script>
+</body>
+</html>

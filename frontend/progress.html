@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite - 보고서 생성 중</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 60px 50px;
+            max-width: 700px;
+            width: 100%;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .logo h1 {
+            color: #2165D1;
+            font-size: 36px;
+            font-weight: 700;
+        }
+        
+        .status-message {
+            text-align: center;
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 40px;
+            font-weight: 600;
+        }
+        
+        .progress-container {
+            margin-bottom: 40px;
+        }
+        
+        .progress-bar-bg {
+            width: 100%;
+            height: 30px;
+            background: #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2165D1 0%, #1a4fa0 100%);
+            border-radius: 15px;
+            width: 0%;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+        
+        .progress-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent
+            );
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .progress-percentage {
+            text-align: center;
+            font-size: 48px;
+            font-weight: 700;
+            color: #2165D1;
+            margin-top: 20px;
+        }
+        
+        .steps {
+            margin-top: 40px;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            transition: all 0.3s;
+        }
+        
+        .step.active {
+            background: #e3f2fd;
+            border-left: 4px solid #2165D1;
+        }
+        
+        .step.completed {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+        
+        .step-icon {
+            font-size: 24px;
+            margin-right: 15px;
+            min-width: 30px;
+        }
+        
+        .step.completed .step-icon {
+            color: #28a745;
+        }
+        
+        .step.active .step-icon {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .step-text {
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .step.active .step-text {
+            color: #2165D1;
+            font-weight: 600;
+        }
+        
+        .info-text {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-top: 30px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>ZeroSite v13.0</h1>
+        </div>
+        
+        <div class="status-message" id="statusMessage">
+            보고서 생성 중...
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+            <div class="progress-percentage" id="progressPercentage">0%</div>
+        </div>
+        
+        <div class="steps">
+            <div class="step" id="step1">
+                <div class="step-icon">🔍</div>
+                <div class="step-text">입지 및 법규 분석</div>
+            </div>
+            <div class="step" id="step2">
+                <div class="step-icon">📊</div>
+                <div class="step-text">지역 수요 분석 (AI)</div>
+            </div>
+            <div class="step" id="step3">
+                <div class="step-icon">💰</div>
+                <div class="step-text">공사비 및 CAPEX 계산</div>
+            </div>
+            <div class="step" id="step4">
+                <div class="step-icon">📈</div>
+                <div class="step-text">재무 타당성 분석 (NPV/IRR)</div>
+            </div>
+            <div class="step" id="step5">
+                <div class="step-icon">🏢</div>
+                <div class="step-text">시장 분석 및 리스크 평가</div>
+            </div>
+            <div class="step" id="step6">
+                <div class="step-icon">📄</div>
+                <div class="step-text">LH 공식 보고서 작성</div>
+            </div>
+        </div>
+        
+        <div class="info-text">
+            잠시만 기다려주세요. 곧 완성됩니다!<br>
+            보고서는 30-50페이지 분량의 LH 공식 제출 문서입니다.
+        </div>
+    </div>
+    
+    <script>
+        // Get report_id from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const reportId = urlParams.get('report_id');
+        
+        if (!reportId) {
+            alert('잘못된 접근입니다.');
+            window.location.href = '/index_v13.html';
+        }
+        
+        // Simulate progress (8 seconds)
+        const steps = [
+            { id: 'step1', duration: 1000, progress: 20 },
+            { id: 'step2', duration: 1200, progress: 35 },
+            { id: 'step3', duration: 1500, progress: 50 },
+            { id: 'step4', duration: 1800, progress: 70 },
+            { id: 'step5', duration: 1500, progress: 85 },
+            { id: 'step6', duration: 1000, progress: 100 }
+        ];
+        
+        let currentStep = 0;
+        
+        function updateProgress() {
+            if (currentStep >= steps.length) {
+                // Redirect to result page
+                window.location.href = `/result.html?report_id=${reportId}`;
+                return;
+            }
+            
+            const step = steps[currentStep];
+            const stepElement = document.getElementById(step.id);
+            const progressBar = document.getElementById('progressBar');
+            const progressPercentage = document.getElementById('progressPercentage');
+            
+            // Mark current step as active
+            stepElement.classList.add('active');
+            
+            // Update progress bar
+            progressBar.style.width = step.progress + '%';
+            progressPercentage.textContent = step.progress + '%';
+            
+            // After step duration, mark as completed and move to next
+            setTimeout(() => {
+                stepElement.classList.remove('active');
+                stepElement.classList.add('completed');
+                stepElement.querySelector('.step-icon').textContent = '✓';
+                currentStep++;
+                updateProgress();
+            }, step.duration);
+        }
+        
+        // Start progress simulation
+        setTimeout(() => {
+            updateProgress();
+        }, 500);
+    </script>
+</body>
+</html>
