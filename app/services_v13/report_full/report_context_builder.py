@@ -793,52 +793,268 @@ class ReportContextBuilder:
         return reasoning
     
     def _build_scenario_section(self, finance_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Build scenario comparison section"""
+        """
+        Build comprehensive 5-scenario sensitivity analysis
         
+        Phase 1, Task 1.2: Financial Sensitivity Analysis (5 scenarios)
+        
+        Scenarios:
+        1. Best Case (최상): Cost -5%, Revenue +10%, Occupancy 98%
+        2. Optimistic (낙관): Cost -3%, Revenue +5%, Occupancy 96%
+        3. Base (기본): Current assumptions
+        4. Pessimistic (비관): Cost +5%, Revenue -5%, Occupancy 92%
+        5. Worst Case (최악): Cost +10%, Revenue -10%, Occupancy 88%
+        
+        Returns:
+            {
+                'base': {...},
+                'best_case': {...},
+                'optimistic': {...},
+                'pessimistic': {...},
+                'worst_case': {...},
+                'sensitivity_analysis': {
+                    'cost_sensitivity': {...},
+                    'revenue_sensitivity': {...},
+                    'occupancy_sensitivity': {...},
+                    'break_even_analysis': {...}
+                }
+            }
+        """
+        
+        # Extract base values
         base_capex = finance_data['capex']['total']
+        base_revenue = finance_data['revenue']['annual_rental']
+        base_opex = finance_data['opex']['annual']
         base_npv_public = finance_data['npv']['public']
         base_irr = finance_data['irr']['public']
         base_payback = finance_data['payback']['years']
+        base_occupancy = finance_data['revenue']['occupancy_rate']
+        base_cashflow = finance_data.get('cashflow', [])
         
-        # Optimistic: -3% cost improvement
-        optimistic_capex = base_capex * 0.97
-        optimistic_npv = base_npv_public + (base_capex * 0.03)  # NPV improves
-        optimistic_irr = base_irr * 1.05 if base_irr > 0 else 0
-        optimistic_payback = base_payback * 0.95 if base_payback > 0 else 0
+        # Helper function to recalculate NPV for scenario
+        def calculate_scenario_npv(capex_multiplier, revenue_multiplier, occupancy_rate):
+            adjusted_capex = base_capex * capex_multiplier
+            adjusted_revenue = base_revenue * revenue_multiplier * (occupancy_rate / 100)
+            adjusted_noi = adjusted_revenue - base_opex
+            
+            # Recalculate 10-year cash flow
+            annual_cashflows = []
+            for year in range(10):
+                if year == 0:  # Year 1: ramp-up
+                    cf = adjusted_noi * 0.85
+                else:  # Year 2+: stabilized
+                    cf = adjusted_noi
+                annual_cashflows.append(cf)
+            
+            # Calculate NPV
+            discount_rate = 0.0287  # 2.87% LH official rate
+            npv = sum([cf / ((1 + discount_rate) ** (i + 1)) for i, cf in enumerate(annual_cashflows)]) - adjusted_capex
+            
+            # Calculate IRR
+            try:
+                import numpy as np
+                cash_flows = [-adjusted_capex] + annual_cashflows
+                irr_value = np.irr(cash_flows)
+                if not np.isfinite(irr_value):
+                    irr_value = None
+                else:
+                    irr_value = irr_value * 100  # Convert to percentage
+            except:
+                irr_value = None
+            
+            # Calculate Payback
+            cumulative = 0
+            payback = float('inf')
+            for i, cf in enumerate(annual_cashflows):
+                cumulative += cf
+                if cumulative >= adjusted_capex:
+                    payback = i + 1 + (adjusted_capex - (cumulative - cf)) / cf
+                    break
+            
+            return {
+                'capex': adjusted_capex,
+                'revenue': adjusted_revenue,
+                'noi': adjusted_noi,
+                'npv_public': npv,
+                'irr': irr_value if irr_value else 0,
+                'payback': payback if payback != float('inf') else 0,
+                'occupancy_rate': occupancy_rate
+            }
         
-        # Pessimistic: +7% cost penalty
-        pessimistic_capex = base_capex * 1.07
-        pessimistic_npv = base_npv_public - (base_capex * 0.07)  # NPV worsens
-        pessimistic_irr = base_irr * 0.93 if base_irr > 0 else 0
-        pessimistic_payback = base_payback * 1.10 if base_payback > 0 else 0
+        # Scenario 1: Best Case
+        best_case = calculate_scenario_npv(0.95, 1.10, 98.0)
+        best_case.update({
+            'scenario_name': '최상 시나리오',
+            'scenario_name_en': 'Best Case',
+            'cost_change_pct': -5.0,
+            'revenue_change_pct': +10.0,
+            'description': '공사비 절감 성공, 시장 호황, 높은 입주율'
+        })
+        
+        # Scenario 2: Optimistic
+        optimistic = calculate_scenario_npv(0.97, 1.05, 96.0)
+        optimistic.update({
+            'scenario_name': '낙관 시나리오',
+            'scenario_name_en': 'Optimistic',
+            'cost_change_pct': -3.0,
+            'revenue_change_pct': +5.0,
+            'description': '공사비 약간 절감, 시장 양호, 양호한 입주율'
+        })
+        
+        # Scenario 3: Base
+        base = {
+            'scenario_name': '기본 시나리오',
+            'scenario_name_en': 'Base Case',
+            'capex': base_capex,
+            'revenue': base_revenue,
+            'noi': base_revenue - base_opex,
+            'npv_public': base_npv_public,
+            'irr': base_irr,
+            'payback': base_payback,
+            'occupancy_rate': base_occupancy,
+            'cost_change_pct': 0.0,
+            'revenue_change_pct': 0.0,
+            'description': '현재 가정 기준, 중립적 시장 조건'
+        }
+        
+        # Scenario 4: Pessimistic
+        pessimistic = calculate_scenario_npv(1.05, 0.95, 92.0)
+        pessimistic.update({
+            'scenario_name': '비관 시나리오',
+            'scenario_name_en': 'Pessimistic',
+            'cost_change_pct': +5.0,
+            'revenue_change_pct': -5.0,
+            'description': '공사비 증가, 시장 침체, 낮은 입주율'
+        })
+        
+        # Scenario 5: Worst Case
+        worst_case = calculate_scenario_npv(1.10, 0.90, 88.0)
+        worst_case.update({
+            'scenario_name': '최악 시나리오',
+            'scenario_name_en': 'Worst Case',
+            'cost_change_pct': +10.0,
+            'revenue_change_pct': -10.0,
+            'description': '공사비 대폭 증가, 시장 붕괴, 매우 낮은 입주율'
+        })
+        
+        # Sensitivity Analysis
+        # Cost Sensitivity: NPV impact per 1% cost change
+        cost_npv_sensitivity = -base_capex / 100  # Each 1% cost increase = -CAPEX/100 NPV
+        
+        # Revenue Sensitivity: NPV impact per 1% revenue change
+        revenue_npv_sensitivity = base_revenue * 10 / 100  # Each 1% revenue increase = +Revenue*10y/100 NPV (approx)
+        
+        # Occupancy Sensitivity
+        occupancy_npv_sensitivity = base_revenue * 10 / 100  # Similar to revenue
+        
+        sensitivity_analysis = {
+            'cost_sensitivity': {
+                'npv_per_1pct_change': cost_npv_sensitivity,
+                'npv_per_1pct_change_kr': f"{cost_npv_sensitivity / 1e8:.2f}억원",
+                'description': f"공사비 1% 변동 시 NPV {abs(cost_npv_sensitivity / 1e8):.2f}억원 변동",
+                'impact_level': 'HIGH' if abs(cost_npv_sensitivity) > base_npv_public * 0.1 else 'MEDIUM'
+            },
+            'revenue_sensitivity': {
+                'npv_per_1pct_change': revenue_npv_sensitivity,
+                'npv_per_1pct_change_kr': f"{revenue_npv_sensitivity / 1e8:.2f}억원",
+                'description': f"임대수익 1% 변동 시 NPV {revenue_npv_sensitivity / 1e8:.2f}억원 변동",
+                'impact_level': 'HIGH' if revenue_npv_sensitivity > base_npv_public * 0.05 else 'MEDIUM'
+            },
+            'occupancy_sensitivity': {
+                'npv_per_1pct_change': occupancy_npv_sensitivity,
+                'npv_per_1pct_change_kr': f"{occupancy_npv_sensitivity / 1e8:.2f}억원",
+                'description': f"입주율 1%p 변동 시 NPV {occupancy_npv_sensitivity / 1e8:.2f}억원 변동",
+                'impact_level': 'HIGH'
+            },
+            'break_even_analysis': self._calculate_break_even(base, finance_data)
+        }
+        
+        # Generate summary comparison table
+        scenario_comparison_table = {
+            'scenarios': ['best_case', 'optimistic', 'base', 'pessimistic', 'worst_case'],
+            'npv_range': {
+                'min': worst_case['npv_public'],
+                'max': best_case['npv_public'],
+                'span': best_case['npv_public'] - worst_case['npv_public'],
+                'span_kr': f"{(best_case['npv_public'] - worst_case['npv_public']) / 1e8:.1f}억원"
+            },
+            'irr_range': {
+                'min': worst_case['irr'],
+                'max': best_case['irr'],
+                'span': best_case['irr'] - worst_case['irr'],
+                'span_kr': f"{best_case['irr'] - worst_case['irr']:.2f}%p"
+            },
+            'recommendation': self._generate_scenario_recommendation(
+                best_case, base, worst_case
+            )
+        }
         
         return {
-            'base': {
-                'capex': base_capex,
-                'npv_public': base_npv_public,
-                'irr': base_irr,
-                'payback': base_payback
-            },
-            'optimistic': {
-                'capex': optimistic_capex,
-                'npv_public': optimistic_npv,
-                'irr': optimistic_irr,
-                'payback': optimistic_payback,
-                'cost_change_pct': -3.0
-            },
-            'pessimistic': {
-                'capex': pessimistic_capex,
-                'npv_public': pessimistic_npv,
-                'irr': pessimistic_irr,
-                'payback': pessimistic_payback,
-                'cost_change_pct': +7.0
-            },
-            'sensitivity': {
-                'npv_impact': f"공사비 ±10% 변동 시 NPV는 ±{base_capex * 0.1 / 1e8:.1f}억원 변동",
-                'irr_impact': f"IRR은 ±0.5%p 변동",
-                'conclusion': '공사비 관리가 프로젝트 수익성의 핵심 요소입니다'
-            }
+            'base': base,
+            'best_case': best_case,
+            'optimistic': optimistic,
+            'pessimistic': pessimistic,
+            'worst_case': worst_case,
+            'sensitivity_analysis': sensitivity_analysis,
+            'comparison_table': scenario_comparison_table
         }
+    
+    def _calculate_break_even(self, base_scenario: Dict[str, Any], finance_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate break-even points for key variables"""
+        base_capex = base_scenario['capex']
+        base_revenue = base_scenario['revenue']
+        base_npv = base_scenario['npv_public']
+        
+        # Break-even cost increase: How much can cost increase before NPV=0?
+        if base_npv > 0:
+            break_even_cost_increase_pct = (base_npv / base_capex) * 100
+        else:
+            break_even_cost_increase_pct = 0
+        
+        # Break-even revenue decrease: How much can revenue decrease before NPV=0?
+        if base_npv > 0 and base_revenue > 0:
+            # Rough estimate: NPV_change ≈ Revenue_change * 10 years * discount_factor
+            break_even_revenue_decrease_pct = (base_npv / (base_revenue * 8)) * 100  # ~8 years NPV factor
+        else:
+            break_even_revenue_decrease_pct = 0
+        
+        # Break-even occupancy rate
+        base_occupancy = base_scenario.get('occupancy_rate', 95.0)
+        if base_npv > 0 and base_revenue > 0:
+            required_occupancy_decrease = (base_npv / (base_revenue * 8)) * 100
+            break_even_occupancy = base_occupancy - required_occupancy_decrease
+        else:
+            break_even_occupancy = base_occupancy
+        
+        return {
+            'cost_increase_limit_pct': max(0, break_even_cost_increase_pct),
+            'cost_increase_limit_kr': f"+{break_even_cost_increase_pct:.1f}%",
+            'revenue_decrease_limit_pct': max(0, break_even_revenue_decrease_pct),
+            'revenue_decrease_limit_kr': f"-{break_even_revenue_decrease_pct:.1f}%",
+            'occupancy_minimum': max(0, break_even_occupancy),
+            'occupancy_minimum_kr': f"{break_even_occupancy:.1f}%",
+            'description': f"손익분기: 공사비 +{break_even_cost_increase_pct:.1f}% 또는 수익 -{break_even_revenue_decrease_pct:.1f}% 한계"
+        }
+    
+    def _generate_scenario_recommendation(
+        self, 
+        best_case: Dict[str, Any], 
+        base: Dict[str, Any], 
+        worst_case: Dict[str, Any]
+    ) -> str:
+        """Generate recommendation based on scenario analysis"""
+        base_npv = base['npv_public']
+        worst_npv = worst_case['npv_public']
+        best_npv = best_case['npv_public']
+        
+        if base_npv > 0 and worst_npv > 0:
+            return "모든 시나리오에서 수익성 확보, 안정적 추진 가능"
+        elif base_npv > 0 and worst_npv < 0:
+            return "기본 시나리오는 수익성 있으나, 최악 시나리오 대비 리스크 관리 필요"
+        elif base_npv < 0 and best_npv > 0:
+            return "기본 시나리오는 손실 예상, 최상 시나리오 조건 확보 시에만 추진 가능"
+        else:
+            return "모든 시나리오에서 손실 예상, 사업 구조 전면 재설계 필요"
     
     def _build_risk_section(self, context: Dict[str, Any]) -> Dict[str, Any]:
         """Build comprehensive risk analysis section"""
