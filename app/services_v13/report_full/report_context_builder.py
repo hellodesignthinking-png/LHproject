@@ -826,7 +826,7 @@ class ReportContextBuilder:
         }
     
     def _grade_dscr(self, dscr: float) -> str:
-        \"\"\"Grade DSCR ratio\"\"\"
+        """Grade DSCR ratio"""
         if dscr >= 1.5:
             return 'A'
         elif dscr >= 1.25:
@@ -837,7 +837,7 @@ class ReportContextBuilder:
             return 'D'
     
     def _grade_ltv(self, ltv_pct: float) -> str:
-        \"\"\"Grade LTV ratio\"\"\"
+        """Grade LTV ratio"""
         if ltv_pct <= 60:
             return 'A'
         elif ltv_pct <= 70:
@@ -848,7 +848,7 @@ class ReportContextBuilder:
             return 'D'
     
     def _grade_roi(self, roi_annual: float) -> str:
-        \"\"\"Grade ROI\"\"\"
+        """Grade ROI"""
         if roi_annual >= 5.0:
             return 'A'
         elif roi_annual >= 3.0:
@@ -859,7 +859,7 @@ class ReportContextBuilder:
             return 'D'
     
     def _grade_roe(self, roe_annual: float) -> str:
-        \"\"\"Grade ROE\"\"\"
+        """Grade ROE"""
         if roe_annual >= 10.0:
             return 'A'
         elif roe_annual >= 7.0:
@@ -870,7 +870,7 @@ class ReportContextBuilder:
             return 'D'
     
     def _interpret_dscr(self, dscr: float) -> str:
-        \"\"\"Interpret DSCR value\"\"\"
+        """Interpret DSCR value"""
         if dscr >= 1.5:
             return "매우 안정적인 부채 상환 능력"
         elif dscr >= 1.25:
@@ -881,7 +881,7 @@ class ReportContextBuilder:
             return "부채 상환 불가능, 사업 재구조화 필요"
     
     def _interpret_ltv(self, ltv_pct: float) -> str:
-        \"\"\"Interpret LTV value\"\"\"
+        """Interpret LTV value"""
         if ltv_pct <= 60:
             return "매우 보수적인 레버리지, 재무 안정성 높음"
         elif ltv_pct <= 70:
@@ -892,7 +892,7 @@ class ReportContextBuilder:
             return "과도한 레버리지, 재무 리스크 매우 높음"
     
     def _interpret_roi(self, roi_annual: float) -> str:
-        \"\"\"Interpret ROI value\"\"\"
+        """Interpret ROI value"""
         if roi_annual >= 5.0:
             return "우수한 투자 수익률, 투자 매력도 높음"
         elif roi_annual >= 3.0:
@@ -903,7 +903,7 @@ class ReportContextBuilder:
             return "낮은 수익률, 투자 재검토 필요"
     
     def _interpret_roe(self, roe_annual: float) -> str:
-        \"\"\"Interpret ROE value\"\"\"
+        """Interpret ROE value"""
         if roe_annual >= 10.0:
             return "탁월한 자기자본 수익률"
         elif roe_annual >= 7.0:
