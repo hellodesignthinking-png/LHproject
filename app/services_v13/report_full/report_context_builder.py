@@ -527,11 +527,16 @@ class ReportContextBuilder:
             logger.error(f"Financial engine failed: {e}")
             base_scenario = {}
         
-        # Extract base metrics
-        capex_total = base_scenario.get('capex_total', cost_data['construction']['total'] * 1.3)  # +30% for land/soft
-        annual_revenue = base_scenario.get('annual_revenue', 0)
-        annual_opex = base_scenario.get('year_1_opex', 0)
-        stabilized_noi = base_scenario.get('stabilized_noi', annual_revenue - annual_opex)
+        # Extract base metrics from correct structure
+        capex_data = base_scenario.get('capex', {})
+        opex_data = base_scenario.get('opex', {})
+        noi_data = base_scenario.get('noi', {})
+        return_metrics = base_scenario.get('return_metrics', {})
+        
+        capex_total = capex_data.get('total_capex', cost_data['construction']['total'] * 1.3)
+        annual_opex = opex_data.get('year1_total_opex', 0)
+        stabilized_noi = noi_data.get('noi', 0)  # Correct key is 'noi', not 'stabilized_noi'
+        annual_revenue = noi_data.get('effective_annual_income', stabilized_noi + annual_opex)  # Revenue = NOI + OpEx
         
         finance = {
             'capex': {
@@ -574,16 +579,27 @@ class ReportContextBuilder:
             try:
                 # Generate 10-year cash flow
                 project_period_years = 10
-                annual_cashflows = [stabilized_noi] * project_period_years
+                
+                # Model: Year 1 = 85% of stabilized, Year 2+ = 100% stabilized
+                annual_cashflows = []
+                for year in range(project_period_years):
+                    if year == 0:  # Year 1
+                        cf = stabilized_noi * 0.85  # Ramp-up period
+                    else:  # Year 2+
+                        cf = stabilized_noi
+                    annual_cashflows.append(cf)
                 
                 # Calculate NPV
+                discount_rate_public = self.financial_params['discount_rates']['public']['rate']
+                discount_rate_private = self.financial_params['discount_rates']['private']['rate']
+                
                 npv_public = FinancialEnhanced.npv(
-                    self.financial_params['discount_rates']['public'],
+                    discount_rate_public,
                     annual_cashflows,
                     capex_total
                 )
                 npv_private = FinancialEnhanced.npv(
-                    self.financial_params['discount_rates']['private'],
+                    discount_rate_private,
                     annual_cashflows,
                     capex_total
                 )
@@ -597,9 +613,11 @@ class ReportContextBuilder:
                 # Update finance section
                 finance['npv']['public'] = npv_public
                 finance['npv']['private'] = npv_private
-                finance['irr']['public'] = irr_value
-                finance['irr']['market'] = irr_value * 1.2  # Estimated market IRR
-                finance['payback']['years'] = payback
+                finance['npv']['discount_rate_public'] = discount_rate_public * 100  # Convert to percentage
+                finance['npv']['discount_rate_private'] = discount_rate_private * 100
+                finance['irr']['public'] = irr_value * 100 if irr_value else 0  # Convert to percentage
+                finance['irr']['market'] = irr_value * 1.2 * 100 if irr_value else 0  # Estimated market IRR
+                finance['payback']['years'] = payback if payback else 0
                 
                 # Build cash flow table
                 cumulative = -capex_total
@@ -612,8 +630,12 @@ class ReportContextBuilder:
                         'cf': cf,
                         'cumulative': cumulative
                     })
+                
+                logger.info(f"✅ Enhanced metrics: NPV={npv_public/1e8:.1f}억, IRR={irr_value*100:.2f}%, Payback={payback:.1f}y")
             except Exception as e:
                 logger.warning(f"Enhanced metrics calculation failed: {e}")
+                import traceback
+                logger.warning(traceback.format_exc())
         
         return finance
     

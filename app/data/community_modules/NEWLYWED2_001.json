@@ -1,0 +1,21 @@
+{
+  "module_id": "NEWLYWED2_001",
+  "module_name": "Growing Family Center",
+  "target_type": "Newlyweds_TypeII",
+  "facilities": [
+    "어린이 도서관 (Children's Library)",
+    "실내 놀이터 (Indoor Playground)",
+    "가족 요리교실 (Family Cooking Class)",
+    "미술 공작실 (Arts & Crafts Studio)",
+    "가족 영화관 (Family Theater)"
+  ],
+  "estimated_cost": 200000000,
+  "space_requirement_m2": 300,
+  "narrative": "성장하는 가족을 위한 다목적 커뮤니티 공간입니다. 아이들의 교육과 창의력 발달을 지원하는 시설들이 갖춰져 있으며, 가족 단위 활동을 통해 이웃 간 유대감을 형성할 수 있습니다.",
+  "benefits": [
+    "아동 교육 프로그램 제공",
+    "창의력 발달 지원",
+    "가족 단위 커뮤니티 형성",
+    "안전한 실내 활동 공간"
+  ]
+}

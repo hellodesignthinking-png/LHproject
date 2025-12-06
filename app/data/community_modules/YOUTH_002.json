@@ -1,0 +1,21 @@
+{
+  "module_id": "YOUTH_002",
+  "module_name": "Urban Lifestyle Center",
+  "target_type": "Youth",
+  "facilities": [
+    "코워킹 스페이스 (Co-working Space)",
+    "프리미엄 피트니스 (Premium Fitness)",
+    "무인 카페테리아 (Unmanned Cafeteria)",
+    "VR 체험존 (VR Experience Zone)",
+    "패키지룸 (Package Room)"
+  ],
+  "estimated_cost": 180000000,
+  "space_requirement_m2": 250,
+  "narrative": "도심 라이프스타일을 선도하는 프리미엄 커뮤니티 공간입니다. 최신 트렌드를 반영한 시설들로 구성되어 있으며, 특히 1인 가구 증가 추세에 맞춘 무인 서비스와 스마트 시설이 특징입니다.",
+  "benefits": [
+    "프리미엄 라이프스타일 제공",
+    "스마트 생활 인프라",
+    "1인 가구 최적화 서비스",
+    "안전한 택배 보관 시스템"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "module_id": "MULTICHILD_001",
+  "module_name": "Big Family Support Hub",
+  "target_type": "MultiChild",
+  "facilities": [
+    "대형 키즈카페 (Large Kids Cafe)",
+    "학습 지원센터 (Learning Support Center)",
+    "체육 활동실 (Sports Activity Room)",
+    "공동 식당 (Community Kitchen)",
+    "세탁 & 청소 서비스 (Laundry & Cleaning)"
+  ],
+  "estimated_cost": 250000000,
+  "space_requirement_m2": 350,
+  "narrative": "다자녀 가구를 위한 실질적인 생활 지원 커뮤니티입니다. 여러 자녀를 키우는 데 필요한 공간과 서비스를 제공하며, 특히 공동 식당과 세탁 서비스는 가사 부담을 크게 줄여줍니다.",
+  "benefits": [
+    "다자녀 가구 특화 서비스",
+    "가사 부담 경감",
+    "형제자매 함께 활동 공간",
+    "이웃 간 상호 지원 네트워크"
+  ]
+}
