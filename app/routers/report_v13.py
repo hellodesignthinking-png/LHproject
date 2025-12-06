@@ -169,17 +169,19 @@ async def download_report(report_id: str):
         
         logger.info(f"PDF generated successfully for report {report_id}")
         
-        # Get address for filename
-        address = cached_report['report_data']['site_overview']['address']
-        safe_address = "".join(c for c in address if c.isalnum() or c in (' ', '_')).replace(' ', '_')
-        filename = f"LH_Report_{safe_address}_{report_id[:8]}.pdf"
+        # Get address for filename (use simple ID to avoid encoding issues)
+        filename = f"LH_Report_{report_id[:8]}.pdf"
         
         # Return PDF as streaming response
+        # Use RFC 5987 encoding for non-ASCII characters
+        from urllib.parse import quote
+        encoded_filename = quote(filename)
+        
         return StreamingResponse(
             io.BytesIO(pdf_buffer.read()),
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f'attachment; filename="{filename}"'
+                "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
             }
         )
         
