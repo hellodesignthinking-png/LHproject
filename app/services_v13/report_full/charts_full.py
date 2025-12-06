@@ -832,3 +832,115 @@ def generate_all_financial_charts(
         )
     
     return charts
+
+
+def generate_all_financial_charts_parallel(
+    financial_data: Dict[str, Any],
+    output_dir: Optional[Path] = None,
+    max_workers: int = 4
+) -> Dict[str, str]:
+    """
+    Generate all financial charts in parallel using ThreadPoolExecutor
+    
+    Args:
+        financial_data: Complete financial analysis data
+        output_dir: Output directory (optional)
+        max_workers: Maximum number of parallel workers (default: 4)
+        
+    Returns:
+        Dictionary mapping chart names to paths/base64 strings
+    """
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    import time
+    
+    generator = ChartGenerator(output_dir)
+    charts = {}
+    
+    # Define chart generation tasks
+    tasks = []
+    
+    # Phase 10.5 Charts
+    if 'capex_breakdown' in financial_data:
+        tasks.append(('capex_breakdown', lambda: generator.generate_capex_breakdown_pie(
+            financial_data['capex_breakdown']
+        )))
+    
+    if 'cashflows' in financial_data and 'years' in financial_data:
+        tasks.append(('npv_curve', lambda: generator.generate_npv_discount_curve(
+            financial_data['years'], financial_data['cashflows']
+        )))
+    
+    if all(k in financial_data for k in ['base_irr', 'optimistic_irr', 'pessimistic_irr']):
+        tasks.append(('irr_sensitivity', lambda: generator.generate_irr_sensitivity_table(
+            financial_data['base_irr'],
+            financial_data['optimistic_irr'],
+            financial_data['pessimistic_irr']
+        )))
+    
+    if all(k in financial_data for k in ['years', 'revenues', 'opex']):
+        tasks.append(('opex_revenue', lambda: generator.generate_opex_revenue_timeline(
+            financial_data['years'],
+            financial_data['revenues'],
+            financial_data['opex']
+        )))
+    
+    if all(k in financial_data for k in ['zerosite_value', 'market_avg']):
+        tasks.append(('market_signal', lambda: generator.generate_market_signal_gauge(
+            financial_data['zerosite_value'],
+            financial_data['market_avg']
+        )))
+    
+    if 'demand_scores' in financial_data:
+        tasks.append(('demand_score', lambda: generator.generate_demand_score_bar(
+            financial_data['demand_scores']
+        )))
+    
+    # Phase B Charts
+    if 'milestones' in financial_data:
+        tasks.append(('gantt_chart', lambda: generator.generate_gantt_chart(
+            financial_data['milestones']
+        )))
+    
+    if 'sensitivity_data' in financial_data and 'base_npv' in financial_data:
+        tasks.append(('npv_tornado', lambda: generator.generate_npv_tornado_chart(
+            financial_data['sensitivity_data'],
+            financial_data['base_npv']
+        )))
+    
+    if 'kpis' in financial_data:
+        tasks.append(('financial_scorecard', lambda: generator.generate_financial_scorecard(
+            financial_data['kpis']
+        )))
+    
+    if 'competitors' in financial_data and 'current_project' in financial_data:
+        tasks.append(('competitive_analysis', lambda: generator.generate_competitive_analysis_table(
+            financial_data['competitors'],
+            financial_data['current_project']
+        )))
+    
+    if all(k in financial_data for k in ['years_30', 'revenues_30', 'expenses_30', 'net_cashflows_30']):
+        tasks.append(('cashflow_30year', lambda: generator.generate_30year_cashflow_chart(
+            financial_data['years_30'],
+            financial_data['revenues_30'],
+            financial_data['expenses_30'],
+            financial_data['net_cashflows_30']
+        )))
+    
+    # Execute tasks in parallel
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # Submit all tasks
+        future_to_name = {
+            executor.submit(task_func): task_name 
+            for task_name, task_func in tasks
+        }
+        
+        # Collect results as they complete
+        for future in as_completed(future_to_name):
+            chart_name = future_to_name[future]
+            try:
+                charts[chart_name] = future.result()
+            except Exception as e:
+                print(f"Warning: Failed to generate {chart_name}: {e}")
+                charts[chart_name] = None
+    
+    return charts
