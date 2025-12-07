@@ -418,13 +418,14 @@
             border-radius: 6px;
         }
 
-        /* ========== Data Tables ========== */
+        /* ========== Data Tables (Enhanced v7.5 Style) ========== */
         .data-table {
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
-            font-size: 9pt;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 10pt;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid var(--lh-gray-medium);
         }
 
         .data-table thead {
@@ -433,24 +434,43 @@
         }
 
         .data-table thead th {
-            padding: 12px 10px;
-            text-align: left;
+            padding: 14px 12px;
+            text-align: center;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            border-right: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .data-table thead th:last-child {
+            border-right: none;
         }
 
         .data-table tbody tr {
             border-bottom: 1px solid var(--lh-gray-light);
         }
-
-        .data-table tbody tr:hover {
+        
+        .data-table tbody tr:nth-child(even) {
             background: var(--lh-light-blue);
         }
 
+        .data-table tbody tr:hover {
+            background: #CCE5FF;
+        }
+
         .data-table tbody td {
-            padding: 10px;
+            padding: 12px 10px;
             color: var(--lh-gray-dark);
+            border-right: 1px solid var(--lh-gray-light);
+        }
+        
+        .data-table tbody td:last-child {
+            border-right: none;
+        }
+        
+        .data-table tbody td.bold {
+            font-weight: 700;
+            color: var(--lh-primary-blue);
         }
         
         /* ========== PDF-Specific Table Enhancements ========== */
@@ -490,6 +510,72 @@
             border-top: 2px solid var(--lh-primary-blue);
         }
 
+        /* ========== Analysis Box Styles (v7.5 Style) ========== */
+        .analysis-box {
+            background: var(--lh-light-blue);
+            border-left: 4px solid var(--lh-primary-blue);
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .analysis-box h4 {
+            color: var(--lh-primary-blue);
+            margin: 0 0 10px 0;
+            font-size: 11pt;
+            font-weight: 700;
+        }
+        
+        .analysis-box p {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        
+        .strategy-box {
+            background: #fff8e1;
+            border-left: 4px solid var(--lh-accent-gold);
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .strategy-box h4 {
+            color: #f57c00;
+            margin: 0 0 10px 0;
+            font-size: 11pt;
+            font-weight: 700;
+        }
+        
+        .highlight-box {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .highlight-box h4 {
+            color: #2e7d32;
+            margin: 0 0 10px 0;
+            font-size: 11pt;
+            font-weight: 700;
+        }
+        
+        .warning-box {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .warning-box h4 {
+            color: #c62828;
+            margin: 0 0 10px 0;
+            font-size: 11pt;
+            font-weight: 700;
+        }
+        
         /* ========== Metrics Display ========== */
         .metrics-grid {
             display: grid;
@@ -1131,6 +1217,67 @@
                 display: block;
             }
             
+            /* Analysis Box Styles for PDF */
+            .analysis-box {
+                background-color: #E6F2FF !important;
+                border-left: 4px solid #005BAC !important;
+                padding: 15px 20px;
+                margin: 15px 0;
+                page-break-inside: avoid;
+            }
+            
+            .analysis-box h4 {
+                color: #005BAC !important;
+                font-size: 11pt;
+                font-weight: 700;
+                margin: 0 0 10px 0;
+            }
+            
+            .strategy-box {
+                background-color: #FFF8E1 !important;
+                border-left: 4px solid #F9A825 !important;
+                padding: 15px 20px;
+                margin: 15px 0;
+                page-break-inside: avoid;
+            }
+            
+            .strategy-box h4 {
+                color: #F57C00 !important;
+                font-size: 11pt;
+                font-weight: 700;
+                margin: 0 0 10px 0;
+            }
+            
+            .highlight-box {
+                background-color: #E8F5E9 !important;
+                border: 2px solid #4CAF50 !important;
+                padding: 15px 20px;
+                margin: 15px 0;
+                page-break-inside: avoid;
+            }
+            
+            .highlight-box h4 {
+                color: #2E7D32 !important;
+                font-size: 11pt;
+                font-weight: 700;
+                margin: 0 0 10px 0;
+            }
+            
+            .warning-box {
+                background-color: #FFEBEE !important;
+                border-left: 4px solid #F44336 !important;
+                padding: 15px 20px;
+                margin: 15px 0;
+                page-break-inside: avoid;
+            }
+            
+            .warning-box h4 {
+                color: #C62828 !important;
+                font-size: 11pt;
+                font-weight: 700;
+                margin: 0 0 10px 0;
+            }
+            
             /* Text formatting */
             h1, h2, h3, h4, h5, h6 {
                 page-break-after: avoid;
@@ -1177,10 +1324,15 @@
             }
             
             thead th {
-                padding: 12px 10px;
-                text-align: left;
+                padding: 14px 12px;
+                text-align: center;
                 font-weight: 700;
                 border: 1px solid #003D73;
+                border-right: 1px solid rgba(255,255,255,0.3);
+            }
+            
+            thead th:last-child {
+                border-right: 1px solid #003D73;
             }
             
             tbody tr {
