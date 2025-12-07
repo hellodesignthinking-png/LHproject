@@ -66,6 +66,9 @@ except ImportError:
 from app.services_v13.report_full.narrative_interpreter import NarrativeInterpreter
 from app.services_v13.report_full.policy_reference_db import PolicyReferenceDB
 
+# v19 Finance Builder with Narratives
+from app.services_v13.report_full.v19_finance_builder import build_v19_finance_with_narratives
+
 # Context Validator (v14.5)
 from app.services_v13.context_validator import validate_context
 
@@ -344,6 +347,15 @@ class ReportContextBuilder:
             additional_params
         )
         
+        # 9.6. Build v19 Enhanced Financial Analysis with Narratives (v19 NEW!)
+        context['v19_finance'] = self._build_v19_finance_with_narratives(
+            context['v18_transaction'],
+            context['finance'],
+            context['zoning'],
+            context['demand'],
+            address
+        )
+        
         # 10. Generate Narrative Interpretations (NEW!)
         context['narratives'] = self.narrative_interpreter.generate_all_narratives(context)
         
@@ -371,21 +383,29 @@ class ReportContextBuilder:
         """Build report metadata"""
         return {
             'report_title': 'LH 신축매입임대 사업 타당성 분석 보고서',
+            'report_subtitle': '거래형(Transaction) 사업 모델 기반 정책금융 분석',
             'report_type': 'LH_SUBMISSION_FULL_EDITION',
             'generated_date': datetime.now().strftime('%Y년 %m월 %d일'),
             'generated_datetime': datetime.now().isoformat(),
-            'version': 'ZeroSite v17.0',
+            'version': 'ZeroSite v19.0',
+            'version_description': 'LH 제출용 최종 버전 (13개 핵심항목 보완 완료)',
             'address': address,
             'report_code': self._generate_project_code(address),
-            'page_count_estimated': '30-50',
+            'page_count_estimated': '40-60',
             'submission_ready': True,
-            # Updated metadata per user request
+            # Updated metadata per v19 requirements
             'submitter': 'ZeroSite / Antenna Holdings',
             'author': '나태흠 (Na Tae-heum)',
+            'author_title': '대표 (CEO)',
             'author_email': 'taina@ant3na.com',
             'copyright': '© 2025 Antenna Holdings. All rights reserved.',
             'organization': 'Antenna Holdings',
-            'organization_url': 'https://ant3na.com'
+            'organization_url': 'https://ant3na.com',
+            'confidentiality': 'LH 내부용 (Confidential)',
+            # v19 specific metadata
+            'report_methodology': 'Transaction-Based Financial Analysis + Academic Policy Reasoning',
+            'deficiencies_fixed': 13,
+            'narrative_sections': 13
         }
     
     def _build_site_section(
@@ -2817,6 +2837,37 @@ class ReportContextBuilder:
             'demand_score': demand.get('overall_score', 60.0),
             'housing_type': demand.get('recommended_type_kr', '청년형')
         }
+    
+    def _build_v19_finance_with_narratives(
+        self,
+        v18_transaction: Dict[str, Any],
+        finance_data: Dict[str, Any],
+        zoning_data: Dict[str, Any],
+        demand_data: Dict[str, Any],
+        address: str
+    ) -> Dict[str, Any]:
+        """
+        Build v19 Finance Context with Complete Narratives
+        
+        Wrapper method that delegates to v19_finance_builder module
+        """
+        try:
+            return build_v19_finance_with_narratives(
+                v18_transaction,
+                finance_data,
+                zoning_data,
+                demand_data,
+                address
+            )
+        except Exception as e:
+            logger.error(f"v19 finance builder failed: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return {
+                'error': str(e),
+                'version': 'v19.0.0',
+                'is_complete': False
+            }
     
     def _generate_decision_summary(self, context: Dict[str, Any]) -> Dict[str, Any]:
         """Generate concise decision summary for Executive Summary"""
