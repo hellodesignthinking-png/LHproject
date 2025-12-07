@@ -1,0 +1,21 @@
+{
+  "module_id": "YOUTH_001",
+  "module_name": "Youth Innovation Hub",
+  "target_type": "Youth",
+  "facilities": [
+    "공유 오피스 (Shared Office)",
+    "스터디 라운지 (Study Lounge)",
+    "24시간 헬스장 (24hr Gym)",
+    "게임 & 미디어룸 (Game & Media Room)",
+    "루프탑 카페 (Rooftop Cafe)"
+  ],
+  "estimated_cost": 150000000,
+  "space_requirement_m2": 200,
+  "narrative": "청년층을 위한 혁신적인 커뮤니티 공간으로, 창업과 자기개발을 지원하는 시설들로 구성됩니다. 공유 오피스와 스터디 라운지는 재택근무와 학습을 위한 최적의 환경을 제공하며, 24시간 운영되는 헬스장은 바쁜 일정 속에서도 건강을 관리할 수 있도록 돕습니다.",
+  "benefits": [
+    "창업 지원 및 네트워킹 공간",
+    "자기개발 인프라 제공",
+    "건강한 라이프스타일 지원",
+    "커뮤니티 형성 촉진"
+  ]
+}

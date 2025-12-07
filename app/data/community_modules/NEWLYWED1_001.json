@@ -1,0 +1,21 @@
+{
+  "module_id": "NEWLYWED1_001",
+  "module_name": "Family Start Package",
+  "target_type": "Newlyweds_TypeI",
+  "facilities": [
+    "키즈 플레이룸 (Kids Playroom)",
+    "육아 상담실 (Parenting Counseling)",
+    "공동 육아방 (Community Childcare)",
+    "맘카페 (Mom's Cafe)",
+    "유아용품 대여소 (Baby Gear Library)"
+  ],
+  "estimated_cost": 120000000,
+  "space_requirement_m2": 180,
+  "narrative": "신혼부부와 영유아 가정을 위한 육아 지원 커뮤니티입니다. 전문 보육교사가 상주하는 공동 육아방과 육아 상담 서비스를 제공하며, 고가의 유아용품을 대여할 수 있는 서비스가 경제적 부담을 덜어줍니다.",
+  "benefits": [
+    "전문적인 육아 지원",
+    "경제적 부담 경감",
+    "육아 정보 공유 네트워크",
+    "안전한 놀이 공간 제공"
+  ]
+}

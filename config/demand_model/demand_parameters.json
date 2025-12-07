@@ -1,0 +1,178 @@
+{
+  "version": "1.0",
+  "last_updated": "2025-12-06",
+  "description": "Feature parameters for ZeroSite Phase 6.8 Local Demand Model",
+  
+  "feature_ranges": {
+    "age_20_34_ratio": {
+      "min": 0.0,
+      "max": 0.40,
+      "unit": "ratio",
+      "description": "Ratio of population aged 20-34"
+    },
+    "commute_time": {
+      "min": 10,
+      "max": 90,
+      "unit": "minutes",
+      "description": "Average commute time to job centers",
+      "inverse": true
+    },
+    "education_facilities": {
+      "min": 0,
+      "max": 50,
+      "unit": "count",
+      "description": "Universities, colleges within 5km"
+    },
+    "cultural_facilities": {
+      "min": 0,
+      "max": 100,
+      "unit": "count",
+      "description": "Cafes, restaurants, entertainment venues"
+    },
+    "job_centers_nearby": {
+      "min": 0,
+      "max": 10,
+      "unit": "count",
+      "description": "Major job centers within 10km"
+    },
+    "rent_burden_index": {
+      "min": 0.1,
+      "max": 0.5,
+      "unit": "ratio",
+      "description": "Rent to income ratio",
+      "inverse": true
+    },
+    "supply_competition": {
+      "min": 0,
+      "max": 100,
+      "unit": "index",
+      "description": "Supply competition index (0=low, 100=high)",
+      "inverse": true
+    },
+    "daycare_count": {
+      "min": 0,
+      "max": 30,
+      "unit": "count",
+      "description": "Daycare centers within 1km"
+    },
+    "school_count": {
+      "min": 0,
+      "max": 20,
+      "unit": "count",
+      "description": "Elementary/middle schools within 2km"
+    },
+    "family_income_ratio": {
+      "min": 30,
+      "max": 150,
+      "unit": "million KRW",
+      "description": "Average family income"
+    },
+    "playground": {
+      "min": 0,
+      "max": 15,
+      "unit": "count",
+      "description": "Playgrounds within 500m"
+    },
+    "safety_index": {
+      "min": 0,
+      "max": 100,
+      "unit": "index",
+      "description": "Safety index (0=low, 100=high)"
+    },
+    "multi_child_ratio": {
+      "min": 0.0,
+      "max": 0.20,
+      "unit": "ratio",
+      "description": "Ratio of families with 3+ children"
+    },
+    "senior_ratio": {
+      "min": 0.0,
+      "max": 0.40,
+      "unit": "ratio",
+      "description": "Ratio of population aged 65+"
+    },
+    "hospital_count": {
+      "min": 0,
+      "max": 20,
+      "unit": "count",
+      "description": "Hospitals/clinics within 2km"
+    },
+    "welfare_centers": {
+      "min": 0,
+      "max": 10,
+      "unit": "count",
+      "description": "Senior welfare centers within 3km"
+    },
+    "park_area": {
+      "min": 0,
+      "max": 500000,
+      "unit": "m2",
+      "description": "Total park area within 1km"
+    },
+    "barrier_free_infra": {
+      "min": 0,
+      "max": 100,
+      "unit": "index",
+      "description": "Barrier-free infrastructure index"
+    },
+    "education_quality": {
+      "min": 0,
+      "max": 100,
+      "unit": "index",
+      "description": "Education quality index"
+    },
+    "job_centers": {
+      "min": 0,
+      "max": 10,
+      "unit": "count",
+      "description": "Job centers within 10km"
+    },
+    "rent_burden": {
+      "min": 0.1,
+      "max": 0.5,
+      "unit": "ratio",
+      "description": "Rent burden ratio",
+      "inverse": true
+    }
+  },
+  
+  "mock_data": {
+    "enabled": true,
+    "description": "Mock data for testing Phase 6.8 before external API integration",
+    "regions": {
+      "gangnam": {
+        "age_20_34_ratio": 0.35,
+        "commute_time": 35,
+        "education_facilities": 25,
+        "cultural_facilities": 80,
+        "job_centers_nearby": 8,
+        "rent_burden_index": 0.40,
+        "supply_competition": 70
+      },
+      "bundang": {
+        "daycare_count": 22,
+        "school_count": 15,
+        "family_income_ratio": 95,
+        "playground": 12,
+        "rent_burden_index": 0.30,
+        "supply_competition": 50,
+        "safety_index": 85
+      },
+      "gyeongbuk": {
+        "senior_ratio": 0.32,
+        "hospital_count": 15,
+        "welfare_centers": 8,
+        "safety_index": 80,
+        "park_area": 300000,
+        "barrier_free_infra": 70
+      }
+    }
+  },
+  
+  "api_config": {
+    "cache_ttl": 86400,
+    "timeout": 10,
+    "retry_count": 3,
+    "fallback_to_mock": true
+  }
+}

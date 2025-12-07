@@ -8,11 +8,34 @@ Comprehensive financial analysis for LH Public Housing projects including:
 - LH 연동형 매입가 estimation
 - Breakeven analysis
 - Sensitivity analysis (optimistic/base/pessimistic scenarios)
+
+Phase 8 Integration:
+- Verified Cost Integration (LH Official Construction Cost)
+- Two-layer cost model (Verified vs. Estimated)
+- Automatic fallback mechanism
 """
 
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Optional
 from dataclasses import dataclass
 import logging
+from pathlib import Path
+
+# Phase 8: Verified Cost Loader
+try:
+    from app.services_v8.verified_cost_loader import VerifiedCostLoader, VerifiedCostData
+    VERIFIED_COST_AVAILABLE = True
+except ImportError:
+    VERIFIED_COST_AVAILABLE = False
+    print("Warning: Phase 8 Verified Cost not available")
+
+# Phase 2.5: Enhanced Financial Metrics (NPV, Payback, IRR)
+try:
+    from app.services_v2.financial_enhanced import FinancialEnhanced
+    from config.financial_parameters import load_financial_parameters
+    ENHANCED_METRICS_AVAILABLE = True
+except ImportError:
+    ENHANCED_METRICS_AVAILABLE = False
+    print("Warning: Phase 2.5 Enhanced Financial Metrics not available")
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +142,18 @@ class FinancialEngine:
     def __init__(self):
         """Initialize financial engine"""
         self.assumptions = self.LH_ASSUMPTIONS.copy()
-        logger.info("💰 Financial Engine v7.4 initialized")
+        
+        # Phase 8: Initialize Verified Cost Loader
+        self.verified_cost_loader = None
+        if VERIFIED_COST_AVAILABLE:
+            try:
+                self.verified_cost_loader = VerifiedCostLoader()
+                logger.info("💰 Financial Engine v7.4 initialized (Phase 8 Verified Cost: ✅)")
+            except Exception as e:
+                logger.warning(f"⚠️ Verified Cost Loader failed to initialize: {e}")
+                logger.info("💰 Financial Engine v7.4 initialized (Phase 8 Verified Cost: ❌)")
+        else:
+            logger.info("💰 Financial Engine v7.4 initialized (Phase 8 Verified Cost: ❌)")
     
     def calculate_capex(
         self,
@@ -127,7 +161,8 @@ class FinancialEngine:
         address: str,
         construction_type: str = "standard",
         include_breakdown: bool = True,
-        land_appraisal_price: float = None  # 🔥 NEW: 사용자 입력 감정평가액
+        land_appraisal_price: float = None,  # 🔥 NEW: 사용자 입력 감정평가액
+        housing_type: str = None  # 🔥 Phase 8: Housing type for verified cost
     ) -> Dict[str, Any]:
         """
         Calculate total Capital Expenditure (CapEx)
@@ -138,6 +173,7 @@ class FinancialEngine:
             construction_type: 'standard', 'premium', or 'economy'
             include_breakdown: Whether to include detailed breakdown
             land_appraisal_price: User-provided land appraisal price (optional)
+            housing_type: Housing type for Phase 8 verified cost (optional)
         
         Returns:
             Dictionary with CapEx breakdown and total
@@ -175,7 +211,30 @@ class FinancialEngine:
         gross_up_factor = self.assumptions['gross_up_factor']
         total_gross_area = unit_count * avg_unit_size * gross_up_factor
         
-        construction_cost_per_sqm = self.assumptions['construction_cost_per_sqm'][construction_type]
+        # 🔥 Phase 8: Try to get verified cost first, then fallback to estimated
+        verified_cost_data = None
+        cost_source = "Estimated"
+        
+        if self.verified_cost_loader and housing_type:
+            try:
+                verified_cost_data = self.verified_cost_loader.get_cost(
+                    address=address,
+                    housing_type=housing_type,
+                    year=2025
+                )
+                if verified_cost_data:
+                    construction_cost_per_sqm = verified_cost_data.cost_per_m2
+                    cost_source = "Verified (LH Official)"
+                    logger.info(f"✅ Using Phase 8 Verified Cost: {self._format_krw(construction_cost_per_sqm)}/㎡")
+                else:
+                    construction_cost_per_sqm = self.assumptions['construction_cost_per_sqm'][construction_type]
+                    logger.info(f"⚠️ Verified cost not found, using estimated: {self._format_krw(construction_cost_per_sqm)}/㎡")
+            except Exception as e:
+                construction_cost_per_sqm = self.assumptions['construction_cost_per_sqm'][construction_type]
+                logger.warning(f"⚠️ Failed to get verified cost: {e}. Using estimated cost.")
+        else:
+            construction_cost_per_sqm = self.assumptions['construction_cost_per_sqm'][construction_type]
+        
         hard_costs = total_gross_area * construction_cost_per_sqm
         
         # 4. Soft Costs
@@ -203,6 +262,16 @@ class FinancialEngine:
             'unit_count': unit_count,
             'total_gross_area': total_gross_area,
             'land_price_zone': land_price_zone,
+            # 🔥 Phase 8: Verified cost data
+            'verified_cost': {
+                'available': verified_cost_data is not None,
+                'cost_per_m2': verified_cost_data.cost_per_m2 if verified_cost_data else None,
+                'source': cost_source,
+                'year': 2025,
+                'housing_type': housing_type,
+                'description': verified_cost_data.description if verified_cost_data else None,
+                'total_verified_construction_cost': hard_costs if verified_cost_data else None
+            }
         }
         
         if include_breakdown:
@@ -380,6 +449,39 @@ class FinancialEngine:
             
             result['irr_percent'] = irr * 100 if irr else 0
             result['npv'] = npv
+            
+            # 🔥 Phase 2.5: Enhanced Financial Metrics (NPV, Payback, IRR)
+            if ENHANCED_METRICS_AVAILABLE:
+                try:
+                    # Load financial parameters
+                    params = load_financial_parameters()
+                    discount_rate_public = params.get('discount_rate_public', 0.02)
+                    discount_rate_private = params.get('discount_rate_private', 0.055)
+                    
+                    # Calculate enhanced metrics using Phase 8 CAPEX
+                    enhanced = FinancialEnhanced.calculate_all_metrics(
+                        cashflows=cash_flows,
+                        capex=total_capex,
+                        discount_rate_public=discount_rate_public,
+                        discount_rate_private=discount_rate_private
+                    )
+                    
+                    # Add to result (additive, no breaking changes)
+                    result['npv_public'] = enhanced['npv']
+                    result['npv_private'] = enhanced['npv_private']
+                    result['payback_period_years'] = enhanced['payback']
+                    result['irr_public_percent'] = enhanced['irr_public']
+                    result['irr_private_percent'] = enhanced['irr_private']
+                    
+                    # Add interpretation flags
+                    result['npv_positive'] = enhanced['npv'] > 0
+                    result['payback_acceptable'] = enhanced['payback'] <= 10.0  # 10 years threshold
+                    result['irr_vs_public_rate'] = enhanced['irr'] - (discount_rate_public * 100)
+                    result['irr_vs_private_rate'] = enhanced['irr'] - (discount_rate_private * 100)
+                    
+                    logger.info(f"✅ Phase 2.5: NPV={enhanced['npv']/1e8:.1f}억, Payback={enhanced['payback']:.1f}yr, IRR={enhanced['irr']:.1f}%")
+                except Exception as e:
+                    logger.warning(f"Phase 2.5 Enhanced Metrics calculation failed: {e}")
         
         return result
     
@@ -425,7 +527,8 @@ class FinancialEngine:
         address: str,
         unit_type: str,
         construction_type: str = "standard",
-        land_appraisal_price: float = None  # 🔥 NEW: 사용자 입력 감정평가액
+        land_appraisal_price: float = None,  # 🔥 NEW: 사용자 입력 감정평가액
+        housing_type: str = None  # 🔥 Phase 8: Housing type for verified cost
     ) -> Dict[str, Any]:
         """Run sensitivity analysis with optimistic/base/pessimistic scenarios"""
         logger.info("🔄 Running sensitivity analysis (3 scenarios)")
@@ -436,7 +539,8 @@ class FinancialEngine:
             land_area, address, unit_type, construction_type,
             scenario_name="Base Case",
             adjustments={},
-            land_appraisal_price=land_appraisal_price
+            land_appraisal_price=land_appraisal_price,
+            housing_type=housing_type
         )
         
         scenarios['optimistic'] = self._run_single_scenario(
@@ -447,7 +551,8 @@ class FinancialEngine:
                 'occupancy_boost': 0.02,
                 'cost_reduction': 0.90
             },
-            land_appraisal_price=land_appraisal_price
+            land_appraisal_price=land_appraisal_price,
+            housing_type=housing_type
         )
         
         scenarios['pessimistic'] = self._run_single_scenario(
@@ -458,7 +563,8 @@ class FinancialEngine:
                 'occupancy_reduction': 0.05,
                 'cost_increase': 1.10
             },
-            land_appraisal_price=land_appraisal_price
+            land_appraisal_price=land_appraisal_price,
+            housing_type=housing_type
         )
         
         base_irr = scenarios['base']['return_metrics'].get('irr_percent', 0)
@@ -515,7 +621,8 @@ class FinancialEngine:
         construction_type: str,
         scenario_name: str,
         adjustments: Dict[str, float],
-        land_appraisal_price: float = None  # 🔥 NEW: 사용자 입력 감정평가액
+        land_appraisal_price: float = None,  # 🔥 NEW: 사용자 입력 감정평가액
+        housing_type: str = None  # 🔥 Phase 8: Housing type for verified cost
     ) -> Dict[str, Any]:
         """Run a single scenario with adjustments"""
         original_assumptions = self.assumptions.copy()
@@ -527,7 +634,11 @@ class FinancialEngine:
             for key in self.assumptions['construction_cost_per_sqm']:
                 self.assumptions['construction_cost_per_sqm'][key] *= adjustments['cost_increase']
         
-        capex_result = self.calculate_capex(land_area, address, construction_type, land_appraisal_price=land_appraisal_price)
+        capex_result = self.calculate_capex(
+            land_area, address, construction_type,
+            land_appraisal_price=land_appraisal_price,
+            housing_type=housing_type
+        )
         total_capex = capex_result['total_capex']
         unit_count = capex_result['unit_count']
         
@@ -611,19 +722,28 @@ def run_full_financial_analysis(
     address: str,
     unit_type: str,
     construction_type: str = "standard",
-    land_appraisal_price: float = None  # 🔥 NEW: 사용자 입력 감정평가액
+    land_appraisal_price: float = None,  # 🔥 NEW: 사용자 입력 감정평가액
+    housing_type: str = None  # 🔥 Phase 8: Housing type for verified cost
 ) -> Dict[str, Any]:
     """Run complete financial feasibility analysis"""
     engine = FinancialEngine()
     
-    capex = engine.calculate_capex(land_area, address, construction_type, land_appraisal_price=land_appraisal_price)
+    capex = engine.calculate_capex(
+        land_area, address, construction_type,
+        land_appraisal_price=land_appraisal_price,
+        housing_type=housing_type
+    )
     opex = engine.project_opex(capex['unit_count'], capex['total_capex'])
     noi = engine.calculate_noi(capex['unit_count'], unit_type, opex['year1_total_opex'], year=2)
     returns = engine.calculate_return_metrics(capex['total_capex'], noi['noi'])
     breakeven = engine.calculate_breakeven(
         capex['total_capex'], capex['unit_count'], unit_type, opex['year1_total_opex']
     )
-    sensitivity = engine.run_sensitivity_analysis(land_area, address, unit_type, construction_type, land_appraisal_price=land_appraisal_price)
+    sensitivity = engine.run_sensitivity_analysis(
+        land_area, address, unit_type, construction_type,
+        land_appraisal_price=land_appraisal_price,
+        housing_type=housing_type
+    )
     
     return {
         'capex': capex,

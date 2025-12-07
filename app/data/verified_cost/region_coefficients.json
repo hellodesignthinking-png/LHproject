@@ -1,0 +1,418 @@
+{
+  "version": "1.0",
+  "last_updated": "2025-12-06",
+  "description": "District-level cost adjustment coefficients for verified construction costs. Base cost is multiplied by coefficient for precise regional pricing.",
+  "source": "LH Official Regional Price Index 2025",
+  
+  "regions": {
+    "seoul": {
+      "region_name": "서울특별시",
+      "base_coefficient": 1.0,
+      "districts": {
+        "강남구": {
+          "coefficient": 1.09,
+          "description": "강남권 프리미엄 지역",
+          "factors": ["High land value", "Premium construction demand", "Limited supply"]
+        },
+        "서초구": {
+          "coefficient": 1.08,
+          "description": "강남권 프리미엄 지역",
+          "factors": ["High land value", "Business district"]
+        },
+        "송파구": {
+          "coefficient": 1.07,
+          "description": "강남권 프리미엄 지역",
+          "factors": ["Olympic complex", "Development area"]
+        },
+        "용산구": {
+          "coefficient": 1.05,
+          "description": "도심권 고급 지역",
+          "factors": ["Central location", "Redevelopment area"]
+        },
+        "성동구": {
+          "coefficient": 1.03,
+          "description": "도심권 발전 지역",
+          "factors": ["Forest district", "Rising area"]
+        },
+        "종로구": {
+          "coefficient": 1.02,
+          "description": "도심권 중심지",
+          "factors": ["Historical center", "Government offices"]
+        },
+        "중구": {
+          "coefficient": 1.02,
+          "description": "도심권 중심지",
+          "factors": ["CBD", "Mixed use"]
+        },
+        "광진구": {
+          "coefficient": 1.00,
+          "description": "동부권 표준 지역",
+          "factors": ["University district", "Standard pricing"]
+        },
+        "동대문구": {
+          "coefficient": 0.98,
+          "description": "동북권 일반 지역",
+          "factors": ["Residential", "Standard construction"]
+        },
+        "중랑구": {
+          "coefficient": 0.96,
+          "description": "동북권 일반 지역",
+          "factors": ["Residential", "Lower cost"]
+        },
+        "강북구": {
+          "coefficient": 0.96,
+          "description": "강북권 일반 지역",
+          "factors": ["Residential", "Lower cost"]
+        },
+        "도봉구": {
+          "coefficient": 0.95,
+          "description": "강북권 외곽 지역",
+          "factors": ["Suburban", "Lower construction cost"]
+        },
+        "노원구": {
+          "coefficient": 0.95,
+          "description": "강북권 외곽 지역",
+          "factors": ["Suburban", "Large residential"]
+        },
+        "은평구": {
+          "coefficient": 0.94,
+          "description": "서북권 일반 지역",
+          "factors": ["Residential", "Moderate cost"]
+        },
+        "서대문구": {
+          "coefficient": 0.97,
+          "description": "서북권 중심 지역",
+          "factors": ["University district", "Mixed use"]
+        },
+        "마포구": {
+          "coefficient": 1.04,
+          "description": "서북권 발전 지역",
+          "factors": ["Commercial hub", "Rising area"]
+        },
+        "양천구": {
+          "coefficient": 0.98,
+          "description": "서남권 일반 지역",
+          "factors": ["Residential", "Standard"]
+        },
+        "강서구": {
+          "coefficient": 0.92,
+          "description": "서남권 외곽 지역",
+          "factors": ["Airport area", "Industrial mix"]
+        },
+        "구로구": {
+          "coefficient": 0.93,
+          "description": "서남권 산업 지역",
+          "factors": ["Industrial", "Digital complex"]
+        },
+        "금천구": {
+          "coefficient": 0.92,
+          "description": "서남권 산업 지역",
+          "factors": ["Industrial", "Lower cost"]
+        },
+        "영등포구": {
+          "coefficient": 1.01,
+          "description": "서남권 중심 지역",
+          "factors": ["Business district", "Yeouido"]
+        },
+        "동작구": {
+          "coefficient": 0.99,
+          "description": "서남권 일반 지역",
+          "factors": ["Residential", "Mixed use"]
+        },
+        "관악구": {
+          "coefficient": 0.95,
+          "description": "서남권 일반 지역",
+          "factors": ["University district", "Residential"]
+        },
+        "강동구": {
+          "coefficient": 0.98,
+          "description": "동남권 일반 지역",
+          "factors": ["Residential", "Standard"]
+        }
+      }
+    },
+    
+    "gyeonggi": {
+      "region_name": "경기도",
+      "base_coefficient": 0.92,
+      "districts": {
+        "분당구": {
+          "coefficient": 1.06,
+          "description": "수도권 신도시 프리미엄",
+          "factors": ["Planned city", "High quality", "Seoul proximity"]
+        },
+        "판교": {
+          "coefficient": 1.08,
+          "description": "테크노밸리 프리미엄",
+          "factors": ["Tech hub", "High demand", "Premium area"]
+        },
+        "일산동구": {
+          "coefficient": 1.02,
+          "description": "신도시 프리미엄",
+          "factors": ["Planned city", "Good infrastructure"]
+        },
+        "일산서구": {
+          "coefficient": 1.01,
+          "description": "신도시 프리미엄",
+          "factors": ["Planned city", "Residential"]
+        },
+        "평촌": {
+          "coefficient": 1.03,
+          "description": "신도시 프리미엄",
+          "factors": ["Planned city", "Education hub"]
+        },
+        "산본": {
+          "coefficient": 0.99,
+          "description": "신도시 일반",
+          "factors": ["Planned city", "Standard"]
+        },
+        "수원": {
+          "coefficient": 0.98,
+          "description": "경기 중심도시",
+          "factors": ["Provincial capital", "Industrial"]
+        },
+        "용인": {
+          "coefficient": 0.97,
+          "description": "경기 발전 지역",
+          "factors": ["Mixed development", "Growing area"]
+        },
+        "성남": {
+          "coefficient": 1.00,
+          "description": "경기 중심도시",
+          "factors": ["Seoul adjacent", "Mixed use"]
+        },
+        "고양": {
+          "coefficient": 0.98,
+          "description": "경기 중심도시",
+          "factors": ["Seoul adjacent", "Large city"]
+        },
+        "화성": {
+          "coefficient": 0.91,
+          "description": "경기 외곽 개발지역",
+          "factors": ["Industrial", "Development area"]
+        },
+        "평택": {
+          "coefficient": 0.90,
+          "description": "경기 남부 산업도시",
+          "factors": ["Industrial", "Port city"]
+        },
+        "파주": {
+          "coefficient": 0.92,
+          "description": "경기 북부 일반",
+          "factors": ["Border area", "Standard"]
+        },
+        "김포": {
+          "coefficient": 0.95,
+          "description": "경기 서부 발전지역",
+          "factors": ["Airport proximity", "Growing"]
+        },
+        "광주": {
+          "coefficient": 0.93,
+          "description": "경기 동부 일반",
+          "factors": ["Suburban", "Standard"]
+        }
+      }
+    },
+    
+    "incheon": {
+      "region_name": "인천광역시",
+      "base_coefficient": 0.88,
+      "districts": {
+        "송도": {
+          "coefficient": 1.05,
+          "description": "국제도시 프리미엄",
+          "factors": ["Smart city", "International", "Premium"]
+        },
+        "연수구": {
+          "coefficient": 1.00,
+          "description": "신도시 지역",
+          "factors": ["Planned area", "Good infrastructure"]
+        },
+        "남동구": {
+          "coefficient": 0.96,
+          "description": "산업 복합 지역",
+          "factors": ["Industrial", "Residential mix"]
+        },
+        "부평구": {
+          "coefficient": 0.98,
+          "description": "중심 상업지역",
+          "factors": ["Commercial hub", "Transportation"]
+        },
+        "계양구": {
+          "coefficient": 0.97,
+          "description": "일반 주거지역",
+          "factors": ["Residential", "Standard"]
+        },
+        "서구": {
+          "coefficient": 0.94,
+          "description": "산업 지역",
+          "factors": ["Industrial", "Port area"]
+        },
+        "중구": {
+          "coefficient": 0.99,
+          "description": "도심 중심지",
+          "factors": ["City center", "Chinatown"]
+        },
+        "동구": {
+          "coefficient": 0.93,
+          "description": "구도심 지역",
+          "factors": ["Old town", "Lower cost"]
+        },
+        "미추홀구": {
+          "coefficient": 0.95,
+          "description": "일반 지역",
+          "factors": ["Residential", "Standard"]
+        },
+        "강화군": {
+          "coefficient": 0.85,
+          "description": "외곽 도서지역",
+          "factors": ["Rural", "Island", "Low cost"]
+        }
+      }
+    },
+    
+    "busan": {
+      "region_name": "부산광역시",
+      "base_coefficient": 0.87,
+      "districts": {
+        "해운대구": {
+          "coefficient": 1.05,
+          "description": "관광·프리미엄 지역",
+          "factors": ["Beach area", "Tourism", "Premium residential"]
+        },
+        "수영구": {
+          "coefficient": 1.03,
+          "description": "중심 상업지역",
+          "factors": ["Commercial", "Residential"]
+        },
+        "동래구": {
+          "coefficient": 1.00,
+          "description": "전통 중심지",
+          "factors": ["City center", "Historical"]
+        },
+        "부산진구": {
+          "coefficient": 0.99,
+          "description": "도심 중심지역",
+          "factors": ["Commercial", "Transportation hub"]
+        },
+        "남구": {
+          "coefficient": 0.98,
+          "description": "일반 주거지역",
+          "factors": ["Residential", "University"]
+        },
+        "연제구": {
+          "coefficient": 0.97,
+          "description": "일반 주거지역",
+          "factors": ["Residential", "Standard"]
+        },
+        "금정구": {
+          "coefficient": 0.94,
+          "description": "외곽 주거지역",
+          "factors": ["Mountain area", "University"]
+        },
+        "사하구": {
+          "coefficient": 0.92,
+          "description": "산업 복합지역",
+          "factors": ["Industrial", "Port"]
+        },
+        "강서구": {
+          "coefficient": 0.90,
+          "description": "산업·공항지역",
+          "factors": ["Airport", "Industrial"]
+        }
+      }
+    },
+    
+    "daegu": {
+      "region_name": "대구광역시",
+      "base_coefficient": 0.86,
+      "districts": {
+        "수성구": {
+          "coefficient": 1.04,
+          "description": "프리미엄 주거지역",
+          "factors": ["High-end residential", "Education"]
+        },
+        "중구": {
+          "coefficient": 1.00,
+          "description": "도심 중심지",
+          "factors": ["City center", "Commercial"]
+        },
+        "동구": {
+          "coefficient": 0.97,
+          "description": "일반 주거지역",
+          "factors": ["Residential", "Standard"]
+        },
+        "서구": {
+          "coefficient": 0.96,
+          "description": "일반 주거지역",
+          "factors": ["Residential", "Standard"]
+        },
+        "남구": {
+          "coefficient": 0.98,
+          "description": "일반 주거지역",
+          "factors": ["Residential", "Mixed"]
+        },
+        "북구": {
+          "coefficient": 0.95,
+          "description": "외곽 주거지역",
+          "factors": ["Suburban", "Lower cost"]
+        },
+        "달서구": {
+          "coefficient": 0.99,
+          "description": "신도시 지역",
+          "factors": ["Developed area", "Residential"]
+        },
+        "달성군": {
+          "coefficient": 0.88,
+          "description": "외곽 농촌지역",
+          "factors": ["Rural", "Low cost"]
+        }
+      }
+    },
+    
+    "gwangju": {
+      "region_name": "광주광역시",
+      "base_coefficient": 0.84,
+      "districts": {
+        "서구": {
+          "coefficient": 1.02,
+          "description": "도심 중심지",
+          "factors": ["City center", "Commercial"]
+        },
+        "남구": {
+          "coefficient": 0.99,
+          "description": "일반 주거지역",
+          "factors": ["Residential", "University"]
+        },
+        "동구": {
+          "coefficient": 0.97,
+          "description": "구도심 지역",
+          "factors": ["Old town", "Standard"]
+        },
+        "북구": {
+          "coefficient": 0.98,
+          "description": "일반 주거지역",
+          "factors": ["Residential", "Standard"]
+        },
+        "광산구": {
+          "coefficient": 0.95,
+          "description": "외곽 개발지역",
+          "factors": ["Suburban", "Development"]
+        }
+      }
+    }
+  },
+  
+  "fallback": {
+    "unknown_district": 1.0,
+    "description": "Default coefficient when district not found in database"
+  },
+  
+  "notes": [
+    "Coefficients based on LH Regional Construction Cost Index 2025",
+    "Base cost is multiplied by region coefficient for final verified cost",
+    "Coefficients consider: land value, construction demand, labor cost, material supply",
+    "Updated quarterly to reflect market changes",
+    "Districts with >5% price variation have separate coefficients"
+  ]
+}

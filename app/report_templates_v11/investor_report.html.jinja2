@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Investor Report - {{ decision.address }}</title>
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .metric { background: #f4f4f4; padding: 15px; margin: 10px 0; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Investment Analysis Report</h1>
+        <p>{{ decision.address }}</p>
+    </div>
+    
+    <div class="metric">
+        <h3>ROI: {{ decision.roi.roi_percent | format_percent }}</h3>
+        <p>IRR: {{ decision.roi.irr_percent | format_percent }}</p>
+        <p>NPV: {{ decision.roi.npv | format_currency }}</p>
+    </div>
+    
+    <div class="metric">
+        <h3>Total CAPEX: {{ decision.capex.total_capex | format_currency }}</h3>
+        <p>Recommendation: {{ decision.recommendation }}</p>
+    </div>
+</body>
+</html>

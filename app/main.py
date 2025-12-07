@@ -49,6 +49,9 @@ from app.api.endpoints.analysis_v9_1 import router as analysis_v91_router
 # ✨ v9.1 REAL: Import REAL working version
 from app.api.endpoints.analysis_v9_1_REAL import router as analysis_v91_real_router
 
+# ✨ v11.0: Import Phase 11 Report API
+from app.api.endpoints.report_v11 import router as report_v11_router
+
 # ✨ MVP: Import MVP Analysis router
 from app.api.endpoints.mvp_analyze import router as mvp_router
 
@@ -138,6 +141,9 @@ app.include_router(report_v72_router)
 
 # ✨ v9.0: Include Analysis API v9.0 router
 app.include_router(analysis_v90_router)
+
+# ✨ v11.0: Include Phase 11 Report API
+app.include_router(report_v11_router)
 
 # ✨ v9.1: Include Analysis API v9.1 router
 app.include_router(analysis_v91_router)
