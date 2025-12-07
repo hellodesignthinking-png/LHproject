@@ -450,15 +450,53 @@ def view_report(timestamp):
             )
             context = add_safe_defaults(context)
         
+        # Deep clean context - convert all None to safe values
+        context = deep_clean_context(context)
+        
         # Load template
         with open(TEMPLATE_PATH, 'r', encoding='utf-8') as f:
             template_content = f.read()
         
-        # Add Jinja2 filter for safe number formatting
-        from jinja2 import Environment
-        env = Environment()
-        env.filters['safe_round'] = lambda x, n=0: round(float(x), n) if x is not None and x != '' else 0
-        env.filters['safe_int'] = lambda x: int(x) if x is not None and x != '' else 0
+        # Create Jinja2 environment with safe filters
+        from jinja2 import Environment, select_autoescape
+        env = Environment(
+            autoescape=select_autoescape(['html', 'xml'])
+        )
+        
+        # Add safe filters
+        def safe_round(value, precision=0):
+            """Safely round a value, return 0 if undefined/None"""
+            try:
+                if value is None or value == '':
+                    return 0
+                return round(float(value), int(precision))
+            except (ValueError, TypeError):
+                return 0
+        
+        def safe_int(value):
+            """Safely convert to int, return 0 if undefined/None"""
+            try:
+                if value is None or value == '':
+                    return 0
+                return int(float(value))
+            except (ValueError, TypeError):
+                return 0
+        
+        def safe_float(value):
+            """Safely convert to float, return 0.0 if undefined/None"""
+            try:
+                if value is None or value == '':
+                    return 0.0
+                return float(value)
+            except (ValueError, TypeError):
+                return 0.0
+        
+        env.filters['round'] = safe_round  # Override default round
+        env.filters['safe_round'] = safe_round
+        env.filters['safe_int'] = safe_int
+        env.filters['safe_float'] = safe_float
+        env.filters['int'] = safe_int  # Override default int
+        env.filters['float'] = safe_float  # Override default float
         
         template = env.from_string(template_content)
         
@@ -490,6 +528,40 @@ def view_report(timestamp):
         """, 500
 
 
+def deep_clean_context(context):
+    """
+    Recursively clean context, replacing None/undefined with safe values
+    """
+    import copy
+    cleaned = copy.deepcopy(context)
+    
+    def clean_value(value):
+        if value is None or value == '':
+            return 0
+        elif isinstance(value, dict):
+            return {k: clean_value(v) for k, v in value.items()}
+        elif isinstance(value, list):
+            return [clean_value(v) for v in value]
+        else:
+            return value
+    
+    # Clean numeric fields recursively
+    if isinstance(cleaned, dict):
+        for key, value in cleaned.items():
+            if isinstance(value, (dict, list)):
+                cleaned[key] = clean_value(value)
+            elif value is None or value == '':
+                # Try to infer safe default based on key name
+                if any(x in key.lower() for x in ['area', 'ratio', 'cost', 'price', 'value']):
+                    cleaned[key] = 0
+                elif 'pct' in key.lower() or 'percent' in key.lower():
+                    cleaned[key] = 0.0
+                else:
+                    cleaned[key] = value  # Keep as is for non-numeric
+    
+    return cleaned
+
+
 if __name__ == '__main__':
     print("=" * 80)
     print("🚀 ZeroSite v20 Expert Report Generator Starting...")
@@ -501,6 +573,6 @@ if __name__ == '__main__':
     print("   - LH submission-ready format")
     print("   - Professional academic style")
     print()
-    print("📍 Server will run on port 5003")
+    print("📍 Server will run on port 5004")
     print()
-    app.run(host='0.0.0.0', port=5003, debug=False)
+    app.run(host='0.0.0.0', port=5004, debug=False)
