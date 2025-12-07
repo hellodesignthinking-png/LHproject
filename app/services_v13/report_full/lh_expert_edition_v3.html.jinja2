@@ -31,17 +31,83 @@
         /* ========== Base Page Setup ========== */
         @page {
             size: A4;
-            margin: 20mm 20mm 25mm 20mm;
-            @top-center {
-                content: "ZeroSite Expert Edition";
-                font-size: 9pt;
-                color: var(--lh-gray-medium);
-                font-family: 'Noto Sans KR', sans-serif;
+            margin: 15mm 20mm 20mm 20mm;
+        }
+        
+        @page :first {
+            margin: 0;
+        }
+        
+        /* ========== PDF Print Optimizations ========== */
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
             }
-            @bottom-right {
-                content: counter(page) " / " counter(pages);
-                font-size: 9pt;
-                color: var(--lh-gray-medium);
+            
+            body {
+                background: white;
+                font-size: 10pt;
+                line-height: 1.6;
+            }
+            
+            /* Page breaks */
+            .section {
+                page-break-inside: avoid;
+            }
+            
+            .content-block {
+                page-break-inside: avoid;
+                margin-bottom: 20px;
+            }
+            
+            .cover-page {
+                page-break-after: always;
+                height: 297mm; /* A4 height */
+            }
+            
+            .toc-page {
+                page-break-after: always;
+            }
+            
+            /* Headers and footers */
+            @page :left {
+                @bottom-left {
+                    content: "ZeroSite v15 Phase 2 | LH 정책자금 사업 타당성 분석";
+                    font-size: 8pt;
+                    color: var(--lh-gray-medium);
+                }
+            }
+            
+            @page :right {
+                @bottom-right {
+                    content: "Page " counter(page);
+                    font-size: 8pt;
+                    color: var(--lh-gray-medium);
+                }
+            }
+            
+            /* Improve visual hierarchy */
+            h1, h2, h3, h4, h5, h6 {
+                page-break-after: avoid;
+                page-break-inside: avoid;
+            }
+            
+            table {
+                page-break-inside: avoid;
+            }
+            
+            /* Better colors for print */
+            .section-header {
+                background: linear-gradient(135deg, var(--lh-primary-blue) 0%, var(--lh-dark-blue) 100%) !important;
+                -webkit-print-color-adjust: exact;
+            }
+            
+            /* Ensure charts and visualizations print well */
+            .chart-container, .graph-container {
+                page-break-inside: avoid;
+                background: white;
             }
         }
 
@@ -385,6 +451,27 @@
         .data-table tbody td {
             padding: 10px;
             color: var(--lh-gray-dark);
+        }
+        
+        /* ========== PDF-Specific Table Enhancements ========== */
+        @media print {
+            .data-table {
+                border: 1px solid var(--lh-gray-medium);
+            }
+            
+            .data-table thead {
+                background-color: var(--lh-primary-blue) !important;
+                -webkit-print-color-adjust: exact;
+            }
+            
+            .data-table tbody tr:nth-child(even) {
+                background-color: var(--lh-light-blue) !important;
+                -webkit-print-color-adjust: exact;
+            }
+            
+            .data-table tbody tr {
+                page-break-inside: avoid;
+            }
         }
 
         .data-table tbody td.number {
@@ -841,11 +928,148 @@
             page-break-after: always;
         }
 
-        /* ========== Print Optimization ========== */
+        /* ========== Enhanced PDF Print Optimization ========== */
         @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            
             body {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
+                background: white;
+                margin: 0;
+                padding: 0;
+            }
+            
+            /* Cover Page Enhancement */
+            .cover-page {
+                background: linear-gradient(135deg, #005BAC 0%, #003D73 100%) !important;
+                color: white !important;
+                page-break-after: always;
+                min-height: 100vh;
+            }
+            
+            /* Section Headers */
+            .section-header {
+                background: linear-gradient(135deg, #005BAC, #0075C9) !important;
+                color: white !important;
+                page-break-after: avoid;
+            }
+            
+            /* Content Blocks - Add borders and spacing */
+            .content-block {
+                border: 1px solid #ECF0F1;
+                padding: 15px;
+                margin-bottom: 15px;
+                page-break-inside: avoid;
+                background: white;
+            }
+            
+            /* v15 Phase 2 Components - Special Styling */
+            .content-block[style*="linear-gradient"] {
+                border: 2px solid #005BAC;
+                box-shadow: 0 2px 8px rgba(0,91,172,0.1);
+            }
+            
+            /* Tables - Ensure colors print */
+            table {
+                border-collapse: collapse;
+                width: 100%;
+                page-break-inside: avoid;
+            }
+            
+            thead {
+                background-color: #005BAC !important;
+                color: white !important;
+                display: table-header-group;
+            }
+            
+            tbody tr:nth-child(even) {
+                background-color: #E6F2FF !important;
+            }
+            
+            /* KPI Cards */
+            .content-block > div[style*="display: grid"] {
+                page-break-inside: avoid;
+            }
+            
+            /* Decision Tree */
+            .content-block[style*="#e8f5e9"],
+            .content-block[style*="#c8e6c9"] {
+                background-color: #e8f5e9 !important;
+                border-left: 4px solid #43a047 !important;
+            }
+            
+            /* Condition Table */
+            .content-block[style*="#f3e5f5"],
+            .content-block[style*="#e1bee7"] {
+                background-color: #f3e5f5 !important;
+                border-left: 4px solid #9c27b0 !important;
+            }
+            
+            /* Risk Response Matrix */
+            .content-block[style*="#ffebee"],
+            .content-block[style*="#ffcdd2"] {
+                background-color: #ffebee !important;
+                border-left: 4px solid #d32f2f !important;
+            }
+            
+            /* Government Decision Page */
+            .content-block[style*="#1a237e"],
+            .content-block[style*="#0d47a1"] {
+                background-color: #1a237e !important;
+                color: white !important;
+                page-break-before: always;
+            }
+            
+            /* Simulation Engine */
+            .content-block[style*="green"] table {
+                background: white;
+            }
+            
+            /* Sensitivity Analysis */
+            .content-block[style*="orange"] table {
+                background: white;
+            }
+            
+            /* Approval Model */
+            .content-block[style*="blue"] table {
+                background: white;
+            }
+            
+            /* Ensure all gradients print */
+            [style*="linear-gradient"] {
+                background-image: linear-gradient(var(--gradient)) !important;
+            }
+            
+            /* Badge and Label Colors */
+            span[style*="background"] {
+                -webkit-print-color-adjust: exact !important;
+            }
+            
+            /* Page breaks */
+            .section {
+                page-break-before: always;
+            }
+            
+            h1, h2, h3, h4, h5, h6 {
+                page-break-after: avoid;
+                page-break-inside: avoid;
+            }
+            
+            /* Footer info */
+            @page {
+                @bottom-center {
+                    content: "ZeroSite v15 Phase 2 - LH 정책자금 사업 타당성 분석 보고서";
+                    font-size: 8pt;
+                    color: #7F8C8D;
+                }
+                @bottom-right {
+                    content: counter(page);
+                    font-size: 8pt;
+                    color: #7F8C8D;
+                }
             }
         }
     </style>
