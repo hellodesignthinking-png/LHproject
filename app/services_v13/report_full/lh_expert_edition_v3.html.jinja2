@@ -1302,6 +1302,268 @@
         </div>
         {% endif %}
         
+        {# ============================================================
+           v15 PHASE 2: S-GRADE COMPONENTS (100% Confidence)
+           ============================================================ #}
+        
+        {% if v15_government_page %}
+        <!-- Government Decision Page (1-Page Executive Summary) -->
+        <div class="content-block" style="margin-top: 40px; background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%); border-left: 4px solid #0d47a1; padding: 30px; border-radius: 8px; color: white;">
+            <h3 class="content-title" style="color: white; margin-bottom: 25px; font-size: 20px; font-weight: 700; text-align: center;">
+                🏛️ 정부 의사결정 요약 페이지 (Government Decision Summary)
+            </h3>
+            
+            <!-- Decision Banner -->
+            {% set banner = v15_government_page.decision_banner %}
+            <div style="text-align: center; margin-bottom: 30px; padding: 25px; background: {{ banner.color }}; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                <div style="font-size: 36px; font-weight: 900; margin-bottom: 10px;">
+                    {{ banner.symbol }} {{ banner.status }}
+                </div>
+                <div style="font-size: 16px; opacity: 0.95; font-weight: 600;">
+                    {{ banner.recommendation }}
+                </div>
+            </div>
+            
+            <!-- Key Metrics Grid -->
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 30px;">
+                {% for metric in v15_government_page.key_metrics %}
+                <div style="background: rgba(255,255,255,0.15); padding: 20px; border-radius: 8px; backdrop-filter: blur(10px);">
+                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">{{ metric.label }}</div>
+                    <div style="font-size: 24px; font-weight: 700; margin-bottom: 5px;">{{ metric.value }}</div>
+                    <div style="font-size: 12px; opacity: 0.8;">{{ metric.interpretation }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Risk Dashboard -->
+            <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <h4 style="margin-bottom: 15px; font-size: 16px; font-weight: 700;">⚠️ 주요 리스크 현황</h4>
+                {% for risk in v15_government_page.risk_dashboard %}
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.2);">
+                    <div style="flex: 1;">
+                        <strong>{{ risk.risk_name }}</strong>
+                        <div style="font-size: 12px; opacity: 0.8;">{{ risk.mitigation }}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="padding: 6px 12px; background: {{ risk.level_color }}; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                            {{ risk.level }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Approval Assessment -->
+            <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px;">
+                <h4 style="margin-bottom: 15px; font-size: 16px; font-weight: 700;">✅ LH 승인 평가</h4>
+                {% set approval = v15_government_page.approval_assessment %}
+                <div style="text-align: center; margin: 20px 0;">
+                    <div style="font-size: 48px; font-weight: 900; color: {{ approval.probability_color }};">
+                        {{ approval.probability_pct }}
+                    </div>
+                    <div style="font-size: 14px; opacity: 0.9; margin-top: 5px;">승인 확률</div>
+                </div>
+                <div style="font-size: 13px; opacity: 0.85; line-height: 1.6;">
+                    {{ approval.interpretation }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if v15_simulation %}
+        <!-- Simulation Engine (3 Scenarios) -->
+        <div class="content-block" style="margin-top: 30px; background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border-left: 4px solid #43a047; padding: 25px; border-radius: 8px;">
+            <h3 class="content-title" style="color: #2e7d32; margin-bottom: 20px; font-size: 18px; font-weight: 700;">
+                🎲 시나리오 시뮬레이션 (Monte Carlo Simulation)
+            </h3>
+            
+            <!-- Scenarios Comparison Table -->
+            <table style="width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 6px; overflow: hidden; margin-bottom: 20px;">
+                <thead>
+                    <tr style="background: linear-gradient(135deg, #43a047 0%, #388e3c 100%); color: white;">
+                        <th style="padding: 15px; text-align: left; font-weight: 600;">시나리오</th>
+                        <th style="padding: 15px; text-align: center; font-weight: 600;">확률</th>
+                        <th style="padding: 15px; text-align: right; font-weight: 600;">NPV</th>
+                        <th style="padding: 15px; text-align: right; font-weight: 600;">IRR</th>
+                        <th style="padding: 15px; text-align: right; font-weight: 600;">회수기간</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scenario in v15_simulation.scenarios %}
+                    <tr style="border-bottom: 1px solid #dee2e6; {% if loop.index % 2 == 0 %}background: #f8f9fa;{% endif %}">
+                        <td style="padding: 15px;">
+                            <strong style="color: {{ scenario.color }};">{{ scenario.scenario_name }}</strong><br>
+                            <span style="font-size: 12px; color: #6c757d;">{{ scenario.description }}</span>
+                        </td>
+                        <td style="padding: 15px; text-align: center; font-weight: 600; color: #495057;">
+                            {{ scenario.probability }}%
+                        </td>
+                        <td style="padding: 15px; text-align: right; font-weight: 700; color: {{ scenario.npv_color }};">
+                            {{ scenario.npv }}
+                        </td>
+                        <td style="padding: 15px; text-align: right; font-weight: 600; color: {{ scenario.irr_color }};">
+                            {{ scenario.irr }}
+                        </td>
+                        <td style="padding: 15px; text-align: right; font-weight: 600; color: #495057;">
+                            {{ scenario.payback }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <!-- Expected Values -->
+            <div style="background: white; padding: 20px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px;">
+                <h4 style="color: #2e7d32; margin-bottom: 15px; font-size: 16px; font-weight: 700;">📊 확률가중 기댓값</h4>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                    <div>
+                        <div style="font-size: 12px; color: #6c757d; margin-bottom: 5px;">Expected NPV</div>
+                        <div style="font-size: 20px; font-weight: 700; color: {{ v15_simulation.expected_values.npv_color }};">
+                            {{ v15_simulation.expected_values.npv }}
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: #6c757d; margin-bottom: 5px;">Expected IRR</div>
+                        <div style="font-size: 20px; font-weight: 700; color: {{ v15_simulation.expected_values.irr_color }};">
+                            {{ v15_simulation.expected_values.irr }}
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: #6c757d; margin-bottom: 5px;">Expected Payback</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #495057;">
+                            {{ v15_simulation.expected_values.payback }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recommendation -->
+            <div style="padding: 15px; background: white; border-radius: 6px; border-left: 3px solid #43a047;">
+                <div style="font-size: 14px; color: #495057; line-height: 1.6;">
+                    <strong style="color: #2e7d32;">🎯 시뮬레이션 결론:</strong><br>
+                    {{ v15_simulation.recommendation }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if v15_sensitivity %}
+        <!-- Sensitivity Analysis -->
+        <div class="content-block" style="margin-top: 30px; background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); border-left: 4px solid #fb8c00; padding: 25px; border-radius: 8px;">
+            <h3 class="content-title" style="color: #e65100; margin-bottom: 20px; font-size: 18px; font-weight: 700;">
+                📈 NPV 민감도 분석 (Sensitivity Analysis)
+            </h3>
+            
+            <div style="background: white; padding: 20px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px;">
+                <h4 style="color: #e65100; margin-bottom: 15px; font-size: 16px; font-weight: 700;">기준 NPV</h4>
+                <div style="font-size: 28px; font-weight: 900; color: #1976d2;">
+                    {{ v15_sensitivity.base_npv_krw }}
+                </div>
+            </div>
+            
+            <!-- Tornado Chart Data -->
+            <table style="width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 6px; overflow: hidden; margin-bottom: 20px;">
+                <thead>
+                    <tr style="background: linear-gradient(135deg, #fb8c00 0%, #f57c00 100%); color: white;">
+                        <th style="padding: 15px; text-align: left; font-weight: 600;">변수</th>
+                        <th style="padding: 15px; text-align: center; font-weight: 600;">변동폭</th>
+                        <th style="padding: 15px; text-align: right; font-weight: 600;">최저 NPV</th>
+                        <th style="padding: 15px; text-align: right; font-weight: 600;">최고 NPV</th>
+                        <th style="padding: 15px; text-align: right; font-weight: 600;">영향 범위</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in v15_sensitivity.sensitivity_results %}
+                    <tr style="border-bottom: 1px solid #dee2e6; {% if loop.index % 2 == 0 %}background: #f8f9fa;{% endif %}">
+                        <td style="padding: 15px;">
+                            <strong style="color: #e65100;">{{ item.variable_name }}</strong>
+                        </td>
+                        <td style="padding: 15px; text-align: center; color: #495057; font-weight: 600;">
+                            ±{{ item.change_pct }}%
+                        </td>
+                        <td style="padding: 15px; text-align: right; font-weight: 700; color: #d32f2f;">
+                            {{ item.low_npv }}
+                        </td>
+                        <td style="padding: 15px; text-align: right; font-weight: 700; color: #388e3c;">
+                            {{ item.high_npv }}
+                        </td>
+                        <td style="padding: 15px; text-align: right; font-weight: 900; color: #1976d2;">
+                            {{ item.impact_range }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <!-- Summary -->
+            <div style="padding: 15px; background: white; border-radius: 6px; border-left: 3px solid #fb8c00;">
+                <div style="font-size: 14px; color: #495057; line-height: 1.6;">
+                    <strong style="color: #e65100;">💡 민감도 분석 요약:</strong><br>
+                    {{ v15_sensitivity.interpretation }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if v15_approval %}
+        <!-- LH Approval Probability Model -->
+        <div class="content-block" style="margin-top: 30px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-left: 4px solid #1976d2; padding: 25px; border-radius: 8px;">
+            <h3 class="content-title" style="color: #0d47a1; margin-bottom: 20px; font-size: 18px; font-weight: 700;">
+                ✅ LH 승인 확률 모델 (LH Approval Probability Model)
+            </h3>
+            
+            <!-- Approval Probability -->
+            <div style="text-align: center; margin-bottom: 30px; padding: 30px; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                <div style="font-size: 64px; font-weight: 900; color: {{ v15_approval.probability_color }}; line-height: 1;">
+                    {{ v15_approval.probability_pct }}
+                </div>
+                <div style="font-size: 16px; color: #495057; margin-top: 10px; font-weight: 600;">
+                    LH 승인 확률 (95% 신뢰구간: {{ v15_approval.confidence_interval }})
+                </div>
+            </div>
+            
+            <!-- Factor Scores -->
+            <table style="width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 6px; overflow: hidden; margin-bottom: 20px;">
+                <thead>
+                    <tr style="background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%); color: white;">
+                        <th style="padding: 15px; text-align: left; font-weight: 600;">평가 요소</th>
+                        <th style="padding: 15px; text-align: center; font-weight: 600;">가중치</th>
+                        <th style="padding: 15px; text-align: center; font-weight: 600;">점수</th>
+                        <th style="padding: 15px; text-align: center; font-weight: 600;">등급</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for factor in v15_approval.factor_scores %}
+                    <tr style="border-bottom: 1px solid #dee2e6; {% if loop.index % 2 == 0 %}background: #f8f9fa;{% endif %}">
+                        <td style="padding: 15px;">
+                            <strong style="color: #0d47a1;">{{ factor.factor_name }}</strong>
+                        </td>
+                        <td style="padding: 15px; text-align: center; font-weight: 600; color: #6c757d;">
+                            {{ factor.weight }}%
+                        </td>
+                        <td style="padding: 15px; text-align: center; font-weight: 700; color: {{ factor.score_color }};">
+                            {{ factor.score }}/100
+                        </td>
+                        <td style="padding: 15px; text-align: center;">
+                            <span style="padding: 6px 12px; background: {{ factor.grade_color }}; color: white; border-radius: 12px; font-weight: 600; font-size: 12px;">
+                                {{ factor.grade }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <!-- Interpretation -->
+            <div style="padding: 15px; background: white; border-radius: 6px; border-left: 3px solid #1976d2;">
+                <div style="font-size: 14px; color: #495057; line-height: 1.6;">
+                    <strong style="color: #0d47a1;">📋 승인 가능성 해석:</strong><br>
+                    {{ v15_approval.interpretation }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
     </div>
 </div>
 
