@@ -1155,6 +1155,153 @@
                 </div>
             </div>
         </div>
+        
+        <!-- ==========================================
+             v15 PHASE 1: DECISION STRUCTURES (NEW)
+             ========================================== -->
+        
+        {% if v15_kpi_cards %}
+        <!-- 4 KPI Cards -->
+        <div class="content-block" style="margin-top: 30px; background: linear-gradient(135deg, #e8f4f8 0%, #d6eaf8 100%); border-left: 4px solid #0066cc; padding: 25px; border-radius: 8px;">
+            <h3 class="content-title" style="color: #0066cc; margin-bottom: 20px; font-size: 18px; font-weight: 700;">
+                📊 핵심 성과 지표 (Key Performance Indicators)
+            </h3>
+            
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                {% for kpi_key, kpi in v15_kpi_cards.items() %}
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-top: 4px solid #0066cc;">
+                    <div style="font-size: 12px; font-weight: 600; color: #6c757d; text-transform: uppercase; margin-bottom: 10px;">
+                        {{ kpi.icon }} {{ kpi.name }}
+                    </div>
+                    <div style="font-size: 28px; font-weight: 900; color: #0066cc; margin-bottom: 8px;">
+                        {{ kpi.value }} <span style="font-size: 16px; font-weight: 400;">{{ kpi.unit }}</span>
+                    </div>
+                    <div style="font-size: 13px; color: #495057; line-height: 1.5;">
+                        {{ kpi.description }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if v15_decision_tree %}
+        <!-- Decision Tree -->
+        <div class="content-block" style="margin-top: 30px; background: linear-gradient(135deg, #fff9e6 0%, #ffecb3 100%); border-left: 4px solid #ff9800; padding: 25px; border-radius: 8px;">
+            <h3 class="content-title" style="color: #e65100; margin-bottom: 20px; font-size: 18px; font-weight: 700;">
+                🌳 의사결정 트리 (Decision Tree Logic)
+            </h3>
+            
+            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div style="font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.8; color: #212529;">
+                    {{ v15_decision_tree.visualization | safe }}
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #ff9800;">
+                    <div style="font-size: 14px; color: #495057; line-height: 1.6;">
+                        <strong style="color: #e65100;">🎯 최종 판정:</strong><br>
+                        {{ v15_decision_tree.final_decision }}<br><br>
+                        <strong style="color: #e65100;">📋 근거:</strong><br>
+                        {{ v15_decision_tree.rationale }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if v15_condition_table %}
+        <!-- C1-C4 Condition Table -->
+        <div class="content-block" style="margin-top: 30px; background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%); border-left: 4px solid #9c27b0; padding: 25px; border-radius: 8px;">
+            <h3 class="content-title" style="color: #6a1b9a; margin-bottom: 20px; font-size: 18px; font-weight: 700;">
+                ⚙️ 조건부 실행 요건 (Conditional Execution Requirements)
+            </h3>
+            
+            <table style="width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 6px; overflow: hidden;">
+                <thead>
+                    <tr style="background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%); color: white;">
+                        <th style="padding: 15px; text-align: left; font-weight: 600; width: 80px;">조건</th>
+                        <th style="padding: 15px; text-align: left; font-weight: 600;">설명</th>
+                        <th style="padding: 15px; text-align: center; font-weight: 600; width: 100px;">상태</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for condition in v15_condition_table %}
+                    <tr style="border-bottom: 1px solid #dee2e6; {% if loop.index % 2 == 0 %}background: #f8f9fa;{% endif %}">
+                        <td style="padding: 15px; font-weight: 700; color: #6a1b9a;">
+                            {{ condition.code }}
+                        </td>
+                        <td style="padding: 15px; color: #495057;">
+                            <strong>{{ condition.title }}</strong><br>
+                            <span style="font-size: 13px; color: #6c757d;">{{ condition.description }}</span>
+                        </td>
+                        <td style="padding: 15px; text-align: center;">
+                            {% if condition.status == 'MET' %}
+                                <span style="padding: 6px 12px; background: #d4edda; color: #155724; border-radius: 12px; font-weight: 600; font-size: 12px;">✓ 충족</span>
+                            {% elif condition.status == 'REQUIRED' %}
+                                <span style="padding: 6px 12px; background: #fff3cd; color: #856404; border-radius: 12px; font-weight: 600; font-size: 12px;">⚠ 필요</span>
+                            {% else %}
+                                <span style="padding: 6px 12px; background: #f8d7da; color: #721c24; border-radius: 12px; font-weight: 600; font-size: 12px;">✗ 미충족</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        
+        {% if v15_risk_response %}
+        <!-- Risk → Response Matrix -->
+        <div class="content-block" style="margin-top: 30px; background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); border-left: 4px solid #d32f2f; padding: 25px; border-radius: 8px;">
+            <h3 class="content-title" style="color: #b71c1c; margin-bottom: 20px; font-size: 18px; font-weight: 700;">
+                🛡️ 위험 대응 매트릭스 (Risk → Response Matrix)
+            </h3>
+            
+            <table style="width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 6px; overflow: hidden;">
+                <thead>
+                    <tr style="background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%); color: white;">
+                        <th style="padding: 15px; text-align: left; font-weight: 600; width: 200px;">위험 요소</th>
+                        <th style="padding: 15px; text-align: center; font-weight: 600; width: 100px;">발생 확률</th>
+                        <th style="padding: 15px; text-align: center; font-weight: 600; width: 100px;">영향도</th>
+                        <th style="padding: 15px; text-align: left; font-weight: 600;">대응 전략</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for risk in v15_risk_response %}
+                    <tr style="border-bottom: 1px solid #dee2e6; {% if loop.index % 2 == 0 %}background: #f8f9fa;{% endif %}">
+                        <td style="padding: 15px;">
+                            <strong style="color: #b71c1c;">{{ risk.risk_name }}</strong><br>
+                            <span style="font-size: 12px; color: #6c757d;">{{ risk.description }}</span>
+                        </td>
+                        <td style="padding: 15px; text-align: center;">
+                            <span style="padding: 6px 12px; background: {{ risk.probability_color }}; color: white; border-radius: 12px; font-weight: 600; font-size: 12px;">
+                                {{ risk.probability }}
+                            </span>
+                        </td>
+                        <td style="padding: 15px; text-align: center;">
+                            <span style="padding: 6px 12px; background: {{ risk.impact_color }}; color: white; border-radius: 12px; font-weight: 600; font-size: 12px;">
+                                {{ risk.impact }}
+                            </span>
+                        </td>
+                        <td style="padding: 15px; color: #495057; font-size: 13px;">
+                            {{ risk.response_strategy }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <div style="margin-top: 15px; padding: 12px; background: white; border-radius: 6px; border-left: 3px solid #d32f2f;">
+                <div style="font-size: 13px; color: #495057; line-height: 1.6;">
+                    <strong style="color: #b71c1c;">📌 위험 등급:</strong> 
+                    <span style="padding: 4px 8px; background: #d32f2f; color: white; border-radius: 8px; font-size: 11px; margin: 0 4px;">높음</span> = 즉시 대응 필요,
+                    <span style="padding: 4px 8px; background: #ff9800; color: white; border-radius: 8px; font-size: 11px; margin: 0 4px;">중간</span> = 모니터링 강화,
+                    <span style="padding: 4px 8px; background: #4caf50; color: white; border-radius: 8px; font-size: 11px; margin: 0 4px;">낮음</span> = 정기 검토
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
     </div>
 </div>
 

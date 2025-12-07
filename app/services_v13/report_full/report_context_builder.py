@@ -2197,6 +2197,33 @@ class ReportContextBuilder:
         except Exception as e:
             logger.warning(f"Context validation failed: {e}, proceeding with unvalidated data")
         
+        # Step 3.7: Generate v15 Phase 1 Decision Structures (NEW)
+        try:
+            logger.info("🎯 Generating v15 Phase 1 Decision Structures...")
+            from app.services_v15 import (
+                DecisionTreeGenerator,
+                ConditionTableGenerator,
+                RiskResponseGenerator,
+                KPICardGenerator
+            )
+            
+            # Initialize v15 generators
+            decision_tree_gen = DecisionTreeGenerator()
+            condition_gen = ConditionTableGenerator()
+            risk_response_gen = RiskResponseGenerator()
+            kpi_gen = KPICardGenerator()
+            
+            # Generate v15 decision components (all generators use generate() method)
+            context['v15_decision_tree'] = decision_tree_gen.generate(context)
+            context['v15_kpi_cards'] = kpi_gen.generate(context)
+            context['v15_condition_table'] = condition_gen.generate(context, context.get('v15_decision_tree', {}))
+            context['v15_risk_response'] = risk_response_gen.generate(context)
+            
+            logger.info("✅ v15 Phase 1: Decision Tree, C1-C4 Conditions, Risk→Response, KPI Cards generated")
+            
+        except Exception as e:
+            logger.warning(f"v15 Phase 1 generation failed: {e}, proceeding without v15 structures")
+        
         # Step 4: Generate Narrative Layer (Phase A - NEW)
         try:
             logger.info("📝 Generating Narrative Layer...")
