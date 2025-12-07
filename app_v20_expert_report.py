@@ -349,17 +349,18 @@ def generate_expert_report():
             additional_params={'appraisal_price': appraisal_price}
         )
         
-        # Load template
-        with open(TEMPLATE_PATH, 'r', encoding='utf-8') as f:
-            template_content = f.read()
+        # Add safe defaults for undefined values
+        context = add_safe_defaults(context)
         
-        template = Template(template_content)
-        
-        # Render report
-        html_content = template.render(**context)
-        
-        # Generate filename
+        # Save context for later retrieval
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        context_cache[timestamp] = {
+            'address': address,
+            'land_area_sqm': land_area_sqm,
+            'appraisal_price': appraisal_price,
+            'context': context,
+            'created_at': datetime.now()
+        }
         
         return jsonify({
             'success': True,
@@ -376,32 +377,92 @@ def generate_expert_report():
         }), 500
 
 
+def add_safe_defaults(context):
+    """
+    Add safe default values for all numeric fields that might be undefined
+    """
+    # Ensure all numeric values have defaults
+    safe_context = context.copy()
+    
+    # Site overview defaults
+    if 'site_overview' not in safe_context:
+        safe_context['site_overview'] = {}
+    
+    site = safe_context['site_overview']
+    site.setdefault('land_area_sqm', 660.0)
+    site.setdefault('building_area', 330.0)
+    site.setdefault('gross_floor_area', 1980.0)
+    site.setdefault('floor_area_ratio', 300.0)
+    site.setdefault('building_coverage_ratio', 50.0)
+    
+    # Financial defaults
+    if 'financial_analysis' not in safe_context:
+        safe_context['financial_analysis'] = {}
+    
+    finance = safe_context['financial_analysis']
+    finance.setdefault('total_investment', 15000000000)
+    finance.setdefault('land_cost', 6600000000)
+    finance.setdefault('construction_cost', 6930000000)
+    finance.setdefault('npv', 0)
+    finance.setdefault('irr', 0)
+    finance.setdefault('roi', 0)
+    
+    # v19_finance defaults
+    if 'v19_finance' in safe_context:
+        v19 = safe_context['v19_finance']
+        
+        if 'profit_calculation' in v19:
+            profit = v19['profit_calculation']
+            profit.setdefault('roi_pct', 0)
+            profit.setdefault('irr_pct', 0)
+            profit.setdefault('payback_years', 0)
+            profit.setdefault('total_capex', 15000000000)
+            profit.setdefault('lh_purchase_price', 12000000000)
+            profit.setdefault('profit', -3000000000)
+    
+    return safe_context
+
+
+# Cache for storing generated contexts
+context_cache = {}
+
+
 @app.route('/report/<timestamp>')
 def view_report(timestamp):
     """
     View generated report
     """
     try:
-        # Re-generate report (in production, would cache this)
-        # For now, using default test data
-        
-        builder = ReportContextBuilder()
-        context = builder.build_context(
-            address='서울특별시 마포구 월드컵북로 120',
-            land_area_sqm=660.0,
-            coordinates=None,
-            multi_parcel=False,
-            parcels=None,
-            additional_params={'appraisal_price': 10_000_000}
-        )
+        # Try to get cached context
+        if timestamp in context_cache:
+            cached = context_cache[timestamp]
+            context = cached['context']
+        else:
+            # Generate new context with default data
+            builder = ReportContextBuilder()
+            context = builder.build_context(
+                address='서울특별시 마포구 월드컵북로 120',
+                land_area_sqm=660.0,
+                coordinates=None,
+                multi_parcel=False,
+                parcels=None,
+                additional_params={'appraisal_price': 10_000_000}
+            )
+            context = add_safe_defaults(context)
         
         # Load template
         with open(TEMPLATE_PATH, 'r', encoding='utf-8') as f:
             template_content = f.read()
         
-        template = Template(template_content)
+        # Add Jinja2 filter for safe number formatting
+        from jinja2 import Environment
+        env = Environment()
+        env.filters['safe_round'] = lambda x, n=0: round(float(x), n) if x is not None and x != '' else 0
+        env.filters['safe_int'] = lambda x: int(x) if x is not None and x != '' else 0
         
-        # Render
+        template = env.from_string(template_content)
+        
+        # Render with safe context
         html_content = template.render(**context)
         
         return Response(
@@ -413,7 +474,20 @@ def view_report(timestamp):
         )
         
     except Exception as e:
-        return f"<h1>Error</h1><pre>{str(e)}</pre>", 500
+        import traceback
+        error_detail = traceback.format_exc()
+        return f"""
+        <html>
+        <head><title>Error</title></head>
+        <body style="padding: 40px; font-family: monospace;">
+            <h1 style="color: #C0392B;">Report Generation Error</h1>
+            <h3>Error Message:</h3>
+            <pre style="background: #f5f5f5; padding: 20px; border-radius: 8px;">{str(e)}</pre>
+            <h3>Traceback:</h3>
+            <pre style="background: #f5f5f5; padding: 20px; border-radius: 8px;">{error_detail}</pre>
+        </body>
+        </html>
+        """, 500
 
 
 if __name__ == '__main__':
@@ -427,6 +501,6 @@ if __name__ == '__main__':
     print("   - LH submission-ready format")
     print("   - Professional academic style")
     print()
-    print("📍 Server will run on port 5002")
+    print("📍 Server will run on port 5003")
     print()
-    app.run(host='0.0.0.0', port=5002, debug=False)
+    app.run(host='0.0.0.0', port=5003, debug=False)
