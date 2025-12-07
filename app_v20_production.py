@@ -590,41 +590,45 @@ PRODUCTION_INTERFACE_HTML = """
             const v20 = result.v19_finance;
             
             // Financial metrics
-            const profit = v20.profit_calculation;
-            document.getElementById('capex').textContent = profit.total_capex_krw;
-            document.getElementById('purchase').textContent = profit.lh_purchase_price_krw;
+            const profit = v20.profit_calculation || {};
+            document.getElementById('capex').textContent = profit.total_capex_krw || 'N/A';
+            document.getElementById('purchase').textContent = profit.lh_purchase_price_krw || 'N/A';
             
-            const profitValue = profit.profit_krw;
+            const profitValue = profit.profit_krw || 'N/A';
             const profitEl = document.getElementById('profit');
             profitEl.textContent = profitValue;
-            profitEl.className = 'metric-value ' + (profit.profit > 0 ? 'positive' : 'negative');
+            profitEl.className = 'metric-value ' + ((profit.profit || 0) > 0 ? 'positive' : 'negative');
             
-            const roiValue = profit.roi_pct.toFixed(2) + '%';
+            const roiPct = profit.roi_pct || 0;
+            const roiValue = roiPct.toFixed(2) + '%';
             const roiEl = document.getElementById('roi');
             roiEl.textContent = roiValue;
-            roiEl.className = 'metric-value ' + (profit.roi_pct > 0 ? 'positive' : 'negative');
+            roiEl.className = 'metric-value ' + (roiPct > 0 ? 'positive' : 'negative');
             
-            document.getElementById('irr').textContent = profit.irr_pct.toFixed(2) + '%';
-            document.getElementById('payback').textContent = profit.payback_years.toFixed(1) + '년';
+            const irrPct = profit.irr_pct || 0;
+            document.getElementById('irr').textContent = irrPct.toFixed(2) + '%';
+            
+            const paybackYears = profit.payback_years || 0;
+            document.getElementById('payback').textContent = paybackYears.toFixed(1) + '년';
             
             // Narratives
-            if (v20.narratives) {
-                document.getElementById('financial-narrative').innerHTML = 
-                    v20.narratives.profit_narrative || '재무 분석 해석';
-                document.getElementById('decision-narrative').innerHTML = 
-                    v20.narratives.decision_narrative || '의사결정 근거';
-            }
+            const narratives = v20.narratives || {};
+            document.getElementById('financial-narrative').innerHTML = 
+                narratives.profit_narrative || '재무 분석 해석이 생성되었습니다.';
+            document.getElementById('decision-narrative').innerHTML = 
+                narratives.decision_narrative || '의사결정 근거가 생성되었습니다.';
             
             // Decision
-            const decision = v20.decision;
-            const decisionClass = decision.decision === 'GO' ? 'decision-go' : 
-                                 decision.decision.includes('CONDITIONAL') ? 'decision-conditional' : 
+            const decision = v20.decision || {};
+            const decisionText = decision.decision || 'PENDING';
+            const decisionClass = decisionText === 'GO' ? 'decision-go' : 
+                                 decisionText.includes('CONDITIONAL') ? 'decision-conditional' : 
                                  'decision-no';
             
             document.getElementById('decision').innerHTML = 
-                `<span class="decision-badge ${decisionClass}">${decision.decision}</span>`;
-            document.getElementById('financial').textContent = decision.financial_criterion;
-            document.getElementById('policy').textContent = decision.policy_criterion;
+                `<span class="decision-badge ${decisionClass}">${decisionText}</span>`;
+            document.getElementById('financial').textContent = decision.financial_criterion || 'N/A';
+            document.getElementById('policy').textContent = decision.policy_criterion || 'N/A';
             
             // Comps info
             const compsInfo = v20.transaction_comps || {};
@@ -652,7 +656,10 @@ PRODUCTION_INTERFACE_HTML = """
             let statusHtml = '';
             for (const [key, value] of Object.entries(status)) {
                 const icon = value ? '✅' : '❌';
-                const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                // Convert snake_case to Title Case
+                const label = key.split('_').map(word => 
+                    word.charAt(0).toUpperCase() + word.slice(1)
+                ).join(' ');
                 statusHtml += `
                     <div style="background: white; padding: 12px; border-radius: 8px; font-size: 13px;">
                         ${icon} <strong>${label}</strong>
@@ -1092,7 +1099,7 @@ if __name__ == '__main__':
     print("   - PDF report generation")
     print("   - LH-grade styling")
     print()
-    print("📍 Server will run on port 5000")
+    print("📍 Server will run on port 5001")
     print("🌐 Access URL will be provided by GetServiceUrl tool")
     print()
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=5001, debug=False)
