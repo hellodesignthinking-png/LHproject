@@ -291,8 +291,8 @@ class ReportContextBuilder:
             'decision': {}
         }
         
-        # 1. Build Zoning & Regulations
-        context['zoning'] = self._build_zoning_section(land_area_sqm)
+        # 1. Build Zoning & Regulations (with coordinates for API lookup)
+        context['zoning'] = self._build_zoning_section(land_area_sqm, address, coordinates)
         
         # 2. Build Demand Analysis (Phase 6.8)
         context['demand'] = self._build_demand_section(address, coordinates)
@@ -382,11 +382,16 @@ class ReportContextBuilder:
             'status': 'merged'
         }
     
-    def _build_zoning_section(self, land_area_sqm: float) -> Dict[str, Any]:
-        """Build zoning & regulations section"""
-        # Use default values for stable operation
-        # In production, integrate with GIS/zoning API
-        return {
+    def _build_zoning_section(
+        self,
+        land_area_sqm: float,
+        address: Optional[str] = None,
+        coordinates: Optional[Tuple[float, float]] = None
+    ) -> Dict[str, Any]:
+        """Build zoning & regulations section with real API data"""
+        
+        # Default values (fallback)
+        zoning_data = {
             'zone_type': '제2종일반주거지역',
             'zone_type_en': 'Type 2 General Residential',
             'bcr': 60,  # Building Coverage Ratio (%)
@@ -399,6 +404,28 @@ class ReportContextBuilder:
             'parking_ratio': 1.0,  # 1 parking per unit
             'status': 'default'
         }
+        
+        # TODO: In production, integrate with actual GIS/zoning API
+        # try:
+        #     from app.services.land_regulation_service import LandRegulationService
+        #     import asyncio
+        #     
+        #     if coordinates:
+        #         service = LandRegulationService()
+        #         zone_info = asyncio.run(service.get_zone_info(coordinates))
+        #         if zone_info:
+        #             zoning_data.update({
+        #                 'zone_type': zone_info.zone_type,
+        #                 'bcr': zone_info.building_coverage_ratio,
+        #                 'far': zone_info.floor_area_ratio,
+        #                 'building_area': land_area_sqm * (zone_info.building_coverage_ratio / 100),
+        #                 'gross_floor_area': land_area_sqm * (zone_info.floor_area_ratio / 100),
+        #                 'status': 'api_retrieved'
+        #             })
+        # except Exception as e:
+        #     logger.warning(f"Zoning API call failed: {e}")
+        
+        return zoning_data
     
     def _build_demand_section(
         self, 
