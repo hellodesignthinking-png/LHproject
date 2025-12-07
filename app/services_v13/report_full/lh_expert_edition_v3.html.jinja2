@@ -3205,9 +3205,113 @@
             </ul>
         </div>
         
-        <!-- 6.5.1: 총사업비 수지표 (Total CAPEX Breakdown) -->
+        <!-- v18 Phase 3: 6.5.1 토지 거래사례 비교표 (NEW!) -->
+        {% if v18_transaction.land_comps %}
+        <div class="analysis-box" style="margin-top: 20px; background: linear-gradient(135deg, #f1f8e9, #dcedc8); border-left: 5px solid #689f38;">
+            <h4>🏞️  6.5.1 토지 실거래가 비교 (최근 10건)</h4>
+            <p style="margin-top: 10px;">
+                <strong>📌 데이터 출처:</strong> 국토교통부 실거래가 공개시스템 (반경 1km, 최근 1년)<br>
+                <strong>📊 분석 목적:</strong> 대상지 인근 토지 시장가격 파악 및 CAPEX 토지비 산정 근거
+            </p>
+            
+            <table class="data-table" style="margin-top: 15px;">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 35%;">주소</th>
+                        <th style="width: 12%;">면적 (㎡)</th>
+                        <th style="width: 15%;">거래금액</th>
+                        <th style="width: 15%;">단가 (원/㎡)</th>
+                        <th style="width: 10%;">거래일</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for comp in v18_transaction.land_comps[:10] %}
+                    <tr {% if loop.index <= 3 %}style="background: #fff9c4;"{% endif %}>
+                        <td class="number">{{ loop.index }}</td>
+                        <td>{{ comp.address }}</td>
+                        <td class="number">{{ comp.area_m2 | round(1) }}</td>
+                        <td class="number" style="color: #1976d2; font-weight: 500;">{{ (comp.price_krw / 1e8) | round(2) }}억원</td>
+                        <td class="number" style="font-weight: 600;">{{ (comp.unit_krw_m2 / 10000) | round(0) | int }}만원</td>
+                        <td class="number">{{ comp.deal_date }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr style="background: #e8f5e9; font-weight: 600; font-size: 1.05em;">
+                        <td colspan="4" class="bold" style="text-align: right; padding-right: 20px;">
+                            평균 토지 단가
+                        </td>
+                        <td class="number" style="color: #2e7d32; font-size: 1.1em;">
+                            {{ v18_transaction.avg_land_price_krw }}
+                        </td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <p style="margin-top: 15px; padding: 12px; background: white; border-radius: 5px;">
+                <strong>✅ 적용 결과:</strong> 
+                본 프로젝트 토지비는 <strong>실거래 평균단가 {{ v18_transaction.avg_land_price_krw }}</strong>를 기준으로 산정하여, 
+                시장 실거래가를 100% 반영한 현실적인 CAPEX를 도출하였습니다.
+            </p>
+        </div>
+        {% endif %}
+        
+        <!-- v18 Phase 3: 6.5.2 유사 신축 건축물 매매사례 비교표 (NEW!) -->
+        {% if v18_transaction.building_comps %}
+        <div class="analysis-box" style="margin-top: 20px; background: linear-gradient(135deg, #e3f2fd, #bbdefb); border-left: 5px solid #1976d2;">
+            <h4>🏢 6.5.2 유사 신축 건축물 매매사례 (최근 10건)</h4>
+            <p style="margin-top: 10px;">
+                <strong>📌 데이터 출처:</strong> 국토교통부 실거래가 공개시스템 (오피스텔, 연립다세대, 단독다가구)<br>
+                <strong>📊 분석 목적:</strong> 신축 건축물 시장가치 파악 및 LH 감정평가 비교 근거
+            </p>
+            
+            <table class="data-table" style="margin-top: 15px;">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 25%;">건물명</th>
+                        <th style="width: 10%;">유형</th>
+                        <th style="width: 12%;">연면적 (㎡)</th>
+                        <th style="width: 15%;">거래금액</th>
+                        <th style="width: 15%;">단가 (원/㎡)</th>
+                        <th style="width: 10%;">거래일</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for comp in v18_transaction.building_comps[:10] %}
+                    <tr {% if loop.index <= 3 %}style="background: #fff9c4;"{% endif %}>
+                        <td class="number">{{ loop.index }}</td>
+                        <td>{{ comp.name }}</td>
+                        <td class="number">{{ comp.building_type or 'N/A' }}</td>
+                        <td class="number">{{ comp.area_m2 | round(1) }}</td>
+                        <td class="number" style="color: #1976d2; font-weight: 500;">{{ (comp.price_krw / 1e8) | round(2) }}억원</td>
+                        <td class="number" style="font-weight: 600;">{{ (comp.unit_krw_m2 / 10000) | round(0) | int }}만원</td>
+                        <td class="number">{{ comp.deal_date }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr style="background: #e8f5e9; font-weight: 600; font-size: 1.05em;">
+                        <td colspan="5" class="bold" style="text-align: right; padding-right: 20px;">
+                            평균 신축 건물 단가
+                        </td>
+                        <td class="number" style="color: #2e7d32; font-size: 1.1em;">
+                            {{ v18_transaction.avg_building_price_krw }}
+                        </td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <p style="margin-top: 15px; padding: 12px; background: white; border-radius: 5px;">
+                <strong>✅ 적용 결과:</strong> 
+                본 프로젝트 건축비는 <strong>유사신축 평균단가 {{ v18_transaction.avg_building_price_krw }}</strong>를 기준으로 산정하여, 
+                시장 거래가를 반영한 LH 감정평가 예상액을 도출하였습니다.
+            </p>
+        </div>
+        {% endif %}
+        
+        <!-- 6.5.3: 총사업비 수지표 (Total CAPEX Breakdown) -->
         <div class="analysis-box" style="margin-top: 20px;">
-            <h4>📊 총사업비 수지표</h4>
+            <h4>📊 6.5.3 총사업비 수지표</h4>
             
             <table class="data-table" style="margin-top: 15px;">
                 <thead>
@@ -3293,9 +3397,9 @@
             </p>
         </div>
         
-        <!-- 6.5.2: LH 감정평가액 산정 (LH Appraisal Calculation) -->
+        <!-- 6.5.4: LH 감정평가액 산정 (LH Appraisal Calculation) -->
         <div class="warning-box" style="margin-top: 20px;">
-            <h4>🏛️ LH 감정평가액 산정 (LH Official Method)</h4>
+            <h4>🏛️ 6.5.4 LH 감정평가액 산정 (LH Official Method)</h4>
             
             <table class="data-table" style="margin-top: 15px;">
                 <thead>
@@ -3351,9 +3455,9 @@
             </p>
         </div>
         
-        <!-- 6.5.3: 거래 수익성 분석 (Transaction Profitability Analysis) -->
+        <!-- 6.5.5: 거래 수익성 분석 (Transaction Profitability Analysis) -->
         <div class="strategy-box" style="margin-top: 20px;">
-            <h4>💰 거래 수익성 분석 (Transaction Profitability)</h4>
+            <h4>💰 6.5.5 거래 수익성 분석 (Transaction Profitability)</h4>
             
             <table class="data-table" style="margin-top: 15px;">
                 <thead>
@@ -3436,10 +3540,10 @@
             </div>
         </div>
         
-        <!-- 6.5.4: 조건부 GO 요구사항 (Conditional Requirements) -->
+        <!-- 6.5.6: 조건부 GO 요구사항 (Conditional Requirements) -->
         {% if v18_transaction.summary.decision == 'CONDITIONAL-GO' and v18_transaction.conditional_requirements %}
         <div class="highlight-box" style="margin-top: 20px; background: linear-gradient(135deg, #fff8e1, #ffecb3); border-left: 5px solid #ffa000;">
-            <h4>⚠️ 조건부 GO 요구사항 (Conditional Requirements)</h4>
+            <h4>⚠️ 6.5.6 조건부 GO 요구사항 (Conditional Requirements)</h4>
             <p>다음 조건들이 충족되어야 사업 추진이 가능합니다:</p>
             
             <ul style="margin-top: 15px; margin-left: 20px; line-height: 2;">
@@ -3450,10 +3554,10 @@
         </div>
         {% endif %}
         
-        <!-- 6.5.5: v18 민감도 분석 (v18 Sensitivity Analysis) -->
+        <!-- 6.5.7: v18 민감도 분석 (v18 Sensitivity Analysis) -->
         {% if v18_transaction.sensitivity and v18_transaction.sensitivity.results %}
         <div class="analysis-box" style="margin-top: 20px;">
-            <h4>📈 민감도 분석 (Key Variables Impact)</h4>
+            <h4>📈 6.5.7 민감도 분석 (Key Variables Impact)</h4>
             <p>{{ v18_transaction.sensitivity.interpretation }}</p>
             
             <table class="data-table" style="margin-top: 15px;">

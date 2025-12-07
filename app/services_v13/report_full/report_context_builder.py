@@ -1973,23 +1973,54 @@ class ReportContextBuilder:
             # Extract input parameters
             building_area_m2 = zoning_data.get('recommended', {}).get('gross_floor_area', land_area_sqm * 2.5)
             
-            # Land price: Try to get from additional_params, otherwise estimate
-            land_price_per_m2 = 10_000_000  # Default: 1000만원/㎡
-            if additional_params and 'appraisal_price' in additional_params:
-                land_price_per_m2 = additional_params['appraisal_price']
+            # ============================================
+            # v18 Phase 3: 실거래가 기반 단가 산정
+            # ============================================
+            land_comps = []
+            building_comps = []
+            land_price_per_m2 = 10_000_000  # Default fallback
+            construction_cost_per_m2 = 3_500_000  # Default fallback
             
-            # Construction cost from cost_data
-            construction_cost_per_m2 = 3_500_000  # Default: 350만원/㎡
-            if cost_data and 'construction' in cost_data:
-                total_construction = cost_data['construction'].get('total', 0)
-                if total_construction > 0 and building_area_m2 > 0:
-                    construction_cost_per_m2 = total_construction / building_area_m2
+            try:
+                logger.info("🌐 Fetching real transaction data...")
+                from app.services.real_transaction_api import RealTransactionAPI
+                import asyncio
+                
+                api = RealTransactionAPI()
+                
+                # Fetch comparables (토지 10건 + 건물 10건)
+                land_comps, building_comps = asyncio.run(
+                    api.fetch_comparables(address, radius_m=1000)
+                )
+                
+                # Calculate average prices from real transactions
+                if land_comps:
+                    land_price_per_m2 = sum(c.unit_krw_m2 for c in land_comps) / len(land_comps)
+                    logger.info(f"✅ Land price from {len(land_comps)} transactions: {land_price_per_m2/10000:.0f}만원/㎡")
+                else:
+                    logger.warning("⚠️  No land transactions found, using default price")
+                
+                if building_comps:
+                    construction_cost_per_m2 = sum(c.unit_krw_m2 for c in building_comps) / len(building_comps)
+                    logger.info(f"✅ Building price from {len(building_comps)} transactions: {construction_cost_per_m2/10000:.0f}만원/㎡")
+                else:
+                    logger.warning("⚠️  No building transactions found, using default price")
+                    
+            except Exception as e:
+                logger.warning(f"⚠️  Real transaction API failed: {e}, using default prices")
+                # Fallback to user input or defaults
+                if additional_params and 'appraisal_price' in additional_params:
+                    land_price_per_m2 = additional_params['appraisal_price']
+                if cost_data and 'construction' in cost_data:
+                    total_construction = cost_data['construction'].get('total', 0)
+                    if total_construction > 0 and building_area_m2 > 0:
+                        construction_cost_per_m2 = total_construction / building_area_m2
             
             logger.info(f"📍 Address: {address}")
             logger.info(f"🏞️  Land Area: {land_area_sqm:.1f}㎡")
             logger.info(f"🏢 Building Area: {building_area_m2:.1f}㎡")
-            logger.info(f"💰 Land Price: {land_price_per_m2/10000:.0f}만원/㎡")
-            logger.info(f"🏗️  Construction Cost: {construction_cost_per_m2/10000:.0f}만원/㎡")
+            logger.info(f"💰 Land Price: {land_price_per_m2/10000:.0f}만원/㎡ ({'실거래가' if land_comps else '추정가'})")
+            logger.info(f"🏗️  Construction Cost: {construction_cost_per_m2/10000:.0f}만원/㎡ ({'실거래가' if building_comps else '추정가'})")
             
             # Create v18 engine inputs
             inputs = TransactionInputs(
@@ -2080,6 +2111,17 @@ class ReportContextBuilder:
                 
                 # Conditional requirements (for action items)
                 'conditional_requirements': result.conditional_requirements,
+                
+                # v18 Phase 3: 실거래가 비교표 데이터
+                'land_comps': [c.to_dict() for c in land_comps] if land_comps else [],
+                'building_comps': [c.to_dict() for c in building_comps] if building_comps else [],
+                'land_comps_count': len(land_comps),
+                'building_comps_count': len(building_comps),
+                'avg_land_price': land_price_per_m2,
+                'avg_land_price_krw': f"{land_price_per_m2/10000:.0f}만원/㎡",
+                'avg_building_price': construction_cost_per_m2,
+                'avg_building_price_krw': f"{construction_cost_per_m2/10000:.0f}만원/㎡",
+                'is_real_transaction_based': len(land_comps) > 0 and len(building_comps) > 0,
                 
                 # Sensitivity analysis (if available)
                 'sensitivity': self._run_v18_sensitivity(engine),

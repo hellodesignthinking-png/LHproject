@@ -56,9 +56,13 @@ class TransactionInputs:
     land_area_m2: float                        # 대지면적 (㎡)
     building_area_m2: float                    # 연면적 (㎡)
     
-    # 가격 정보 (거래사례 기반)
-    land_price_per_m2: float                   # 토지 평균 거래단가 (원/㎡)
-    construction_cost_per_m2: float            # 건설비 단가 (원/㎡)
+    # 가격 정보 (거래사례 기반 - v18 Phase 3)
+    land_price_per_m2: float = None            # 토지 평균 거래단가 (원/㎡) - 실거래가 10건 평균
+    construction_cost_per_m2: float = None     # 건설비 단가 (원/㎡) - 유사신축 10건 평균
+    
+    # 실거래가 비교표 데이터 (v18 Phase 3 NEW)
+    land_comps: List[Any] = None               # 토지 거래사례 10건
+    building_comps: List[Any] = None           # 건축물 매매사례 10건
     
     # 부대비용 비율
     design_cost_rate: float = 0.08             # 설계비 8%
