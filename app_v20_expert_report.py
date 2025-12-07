@@ -462,6 +462,44 @@ def add_safe_defaults(context):
     return safe_context
 
 
+def add_template_aliases(context):
+    """
+    Add template variable aliases to fix undefined errors
+    
+    CRITICAL FIX: Template uses different variable names than context:
+    - Template expects: building_coverage, building_ratio, max_building_coverage
+    - Context provides: bcr, far, legal_bcr, legal_far
+    
+    This function creates aliases to bridge the gap.
+    """
+    ctx = context.copy()
+    
+    # Get zoning data (context uses 'zoning' key with bcr/far)
+    zoning = ctx.get('zoning', {})
+    bcr = zoning.get('bcr', 60.0)
+    far = zoning.get('far', 200.0)
+    
+    # TOP-LEVEL ALIASES (what template expects)
+    ctx['building_coverage'] = bcr  # Template: {{ building_coverage }}
+    ctx['building_ratio'] = far  # Template: {{ building_ratio }}
+    ctx['max_building_coverage'] = bcr  # Template: {{ max_building_coverage }}
+    ctx['legal_bcr'] = bcr  # For "법정 건폐율"
+    ctx['legal_far'] = far  # For "법정 용적률"
+    ctx['plan_bcr'] = bcr  # For "계획 건폐율"
+    ctx['plan_far'] = far  # For "계획 용적률"
+    
+    # CALCULATED VALUES
+    land_area = ctx.get('land_area_sqm', ctx.get('site_overview', {}).get('land_area_sqm', 660.0))
+    ctx['building_area'] = land_area * (bcr / 100.0)
+    ctx['gross_floor_area'] = land_area * (far / 100.0)
+    
+    # DISPLAY VARIABLES (formatted for tables)
+    ctx['bcr_display'] = f"{bcr:.1f}%"
+    ctx['far_display'] = f"{far:.1f}%"
+    
+    return ctx
+
+
 # Cache for storing generated contexts
 context_cache = {}
 
@@ -491,6 +529,9 @@ def view_report(timestamp):
         
         # Deep clean context - convert all None to safe values
         context = deep_clean_context(context)
+        
+        # ADD TEMPLATE VARIABLE ALIASES (FIX: building_coverage undefined)
+        context = add_template_aliases(context)
         
         # Load template
         with open(TEMPLATE_PATH, 'r', encoding='utf-8') as f:
