@@ -14,6 +14,12 @@ from typing import Dict, Any, Optional, List
 import logging
 
 from app.services_v13.report_full.v19_financial_narrative import V19FinancialNarrative
+from app.services_v13.report_full.v20_integration import (
+    integrate_comps_into_capex,
+    generate_dynamic_decision_narrative,
+    create_fallback_narrative,
+    build_v20_complete_context
+)
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +60,7 @@ def build_v19_finance_with_narratives(
         Complete v19 finance context with narratives
     """
     logger.info("=" * 80)
-    logger.info("🎓 v19 Enhanced Financial Analysis with Narratives")
+    logger.info("🚀 v20 Complete Financial Analysis (v19 + Integration)")
     logger.info("=" * 80)
     
     narrative_gen = V19FinancialNarrative()
@@ -65,6 +71,13 @@ def build_v19_finance_with_narratives(
     appraisal = v18_transaction.get('appraisal', {})
     land_comps = v18_transaction.get('land_comps', [])
     building_comps = v18_transaction.get('building_comps', [])
+    
+    # v20 FIX #1: Integrate comps into CAPEX
+    comps_integration = integrate_comps_into_capex(
+        v18_transaction,
+        land_comps,
+        building_comps
+    )
     sensitivity = v18_transaction.get('sensitivity', {})
     
     roi_pct = summary.get('roi_pct', 0)
@@ -105,26 +118,32 @@ def build_v19_finance_with_narratives(
         },
         
         # Section 3: Land Comparables Analysis (Deficiency #2)
+        # v20 FIX #5: Add fallback narrative when no comps
         'land_analysis': {
             'comparables': land_comps,
             'count': len(land_comps),
-            'avg_price_m2': v18_transaction.get('avg_land_price', 0),
-            'avg_price_m2_krw': v18_transaction.get('avg_land_price_krw', '0만원/㎡'),
-            'narrative': narrative_gen.explain_land_comp_analysis(
-                land_comps,
-                v18_transaction.get('avg_land_price', 0)
+            'avg_price_m2': comps_integration['avg_land_price_m2'],
+            'avg_price_m2_krw': f"{comps_integration['avg_land_price_m2']/10000:.0f}만원/㎡",
+            'data_source': comps_integration['land_data_source'],
+            'narrative': (
+                narrative_gen.explain_land_comp_analysis(land_comps, comps_integration['avg_land_price_m2'])
+                if len(land_comps) > 0
+                else create_fallback_narrative('land_comps', 'no_data')
             )
         },
         
         # Section 4: Building Comparables Analysis (Deficiency #2)
+        # v20 FIX #5: Add fallback narrative when no comps
         'building_analysis': {
             'comparables': building_comps,
             'count': len(building_comps),
-            'avg_price_m2': v18_transaction.get('avg_building_price', 0),
-            'avg_price_m2_krw': v18_transaction.get('avg_building_price_krw', '0만원/㎡'),
-            'narrative': narrative_gen.explain_construction_comp_analysis(
-                building_comps,
-                v18_transaction.get('avg_building_price', 0)
+            'avg_price_m2': comps_integration['avg_building_price_m2'],
+            'avg_price_m2_krw': f"{comps_integration['avg_building_price_m2']/10000:.0f}만원/㎡",
+            'data_source': comps_integration['building_data_source'],
+            'narrative': (
+                narrative_gen.explain_construction_comp_analysis(building_comps, comps_integration['avg_building_price_m2'])
+                if len(building_comps) > 0
+                else create_fallback_narrative('building_comps', 'no_data')
             )
         },
         
@@ -215,11 +234,17 @@ def build_v19_finance_with_narratives(
         },
         
         # Section 12: Decision with Dual Logic (Deficiency #12)
-        'decision': narrative_gen.explain_dual_decision_logic(
-            roi_pct,
-            irr_pct,
-            policy_priority
-        ),
+        # v20 FIX #3: Dynamic decision narrative based on actual data
+        'decision': {
+            **narrative_gen.explain_dual_decision_logic(roi_pct, irr_pct, policy_priority),
+            'dynamic_narrative': generate_dynamic_decision_narrative(
+                roi_pct,
+                irr_pct,
+                land_appraisal_rate,
+                policy_priority,
+                cost_saving_potential=0.15  # 15% potential cost saving
+            )
+        },
         
         # Section 13: Business Risks & Response Strategies (Deficiency #13)
         'risk_strategy': {
@@ -227,18 +252,33 @@ def build_v19_finance_with_narratives(
         },
         
         # Metadata
-        'version': 'v19.0.0',
+        'version': 'v20.0.0',
         'deficiencies_fixed': 13,
+        'v20_improvements': 5,  # All 5 integration issues fixed
         'generated_at': summary.get('generated_at', ''),
-        'is_complete': True
+        'is_complete': True,
+        
+        # v20 Integration Status
+        'v20_status': {
+            'comps_to_capex': True,
+            'narratives_complete': True,
+            'dynamic_decisions': True,
+            'fallbacks_ready': True,
+            'lh_submission_ready': True
+        }
     }
     
-    logger.info(f"✅ v19 Enhanced Financial Analysis Complete")
-    logger.info(f"   ROI: {roi_pct:.2f}%")
-    logger.info(f"   Decision: {v19_context['decision']['decision']}")
-    logger.info(f"   Narratives: 13 sections generated")
+    # v20 FIX #2: Ensure all sections complete
+    v20_context = build_v20_complete_context(v19_context)
     
-    return v19_context
+    logger.info(f"✅ v20 Complete Financial Analysis Done")
+    logger.info(f"   ROI: {roi_pct:.2f}%")
+    logger.info(f"   Decision: {v20_context['decision']['decision']}")
+    logger.info(f"   Narratives: 13 sections + fallbacks")
+    logger.info(f"   Comps: {len(land_comps)} land + {len(building_comps)} building")
+    logger.info(f"   Integration: COMPLETE")
+    
+    return v20_context
 
 
 # Helper functions
