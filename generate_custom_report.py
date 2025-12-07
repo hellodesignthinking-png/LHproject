@@ -126,7 +126,10 @@ def generate_custom_report(address: str, land_area_sqm: float, output_filename: 
         
         print(f"📈 수요 점수: {demand_ctx.get('overall_score', 0):.1f}/100")
         print(f"📊 시장 신호: {market_ctx.get('signal', 'N/A')}")
-        print(f"💵 NPV (Public): {finance_ctx.get('npv_public', 0) / 100_000_000:.1f} 억원")
+        
+        # Fix: NPV is nested in finance_ctx['npv']['public']
+        npv_public = finance_ctx.get('npv', {}).get('public', 0)
+        print(f"💵 NPV (Public): {npv_public / 100_000_000:.1f} 억원")
         
         print("\n🌐 웹 접속 URL:")
         print(f"   https://8080-i65g3ela1oephi4loymka-ad490db5.sandbox.novita.ai/{output_filename}")

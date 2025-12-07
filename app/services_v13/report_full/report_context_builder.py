@@ -614,6 +614,8 @@ class ReportContextBuilder:
         stabilized_noi = noi_data.get('noi', 0)  # Correct key is 'noi', not 'stabilized_noi'
         annual_revenue = noi_data.get('effective_annual_income', stabilized_noi + annual_opex)  # Revenue = NOI + OpEx
         
+        print(f"💰 Financial data: CAPEX={capex_total/1e8:.1f}억, NOI={stabilized_noi/1e8:.1f}억, OpEx={annual_opex/1e8:.1f}억, Revenue={annual_revenue/1e8:.1f}억")
+        print(f"🔍 Raw values - stabilized_noi={stabilized_noi}, capex_total={capex_total}")
         logger.info(f"💰 Financial data: CAPEX={capex_total/1e8:.1f}억, NOI={stabilized_noi/1e8:.1f}억, OpEx={annual_opex/1e8:.1f}억, Revenue={annual_revenue/1e8:.1f}억")
         
         finance = {
@@ -755,10 +757,15 @@ class ReportContextBuilder:
                     finance['capex']
                 )
                 
-                logger.info(f"✅ Enhanced metrics (30yr): NPV={npv_public/1e8:.1f}억, IRR={irr_value*100:.2f}%, Payback={payback:.1f}y")
+                irr_display = irr_value * 100 if irr_value else 0
+                payback_display = payback if payback and payback != float('inf') else 0
+                print(f"✅ Enhanced metrics (30yr): NPV={npv_public/1e8:.1f}억, IRR={irr_display:.2f}%, Payback={payback_display:.1f}y")
+                logger.info(f"✅ Enhanced metrics (30yr): NPV={npv_public/1e8:.1f}억, IRR={irr_display:.2f}%, Payback={payback_display:.1f}y")
             except Exception as e:
-                logger.warning(f"Enhanced metrics calculation failed: {e}")
+                print(f"❌ Enhanced metrics calculation failed: {e}")
                 import traceback
+                print(traceback.format_exc())
+                logger.warning(f"Enhanced metrics calculation failed: {e}")
                 logger.warning(traceback.format_exc())
         
         return finance
