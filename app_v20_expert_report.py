@@ -657,6 +657,7 @@ def add_template_aliases(context):
                 'noi': 0,
                 'net_cf': 0,  # Template line 3615 - Net cash flow
                 'cumulative': 0,
+                'cumulative_cf': 0,  # Iteration 2 - Cumulative cash flow
                 'cash_flow': 0
             } for i in range(1, 31)
         ]
