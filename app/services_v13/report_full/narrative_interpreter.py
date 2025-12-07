@@ -22,6 +22,9 @@ class NarrativeInterpreter:
     def __init__(self):
         self.current_year = datetime.now().year
         
+        # v14.5: Citation tracking
+        self.used_citations = []
+        
         # Polish Layer: Tone Unification Templates
         self.connectors = {
             "meaning": [
@@ -108,7 +111,7 @@ class NarrativeInterpreter:
     
     def quote_policy(self, agency: str, title: str, year: str, page: Optional[int] = None) -> str:
         """
-        Generate standardized policy citation
+        Generate standardized policy citation (v14.5: now tracks citations)
         
         Args:
             agency: 발행기관 (e.g., "국토교통부", "LH")
@@ -123,6 +126,18 @@ class NarrativeInterpreter:
             >>> quote_policy("국토교통부", "공공주택 건설 및 매입기준 운영지침", "2023.3", 12)
             "(출처: 국토교통부, 『공공주택 건설 및 매입기준 운영지침』, 2023.3, p.12)"
         """
+        # Track this citation (v14.5)
+        citation_record = {
+            'agency': agency,
+            'title': title,
+            'year': year,
+            'page': page
+        }
+        
+        # Add to used_citations if not already present
+        if citation_record not in self.used_citations:
+            self.used_citations.append(citation_record)
+        
         base = f"(출처: {agency}, 『{title}』, {year}"
         if page:
             base += f", p.{page}"
@@ -216,6 +231,36 @@ class NarrativeInterpreter:
             'COLD': '침체'
         }
         return temp_map.get(temp, temp)
+    
+    def collect_citations(self) -> List[Dict[str, Any]]:
+        """
+        Collect all citations used in the narrative (v14.5 NEW)
+        
+        Returns a list of citation dictionaries for bibliography generation.
+        
+        Returns:
+            List of citation dicts with keys: agency, title, year, page
+            
+        Example:
+            >>> citations = interpreter.collect_citations()
+            >>> print(citations[0])
+            {'agency': 'LH', 'title': '신축매입임대 사업 매뉴얼', 'year': '2024', 'page': '12-18'}
+        """
+        # Return unique citations sorted by agency
+        unique_citations = []
+        seen = set()
+        
+        for citation in self.used_citations:
+            # Create a unique key for deduplication
+            key = (citation['agency'], citation['title'], citation['year'])
+            if key not in seen:
+                seen.add(key)
+                unique_citations.append(citation)
+        
+        # Sort by agency name
+        unique_citations.sort(key=lambda x: x['agency'])
+        
+        return unique_citations
     
     # ============================================
     # SECTION 1: EXECUTIVE SUMMARY
@@ -3204,5 +3249,9 @@ LH 신축매입임대 사업의 성공 가능성을 극대화하는 데 기여�
             narratives['academic_conclusion'] = self.interpret_academic_conclusion(ctx)
         except Exception as e:
             narratives['academic_conclusion'] = f"[Academic Conclusion 생성 오류: {str(e)}]"
+        
+        # v14.5: Add collected citations for bibliography
+        narratives['citations'] = self.collect_citations()
+        narratives['citation_count'] = len(narratives['citations'])
         
         return narratives

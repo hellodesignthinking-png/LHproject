@@ -156,6 +156,10 @@ def _flatten_context_for_template(context: dict, land_area_sqm: float) -> dict:
     context['report_date'] = datetime.now().strftime('%Y년 %m월 %d일')
     context['report_id'] = f"EXP-V3-{datetime.now().strftime('%Y%m%d')}"
     
+    # v14.5: Date variables for bibliography section
+    context['current_year'] = datetime.now().year
+    context['current_month'] = datetime.now().month
+    
     return context
 
 

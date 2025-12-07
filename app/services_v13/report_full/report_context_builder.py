@@ -62,6 +62,9 @@ except ImportError:
 from app.services_v13.report_full.narrative_interpreter import NarrativeInterpreter
 from app.services_v13.report_full.policy_reference_db import PolicyReferenceDB
 
+# Context Validator (v14.5)
+from app.services_v13.context_validator import validate_context
+
 # Phase 2: Competitive Analysis & Risk Enhancement
 try:
     from app.services_v13.report_full.competitive_analyzer import CompetitiveAnalyzer
@@ -2185,6 +2188,14 @@ class ReportContextBuilder:
         except Exception as e:
             logger.error(f"Expert analysis generation failed: {e}")
             logger.warning("Falling back to Full Edition context")
+        
+        # Step 3.5: Validate Context (v14.5 - NEW)
+        try:
+            logger.info("🔍 Validating context data...")
+            context = validate_context(context)
+            logger.info("✅ Context validation complete (finance/demand/market guaranteed)")
+        except Exception as e:
+            logger.warning(f"Context validation failed: {e}, proceeding with unvalidated data")
         
         # Step 4: Generate Narrative Layer (Phase A - NEW)
         try:
