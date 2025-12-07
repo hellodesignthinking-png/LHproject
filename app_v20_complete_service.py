@@ -924,6 +924,23 @@ def add_template_aliases(context):
     ctx.setdefault('limitation', '')
     ctx.setdefault('research', '')
     
+    # ========================================================================
+    # SECTION 9: CASH FLOW TABLE
+    # ========================================================================
+    
+    # Cash flow table for 30-year projection
+    if 'cash_flow_table' not in ctx:
+        # Generate minimal cash flow table structure
+        ctx['cash_flow_table'] = [
+            {
+                'year': i,
+                'revenue': 0,
+                'opex': 0,
+                'noi': 0,
+                'cumulative': 0
+            } for i in range(1, 31)
+        ]
+    
     return ctx
 
 
