@@ -16,11 +16,27 @@ from .condition_generator import ConditionGenerator as ConditionTableGenerator
 from .risk_response_generator import RiskResponseGenerator
 from .kpi_generator import KPIGenerator as KPICardGenerator
 
+# v15 Phase 2 components
+from .simulation_engine import SimulationEngine, get_simulation_engine
+from .sensitivity_chart_generator import SensitivityChartGenerator, get_sensitivity_chart_generator
+from .lh_approval_model import LHApprovalModel, get_lh_approval_model
+from .government_decision_page import GovernmentDecisionPageGenerator, get_government_decision_page_generator
+
 __all__ = [
+    # Phase 1
     'DecisionTreeGenerator',
     'ConditionTableGenerator',
     'RiskResponseGenerator',
-    'KPICardGenerator'
+    'KPICardGenerator',
+    # Phase 2
+    'SimulationEngine',
+    'SensitivityChartGenerator',
+    'LHApprovalModel',
+    'GovernmentDecisionPageGenerator',
+    'get_simulation_engine',
+    'get_sensitivity_chart_generator',
+    'get_lh_approval_model',
+    'get_government_decision_page_generator'
 ]
 
 __version__ = '15.0.0'

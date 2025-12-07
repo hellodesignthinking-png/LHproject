@@ -2224,6 +2224,33 @@ class ReportContextBuilder:
         except Exception as e:
             logger.warning(f"v15 Phase 1 generation failed: {e}, proceeding without v15 structures")
         
+        # Step 3.8: Generate v15 Phase 2 Advanced Analytics (NEW)
+        try:
+            logger.info("🚀 Generating v15 Phase 2 Advanced Analytics...")
+            from app.services_v15 import (
+                get_simulation_engine,
+                get_sensitivity_chart_generator,
+                get_lh_approval_model,
+                get_government_decision_page_generator
+            )
+            
+            # Initialize v15 Phase 2 engines
+            sim_engine = get_simulation_engine()
+            sens_gen = get_sensitivity_chart_generator()
+            approval_model = get_lh_approval_model()
+            gov_page_gen = get_government_decision_page_generator()
+            
+            # Generate v15 Phase 2 components
+            context['v15_simulation'] = sim_engine.simulate_scenarios(context)
+            context['v15_sensitivity'] = sens_gen.generate_sensitivity_analysis(context)
+            context['v15_approval'] = approval_model.calculate_approval_probability(context)
+            context['v15_government_page'] = gov_page_gen.generate_decision_page(context)
+            
+            logger.info("✅ v15 Phase 2: Simulation, Sensitivity, Approval Model, Gov Page generated")
+            
+        except Exception as e:
+            logger.warning(f"v15 Phase 2 generation failed: {e}, proceeding without v15 Phase 2")
+        
         # Step 4: Generate Narrative Layer (Phase A - NEW)
         try:
             logger.info("📝 Generating Narrative Layer...")

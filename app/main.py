@@ -55,6 +55,9 @@ from app.api.endpoints.report_v11 import router as report_v11_router
 # ✨ MVP: Import MVP Analysis router
 from app.api.endpoints.mvp_analyze import router as mvp_router
 
+# ✨ v13.0: Import Report Engine v13 router with v15 Phase 1 enhancements
+from app.routers.report_v13 import router as report_v13_router
+
 # ✨ v11.0 ENHANCEMENTS: Import middleware and utilities
 from app.middleware.rate_limiter import RateLimiter, RateLimitConfig
 from app.middleware.cache_manager import cache_manager, start_cache_cleanup_task
@@ -153,6 +156,9 @@ app.include_router(analysis_v91_real_router)
 
 # ✨ MVP: Include MVP Analysis router
 app.include_router(mvp_router)
+
+# ✨ v13.0: Include Report Engine v13 with v15 Phase 1 Decision Engine
+app.include_router(report_v13_router)
 
 # 정적 파일 서빙
 static_path = Path(__file__).parent.parent / "static"
