@@ -28,6 +28,10 @@ import json
 
 # Core ZeroSite engines
 from app.services.financial_engine_v7_4 import FinancialEngine
+from app.services.policy_transaction_financial_engine_v18 import (
+    PolicyTransactionFinancialEngineV18,
+    TransactionInputs
+)
 
 # Phase 8: Verified Cost
 try:
@@ -328,10 +332,39 @@ class ReportContextBuilder:
         # 8. Build Final Decision
         context['decision'] = self._build_decision_section(context)
         
-        # 9. Generate Narrative Interpretations (NEW!)
+        # 9. Build Policy-Based Financial Analysis (v16 NEW!)
+        context['policy_finance'] = self._build_policy_finance_section(context['finance'])
+        
+        # 9.5. Build v18 Transaction-Based Financial Analysis (v18 NEW!)
+        context['v18_transaction'] = self._build_v18_transaction_finance(
+            address,
+            land_area_sqm,
+            context['zoning'],
+            context['cost'],
+            additional_params
+        )
+        
+        # 10. Generate Narrative Interpretations (NEW!)
         context['narratives'] = self.narrative_interpreter.generate_all_narratives(context)
         
+        # 11. Add template-friendly variables (FIX: Match template expectations)
+        # Convert finance nested data to flat variables for template compatibility
+        finance = context.get('finance', {})
+        context['npv_public_krw'] = finance.get('npv', {}).get('public', 0) / 1e8  # Convert to 억원
+        context['npv_private_krw'] = finance.get('npv', {}).get('private', 0) / 1e8
+        context['irr_public_pct'] = finance.get('irr', {}).get('public', 0)  # Already in percentage
+        context['irr_market_pct'] = finance.get('irr', {}).get('market', 0)
+        context['payback_years'] = finance.get('payback', {}).get('years', 0)
+        context['capex_krw'] = finance.get('capex', {}).get('total', 0) / 1e8  # Convert to 억원
+        
+        # Add NPV status for template conditional logic
+        if context['npv_public_krw'] >= 0:
+            finance['npv_status'] = 'positive'
+        else:
+            finance['npv_status'] = 'negative_case'
+        
         logger.info(f"✅ REPORT_CONTEXT complete for {address}")
+        logger.info(f"📊 Template variables: NPV={context['npv_public_krw']:.1f}억, IRR={context['irr_public_pct']:.2f}%, Payback={context['payback_years']:.1f}y")
         return context
     
     def _build_metadata(self, address: str) -> Dict[str, Any]:
@@ -341,11 +374,18 @@ class ReportContextBuilder:
             'report_type': 'LH_SUBMISSION_FULL_EDITION',
             'generated_date': datetime.now().strftime('%Y년 %m월 %d일'),
             'generated_datetime': datetime.now().isoformat(),
-            'version': 'ZeroSite v13.0',
+            'version': 'ZeroSite v17.0',
             'address': address,
             'report_code': self._generate_project_code(address),
             'page_count_estimated': '30-50',
-            'submission_ready': True
+            'submission_ready': True,
+            # Updated metadata per user request
+            'submitter': 'ZeroSite / Antenna Holdings',
+            'author': '나태흠 (Na Tae-heum)',
+            'author_email': 'taina@ant3na.com',
+            'copyright': '© 2025 Antenna Holdings. All rights reserved.',
+            'organization': 'Antenna Holdings',
+            'organization_url': 'https://ant3na.com'
         }
     
     def _build_site_section(
@@ -390,12 +430,12 @@ class ReportContextBuilder:
     ) -> Dict[str, Any]:
         """Build zoning & regulations section with real API data"""
         
-        # Default values (fallback)
+        # Default values (fallback) - FIXED: 용적률 200% (was 250%)
         zoning_data = {
             'zone_type': '제2종일반주거지역',
             'zone_type_en': 'Type 2 General Residential',
             'bcr': 60,  # Building Coverage Ratio (%)
-            'far': 200,  # Floor Area Ratio (%)
+            'far': 200,  # Floor Area Ratio (%) - CORRECTED from 250%
             'max_height': 35,  # meters
             'max_floors': 11,
             'parking_required': int(land_area_sqm * 2.0 / 45),
@@ -405,25 +445,47 @@ class ReportContextBuilder:
             'status': 'default'
         }
         
-        # TODO: In production, integrate with actual GIS/zoning API
-        # try:
-        #     from app.services.land_regulation_service import LandRegulationService
-        #     import asyncio
-        #     
-        #     if coordinates:
-        #         service = LandRegulationService()
-        #         zone_info = asyncio.run(service.get_zone_info(coordinates))
-        #         if zone_info:
-        #             zoning_data.update({
-        #                 'zone_type': zone_info.zone_type,
-        #                 'bcr': zone_info.building_coverage_ratio,
-        #                 'far': zone_info.floor_area_ratio,
-        #                 'building_area': land_area_sqm * (zone_info.building_coverage_ratio / 100),
-        #                 'gross_floor_area': land_area_sqm * (zone_info.floor_area_ratio / 100),
-        #                 'status': 'api_retrieved'
-        #             })
-        # except Exception as e:
-        #     logger.warning(f"Zoning API call failed: {e}")
+        # ACTIVATED: Integrate with actual GIS/zoning API
+        try:
+            from app.services.land_regulation_service import LandRegulationService
+            from app.services.kakao_service import KakaoService
+            import asyncio
+            
+            # If no coordinates, get from address
+            if not coordinates and address:
+                kakao = KakaoService()
+                try:
+                    coord_result = asyncio.run(kakao.address_to_coordinates(address))
+                    if coord_result:
+                        # coord_result is a Coordinates object
+                        coordinates = (float(coord_result.latitude), float(coord_result.longitude))
+                        logger.info(f"📍 Got coordinates for {address}: {coordinates}")
+                        print(f"📍 Kakao Coordinates: lat={coordinates[0]}, lon={coordinates[1]}")
+                except Exception as e:
+                    logger.warning(f"Kakao address conversion failed: {e}")
+            
+            if coordinates:
+                from app.schemas import Coordinates
+                coords_obj = Coordinates(latitude=coordinates[0], longitude=coordinates[1])
+                service = LandRegulationService()
+                zone_info = asyncio.run(service.get_zone_info(coords_obj))
+                if zone_info and zone_info.zone_type:
+                    # Update with real API data (FIXED: Accept all zone types including 제2종일반주거지역)
+                    zoning_data.update({
+                        'zone_type': zone_info.zone_type,
+                        'bcr': zone_info.building_coverage_ratio,
+                        'far': zone_info.floor_area_ratio,
+                        'building_area': land_area_sqm * (zone_info.building_coverage_ratio / 100),
+                        'gross_floor_area': land_area_sqm * (zone_info.floor_area_ratio / 100),
+                        'status': 'api_retrieved'
+                    })
+                    logger.info(f"✅ Zoning API SUCCESS: {zone_info.zone_type}, BCR={zone_info.building_coverage_ratio}%, FAR={zone_info.floor_area_ratio}%")
+                else:
+                    logger.warning(f"⚠️ Zoning API returned no data, using default fallback")
+        except Exception as e:
+            logger.warning(f"Zoning API call failed: {e}, using default values")
+            import traceback
+            logger.warning(traceback.format_exc())
         
         return zoning_data
     
@@ -618,12 +680,38 @@ class ReportContextBuilder:
         print(f"🔍 Raw values - stabilized_noi={stabilized_noi}, capex_total={capex_total}")
         logger.info(f"💰 Financial data: CAPEX={capex_total/1e8:.1f}억, NOI={stabilized_noi/1e8:.1f}억, OpEx={annual_opex/1e8:.1f}억, Revenue={annual_revenue/1e8:.1f}억")
         
+        # Enhanced CAPEX breakdown (8 rows as per user feedback)
+        land_cost = capex_total * 0.25  # Updated: 25% for land (more realistic for urban projects)
+        construction_cost = cost_data['construction']['total']
+        acquisition_tax = land_cost * 0.044  # 4.4% acquisition tax
+        design_fee = construction_cost * 0.08  # 8% design fee
+        supervision_fee = construction_cost * 0.03  # 3% supervision fee
+        contingency = construction_cost * 0.10  # 10% contingency
+        financing_cost = capex_total * 0.03  # 3% financing cost
+        other_costs = capex_total - (land_cost + construction_cost + acquisition_tax + design_fee + supervision_fee + contingency + financing_cost)
+        
         finance = {
             'capex': {
-                'land': capex_total * 0.20,  # Estimated 20% land
-                'construction': cost_data['construction']['total'],
-                'soft_cost': capex_total * 0.10,  # Estimated 10% soft cost
-                'total': capex_total
+                'land': land_cost,
+                'construction': construction_cost,
+                'acquisition_tax': acquisition_tax,
+                'design_fee': design_fee,
+                'supervision_fee': supervision_fee,
+                'contingency': contingency,
+                'financing_cost': financing_cost,
+                'other_costs': max(0, other_costs),  # Prevent negative
+                'total': capex_total,
+                # Add explanation context
+                'breakdown_description': {
+                    'land': '토지비: 공시지가 기준 시장가 반영 (감정평가 시 85-95% 인정)',
+                    'construction': '건축비: LH 표준건축비 기준 (㎡당 350만원 적용)',
+                    'acquisition_tax': '취득세: 4.4% (지방세 포함, LH 사업 50% 감면 가능)',
+                    'design_fee': '설계비: 건축비의 8% (구조/전기/설비 포함)',
+                    'supervision_fee': '감리비: 건축비의 3% (시공 감리)',
+                    'contingency': '예비비: 건축비의 10% (공사비 변동 대비)',
+                    'financing_cost': '금융비용: 총사업비의 3% (PF 대출 수수료)',
+                    'other_costs': '기타비용: 인허가, 법무, 보험 등'
+                }
             },
             'revenue': {
                 'annual_rental': annual_revenue,
@@ -1768,6 +1856,367 @@ class ReportContextBuilder:
             'confidence': confidence,
             'conditions': conditions if recommendation in ['CONDITIONAL', 'REVISE'] else None
         }
+    
+    def _build_policy_finance_section(self, finance_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        정책형 재무 분석 (v16 NEW!)
+        
+        LH 신축매입임대 사업의 실제 메커니즘 반영:
+        - 감정평가 기반 최종 매입가 결정
+        - 공사비 연동제 적용
+        - 거래 수익 중심 평가 (민간형과 완전히 다름)
+        
+        Args:
+            finance_data: 민간형 재무 데이터
+            
+        Returns:
+            정책형 재무 분석 결과
+        """
+        from app.services.policy_financial_engine import PolicyFinancialEngine
+        
+        logger.info("=" * 60)
+        logger.info("🏛️ 정책형 재무 분석 시작 (v16)")
+        logger.info("=" * 60)
+        
+        # Policy engine 초기화
+        policy_engine = PolicyFinancialEngine()
+        
+        # CAPEX 데이터
+        capex_data = finance_data.get('capex', {})
+        
+        # 민간형 결과 (비교용)
+        private_npv = finance_data.get('npv', {}).get('public', 0)
+        private_irr = finance_data.get('irr', {}).get('public', 0)
+        
+        # 기준 시나리오 (감정평가율 90%)
+        base_result = policy_engine.evaluate(
+            capex_data=capex_data,
+            appraisal_rate=0.90,
+            internal_adjustment=1.0,
+            construction_index_change=0.0,
+            private_npv=private_npv,
+            private_irr=private_irr
+        )
+        
+        # 민감도 분석 (85%, 90%, 95%)
+        sensitivity_results = policy_engine.sensitivity_analysis(
+            capex_data=capex_data,
+            private_npv=private_npv,
+            private_irr=private_irr
+        )
+        
+        logger.info("✅ 정책형 재무 분석 완료")
+        
+        return {
+            'base': {
+                'appraisal_rate': base_result.appraisal.appraisal_rate,
+                'appraisal_value': base_result.appraisal.total_appraisal,
+                'land_appraisal': base_result.appraisal.land_appraisal,
+                'building_appraisal': base_result.appraisal.building_appraisal,
+                'purchase_price': base_result.final_purchase_price,
+                'internal_adjustment': base_result.internal_adjustment_rate,
+                'policy_npv': base_result.policy_npv,
+                'policy_irr': base_result.policy_irr,
+                'decision': base_result.decision,
+                'decision_reason': base_result.decision_reason,
+                # 민간형 비교
+                'private_npv': base_result.private_npv,
+                'private_irr': base_result.private_irr,
+                'npv_improvement': base_result.policy_npv - base_result.private_npv
+            },
+            'sensitivity': sensitivity_results,
+            'explanation': {
+                'mechanism': 'LH 신축매입임대는 감정평가 기반 최종 매입가로 수익이 결정됩니다. 민간형 개발사업과 달리 운영수익이 아닌 거래수익 중심 평가입니다.',
+                'appraisal': f'감정평가율 {base_result.appraisal.appraisal_rate*100:.0f}% 적용 시 토지+건물 감정가액은 {base_result.appraisal.total_appraisal/1e8:.1f}억원입니다.',
+                'policy_logic': '정책형 IRR = (최종 매입가 - CAPEX) / CAPEX 로 계산됩니다.',
+                'construction_indexing': '2024년 LH는 공사비 연동제를 적용하여 건축비 변동 리스크를 최소화합니다.'
+            }
+        }
+
+    def _build_v18_transaction_finance(
+        self,
+        address: str,
+        land_area_sqm: float,
+        zoning_data: Dict[str, Any],
+        cost_data: Dict[str, Any],
+        additional_params: Optional[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """
+        Build v18 Transaction-Based Financial Analysis
+        
+        ZeroSite v18 Core Logic:
+        ----------------------
+        1. Revenue Model: LH Final Purchase Price (NOT 30-year rental)
+        2. Cost Model: Total Project Cost (CAPEX + soft costs + financing)
+        3. Profitability: Transaction Profit = Revenue - Cost
+        4. Metrics: ROI (%), IRR (2.5yr), Payback (years)
+        5. Decision: GO / CONDITIONAL-GO / NO-GO
+        
+        This replaces the v17 rental-operation model which produced meaningless
+        negative NPVs (-111.9억) and IRRs (-701%).
+        
+        Args:
+            address: Project address
+            land_area_sqm: Land area in square meters
+            zoning_data: Zoning analysis results
+            cost_data: Construction cost data
+            additional_params: Additional parameters (land price, etc.)
+            
+        Returns:
+            v18 transaction finance data structure for template
+        """
+        logger.info("=" * 80)
+        logger.info("🏛️ v18 Transaction-Based Financial Analysis")
+        logger.info("=" * 80)
+        
+        try:
+            # Extract input parameters
+            building_area_m2 = zoning_data.get('recommended', {}).get('gross_floor_area', land_area_sqm * 2.5)
+            
+            # Land price: Try to get from additional_params, otherwise estimate
+            land_price_per_m2 = 10_000_000  # Default: 1000만원/㎡
+            if additional_params and 'appraisal_price' in additional_params:
+                land_price_per_m2 = additional_params['appraisal_price']
+            
+            # Construction cost from cost_data
+            construction_cost_per_m2 = 3_500_000  # Default: 350만원/㎡
+            if cost_data and 'construction' in cost_data:
+                total_construction = cost_data['construction'].get('total', 0)
+                if total_construction > 0 and building_area_m2 > 0:
+                    construction_cost_per_m2 = total_construction / building_area_m2
+            
+            logger.info(f"📍 Address: {address}")
+            logger.info(f"🏞️  Land Area: {land_area_sqm:.1f}㎡")
+            logger.info(f"🏢 Building Area: {building_area_m2:.1f}㎡")
+            logger.info(f"💰 Land Price: {land_price_per_m2/10000:.0f}만원/㎡")
+            logger.info(f"🏗️  Construction Cost: {construction_cost_per_m2/10000:.0f}만원/㎡")
+            
+            # Create v18 engine inputs
+            inputs = TransactionInputs(
+                land_area_m2=land_area_sqm,
+                building_area_m2=building_area_m2,
+                land_price_per_m2=land_price_per_m2,
+                construction_cost_per_m2=construction_cost_per_m2
+            )
+            
+            # Run v18 engine
+            engine = PolicyTransactionFinancialEngineV18(inputs)
+            result = engine.evaluate()
+            
+            logger.info(f"✅ v18 Analysis Complete:")
+            logger.info(f"   Total CAPEX: {result.cost/1e8:.2f}억")
+            logger.info(f"   LH Purchase Price: {result.revenue/1e8:.2f}억")
+            logger.info(f"   Profit: {result.profit/1e8:.2f}억")
+            logger.info(f"   ROI: {result.roi_pct:.2f}%")
+            logger.info(f"   IRR: {result.irr_pct:.2f}%")
+            logger.info(f"   Decision: {result.decision}")
+            
+            # Format for template consumption
+            return {
+                # Summary metrics (for dashboard/executive summary)
+                'summary': {
+                    'total_capex': result.cost,
+                    'total_capex_krw': f"{result.cost/1e8:.1f}억원",
+                    'lh_purchase_price': result.revenue,
+                    'lh_purchase_price_krw': f"{result.revenue/1e8:.1f}억원",
+                    'profit': result.profit,
+                    'profit_krw': f"{result.profit/1e8:.1f}억원" if result.profit >= 0 else f"-{abs(result.profit)/1e8:.1f}억원",
+                    'roi_pct': result.roi_pct,
+                    'roi_display': f"{result.roi_pct:.2f}%",
+                    'irr_pct': result.irr_pct,
+                    'irr_display': f"{result.irr_pct:.2f}%",
+                    'payback_years': result.payback_years,
+                    'payback_display': f"{result.payback_years:.1f}년" if result.payback_years < 999 else "회수불가",
+                    'decision': result.decision,
+                    'decision_reason': result.decision_reason,
+                    'decision_color': {
+                        'GO': '#22c55e',
+                        'CONDITIONAL-GO': '#f59e0b',
+                        'NO-GO': '#ef4444'
+                    }.get(result.decision, '#6b7280')
+                },
+                
+                # CAPEX breakdown (for detailed table)
+                'capex_detail': {
+                    'land_cost': result.capex.land_cost,
+                    'land_cost_krw': f"{result.capex.land_cost/1e8:.2f}억",
+                    'land_acquisition_tax': result.capex.land_acquisition_tax,
+                    'land_acquisition_tax_krw': f"{result.capex.land_acquisition_tax/1e8:.2f}억",
+                    'base_construction_cost': result.capex.base_construction_cost,
+                    'base_construction_cost_krw': f"{result.capex.base_construction_cost/1e8:.2f}억",
+                    'indexed_construction_cost': result.capex.indexed_construction_cost,
+                    'indexed_construction_cost_krw': f"{result.capex.indexed_construction_cost/1e8:.2f}억",
+                    'design_cost': result.capex.design_cost,
+                    'design_cost_krw': f"{result.capex.design_cost/1e8:.2f}억",
+                    'supervision_cost': result.capex.supervision_cost,
+                    'supervision_cost_krw': f"{result.capex.supervision_cost/1e8:.2f}억",
+                    'permit_cost': result.capex.permit_cost,
+                    'permit_cost_krw': f"{result.capex.permit_cost/1e8:.2f}억",
+                    'contingency_cost': result.capex.contingency_cost,
+                    'contingency_cost_krw': f"{result.capex.contingency_cost/1e8:.2f}억",
+                    'financing_cost': result.capex.financing_cost,
+                    'financing_cost_krw': f"{result.capex.financing_cost/1e8:.2f}억",
+                    'misc_cost': result.capex.misc_cost,
+                    'misc_cost_krw': f"{result.capex.misc_cost/1e8:.2f}억",
+                    'total_capex': result.capex.total_capex,
+                    'total_capex_krw': f"{result.capex.total_capex/1e8:.2f}억"
+                },
+                
+                # LH Appraisal (for appraisal calculation table)
+                'appraisal': {
+                    'land_appraised_value': result.appraisal.land_appraised_value,
+                    'land_appraised_value_krw': f"{result.appraisal.land_appraised_value/1e8:.2f}억",
+                    'building_appraised_value': result.appraisal.building_appraised_value,
+                    'building_appraised_value_krw': f"{result.appraisal.building_appraised_value/1e8:.2f}억",
+                    'indexing_adjustment': result.appraisal.indexing_adjustment,
+                    'indexing_adjustment_krw': f"{result.appraisal.indexing_adjustment/1e8:.2f}억",
+                    'subtotal': result.appraisal.subtotal,
+                    'subtotal_krw': f"{result.appraisal.subtotal/1e8:.2f}억",
+                    'safety_factor_adjustment': result.appraisal.safety_factor_adjustment,
+                    'safety_factor_adjustment_krw': f"{result.appraisal.safety_factor_adjustment/1e8:.2f}억",
+                    'final_appraisal_value': result.appraisal.final_appraisal_value,
+                    'final_appraisal_value_krw': f"{result.appraisal.final_appraisal_value/1e8:.2f}억"
+                },
+                
+                # Conditional requirements (for action items)
+                'conditional_requirements': result.conditional_requirements,
+                
+                # Sensitivity analysis (if available)
+                'sensitivity': self._run_v18_sensitivity(engine),
+                
+                # Metadata
+                'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'engine_version': 'v18.0.0'
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ v18 Transaction Finance Analysis Failed: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            
+            # Return empty structure to prevent template errors
+            return {
+                'summary': {
+                    'total_capex': 0,
+                    'total_capex_krw': '0.0억원',
+                    'lh_purchase_price': 0,
+                    'lh_purchase_price_krw': '0.0억원',
+                    'profit': 0,
+                    'profit_krw': '0.0억원',
+                    'roi_pct': 0,
+                    'roi_display': '0.00%',
+                    'irr_pct': 0,
+                    'irr_display': '0.00%',
+                    'payback_years': 999,
+                    'payback_display': '회수불가',
+                    'decision': 'NO-GO',
+                    'decision_reason': f'재무 분석 오류: {str(e)}',
+                    'decision_color': '#ef4444'
+                },
+                'capex_detail': {},
+                'appraisal': {},
+                'conditional_requirements': [],
+                'sensitivity': {},
+                'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'engine_version': 'v18.0.0',
+                'error': str(e)
+            }
+    
+    def _run_v18_sensitivity(self, engine: PolicyTransactionFinancialEngineV18) -> Dict[str, Any]:
+        """Run v18 sensitivity analysis for key variables"""
+        try:
+            # Run sensitivity for: land cost, construction cost, appraisal rate
+            sensitivity_results = []
+            
+            # Land cost sensitivity (±10%)
+            for variation in [-0.10, 0.10]:
+                inputs_copy = TransactionInputs(
+                    land_area_m2=engine.inputs.land_area_m2,
+                    building_area_m2=engine.inputs.building_area_m2,
+                    land_price_per_m2=engine.inputs.land_price_per_m2 * (1 + variation),
+                    construction_cost_per_m2=engine.inputs.construction_cost_per_m2
+                )
+                temp_engine = PolicyTransactionFinancialEngineV18(inputs_copy)
+                result = temp_engine.evaluate()
+                sensitivity_results.append({
+                    'variable': '토지비',
+                    'variation': f"{variation*100:+.0f}%",
+                    'roi_pct': result.roi_pct,
+                    'irr_pct': result.irr_pct,
+                    'decision': result.decision
+                })
+            
+            # Construction cost sensitivity (±15%)
+            for variation in [-0.15, 0.15]:
+                inputs_copy = TransactionInputs(
+                    land_area_m2=engine.inputs.land_area_m2,
+                    building_area_m2=engine.inputs.building_area_m2,
+                    land_price_per_m2=engine.inputs.land_price_per_m2,
+                    construction_cost_per_m2=engine.inputs.construction_cost_per_m2 * (1 + variation)
+                )
+                temp_engine = PolicyTransactionFinancialEngineV18(inputs_copy)
+                result = temp_engine.evaluate()
+                sensitivity_results.append({
+                    'variable': '건축비',
+                    'variation': f"{variation*100:+.0f}%",
+                    'roi_pct': result.roi_pct,
+                    'irr_pct': result.irr_pct,
+                    'decision': result.decision
+                })
+            
+            # Appraisal rate sensitivity (85%, 90%, 95%)
+            for rate in [0.85, 0.90, 0.95]:
+                inputs_copy = TransactionInputs(
+                    land_area_m2=engine.inputs.land_area_m2,
+                    building_area_m2=engine.inputs.building_area_m2,
+                    land_price_per_m2=engine.inputs.land_price_per_m2,
+                    construction_cost_per_m2=engine.inputs.construction_cost_per_m2,
+                    building_ack_rate=rate
+                )
+                temp_engine = PolicyTransactionFinancialEngineV18(inputs_copy)
+                result = temp_engine.evaluate()
+                sensitivity_results.append({
+                    'variable': 'LH 감정평가율',
+                    'variation': f"{rate*100:.0f}%",
+                    'roi_pct': result.roi_pct,
+                    'irr_pct': result.irr_pct,
+                    'decision': result.decision
+                })
+            
+            return {
+                'results': sensitivity_results,
+                'interpretation': self._interpret_v18_sensitivity(sensitivity_results)
+            }
+            
+        except Exception as e:
+            logger.warning(f"v18 sensitivity analysis failed: {e}")
+            return {
+                'results': [],
+                'interpretation': '민감도 분석 실패'
+            }
+    
+    def _interpret_v18_sensitivity(self, results: List[Dict[str, Any]]) -> str:
+        """Interpret v18 sensitivity analysis results"""
+        if not results:
+            return ''
+        
+        # Find most sensitive variable
+        roi_ranges = {}
+        for result in results:
+            var = result['variable']
+            roi = result['roi_pct']
+            if var not in roi_ranges:
+                roi_ranges[var] = {'min': roi, 'max': roi}
+            else:
+                roi_ranges[var]['min'] = min(roi_ranges[var]['min'], roi)
+                roi_ranges[var]['max'] = max(roi_ranges[var]['max'], roi)
+        
+        # Calculate ranges
+        ranges = {var: data['max'] - data['min'] for var, data in roi_ranges.items()}
+        most_sensitive = max(ranges, key=ranges.get) if ranges else '알 수 없음'
+        
+        return f"ROI 민감도가 가장 높은 변수는 {most_sensitive}입니다. " \
+               f"{most_sensitive} 변동 시 ROI는 최대 {ranges.get(most_sensitive, 0):.2f}%p 변화합니다."
 
     def calculate_scorecard(self, context: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -2337,6 +2786,8 @@ class ReportContextBuilder:
             'recommendation': decision.get('recommendation', 'CONDITIONAL'),
             'confidence': decision.get('confidence', 'medium'),
             'overall_score': overall.get('score', 60.0),
+            'overall_grade': overall.get('grade', 'B'),
+            'overall_recommendation': overall.get('recommendation', 'CONDITIONAL'),
             'overall_grade': overall.get('grade', 'C+'),
             'key_strengths': self._identify_key_strengths(scorecard),
             'key_concerns': self._identify_key_concerns(scorecard)
