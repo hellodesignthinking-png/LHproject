@@ -641,6 +641,19 @@ def add_template_aliases(context):
     ctx.setdefault('limitation', '')
     ctx.setdefault('research', '')
     
+    # 36-month implementation roadmap
+    if 'implementation_roadmap' not in ctx:
+        ctx['implementation_roadmap'] = {
+            'phases': [
+                {'phase': 'Phase 1', 'months': '1-6', 'tasks': '사업계획 수립 및 인허가'},
+                {'phase': 'Phase 2', 'months': '7-18', 'tasks': '설계 및 시공'},
+                {'phase': 'Phase 3', 'months': '19-30', 'tasks': '준공 및 LH 매입'},
+                {'phase': 'Phase 4', 'months': '31-36', 'tasks': '임대 운영 개시'}
+            ],
+            'critical_path': '인허가 → 설계 → 착공 → 준공 → LH감정평가 → 매입',
+            'total_duration': '36개월'
+        }
+    
     # ========================================================================
     # SECTION 9: CASH FLOW TABLE
     # ========================================================================
