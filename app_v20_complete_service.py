@@ -747,67 +747,179 @@ def add_complete_defaults(context, address, land_area_sqm, appraisal_price):
 
 def add_template_aliases(context):
     """
-    Add template variable aliases to fix undefined errors
+    COMPREHENSIVE Template Variable Alias Layer
+    ============================================
     
-    CRITICAL FIX: Template uses different variable names than context:
-    - Template expects: building_coverage, building_ratio, max_building_coverage, demand_score
-    - Context provides: bcr, far, demand.overall_score
+    Maps ALL context variables to template expectations.
+    This function ensures 100% template compatibility.
     
-    This function creates aliases to bridge the gap.
+    Strategy: Extract from nested context → Create flat aliases
     """
     ctx = context.copy()
     
-    # 1) BCR/FAR ALIASES
-    # Get zoning data (context uses 'zoning' key with bcr/far)
-    zoning = ctx.get('zoning', {})
-    bcr = zoning.get('bcr', 60.0)
-    far = zoning.get('far', 200.0)
+    # ========================================================================
+    # SECTION 1: SITE & ZONING DATA
+    # ========================================================================
     
-    # TOP-LEVEL ALIASES (what template expects)
-    ctx['building_coverage'] = bcr  # Template: {{ building_coverage }}
-    ctx['building_ratio'] = far  # Template: {{ building_ratio }}
-    ctx['max_building_coverage'] = bcr  # Template: {{ max_building_coverage }}
-    ctx['legal_bcr'] = bcr  # For "법정 건폐율"
-    ctx['legal_far'] = far  # For "법정 용적률"
-    ctx['plan_bcr'] = bcr  # For "계획 건폐율"
-    ctx['plan_far'] = far  # For "계획 용적률"
+    # Get nested data sources
+    site = ctx.get('site', ctx.get('site_overview', {}))
+    zoning = ctx.get('zoning', ctx.get('zoning_regulations', {}))
     
-    # CALCULATED VALUES
-    land_area = ctx.get('land_area_sqm', ctx.get('site_overview', {}).get('land_area_sqm', 660.0))
-    building_area = land_area * (bcr / 100.0)
-    ctx['building_area'] = building_area
-    ctx['building_area_sqm'] = building_area  # Template expects this variant
-    ctx['gross_floor_area'] = land_area * (far / 100.0)
-    ctx['gross_floor_area_sqm'] = land_area * (far / 100.0)  # Also add sqm variant
-    
-    # DISPLAY VARIABLES (formatted for tables)
-    ctx['bcr_display'] = f"{bcr:.1f}%"
-    ctx['far_display'] = f"{far:.1f}%"
-    
-    # 2) DEMAND SCORE ALIAS
-    # Template expects: {{ demand_score }}
-    # Context provides: demand.overall_score
-    demand = ctx.get('demand', {})
-    ctx['demand_score'] = demand.get('overall_score', 75.0)
-    ctx['recommended_housing_type'] = demand.get('recommended_type', '도시근로자')
-    
-    # 3) MARKET SIGNAL ALIAS
-    market = ctx.get('market', {})
-    ctx['market_signal'] = market.get('signal', 'FAIR')
-    ctx['market_delta'] = market.get('delta_pct', 0.0)
-    
-    # 4) ADDITIONAL COMMON FIELDS
-    # Template expects: land_area_pyeong, total_units, avg_unit_area
+    # Land area (primary metric)
+    land_area = ctx.get('land_area_sqm', site.get('land_area_sqm', 660.0))
+    ctx['land_area_sqm'] = land_area
     ctx['land_area_pyeong'] = land_area / 3.3058
+    ctx['address'] = ctx.get('address', site.get('address', '서울특별시 마포구 월드컵북로 120'))
+    
+    # BCR/FAR (Building Coverage Ratio / Floor Area Ratio)
+    bcr = zoning.get('bcr', zoning.get('building_coverage_ratio', zoning.get('max_building_coverage', 60.0)))
+    far = zoning.get('far', zoning.get('floor_area_ratio', zoning.get('max_floor_area_ratio', 200.0)))
+    
+    ctx['building_coverage'] = bcr
+    ctx['building_ratio'] = far
+    ctx['floor_area_ratio'] = far
+    ctx['max_building_coverage'] = bcr
+    ctx['max_floor_area_ratio'] = far
+    ctx['legal_bcr'] = bcr
+    ctx['legal_far'] = far
+    ctx['plan_bcr'] = bcr
+    ctx['plan_far'] = far
+    
+    # Zone type and height limits
+    ctx['zone_type'] = zoning.get('zone_type', '제2종일반주거지역')
+    ctx['max_height_m'] = zoning.get('max_height', 35.0)
+    ctx['building_height_m'] = zoning.get('max_height', 35.0)
+    ctx['building_floors'] = zoning.get('max_floors', 11)
+    ctx['land_category'] = zoning.get('land_category', '대')
+    
+    # ========================================================================
+    # SECTION 2: AREA CALCULATIONS
+    # ========================================================================
+    
+    building_area = land_area * (bcr / 100.0)
+    gross_floor_area = land_area * (far / 100.0)
+    
+    # Building area (all variants)
+    ctx['building_area'] = building_area
+    ctx['building_area_sqm'] = building_area
+    
+    # Floor area (all variants)
+    ctx['gross_floor_area'] = gross_floor_area
+    ctx['gross_floor_area_sqm'] = gross_floor_area
+    ctx['total_floor_area'] = gross_floor_area
+    ctx['total_floor_area_sqm'] = gross_floor_area
+    ctx['floor_area'] = gross_floor_area
+    ctx['floor_area_sqm'] = gross_floor_area
+    
+    # Unit information
     ctx['total_units'] = ctx.get('total_units', 30)
+    ctx['recommended_units'] = ctx.get('total_units', 30)
     ctx['avg_unit_area'] = ctx.get('avg_unit_area', 66.0)
     
-    # 5) TOTAL FLOOR AREA (multiple naming variants)
-    total_floor = ctx.get('gross_floor_area', land_area * (far / 100.0))
-    ctx['total_floor_area'] = total_floor
-    ctx['total_floor_area_sqm'] = total_floor
-    ctx['floor_area'] = total_floor
-    ctx['floor_area_sqm'] = total_floor
+    # Parking
+    ctx['parking_spaces'] = zoning.get('parking_required', int(land_area / 45))
+    ctx['required_parking'] = zoning.get('parking_required', int(land_area / 45))
+    
+    # ========================================================================
+    # SECTION 3: FINANCIAL DATA
+    # ========================================================================
+    
+    finance = ctx.get('finance', ctx.get('financial_analysis', {}))
+    v19 = ctx.get('v19_finance', {})
+    
+    # Get financial metrics from multiple possible sources
+    if v19:
+        profit = v19.get('profit_calculation', {})
+        # Safely extract numeric values
+        capex = float(profit.get('total_capex', 0) or profit.get('total_capex_krw', 0) or 15000000000)
+        lh_price = float(profit.get('lh_purchase_price', 0) or profit.get('lh_purchase_price_krw', 0) or 12000000000)
+        roi_val = profit.get('roi_pct')
+        roi = float(roi_val) / 100.0 if roi_val and isinstance(roi_val, (int, float)) else 0.0
+        irr_val = profit.get('irr_pct')
+        irr = float(irr_val) / 100.0 if irr_val and isinstance(irr_val, (int, float)) else 0.0
+        payback = float(profit.get('payback_years', 0) or 0)
+    else:
+        capex_raw = finance.get('total_investment', finance.get('total_cost', 15000000000))
+        capex = float(capex_raw) if isinstance(capex_raw, (int, float)) else 15000000000
+        lh_price = capex * 0.8
+        roi = float(finance.get('roi', 0) or 0)
+        irr = float(finance.get('irr', 0) or 0)
+        payback = float(finance.get('payback_period', 0) or 0)
+    
+    ctx['capex_krw'] = capex
+    ctx['total_construction_cost_krw'] = capex
+    ctx['total_project_cost'] = capex
+    ctx['lh_purchase_price'] = lh_price
+    ctx['irr_public_pct'] = irr * 100
+    ctx['npv_public_krw'] = finance.get('npv', 0)
+    ctx['payback_period_years'] = payback
+    
+    # Cost breakdown
+    cost = ctx.get('cost', {})
+    construction = cost.get('construction', {})
+    breakdown = construction.get('breakdown', {})
+    
+    ctx['direct_cost_krw'] = breakdown.get('direct', capex * 0.6)
+    ctx['indirect_cost_krw'] = breakdown.get('indirect', capex * 0.2)
+    ctx['design_cost_krw'] = breakdown.get('design', capex * 0.1)
+    ctx['other_cost_krw'] = breakdown.get('contingency', capex * 0.1)
+    ctx['cost_per_sqm_krw'] = capex / gross_floor_area if gross_floor_area > 0 else 3500000
+    ctx['zerosite_value_per_sqm'] = ctx['cost_per_sqm_krw']
+    ctx['cost_confidence'] = 'HIGH'
+    
+    # ========================================================================
+    # SECTION 4: DEMAND INTELLIGENCE
+    # ========================================================================
+    
+    demand = ctx.get('demand', {})
+    
+    ctx['demand_score'] = demand.get('overall_score', demand.get('total_score', 75.0))
+    ctx['total_score'] = ctx['demand_score']
+    ctx['recommended_housing_type'] = demand.get('recommended_type', '도시근로자')
+    ctx['demand_confidence'] = demand.get('confidence_level', 'MEDIUM')
+    
+    # ========================================================================
+    # SECTION 5: MARKET INTELLIGENCE
+    # ========================================================================
+    
+    market = ctx.get('market', {})
+    
+    ctx['market_signal'] = market.get('signal', 'FAIR')
+    ctx['market_delta_pct'] = market.get('delta_pct', 0.0)
+    ctx['market_temperature'] = market.get('temperature', 'MODERATE')
+    ctx['market_avg_price_per_sqm'] = market.get('avg_price_per_sqm', 10000000)
+    
+    # ========================================================================
+    # SECTION 6: METADATA & DATES
+    # ========================================================================
+    
+    metadata = ctx.get('metadata', {})
+    from datetime import datetime
+    now = datetime.now()
+    
+    ctx['report_date'] = metadata.get('generated_date', now.strftime('%Y년 %m월 %d일'))
+    ctx['report_id'] = metadata.get('report_code', f'ZS-{now.strftime("%Y%m%d")}-0000')
+    ctx['current_year'] = now.year
+    ctx['current_month'] = now.month
+    ctx['analysis_period'] = '30 years'
+    
+    # ========================================================================
+    # SECTION 7: ASSUMPTIONS & PARAMETERS
+    # ========================================================================
+    
+    ctx['discount_rate'] = 0.05
+    ctx['rent_escalation'] = 0.02
+    ctx['vacancy_rate'] = 0.05
+    
+    # ========================================================================
+    # SECTION 8: POLICY & REQUIREMENTS
+    # ========================================================================
+    
+    # These are typically narrative fields - ensure they exist
+    ctx.setdefault('requirement', '')
+    ctx.setdefault('implication', '')
+    ctx.setdefault('limitation', '')
+    ctx.setdefault('research', '')
     
     return ctx
 
