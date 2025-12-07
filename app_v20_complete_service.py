@@ -935,9 +935,10 @@ def add_template_aliases(context):
             {
                 'year': i,
                 'revenue': 0,
-                'expense': 0,  # Template expects this
+                'expense': 0,  # Template line 3614
                 'opex': 0,
                 'noi': 0,
+                'net_cf': 0,  # Template line 3615 - Net cash flow
                 'cumulative': 0,
                 'cash_flow': 0
             } for i in range(1, 31)
