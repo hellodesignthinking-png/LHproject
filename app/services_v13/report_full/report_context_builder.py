@@ -596,8 +596,11 @@ class ReportContextBuilder:
             )
             
             base_scenario = financial_result.get('base', {})
+            logger.info(f"📊 Financial engine result keys: {base_scenario.keys()}")
         except Exception as e:
             logger.error(f"Financial engine failed: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             base_scenario = {}
         
         # Extract base metrics from correct structure
@@ -610,6 +613,8 @@ class ReportContextBuilder:
         annual_opex = opex_data.get('year1_total_opex', 0)
         stabilized_noi = noi_data.get('noi', 0)  # Correct key is 'noi', not 'stabilized_noi'
         annual_revenue = noi_data.get('effective_annual_income', stabilized_noi + annual_opex)  # Revenue = NOI + OpEx
+        
+        logger.info(f"💰 Financial data: CAPEX={capex_total/1e8:.1f}억, NOI={stabilized_noi/1e8:.1f}억, OpEx={annual_opex/1e8:.1f}억, Revenue={annual_revenue/1e8:.1f}억")
         
         finance = {
             'capex': {

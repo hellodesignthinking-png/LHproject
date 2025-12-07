@@ -661,7 +661,19 @@ class FinancialEngine:
             year=2
         )
         
-        return_metrics = self.calculate_return_metrics(total_capex, noi_result['noi'])
+        # Generate 10-year cash flows for NPV/IRR calculation
+        stabilized_noi = noi_result['noi']
+        cash_flows = []
+        for year in range(1, 11):
+            if year == 1:
+                cf = stabilized_noi * 0.85  # Year 1: 85% ramp-up
+            else:
+                # Years 2-10: stabilized with 2% annual growth
+                growth_factor = (1.02) ** (year - 2)
+                cf = stabilized_noi * growth_factor
+            cash_flows.append(cf)
+        
+        return_metrics = self.calculate_return_metrics(total_capex, noi_result['noi'], cash_flows)
         
         self.assumptions = original_assumptions
         
@@ -675,27 +687,46 @@ class FinancialEngine:
         }
     
     def _calculate_irr(self, cash_flows: List[float], guess: float = 0.1) -> float:
-        """Calculate Internal Rate of Return using Newton-Raphson method"""
+        """Calculate Internal Rate of Return using Newton-Raphson method with overflow protection"""
         if not cash_flows or len(cash_flows) < 2:
             return 0.0
+        
+        # Quick check: if all positive or all negative cashflows (except first), IRR doesn't exist
+        if sum(1 for cf in cash_flows[1:] if cf > 0) == 0:
+            return -1.0  # No positive cashflows, IRR doesn't exist
         
         rate = guess
         max_iterations = 100
         tolerance = 1e-6
         
-        for _ in range(max_iterations):
-            npv = sum(cf / ((1 + rate) ** i) for i, cf in enumerate(cash_flows))
-            npv_derivative = sum(-i * cf / ((1 + rate) ** (i + 1)) for i, cf in enumerate(cash_flows))
-            
-            if abs(npv) < tolerance:
-                return rate
-            
-            if npv_derivative == 0:
-                break
-            
-            rate = rate - npv / npv_derivative
+        for iteration in range(max_iterations):
+            try:
+                # Protect against overflow
+                if rate <= -1 or rate > 10:  # Sanity check: IRR shouldn't exceed 1000%
+                    return 0.0
+                
+                npv = sum(cf / ((1 + rate) ** i) for i, cf in enumerate(cash_flows))
+                npv_derivative = sum(-i * cf / ((1 + rate) ** (i + 1)) for i, cf in enumerate(cash_flows))
+                
+                if abs(npv) < tolerance:
+                    return rate
+                
+                if npv_derivative == 0:
+                    break
+                
+                new_rate = rate - npv / npv_derivative
+                
+                # Limit rate adjustment to prevent wild swings
+                if abs(new_rate - rate) > 1.0:
+                    new_rate = rate + (1.0 if new_rate > rate else -1.0)
+                
+                rate = new_rate
+                
+            except (OverflowError, ZeroDivisionError):
+                # If overflow occurs, IRR is likely invalid
+                return 0.0
         
-        return rate if rate > -1 else 0.0
+        return rate if -0.99 < rate < 10 else 0.0
     
     def _calculate_npv(self, cash_flows: List[float], discount_rate: float) -> float:
         """Calculate Net Present Value"""
