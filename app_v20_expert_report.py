@@ -491,8 +491,11 @@ def add_template_aliases(context):
     
     # CALCULATED VALUES
     land_area = ctx.get('land_area_sqm', ctx.get('site_overview', {}).get('land_area_sqm', 660.0))
-    ctx['building_area'] = land_area * (bcr / 100.0)
+    building_area = land_area * (bcr / 100.0)
+    ctx['building_area'] = building_area
+    ctx['building_area_sqm'] = building_area  # Template expects this variant
     ctx['gross_floor_area'] = land_area * (far / 100.0)
+    ctx['gross_floor_area_sqm'] = land_area * (far / 100.0)  # Also add sqm variant
     
     # DISPLAY VARIABLES (formatted for tables)
     ctx['bcr_display'] = f"{bcr:.1f}%"
@@ -515,6 +518,13 @@ def add_template_aliases(context):
     ctx['land_area_pyeong'] = land_area / 3.3058
     ctx['total_units'] = ctx.get('total_units', 30)
     ctx['avg_unit_area'] = ctx.get('avg_unit_area', 66.0)
+    
+    # 5) TOTAL FLOOR AREA (multiple naming variants)
+    total_floor = ctx.get('gross_floor_area', land_area * (far / 100.0))
+    ctx['total_floor_area'] = total_floor
+    ctx['total_floor_area_sqm'] = total_floor
+    ctx['floor_area'] = total_floor
+    ctx['floor_area_sqm'] = total_floor
     
     return ctx
 
