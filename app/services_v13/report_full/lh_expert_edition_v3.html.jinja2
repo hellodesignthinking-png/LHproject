@@ -940,6 +940,47 @@
                 background: white;
                 margin: 0;
                 padding: 0;
+                font-size: 11pt;
+                line-height: 1.5;
+            }
+            
+            /* Fix layout issues in PDF */
+            .cover-meta {
+                display: block !important;
+            }
+            
+            .cover-meta-item {
+                display: block;
+                width: 100%;
+                margin-bottom: 15px;
+                page-break-inside: avoid;
+            }
+            
+            .executive-grid {
+                display: block !important;
+            }
+            
+            .executive-card {
+                display: block;
+                width: 100%;
+                margin-bottom: 15px;
+                page-break-inside: avoid;
+            }
+            
+            .two-column {
+                display: block !important;
+            }
+            
+            .column {
+                display: block;
+                width: 100%;
+                margin-bottom: 15px;
+            }
+            
+            /* Ensure text is readable */
+            p, li, td, th, div {
+                orphans: 3;
+                widows: 3;
             }
             
             /* Cover Page Enhancement */
@@ -948,6 +989,97 @@
                 color: white !important;
                 page-break-after: always;
                 min-height: 100vh;
+                display: block;
+                padding: 60px 40px;
+            }
+            
+            .cover-logo {
+                font-size: 32pt;
+                font-weight: 900;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+            
+            .cover-subtitle {
+                font-size: 14pt;
+                text-align: center;
+                margin-bottom: 60px;
+            }
+            
+            .cover-title {
+                font-size: 28pt;
+                font-weight: 900;
+                text-align: center;
+                margin: 80px 0 40px 0;
+                line-height: 1.3;
+            }
+            
+            .cover-address {
+                font-size: 20pt;
+                text-align: center;
+                margin: 40px 0;
+                padding: 20px;
+                background: rgba(255,255,255,0.15);
+                border-left: 4px solid #D4AF37;
+            }
+            
+            .cover-footer {
+                margin-top: 100px;
+                padding-top: 30px;
+                border-top: 1px solid rgba(255,255,255,0.4);
+                text-align: center;
+            }
+            
+            .cover-organization {
+                font-size: 14pt;
+                margin-bottom: 10px;
+            }
+            
+            .cover-date {
+                font-size: 12pt;
+            }
+            
+            /* TOC Page */
+            .toc-page {
+                page-break-after: always;
+                padding: 40px 20px;
+            }
+            
+            .toc-title {
+                font-size: 28pt;
+                font-weight: 900;
+                color: #005BAC;
+                margin-bottom: 40px;
+                padding-bottom: 20px;
+                border-bottom: 3px solid #005BAC;
+                text-align: center;
+            }
+            
+            .toc-section {
+                display: block;
+                margin-bottom: 15px;
+                padding: 12px 15px;
+                border-left: 4px solid #E6F2FF;
+                background: white;
+                page-break-inside: avoid;
+            }
+            
+            .toc-number {
+                display: inline;
+                font-weight: 700;
+                color: #005BAC;
+                margin-right: 10px;
+            }
+            
+            .toc-text {
+                display: inline;
+                font-weight: 500;
+                color: #2C3E50;
+            }
+            
+            .toc-page-number {
+                float: right;
+                color: #7F8C8D;
             }
             
             /* Section Headers */
@@ -955,15 +1087,72 @@
                 background: linear-gradient(135deg, #005BAC, #0075C9) !important;
                 color: white !important;
                 page-break-after: avoid;
+                padding: 20px 25px;
+                margin-bottom: 20px;
+            }
+            
+            .section-number {
+                font-size: 13pt;
+                font-weight: 400;
+                display: block;
+                margin-bottom: 8px;
+            }
+            
+            .section-title {
+                font-size: 18pt;
+                font-weight: 900;
+                display: block;
+                margin-bottom: 5px;
+            }
+            
+            .section-subtitle {
+                font-size: 10pt;
+                font-weight: 300;
+                display: block;
             }
             
             /* Content Blocks - Add borders and spacing */
             .content-block {
                 border: 1px solid #ECF0F1;
-                padding: 15px;
-                margin-bottom: 15px;
+                padding: 20px;
+                margin-bottom: 20px;
                 page-break-inside: avoid;
                 background: white;
+                clear: both;
+            }
+            
+            .content-title {
+                font-size: 13pt;
+                font-weight: 700;
+                color: #005BAC;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #E6F2FF;
+                display: block;
+            }
+            
+            /* Text formatting */
+            h1, h2, h3, h4, h5, h6 {
+                page-break-after: avoid;
+                page-break-inside: avoid;
+                clear: both;
+            }
+            
+            p {
+                margin-bottom: 10px;
+                line-height: 1.6;
+                text-align: justify;
+                hyphens: auto;
+            }
+            
+            ul, ol {
+                margin: 10px 0;
+                padding-left: 30px;
+            }
+            
+            li {
+                margin-bottom: 8px;
+                line-height: 1.5;
             }
             
             /* v15 Phase 2 Components - Special Styling */
@@ -977,6 +1166,8 @@
                 border-collapse: collapse;
                 width: 100%;
                 page-break-inside: avoid;
+                margin: 15px 0;
+                font-size: 10pt;
             }
             
             thead {
@@ -985,12 +1176,51 @@
                 display: table-header-group;
             }
             
+            thead th {
+                padding: 12px 10px;
+                text-align: left;
+                font-weight: 700;
+                border: 1px solid #003D73;
+            }
+            
+            tbody tr {
+                border-bottom: 1px solid #ECF0F1;
+            }
+            
             tbody tr:nth-child(even) {
                 background-color: #E6F2FF !important;
             }
             
-            /* KPI Cards */
-            .content-block > div[style*="display: grid"] {
+            tbody td {
+                padding: 10px;
+                border: 1px solid #ECF0F1;
+                vertical-align: top;
+            }
+            
+            /* Table numbers and text alignment */
+            td.number, th.number {
+                text-align: right;
+            }
+            
+            td.center, th.center {
+                text-align: center;
+            }
+            
+            td.bold {
+                font-weight: 700;
+            }
+            
+            /* KPI Cards - Force block layout */
+            .content-block > div[style*="display: grid"],
+            .content-block > div[style*="display: flex"] {
+                display: block !important;
+            }
+            
+            .content-block > div[style*="display: grid"] > div,
+            .content-block > div[style*="display: flex"] > div {
+                display: block !important;
+                width: 100% !important;
+                margin-bottom: 15px;
                 page-break-inside: avoid;
             }
             
