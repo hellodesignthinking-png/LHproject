@@ -19,6 +19,14 @@ import logging
 import xml.etree.ElementTree as ET
 from math import radians, sin, cos, sqrt, atan2
 
+# Import caching system
+try:
+    from app.services.real_transaction_cache import get_cache
+    CACHE_ENABLED = True
+except ImportError:
+    CACHE_ENABLED = False
+    logger.warning("⚠️ Cache module not found - running without cache")
+
 logger = logging.getLogger(__name__)
 
 
@@ -71,12 +79,16 @@ class RealTransactionAPI:
     TOWNHOUSE_ENDPOINT = "https://apis.data.go.kr/1613000/RTMSDataSvcRHTrade/getRTMSDataSvcRHTrade"
     SINGLEHOUSE_ENDPOINT = "https://apis.data.go.kr/1613000/RTMSDataSvcSHTrade/getRTMSDataSvcSHTrade"
     
-    def __init__(self):
+    def __init__(self, enable_cache: bool = True):
         self.api_key = self.API_KEY
+        self.cache_enabled = enable_cache and CACHE_ENABLED
+        self.cache = get_cache() if self.cache_enabled else None
+        
         logger.info("=" * 80)
         logger.info("🌐 RealTransactionAPI initialized")
         logger.info(f"   Land API: {self.LAND_ENDPOINT[:50]}...")
         logger.info(f"   Building APIs: 3 endpoints configured")
+        logger.info(f"   Cache: {'✅ ENABLED' if self.cache_enabled else '❌ DISABLED'}")
         logger.info("=" * 80)
     
     def _calculate_distance_m(self, lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -128,7 +140,7 @@ class RealTransactionAPI:
         radius_m: int = 1000
     ) -> List[LandTransaction]:
         """
-        토지 실거래가 조회
+        토지 실거래가 조회 (캐싱 지원)
         
         Args:
             lawd_cd: 법정동코드 (앞 2자리, 서울=11, 경기=41)
@@ -141,6 +153,14 @@ class RealTransactionAPI:
             LandTransaction 리스트
         """
         logger.info(f"🏞️  Fetching land transactions: lawd={lawd_cd}, date={deal_ymd}, radius={radius_m}m")
+        
+        # Try cache first
+        if self.cache_enabled:
+            cached_data = self.cache.get('land', lawd_cd, deal_ymd)
+            if cached_data:
+                transactions = [LandTransaction(**t) for t in cached_data]
+                logger.info(f"   ✅ Loaded {len(transactions)} land transactions from cache")
+                return transactions[:10]
         
         params = {
             'serviceKey': self.api_key,
@@ -206,6 +226,11 @@ class RealTransactionAPI:
                     avg_unit = sum(t.unit_krw_m2 for t in top_transactions) / len(top_transactions)
                     logger.info(f"   📊 Average land price: {avg_unit/10000:.0f}만원/㎡")
                 
+                # Save to cache
+                if self.cache_enabled and top_transactions:
+                    cache_data = [t.to_dict() for t in top_transactions]
+                    self.cache.set('land', lawd_cd, deal_ymd, cache_data)
+                
                 return top_transactions
                 
         except Exception as e:
@@ -221,7 +246,7 @@ class RealTransactionAPI:
         radius_m: int = 1000
     ) -> List[BuildingTransaction]:
         """
-        건축물 매매사례 조회 (오피스텔, 연립다세대, 단독다가구 통합)
+        건축물 매매사례 조회 (오피스텔, 연립다세대, 단독다가구 통합) (캐싱 지원)
         
         Args:
             lawd_cd: 법정동코드
@@ -234,6 +259,14 @@ class RealTransactionAPI:
             BuildingTransaction 리스트
         """
         logger.info(f"🏢 Fetching building transactions: lawd={lawd_cd}, date={deal_ymd}")
+        
+        # Try cache first
+        if self.cache_enabled:
+            cached_data = self.cache.get('building', lawd_cd, deal_ymd)
+            if cached_data:
+                transactions = [BuildingTransaction(**t) for t in cached_data]
+                logger.info(f"   ✅ Loaded {len(transactions)} building transactions from cache")
+                return transactions[:10]
         
         all_transactions = []
         
@@ -311,6 +344,11 @@ class RealTransactionAPI:
         if top_transactions:
             avg_unit = sum(t.unit_krw_m2 for t in top_transactions) / len(top_transactions)
             logger.info(f"   📊 Average building price: {avg_unit/10000:.0f}만원/㎡")
+        
+        # Save to cache
+        if self.cache_enabled and top_transactions:
+            cache_data = [t.to_dict() for t in top_transactions]
+            self.cache.set('building', lawd_cd, deal_ymd, cache_data)
         
         return top_transactions
     
