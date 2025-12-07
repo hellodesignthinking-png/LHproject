@@ -384,16 +384,37 @@ def add_safe_defaults(context):
     # Ensure all numeric values have defaults
     safe_context = context.copy()
     
+    # Top-level template variables (direct access in template)
+    safe_context.setdefault('address', '서울특별시 마포구 월드컵북로 120')
+    safe_context.setdefault('land_area_sqm', 660.0)
+    safe_context.setdefault('building_coverage_ratio', 50.0)
+    safe_context.setdefault('floor_area_ratio', 300.0)
+    safe_context.setdefault('building_area', 330.0)
+    safe_context.setdefault('gross_floor_area', 1980.0)
+    safe_context.setdefault('total_units', 30)
+    safe_context.setdefault('avg_unit_area', 66.0)
+    
     # Site overview defaults
     if 'site_overview' not in safe_context:
         safe_context['site_overview'] = {}
     
     site = safe_context['site_overview']
-    site.setdefault('land_area_sqm', 660.0)
+    site.setdefault('address', safe_context.get('address', '서울특별시 마포구 월드컵북로 120'))
+    site.setdefault('land_area_sqm', safe_context.get('land_area_sqm', 660.0))
     site.setdefault('building_area', 330.0)
     site.setdefault('gross_floor_area', 1980.0)
     site.setdefault('floor_area_ratio', 300.0)
     site.setdefault('building_coverage_ratio', 50.0)
+    
+    # Zoning regulations defaults
+    if 'zoning_regulations' not in safe_context:
+        safe_context['zoning_regulations'] = {}
+    
+    zoning = safe_context['zoning_regulations']
+    zoning.setdefault('zone_type', '제2종일반주거지역')
+    zoning.setdefault('max_floor_area_ratio', 300.0)
+    zoning.setdefault('max_building_coverage', 50.0)
+    zoning.setdefault('max_height', 35.0)
     
     # Financial defaults
     if 'financial_analysis' not in safe_context:
@@ -419,6 +440,24 @@ def add_safe_defaults(context):
             profit.setdefault('total_capex', 15000000000)
             profit.setdefault('lh_purchase_price', 12000000000)
             profit.setdefault('profit', -3000000000)
+    
+    # Construction cost defaults
+    if 'construction_cost' not in safe_context:
+        safe_context['construction_cost'] = {}
+    
+    construction = safe_context['construction_cost']
+    construction.setdefault('total_cost', 6930000000)
+    construction.setdefault('per_sqm', 3500000)
+    
+    # Metadata defaults
+    if 'metadata' not in safe_context:
+        safe_context['metadata'] = {}
+    
+    meta = safe_context['metadata']
+    meta.setdefault('report_title', 'LH 신축매입임대 사업 타당성 분석 보고서')
+    meta.setdefault('generated_date', '2025년 12월 07일')
+    meta.setdefault('author', 'Na TaiHeum (나태흠)')
+    meta.setdefault('organization', 'Antenna Holdings')
     
     return safe_context
 
@@ -573,6 +612,6 @@ if __name__ == '__main__':
     print("   - LH submission-ready format")
     print("   - Professional academic style")
     print()
-    print("📍 Server will run on port 5004")
+    print("📍 Server will run on port 5005")
     print()
-    app.run(host='0.0.0.0', port=5004, debug=False)
+    app.run(host='0.0.0.0', port=5005, debug=False)
