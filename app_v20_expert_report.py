@@ -654,6 +654,18 @@ def add_template_aliases(context):
             'total_duration': '36개월'
         }
     
+    # Risk matrix
+    if 'risk_matrix' not in ctx:
+        ctx['risk_matrix'] = {
+            'risks': [
+                {'category': '시장', 'risk': '부동산 시장 침체', 'probability': 'Medium', 'impact': 'High', 'mitigation': 'LH 매입 보장으로 시장 리스크 최소화'},
+                {'category': '재무', 'risk': 'ROI 마이너스', 'probability': 'High', 'impact': 'High', 'mitigation': '정책자금 우대금리 활용'},
+                {'category': '정책', 'risk': 'LH 정책 변경', 'probability': 'Low', 'impact': 'Critical', 'mitigation': '사전 LH 협의 및 계약 보장'},
+                {'category': '운영', 'risk': '공사 지연', 'probability': 'Medium', 'impact': 'Medium', 'mitigation': '여유 공기 확보'}
+            ],
+            'overall_rating': 'MODERATE'
+        }
+    
     # ========================================================================
     # SECTION 9: CASH FLOW TABLE
     # ========================================================================
