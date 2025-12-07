@@ -26,6 +26,170 @@ from app.feasibility_checker_v11 import FeasibilityChecker
 from app.narrative_generator_v11 import NarrativeGenerator
 
 
+def run_v11_engines(
+    address: str,
+    land_area: float,
+    land_appraisal_price: float,
+    zone_type: str,
+    analysis_result: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    Run only v11.0 AI engines (no HTML generation)
+    
+    Returns v11.0 engine results for use with v7.5 report generator
+    
+    Args:
+        address: Land address
+        land_area: Land area in m²
+        land_appraisal_price: Total land appraisal price
+        zone_type: Zone type
+        analysis_result: v9.1 analysis result
+        
+    Returns:
+        Dictionary with v11.0 engine results:
+        {
+            'v11_data': {
+                'lh_score': LHScoreBreakdown,
+                'decision': DecisionResult,
+                'unit_analysis': dict,
+                'pseudo_data': dict,
+                'feasibility': dict
+            }
+        }
+    """
+    print("🤖 Running v11.0 AI Engines (data only, no HTML)...")
+    
+    # Extract coordinates
+    coord = {
+        'lat': analysis_result.get('latitude', 37.5665),
+        'lng': analysis_result.get('longitude', 126.9780)
+    }
+    
+    # 1. Pseudo Data Engine
+    print("  📊 PseudoDataEngine...")
+    pseudo_engine = PseudoDataEngine(address=address, coord=coord)
+    pseudo_data = pseudo_engine.generate_comprehensive_report()
+    print(f"     ✅ Generated pseudo data")
+    
+    # 2. Unit-Type Analysis
+    print("  🏘️ UnitTypeSuitabilityAnalyzer...")
+    unit_analyzer = UnitTypeSuitabilityAnalyzer()
+    unit_analysis = unit_analyzer.analyze_all_types(
+        address=address,
+        coord=coord,
+        zone_type=zone_type,
+        land_area=land_area
+    )
+    recommended_type = unit_analysis.get('recommended_type', 'newlywed')
+    print(f"     ✅ Recommended: {recommended_type}")
+    
+    # 3. Feasibility Check
+    print("  ✔️  FeasibilityChecker...")
+    bcr = analysis_result.get('building_coverage_ratio', 60.0)
+    far = analysis_result.get('floor_area_ratio', 200.0)
+    max_floors = analysis_result.get('floors', 7)
+    unit_count = pseudo_data.get('unit_count', 30)
+    total_gfa = pseudo_data.get('total_gfa', land_area * far / 100)
+    
+    feasibility_checker = FeasibilityChecker(
+        land_area=land_area,
+        bcr=bcr,
+        far=far,
+        zone_type=zone_type,
+        max_floors=max_floors,
+        unit_count=unit_count,
+        total_gfa=total_gfa
+    )
+    feasibility = feasibility_checker.check_unit_type_feasibility(recommended_type)
+    print(f"     ✅ Feasibility: {feasibility.get('status', 'UNKNOWN')}")
+    
+    # 4. LH Score Calculation
+    print("  📈 LHScoreMapper...")
+    lh_mapper = LHScoreMapper()
+    lh_score = lh_mapper.calculate_lh_score(
+        analysis_result=analysis_result,
+        unit_analysis=unit_analysis,
+        pseudo_data=pseudo_data
+    )
+    print(f"     ✅ LH Score: {lh_score.total_score:.1f}/100 (Grade {lh_score.grade.value})")
+    
+    # 5. Decision Engine
+    print("  🎯 LHDecisionEngine...")
+    decision_engine = LHDecisionEngine()
+    decision = decision_engine.make_decision(
+        lh_score=lh_score,
+        analysis_result=analysis_result,
+        feasibility_result=feasibility
+    )
+    print(f"     ✅ Decision: {decision.decision}")
+    
+    print("✅ v11.0 AI Engines Complete!")
+    
+    return {
+        'v11_data': {
+            'lh_score': {
+                'total_score': lh_score.total_score,
+                'grade': lh_score.grade.value,
+                'breakdown': {
+                    'location': {
+                        'transportation_access': lh_score.transportation_access,
+                        'living_convenience': lh_score.living_convenience,
+                        'education_environment': lh_score.education_environment,
+                        'location_total': lh_score.location_total
+                    },
+                    'feasibility': {
+                        'far_bcr_adequacy': lh_score.far_bcr_adequacy,
+                        'unit_count_adequacy': lh_score.unit_count_adequacy,
+                        'land_price_adequacy': lh_score.land_price_adequacy,
+                        'feasibility_total': lh_score.feasibility_total
+                    },
+                    'policy': {
+                        'zone_suitability': lh_score.zone_suitability,
+                        'housing_policy_alignment': lh_score.housing_policy_alignment,
+                        'unit_type_suitability': lh_score.unit_type_suitability,
+                        'policy_total': lh_score.policy_total
+                    },
+                    'financial': {
+                        'irr_roi_level': lh_score.irr_roi_level,
+                        'payback_period': lh_score.payback_period,
+                        'financing_feasibility': lh_score.financing_feasibility,
+                        'financial_total': lh_score.financial_total
+                    },
+                    'risk': {
+                        'legal_risk': lh_score.legal_risk,
+                        'market_risk': lh_score.market_risk,
+                        'construction_risk': lh_score.construction_risk,
+                        'risk_total': lh_score.risk_total
+                    }
+                }
+            },
+            'decision': {
+                'decision': decision.decision.value,
+                'confidence': decision.confidence,
+                'primary_reason': decision.primary_reason,
+                'supporting_reasons': decision.supporting_reasons,
+                'critical_risks': [
+                    {
+                        'category': risk.category,
+                        'description': risk.description,
+                        'impact': risk.impact,
+                        'mitigation': risk.mitigation
+                    } for risk in decision.critical_risks
+                ],
+                'risk_level': decision.risk_level.value,
+                'financial_viability': decision.financial_viability,
+                'improvement_strategies': decision.improvement_strategies,
+                'priority_actions': decision.priority_actions,
+                'executive_summary': decision.executive_summary,
+                'next_steps': decision.next_steps
+            },
+            'unit_analysis': unit_analysis,
+            'pseudo_data': pseudo_data,
+            'feasibility': feasibility
+        }
+    }
+
+
 def generate_lh_score_table_html(lh_score: LHScoreBreakdown) -> str:
     """LH 100점 채점표 HTML 생성 (v7.5 스타일)"""
     
@@ -951,7 +1115,7 @@ def generate_v11_ultra_pro_report(
     v11_html = v11_html.replace("v9.1 + v7.5", "v9.1 + v10.0 + v11.0")
     
     # Inject LH Score Table after Part 6 header
-    part6_marker = '<div class="section-header">6.1 LH 평가 기준</div>'
+    part6_marker = '<div class="section-header">6.1 LH 평가 체계</div>'
     if part6_marker in v11_html:
         v11_html = v11_html.replace(
             part6_marker,
@@ -969,7 +1133,7 @@ def generate_v11_ultra_pro_report(
         print("  ✅ Unit-Type Matrix injected into Part 4")
     
     # Inject Decision Result into Part 8
-    part8_marker = '<div class="section-header">8.1 최종 권고사항</div>'
+    part8_marker = '<div class="section-header">8.1 종합 의견</div>'
     if part8_marker in v11_html:
         v11_html = v11_html.replace(
             part8_marker,
