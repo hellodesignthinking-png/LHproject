@@ -750,13 +750,14 @@ def add_template_aliases(context):
     Add template variable aliases to fix undefined errors
     
     CRITICAL FIX: Template uses different variable names than context:
-    - Template expects: building_coverage, building_ratio, max_building_coverage
-    - Context provides: bcr, far, legal_bcr, legal_far
+    - Template expects: building_coverage, building_ratio, max_building_coverage, demand_score
+    - Context provides: bcr, far, demand.overall_score
     
     This function creates aliases to bridge the gap.
     """
     ctx = context.copy()
     
+    # 1) BCR/FAR ALIASES
     # Get zoning data (context uses 'zoning' key with bcr/far)
     zoning = ctx.get('zoning', {})
     bcr = zoning.get('bcr', 60.0)
@@ -779,6 +780,24 @@ def add_template_aliases(context):
     # DISPLAY VARIABLES (formatted for tables)
     ctx['bcr_display'] = f"{bcr:.1f}%"
     ctx['far_display'] = f"{far:.1f}%"
+    
+    # 2) DEMAND SCORE ALIAS
+    # Template expects: {{ demand_score }}
+    # Context provides: demand.overall_score
+    demand = ctx.get('demand', {})
+    ctx['demand_score'] = demand.get('overall_score', 75.0)
+    ctx['recommended_housing_type'] = demand.get('recommended_type', '도시근로자')
+    
+    # 3) MARKET SIGNAL ALIAS
+    market = ctx.get('market', {})
+    ctx['market_signal'] = market.get('signal', 'FAIR')
+    ctx['market_delta'] = market.get('delta_pct', 0.0)
+    
+    # 4) ADDITIONAL COMMON FIELDS
+    # Template expects: land_area_pyeong, total_units, avg_unit_area
+    ctx['land_area_pyeong'] = land_area / 3.3058
+    ctx['total_units'] = ctx.get('total_units', 30)
+    ctx['avg_unit_area'] = ctx.get('avg_unit_area', 66.0)
     
     return ctx
 
@@ -837,12 +856,21 @@ def create_safe_jinja_env():
         except (ValueError, TypeError):
             return 0.0
     
+    def markdown_filter(text):
+        """Simple markdown filter - preserves newlines as <br> and wraps in <p>"""
+        if not text:
+            return ''
+        # Replace \n with <br> and wrap in paragraph
+        text = str(text).replace('\n', '<br>\n')
+        return f'<p>{text}</p>'
+    
     env.filters['round'] = safe_round
     env.filters['safe_round'] = safe_round
     env.filters['int'] = safe_int
     env.filters['safe_int'] = safe_int
     env.filters['float'] = safe_float
     env.filters['safe_float'] = safe_float
+    env.filters['markdown'] = markdown_filter  # ADD: markdown filter
     
     return env
 
