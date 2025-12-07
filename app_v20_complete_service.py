@@ -930,16 +930,37 @@ def add_template_aliases(context):
     
     # Cash flow table for 30-year projection
     if 'cash_flow_table' not in ctx:
-        # Generate minimal cash flow table structure
+        # Generate minimal cash flow table structure with ALL required fields
         ctx['cash_flow_table'] = [
             {
                 'year': i,
                 'revenue': 0,
+                'expense': 0,  # Template expects this
                 'opex': 0,
                 'noi': 0,
-                'cumulative': 0
+                'cumulative': 0,
+                'cash_flow': 0
             } for i in range(1, 31)
         ]
+    
+    # ========================================================================
+    # SECTION 10: POLICY FINANCE
+    # ========================================================================
+    
+    # Policy finance structure for LH appraisal calculations
+    if 'policy_finance' not in ctx:
+        ctx['policy_finance'] = {
+            'base': {
+                'land_appraisal': capex * 0.4,  # ~40% for land
+                'building_appraisal': capex * 0.5,  # ~50% for building
+                'appraisal_value': capex * 0.9,  # 90% appraisal
+                'appraisal_rate': 0.9,
+                'policy_npv': ctx.get('npv_public_krw', 0)
+            },
+            'explanation': {
+                'mechanism': 'LH 정책자금은 토지 및 건물 감정평가액의 90%를 기준으로 산정됩니다.'
+            }
+        }
     
     return ctx
 
