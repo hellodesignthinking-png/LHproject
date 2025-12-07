@@ -851,7 +851,10 @@ def add_template_aliases(context):
     ctx['total_project_cost'] = capex
     ctx['lh_purchase_price'] = lh_price
     ctx['irr_public_pct'] = irr * 100
-    ctx['npv_public_krw'] = finance.get('npv', 0)
+    
+    # NPV - ensure numeric value
+    npv_raw = finance.get('npv', 0)
+    ctx['npv_public_krw'] = float(npv_raw) if isinstance(npv_raw, (int, float)) else 0.0
     ctx['payback_period_years'] = payback
     
     # Cost breakdown
