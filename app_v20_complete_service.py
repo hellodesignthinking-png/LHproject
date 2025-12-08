@@ -989,6 +989,62 @@ def add_template_aliases(context):
             }
         }
     
+    # ========================================================================
+    # SECTION 9: FINANCIAL NUMBER FORMATTING (v22.1 FIX)
+    # ========================================================================
+    # Convert all KRW (원) values to display units (억원, 만원/㎡)
+    # This prevents double-unit issues like "15000000000 억원"
+    
+    # Helper functions
+    def to_eok(value_won):
+        """Convert KRW to 억원 (hundred million)"""
+        return round(value_won / 1e8, 2) if value_won else 0.0
+    
+    def to_man_per_sqm(value_won_per_sqm):
+        """Convert KRW/㎡ to 만원/㎡ (ten thousand)"""
+        return round(value_won_per_sqm / 1e4, 1) if value_won_per_sqm else 0.0
+    
+    # CAPEX and related costs (all in 억원)
+    capex_won = ctx.get('capex_krw', 15000000000)  # Original value in KRW
+    ctx['capex_eok'] = to_eok(capex_won)
+    ctx['total_construction_cost_eok'] = to_eok(capex_won)
+    ctx['total_project_cost_eok'] = to_eok(capex_won)
+    
+    # NPV, Profit, LH Purchase Price (all in 억원)
+    npv_won = ctx.get('npv_public_krw', 0)
+    ctx['npv_eok'] = to_eok(npv_won)
+    ctx['npv_public_eok'] = to_eok(npv_won)
+    
+    lh_price_won = ctx.get('lh_purchase_price', 0)
+    ctx['lh_purchase_price_eok'] = to_eok(lh_price_won)
+    
+    profit_won = lh_price_won - capex_won
+    ctx['profit_eok'] = to_eok(profit_won)
+    
+    # ROI/IRR (already in %)
+    ctx['roi_pct'] = round((profit_won / capex_won * 100), 2) if capex_won > 0 else 0.0
+    ctx['irr_pct'] = ctx.get('irr_public_pct', 0.0)
+    
+    # Cost per sqm (만원/㎡)
+    cost_per_sqm_won = ctx.get('cost_per_sqm_krw', 3500000)
+    ctx['cost_per_sqm_man'] = to_man_per_sqm(cost_per_sqm_won)
+    ctx['zerosite_value_per_sqm_man'] = to_man_per_sqm(cost_per_sqm_won)
+    
+    # Market prices (만원/㎡)
+    market_price_won = ctx.get('market_avg_price_per_sqm', 10000000)
+    ctx['market_avg_price_per_sqm_man'] = to_man_per_sqm(market_price_won)
+    ctx['zerosite_price_man_per_sqm'] = to_man_per_sqm(cost_per_sqm_won)
+    ctx['market_price_man_per_sqm'] = to_man_per_sqm(market_price_won)
+    
+    # Cost breakdown (all in 억원)
+    ctx['direct_cost_eok'] = to_eok(ctx.get('direct_cost_krw', 0))
+    ctx['indirect_cost_eok'] = to_eok(ctx.get('indirect_cost_krw', 0))
+    ctx['design_cost_eok'] = to_eok(ctx.get('design_cost_krw', 0))
+    ctx['other_cost_eok'] = to_eok(ctx.get('other_cost_krw', 0))
+    
+    # Keep original KRW values for calculations, but add display versions
+    # This way templates can use {{ capex_eok }} 억원 instead of {{ capex_krw }} 억원
+    
     return ctx
 
 

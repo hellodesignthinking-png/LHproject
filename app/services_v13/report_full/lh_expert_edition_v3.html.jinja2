@@ -1685,6 +1685,23 @@
                 column-gap: 0;
             }
         }
+        
+        /* ========== Layout Stability ========== */
+        .logic-section {
+            page-break-inside: avoid;
+        }
+        
+        .logic-grid {
+            align-items: flex-start;
+        }
+        
+        .logic-left, .logic-right {
+            break-inside: avoid;
+        }
+        
+        .logic-box, .highlight-box {
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -1725,10 +1742,17 @@
     </div>
     
     <div class="cover-footer">
-        <div class="cover-organization">한국토지주택공사 (LH)</div>
+        <div class="cover-organization">ZeroSite</div>
         <div class="cover-date">{{ report_date }}</div>
     </div>
+    
+    <div class="copyright" style="position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; font-size: 9px; color: #7A7A7A; font-family: 'Pretendard', sans-serif;">
+        © Antenna Holdings · Na Tae-heum. All rights reserved.
+    </div>
 </div>
+
+<!-- Page break after cover -->
+<div style="page-break-after: always;"></div>
 
 <!-- ============================================================
      PART 2: TABLE OF CONTENTS (목차)
@@ -1810,21 +1834,21 @@
         <div class="executive-card">
             <div class="executive-card-label">총 투자비 (CAPEX)</div>
             <div class="executive-card-value">
-                {{ capex_krw | round(0) | int }}
+                {{ capex_eok }}
                 <span class="executive-card-unit">억원</span>
             </div>
         </div>
         <div class="executive-card">
             <div class="executive-card-label">순현재가치 (NPV)</div>
             <div class="executive-card-value">
-                {{ npv_public_krw | round(0) | int }}
+                {{ npv_eok }}
                 <span class="executive-card-unit">억원</span>
             </div>
         </div>
         <div class="executive-card">
             <div class="executive-card-label">내부수익률 (IRR)</div>
             <div class="executive-card-value">
-                {{ irr_public_pct | round(2) }}
+                {{ irr_pct }}
                 <span class="executive-card-unit">%</span>
             </div>
         </div>
@@ -2847,7 +2871,7 @@
             </div>
             <div class="metric-card">
                 <div class="metric-label">ZeroSite 산정가</div>
-                <div class="metric-value">{{ zerosite_value_per_sqm | round(0) }}<span class="metric-unit">만원/㎡</span></div>
+                <div class="metric-value">{{ zerosite_price_man_per_sqm }}<span class="metric-unit">만원/㎡</span></div>
             </div>
         </div>
     </div>
@@ -2905,14 +2929,14 @@
             <tbody>
                 <tr>
                     <td class="bold">ZeroSite 산정가</td>
-                    <td class="number">{{ zerosite_value_per_sqm | round(1) }}</td>
-                    <td class="number">{{ (zerosite_value_per_sqm * land_area_sqm / 10000) | round(1) }}</td>
+                    <td class="number">{{ zerosite_price_man_per_sqm }}</td>
+                    <td class="number">{{ (zerosite_price_man_per_sqm * land_area_sqm / 100) | round(1) }}</td>
                     <td class="number">-</td>
                 </tr>
                 <tr>
                     <td class="bold">시장 평균가</td>
-                    <td class="number">{{ market_avg_price_per_sqm | round(1) }}</td>
-                    <td class="number">{{ (market_avg_price_per_sqm * land_area_sqm / 10000) | round(1) }}</td>
+                    <td class="number">{{ market_price_man_per_sqm }}</td>
+                    <td class="number">{{ (market_price_man_per_sqm * land_area_sqm / 100) | round(1) }}</td>
                     <td class="number">{{ market_delta_pct | round(1) }}%</td>
                 </tr>
             </tbody>
