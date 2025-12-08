@@ -1202,11 +1202,19 @@ def add_template_aliases(context):
         'sensitivity': {
             'optimistic': {
                 'appraisal_rate': 0.95,
+                'appraisal_value_eok': to_eok(lh_total_appraisal_won * 0.95),
                 'policy_npv': (lh_total_appraisal_won * 0.95 - capex_won),
                 'policy_npv_eok': to_eok(lh_total_appraisal_won * 0.95 - capex_won)
             },
+            'base': {
+                'appraisal_rate': land_appraisal_rate,
+                'appraisal_value_eok': ctx['lh_total_appraisal_eok'],
+                'policy_npv': 0,  # Will be updated
+                'policy_npv_eok': 0
+            },
             'pessimistic': {
                 'appraisal_rate': 0.88,
+                'appraisal_value_eok': to_eok(lh_total_appraisal_won * 0.88),
                 'policy_npv': (lh_total_appraisal_won * 0.88 - capex_won),
                 'policy_npv_eok': to_eok(lh_total_appraisal_won * 0.88 - capex_won)
             }
