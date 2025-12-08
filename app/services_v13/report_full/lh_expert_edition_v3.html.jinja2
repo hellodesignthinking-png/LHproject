@@ -2950,15 +2950,15 @@
             <tbody>
                 <tr>
                     <td class="bold">ZeroSite 산정가</td>
-                    <td class="number">{{ zerosite_price_man_per_sqm | round(1) }}</td>
-                    <td class="number">{{ zerosite_market_value_eok | round(2) }}</td>
+                    <td class="number">{{ (zerosite_price_man_per_sqm | default(0)) | round(1) }}</td>
+                    <td class="number">{{ (zerosite_market_value_eok | default(0)) | round(2) }}</td>
                     <td class="number">-</td>
                 </tr>
                 <tr>
                     <td class="bold">시장 평균가</td>
-                    <td class="number">{{ market_price_man_per_sqm | round(1) }}</td>
-                    <td class="number">{{ market_land_value_eok | round(2) }}</td>
-                    <td class="number">{{ market_delta_pct | round(1) }}%</td>
+                    <td class="number">{{ (market_price_man_per_sqm | default(0)) | round(1) }}</td>
+                    <td class="number">{{ (market_land_value_eok | default(0)) | round(2) }}</td>
+                    <td class="number">{{ (market_delta_pct | default(0)) | round(1) }}%</td>
                 </tr>
             </tbody>
             <tfoot>

@@ -1210,6 +1210,12 @@ def add_template_aliases(context):
     ctx['market_avg_price_per_sqm_man'] = ctx['market_land_price_man_per_sqm']
     ctx['market_price_man_per_sqm'] = ctx['market_land_price_man_per_sqm']
     
+    # v23 DEBUG: Verify critical variables are set
+    critical_vars = ['zerosite_market_value_eok', 'zerosite_price_man_per_sqm', 'lh_total_appraisal_eok']
+    for var in critical_vars:
+        if var not in ctx:
+            print(f"WARNING: {var} not in context!")
+    
     # Keep original KRW values for calculations, but add display versions
     # This way templates can use {{ capex_eok }} 억원 instead of {{ capex_krw }} 억원
     
