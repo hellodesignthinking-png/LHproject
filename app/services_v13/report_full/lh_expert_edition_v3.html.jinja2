@@ -1681,14 +1681,18 @@
             <span class="decision-badge decision-no-go">✗ NO-GO - 개발 보류 권고</span>
         {% endif %}
         
+        <!-- v21 UPGRADE: Professional Executive Summary with Dual Decision Logic -->
         <div class="executive-narrative">
-            {% if narratives and narratives.executive_summary %}
-                <!-- Phase A: Auto-generated Strategic Narrative -->
+            {% if executive_summary_v21 %}
+                <!-- v21: KDI-style Executive Summary (Project/Metrics/Decision) -->
+                {{ executive_summary_v21 | safe }}
+            {% elif narratives and narratives.executive_summary %}
+                <!-- Legacy: Phase A Auto-generated Strategic Narrative -->
                 <div class="narrative">
                     {{ narratives.executive_summary | markdown | safe }}
                 </div>
             {% else %}
-                <!-- Fallback if narrative not available -->
+                <!-- Fallback if no narrative available -->
                 <strong>종합 평가:</strong><br>
                 종합 분석을 수행하였습니다.
                 <br><br>
@@ -2599,6 +2603,21 @@
                 {% endfor %}
             </tbody>
         </table>
+        
+        <!-- v21 UPGRADE: Professional Demand Interpretation -->
+        {% if demand_interpretation %}
+            {{ demand_interpretation | safe }}
+        {% endif %}
+        
+        <!-- v21 UPGRADE: Fallback for Missing Demand Data -->
+        {% if demand_fallback %}
+            {{ demand_fallback | safe }}
+        {% endif %}
+        
+        <!-- v21 UPGRADE: Fallback for Missing Housing Type Data -->
+        {% if housing_type_fallback %}
+            {{ housing_type_fallback | safe }}
+        {% endif %}
     </div>
 </div>
 
@@ -2799,6 +2818,16 @@
                 </tr>
             </tfoot>
         </table>
+        
+        <!-- v21 UPGRADE: Professional Market Interpretation -->
+        {% if market_interpretation %}
+            {{ market_interpretation | safe }}
+        {% endif %}
+        
+        <!-- v21 UPGRADE: Fallback for Insufficient Market Comps -->
+        {% if market_comps_fallback %}
+            {{ market_comps_fallback | safe }}
+        {% endif %}
     </div>
 </div>
 
@@ -2919,6 +2948,11 @@
             <p><strong>2) 건물가액 산정</strong>: 실제 공사비의 85-95%를 인정합니다. 따라서 투명한 공사비 증빙(계약서, 세금계산서)이 필수적이며, 표준건축비 준수 시 90% 이상 인정 가능성이 높습니다.</p>
             <p><strong>3) 감정평가율 예상</strong>: 토지 90% + 건물 90% 가중평균 시 총 감정평가액은 CAPEX의 <strong>88-92%</strong> 수준으로 예상되며, 이는 LH '재무 타당성' 평가에서 <strong>25-28점(30점 만점)</strong>에 해당합니다.</p>
         </div>
+        
+        <!-- v21 UPGRADE: Professional CAPEX Interpretation (200-260 words) -->
+        {% if capex_interpretation %}
+            {{ capex_interpretation | safe }}
+        {% endif %}
     </div>
     
     <div class="content-block">
@@ -3000,6 +3034,11 @@
                 </div>
             {% endif %}
         </div>
+        
+        <!-- v21 UPGRADE: Professional Financial Interpretation -->
+        {% if financial_interpretation %}
+            {{ financial_interpretation | safe }}
+        {% endif %}
     </div>
     
     <!-- v16 NEW: 정책형 재무 분석 섹션 -->
@@ -3774,6 +3813,15 @@
 </div>
 
 <!-- ============================================================
+     v21 UPGRADE: DUAL DECISION NARRATIVE (Financial + Policy)
+     ============================================================ -->
+{% if dual_decision_narrative %}
+<div class="section">
+    {{ dual_decision_narrative | safe }}
+</div>
+{% endif %}
+
+<!-- ============================================================
      PART 11: IMPLEMENTATION ROADMAP (36개월 실행 로드맵)
      2-3 PAGES - NEW EXPERT EDITION MODULE
      ============================================================ -->
@@ -3978,6 +4026,11 @@
                 {% endfor %}
             </tbody>
         </table>
+        
+        <!-- v21 UPGRADE: Professional Risk Matrix Narrative -->
+        {% if risk_matrix_narrative %}
+            {{ risk_matrix_narrative | safe }}
+        {% endif %}
     </div>
 </div>
 
