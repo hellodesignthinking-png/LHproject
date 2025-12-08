@@ -656,6 +656,9 @@ def view_report(timestamp):
         # ADD TEMPLATE VARIABLE ALIASES (FIX: building_coverage undefined)
         context = add_template_aliases(context)
         
+        # ADD V21 NARRATIVES (PHASE 1 UPGRADE)
+        context = add_v21_narratives(context)
+        
         # Load template
         with open(TEMPLATE_PATH, 'r', encoding='utf-8') as f:
             template_content = f.read()
@@ -985,6 +988,77 @@ def add_template_aliases(context):
                 'mechanism': 'LH 정책자금은 토지 및 건물 감정평가액의 90%를 기준으로 산정됩니다.'
             }
         }
+    
+    return ctx
+
+
+def add_v21_narratives(context):
+    """
+    Add v21 Advanced Narratives to Context
+    =======================================
+    
+    This function generates professional, policy-oriented narratives for all report sections.
+    It follows KDI (Korea Development Institute) style with academic rigor.
+    
+    New fields added:
+    - executive_summary_v21: Structured 3-block summary (Project/Metrics/Decision)
+    - capex_interpretation: CAPEX table interpretation (200-260 words)
+    - financial_interpretation: Financial analysis interpretation
+    - market_interpretation: Market analysis interpretation
+    - demand_interpretation: Demand analysis interpretation
+    - dual_decision_narrative: Comprehensive Financial + Policy decision
+    - risk_matrix_narrative: Risk matrix with mitigation strategies
+    - fallback_*: Professional fallback narratives for missing data
+    """
+    from app.services_v13.report_full.v21_narrative_generator import V21NarrativeGenerator
+    
+    ctx = context.copy()
+    generator = V21NarrativeGenerator()
+    
+    # ========================================================================
+    # EXECUTIVE SUMMARY (v21 - Structured Format)
+    # ========================================================================
+    ctx['executive_summary_v21'] = generator.generate_executive_summary(ctx)
+    
+    # ========================================================================
+    # TABLE INTERPRETATIONS (4-6 sentences per table)
+    # ========================================================================
+    ctx['capex_interpretation'] = generator.generate_capex_interpretation(ctx)
+    ctx['financial_interpretation'] = generator.generate_financial_interpretation(ctx)
+    ctx['market_interpretation'] = generator.generate_market_interpretation(ctx)
+    ctx['demand_interpretation'] = generator.generate_demand_interpretation(ctx)
+    
+    # ========================================================================
+    # DUAL DECISION NARRATIVE (Financial + Policy)
+    # ========================================================================
+    ctx['dual_decision_narrative'] = generator.generate_dual_decision_narrative(ctx)
+    
+    # ========================================================================
+    # RISK MATRIX NARRATIVE
+    # ========================================================================
+    ctx['risk_matrix_narrative'] = generator.generate_risk_matrix_narrative(ctx)
+    
+    # ========================================================================
+    # FALLBACK NARRATIVES (for empty sections)
+    # ========================================================================
+    
+    # Check if demand data is sufficient
+    demand_score = ctx.get('demand_score', 0)
+    if demand_score == 0 or demand_score < 30:
+        ctx['demand_fallback'] = generator.generate_empty_demand_fallback(ctx)
+    
+    # Check if market comps are sufficient
+    v18_transaction = ctx.get('v18_transaction', {})
+    land_comps = v18_transaction.get('land_comps', [])
+    building_comps = v18_transaction.get('building_comps', [])
+    if len(land_comps) + len(building_comps) < 5:
+        ctx['market_comps_fallback'] = generator.generate_empty_market_comps_fallback(ctx)
+    
+    # Check if housing type analysis exists
+    recommended_type = ctx.get('recommended_housing_type', '')
+    if not recommended_type or recommended_type == '도시근로자':
+        # Default type suggests no specific analysis
+        ctx['housing_type_fallback'] = generator.generate_empty_housing_type_fallback(ctx)
     
     return ctx
 
