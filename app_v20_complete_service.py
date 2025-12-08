@@ -961,17 +961,74 @@ def add_template_aliases(context):
     ctx.setdefault('limitation', '')
     ctx.setdefault('research', '')
     
-    # 36-month implementation roadmap
+    # v23 Task #8: 36-month Implementation Roadmap - 13 Critical Milestones with RACI
     if 'implementation_roadmap' not in ctx:
         ctx['implementation_roadmap'] = {
             'phases': [
-                {'phase': 'Phase 1', 'months': '1-6', 'tasks': '사업계획 수립 및 인허가'},
-                {'phase': 'Phase 2', 'months': '7-18', 'tasks': '설계 및 시공'},
-                {'phase': 'Phase 3', 'months': '19-30', 'tasks': '준공 및 LH 매입'},
-                {'phase': 'Phase 4', 'months': '31-36', 'tasks': '임대 운영 개시'}
+                # Phase 0: Pre-Development (0-6 months)
+                {
+                    'phase': 'Phase 0: 사전개발', 
+                    'months': '0-6', 
+                    'goal': '사업 기획 및 인허가 확보',
+                    'output': '사업계획승인, 건축허가',
+                    'owner': 'Developer',
+                    'milestones': [
+                        {'month': 1, 'task': 'M1: 부지 매입 및 실사', 'responsible': 'Developer', 'risk': 'Low'},
+                        {'month': 3, 'task': 'M2: LH 사전협의 (매입 조건)', 'responsible': 'LH', 'risk': 'Medium'},
+                        {'month': 4, 'task': 'M3: 사업계획승인', 'responsible': 'City', 'risk': 'Medium'},
+                        {'month': 6, 'task': 'M4: 건축허가 취득', 'responsible': 'Developer', 'risk': 'Low'}
+                    ]
+                },
+                # Phase 1: Construction (6-18 months)
+                {
+                    'phase': 'Phase 1: 설계 및 시공', 
+                    'months': '6-18', 
+                    'goal': '건축 설계 및 공사 완료',
+                    'output': '준공검사, 사용승인',
+                    'owner': 'Contractor',
+                    'milestones': [
+                        {'month': 8, 'task': 'M5: 설계 완료 (인허가 도면)', 'responsible': 'Architect', 'risk': 'Low'},
+                        {'month': 9, 'task': 'M6: 착공 (기초 공사)', 'responsible': 'Contractor', 'risk': 'Medium'},
+                        {'month': 15, 'task': 'M7: 골조 완료 (상량식)', 'responsible': 'Contractor', 'risk': 'High'},
+                        {'month': 18, 'task': 'M8: 준공검사 완료', 'responsible': 'City', 'risk': 'Low'}
+                    ]
+                },
+                # Phase 2: LH Purchase Process (18-30 months)
+                {
+                    'phase': 'Phase 2: LH 매입 절차', 
+                    'months': '18-30', 
+                    'goal': 'LH 감정평가 및 매입 확정',
+                    'output': 'LH 매매계약, 소유권 이전',
+                    'owner': 'LH',
+                    'milestones': [
+                        {'month': 20, 'task': 'M9: LH 감정평가 의뢰', 'responsible': 'LH', 'risk': 'High'},
+                        {'month': 24, 'task': 'M10: 감정평가 완료 (매입가 확정)', 'responsible': 'Appraiser', 'risk': 'Critical'},
+                        {'month': 27, 'task': 'M11: LH 매매계약 체결', 'responsible': 'LH', 'risk': 'Medium'},
+                        {'month': 30, 'task': 'M12: 소유권 이전 및 대금 지급', 'responsible': 'LH', 'risk': 'Low'}
+                    ]
+                },
+                # Phase 3: Operations (30-36 months)
+                {
+                    'phase': 'Phase 3: 임대 운영', 
+                    'months': '30-36', 
+                    'goal': '입주자 모집 및 임대 개시',
+                    'output': '100% 임대율 달성',
+                    'owner': 'LH',
+                    'milestones': [
+                        {'month': 33, 'task': 'M13: 입주자 모집 공고', 'responsible': 'LH', 'risk': 'Low'},
+                        {'month': 36, 'task': 'M14: 임대 개시 (운영 시작)', 'responsible': 'LH', 'risk': 'Low'}
+                    ]
+                }
             ],
-            'critical_path': '인허가 → 설계 → 착공 → 준공 → LH감정평가 → 매입',
-            'total_duration': '36개월'
+            'critical_path': 'M1→M2→M3→M4→M5→M6→M7→M8→M9→M10→M11→M12→M13',
+            'critical_milestones': ['M2 (LH사전협의)', 'M7 (골조완료)', 'M10 (감정평가)'],
+            'total_duration': '36개월',
+            'raci_legend': {
+                'R': 'Responsible (실행 책임자)',
+                'A': 'Accountable (최종 승인권자)',
+                'C': 'Consulted (협의 대상)',
+                'I': 'Informed (정보 제공 대상)'
+            }
         }
     
     # v23 Task #10: McKinsey 2×2 Risk Matrix - 6 Core Risks
