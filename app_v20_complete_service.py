@@ -884,6 +884,40 @@ def add_template_aliases(context):
     ctx['recommended_housing_type'] = demand.get('recommended_type', '도시근로자')
     ctx['demand_confidence'] = demand.get('confidence_level', 'MEDIUM')
     
+    # v23 Task #6: Auto-generate housing type breakdown table
+    # Based on recommended_housing_type and demand_score
+    recommended = ctx['recommended_housing_type']
+    base_score = ctx['demand_score']
+    
+    # Define housing type options with relative demand
+    housing_type_templates = {
+        '도시근로자': {'score': 1.0, 'suitability': 95, 'units': 0.40},
+        '신혼부부': {'score': 0.9, 'suitability': 85, 'units': 0.30},
+        '대학생': {'score': 0.7, 'suitability': 70, 'units': 0.20},
+        '고령자': {'score': 0.5, 'suitability': 50, 'units': 0.10}
+    }
+    
+    # Calculate total units (based on gross_floor_area)
+    total_units = int(gross_floor_area / 60) if gross_floor_area > 0 else 100  # Approx 60㎡ per unit
+    
+    # Generate housing types list
+    ctx['housing_types'] = []
+    for housing_type, template in housing_type_templates.items():
+        # Adjust score based on whether it's the recommended type
+        score_multiplier = 1.2 if housing_type == recommended else template['score']
+        score = base_score * score_multiplier
+        score = min(100, score)  # Cap at 100
+        
+        ctx['housing_types'].append({
+            'name': housing_type,
+            'score': score,
+            'suitability': int(template['suitability'] * score_multiplier),
+            'recommended_units': int(total_units * template['units'])
+        })
+    
+    # Sort by score descending
+    ctx['housing_types'].sort(key=lambda x: x['score'], reverse=True)
+    
     # ========================================================================
     # SECTION 5: MARKET INTELLIGENCE
     # ========================================================================
