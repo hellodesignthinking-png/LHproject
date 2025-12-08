@@ -1021,9 +1021,26 @@ def add_template_aliases(context):
     profit_won = lh_price_won - capex_won
     ctx['profit_eok'] = to_eok(profit_won)
     
-    # ROI/IRR (already in %)
+    # ROI/IRR/Payback (already in % or years)
     ctx['roi_pct'] = round((profit_won / capex_won * 100), 2) if capex_won > 0 else 0.0
     ctx['irr_pct'] = ctx.get('irr_public_pct', 0.0)
+    
+    # Payback period: cap to max 30 years if infinite or negative profit
+    # Check both payback_years and payback_period_years (context builder sets both)
+    raw_payback = ctx.get('payback_years', ctx.get('payback_period_years', 2.5))
+    try:
+        # Convert to float first to handle numeric string inputs
+        payback_val = float(raw_payback)
+        
+        # Check for infinity, excessive values, or negative profit
+        if (payback_val == float('inf') or payback_val == float('-inf') or 
+            payback_val > 30 or payback_val < 0 or profit_won <= 0):
+            ctx['payback_years'] = 30.0  # Max payback for LH projects (30-year operation)
+        else:
+            ctx['payback_years'] = round(payback_val, 1)
+    except (ValueError, TypeError):
+        # Handle string 'inf' or other conversion failures
+        ctx['payback_years'] = 30.0  # Default to 30 years if conversion fails
     
     # Cost per sqm (만원/㎡)
     cost_per_sqm_won = ctx.get('cost_per_sqm_krw', 3500000)
@@ -1153,7 +1170,15 @@ def create_safe_jinja_env():
         try:
             if value is None or value == '':
                 return 0
-            return round(float(value), int(precision))
+            # Handle string 'inf' case
+            if isinstance(value, str) and 'inf' in value.lower():
+                return 30.0
+            float_val = float(value)
+            # Handle infinity or impossible payback (999): cap to 30 years
+            if (float_val == float('inf') or float_val == float('-inf') or 
+                float_val >= 999 or float_val > 100):
+                return 30.0
+            return round(float_val, int(precision))
         except (ValueError, TypeError):
             return 0
     

@@ -2991,15 +2991,15 @@
         <div class="metrics-grid">
             <div class="metric-card">
                 <div class="metric-label">총 공사비</div>
-                <div class="metric-value">{{ total_construction_cost_krw | round(0) | int }}<span class="metric-unit">억원</span></div>
+                <div class="metric-value">{{ total_construction_cost_eok }}<span class="metric-unit">억원</span></div>
             </div>
             <div class="metric-card">
                 <div class="metric-label">㎡당 단가</div>
-                <div class="metric-value">{{ cost_per_sqm_krw | round(0) | int }}<span class="metric-unit">만원/㎡</span></div>
+                <div class="metric-value">{{ cost_per_sqm_man }}<span class="metric-unit">만원/㎡</span></div>
             </div>
             <div class="metric-card">
                 <div class="metric-label">평당 단가</div>
-                <div class="metric-value">{{ (cost_per_sqm_krw * 3.3058) | round(0) | int }}<span class="metric-unit">만원/평</span></div>
+                <div class="metric-value">{{ (cost_per_sqm_man * 3.3058) | round(0) }}<span class="metric-unit">만원/평</span></div>
             </div>
             <div class="metric-card">
                 <div class="metric-label">신뢰도</div>
@@ -3023,35 +3023,35 @@
             <tbody>
                 <tr>
                     <td class="bold">직접공사비</td>
-                    <td class="number">{{ direct_cost_krw | round(1) }}</td>
-                    <td class="number">{{ (direct_cost_krw / total_construction_cost_krw * 100) | round(1) }}%</td>
-                    <td class="number">{{ (direct_cost_krw * 10000 / total_floor_area_sqm) | round(1) }}</td>
+                    <td class="number">{{ direct_cost_eok }}</td>
+                    <td class="number">{{ (direct_cost_eok / total_construction_cost_eok * 100) | round(1) }}%</td>
+                    <td class="number">{{ (direct_cost_eok * 100 / total_floor_area_sqm) | round(1) }}</td>
                 </tr>
                 <tr>
                     <td class="bold">간접공사비</td>
-                    <td class="number">{{ indirect_cost_krw | round(1) }}</td>
-                    <td class="number">{{ (indirect_cost_krw / total_construction_cost_krw * 100) | round(1) }}%</td>
-                    <td class="number">{{ (indirect_cost_krw * 10000 / total_floor_area_sqm) | round(1) }}</td>
+                    <td class="number">{{ indirect_cost_eok }}</td>
+                    <td class="number">{{ (indirect_cost_eok / total_construction_cost_eok * 100) | round(1) }}%</td>
+                    <td class="number">{{ (indirect_cost_eok * 100 / total_floor_area_sqm) | round(1) }}</td>
                 </tr>
                 <tr>
                     <td class="bold">설계·감리비</td>
-                    <td class="number">{{ design_cost_krw | round(1) }}</td>
-                    <td class="number">{{ (design_cost_krw / total_construction_cost_krw * 100) | round(1) }}%</td>
-                    <td class="number">{{ (design_cost_krw * 10000 / total_floor_area_sqm) | round(1) }}</td>
+                    <td class="number">{{ design_cost_eok }}</td>
+                    <td class="number">{{ (design_cost_eok / total_construction_cost_eok * 100) | round(1) }}%</td>
+                    <td class="number">{{ (design_cost_eok * 100 / total_floor_area_sqm) | round(1) }}</td>
                 </tr>
                 <tr>
                     <td class="bold">부대비용</td>
-                    <td class="number">{{ other_cost_krw | round(1) }}</td>
-                    <td class="number">{{ (other_cost_krw / total_construction_cost_krw * 100) | round(1) }}%</td>
-                    <td class="number">{{ (other_cost_krw * 10000 / total_floor_area_sqm) | round(1) }}</td>
+                    <td class="number">{{ other_cost_eok }}</td>
+                    <td class="number">{{ (other_cost_eok / total_construction_cost_eok * 100) | round(1) }}%</td>
+                    <td class="number">{{ (other_cost_eok * 100 / total_floor_area_sqm) | round(1) }}</td>
                 </tr>
             </tbody>
             <tfoot>
                 <tr>
                     <td class="bold">합계</td>
-                    <td class="number bold">{{ total_construction_cost_krw | round(1) }}</td>
+                    <td class="number bold">{{ total_construction_cost_eok }}</td>
                     <td class="number bold">100.0%</td>
-                    <td class="number bold">{{ cost_per_sqm_krw | round(1) }}</td>
+                    <td class="number bold">{{ cost_per_sqm_man }}</td>
                 </tr>
             </tfoot>
         </table>
@@ -3084,19 +3084,19 @@
         <div class="metrics-grid">
             <div class="metric-card">
                 <div class="metric-label">CAPEX (총 투자비)</div>
-                <div class="metric-value">{{ capex_krw | round(0) | int }}<span class="metric-unit">억원</span></div>
+                <div class="metric-value">{{ capex_eok | round(1) }}<span class="metric-unit">억원</span></div>
             </div>
             <div class="metric-card">
                 <div class="metric-label">NPV (공공임대)</div>
-                <div class="metric-value">{{ npv_public_krw | round(0) | int }}<span class="metric-unit">억원</span></div>
+                <div class="metric-value">{{ npv_eok | round(1) }}<span class="metric-unit">억원</span></div>
             </div>
             <div class="metric-card">
                 <div class="metric-label">IRR (내부수익률)</div>
-                <div class="metric-value">{{ irr_public_pct | round(2) }}<span class="metric-unit">%</span></div>
+                <div class="metric-value">{{ irr_pct | round(2) }}<span class="metric-unit">%</span></div>
             </div>
             <div class="metric-card">
                 <div class="metric-label">회수기간</div>
-                <div class="metric-value">{{ payback_period_years | round(1) }}<span class="metric-unit">년</span></div>
+                <div class="metric-value">{% if payback_years >= 999 or payback_years > 100 %}30.0{% else %}{{ payback_years | round(1) }}{% endif %}<span class="metric-unit">년</span></div>
             </div>
         </div>
     </div>
@@ -3117,25 +3117,25 @@
             <tbody>
                 <tr>
                     <td class="bold">토지비</td>
-                    <td class="number">{{ (capex_krw * 0.25) | round(1) }}</td>
+                    <td class="number">{{ (capex_eok * 0.25) | round(1) }}</td>
                     <td class="number">25.0%</td>
                     <td>공시지가 기준 시장가 반영 (감정평가 시 85-95% 인정)</td>
                 </tr>
                 <tr>
                     <td class="bold">건축비</td>
-                    <td class="number">{{ (capex_krw * 0.55) | round(1) }}</td>
+                    <td class="number">{{ (capex_eok * 0.55) | round(1) }}</td>
                     <td class="number">55.0%</td>
                     <td>LH 표준건축비 기준 (㎡당 350만원 적용)</td>
                 </tr>
                 <tr>
                     <td class="bold">취득세</td>
-                    <td class="number">{{ (capex_krw * 0.044) | round(1) }}</td>
+                    <td class="number">{{ (capex_eok * 0.044) | round(1) }}</td>
                     <td class="number">4.4%</td>
                     <td>지방세 포함 (LH 사업 시 50% 감면 가능)</td>
                 </tr>
                 <tr>
                     <td class="bold">설계비</td>
-                    <td class="number">{{ (capex_krw * 0.044) | round(1) }}</td>
+                    <td class="number">{{ (capex_eok * 0.044) | round(1) }}</td>
                     <td class="number">4.4%</td>
                     <td>건축비의 8% (구조/전기/설비 포함)</td>
                 </tr>
@@ -3201,7 +3201,7 @@
                 <div class="logic-left">
                     <div class="logic-box">
                         <h4>What (재무 현황)</h4>
-                        <p>본 프로젝트의 NPV는 <strong>{{ npv_public_krw | round(1) }}억원</strong>, IRR은 <strong>{{ irr_public_pct | round(2) }}%</strong>로 산출되었습니다. 민간 부동산 개발 사업 기준(NPV > 0, IRR > 5%)과 비교 시 음수 NPV/낮은 IRR이 나타났으나, 이는 LH 신축매입임대 사업의 구조적 특성에 기인합니다.</p>
+                        <p>본 프로젝트의 NPV는 <strong>{{ npv_eok | round(1) }}억원</strong>, IRR은 <strong>{{ irr_pct | round(2) }}%</strong>로 산출되었습니다. 민간 부동산 개발 사업 기준(NPV > 0, IRR > 5%)과 비교 시 음수 NPV/낮은 IRR이 나타났으나, 이는 LH 신축매입임대 사업의 구조적 특성에 기인합니다.</p>
                     </div>
                     <div class="logic-box">
                         <h4>So What (재무 시사점)</h4>
@@ -3246,24 +3246,24 @@
                         <td class="bold">NPV</td>
                         <td>> 0억원 (필수)</td>
                         <td>사회적 편익 고려</td>
-                        <td style="{% if npv_public_krw >= 0 %}color: green;{% else %}color: orange;{% endif %}">{{ npv_public_krw | round(1) }}억원 {% if npv_public_krw < 0 %}(정책 보완 필요){% else %}(우수){% endif %}</td>
+                        <td style="{% if npv_eok >= 0 %}color: green;{% else %}color: orange;{% endif %}">{{ npv_eok | round(1) }}억원 {% if npv_eok < 0 %}(정책 보완 필요){% else %}(우수){% endif %}</td>
                     </tr>
                     <tr>
                         <td class="bold">IRR</td>
                         <td>> 5% (민간 PF 기준)</td>
                         <td>> 2% (정책 기준)</td>
-                        <td style="{% if irr_public_pct >= 5 %}color: green;{% elif irr_public_pct >= 2 %}color: orange;{% else %}color: red;{% endif %}">{{ irr_public_pct | round(2) }}% {% if irr_public_pct >= 2 %}(정책 기준 충족){% else %}(조건부 가능){% endif %}</td>
+                        <td style="{% if irr_pct >= 5 %}color: green;{% elif irr_pct >= 2 %}color: orange;{% else %}color: red;{% endif %}">{{ irr_pct | round(2) }}% {% if irr_pct >= 2 %}(정책 기준 충족){% else %}(조건부 가능){% endif %}</td>
                     </tr>
                     <tr>
                         <td class="bold">자금조달</td>
                         <td>민간 PF (5.5%)</td>
                         <td>LH 정책자금 (2.87%)</td>
-                        <td style="color: green;">정책자금 활용 (연 {{ (capex_krw * 0.0263) | round(1) }}억원 절감)</td>
+                        <td style="color: green;">정책자금 활용 (연 {{ (capex_eok * 0.0263) | round(1) }}억원 절감)</td>
                     </tr>
                     <tr>
                         <td class="bold">최종 판단</td>
-                        <td>{% if npv_public_krw >= 0 and irr_public_pct >= 5 %}✅ GO{% else %}❌ NO-GO{% endif %}</td>
-                        <td>{% if irr_public_pct >= 2 %}✅ CONDITIONAL GO{% else %}⚠️ 재검토{% endif %}</td>
+                        <td>{% if npv_eok >= 0 and irr_pct >= 5 %}✅ GO{% else %}❌ NO-GO{% endif %}</td>
+                        <td>{% if irr_pct >= 2 %}✅ CONDITIONAL GO{% else %}⚠️ 재검토{% endif %}</td>
                         <td class="bold">정책 사업으로 추진 가능</td>
                     </tr>
                 </tbody>
