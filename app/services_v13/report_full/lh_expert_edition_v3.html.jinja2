@@ -1573,6 +1573,8 @@
             margin: 60px 0;
             padding: 0;
             page-break-inside: avoid;
+            /* v22.2 FIX: Prevent vertical stretching */
+            align-items: flex-start;
         }
         
         .logic-grid {
@@ -1580,18 +1582,24 @@
             grid-template-columns: 1fr 1fr;
             column-gap: 40px;
             row-gap: 20px;
+            /* v22.2 FIX: Page break optimization */
+            page-break-inside: auto;
         }
         
         .logic-left {
             display: flex;
             flex-direction: column;
             gap: 16px;
+            /* v22.2 FIX: Align to top */
+            align-items: flex-start;
         }
         
         .logic-right {
             display: flex;
             flex-direction: column;
             gap: 16px;
+            /* v22.2 FIX: Align to top */
+            align-items: flex-start;
         }
         
         /* ========== McKinsey Box Components ========== */
@@ -1601,6 +1609,9 @@
             border-radius: 8px;
             background: var(--mckinsey-white);
             page-break-inside: avoid;
+            /* v22.2 FIX: Force 100% width within grid */
+            width: 100%;
+            box-sizing: border-box;
         }
         
         .logic-box h4 {
@@ -1623,6 +1634,9 @@
             border-radius: 8px;
             background: #EEF3FF;
             page-break-inside: avoid;
+            /* v22.2 FIX: Force 100% width within grid */
+            width: 100%;
+            box-sizing: border-box;
         }
         
         .highlight-box h4 {
@@ -1656,12 +1670,16 @@
         @media print {
             .logic-section {
                 page-break-inside: avoid;
+                /* v22.2 FIX: Prevent stretching in print */
+                align-items: flex-start;
             }
             
             .logic-grid {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
                 column-gap: 40px;
+                /* v22.2 FIX: Better page break handling */
+                page-break-inside: auto;
             }
             
             .logic-box,
@@ -1670,6 +1688,9 @@
                 border: 1px solid #AEB7C3 !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
+                /* v22.2 FIX: Force width in print mode */
+                width: 100% !important;
+                box-sizing: border-box !important;
             }
             
             .highlight-box {
