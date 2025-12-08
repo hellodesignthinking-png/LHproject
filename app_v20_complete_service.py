@@ -974,13 +974,24 @@ def add_template_aliases(context):
             'total_duration': '36개월'
         }
     
-    # Risk matrix - Template expects LIST not dict
+    # v23 Task #10: McKinsey 2×2 Risk Matrix - 6 Core Risks
+    # Reduced from 25-item to focused 6-item matrix
+    # Quadrants: High Impact/High Probability → Low Impact/Low Probability
     if 'risk_matrix' not in ctx:
         ctx['risk_matrix'] = [
-            {'category': '시장', 'risk': '부동산 시장 침체', 'level': 'medium', 'probability': 'Medium', 'impact': 'High', 'mitigation': 'LH 매입 보장으로 시장 리스크 최소화'},
-            {'category': '재무', 'risk': 'ROI 마이너스', 'level': 'high', 'probability': 'High', 'impact': 'High', 'mitigation': '정책자금 우대금리 활용'},
-            {'category': '정책', 'risk': 'LH 정책 변경', 'level': 'low', 'probability': 'Low', 'impact': 'Critical', 'mitigation': '사전 LH 협의 및 계약 보장'},
-            {'category': '운영', 'risk': '공사 지연', 'level': 'medium', 'probability': 'Medium', 'impact': 'Medium', 'mitigation': '여유 공기 확보'}
+            # High Impact, High Probability (Critical Risks - Top Priority)
+            {'category': '건설비 상승', 'risk': '자재·인건비 상승', 'level': 'high', 'probability': 'High', 'impact': 8.5, 'mitigation': '계약 시 물가조정 조항 포함, 자재 선확보'},
+            {'category': 'LH 감정평가 미달', 'risk': '감정가 < 공사비', 'level': 'high', 'probability': 'Medium', 'impact': 9.0, 'mitigation': 'LH 표준건축비 준수, 토지비 최적화'},
+            
+            # High Impact, Low Probability (Monitor Closely)
+            {'category': 'LH 정책 변경', 'risk': '신축매입임대 중단', 'level': 'medium', 'probability': 'Low', 'impact': 7.5, 'mitigation': '사전 LH 협의 및 조건부 계약'},
+            
+            # Low Impact, High Probability (Manageable)
+            {'category': '공사 지연', 'risk': '일정 3-6개월 초과', 'level': 'medium', 'probability': 'Medium', 'impact': 5.0, 'mitigation': '공기 여유 6개월 확보, 패널티 조항'},
+            
+            # Low Impact, Low Probability (Low Priority)
+            {'category': '인허가 지연', 'risk': '사업계획승인 지연', 'level': 'low', 'probability': 'Low', 'impact': 3.5, 'mitigation': '사전 협의 및 전문가 자문'},
+            {'category': '시장 침체', 'risk': '부동산 경기 악화', 'level': 'low', 'probability': 'Low', 'impact': 2.0, 'mitigation': 'LH 매입 보장으로 시장 리스크 차단'}
         ]
     
     # ========================================================================
