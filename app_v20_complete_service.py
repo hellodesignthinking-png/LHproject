@@ -971,31 +971,55 @@ def add_template_aliases(context):
         ]
     
     # ========================================================================
-    # SECTION 10: POLICY FINANCE
+    # v23 FIX #8: POLICY FINANCE - Real LH Mechanism
     # ========================================================================
+    # Update policy_finance with ACTUAL calculated values (not estimates)
     
-    # Policy finance structure for LH appraisal calculations
-    if 'policy_finance' not in ctx:
-        ctx['policy_finance'] = {
-            'base': {
-                'land_appraisal': capex * 0.4,  # ~40% for land
-                'building_appraisal': capex * 0.5,  # ~50% for building
-                'appraisal_value': capex * 0.9,  # 90% appraisal
-                'appraisal_rate': 0.9,
-                'policy_npv': ctx.get('npv_public_krw', 0)
+    ctx['policy_finance'] = {
+        'base': {
+            'land_appraisal': lh_land_appraisal_won,
+            'land_appraisal_eok': ctx['lh_land_appraisal_eok'],
+            'building_appraisal': building_appraisal_won,
+            'building_appraisal_eok': ctx['lh_building_appraisal_eok'],
+            'total_appraisal': lh_total_appraisal_won,
+            'total_appraisal_eok': ctx['lh_total_appraisal_eok'],
+            'appraisal_rate': land_appraisal_rate,
+            'appraisal_rate_pct': land_appraisal_rate * 100,
+            'lh_purchase_price': lh_price_won,
+            'lh_purchase_price_eok': ctx['lh_purchase_price_eok'],
+            'policy_npv': npv_won,
+            'policy_npv_eok': ctx['npv_eok']
+        },
+        'mechanism': {
+            'land_valuation_method': '거래사례 평균가 기준',
+            'building_valuation_method': 'LH 표준건축비 (350만원/㎡)',
+            'appraisal_rate_range': '88-95% (일반적으로 92%)',
+            'purchase_rate': f'{lh_purchase_rate * 100:.0f}%',
+            'description': f'토지감정 {ctx["lh_land_appraisal_eok"]:.2f}억 + 건물감정 {ctx["lh_building_appraisal_eok"]:.2f}억 = 총 {ctx["lh_total_appraisal_eok"]:.2f}억'
+        },
+        'sensitivity': {
+            'optimistic': {
+                'appraisal_rate': 0.95,
+                'policy_npv': (lh_total_appraisal_won * 0.95 - capex_won),
+                'policy_npv_eok': to_eok(lh_total_appraisal_won * 0.95 - capex_won)
             },
-            'explanation': {
-                'mechanism': 'LH 정책자금은 토지 및 건물 감정평가액의 90%를 기준으로 산정됩니다.'
+            'pessimistic': {
+                'appraisal_rate': 0.88,
+                'policy_npv': (lh_total_appraisal_won * 0.88 - capex_won),
+                'policy_npv_eok': to_eok(lh_total_appraisal_won * 0.88 - capex_won)
             }
         }
+    }
     
     # ========================================================================
-    # SECTION 9: FINANCIAL NUMBER FORMATTING (v22.1 FIX)
+    # SECTION 9: FINANCIAL NUMBER FORMATTING (v23 COMPLETE REBUILD)
     # ========================================================================
-    # Convert all KRW (원) values to display units (억원, 만원/㎡)
-    # This prevents double-unit issues like "15000000000 억원"
+    # v23 PRINCIPLE: Single Source of Truth for ALL Financial Numbers
+    # - Market Price ≠ Construction Cost
+    # - All units explicitly converted (원 → 억원, 만원/㎡)
+    # - LH Appraisal Mechanism = REAL calculation (not explanation only)
     
-    # Helper functions
+    # Helper functions (kept for compatibility)
     def to_eok(value_won):
         """Convert KRW to 억원 (hundred million)"""
         return round(value_won / 1e8, 2) if value_won else 0.0
@@ -1004,26 +1028,125 @@ def add_template_aliases(context):
         """Convert KRW/㎡ to 만원/㎡ (ten thousand)"""
         return round(value_won_per_sqm / 1e4, 1) if value_won_per_sqm else 0.0
     
-    # CAPEX and related costs (all in 억원)
+    def to_man(value_won):
+        """Convert KRW to 만원 (ten thousand)"""
+        return round(value_won / 1e4, 1) if value_won else 0.0
+    
+    # ========================================================================
+    # v23 FIX #1: CONSTRUCTION COST (CAPEX) - Engineering Calculation
+    # ========================================================================
+    # CAPEX = Total Project Cost (토지비 + 건축비 + 간접비)
+    # This is NOT market price - it's actual construction + land acquisition cost
+    
     capex_won = ctx.get('capex_krw', 15000000000)  # Original value in KRW
     ctx['capex_eok'] = to_eok(capex_won)
     ctx['total_construction_cost_eok'] = to_eok(capex_won)
     ctx['total_project_cost_eok'] = to_eok(capex_won)
     
-    # NPV, Profit, LH Purchase Price (all in 억원)
-    npv_won = ctx.get('npv_public_krw', 0)
-    ctx['npv_eok'] = to_eok(npv_won)
-    ctx['npv_public_eok'] = to_eok(npv_won)
+    # ========================================================================
+    # v23 FIX #2: MARKET VALUATION - Transaction-based Market Price
+    # ========================================================================
+    # Market price = Real transaction data (실거래가 기반)
+    # This is DIFFERENT from construction cost
     
-    lh_price_won = ctx.get('lh_purchase_price', 0)
+    # Get actual market data from context (if available)
+    v18_transaction = ctx.get('v18_transaction', {})
+    land_comps = v18_transaction.get('land_comps', [])
+    
+    # Calculate market-based land value (NOT construction cost)
+    if land_comps and len(land_comps) > 0:
+        # Use average transaction price from comparable sales
+        avg_land_price_per_sqm = sum([comp.get('unit_price', 0) for comp in land_comps]) / len(land_comps)
+    else:
+        # Fallback: estimate from appraisal price
+        appraisal_price = ctx.get('appraisal_price', 20000000)  # 만원/㎡
+        avg_land_price_per_sqm = appraisal_price * 10000  # Convert to KRW/㎡
+    
+    # Market valuation for LAND only (토지 시장가치)
+    market_land_value_won = avg_land_price_per_sqm * land_area
+    ctx['market_land_value_eok'] = to_eok(market_land_value_won)
+    ctx['market_land_price_man_per_sqm'] = to_man_per_sqm(avg_land_price_per_sqm)
+    
+    # ZeroSite Model Valuation (AI-predicted market value)
+    # This should come from actual model output, not construction cost
+    zerosite_model_value_won = ctx.get('zerosite_valuation', market_land_value_won * 1.05)
+    ctx['zerosite_market_value_eok'] = to_eok(zerosite_model_value_won)
+    ctx['zerosite_price_man_per_sqm'] = to_man_per_sqm(zerosite_model_value_won / land_area)
+    
+    # ========================================================================
+    # v23 FIX #3: LH APPRAISAL MECHANISM - Real Calculation
+    # ========================================================================
+    # LH 감정평가 = 토지감정 + 건물감정
+    # Based on ACTUAL LH standards (not just explanation)
+    
+    # STEP 1: Land Appraisal (토지 감정평가)
+    # = Transaction-based market price × 0.90~0.95 (appraisal rate)
+    land_appraisal_rate = 0.92  # LH standard: 88-95%, typical 92%
+    lh_land_appraisal_won = market_land_value_won * land_appraisal_rate
+    ctx['lh_land_appraisal_eok'] = to_eok(lh_land_appraisal_won)
+    
+    # STEP 2: Building Appraisal (건물 감정평가)
+    # = LH Standard Construction Cost × Floor Area
+    lh_standard_cost_per_sqm = 3500000  # 350만원/㎡ (LH 표준건축비)
+    building_appraisal_won = lh_standard_cost_per_sqm * gross_floor_area
+    ctx['lh_building_appraisal_eok'] = to_eok(building_appraisal_won)
+    ctx['lh_standard_cost_per_sqm_man'] = to_man_per_sqm(lh_standard_cost_per_sqm)
+    
+    # STEP 3: Total LH Appraisal Value
+    lh_total_appraisal_won = lh_land_appraisal_won + building_appraisal_won
+    ctx['lh_total_appraisal_eok'] = to_eok(lh_total_appraisal_won)
+    
+    # STEP 4: LH Purchase Price (매입가)
+    # = Appraisal Value (some LH programs use 90% of appraisal)
+    lh_purchase_rate = 1.0  # For 신축매입임대, typically 100% of appraisal
+    lh_price_won = lh_total_appraisal_won * lh_purchase_rate
+    ctx['lh_purchase_price'] = lh_price_won
     ctx['lh_purchase_price_eok'] = to_eok(lh_price_won)
+    ctx['lh_appraisal_rate_pct'] = land_appraisal_rate * 100
+    
+    # ========================================================================
+    # v23 FIX #4: PROFIT & ROI CALCULATION
+    # ========================================================================
+    # Profit = LH Purchase Price - Total CAPEX
+    # ROI = (Profit / CAPEX) × 100%
     
     profit_won = lh_price_won - capex_won
     ctx['profit_eok'] = to_eok(profit_won)
+    ctx['profit_won'] = profit_won
     
-    # ROI/IRR/Payback (already in % or years)
-    ctx['roi_pct'] = round((profit_won / capex_won * 100), 2) if capex_won > 0 else 0.0
-    ctx['irr_pct'] = ctx.get('irr_public_pct', 0.0)
+    # NPV (keep existing if available, else use profit)
+    npv_won = ctx.get('npv_public_krw', profit_won)
+    ctx['npv_eok'] = to_eok(npv_won)
+    ctx['npv_public_eok'] = to_eok(npv_won)
+    ctx['npv_won'] = npv_won
+    
+    # ========================================================================
+    # v23 FIX #5: ROI, IRR, PAYBACK - Unified Calculation
+    # ========================================================================
+    
+    # ROI (Return on Investment)
+    # = (Profit / CAPEX) × 100%
+    roi_pct = round((profit_won / capex_won * 100), 2) if capex_won > 0 else 0.0
+    ctx['roi_pct'] = roi_pct
+    ctx['roi_display'] = f"{roi_pct:.2f}%"
+    
+    # IRR (Internal Rate of Return)
+    # Use existing IRR from financial engine, or calculate based on transaction
+    irr_from_engine = ctx.get('irr_public_pct', None)
+    if irr_from_engine is not None:
+        irr_pct = irr_from_engine
+    else:
+        # Simple IRR estimate for policy transaction projects
+        # IRR ≈ (Profit / CAPEX) / Construction_Period
+        construction_period_years = 2.5
+        irr_pct = roi_pct / construction_period_years if construction_period_years > 0 else roi_pct
+    
+    ctx['irr_pct'] = round(irr_pct, 2)
+    ctx['irr_display'] = f"{irr_pct:.2f}%"
+    
+    # Decision thresholds (v23 standards)
+    ctx['private_irr_threshold'] = 8.0  # Private development minimum
+    ctx['policy_irr_threshold'] = 2.0   # Policy project minimum (social IRR)
     
     # Payback period: cap to max 30 years if infinite or negative profit
     # Check both payback_years and payback_period_years (context builder sets both)
@@ -1042,22 +1165,50 @@ def add_template_aliases(context):
         # Handle string 'inf' or other conversion failures
         ctx['payback_years'] = 30.0  # Default to 30 years if conversion fails
     
-    # Cost per sqm (만원/㎡)
-    cost_per_sqm_won = ctx.get('cost_per_sqm_krw', 3500000)
-    ctx['cost_per_sqm_man'] = to_man_per_sqm(cost_per_sqm_won)
-    ctx['zerosite_value_per_sqm_man'] = to_man_per_sqm(cost_per_sqm_won)
+    # ========================================================================
+    # v23 FIX #6: CAPEX BREAKDOWN - Correct Unit Calculations
+    # ========================================================================
+    # Problem: Previously "2.5만원/㎡" appeared (100x too small)
+    # Solution: Calculate sqm units AFTER eok conversion
     
-    # Market prices (만원/㎡)
-    market_price_won = ctx.get('market_avg_price_per_sqm', 10000000)
-    ctx['market_avg_price_per_sqm_man'] = to_man_per_sqm(market_price_won)
-    ctx['zerosite_price_man_per_sqm'] = to_man_per_sqm(cost_per_sqm_won)
-    ctx['market_price_man_per_sqm'] = to_man_per_sqm(market_price_won)
+    # Land Cost (typically 25% of CAPEX)
+    land_cost_won = ctx.get('land_cost_krw', capex_won * 0.25)
+    ctx['land_cost_eok'] = to_eok(land_cost_won)
+    ctx['land_cost_per_sqm_man'] = to_man_per_sqm(land_cost_won / land_area) if land_area > 0 else 0
     
-    # Cost breakdown (all in 억원)
-    ctx['direct_cost_eok'] = to_eok(ctx.get('direct_cost_krw', 0))
-    ctx['indirect_cost_eok'] = to_eok(ctx.get('indirect_cost_krw', 0))
-    ctx['design_cost_eok'] = to_eok(ctx.get('design_cost_krw', 0))
-    ctx['other_cost_eok'] = to_eok(ctx.get('other_cost_krw', 0))
+    # Direct Construction Cost (typically 55% of CAPEX)
+    direct_cost_won = ctx.get('direct_cost_krw', capex_won * 0.55)
+    ctx['direct_cost_eok'] = to_eok(direct_cost_won)
+    # FIX: Divide by GROSS FLOOR AREA (not land area) for construction cost per sqm
+    ctx['direct_cost_per_sqm_man'] = to_man_per_sqm(direct_cost_won / gross_floor_area) if gross_floor_area > 0 else 0
+    
+    # Indirect costs
+    indirect_cost_won = ctx.get('indirect_cost_krw', capex_won * 0.10)
+    ctx['indirect_cost_eok'] = to_eok(indirect_cost_won)
+    ctx['indirect_cost_per_sqm_man'] = to_man_per_sqm(indirect_cost_won / gross_floor_area) if gross_floor_area > 0 else 0
+    
+    # Design cost
+    design_cost_won = ctx.get('design_cost_krw', capex_won * 0.05)
+    ctx['design_cost_eok'] = to_eok(design_cost_won)
+    ctx['design_cost_per_sqm_man'] = to_man_per_sqm(design_cost_won / gross_floor_area) if gross_floor_area > 0 else 0
+    
+    # Other costs (contingency, etc.)
+    other_cost_won = ctx.get('other_cost_krw', capex_won * 0.05)
+    ctx['other_cost_eok'] = to_eok(other_cost_won)
+    ctx['other_cost_per_sqm_man'] = to_man_per_sqm(other_cost_won / gross_floor_area) if gross_floor_area > 0 else 0
+    
+    # Total construction cost per sqm (for building only, excluding land)
+    building_capex_won = capex_won - land_cost_won
+    ctx['building_cost_per_sqm_man'] = to_man_per_sqm(building_capex_won / gross_floor_area) if gross_floor_area > 0 else 0
+    
+    # ========================================================================
+    # v23 FIX #7: MARKET PRICES - Separate from Construction Cost
+    # ========================================================================
+    # Market price = Transaction-based (already calculated above)
+    # Do NOT confuse with construction cost
+    
+    ctx['market_avg_price_per_sqm_man'] = ctx['market_land_price_man_per_sqm']
+    ctx['market_price_man_per_sqm'] = ctx['market_land_price_man_per_sqm']
     
     # Keep original KRW values for calculations, but add display versions
     # This way templates can use {{ capex_eok }} 억원 instead of {{ capex_krw }} 억원

@@ -1855,21 +1855,21 @@
         <div class="executive-card">
             <div class="executive-card-label">총 투자비 (CAPEX)</div>
             <div class="executive-card-value">
-                {{ capex_eok }}
+                {{ capex_eok | round(2) }}
                 <span class="executive-card-unit">억원</span>
             </div>
         </div>
         <div class="executive-card">
             <div class="executive-card-label">순현재가치 (NPV)</div>
             <div class="executive-card-value">
-                {{ npv_eok }}
+                {{ npv_eok | round(2) }}
                 <span class="executive-card-unit">억원</span>
             </div>
         </div>
         <div class="executive-card">
             <div class="executive-card-label">내부수익률 (IRR)</div>
             <div class="executive-card-value">
-                {{ irr_pct }}
+                {{ irr_pct | round(2) }}
                 <span class="executive-card-unit">%</span>
             </div>
         </div>
@@ -2950,14 +2950,14 @@
             <tbody>
                 <tr>
                     <td class="bold">ZeroSite 산정가</td>
-                    <td class="number">{{ zerosite_price_man_per_sqm }}</td>
-                    <td class="number">{{ (zerosite_price_man_per_sqm * land_area_sqm / 100) | round(1) }}</td>
+                    <td class="number">{{ zerosite_price_man_per_sqm | round(1) }}</td>
+                    <td class="number">{{ zerosite_market_value_eok | round(2) }}</td>
                     <td class="number">-</td>
                 </tr>
                 <tr>
                     <td class="bold">시장 평균가</td>
-                    <td class="number">{{ market_price_man_per_sqm }}</td>
-                    <td class="number">{{ (market_price_man_per_sqm * land_area_sqm / 100) | round(1) }}</td>
+                    <td class="number">{{ market_price_man_per_sqm | round(1) }}</td>
+                    <td class="number">{{ market_land_value_eok | round(2) }}</td>
                     <td class="number">{{ market_delta_pct | round(1) }}%</td>
                 </tr>
             </tbody>
@@ -3044,35 +3044,35 @@
             <tbody>
                 <tr>
                     <td class="bold">직접공사비</td>
-                    <td class="number">{{ direct_cost_eok }}</td>
+                    <td class="number">{{ direct_cost_eok | round(2) }}</td>
                     <td class="number">{{ (direct_cost_eok / total_construction_cost_eok * 100) | round(1) }}%</td>
-                    <td class="number">{{ (direct_cost_eok * 100 / total_floor_area_sqm) | round(1) }}</td>
+                    <td class="number">{{ direct_cost_per_sqm_man | round(1) }}</td>
                 </tr>
                 <tr>
                     <td class="bold">간접공사비</td>
-                    <td class="number">{{ indirect_cost_eok }}</td>
+                    <td class="number">{{ indirect_cost_eok | round(2) }}</td>
                     <td class="number">{{ (indirect_cost_eok / total_construction_cost_eok * 100) | round(1) }}%</td>
-                    <td class="number">{{ (indirect_cost_eok * 100 / total_floor_area_sqm) | round(1) }}</td>
+                    <td class="number">{{ indirect_cost_per_sqm_man | round(1) }}</td>
                 </tr>
                 <tr>
                     <td class="bold">설계·감리비</td>
-                    <td class="number">{{ design_cost_eok }}</td>
+                    <td class="number">{{ design_cost_eok | round(2) }}</td>
                     <td class="number">{{ (design_cost_eok / total_construction_cost_eok * 100) | round(1) }}%</td>
-                    <td class="number">{{ (design_cost_eok * 100 / total_floor_area_sqm) | round(1) }}</td>
+                    <td class="number">{{ design_cost_per_sqm_man | round(1) }}</td>
                 </tr>
                 <tr>
                     <td class="bold">부대비용</td>
-                    <td class="number">{{ other_cost_eok }}</td>
+                    <td class="number">{{ other_cost_eok | round(2) }}</td>
                     <td class="number">{{ (other_cost_eok / total_construction_cost_eok * 100) | round(1) }}%</td>
-                    <td class="number">{{ (other_cost_eok * 100 / total_floor_area_sqm) | round(1) }}</td>
+                    <td class="number">{{ other_cost_per_sqm_man | round(1) }}</td>
                 </tr>
             </tbody>
             <tfoot>
                 <tr>
                     <td class="bold">합계</td>
-                    <td class="number bold">{{ total_construction_cost_eok }}</td>
+                    <td class="number bold">{{ total_construction_cost_eok | round(2) }}</td>
                     <td class="number bold">100.0%</td>
-                    <td class="number bold">{{ cost_per_sqm_man }}</td>
+                    <td class="number bold">{{ building_cost_per_sqm_man | round(1) }}</td>
                 </tr>
             </tfoot>
         </table>
