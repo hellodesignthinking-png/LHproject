@@ -1190,7 +1190,10 @@ def add_template_aliases(context):
             'lh_purchase_price': lh_price_won,
             'lh_purchase_price_eok': ctx['lh_purchase_price_eok'],
             'policy_npv': 0,  # Will be updated after profit calculation
-            'policy_npv_eok': 0
+            'policy_npv_eok': 0,
+            'policy_irr': 0,  # Will be calculated
+            'decision': 'PENDING',
+            'decision_reason': 'Analysis in progress'
         },
         'mechanism': {
             'land_valuation_method': '거래사례 평균가 기준',
@@ -1204,20 +1207,29 @@ def add_template_aliases(context):
                 'appraisal_rate': 0.95,
                 'appraisal_value_eok': to_eok(lh_total_appraisal_won * 0.95),
                 'policy_npv': (lh_total_appraisal_won * 0.95 - capex_won),
-                'policy_npv_eok': to_eok(lh_total_appraisal_won * 0.95 - capex_won)
+                'policy_npv_eok': to_eok(lh_total_appraisal_won * 0.95 - capex_won),
+                'policy_irr': 0,  # Placeholder
+                'decision': 'GO'
             },
             'base': {
                 'appraisal_rate': land_appraisal_rate,
                 'appraisal_value_eok': ctx['lh_total_appraisal_eok'],
                 'policy_npv': 0,  # Will be updated
-                'policy_npv_eok': 0
+                'policy_npv_eok': 0,
+                'policy_irr': 0,
+                'decision': 'PENDING'
             },
             'pessimistic': {
                 'appraisal_rate': 0.88,
                 'appraisal_value_eok': to_eok(lh_total_appraisal_won * 0.88),
                 'policy_npv': (lh_total_appraisal_won * 0.88 - capex_won),
-                'policy_npv_eok': to_eok(lh_total_appraisal_won * 0.88 - capex_won)
+                'policy_npv_eok': to_eok(lh_total_appraisal_won * 0.88 - capex_won),
+                'policy_irr': 0,  # Placeholder
+                'decision': 'NO-GO'
             }
+        },
+        'explanation': {
+            'construction_indexing': 'Construction cost indexed annually at 3-5% inflation rate'
         }
     }
     
