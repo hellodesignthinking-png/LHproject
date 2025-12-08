@@ -93,6 +93,17 @@ def generate_custom_report(address: str, land_area_sqm: float, output_filename: 
             loader=FileSystemLoader('app/services_v13/report_full'),
             autoescape=select_autoescape(['html', 'xml', 'jinja2'])
         )
+        
+        # Add markdown filter to convert Markdown to HTML
+        import markdown
+        def markdown_filter(text):
+            """Convert Markdown to HTML"""
+            if not text:
+                return ""
+            return markdown.markdown(text, extensions=['extra', 'nl2br'])
+        
+        env.filters['markdown'] = markdown_filter
+        
         template = env.get_template('lh_expert_edition_v3.html.jinja2')
         html_output = template.render(**flattened)
         print("   ✅ Template rendered successfully")

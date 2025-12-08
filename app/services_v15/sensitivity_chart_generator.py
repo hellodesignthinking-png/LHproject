@@ -189,18 +189,29 @@ class SensitivityChartGenerator:
         
         npv_range = npv_high - npv_low
         
+        npv_high_krw = npv_high / 100_000_000
+        npv_low_krw = npv_low / 100_000_000
+        npv_range_krw = npv_range / 100_000_000
+        
         return {
+            # Original format (for internal use)
             'name': var.name,
             'name_kr': var.name_kr,
             'icon': var.icon,
             'base_value': var.base_value,
             'variation_pct': var.variation_pct,
             'npv_base': base_npv / 100_000_000,
-            'npv_high': npv_high / 100_000_000,
-            'npv_low': npv_low / 100_000_000,
+            'npv_high': npv_high_krw,
+            'npv_low': npv_low_krw,
             'npv_range': npv_range,
-            'npv_range_krw': npv_range / 100_000_000,
-            'impact_label': f"±{var.variation_pct:.0f}%"
+            'npv_range_krw': npv_range_krw,
+            'impact_label': f"±{var.variation_pct:.0f}%",
+            # Template-friendly format
+            'variable_name': f"{var.icon} {var.name_kr}",
+            'change_pct': f"{var.variation_pct:.0f}",  # Template adds ± and %
+            'low_npv': f"{npv_low_krw:+.1f}억원",
+            'high_npv': f"{npv_high_krw:+.1f}억원",
+            'impact_range': f"{abs(npv_range_krw):.1f}억원"
         }
     
     def _estimate_npv_with_change(
