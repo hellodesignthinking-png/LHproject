@@ -973,43 +973,8 @@ def add_template_aliases(context):
     # ========================================================================
     # v23 FIX #8: POLICY FINANCE - Real LH Mechanism
     # ========================================================================
-    # Update policy_finance with ACTUAL calculated values (not estimates)
-    
-    ctx['policy_finance'] = {
-        'base': {
-            'land_appraisal': lh_land_appraisal_won,
-            'land_appraisal_eok': ctx['lh_land_appraisal_eok'],
-            'building_appraisal': building_appraisal_won,
-            'building_appraisal_eok': ctx['lh_building_appraisal_eok'],
-            'total_appraisal': lh_total_appraisal_won,
-            'total_appraisal_eok': ctx['lh_total_appraisal_eok'],
-            'appraisal_rate': land_appraisal_rate,
-            'appraisal_rate_pct': land_appraisal_rate * 100,
-            'lh_purchase_price': lh_price_won,
-            'lh_purchase_price_eok': ctx['lh_purchase_price_eok'],
-            'policy_npv': npv_won,
-            'policy_npv_eok': ctx['npv_eok']
-        },
-        'mechanism': {
-            'land_valuation_method': '거래사례 평균가 기준',
-            'building_valuation_method': 'LH 표준건축비 (350만원/㎡)',
-            'appraisal_rate_range': '88-95% (일반적으로 92%)',
-            'purchase_rate': f'{lh_purchase_rate * 100:.0f}%',
-            'description': f'토지감정 {ctx["lh_land_appraisal_eok"]:.2f}억 + 건물감정 {ctx["lh_building_appraisal_eok"]:.2f}억 = 총 {ctx["lh_total_appraisal_eok"]:.2f}억'
-        },
-        'sensitivity': {
-            'optimistic': {
-                'appraisal_rate': 0.95,
-                'policy_npv': (lh_total_appraisal_won * 0.95 - capex_won),
-                'policy_npv_eok': to_eok(lh_total_appraisal_won * 0.95 - capex_won)
-            },
-            'pessimistic': {
-                'appraisal_rate': 0.88,
-                'policy_npv': (lh_total_appraisal_won * 0.88 - capex_won),
-                'policy_npv_eok': to_eok(lh_total_appraisal_won * 0.88 - capex_won)
-            }
-        }
-    }
+    # NOTE: Moved to AFTER LH appraisal calculations (line ~1107)
+    # to avoid UnboundLocalError
     
     # ========================================================================
     # SECTION 9: FINANCIAL NUMBER FORMATTING (v23 COMPLETE REBUILD)
@@ -1105,6 +1070,48 @@ def add_template_aliases(context):
     ctx['lh_appraisal_rate_pct'] = land_appraisal_rate * 100
     
     # ========================================================================
+    # v23 FIX #3.5: POLICY FINANCE - Real LH Mechanism (moved here from line 973)
+    # ========================================================================
+    # Update policy_finance with ACTUAL calculated values (not estimates)
+    # This block MUST come AFTER LH appraisal calculations to avoid UnboundLocalError
+    
+    ctx['policy_finance'] = {
+        'base': {
+            'land_appraisal': lh_land_appraisal_won,
+            'land_appraisal_eok': ctx['lh_land_appraisal_eok'],
+            'building_appraisal': building_appraisal_won,
+            'building_appraisal_eok': ctx['lh_building_appraisal_eok'],
+            'total_appraisal': lh_total_appraisal_won,
+            'total_appraisal_eok': ctx['lh_total_appraisal_eok'],
+            'appraisal_rate': land_appraisal_rate,
+            'appraisal_rate_pct': land_appraisal_rate * 100,
+            'lh_purchase_price': lh_price_won,
+            'lh_purchase_price_eok': ctx['lh_purchase_price_eok'],
+            'policy_npv': 0,  # Will be updated after profit calculation
+            'policy_npv_eok': 0
+        },
+        'mechanism': {
+            'land_valuation_method': '거래사례 평균가 기준',
+            'building_valuation_method': 'LH 표준건축비 (350만원/㎡)',
+            'appraisal_rate_range': '88-95% (일반적으로 92%)',
+            'purchase_rate': f'{lh_purchase_rate * 100:.0f}%',
+            'description': f'토지감정 {ctx["lh_land_appraisal_eok"]:.2f}억 + 건물감정 {ctx["lh_building_appraisal_eok"]:.2f}억 = 총 {ctx["lh_total_appraisal_eok"]:.2f}억'
+        },
+        'sensitivity': {
+            'optimistic': {
+                'appraisal_rate': 0.95,
+                'policy_npv': (lh_total_appraisal_won * 0.95 - capex_won),
+                'policy_npv_eok': to_eok(lh_total_appraisal_won * 0.95 - capex_won)
+            },
+            'pessimistic': {
+                'appraisal_rate': 0.88,
+                'policy_npv': (lh_total_appraisal_won * 0.88 - capex_won),
+                'policy_npv_eok': to_eok(lh_total_appraisal_won * 0.88 - capex_won)
+            }
+        }
+    }
+    
+    # ========================================================================
     # v23 FIX #4: PROFIT & ROI CALCULATION
     # ========================================================================
     # Profit = LH Purchase Price - Total CAPEX
@@ -1119,6 +1126,11 @@ def add_template_aliases(context):
     ctx['npv_eok'] = to_eok(npv_won)
     ctx['npv_public_eok'] = to_eok(npv_won)
     ctx['npv_won'] = npv_won
+    
+    # Update policy_finance with calculated NPV
+    if 'policy_finance' in ctx:
+        ctx['policy_finance']['base']['policy_npv'] = npv_won
+        ctx['policy_finance']['base']['policy_npv_eok'] = to_eok(npv_won)
     
     # ========================================================================
     # v23 FIX #5: ROI, IRR, PAYBACK - Unified Calculation
