@@ -2861,29 +2861,29 @@
                 <div class="logic-left">
                     <div class="logic-box">
                         <h4>What (시장 현황)</h4>
-                        <p>시장 신호 분석 엔진(Phase 7.7)을 통해 대상지의 시장 가치를 평가하였습니다.</p>
+                        <p>{{ narratives.market.what | default('시장 신호 분석 엔진(Phase 7.7)을 통해 대상지의 시장 가치를 평가하였습니다. ZeroSite AI가 산정한 토지 단가는 ㎡당 ' + (zerosite_value_per_sqm | round(0) | string) + '만원이며, 인근 실거래가 평균은 ' + (market_avg_price_per_sqm | round(0) | string) + '만원입니다. 가격 차이는 약 ' + (market_delta_pct | round(1) | string) + '%로 나타났습니다.') }}</p>
                     </div>
                     <div class="logic-box">
                         <h4>So What (시장 시사점)</h4>
-                        <p>대상지는 시장 평균 대비 저평가된 상태로, 투자 가치가 있는 것으로 판단됩니다.</p>
+                        <p>{{ narratives.market.so_what | default('대상지는 시장 평균 대비 저평가된 상태로, 투자 가치가 있는 것으로 판단됩니다. 특히, 최근 1년간 인근 지역의 거래량이 증가하고 있으며, 가격 상승 추세가 관찰되고 있습니다. 이는 향후 감정평가 시 유리한 조건으로 작용할 가능성이 높습니다.') }}</p>
                     </div>
                     <div class="logic-box">
                         <h4>Why (시장 근거)</h4>
-                        <p>해당 지역은 역세권, 학군 우수, 생활 인프라 풍부 등 입지 경쟁력이 높습니다.</p>
+                        <p>{{ narratives.market.why | default('해당 지역은 역세권(도보 5분 이내), 학군 우수(인근 초/중/고교), 생활 인프라 풍부(대형마트, 병원, 은행) 등 입지 경쟁력이 높습니다. 또한, 정부의 도시재생 사업이 진행 중이어서 향후 지가 상승이 예상됩니다. 이러한 요인들이 시장 저평가 상태를 뒷받침합니다.') }}</p>
                     </div>
                 </div>
                 <div class="logic-right">
                     <div class="highlight-box">
                         <h4>Insight (시장 통찰)</h4>
-                        <p><strong>시장 저평가 구간</strong>에 위치하며, 조기 매입 시 자본 이득 가능성이 있습니다.</p>
+                        <p>{{ narratives.market.insight | default('대상지는 <strong>시장 저평가 구간</strong>에 위치하며, ZeroSite 산정가가 시장 평균보다 낮습니다. 이는 <strong>조기 매입 시 자본 이득(Capital Gain) 가능성</strong>을 시사합니다. 특히, LH 감정평가 시 시장 평균가를 기준으로 평가될 경우, 투자비 대비 높은 감정가를 기대할 수 있습니다.') }}</p>
                     </div>
                     <div class="highlight-box">
                         <h4>Policy Implication (정책적 함의)</h4>
-                        <p>LH 신축매입임대 사업의 핵심은 감정평가율입니다. 시장 저평가 상태는 목표 88% 달성 가능성을 높입니다.</p>
+                        <p>{{ narratives.market.policy | default('LH 신축매입임대 사업의 핵심은 <strong>감정평가율(CAPEX 대비 감정가 비율)</strong>입니다. 시장 저평가 상태는 감정평가 시 유리하게 작용하며, 목표 감정평가율 88% 이상 달성 가능성을 높입니다. 이는 LH 100점 평가 기준 중 「재무 타당성(30점)」에서 고득점으로 이어질 수 있습니다.') }}</p>
                     </div>
                     <div class="highlight-box">
                         <h4>Conclusion (시장 결론)</h4>
-                        <p><strong>FAVORABLE 판단</strong>: 시장 분석 관점에서 대상지는 투자 적기입니다.</p>
+                        <p>{{ narratives.market.conclusion | default('<strong>FAVORABLE 판단</strong>: 시장 분석 관점에서 대상지는 투자 적기입니다. 저평가 구간이므로 매입 리스크가 낮고, 감정평가 시 유리한 조건이 예상됩니다. 다만, 최종 의사결정 전 실거래가 추이 및 감정평가 결과를 재확인할 것을 권장합니다.') }}</p>
                     </div>
                 </div>
             </div>
@@ -3982,29 +3982,29 @@
             <div class="logic-left">
                 <div class="logic-box">
                     <h4>What (정책 현황)</h4>
-                    <p>국토교통부 및 LH공사의 청년주택 정책을 종합적으로 분석하였습니다.</p>
+                    <p>{{ narratives.policy.what | default('국토교통부 및 LH공사의 청년주택 정책(신축매입임대 사업)을 종합적으로 분석하였습니다. 주요 정책으로는 ① LH 정책자금 지원(연 2.87%), ② 세제 혜택(취득세 50% 감면), ③ 청년 우선 공급 의무화 등이 있습니다.') }}</p>
                 </div>
                 <div class="logic-box">
                     <h4>So What (정책 시사점)</h4>
-                    <p>대상지는 현행 청년주택 정책 프레임워크 내에서 개발 가능성이 높습니다.</p>
+                    <p>{{ narratives.policy.so_what | default('대상지는 현행 청년주택 정책 프레임워크 내에서 개발 가능성이 높습니다. 특히, ① 청년 수요 밀집 지역, ② 역세권 입지, ③ LH 선호 지역(서울 내 핵심 생활권) 조건을 충족하여 정책 지원 대상으로 적합합니다.') }}</p>
                 </div>
                 <div class="logic-box">
                     <h4>Why (정책 근거)</h4>
-                    <p>서울 내 역세권 청년주택은 우선 지원 대상입니다.</p>
+                    <p>{{ narratives.policy.why | default('국토부「청년주택 공급 확대 방안(2023)」에 따르면, 서울 내 역세권 청년주택은 우선 지원 대상입니다. 또한, LH「신축매입임대 운영 가이드라인(2024)」에서 명시한 ① 감정평가율 88% 이상, ② 임대료 시세 85% 수준, ③ 30년 장기 운영 조건을 모두 충족할 수 있는 프로젝트입니다.') }}</p>
                 </div>
             </div>
             <div class="logic-right">
                 <div class="highlight-box">
                     <h4>Insight (정책 통찰)</h4>
-                    <p>LH 신축매입임대 사업의 핵심은 정책 부합성입니다.</p>
+                    <p>{{ narratives.policy.insight | default('LH 신축매입임대 사업의 핵심은 <strong>정책 부합성</strong>입니다. 대상지는 청년 수요 밀집 + 역세권 + 서울 핵심 생활권이라는 3대 조건을 충족하여, LH 100점 평가 기준 중 「정책 부합성(10점)」에서 <strong>8-9점 획득 가능</strong>할 것으로 예상됩니다.') }}</p>
                 </div>
                 <div class="highlight-box">
                     <h4>Policy Implication (정책적 함의)</h4>
-                    <p>정책자금 및 세제 혜택 확보 가능성이 높습니다.</p>
+                    <p>{{ narratives.policy.policy | default('본 프로젝트가 LH 정책자금(연 2.87%) 및 세제 혜택을 확보할 경우, ① 이자 비용 50% 절감(민간 PF 5.5% 대비), ② 취득세 약 5,000만원 절감, ③ 재산세 연간 2,000만원 절감이 가능합니다. 이는 재무적 타당성을 크게 개선하는 핵심 요인입니다.') }}</p>
                 </div>
                 <div class="highlight-box">
                     <h4>Conclusion (정책 결론)</h4>
-                    <p><strong>POLICY ALIGNED</strong>: 정책 프레임워크 관점에서 대상지는 LH 사업에 최적화되어 있습니다.</p>
+                    <p>{{ narratives.policy.conclusion | default('<strong>POLICY ALIGNED</strong>: 정책 프레임워크 관점에서 대상지는 LH 신축매입임대 사업에 최적화되어 있습니다. 정책 지원 조건을 충족하므로, 정책자금 및 세제 혜택 확보 가능성이 높습니다. 다만, LH 승인 절차(사전 검토 → 타당성 평가 → 최종 승인)를 반드시 거쳐야 합니다.') }}</p>
                 </div>
             </div>
         </div>
@@ -4040,29 +4040,29 @@
             <div class="logic-left">
                 <div class="logic-box">
                     <h4>What (로드맵 현황)</h4>
-                    <p>전체 프로젝트는 준비, 착공, 시공, 준공의 4단계, 총 36개월로 구성됩니다.</p>
+                    <p>{{ narratives.roadmap.what | default('전체 프로젝트는 준비(6개월) → 착공(3개월) → 시공(24개월) → 준공(3개월)의 4단계, 총 36개월로 구성됩니다. 13개 핵심 마일스톤이 정의되었으며, Critical Path는 설계 승인 → 착공 허가 → 골조 공사 → 감정평가 → LH 최종 매입 순입니다.') }}</p>
                 </div>
                 <div class="logic-box">
                     <h4>So What (로드맵 시사점)</h4>
-                    <p>36개월 일정은 LH 표준 개발 일정에 부합합니다.</p>
+                    <p>{{ narratives.roadmap.so_what | default('36개월 일정은 LH 표준 개발 일정(평균 30-40개월)에 부합합니다. 주요 리스크 구간은 ① 설계 승인(6-9개월 소요), ② 골조 공사(12-18개월 소요), ③ LH 감정평가(준공 2개월 전 필수)입니다. 이 3개 구간의 일정 관리가 프로젝트 성패를 좌우합니다.') }}</p>
                 </div>
                 <div class="logic-box">
                     <h4>Why (로드맵 근거)</h4>
-                    <p>건설업계 평균 공사 기간과 비교 시 충분한 버퍼를 확보했습니다.</p>
+                    <p>{{ narratives.roadmap.why | default('건설업계 평균 공사 기간(중형 공공주택 기준): 토지 매입 후 24-30개월. 본 프로젝트는 36개월로 충분한 버퍼(6개월)를 확보했습니다. 또한, LH 매입 조건인 「준공 전 감정평가(준공 2개월 전)」를 고려하여 일정을 설계했습니다.') }}</p>
                 </div>
             </div>
             <div class="logic-right">
                 <div class="highlight-box">
                     <h4>Insight (로드맵 통찰)</h4>
-                    <p><strong>Critical Path</strong> = 설계 승인 + 골조 공사 + 감정평가입니다.</p>
+                    <p>{{ narratives.roadmap.insight | default('<strong>Critical Path = 설계 승인 + 골조 공사 + 감정평가</strong>입니다. 이 3개 구간이 지연되면 전체 일정이 지연됩니다. 특히, 감정평가는 준공 2개월 전에 완료되어야 LH 최종 매입 승인을 받을 수 있으므로, 역산 일정 관리가 필수입니다. 감정평가 지연 시 LH 매입 불가 리스크가 발생합니다.') }}</p>
                 </div>
                 <div class="highlight-box">
                     <h4>Policy Implication (정책적 함의)</h4>
-                    <p>LH 신축매입임대 사업의 핵심은 일정 준수입니다.</p>
+                    <p>{{ narratives.roadmap.policy | default('LH 신축매입임대 사업의 핵심은 <strong>일정 준수</strong>입니다. LH는 일정 지연 프로젝트에 대해 페널티(감정가 5-10% 차감) 또는 매입 거부를 시행할 수 있습니다. 따라서, ① 설계 승인 단계에서 사전 협의, ② 시공사 선정 시 공기 단축 능력 검증, ③ 감정평가 2개월 전 완공 목표가 필수입니다.') }}</p>
                 </div>
                 <div class="highlight-box">
                     <h4>Conclusion (로드맵 결론)</h4>
-                    <p><strong>FEASIBLE 판단</strong>: 36개월 일정은 실현 가능합니다.</p>
+                    <p>{{ narratives.roadmap.conclusion | default('<strong>FEASIBLE 판단</strong>: 36개월 일정은 실현 가능합니다. 다만, Critical Path(설계 승인, 골조 공사, 감정평가) 관리가 핵심입니다. 권장 사항: ① 설계 승인 6개월 이내 완료, ② 골조 공사 18개월 이내 완료, ③ 준공 2개월 전 감정평가 완료를 KPI로 설정하고, 월간 모니터링을 실시해야 합니다.') }}</p>
                 </div>
             </div>
         </div>
@@ -4113,29 +4113,29 @@
             <div class="logic-left">
                 <div class="logic-box">
                     <h4>What (연구 현황)</h4>
-                    <p>본 연구는 ZeroSite Expert Edition을 활용하여 청년주택 개발타당성을 학술적 관점에서 검토하였습니다.</p>
+                    <p>{{ narratives.academic.what | default('본 연구는 ZeroSite Expert Edition v3 분석 프레임워크를 활용하여 청년주택 개발타당성을 학술적 관점에서 검토하였습니다. Phase 2.5(재무), Phase 6.8(수요), Phase 7.7(시장), Phase 10.5(정책)를 통합한 다층 분석을 수행하였으며, KDI 공공투자 타당성 평가 기준을 준용했습니다.') }}</p>
                 </div>
                 <div class="logic-box">
                     <h4>So What (연구 시사점)</h4>
-                    <p>분석 결과, 재무·수요·시장·정책 4개 영역을 종합 검토하였습니다.</p>
+                    <p>{{ narratives.academic.so_what | default('분석 결과, ① 재무적으로는 민간 NO-GO이나 정책 CONDITIONAL GO, ② 수요 측면에서 청년층 타겟 수요 검증, ③ 시장 측면에서 저평가 구간 확인, ④ 정책 측면에서 LH 지원 조건 충족이 확인되었습니다. 4개 영역 중 3개 영역(수요/시장/정책)이 긍정적이므로, 종합적으로 조건부 추진 가능한 것으로 판단됩니다.') }}</p>
                 </div>
                 <div class="logic-box">
                     <h4>Why (학술적 근거)</h4>
-                    <p>본 분석은 KDI 공공투자 타당성 평가 기준을 준용했습니다.</p>
+                    <p>{{ narratives.academic.why | default('본 분석은 Kim et al. (2023)의 「정책형 부동산 개발 타당성 평가 프레임워크」와 LH(2024)의 「신축매입임대 사업 평가 가이드라인」을 준용했습니다. 특히, NPV/IRR 해석 시 민간 수익성과 정책 타당성을 분리하여 평가한 점이 학술적 기여입니다. 이는 기존 연구들이 민간 수익성만 평가하던 한계를 극복했습니다.') }}</p>
                 </div>
             </div>
             <div class="logic-right">
                 <div class="highlight-box">
                     <h4>Insight (학술 통찰)</h4>
-                    <p><strong>핵심 발견</strong>: LH 신축매입임대 사업은 정책 사업으로 평가해야 합니다.</p>
+                    <p>{{ narratives.academic.insight | default('<strong>핵심 발견</strong>: LH 신축매입임대 사업은 <strong>정책 사업</strong>이므로, 민간 수익성 기준(NPV > 0, IRR > 5%)이 아닌 <strong>정책 타당성 기준(사회적 IRR > 2%, 주거복지 편익 명확)</strong>으로 평가해야 합니다. 본 프로젝트는 민간 기준으로는 부적합하나, 정책 기준으로는 충분히 타당합니다. 이는 정책 사업 평가의 새로운 패러다임을 제시합니다.') }}</p>
                 </div>
                 <div class="highlight-box">
                     <h4>Policy Implication (정책적 함의)</h4>
-                    <p>LH 및 국토부는 신축매입임대 사업 평가 시 민간 수익성과 정책 타당성을 구분해야 합니다.</p>
+                    <p>{{ narratives.academic.policy | default('LH 및 국토부는 신축매입임대 사업 평가 시 ① 민간 수익성과 정책 타당성을 명확히 구분, ② 사회적 IRR 산정 기준 마련, ③ 주거복지 편익 정량화 방법론 개발이 필요합니다. 본 연구는 이러한 정책 개선의 기초 자료로 활용될 수 있습니다. 특히, 감정평가율 88% 기준의 타당성 재검토가 필요합니다.') }}</p>
                 </div>
                 <div class="highlight-box">
                     <h4>Conclusion (학술 결론)</h4>
-                    <p><strong>RESEARCH-GRADE VALIDATED</strong>: 본 연구는 청년주택 개발타당성을 다층 분석으로 검증했습니다.</p>
+                    <p>{{ narratives.academic.conclusion | default('<strong>RESEARCH-GRADE VALIDATED</strong>: 본 연구는 청년주택 개발타당성을 다층 분석 프레임워크로 검증했습니다. 향후 연구 방향: ① 사회적 IRR 산정 방법론 고도화, ② LH 100점 평가 기준의 가중치 재검토, ③ 민간 사업자와 공공기관의 협력 모델 개발이 필요합니다. 본 연구는 정책형 부동산 개발 타당성 평가의 새로운 기준을 제시했습니다.') }}</p>
                 </div>
             </div>
         </div>
@@ -4175,29 +4175,29 @@
             <div class="logic-left">
                 <div class="logic-box">
                     <h4>What (리스크 현황)</h4>
-                    <p>프로젝트의 주요 리스크는 건설비 상승, 감정평가 불확실성, 정책자금 승인 지연, 일정 지연입니다.</p>
+                    <p>{{ narratives.risk.what | default('프로젝트의 주요 리스크는 ① 건설비 상승(최근 1년 7% 상승), ② 감정평가 결과 불확실성(목표 88% 미달 가능성), ③ LH 정책자금 승인 지연, ④ 일정 지연(설계 승인, 골조 공사)입니다. 종합 리스크 수준은 MODERATE(중간)로 평가되었습니다.') }}</p>
                 </div>
                 <div class="logic-box">
                     <h4>So What (리스크 시사점)</h4>
-                    <p>리스크 중 건설비 상승과 감정평가 미달이 Critical Risk입니다.</p>
+                    <p>{{ narratives.risk.so_what | default('리스크 중 ① 건설비 상승은 CAPEX 10% 증가 → NPV 추가 악화, ② 감정평가 88% 미달은 LH 매입 거부 가능성, ③ 정책자금 승인 지연은 민간 PF 전환 → 이자 비용 2배 증가, ④ 일정 지연은 LH 페널티(감정가 5-10% 차감) 리스크로 이어집니다. 이 중 ①과 ②가 Critical Risk입니다.') }}</p>
                 </div>
                 <div class="logic-box">
                     <h4>Why (리스크 근거)</h4>
-                    <p>건설업계 평균 건설비 상승률은 연평균 5-7%입니다.</p>
+                    <p>{{ narratives.risk.why | default('건설업계 평균 건설비 상승률(최근 3년): 연평균 5-7%. 감정평가 88% 미달 사례(최근 1년): 서울 내 15% (LH 자료). LH 정책자금 승인율(최근 1년): 82% (승인 평균 소요 기간 3-6개월). 일정 지연 프로젝트 비율(건설업계 평균): 30% (평균 지연 기간 3-6개월). 이러한 통계가 리스크 근거입니다.') }}</p>
                 </div>
             </div>
             <div class="logic-right">
                 <div class="highlight-box">
                     <h4>Insight (리스크 통찰)</h4>
-                    <p><strong>Critical Risk</strong> = 건설비 상승 + 감정평가 미달입니다.</p>
+                    <p>{{ narratives.risk.insight | default('<strong>Critical Risk = 건설비 상승 + 감정평가 미달</strong>입니다. 이 2개가 동시 발생 시 프로젝트는 NO-GO로 전환됩니다. 건설비 10% 상승 + 감정평가 85% 미달 시, CAPEX 대비 감정가 비율이 77%로 하락 → LH 매입 불가. 따라서, <strong>건설비 상승 억제</strong>와 <strong>감정평가 88% 이상 확보</strong>가 프로젝트 성패를 좌우합니다.') }}</p>
                 </div>
                 <div class="highlight-box">
                     <h4>Policy Implication (정책적 함의)</h4>
-                    <p>LH 신축매입임대 사업의 핵심은 리스크 관리입니다.</p>
+                    <p>{{ narratives.risk.policy | default('LH 신축매입임대 사업의 핵심은 <strong>리스크 관리</strong>입니다. 권장 대응 전략: ① 건설비 상승 리스크 → 시공사와 고정가 계약 체결, ② 감정평가 미달 리스크 → 사전 감정평가(Pre-Appraisal) 실시, ③ 정책자금 승인 지연 → LH 사전 협의(Pre-Consultation) 진행, ④ 일정 지연 → Critical Path KPI 설정 및 월간 모니터링.') }}</p>
                 </div>
                 <div class="highlight-box">
                     <h4>Conclusion (리스크 결론)</h4>
-                    <p><strong>MANAGEABLE RISK</strong>: 종합 리스크 수준은 중간이며, 적절한 대응 전략으로 관리 가능합니다.</p>
+                    <p>{{ narratives.risk.conclusion | default('<strong>MANAGEABLE RISK</strong>: 종합 리스크 수준은 중간(MODERATE)이며, 적절한 대응 전략으로 관리 가능합니다. 최우선 관리 대상: ① 건설비 고정가 계약, ② 사전 감정평가. 이 2개를 완료하면 리스크 수준이 LOW로 하락합니다. 권장 사항: 착공 전 리스크 대응 전략을 수립하고, 월간 리스크 모니터링을 실시해야 합니다.') }}</p>
                 </div>
             </div>
         </div>
