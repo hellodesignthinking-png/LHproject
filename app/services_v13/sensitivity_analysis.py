@@ -179,9 +179,9 @@ class SensitivityAnalyzer:
         best_scenario = max(scenarios, key=lambda x: x['profit_eok'])
         worst_scenario = min(scenarios, key=lambda x: x['profit_eok'])
         
-        # Count decisions
-        go_count = sum(1 for s in scenarios if 'GO' in s['decision'])
-        no_go_count = sum(1 for s in scenarios if 'NO-GO' in s['decision'])
+        # Count decisions (exclude NO-GO from GO count)
+        go_count = sum(1 for s in scenarios if 'GO' in s['decision'] and 'NO-GO' not in s['decision'])
+        no_go_count = sum(1 for s in scenarios if 'NO-GO' == s['decision'])
         
         return {
             'profit_min_eok': min(profits),

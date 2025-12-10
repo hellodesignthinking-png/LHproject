@@ -1,0 +1,154 @@
+INFO:__main__:━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+INFO:__main__:ZeroSite v23 - Ground Truth Verification Suite
+INFO:__main__:테스트 케이스: 강남 역삼동 825 프로젝트
+INFO:__main__:━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+INFO:__main__:================================================================================
+INFO:__main__:TEST 1: 민감도 분석 Ground Truth 검증
+INFO:__main__:================================================================================
+INFO:app.services_v13.sensitivity_analysis:💡 Sensitivity Analyzer v23 초기화
+INFO:app.services_v13.sensitivity_analysis:📊 민감도 분석 시작: CAPEX 300억, 감정평가율 92%
+INFO:app.services_v13.sensitivity_analysis:✅ 민감도 분석 완료: 9개 시나리오
+INFO:__main__:
+================================================================================
+INFO:__main__:민감도 분석 실제 계산 결과 (Ground Truth)
+INFO:__main__:================================================================================
+
+INFO:__main__:┌─────────────────────────────┬────────┬────────┬────────┬────────┬────────────────┐
+INFO:__main__:│         시나리오             │ CAPEX  │ 평가율 │ 수익   │  ROI   │   의사결정     │
+INFO:__main__:│                             │ (억원) │  (%)   │ (억원) │  (%)   │                │
+INFO:__main__:├─────────────────────────────┼────────┼────────┼────────┼────────┼────────────────┤
+INFO:__main__:│ CAPEX -10%, 감정평가율 -5%       │    270 │  87.40 │  18.51 │   6.85 │ GO (Policy)    │
+INFO:__main__:│ CAPEX -10%, 감정평가율 +0%       │    270 │  92.00 │  29.64 │  10.98 │ GO (Policy)    │
+INFO:__main__:│ CAPEX -10%, 감정평가율 +5%       │    270 │  96.60 │  40.77 │  15.10 │ GO (Policy)    │
+INFO:__main__:│ CAPEX +0%, 감정평가율 -5%        │    300 │  87.40 │ -11.49 │  -3.83 │ NO-GO          │
+INFO:__main__:│ Base (기준)                   │    300 │  92.00 │  -0.36 │  -0.12 │ NO-GO          │
+INFO:__main__:│ CAPEX +0%, 감정평가율 +5%        │    300 │  96.60 │  10.77 │   3.59 │ NO-GO          │
+INFO:__main__:│ CAPEX +10%, 감정평가율 -5%       │    330 │  87.40 │ -41.49 │ -12.57 │ NO-GO          │
+INFO:__main__:│ CAPEX +10%, 감정평가율 +0%       │    330 │  92.00 │ -30.36 │  -9.20 │ NO-GO          │
+INFO:__main__:│ CAPEX +10%, 감정평가율 +5%       │    330 │  96.60 │ -19.23 │  -5.83 │ NO-GO          │
+INFO:__main__:└─────────────────────────────┴────────┴────────┴────────┴────────┴────────────────┘
+INFO:__main__:
+================================================================================
+INFO:__main__:요약 통계
+INFO:__main__:================================================================================
+INFO:__main__:수익 범위: -41.49억 ~ 40.77억
+INFO:__main__:수익 변동폭: 82.26억
+INFO:__main__:ROI 범위: -12.57% ~ 15.10%
+INFO:__main__:ROI 변동폭: 27.67%p
+INFO:__main__:GO 시나리오: 3개 (33.3%)
+INFO:__main__:NO-GO 시나리오: 6개
+INFO:__main__:
+================================================================================
+INFO:__main__:Tornado 다이어그램 (민감도 순위)
+INFO:__main__:================================================================================
+INFO:__main__:
+1위. CAPEX (±10%)
+INFO:__main__:  • 변동폭: 60.00억원
+INFO:__main__:  • 음의 영향: 30.00억원
+INFO:__main__:  • 양의 영향: -30.00억원
+INFO:__main__:
+2위. 감정평가율 (±5%)
+INFO:__main__:  • 변동폭: 22.26억원
+INFO:__main__:  • 음의 영향: -11.13억원
+INFO:__main__:  • 양의 영향: 11.13억원
+INFO:__main__:
+가장 민감한 요인: CAPEX
+INFO:__main__:
+================================================================================
+INFO:__main__:TEST 2: Dynamic CAPEX 계산 Ground Truth 검증
+INFO:__main__:================================================================================
+
+INFO:app.services_v13.dynamic_capex_calculator:💰 Dynamic CAPEX Calculator v23 초기화
+INFO:__main__:▶ Test 2-1: 시장가 기반 동적 토지비 계산
+INFO:__main__:--------------------------------------------------------------------------------
+INFO:app.services_v13.dynamic_capex_calculator:💰 Dynamic Land Cost: 150.00억원 (50.0%)
+INFO:__main__:입력:
+INFO:__main__:  • 시장 토지가: 242.00억원
+INFO:__main__:  • 총 CAPEX: 300억원
+INFO:__main__:
+계산 결과:
+INFO:__main__:  • 예상 토지비 (협상 후): 229.90억원
+INFO:__main__:  • CAPEX 토지비: 150.00억원
+INFO:__main__:  • 토지비 비율: 50.0%
+INFO:__main__:  • 계산 방법: Market-based Dynamic
+INFO:__main__:  • 조정 필요: True
+INFO:__main__:  • 권장 CAPEX: 460억원
+INFO:__main__:
+▶ Test 2-2: LH 인정 건축비 검증
+INFO:__main__:--------------------------------------------------------------------------------
+INFO:app.services_v13.dynamic_capex_calculator:🔍 Construction Cost Validation: ERROR - 750만원/㎡
+INFO:__main__:입력:
+INFO:__main__:  • CAPEX 건축비: 165.00억원 (CAPEX의 55%)
+INFO:__main__:  • 연면적: 2200㎡
+INFO:__main__:
+검증 결과:
+INFO:__main__:  • CAPEX 건축비 단가: 750.0만원/㎡
+INFO:__main__:  • LH 표준건축비: 350.0만원/㎡
+INFO:__main__:  • LH 인정 한도: 420.0만원/㎡ (표준 +20%)
+INFO:__main__:  • 초과액: 400.0만원/㎡ (114.3%)
+INFO:__main__:  • 상태: ERROR
+WARNING:__main__:  ⚠️ 경고: ❌ 건축비 과다: 750만원/㎡가 LH 표준 350만원/㎡를 114% 초과
+   → LH 매입가 < CAPEX 위험 (사업성 없음)
+   권장: 건축비를 420만원/㎡ 이하로 조정
+INFO:__main__:
+▶ Test 2-3: CAPEX 세부 항목 조정
+INFO:__main__:--------------------------------------------------------------------------------
+INFO:app.services_v13.dynamic_capex_calculator:🔍 Construction Cost Validation: ERROR - 500만원/㎡
+INFO:__main__:조정 후 CAPEX 구조:
+INFO:__main__:
+┌──────────────┬────────┬───────────┬──────────────┐
+INFO:__main__:│   항목       │  비율  │   금액    │     상태     │
+INFO:__main__:├──────────────┼────────┼───────────┼──────────────┤
+ERROR:__main__:❌ Dynamic CAPEX 테스트 실패: 'direct_cost_eok'
+Traceback (most recent call last):
+  File "/home/user/webapp/test_ground_truth_verification.py", line 212, in test_dynamic_capex
+    ('직접 건축비', breakdown['direct_cost_eok'], breakdown['direct_cost_ratio_pct'],
+                   ~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+KeyError: 'direct_cost_eok'
+INFO:__main__:
+================================================================================
+INFO:__main__:TEST 3: Land Value 3-Layer 구조 검증
+INFO:__main__:================================================================================
+
+INFO:__main__:Layer 1: Market Land Value (국토부 실거래가 기반)
+INFO:__main__:  • 시장 토지가: 242.00억원
+INFO:__main__:  • 평균 단가: 2200.00만원/㎡
+INFO:__main__:
+Layer 2: LH Appraisal Value (감정평가)
+INFO:__main__:  • 토지 감정가: 222.64억원 (시장가 × 92%)
+INFO:__main__:  • 건물 감정가: 77.00억원 (표준단가 × 연면적)
+INFO:__main__:  • 총 LH 매입가: 299.64억원
+INFO:__main__:
+Layer 3: CAPEX Land Cost (동적 계산)
+INFO:__main__:  • 기존 고정 토지비: 75.00억원 (CAPEX의 25%)
+INFO:__main__:  • 개선 후 동적 토지비: (상기 Test 2 결과 참조)
+INFO:__main__:
+================================================================================
+INFO:__main__:TEST 4: 문서 vs 코드 불일치 검증
+INFO:__main__:================================================================================
+
+INFO:__main__:문서에 기록된 값 (v23_implementation_summary.md):
+INFO:__main__:  • 최적 시나리오 수익: 40.77억원
+INFO:__main__:  • 기준 시나리오 수익: -0.36억원
+INFO:__main__:  • 최악 시나리오 수익: -41.49억원
+INFO:__main__:  • CAPEX 민감도: 60.00억원
+INFO:__main__:  • 감정평가율 민감도: 22.26억원
+INFO:__main__:
+코드 계산 결과와 비교를 위해 상기 TEST 1 결과를 참조하세요.
+INFO:__main__:
+================================================================================
+INFO:__main__:Ground Truth 검증 완료
+INFO:__main__:================================================================================
+INFO:__main__:
+✅ 기준 시나리오 (CAPEX 300억, 평가율 92%):
+INFO:__main__:   수익: -0.36억원
+INFO:__main__:   ROI: -0.12%
+INFO:__main__:   IRR: -0.05%
+INFO:__main__:   의사결정: NO-GO
+INFO:__main__:
+✅ 3-Layer Land Valuation:
+INFO:__main__:   Market: 242.00억원
+INFO:__main__:   LH Land: 222.64억원
+INFO:__main__:   LH Total: 299.64억원
+INFO:__main__:
+이제 이 Ground Truth 값을 기준으로 문서와 비교하여 불일치를 수정합니다.

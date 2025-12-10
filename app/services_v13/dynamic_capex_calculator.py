@@ -220,6 +220,8 @@ class DynamicCapexCalculator:
             'lh_standard_man': round(lh_standard / 10000, 0),
             'lh_max_acceptable': lh_max_acceptable,
             'lh_max_acceptable_man': round(lh_max_acceptable / 10000, 0),
+            'lh_approved_limit': lh_max_acceptable,  # Alias for consistency
+            'lh_approved_limit_man': round(lh_max_acceptable / 10000, 0),  # Alias
             'excess_won': excess_won,
             'excess_man': round(excess_won / 10000, 0),
             'excess_pct': round(excess_pct, 1),
@@ -286,10 +288,25 @@ class DynamicCapexCalculator:
             'land_cost_won': land_cost,
             'land_cost_eok': round(land_cost / 1e8, 2),
             'land_cost_ratio_pct': round(land_cost / capex_total * 100, 1),
+            # Nested structure
             'construction': adjusted['construction'],
             'indirect': adjusted['indirect'],
             'design': adjusted['design'],
             'other': adjusted['other'],
+            # Flattened aliases for easier access
+            'direct_cost_won': adjusted['construction']['amount_won'],
+            'direct_cost_eok': adjusted['construction']['amount_eok'],
+            'direct_cost_ratio_pct': adjusted['construction']['ratio_pct'],
+            'indirect_cost_won': adjusted['indirect']['amount_won'],
+            'indirect_cost_eok': adjusted['indirect']['amount_eok'],
+            'indirect_cost_ratio_pct': adjusted['indirect']['ratio_pct'],
+            'design_cost_won': adjusted['design']['amount_won'],
+            'design_cost_eok': adjusted['design']['amount_eok'],
+            'design_cost_ratio_pct': adjusted['design']['ratio_pct'],
+            'other_cost_won': adjusted['other']['amount_won'],
+            'other_cost_eok': adjusted['other']['amount_eok'],
+            'other_cost_ratio_pct': adjusted['other']['ratio_pct'],
+            # Other fields
             'remaining_budget_won': remaining_budget,
             'remaining_budget_eok': round(remaining_budget / 1e8, 2),
             'validation': construction_validation
