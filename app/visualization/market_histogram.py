@@ -134,8 +134,8 @@ class MarketHistogramGenerator:
             'cv': (std_price / mean_price * 100) if mean_price > 0 else 0.0
         }
         
-        # Create figure and axis
-        fig, ax = plt.subplots(figsize=(12, 6), dpi=100)
+        # Create figure and axis (v23.1: Enhanced DPI)
+        fig, ax = plt.subplots(figsize=(12, 6), dpi=150)
         
         # Create histogram
         n, bins_edges, patches = ax.hist(
@@ -189,32 +189,33 @@ class MarketHistogramGenerator:
             zorder=1
         )
         
-        # Add statistics text box
-        stats_text = f"""통계 요약
-───────────
-• 평균: {mean_price:.2f} 백만원/㎡
-• 중앙값: {median_price:.2f} 백만원/㎡
-• 표준편차: {std_price:.2f} 백만원/㎡
-• 최소: {min_price:.2f} 백만원/㎡
-• 최대: {max_price:.2f} 백만원/㎡
-• 변동계수: {statistics['cv']:.1f}%
-• 표본수: {len(prices)}건"""
+        # Add statistics text box (v23.1: Enhanced size and styling)
+        stats_text = f"""{'통계 요약':^20}
+{'─' * 20}
+평균:    {mean_price:>7.2f} M/㎡
+중앙값:  {median_price:>7.2f} M/㎡
+표준편차: {std_price:>7.2f} M/㎡
+최소값:  {min_price:>7.2f} M/㎡
+최대값:  {max_price:>7.2f} M/㎡
+변동계수: {statistics['cv']:>7.1f}%
+사례수:  {len(prices):>7}건"""
         
         ax.text(
-            0.98, 0.97,
+            0.97, 0.97,
             stats_text,
             transform=ax.transAxes,
-            fontsize=9,
+            fontsize=11,  # Increased from 9
             verticalalignment='top',
             horizontalalignment='right',
             bbox=dict(
-                boxstyle='round,pad=0.8',
+                boxstyle='round,pad=1.0',  # Increased padding
                 facecolor='white',
                 edgecolor=self.LH_BLUE,
-                alpha=0.95,
-                linewidth=2
+                alpha=0.98,
+                linewidth=2.5  # Thicker border
             ),
-            family='monospace'
+            family='monospace',
+            fontweight='600'  # Bolder text
         )
         
         # Styling

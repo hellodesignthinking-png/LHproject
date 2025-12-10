@@ -27,8 +27,10 @@ from typing import Dict, Any, Optional
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+import hashlib
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -51,9 +53,9 @@ logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="ZeroSite v23 - A/B Scenario Comparison",
+    title="ZeroSite v23.1 - A/B Scenario Comparison",
     description="Professional A/B Scenario Analysis for LH Land Acquisition",
-    version="23.0.0",
+    version="23.1.0",
     docs_url="/api/v23/docs",
     redoc_url="/api/v23/redoc"
 )
@@ -85,6 +87,20 @@ metrics = {
 
 # Startup time
 server_start_time = time.time()
+
+# ==========================================
+# Static Files & Reports Directory
+# ==========================================
+
+# Reports directory
+REPORTS_DIR = Path("/home/user/webapp/public/reports")
+REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+
+# Mount static files for direct access
+app.mount("/reports", StaticFiles(directory=str(REPORTS_DIR)), name="reports")
+
+# Base URL (from environment or auto-detect)
+BASE_URL = os.getenv("BASE_URL", "http://localhost:8041")
 
 
 # ==========================================
@@ -138,6 +154,40 @@ def format_krw(value: float) -> str:
 def generate_document_code() -> str:
     """Generate unique document code"""
     return f"ZS-v23-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+
+
+def save_report_with_url(html_content: str, address: str) -> tuple:
+    """
+    Save HTML report to static directory and generate accessible URL
+    
+    Args:
+        html_content: HTML report content
+        address: Land address
+    
+    Returns:
+        (report_url, download_url, filename, filepath)
+    """
+    # Generate unique filename
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    address_hash = hashlib.md5(address.encode('utf-8')).hexdigest()[:8]
+    
+    # Filename format: ab_scn_{hash}_{timestamp}.html
+    filename = f"ab_scn_{address_hash}_{timestamp}.html"
+    filepath = REPORTS_DIR / filename
+    
+    # Save HTML
+    with open(filepath, 'w', encoding='utf-8') as f:
+        f.write(html_content)
+    
+    # Generate URLs
+    report_url = f"{BASE_URL}/reports/{filename}"
+    download_url = f"{BASE_URL}/reports/{filename}?download=true"
+    
+    # Log
+    logger.info(f"✅ Report saved: {filename}")
+    logger.info(f"📊 URL: {report_url}")
+    
+    return report_url, download_url, filename, str(filepath)
 
 
 # ==========================================
@@ -472,17 +522,13 @@ async def generate_ab_report(request: ABReportRequest):
 </body>
 </html>"""
         
-        # Save HTML report
-        output_dir = Path('generated_reports')
-        output_dir.mkdir(exist_ok=True)
+        # ✨ NEW: Save HTML report with accessible URL
+        report_url, download_url, filename, filepath = save_report_with_url(
+            html_content=html_content,
+            address=request.address
+        )
         
-        filename = f"v23_ab_{request.address.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        html_path = output_dir / f"{filename}.html"
-        
-        with open(html_path, 'w', encoding='utf-8') as f:
-            f.write(html_content)
-        
-        file_size_kb = html_path.stat().st_size // 1024
+        file_size_kb = Path(filepath).stat().st_size // 1024
         generation_time = time.time() - start_time
         
         # Update metrics
@@ -493,11 +539,12 @@ async def generate_ab_report(request: ABReportRequest):
         # Determine recommended scenario
         recommended_scenario = "A" if comparison["decision"]["winner"] == "A" else "B"
         
-        logger.info(f"✅ v23 A/B Report generated: {filename}.html ({generation_time:.2f}s)")
+        logger.info(f"✅ v23 A/B Report generated: {filename} ({generation_time:.2f}s)")
+        logger.info(f"📊 Accessible at: {report_url}")
         
         return ABReportResponse(
             status="success",
-            report_url=f"/reports/{filename}.html",
+            report_url=report_url,
             generation_time=round(generation_time, 2),
             file_size_kb=file_size_kb,
             scenario_a_type=scenario_a.supply_type,
@@ -526,14 +573,75 @@ async def generate_ab_report(request: ABReportRequest):
 
 
 @app.get("/reports/{filename}")
-async def get_report(filename: str):
-    """Serve generated reports"""
-    file_path = Path('generated_reports') / filename
+async def get_report(filename: str, download: bool = False):
+    """
+    Direct access to generated reports
     
-    if not file_path.exists():
-        raise HTTPException(status_code=404, detail="Report not found")
+    Args:
+        filename: Report filename
+        download: If True, force download instead of display
     
-    return FileResponse(file_path)
+    Returns:
+        HTML file
+    """
+    filepath = REPORTS_DIR / filename
+    
+    if not filepath.exists():
+        # Try old location for backward compatibility
+        old_filepath = Path('generated_reports') / filename
+        if old_filepath.exists():
+            filepath = old_filepath
+        else:
+            raise HTTPException(status_code=404, detail="Report not found")
+    
+    headers = {}
+    if download:
+        headers["Content-Disposition"] = f"attachment; filename={filename}"
+    else:
+        headers["Content-Disposition"] = f"inline; filename={filename}"
+    
+    return FileResponse(
+        filepath,
+        media_type="text/html",
+        headers=headers
+    )
+
+
+@app.get("/api/v23/reports/list")
+async def list_reports():
+    """
+    List all generated reports
+    
+    Returns:
+        List of reports with URLs and metadata
+    """
+    reports = []
+    
+    # Check both new and old locations
+    for directory in [REPORTS_DIR, Path('generated_reports')]:
+        if not directory.exists():
+            continue
+            
+        for file in directory.glob("*.html"):
+            if file.name in [r['filename'] for r in reports]:
+                continue  # Skip duplicates
+                
+            stat = file.stat()
+            reports.append({
+                "filename": file.name,
+                "url": f"{BASE_URL}/reports/{file.name}",
+                "download_url": f"{BASE_URL}/reports/{file.name}?download=true",
+                "size_kb": round(stat.st_size / 1024, 2),
+                "created_at": datetime.fromtimestamp(stat.st_ctime).isoformat()
+            })
+    
+    # Sort by creation time (newest first)
+    reports.sort(key=lambda x: x['created_at'], reverse=True)
+    
+    return {
+        "total": len(reports),
+        "reports": reports[:50]  # Limit to 50 most recent
+    }
 
 
 @app.exception_handler(Exception)

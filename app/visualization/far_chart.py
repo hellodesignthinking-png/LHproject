@@ -99,8 +99,8 @@ class FARChartGenerator:
         Returns:
             Tuple of (base64_string, file_path)
         """
-        # Create figure and axis
-        fig, ax = plt.subplots(figsize=(10, 6), dpi=100)
+        # Create figure and axis (v23.1: Enhanced DPI)
+        fig, ax = plt.subplots(figsize=(10, 6), dpi=150)
         
         # Data
         scenarios = [f'시나리오 A\n({scenario_a_label})', f'시나리오 B\n({scenario_b_label})']
@@ -163,7 +163,7 @@ class FARChartGenerator:
                 color=self.LH_BLUE if i == 0 else self.LH_ORANGE
             )
             
-            # Relaxation amount
+            # Relaxation amount (v23.1: Enhanced with box)
             relaxation = final_fars[i] - legal_fars[i]
             if relaxation > 0:
                 ax.text(
@@ -172,9 +172,16 @@ class FARChartGenerator:
                     f'(+{relaxation:.0f}%p)',
                     ha='center',
                     va='bottom',
-                    fontsize=9,
+                    fontsize=10,
+                    fontweight='bold',
                     color=self.LH_BLUE if i == 0 else self.LH_ORANGE,
-                    style='italic'
+                    bbox=dict(
+                        boxstyle='round,pad=0.5',
+                        facecolor='#FFF3CD',
+                        edgecolor=self.LH_BLUE if i == 0 else self.LH_ORANGE,
+                        linewidth=2,
+                        alpha=0.9
+                    )
                 )
         
         # Styling
