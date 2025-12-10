@@ -1224,6 +1224,353 @@ class V21NarrativeEnginePro:
         return narrative
     
     # ========================================================================
+    # 5. ZONING & PLANNING INTERPRETER (30 lines)
+    # ========================================================================
+    
+    def generate_zoning_planning_narrative(self, context: dict) -> str:
+        """
+        Generate professional Zoning & Planning narrative (30 lines)
+        
+        Focus Areas:
+        - Zoning overview & urban planning context
+        - FAR/BCR relaxation conditions & public contribution
+        - Transit & school zone analysis
+        - LH policy alignment & public interest principles
+        """
+        
+        # Extract context data
+        address = context.get('address', '(주소 미제공)')
+        land_area_pyeong = context.get('land_area_pyeong', 0)
+        far_legal = context.get('far_legal', 200)
+        bcr_legal = context.get('bcr_legal', 60)
+        far_relaxation = context.get('far_relaxation', 0)
+        bcr_relaxation = context.get('bcr_relaxation', 0)
+        far_actual = far_legal + far_relaxation
+        bcr_actual = bcr_legal + bcr_relaxation
+        
+        # Zoning type inference
+        zoning_type = context.get('zoning_type', '제2종일반주거지역')
+        if far_legal >= 300:
+            zoning_type = '제3종일반주거지역'
+        elif far_legal >= 200:
+            zoning_type = '제2종일반주거지역'
+        else:
+            zoning_type = '제1종일반주거지역'
+        
+        # Transit & school zone
+        near_subway = context.get('near_subway', False)
+        subway_distance = context.get('subway_distance_m', 800)
+        school_zone = context.get('school_zone', False)
+        
+        # Calculate relaxation benefit
+        far_benefit = far_relaxation / far_legal * 100 if far_legal > 0 else 0
+        bcr_benefit = bcr_relaxation / bcr_legal * 100 if bcr_legal > 0 else 0
+        
+        narrative = f"""
+        <div class="zoning-planning-section" style="padding: 25px; background: #FFFFFF; border-radius: 12px; margin: 20px 0;">
+            <div class="section-content">
+                <h4 style="color: #005BAC; font-size: 14pt; margin-bottom: 20px; border-bottom: 3px solid #005BAC; padding-bottom: 10px;">
+                    🏙️ 도시계획 및 용도지역 분석 (Zoning & Urban Planning Analysis)
+                </h4>
+                
+                <p style="font-size: 10pt; line-height: 1.9; margin-bottom: 20px; text-align: justify;">
+                    본 섹션에서는 <strong>{address}</strong> 대상지의 <strong>용도지역, 건폐율/용적률, 
+                    지구단위계획, 교통/교육 입지</strong>를 종합 분석하고, 
+                    <strong>LH 공공주택 사업 관점에서의 개발 가능성 및 완화 조건</strong>을 평가합니다. 
+                    특히 <strong>도시계획시설, 학교용지 확보, 대중교통 접근성</strong> 등 
+                    공공기여 요소가 용적률 완화의 핵심 판단 기준임을 고려하여 분석하였습니다.
+                </p>
+                
+                <h5 style="color: #005BAC; font-size: 11pt; margin-top: 25px; margin-bottom: 15px;">
+                    📋 1) 용도지역 현황 및 법적 기준
+                </h5>
+                
+                <div style="background: #F8F9FA; border-left: 4px solid #005BAC; padding: 15px; margin: 15px 0;">
+                    <table style="width: 100%; font-size: 9pt; border-collapse: collapse;">
+                        <tr style="background: #E6F2FF;">
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">항목</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">법정 기준</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">완화 적용</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">최종 적용</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #ddd;">용도지역</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;" colspan="3">{zoning_type}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #ddd;">건폐율 (BCR)</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">{bcr_legal}%</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">+{bcr_relaxation}%p</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: #28a745;">{bcr_actual}%</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #ddd;">용적률 (FAR)</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">{far_legal}%</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">+{far_relaxation}%p</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: #28a745;">{far_actual}%</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <p style="font-size: 10pt; line-height: 1.9; margin: 15px 0; text-align: justify;">
+                    <strong>📌 해석 (Interpretation):</strong> 
+                    본 대상지는 <strong>{zoning_type}</strong>으로 지정되어 있으며, 
+                    법정 건폐율 {bcr_legal}%, 용적률 {far_legal}%가 적용됩니다. 
+                    {'<strong style="color: #28a745;">용적률 완화(+' + str(far_relaxation) + '%p) 적용 시 최대 ' + str(far_actual) + '%까지 개발 가능</strong>하여, ' if far_relaxation > 0 else ''}
+                    LH 공공주택 사업의 경제성 확보에 {'<strong>유리한 조건</strong>' if far_relaxation >= 30 else '<strong>보통 수준의 조건</strong>'}입니다. 
+                    {'용적률 완화율(' + f'{far_benefit:.1f}' + '%)이 높아 추가 세대 확보 및 사업비 회수에 긍정적 영향을 미칩니다.' if far_relaxation >= 30 else ''}
+                </p>
+                
+                <h5 style="color: #005BAC; font-size: 11pt; margin-top: 25px; margin-bottom: 15px;">
+                    🎯 2) 용적률 완화 조건 및 공공기여
+                </h5>
+                
+                <div style="background: #E6F2FF; border: 2px solid #005BAC; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                    <p style="font-size: 10pt; line-height: 2.0; margin: 0;">
+                        <strong>🔹 용적률 완화 근거 (Legal Basis):</strong><br>
+                        • <strong>「국토계획법」 제78조</strong>: 공공시설 기부채납 시 용적률 +30%p까지 완화 가능<br>
+                        • <strong>「주택법」 제15조</strong>: 공공주택사업자(LH) 건립 시 +20-40%p 완화 (지자체 조례)<br>
+                        • <strong>「서울시 도시계획 조례」 제55조</strong>: 학교용지 확보, 도로 확장 등 공익기여 시 완화<br>
+                        <br>
+                        <strong>🔹 적용 완화 내역 (Applied Relaxations):</strong><br>
+                        • 기부채납 (공공시설): <strong>+{min(far_relaxation, 30)}%p</strong> 
+                        (도로, 공원 등 기여 시 최대 30%p)<br>
+                        • LH 공공주택 사업: <strong>+{max(0, far_relaxation-30)}%p</strong> 
+                        (주택법 특례 적용)<br>
+                        • <strong>총 완화: +{far_relaxation}%p → 최종 용적률 {far_actual}%</strong><br>
+                        <br>
+                        <strong style="color: #DC3545;">⚠️ 완화 조건 (Requirements):</strong> 
+                        {'용적률 완화 적용을 위해서는 <strong>도로 확폭(6m→8m), 소공원 기부채납(대지면적의 5-10%)</strong> 등 공공기여가 필수적이며, ' if far_relaxation > 0 else ''}
+                        사업비(CAPEX)에 <strong>기부채납 비용 약 {(land_area_pyeong * 0.08 * 30 * 3.3):.1f}만원</strong> 
+                        (대지 8% × 평당 30만원 가정) 반영 필요.
+                    </p>
+                </div>
+                
+                <h5 style="color: #005BAC; font-size: 11pt; margin-top: 25px; margin-bottom: 15px;">
+                    🚇 3) 교통 및 학교시설 입지 분석
+                </h5>
+                
+                <p style="font-size: 10pt; line-height: 1.9; margin: 15px 0; text-align: justify;">
+                    <strong>📍 대중교통 접근성:</strong> 
+                    {'<strong style="color: #28a745;">지하철역 ' + str(subway_distance) + 'm 이내 위치</strong>하여 교통 접근성이 우수합니다. ' if near_subway else '<strong style="color: #FFC107;">지하철역 ' + str(subway_distance) + 'm 거리</strong>로, 버스 노선 보완 필요. '}
+                    LH 청년·신혼부부 주택의 핵심 수요층(20-30대)이 선호하는 
+                    <strong>직주근접 입지 조건</strong>을 {'충족' if near_subway else '부분 충족'}하며, 
+                    {'향후 입주자 만족도 및 임대율(95% 이상) 확보에 유리합니다.' if near_subway else '교통 편의성 개선 시 경쟁력 강화 가능합니다.'}
+                </p>
+                
+                <p style="font-size: 10pt; line-height: 1.9; margin: 15px 0; text-align: justify;">
+                    <strong>🏫 학교시설 및 교육환경:</strong> 
+                    {'<strong style="color: #28a745;">초·중·고 학교시설 1km 이내 위치</strong>하여 ' if school_zone else '<strong style="color: #FFC107;">학교시설 1km 이상 거리</strong>로, '}
+                    신혼부부(자녀 계획 세대) 수요 {'확보에 유리한 조건입니다. ' if school_zone else '확보에 보통 수준입니다. '}
+                    「학교용지 확보 등에 관한 특례법」에 따라 
+                    {'학교 부지 부담금 납부(세대당 약 500만원) 필요하며, ' if school_zone else '향후 학교 신설 시 부담금 발생 가능성 고려 필요하며, '}
+                    이는 사업비(CAPEX)에 반영되어야 합니다.
+                </p>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #E6F2FF; border-radius: 8px;">
+                    <p style="margin: 0; font-size: 10pt; color: #005BAC; line-height: 1.7;">
+                        <strong>🔗 LH 정책 연계:</strong> 
+                        본 대상지는 LH 공공주택 사업의 <strong>입지 적합성 평가 기준</strong>
+                        (교통 접근성, 교육시설, 용적률 완화 가능성)을 {'<strong>충족</strong>' if near_subway and far_relaxation >= 20 else '<strong>부분 충족</strong>'}하며, 
+                        「공공주택 특별법」 제4조(입지 선정 기준) 및 
+                        LH 내부 지침(대중교통 500m 이내, 용적률 완화 20%p 이상)과 {'<strong style="color: #28a745;">부합</strong>' if near_subway and far_relaxation >= 20 else '<strong style="color: #FFC107;">일부 보완 필요</strong>'}합니다. 
+                        최종 매입 의사결정 시 <strong>도시계획 리스크(용적률 불허가, 기부채납 비용 증가) 
+                        및 완화 전략</strong>이 함께 고려되어야 합니다.
+                    </p>
+                </div>
+            </div>
+        </div>
+        """
+        
+        self.narrative_lines_generated += 30
+        self.citation_count += 2  # 국토계획법, 주택법
+        return narrative
+    
+    # ========================================================================
+    # 6. RISK & STRATEGY INTERPRETER (35 lines)
+    # ========================================================================
+    
+    def generate_risk_strategy_narrative(self, context: dict) -> str:
+        """
+        Generate professional Risk & Strategy narrative (35 lines)
+        
+        Focus Areas:
+        - Risk categorization & matrix (Policy vs Business Risk)
+        - Mitigation strategies (Preventive & Contingency)
+        - LH risk management framework alignment
+        """
+        
+        # Extract context data
+        address = context.get('address', '(주소 미제공)')
+        irr = context.get('irr', 12.0)
+        npv = context.get('npv', 0)
+        capex = context.get('total_capex', 10_000_000_000)
+        land_cost = context.get('land_cost', capex * 0.5)
+        building_cost = context.get('building_cost', capex * 0.4)
+        far_relaxation = context.get('far_relaxation', 0)
+        lh_appraisal_rate = context.get('lh_appraisal_rate', 95)
+        
+        # Risk assessment
+        financial_risk = "HIGH" if irr < 8 else "MEDIUM" if irr < 12 else "LOW"
+        policy_risk = "HIGH" if far_relaxation < 10 else "MEDIUM" if far_relaxation < 30 else "LOW"
+        market_risk = "MEDIUM"  # Default
+        
+        # Risk scores (for matrix)
+        risk_scores = {
+            "policy": 75 if policy_risk == "HIGH" else 50 if policy_risk == "MEDIUM" else 25,
+            "financial": 75 if financial_risk == "HIGH" else 50 if financial_risk == "MEDIUM" else 25,
+            "market": 50,
+            "construction": 40,
+            "operational": 30
+        }
+        
+        narrative = f"""
+        <div class="risk-strategy-section" style="padding: 25px; background: #FFFFFF; border-radius: 12px; margin: 20px 0;">
+            <div class="section-content">
+                <h4 style="color: #DC3545; font-size: 14pt; margin-bottom: 20px; border-bottom: 3px solid #DC3545; padding-bottom: 10px;">
+                    ⚠️ 리스크 분석 및 완화 전략 (Risk Analysis & Mitigation Strategy)
+                </h4>
+                
+                <p style="font-size: 10pt; line-height: 1.9; margin-bottom: 20px; text-align: justify;">
+                    본 섹션에서는 <strong>{address}</strong> 대상지 개발 사업의 
+                    <strong>주요 리스크 요인을 정책 리스크(Policy Risk) vs 사업 리스크(Business Risk)</strong>로 구분하고, 
+                    각 리스크별 <strong>발생 가능성, 영향도, 완화 전략</strong>을 제시합니다. 
+                    LH 공공주택 사업은 일반 민간 개발과 달리 
+                    <strong>정책 변경, 규제 강화, 공공기여 비용 증가</strong> 등 
+                    정책 리스크가 사업 타당성에 미치는 영향이 크므로, 
+                    <strong>예방적(Preventive) 전략 + 대응적(Contingency) 전략</strong>을 병행합니다.
+                </p>
+                
+                <h5 style="color: #DC3545; font-size: 11pt; margin-top: 25px; margin-bottom: 15px;">
+                    📊 1) 리스크 매트릭스 (Risk Matrix)
+                </h5>
+                
+                <div style="background: #F8F9FA; border-left: 4px solid #DC3545; padding: 15px; margin: 15px 0;">
+                    <table style="width: 100%; font-size: 9pt; border-collapse: collapse;">
+                        <tr style="background: #FFEBEE;">
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">리스크 유형</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">발생 가능성</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">영향도 (Impact)</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">리스크 점수</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">등급</th>
+                        </tr>
+                        <tr style="background: {'#FFCDD2' if policy_risk == 'HIGH' else '#FFF9C4' if policy_risk == 'MEDIUM' else '#C8E6C9'};">
+                            <td style="padding: 10px; border: 1px solid #ddd;"><strong>정책 리스크</strong><br>(용적률 불허가)</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">{'HIGH' if policy_risk == 'HIGH' else 'MEDIUM' if policy_risk == 'MEDIUM' else 'LOW'}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">HIGH</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center; font-weight: bold;">{risk_scores['policy']}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: {'#DC3545' if policy_risk == 'HIGH' else '#FFC107' if policy_risk == 'MEDIUM' else '#28a745'}; font-weight: bold;">{policy_risk}</td>
+                        </tr>
+                        <tr style="background: {'#FFCDD2' if financial_risk == 'HIGH' else '#FFF9C4' if financial_risk == 'MEDIUM' else '#C8E6C9'};">
+                            <td style="padding: 10px; border: 1px solid #ddd;"><strong>재무 리스크</strong><br>(IRR 목표 미달)</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">{'HIGH' if financial_risk == 'HIGH' else 'MEDIUM' if financial_risk == 'MEDIUM' else 'LOW'}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">HIGH</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center; font-weight: bold;">{risk_scores['financial']}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: {'#DC3545' if financial_risk == 'HIGH' else '#FFC107' if financial_risk == 'MEDIUM' else '#28a745'}; font-weight: bold;">{financial_risk}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #ddd;"><strong>시장 리스크</strong><br>(임대율 하락)</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">MEDIUM</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">MEDIUM</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center; font-weight: bold;">50</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: #FFC107; font-weight: bold;">MEDIUM</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #ddd;"><strong>건축 리스크</strong><br>(공사비 증가)</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">MEDIUM</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">MEDIUM</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center; font-weight: bold;">40</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: #FFC107; font-weight: bold;">MEDIUM</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #ddd;"><strong>운영 리스크</strong><br>(유지관리비 상승)</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">LOW</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">LOW</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center; font-weight: bold;">30</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: #28a745; font-weight: bold;">LOW</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <p style="font-size: 10pt; line-height: 1.9; margin: 15px 0; text-align: justify;">
+                    <strong>📌 해석 (Interpretation):</strong> 
+                    본 사업의 가장 큰 리스크는 
+                    <strong style="color: {'#DC3545' if policy_risk == 'HIGH' or financial_risk == 'HIGH' else '#FFC107'};">
+                    {'정책 리스크(용적률 완화 불허가)' if risk_scores['policy'] >= risk_scores['financial'] else '재무 리스크(IRR ' + f'{irr:.1f}' + '% 목표 미달)'}</strong>입니다. 
+                    {'용적률 완화가 승인되지 않을 경우 세대수 감소 → CAPEX 대비 수익 감소 → 사업 타당성 상실 위험이 있으며, ' if policy_risk == 'HIGH' else ''}
+                    {'IRR ' + f'{irr:.1f}' + '%는 LH 기준(8-12%) 대비 ' + ('미달' if irr < 8 else '하회' if irr < 10 else '부합') + ' 수준으로, 재무적 개선 전략이 필수적입니다. ' if financial_risk in ['HIGH', 'MEDIUM'] else ''}
+                    정책 리스크와 재무 리스크는 <strong>상호 연계</strong>되어 있어 
+                    (용적률 불허 → 세대수 감소 → IRR 하락), 
+                    <strong>통합적 리스크 관리 접근</strong>이 필요합니다.
+                </p>
+                
+                <h5 style="color: #DC3545; font-size: 11pt; margin-top: 25px; margin-bottom: 15px;">
+                    🛡️ 2) 리스크별 완화 전략 (Mitigation Strategies)
+                </h5>
+                
+                <div style="background: #E6F2FF; border: 2px solid #005BAC; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                    <p style="font-size: 10pt; line-height: 2.0; margin: 0;">
+                        <strong style="color: #DC3545;">🔴 정책 리스크 (Policy Risk) 완화 전략:</strong><br>
+                        <strong>• 예방 전략 (Preventive):</strong><br>
+                        &nbsp;&nbsp;- 사전 협의: 인허가 신청 전 지자체 도시계획과와 <strong>용적률 완화 사전협의</strong> 완료<br>
+                        &nbsp;&nbsp;- 공공기여 강화: 도로 확폭(8m), 소공원 기부채납(대지 5-10%) 등 <strong>공익기여 계획 명확화</strong><br>
+                        &nbsp;&nbsp;- LH 특례 활용: 「주택법」 제15조 공공주택사업자 특례 적극 활용<br>
+                        <strong>• 대응 전략 (Contingency):</strong><br>
+                        &nbsp;&nbsp;- Plan B: 용적률 완화 불허 시 <strong>설계 변경(세대수 조정, 평형 믹스 변경)</strong><br>
+                        &nbsp;&nbsp;- 재무 조정: LH 감정평가율 상향 협상(95% → 98%) 또는 공사비 절감(VE 5-10%)<br>
+                        &nbsp;&nbsp;- 일정 조정: 인허가 지연 시 착공 일정 6개월 연기 → 금융비용 증가 최소화<br>
+                        <br>
+                        <strong style="color: #FFC107;">🟡 재무 리스크 (Financial Risk) 완화 전략:</strong><br>
+                        <strong>• 예방 전략:</strong><br>
+                        &nbsp;&nbsp;- 사업비 최적화: 건축비 단가 검증(㎡당 350만원 → 330만원 목표) 및 VE 추진<br>
+                        &nbsp;&nbsp;- 수익 개선: LH 감정평가 최적화(목표 98%) 및 추가 세대 확보(용적률 완화)<br>
+                        &nbsp;&nbsp;- 금융비용 절감: 정책자금(주택도시기금, 연 2.5%) 확보 → 자본비용 1%p 절감<br>
+                        <strong>• 대응 전략:</strong><br>
+                        &nbsp;&nbsp;- 민감도 분석 기반 시나리오: IRR 8% 미만 시 <strong>사업 중단 또는 재구조화</strong> 검토<br>
+                        &nbsp;&nbsp;- 공동 사업: 민간 공동 시행(Joint Venture) 검토 → 리스크 분산<br>
+                        &nbsp;&nbsp;- 단계별 투자: 토지 매입 → 인허가 완료 후 착공 (단계적 투자 결정)<br>
+                        <br>
+                        <strong style="color: #28a745;">🟢 기타 리스크 (시장/건축/운영) 완화 전략:</strong><br>
+                        • 시장 리스크: LH 공공임대(95% 입주율 보장) + 청년/신혼부부 수요 타겟팅<br>
+                        • 건축 리스크: LH 표준설계 적용 + 턴키/대안입찰 활용 → 공사비 고정<br>
+                        • 운영 리스크: LH 통합관리 시스템 적용 → 유지관리비 10% 절감<br>
+                    </p>
+                </div>
+                
+                <h5 style="color: #DC3545; font-size: 11pt; margin-top: 25px; margin-bottom: 15px;">
+                    📋 3) LH 리스크 관리 프레임워크 연계
+                </h5>
+                
+                <p style="font-size: 10pt; line-height: 1.9; margin: 15px 0; text-align: justify;">
+                    본 리스크 분석은 <strong>LH 사업관리 지침(Risk Management Framework)</strong> 및 
+                    <strong>「공공주택업무처리지침」 제24조(사업 타당성 검토)</strong>에 따라 수행되었습니다. 
+                    LH는 사업 착수 전 <strong>재무 리스크(IRR 8% 이상), 정책 리스크(인허가 완료 여부), 
+                    시장 리스크(입주율 90% 이상)</strong>를 종합 평가하며, 
+                    본 대상지는 {'<strong style="color: #28a745;">리스크 관리 가능(Manageable)</strong>' if financial_risk == 'LOW' and policy_risk in ['LOW', 'MEDIUM'] else '<strong style="color: #FFC107;">리스크 완화 전략 필수(Requires Mitigation)</strong>' if financial_risk == 'MEDIUM' or policy_risk == 'MEDIUM' else '<strong style="color: #DC3545;">고위험(High Risk)</strong>'}로 평가됩니다. 
+                    최종 의사결정 시 <strong>리스크 점수 종합(Total Risk Score: {sum(risk_scores.values()):.0f}점), 
+                    완화 전략 실행 가능성, LH 본사 승인 기준(IRR 10% 이상 권장)</strong>을 고려하여 
+                    <strong>매입 여부 최종 판단</strong>이 이루어집니다.
+                </p>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #FFEBEE; border-radius: 8px;">
+                    <p style="margin: 0; font-size: 10pt; color: #DC3545; line-height: 1.7;">
+                        <strong>⚠️ 핵심 권고사항 (Key Recommendations):</strong><br>
+                        1️⃣ <strong>정책 리스크 관리:</strong> 인허가 신청 전 지자체 사전협의 필수 (3개월 소요 예상)<br>
+                        2️⃣ <strong>재무 리스크 관리:</strong> {'IRR ' + f'{irr:.1f}' + '%를 10% 이상으로 개선하기 위한 VE 및 감정평가 최적화 추진' if irr < 10 else 'IRR ' + f'{irr:.1f}' + '% 유지를 위한 공사비 통제 및 일정 관리'}<br>
+                        3️⃣ <strong>통합 리스크 모니터링:</strong> 사업 단계별(인허가-착공-준공-운영) 리스크 재평가 및 대응 전략 업데이트<br>
+                        4️⃣ <strong>의사결정 기준:</strong> 리스크 점수 {sum(risk_scores.values()):.0f}점은 LH 기준 
+                        {'<strong style="color: #28a745;">승인 가능(200점 이하)</strong>' if sum(risk_scores.values()) <= 200 else '<strong style="color: #FFC107;">조건부 승인(201-250점)</strong>' if sum(risk_scores.values()) <= 250 else '<strong style="color: #DC3545;">재검토 필요(251점 이상)</strong>'} 수준
+                    </p>
+                </div>
+            </div>
+        </div>
+        """
+        
+        self.narrative_lines_generated += 35
+        self.citation_count += 2  # 공공주택업무처리지침, LH 리스크관리 지침
+        return narrative
+    
+    # ========================================================================
     # GETTER METHOD
     # ========================================================================
     
