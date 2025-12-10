@@ -1497,9 +1497,73 @@ def add_template_aliases(context):
         logger.info(f"   수익 범위: {sensitivity_result['summary']['profit_min_eok']:.2f}억 ~ {sensitivity_result['summary']['profit_max_eok']:.2f}억")
         logger.info(f"   GO 확률: {sensitivity_result['summary']['go_probability_pct']:.1f}%")
         
+        # v23 IMPROVEMENT #3: Generate Visualization Charts
+        try:
+            from app.services_v13.tornado_chart_generator import (
+                generate_tornado_chart,
+                generate_profit_distribution_chart
+            )
+            from app.services_v13.scenario_heatmap_generator import (
+                generate_profit_heatmap,
+                generate_roi_heatmap,
+                generate_decision_heatmap
+            )
+            
+            # Create charts directory
+            import hashlib
+            address_hash = hashlib.md5(address.encode()).hexdigest()[:8]
+            charts_dir = f"/home/user/webapp/generated_reports/charts_{address_hash}"
+            os.makedirs(charts_dir, exist_ok=True)
+            
+            # Get base scenario profit for reference line
+            base_scenario = next((s for s in sensitivity_result['scenarios'] if s.get('is_base')), None)
+            base_profit = base_scenario['profit_eok'] if base_scenario else 0.0
+            
+            # Generate charts
+            chart_paths = {}
+            
+            # 1. Tornado diagram
+            tornado_path = f"{charts_dir}/tornado_diagram.png"
+            if generate_tornado_chart(sensitivity_result['tornado_data'], tornado_path, base_profit=base_profit):
+                chart_paths['tornado'] = tornado_path
+                logger.info(f"   📊 Tornado diagram generated: {tornado_path}")
+            
+            # 2. Profit distribution
+            profit_dist_path = f"{charts_dir}/profit_distribution.png"
+            if generate_profit_distribution_chart(sensitivity_result['scenarios'], profit_dist_path):
+                chart_paths['profit_distribution'] = profit_dist_path
+                logger.info(f"   📊 Profit distribution generated: {profit_dist_path}")
+            
+            # 3. Profit heatmap
+            profit_heatmap_path = f"{charts_dir}/profit_heatmap.png"
+            if generate_profit_heatmap(sensitivity_result['scenarios'], profit_heatmap_path):
+                chart_paths['profit_heatmap'] = profit_heatmap_path
+                logger.info(f"   📊 Profit heatmap generated: {profit_heatmap_path}")
+            
+            # 4. ROI heatmap
+            roi_heatmap_path = f"{charts_dir}/roi_heatmap.png"
+            if generate_roi_heatmap(sensitivity_result['scenarios'], roi_heatmap_path):
+                chart_paths['roi_heatmap'] = roi_heatmap_path
+                logger.info(f"   📊 ROI heatmap generated: {roi_heatmap_path}")
+            
+            # 5. Decision heatmap
+            decision_heatmap_path = f"{charts_dir}/decision_heatmap.png"
+            if generate_decision_heatmap(sensitivity_result['scenarios'], decision_heatmap_path):
+                chart_paths['decision_heatmap'] = decision_heatmap_path
+                logger.info(f"   📊 Decision heatmap generated: {decision_heatmap_path}")
+            
+            # Store chart paths in context
+            ctx['sensitivity_charts'] = chart_paths
+            logger.info(f"✅ Generated {len(chart_paths)} visualization charts")
+            
+        except Exception as chart_error:
+            logger.warning(f"⚠️ Chart generation failed (non-critical): {str(chart_error)}")
+            ctx['sensitivity_charts'] = {}
+        
     except Exception as e:
         logger.error(f"❌ 민감도 분석 실패: {str(e)}")
         ctx['sensitivity_analysis_v23'] = None
+        ctx['sensitivity_charts'] = {}
     
     # v23 DEBUG: Verify critical variables are set
     critical_vars = ['zerosite_market_value_eok', 'zerosite_price_man_per_sqm', 'lh_total_appraisal_eok']
