@@ -1,0 +1,17 @@
+ZeroSite v23.1 Test Results
+===========================
+
+Test 1: 강남구
+curl -X POST http://localhost:8041/api/v23/generate-ab-report \
+  -H "Content-Type: application/json" \
+  -d '{"address":"서울특별시 강남구 역삼동 123-45","land_area_sqm":1650.0}'
+
+Test 2: 송파구
+curl -X POST http://localhost:8041/api/v23/generate-ab-report \
+  -H "Content-Type: application/json" \
+  -d '{"address":"서울특별시 송파구 잠실동 456-78","land_area_sqm":1800.0}'
+
+Test 3: 노원구
+curl -X POST http://localhost:8041/api/v23/generate-ab-report \
+  -H "Content-Type: application/json" \
+  -d '{"address":"서울특별시 노원구 상계동 789-12","land_area_sqm":2000.0}'
