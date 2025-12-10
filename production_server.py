@@ -84,10 +84,13 @@ def generate_simplified_context(address: str, land_area_pyeong: float, supply_ty
     npv = lh_purchase - total_capex
     irr = (npv / total_capex * 100) * 0.8 if npv > 0 else 5.0
     
-    # FLAT structure matching generate_v21_report.py
+    # ✅ FIX: Add all expected keys for Executive Summary (flat structure)
+    roi_pct = npv / total_capex * 100 if total_capex > 0 else 0
+    
     return {
         "address": address,
         "supply_type": supply_type,
+        "supply_type_name": supply_type,
         "land_area_pyeong": land_area_pyeong,
         "land_area_sqm": land_area_sqm,
         "total_units": total_units,
@@ -99,7 +102,18 @@ def generate_simplified_context(address: str, land_area_pyeong: float, supply_ty
         "subway_distance_m": 450,
         "school_zone": True,
         "zoning_type": "제2종일반주거지역",
-        # Financial metrics (FLAT)
+        "zone_type": "제2종일반주거지역",
+        
+        # ✅ FIX: Financial metrics - Executive Summary expected keys (KRW units)
+        "total_construction_cost_krw": total_capex,  # ✅ Expected by Executive Summary
+        "capex_krw": total_capex,                     # ✅ Expected by Executive Summary
+        "profit_krw": npv,                            # ✅ Expected by Executive Summary (profit = npv)
+        "roi_pct": roi_pct,                           # ✅ Expected by Executive Summary
+        "irr_public_pct": irr,                        # ✅ Expected by Executive Summary
+        "npv_public_krw": npv,                        # ✅ Expected by Executive Summary
+        "payback_period_years": 7.2,                  # ✅ Expected by Executive Summary
+        
+        # Additional Financial metrics (FLAT for other sections)
         "total_capex": total_capex,
         "land_cost": land_cost,
         "building_cost": building_cost,
@@ -108,9 +122,15 @@ def generate_simplified_context(address: str, land_area_pyeong: float, supply_ty
         "lh_appraisal_rate": 98,
         "npv": npv,
         "irr": irr,
-        "roi": npv / total_capex * 100 if total_capex > 0 else 0,
+        "roi": roi_pct,
         "payback_years": 7.2,
-        # Nested versions for passing to methods (matching expected keys)
+        
+        # Demand/Market scores
+        "demand_score": 78,
+        "market_score": 50,
+        "target_population": 8500,  # ✅ FIX ISSUE #2: Add target population
+        
+        # Nested versions for Financial Analysis section
         "financial_metrics": {
             "total_construction_cost_krw": total_capex,
             "capex_krw": total_capex,
@@ -120,7 +140,7 @@ def generate_simplified_context(address: str, land_area_pyeong: float, supply_ty
             "lh_purchase_price": lh_purchase,
             "profit_krw": npv,
             "npv_public_krw": npv,
-            "roi_pct": npv / total_capex * 100 if total_capex > 0 else 0,
+            "roi_pct": roi_pct,
             "irr_public_pct": irr,
             "payback_period_years": 7.2
         },
@@ -131,6 +151,7 @@ def generate_simplified_context(address: str, land_area_pyeong: float, supply_ty
         ],
         "demand_data": {
             "demand_score": 78,
+            "target_population": 8500,  # ✅ FIX ISSUE #2
             "target_age_group": "20-35세" if supply_type == "청년" else "30-40세",
             "target_household": "1-2인 가구" if supply_type == "청년" else "2-4인 가구",
             "supply_ratio": 85
