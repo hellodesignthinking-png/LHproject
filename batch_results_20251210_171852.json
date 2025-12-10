@@ -1,0 +1,181 @@
+{
+  "summary": {
+    "total": 10,
+    "successful": 10,
+    "failed": 0,
+    "total_time": 9.10198712348938,
+    "average_time_per_report": 0.910198712348938
+  },
+  "results": [
+    {
+      "success": true,
+      "project": "강남 역삼동 청년주택",
+      "result": {
+        "status": "success",
+        "report_url": "/reports/v21_서울특별시_강남구_역삼동_123-45_청년_20251210_171843.html",
+        "pdf_url": null,
+        "generation_time": 0.0,
+        "file_size_kb": 81,
+        "narrative_lines": 1166,
+        "policy_citations": 12,
+        "financial_decision": "FAIL",
+        "policy_decision": "ADOPT",
+        "message": "v21 Professional Report generated successfully in 0.00s"
+      },
+      "generation_time": 0.011561870574951172
+    },
+    {
+      "success": true,
+      "project": "마포 공덕동 신혼부부주택",
+      "result": {
+        "status": "success",
+        "report_url": "/reports/v21_서울특별시_마포구_공덕동_456-78_신혼부부_20251210_171844.html",
+        "pdf_url": null,
+        "generation_time": 0.0,
+        "file_size_kb": 81,
+        "narrative_lines": 1166,
+        "policy_citations": 12,
+        "financial_decision": "FAIL",
+        "policy_decision": "ADOPT",
+        "message": "v21 Professional Report generated successfully in 0.00s"
+      },
+      "generation_time": 0.009738683700561523
+    },
+    {
+      "success": true,
+      "project": "송파 잠실동 혼합주택",
+      "result": {
+        "status": "success",
+        "report_url": "/reports/v21_서울특별시_송파구_잠실동_789-12_혼합_20251210_171845.html",
+        "pdf_url": null,
+        "generation_time": 0.0,
+        "file_size_kb": 81,
+        "narrative_lines": 1166,
+        "policy_citations": 12,
+        "financial_decision": "FAIL",
+        "policy_decision": "ADOPT",
+        "message": "v21 Professional Report generated successfully in 0.00s"
+      },
+      "generation_time": 0.009259700775146484
+    },
+    {
+      "success": true,
+      "project": "서초 서초동 청년주택",
+      "result": {
+        "status": "success",
+        "report_url": "/reports/v21_서울특별시_서초구_서초동_234-56_청년_20251210_171846.html",
+        "pdf_url": null,
+        "generation_time": 0.0,
+        "file_size_kb": 81,
+        "narrative_lines": 1166,
+        "policy_citations": 12,
+        "financial_decision": "FAIL",
+        "policy_decision": "ADOPT",
+        "message": "v21 Professional Report generated successfully in 0.00s"
+      },
+      "generation_time": 0.009240865707397461
+    },
+    {
+      "success": true,
+      "project": "용산 한강로동 행복주택",
+      "result": {
+        "status": "success",
+        "report_url": "/reports/v21_서울특별시_용산구_한강로동_567-89_행복주택_20251210_171847.html",
+        "pdf_url": null,
+        "generation_time": 0.0,
+        "file_size_kb": 81,
+        "narrative_lines": 1166,
+        "policy_citations": 12,
+        "financial_decision": "FAIL",
+        "policy_decision": "ADOPT",
+        "message": "v21 Professional Report generated successfully in 0.00s"
+      },
+      "generation_time": 0.009258747100830078
+    },
+    {
+      "success": true,
+      "project": "성동 성수동 청년주택",
+      "result": {
+        "status": "success",
+        "report_url": "/reports/v21_서울특별시_성동구_성수동_890-12_청년_20251210_171848.html",
+        "pdf_url": null,
+        "generation_time": 0.0,
+        "file_size_kb": 81,
+        "narrative_lines": 1166,
+        "policy_citations": 12,
+        "financial_decision": "FAIL",
+        "policy_decision": "ADOPT",
+        "message": "v21 Professional Report generated successfully in 0.00s"
+      },
+      "generation_time": 0.009563207626342773
+    },
+    {
+      "success": true,
+      "project": "영등포 여의도동 신혼부부주택",
+      "result": {
+        "status": "success",
+        "report_url": "/reports/v21_서울특별시_영등포구_여의도동_345-67_신혼부부_20251210_171849.html",
+        "pdf_url": null,
+        "generation_time": 0.0,
+        "file_size_kb": 81,
+        "narrative_lines": 1166,
+        "policy_citations": 12,
+        "financial_decision": "FAIL",
+        "policy_decision": "ADOPT",
+        "message": "v21 Professional Report generated successfully in 0.00s"
+      },
+      "generation_time": 0.01079249382019043
+    },
+    {
+      "success": true,
+      "project": "광진 자양동 청년주택",
+      "result": {
+        "status": "success",
+        "report_url": "/reports/v21_서울특별시_광진구_자양동_678-90_청년_20251210_171850.html",
+        "pdf_url": null,
+        "generation_time": 0.0,
+        "file_size_kb": 81,
+        "narrative_lines": 1166,
+        "policy_citations": 12,
+        "financial_decision": "FAIL",
+        "policy_decision": "ADOPT",
+        "message": "v21 Professional Report generated successfully in 0.00s"
+      },
+      "generation_time": 0.009516477584838867
+    },
+    {
+      "success": true,
+      "project": "노원 상계동 일반주택",
+      "result": {
+        "status": "success",
+        "report_url": "/reports/v21_서울특별시_노원구_상계동_123-45_일반_20251210_171851.html",
+        "pdf_url": null,
+        "generation_time": 0.0,
+        "file_size_kb": 81,
+        "narrative_lines": 1166,
+        "policy_citations": 12,
+        "financial_decision": "FAIL",
+        "policy_decision": "ADOPT",
+        "message": "v21 Professional Report generated successfully in 0.00s"
+      },
+      "generation_time": 0.00902414321899414
+    },
+    {
+      "success": true,
+      "project": "강서 화곡동 행복주택",
+      "result": {
+        "status": "success",
+        "report_url": "/reports/v21_서울특별시_강서구_화곡동_456-78_행복주택_20251210_171852.html",
+        "pdf_url": null,
+        "generation_time": 0.0,
+        "file_size_kb": 81,
+        "narrative_lines": 1166,
+        "policy_citations": 12,
+        "financial_decision": "FAIL",
+        "policy_decision": "ADOPT",
+        "message": "v21 Professional Report generated successfully in 0.00s"
+      },
+      "generation_time": 0.00894784927368164
+    }
+  ]
+}

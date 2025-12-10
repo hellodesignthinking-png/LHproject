@@ -1,0 +1,71 @@
+{
+  "summary": {
+    "total": 10,
+    "successful": 0,
+    "failed": 10,
+    "total_time": 9.073036670684814,
+    "average_time_per_report": 0.9073036670684814
+  },
+  "results": [
+    {
+      "success": false,
+      "project": "강남 역삼동 청년주택",
+      "error": "{\"detail\":\"Report generation failed: V21NarrativeEnginePro.generate_market_interpretation_v21() missing 1 required positional argument: 'context'\"}",
+      "generation_time": 0.009858369827270508
+    },
+    {
+      "success": false,
+      "project": "마포 공덕동 신혼부부주택",
+      "error": "{\"detail\":\"Report generation failed: V21NarrativeEnginePro.generate_market_interpretation_v21() missing 1 required positional argument: 'context'\"}",
+      "generation_time": 0.00688934326171875
+    },
+    {
+      "success": false,
+      "project": "송파 잠실동 혼합주택",
+      "error": "{\"detail\":\"Report generation failed: V21NarrativeEnginePro.generate_market_interpretation_v21() missing 1 required positional argument: 'context'\"}",
+      "generation_time": 0.007044315338134766
+    },
+    {
+      "success": false,
+      "project": "서초 서초동 청년주택",
+      "error": "{\"detail\":\"Report generation failed: V21NarrativeEnginePro.generate_market_interpretation_v21() missing 1 required positional argument: 'context'\"}",
+      "generation_time": 0.0076410770416259766
+    },
+    {
+      "success": false,
+      "project": "용산 한강로동 행복주택",
+      "error": "{\"detail\":\"Report generation failed: V21NarrativeEnginePro.generate_market_interpretation_v21() missing 1 required positional argument: 'context'\"}",
+      "generation_time": 0.006339073181152344
+    },
+    {
+      "success": false,
+      "project": "성동 성수동 청년주택",
+      "error": "{\"detail\":\"Report generation failed: V21NarrativeEnginePro.generate_market_interpretation_v21() missing 1 required positional argument: 'context'\"}",
+      "generation_time": 0.006137847900390625
+    },
+    {
+      "success": false,
+      "project": "영등포 여의도동 신혼부부주택",
+      "error": "{\"detail\":\"Report generation failed: V21NarrativeEnginePro.generate_market_interpretation_v21() missing 1 required positional argument: 'context'\"}",
+      "generation_time": 0.0065724849700927734
+    },
+    {
+      "success": false,
+      "project": "광진 자양동 청년주택",
+      "error": "{\"detail\":\"Report generation failed: V21NarrativeEnginePro.generate_market_interpretation_v21() missing 1 required positional argument: 'context'\"}",
+      "generation_time": 0.006417274475097656
+    },
+    {
+      "success": false,
+      "project": "노원 상계동 일반주택",
+      "error": "{\"detail\":\"Report generation failed: V21NarrativeEnginePro.generate_market_interpretation_v21() missing 1 required positional argument: 'context'\"}",
+      "generation_time": 0.00609135627746582
+    },
+    {
+      "success": false,
+      "project": "강서 화곡동 행복주택",
+      "error": "{\"detail\":\"Report generation failed: V21NarrativeEnginePro.generate_market_interpretation_v21() missing 1 required positional argument: 'context'\"}",
+      "generation_time": 0.006331443786621094
+    }
+  ]
+}
