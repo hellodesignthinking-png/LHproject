@@ -133,9 +133,16 @@ class SimulationEngine:
         # Calculate decision metrics
         decision_metrics = self._calculate_decision_metrics(results, expected_values)
         
+        # Format scenarios for template display
+        scenarios_list = self._format_scenarios_for_display(results)
+        
+        # Format expected values for template display
+        expected_values_formatted = self._format_expected_values_for_display(expected_values)
+        
         return {
-            'scenarios': results,
-            'expected_values': expected_values,
+            'scenarios': scenarios_list,  # List format for template iteration
+            'scenarios_dict': results,  # Dict format for programmatic access
+            'expected_values': expected_values_formatted,
             'comparison_table': comparison,
             'decision_metrics': decision_metrics,
             'recommendation': self._generate_recommendation(decision_metrics)
@@ -380,6 +387,88 @@ class SimulationEngine:
             return "MEDIUM (중)"
         else:
             return "LOW (낮음)"
+    
+    def _format_scenarios_for_display(self, results: Dict[str, Dict]) -> List[Dict]:
+        """
+        Transform scenario results dict into list format for template iteration
+        
+        Template expects list of dicts with:
+        - scenario_name: str
+        - description: str
+        - color: str (CSS color)
+        - probability: float (as percentage)
+        - npv: str (formatted)
+        - npv_color: str
+        - irr: str (formatted)
+        - irr_color: str
+        - payback: str (formatted)
+        """
+        scenario_colors = {
+            'base': '#1976d2',  # Blue
+            'optimistic': '#43a047',  # Green
+            'pessimistic': '#d32f2f'  # Red
+        }
+        
+        scenario_descriptions = {
+            'base': '현재 시장 조건 유지 (기준)',
+            'optimistic': '시장 호조 (+15% 수익, -10% 비용)',
+            'pessimistic': '시장 악화 (-15% 수익, +10% 비용)'
+        }
+        
+        scenarios_list = []
+        for key in ['optimistic', 'base', 'pessimistic']:  # Display order
+            if key not in results:
+                continue
+                
+            result = results[key]
+            npv_krw = result['npv']['value_krw']
+            irr_pct = result['irr']['percentage']
+            payback_years = result['payback']['years']
+            
+            # Determine colors
+            npv_color = '#43a047' if npv_krw >= 0 else '#d32f2f'
+            irr_color = '#43a047' if irr_pct >= 3.0 else '#f57c00' if irr_pct >= 1.5 else '#d32f2f'
+            
+            scenarios_list.append({
+                'scenario_name': result['name_kr'],
+                'description': scenario_descriptions.get(key, ''),
+                'color': scenario_colors.get(key, '#666'),
+                'probability': f"{result['probability']*100:.0f}",  # Template adds %
+                'npv': f"{npv_krw:+.1f}억원",
+                'npv_color': npv_color,
+                'irr': f"{irr_pct:+.2f}%",
+                'irr_color': irr_color,
+                'payback': f"{payback_years:.1f}년" if payback_years < 100 else 'N/A'
+            })
+        
+        return scenarios_list
+    
+    def _format_expected_values_for_display(self, expected: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Format expected values for template display
+        
+        Template expects:
+        - npv: str (formatted)
+        - npv_color: str
+        - irr: str (formatted)
+        - irr_color: str
+        - payback: str (formatted)
+        """
+        npv_krw = expected['npv_krw']
+        irr_pct = expected['irr']
+        payback_years = expected['payback']
+        
+        npv_color = '#43a047' if npv_krw >= 0 else '#d32f2f'
+        irr_color = '#43a047' if irr_pct >= 3.0 else '#f57c00' if irr_pct >= 1.5 else '#d32f2f'
+        
+        return {
+            'npv': f"{npv_krw:+.1f}억원",
+            'npv_color': npv_color,
+            'irr': f"{irr_pct:+.2f}%",
+            'irr_color': irr_color,
+            'payback': f"{payback_years:.1f}년" if payback_years < 100 else 'N/A',
+            'interpretation': expected.get('interpretation', '')
+        }
     
     def _generate_recommendation(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
         """Generate final recommendation based on simulation"""

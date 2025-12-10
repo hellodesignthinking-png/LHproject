@@ -321,11 +321,11 @@ class NarrativeInterpreter:
         else:
             irr = finance.get('irr_percent', ctx.get('irr_public_pct', 0))
         
-        # Scorecard
-        scorecard = ctx.get('scorecard', {})
-        overall_score = scorecard.get('overall', {}).get('score', 0)
-        overall_grade = scorecard.get('overall', {}).get('grade', 'C')
-        recommendation = scorecard.get('overall', {}).get('recommendation', 'REVISE')
+        # Scorecard - FIXED: Check both locations
+        scorecard = ctx.get('executive_summary', {}).get('scorecard', ctx.get('scorecard', {}))
+        overall_score = scorecard.get('overall', {}).get('score', ctx.get('overall_score', 0))
+        overall_grade = scorecard.get('overall', {}).get('grade', ctx.get('overall_grade', 'C'))
+        recommendation = scorecard.get('overall', {}).get('recommendation', ctx.get('overall_recommendation', 'REVISE'))
         
         # Generate narrative
         narrative = f"""

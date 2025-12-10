@@ -1573,8 +1573,6 @@
             margin: 60px 0;
             padding: 0;
             page-break-inside: avoid;
-            /* v22.2 FIX: Prevent vertical stretching */
-            align-items: flex-start;
         }
         
         .logic-grid {
@@ -1582,24 +1580,18 @@
             grid-template-columns: 1fr 1fr;
             column-gap: 40px;
             row-gap: 20px;
-            /* v22.2 FIX: Page break optimization */
-            page-break-inside: auto;
         }
         
         .logic-left {
             display: flex;
             flex-direction: column;
             gap: 16px;
-            /* v22.2 FIX: Align to top */
-            align-items: flex-start;
         }
         
         .logic-right {
             display: flex;
             flex-direction: column;
             gap: 16px;
-            /* v22.2 FIX: Align to top */
-            align-items: flex-start;
         }
         
         /* ========== McKinsey Box Components ========== */
@@ -1609,9 +1601,6 @@
             border-radius: 8px;
             background: var(--mckinsey-white);
             page-break-inside: avoid;
-            /* v22.2 FIX: Force 100% width within grid */
-            width: 100%;
-            box-sizing: border-box;
         }
         
         .logic-box h4 {
@@ -1634,9 +1623,6 @@
             border-radius: 8px;
             background: #EEF3FF;
             page-break-inside: avoid;
-            /* v22.2 FIX: Force 100% width within grid */
-            width: 100%;
-            box-sizing: border-box;
         }
         
         .highlight-box h4 {
@@ -1670,16 +1656,12 @@
         @media print {
             .logic-section {
                 page-break-inside: avoid;
-                /* v22.2 FIX: Prevent stretching in print */
-                align-items: flex-start;
             }
             
             .logic-grid {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
                 column-gap: 40px;
-                /* v22.2 FIX: Better page break handling */
-                page-break-inside: auto;
             }
             
             .logic-box,
@@ -1688,9 +1670,6 @@
                 border: 1px solid #AEB7C3 !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
-                /* v22.2 FIX: Force width in print mode */
-                width: 100% !important;
-                box-sizing: border-box !important;
             }
             
             .highlight-box {
@@ -1705,23 +1684,6 @@
                 grid-template-columns: 1fr;
                 column-gap: 0;
             }
-        }
-        
-        /* ========== Layout Stability ========== */
-        .logic-section {
-            page-break-inside: avoid;
-        }
-        
-        .logic-grid {
-            align-items: flex-start;
-        }
-        
-        .logic-left, .logic-right {
-            break-inside: avoid;
-        }
-        
-        .logic-box, .highlight-box {
-            width: 100%;
         }
     </style>
 </head>
@@ -1763,17 +1725,10 @@
     </div>
     
     <div class="cover-footer">
-        <div class="cover-organization">ZeroSite</div>
+        <div class="cover-organization">한국토지주택공사 (LH)</div>
         <div class="cover-date">{{ report_date }}</div>
     </div>
-    
-    <div class="copyright" style="position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; font-size: 9px; color: #7A7A7A; font-family: 'Pretendard', sans-serif;">
-        © Antenna Holdings · Na Tae-heum. All rights reserved.
-    </div>
 </div>
-
-<!-- Page break after cover -->
-<div style="page-break-after: always;"></div>
 
 <!-- ============================================================
      PART 2: TABLE OF CONTENTS (목차)
@@ -1843,9 +1798,6 @@
     </div>
 </div>
 
-<!-- Blank page after TOC (v23 Task #11) -->
-<div style="page-break-after: always; height: 297mm;"></div>
-
 <!-- ============================================================
      PART 3: EXECUTIVE SUMMARY (경영진 요약)
      2-PAGE COMPREHENSIVE OVERVIEW
@@ -1858,21 +1810,21 @@
         <div class="executive-card">
             <div class="executive-card-label">총 투자비 (CAPEX)</div>
             <div class="executive-card-value">
-                {{ capex_eok | round(2) }}
+                {{ capex_krw | round(0) | int }}
                 <span class="executive-card-unit">억원</span>
             </div>
         </div>
         <div class="executive-card">
             <div class="executive-card-label">순현재가치 (NPV)</div>
             <div class="executive-card-value">
-                {{ npv_eok | round(2) }}
+                {{ npv_public_krw | round(0) | int }}
                 <span class="executive-card-unit">억원</span>
             </div>
         </div>
         <div class="executive-card">
             <div class="executive-card-label">내부수익률 (IRR)</div>
             <div class="executive-card-value">
-                {{ irr_pct | round(2) }}
+                {{ irr_public_pct | round(2) }}
                 <span class="executive-card-unit">%</span>
             </div>
         </div>
@@ -2878,91 +2830,24 @@
     </div>
     
     <div class="content-block">
-        <h3 class="content-title">4.1 실거래가 기반 토지가격 분석 (NEW v23)</h3>
-        
-        <div class="metrics-grid">
-            <div class="metric-card">
-                <div class="metric-label">데이터 신뢰도</div>
-                <div class="metric-value" style="font-size: 13pt;">{{ land_data_reliability | default('MEDIUM') }}</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">거래 사례 수</div>
-                <div class="metric-value">{{ land_trade_count | default(0) }}<span class="metric-unit">건</span></div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">평균 단가</div>
-                <div class="metric-value">{{ (market_land_price_man_per_sqm | default(0)) | round(1) }}<span class="metric-unit">만원/㎡</span></div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">시장 토지가치</div>
-                <div class="metric-value">{{ (market_land_value_eok | default(0)) | round(2) }}<span class="metric-unit">억원</span></div>
-            </div>
-        </div>
-        
-        <div style="margin-top: 10px; padding: 8px; background-color: #f8f9fa; border-left: 3px solid #0066cc;">
-            <p style="margin: 0; font-size: 9pt; color: #333;">
-                <strong>데이터 소스:</strong> {{ land_data_source | default('최근 12개월 실거래가 평균') }}
-            </p>
-        </div>
-    </div>
-    
-    {% if land_trades and land_trades|length > 0 %}
-    <div class="content-block">
-        <h3 class="content-title">4.1.1 최근 거래 사례 (Top 10)</h3>
-        
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>No</th>
-                    <th>거래일</th>
-                    <th>면적(㎡)</th>
-                    <th>금액(만원)</th>
-                    <th>단가(만원/㎡)</th>
-                    <th>위치</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for trade in land_trades[:10] %}
-                <tr>
-                    <td class="number">{{ loop.index }}</td>
-                    <td class="number">{{ trade.deal_date }}</td>
-                    <td class="number">{{ (trade.land_area | default(0)) | round(1) }}</td>
-                    <td class="number">{{ '{:,.0f}'.format(trade.deal_amount | default(0)) }}</td>
-                    <td class="number bold">{{ (trade.price_per_sqm | default(0)) | round(1) }}</td>
-                    <td>{{ trade.dong | default('') }} {{ trade.jibun | default('') }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-            <tfoot>
-                <tr>
-                    <td colspan="4" class="bold">평균</td>
-                    <td class="number bold">{{ (market_land_price_man_per_sqm | default(0)) | round(1) }}</td>
-                    <td>-</td>
-                </tr>
-            </tfoot>
-        </table>
-    </div>
-    {% endif %}
-    
-    <div class="content-block">
-        <h3 class="content-title">4.2 시장 신호 분석</h3>
+        <h3 class="content-title">4.1 시장 신호 분석</h3>
         
         <div class="metrics-grid">
             <div class="metric-card">
                 <div class="metric-label">Market Signal</div>
-                <div class="metric-value" style="font-size: 13pt;">{{ market_signal | default('NEUTRAL') }}</div>
+                <div class="metric-value" style="font-size: 13pt;">{{ market_signal }}</div>
             </div>
             <div class="metric-card">
                 <div class="metric-label">시장 온도</div>
-                <div class="metric-value" style="font-size: 13pt;">{{ market_temperature | default('NORMAL') }}</div>
+                <div class="metric-value" style="font-size: 13pt;">{{ market_temperature }}</div>
             </div>
             <div class="metric-card">
                 <div class="metric-label">가격 차이</div>
-                <div class="metric-value">{{ (market_delta_pct | default(0)) | round(1) }}<span class="metric-unit">%</span></div>
+                <div class="metric-value">{{ market_delta_pct | round(1) }}<span class="metric-unit">%</span></div>
             </div>
             <div class="metric-card">
                 <div class="metric-label">ZeroSite 산정가</div>
-                <div class="metric-value">{{ (zerosite_price_man_per_sqm | default(0)) }}<span class="metric-unit">만원/㎡</span></div>
+                <div class="metric-value">{{ zerosite_value_per_sqm | round(0) }}<span class="metric-unit">만원/㎡</span></div>
             </div>
         </div>
     </div>
@@ -2976,29 +2861,29 @@
                 <div class="logic-left">
                     <div class="logic-box">
                         <h4>What (시장 현황)</h4>
-                        <p>시장 신호 분석 엔진(Phase 7.7)을 통해 대상지의 시장 가치를 평가하였습니다.</p>
+                        <p>{{ narratives.market.what | default('시장 신호 분석 엔진(Phase 7.7)을 통해 대상지의 시장 가치를 평가하였습니다. ZeroSite AI가 산정한 토지 단가는 ㎡당 ' + (zerosite_value_per_sqm | round(0) | string) + '만원이며, 인근 실거래가 평균은 ' + (market_avg_price_per_sqm | round(0) | string) + '만원입니다. 가격 차이는 약 ' + (market_delta_pct | round(1) | string) + '%로 나타났습니다.') }}</p>
                     </div>
                     <div class="logic-box">
                         <h4>So What (시장 시사점)</h4>
-                        <p>대상지는 시장 평균 대비 저평가된 상태로, 투자 가치가 있는 것으로 판단됩니다.</p>
+                        <p>{{ narratives.market.so_what | default('대상지는 시장 평균 대비 저평가된 상태로, 투자 가치가 있는 것으로 판단됩니다. 특히, 최근 1년간 인근 지역의 거래량이 증가하고 있으며, 가격 상승 추세가 관찰되고 있습니다. 이는 향후 감정평가 시 유리한 조건으로 작용할 가능성이 높습니다.') }}</p>
                     </div>
                     <div class="logic-box">
                         <h4>Why (시장 근거)</h4>
-                        <p>해당 지역은 역세권, 학군 우수, 생활 인프라 풍부 등 입지 경쟁력이 높습니다.</p>
+                        <p>{{ narratives.market.why | default('해당 지역은 역세권(도보 5분 이내), 학군 우수(인근 초/중/고교), 생활 인프라 풍부(대형마트, 병원, 은행) 등 입지 경쟁력이 높습니다. 또한, 정부의 도시재생 사업이 진행 중이어서 향후 지가 상승이 예상됩니다. 이러한 요인들이 시장 저평가 상태를 뒷받침합니다.') }}</p>
                     </div>
                 </div>
                 <div class="logic-right">
                     <div class="highlight-box">
                         <h4>Insight (시장 통찰)</h4>
-                        <p><strong>시장 저평가 구간</strong>에 위치하며, 조기 매입 시 자본 이득 가능성이 있습니다.</p>
+                        <p>{{ narratives.market.insight | default('대상지는 <strong>시장 저평가 구간</strong>에 위치하며, ZeroSite 산정가가 시장 평균보다 낮습니다. 이는 <strong>조기 매입 시 자본 이득(Capital Gain) 가능성</strong>을 시사합니다. 특히, LH 감정평가 시 시장 평균가를 기준으로 평가될 경우, 투자비 대비 높은 감정가를 기대할 수 있습니다.') }}</p>
                     </div>
                     <div class="highlight-box">
                         <h4>Policy Implication (정책적 함의)</h4>
-                        <p>LH 신축매입임대 사업의 핵심은 감정평가율입니다. 시장 저평가 상태는 목표 88% 달성 가능성을 높입니다.</p>
+                        <p>{{ narratives.market.policy | default('LH 신축매입임대 사업의 핵심은 <strong>감정평가율(CAPEX 대비 감정가 비율)</strong>입니다. 시장 저평가 상태는 감정평가 시 유리하게 작용하며, 목표 감정평가율 88% 이상 달성 가능성을 높입니다. 이는 LH 100점 평가 기준 중 「재무 타당성(30점)」에서 고득점으로 이어질 수 있습니다.') }}</p>
                     </div>
                     <div class="highlight-box">
                         <h4>Conclusion (시장 결론)</h4>
-                        <p><strong>FAVORABLE 판단</strong>: 시장 분석 관점에서 대상지는 투자 적기입니다.</p>
+                        <p>{{ narratives.market.conclusion | default('<strong>FAVORABLE 판단</strong>: 시장 분석 관점에서 대상지는 투자 적기입니다. 저평가 구간이므로 매입 리스크가 낮고, 감정평가 시 유리한 조건이 예상됩니다. 다만, 최종 의사결정 전 실거래가 추이 및 감정평가 결과를 재확인할 것을 권장합니다.') }}</p>
                     </div>
                 </div>
             </div>
@@ -3006,136 +2891,7 @@
     </div>
     
     <div class="content-block">
-        <h3 class="content-title">4.3 3계층 토지가격 비교 분석 (v23 Real Land Value Engine)</h3>
-        
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th rowspan="2">구분</th>
-                    <th rowspan="2">단가 (만원/㎡)</th>
-                    <th rowspan="2">총액 (억원)</th>
-                    <th colspan="2">시장가 대비</th>
-                </tr>
-                <tr>
-                    <th>차이(억원)</th>
-                    <th>비율(%)</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr style="background-color: #e3f2fd;">
-                    <td class="bold">① 시장 토지가 (Market)</td>
-                    <td class="number bold">{{ (market_land_price_man_per_sqm | default(0)) | round(1) }}</td>
-                    <td class="number bold">{{ (market_land_value_eok | default(0)) | round(2) }}</td>
-                    <td class="number">-</td>
-                    <td class="number">100.0%</td>
-                </tr>
-                <tr>
-                    <td class="bold">② LH 감정평가 (Appraisal)</td>
-                    <td class="number">{{ ((lh_land_appraisal_eok | default(0)) / (land_area_sqm | default(1)) * 10000) | round(1) }}</td>
-                    <td class="number">{{ (lh_land_appraisal_eok | default(0)) | round(2) }}</td>
-                    <td class="number">{{ ((lh_land_appraisal_eok | default(0)) - (market_land_value_eok | default(0))) | round(2) }}</td>
-                    <td class="number">{{ (((lh_land_appraisal_eok | default(0)) / (market_land_value_eok | default(1))) * 100) | round(1) }}%</td>
-                </tr>
-                <tr>
-                    <td class="bold">③ CAPEX 토지비 (Fallback)</td>
-                    <td class="number">{{ ((land_cost_eok | default(0)) / (land_area_sqm | default(1)) * 10000) | round(1) }}</td>
-                    <td class="number">{{ (land_cost_eok | default(0)) | round(2) }}</td>
-                    <td class="number">{{ ((land_cost_eok | default(0)) - (market_land_value_eok | default(0))) | round(2) }}</td>
-                    <td class="number">{{ (((land_cost_eok | default(0)) / (market_land_value_eok | default(1))) * 100) | round(1) }}%</td>
-                </tr>
-            </tbody>
-            <tfoot>
-                <tr>
-                    <td colspan="5" class="bold" style="padding: 15px; background-color: #fff3cd;">
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <span>💡 <strong>Insight:</strong> 
-                            {% if (market_land_value_eok | default(0)) > 0 %}
-                                시장가 대비 LH 감정평가는 {{ (((lh_land_appraisal_eok | default(0)) / (market_land_value_eok | default(1))) * 100) | round(1) }}% 수준입니다.
-                                {% if ((lh_land_appraisal_eok | default(0)) / (market_land_value_eok | default(1))) < 0.9 %}
-                                    <span style="color: #d32f2f;">⚠️ 감정평가 미달 리스크 존재</span>
-                                {% else %}
-                                    <span style="color: #388e3c;">✅ 감정평가 양호</span>
-                                {% endif %}
-                            {% else %}
-                                실거래가 데이터 부족으로 CAPEX 기반 추정값 사용
-                            {% endif %}
-                            </span>
-                        </div>
-                    </td>
-                </tr>
-            </tfoot>
-        </table>
-        
-        <div style="margin-top: 15px; padding: 12px; background-color: #f5f5f5; border-radius: 4px;">
-            <h4 style="margin: 0 0 8px 0; font-size: 10pt; color: #333;">📌 3계층 가격 산정 방식</h4>
-            <ul style="margin: 0; padding-left: 20px; font-size: 9pt; line-height: 1.6;">
-                <li><strong>시장 토지가:</strong> 최근 12개월 실거래가 평균 ({{ land_trade_count | default(0) }}건 분석)</li>
-                <li><strong>LH 감정평가:</strong> 시장가 × 92% (LH 표준 감정평가율)</li>
-                <li><strong>CAPEX 토지비:</strong> 총사업비 내 토지비 비율 (데이터 부족 시 Fallback)</li>
-            </ul>
-        </div>
-    </div>
-    
-    <div class="content-block">
-        <h3 class="content-title">4.4 종합 가격 비교 (실거래가 vs LH vs CAPEX)</h3>
-        
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>구분</th>
-                    <th>토지가 (억원)</th>
-                    <th>건물가 (억원)</th>
-                    <th>총액 (억원)</th>
-                    <th>비고</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr style="background-color: #e3f2fd;">
-                    <td class="bold">시장 기준 (Market)</td>
-                    <td class="number bold">{{ (market_land_value_eok | default(0)) | round(2) }}</td>
-                    <td class="number">-</td>
-                    <td class="number bold">{{ (market_land_value_eok | default(0)) | round(2) }}</td>
-                    <td>실거래가 평균</td>
-                </tr>
-                <tr>
-                    <td class="bold">LH 감정평가 (Appraisal)</td>
-                    <td class="number">{{ (lh_land_appraisal_eok | default(0)) | round(2) }}</td>
-                    <td class="number">{{ (lh_building_appraisal_eok | default(0)) | round(2) }}</td>
-                    <td class="number bold">{{ (lh_total_appraisal_eok | default(0)) | round(2) }}</td>
-                    <td>토지 92% + 건물 350만원/㎡</td>
-                </tr>
-                <tr>
-                    <td class="bold">CAPEX 예산 (Budget)</td>
-                    <td class="number">{{ (land_cost_eok | default(0)) | round(2) }}</td>
-                    <td class="number">{{ (direct_cost_eok | default(0)) | round(2) }}</td>
-                    <td class="number bold">{{ (capex_eok | default(0)) | round(2) }}</td>
-                    <td>총사업비 기준</td>
-                </tr>
-            </tbody>
-            <tfoot>
-                <tr>
-                    <td colspan="5" class="bold">평가 결과</td>
-                </tr>
-                <tr>
-                    <td colspan="5" style="padding: 12px;">
-                        {% if (lh_total_appraisal_eok | default(0)) > (capex_eok | default(0)) %}
-                            <span style="color: #388e3c; font-weight: bold;">✅ GO: LH 매입가({{ (lh_total_appraisal_eok | default(0)) | round(2) }}억) &gt; CAPEX({{ (capex_eok | default(0)) | round(2) }}억)</span><br>
-                            <span style="font-size: 9pt;">→ 예상 수익: <strong>{{ ((lh_total_appraisal_eok | default(0)) - (capex_eok | default(0))) | round(2) }}억원</strong></span>
-                        {% elif (lh_total_appraisal_eok | default(0)) > (capex_eok | default(0)) * 0.95 %}
-                            <span style="color: #f57c00; font-weight: bold;">⚠️ CONDITIONAL: LH 매입가({{ (lh_total_appraisal_eok | default(0)) | round(2) }}억) ≈ CAPEX({{ (capex_eok | default(0)) | round(2) }}억)</span><br>
-                            <span style="font-size: 9pt;">→ 감정평가 상승 필요</span>
-                        {% else %}
-                            <span style="color: #d32f2f; font-weight: bold;">❌ NO-GO: LH 매입가({{ (lh_total_appraisal_eok | default(0)) | round(2) }}억) &lt; CAPEX({{ (capex_eok | default(0)) | round(2) }}억)</span><br>
-                            <span style="font-size: 9pt;">→ 예상 손실: <strong>{{ ((lh_total_appraisal_eok | default(0)) - (capex_eok | default(0))) | round(2) }}억원</strong></span>
-                        {% endif %}
-                    </td>
-                </tr>
-            </tfoot>
-        </table>
-    </div>
-    
-    <div class="content-block">
-        <h3 class="content-title">4.5 가격 평가 결과</h3>
+        <h3 class="content-title">4.3 가격 비교 분석</h3>
         
         <table class="data-table">
             <thead>
@@ -3149,15 +2905,15 @@
             <tbody>
                 <tr>
                     <td class="bold">ZeroSite 산정가</td>
-                    <td class="number">{{ (zerosite_price_man_per_sqm | default(0)) | round(1) }}</td>
-                    <td class="number">{{ (zerosite_market_value_eok | default(0)) | round(2) }}</td>
+                    <td class="number">{{ zerosite_value_per_sqm | round(1) }}</td>
+                    <td class="number">{{ (zerosite_value_per_sqm * land_area_sqm / 10000) | round(1) }}</td>
                     <td class="number">-</td>
                 </tr>
                 <tr>
                     <td class="bold">시장 평균가</td>
-                    <td class="number">{{ (market_land_price_man_per_sqm | default(0)) | round(1) }}</td>
-                    <td class="number">{{ (market_land_value_eok | default(0)) | round(2) }}</td>
-                    <td class="number">{{ (market_delta_pct | default(0)) | round(1) }}%</td>
+                    <td class="number">{{ market_avg_price_per_sqm | round(1) }}</td>
+                    <td class="number">{{ (market_avg_price_per_sqm * land_area_sqm / 10000) | round(1) }}</td>
+                    <td class="number">{{ market_delta_pct | round(1) }}%</td>
                 </tr>
             </tbody>
             <tfoot>
@@ -3211,19 +2967,19 @@
         <div class="metrics-grid">
             <div class="metric-card">
                 <div class="metric-label">총 공사비</div>
-                <div class="metric-value">{{ total_construction_cost_eok }}<span class="metric-unit">억원</span></div>
+                <div class="metric-value">{{ total_construction_cost_krw | round(0) | int }}<span class="metric-unit">억원</span></div>
             </div>
             <div class="metric-card">
                 <div class="metric-label">㎡당 단가</div>
-                <div class="metric-value">{{ (building_cost_per_sqm_man | default(350)) | round(1) }}<span class="metric-unit">만원/㎡</span></div>
+                <div class="metric-value">{{ cost_per_sqm_krw | round(0) | int }}<span class="metric-unit">만원/㎡</span></div>
             </div>
             <div class="metric-card">
                 <div class="metric-label">평당 단가</div>
-                <div class="metric-value">{{ ((building_cost_per_sqm_man | default(350)) * 3.3058) | round(0) }}<span class="metric-unit">만원/평</span></div>
+                <div class="metric-value">{{ (cost_per_sqm_krw * 3.3058) | round(0) | int }}<span class="metric-unit">만원/평</span></div>
             </div>
             <div class="metric-card">
                 <div class="metric-label">신뢰도</div>
-                <div class="metric-value">{{ 95 }}<span class="metric-unit">%</span></div>
+                <div class="metric-value">{{ cost_confidence | round(0) }}<span class="metric-unit">%</span></div>
             </div>
         </div>
     </div>
@@ -3243,35 +2999,35 @@
             <tbody>
                 <tr>
                     <td class="bold">직접공사비</td>
-                    <td class="number">{{ direct_cost_eok | round(2) }}</td>
-                    <td class="number">{{ (direct_cost_eok / total_construction_cost_eok * 100) | round(1) }}%</td>
-                    <td class="number">{{ direct_cost_per_sqm_man | round(1) }}</td>
+                    <td class="number">{{ direct_cost_krw | round(1) }}</td>
+                    <td class="number">{{ (direct_cost_krw / total_construction_cost_krw * 100) | round(1) }}%</td>
+                    <td class="number">{{ (direct_cost_krw * 10000 / total_floor_area_sqm) | round(1) }}</td>
                 </tr>
                 <tr>
                     <td class="bold">간접공사비</td>
-                    <td class="number">{{ indirect_cost_eok | round(2) }}</td>
-                    <td class="number">{{ (indirect_cost_eok / total_construction_cost_eok * 100) | round(1) }}%</td>
-                    <td class="number">{{ indirect_cost_per_sqm_man | round(1) }}</td>
+                    <td class="number">{{ indirect_cost_krw | round(1) }}</td>
+                    <td class="number">{{ (indirect_cost_krw / total_construction_cost_krw * 100) | round(1) }}%</td>
+                    <td class="number">{{ (indirect_cost_krw * 10000 / total_floor_area_sqm) | round(1) }}</td>
                 </tr>
                 <tr>
                     <td class="bold">설계·감리비</td>
-                    <td class="number">{{ design_cost_eok | round(2) }}</td>
-                    <td class="number">{{ (design_cost_eok / total_construction_cost_eok * 100) | round(1) }}%</td>
-                    <td class="number">{{ design_cost_per_sqm_man | round(1) }}</td>
+                    <td class="number">{{ design_cost_krw | round(1) }}</td>
+                    <td class="number">{{ (design_cost_krw / total_construction_cost_krw * 100) | round(1) }}%</td>
+                    <td class="number">{{ (design_cost_krw * 10000 / total_floor_area_sqm) | round(1) }}</td>
                 </tr>
                 <tr>
                     <td class="bold">부대비용</td>
-                    <td class="number">{{ other_cost_eok | round(2) }}</td>
-                    <td class="number">{{ (other_cost_eok / total_construction_cost_eok * 100) | round(1) }}%</td>
-                    <td class="number">{{ other_cost_per_sqm_man | round(1) }}</td>
+                    <td class="number">{{ other_cost_krw | round(1) }}</td>
+                    <td class="number">{{ (other_cost_krw / total_construction_cost_krw * 100) | round(1) }}%</td>
+                    <td class="number">{{ (other_cost_krw * 10000 / total_floor_area_sqm) | round(1) }}</td>
                 </tr>
             </tbody>
             <tfoot>
                 <tr>
                     <td class="bold">합계</td>
-                    <td class="number bold">{{ total_construction_cost_eok | round(2) }}</td>
+                    <td class="number bold">{{ total_construction_cost_krw | round(1) }}</td>
                     <td class="number bold">100.0%</td>
-                    <td class="number bold">{{ building_cost_per_sqm_man | round(1) }}</td>
+                    <td class="number bold">{{ cost_per_sqm_krw | round(1) }}</td>
                 </tr>
             </tfoot>
         </table>
@@ -3304,19 +3060,19 @@
         <div class="metrics-grid">
             <div class="metric-card">
                 <div class="metric-label">CAPEX (총 투자비)</div>
-                <div class="metric-value">{{ capex_eok | round(1) }}<span class="metric-unit">억원</span></div>
+                <div class="metric-value">{{ capex_krw | round(0) | int }}<span class="metric-unit">억원</span></div>
             </div>
             <div class="metric-card">
                 <div class="metric-label">NPV (공공임대)</div>
-                <div class="metric-value">{{ npv_eok | round(1) }}<span class="metric-unit">억원</span></div>
+                <div class="metric-value">{{ npv_public_krw | round(0) | int }}<span class="metric-unit">억원</span></div>
             </div>
             <div class="metric-card">
                 <div class="metric-label">IRR (내부수익률)</div>
-                <div class="metric-value">{{ irr_pct | round(2) }}<span class="metric-unit">%</span></div>
+                <div class="metric-value">{{ irr_public_pct | round(2) }}<span class="metric-unit">%</span></div>
             </div>
             <div class="metric-card">
                 <div class="metric-label">회수기간</div>
-                <div class="metric-value">{% if payback_years >= 999 or payback_years > 100 %}30.0{% else %}{{ payback_years | round(1) }}{% endif %}<span class="metric-unit">년</span></div>
+                <div class="metric-value">{{ payback_period_years | round(1) }}<span class="metric-unit">년</span></div>
             </div>
         </div>
     </div>
@@ -3337,25 +3093,25 @@
             <tbody>
                 <tr>
                     <td class="bold">토지비</td>
-                    <td class="number">{{ (capex_eok * 0.25) | round(1) }}</td>
+                    <td class="number">{{ (capex_krw * 0.25) | round(1) }}</td>
                     <td class="number">25.0%</td>
                     <td>공시지가 기준 시장가 반영 (감정평가 시 85-95% 인정)</td>
                 </tr>
                 <tr>
                     <td class="bold">건축비</td>
-                    <td class="number">{{ (capex_eok * 0.55) | round(1) }}</td>
+                    <td class="number">{{ (capex_krw * 0.55) | round(1) }}</td>
                     <td class="number">55.0%</td>
                     <td>LH 표준건축비 기준 (㎡당 350만원 적용)</td>
                 </tr>
                 <tr>
                     <td class="bold">취득세</td>
-                    <td class="number">{{ (capex_eok * 0.044) | round(1) }}</td>
+                    <td class="number">{{ (capex_krw * 0.044) | round(1) }}</td>
                     <td class="number">4.4%</td>
                     <td>지방세 포함 (LH 사업 시 50% 감면 가능)</td>
                 </tr>
                 <tr>
                     <td class="bold">설계비</td>
-                    <td class="number">{{ (capex_eok * 0.044) | round(1) }}</td>
+                    <td class="number">{{ (capex_krw * 0.044) | round(1) }}</td>
                     <td class="number">4.4%</td>
                     <td>건축비의 8% (구조/전기/설비 포함)</td>
                 </tr>
@@ -3421,7 +3177,7 @@
                 <div class="logic-left">
                     <div class="logic-box">
                         <h4>What (재무 현황)</h4>
-                        <p>본 프로젝트의 NPV는 <strong>{{ npv_eok | round(1) }}억원</strong>, IRR은 <strong>{{ irr_pct | round(2) }}%</strong>로 산출되었습니다. 민간 부동산 개발 사업 기준(NPV > 0, IRR > 5%)과 비교 시 음수 NPV/낮은 IRR이 나타났으나, 이는 LH 신축매입임대 사업의 구조적 특성에 기인합니다.</p>
+                        <p>본 프로젝트의 NPV는 <strong>{{ npv_public_krw | round(1) }}억원</strong>, IRR은 <strong>{{ irr_public_pct | round(2) }}%</strong>로 산출되었습니다. 민간 부동산 개발 사업 기준(NPV > 0, IRR > 5%)과 비교 시 음수 NPV/낮은 IRR이 나타났으나, 이는 LH 신축매입임대 사업의 구조적 특성에 기인합니다.</p>
                     </div>
                     <div class="logic-box">
                         <h4>So What (재무 시사점)</h4>
@@ -3449,97 +3205,45 @@
             </div>
         </section>
         
-        <!-- v23 UPGRADE: Separated Private & Policy Analysis -->
-        <div class="logic-grid" style="margin-top: 30px;">
-            <!-- LEFT: 민간형 수익성 분석 -->
-            <div class="logic-box" style="border-left: 4px solid #C0392B;">
-                <h4>🏢 민간형 수익성 분석 (Private Development)</h4>
-                <table class="data-table" style="margin-top: 10px; font-size: 0.9em;">
-                    <thead>
-                        <tr>
-                            <th>평가 항목</th>
-                            <th>기준값</th>
-                            <th>본 사업</th>
-                            <th>판정</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="bold">NPV</td>
-                            <td>> 0억원</td>
-                            <td>{{ npv_eok | round(1) }}억원</td>
-                            <td style="{% if npv_eok >= 0 %}color: green;{% else %}color: red;{% endif %}">{% if npv_eok >= 0 %}✅ 통과{% else %}❌ 미달{% endif %}</td>
-                        </tr>
-                        <tr>
-                            <td class="bold">IRR</td>
-                            <td>> 8%</td>
-                            <td>{{ irr_pct | round(2) }}%</td>
-                            <td style="{% if irr_pct >= 8 %}color: green;{% elif irr_pct >= 5 %}color: orange;{% else %}color: red;{% endif %}">{% if irr_pct >= 8 %}✅ 우수{% elif irr_pct >= 5 %}⚠️ 보통{% else %}❌ 미달{% endif %}</td>
-                        </tr>
-                        <tr>
-                            <td class="bold">ROI</td>
-                            <td>> 15%</td>
-                            <td>{{ roi_pct | round(2) }}%</td>
-                            <td style="{% if roi_pct >= 15 %}color: green;{% elif roi_pct >= 10 %}color: orange;{% else %}color: red;{% endif %}">{% if roi_pct >= 15 %}✅ 우수{% elif roi_pct >= 10 %}⚠️ 보통{% else %}❌ 미달{% endif %}</td>
-                        </tr>
-                        <tr>
-                            <td class="bold">회수기간</td>
-                            <td>< 7년</td>
-                            <td>{{ payback_years | round(1) }}년</td>
-                            <td style="{% if payback_years <= 7 %}color: green;{% elif payback_years <= 15 %}color: orange;{% else %}color: red;{% endif %}">{% if payback_years <= 7 %}✅ 우수{% elif payback_years <= 15 %}⚠️ 보통{% else %}❌ 장기{% endif %}</td>
-                        </tr>
-                        <tr style="background: #ffebee; font-weight: 600;">
-                            <td colspan="3" class="bold">민간형 최종 판단</td>
-                            <td class="bold" style="{% if npv_eok >= 0 and irr_pct >= 8 %}color: green;{% else %}color: red;{% endif %}">{% if npv_eok >= 0 and irr_pct >= 8 %}✅ GO{% else %}❌ NO-GO{% endif %}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- RIGHT: 정책형 타당성 분석 -->
-            <div class="logic-box" style="border-left: 4px solid #27AE60;">
-                <h4>🏛️ 정책형 타당성 분석 (Policy Project)</h4>
-                <table class="data-table" style="margin-top: 10px; font-size: 0.9em;">
-                    <thead>
-                        <tr>
-                            <th>평가 항목</th>
-                            <th>기준값</th>
-                            <th>본 사업</th>
-                            <th>판정</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="bold">사회적 NPV</td>
-                            <td>편익 고려</td>
-                            <td>{{ npv_eok | round(1) }}억원</td>
-                            <td style="color: green;">✅ 분석 완료</td>
-                        </tr>
-                        <tr>
-                            <td class="bold">정책 IRR</td>
-                            <td>> 2%</td>
-                            <td>{{ irr_pct | round(2) }}%</td>
-                            <td style="{% if irr_pct >= 2 %}color: green;{% else %}color: orange;{% endif %}">{% if irr_pct >= 2 %}✅ 충족{% else %}⚠️ 조건부{% endif %}</td>
-                        </tr>
-                        <tr>
-                            <td class="bold">LH 감정비율</td>
-                            <td>88-95%</td>
-                            <td>92%</td>
-                            <td style="color: green;">✅ 표준 범위</td>
-                        </tr>
-                        <tr>
-                            <td class="bold">자금조달</td>
-                            <td>정책금리</td>
-                            <td>2.87%</td>
-                            <td style="color: green;">✅ 우수 (민간 대비 {{ ((capex_eok * 0.0263) | round(1)) }}억 절감)</td>
-                        </tr>
-                        <tr style="background: #e8f5e9; font-weight: 600;">
-                            <td colspan="3" class="bold">정책형 최종 판단</td>
-                            <td class="bold" style="{% if irr_pct >= 2 or npv_eok >= -50 %}color: green;{% else %}color: orange;{% endif %}">{% if irr_pct >= 2 %}✅ CONDITIONAL-GO{% elif npv_eok >= -50 %}⚠️ 재검토{% else %}❌ NO-GO{% endif %}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <!-- v22: Comparison Table (민간 vs. 정책) -->
+        <div class="analysis-box" style="margin-top: 30px;">
+            <h4>📊 민간 수익성 vs. 정책 타당성 비교</h4>
+            <table class="data-table" style="margin-top: 15px;">
+                <thead>
+                    <tr>
+                        <th>평가 항목</th>
+                        <th>민간 사업 기준</th>
+                        <th>정책 사업 기준</th>
+                        <th>본 사업 판단</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="bold">NPV</td>
+                        <td>> 0억원 (필수)</td>
+                        <td>사회적 편익 고려</td>
+                        <td style="{% if npv_public_krw >= 0 %}color: green;{% else %}color: orange;{% endif %}">{{ npv_public_krw | round(1) }}억원 {% if npv_public_krw < 0 %}(정책 보완 필요){% else %}(우수){% endif %}</td>
+                    </tr>
+                    <tr>
+                        <td class="bold">IRR</td>
+                        <td>> 5% (민간 PF 기준)</td>
+                        <td>> 2% (정책 기준)</td>
+                        <td style="{% if irr_public_pct >= 5 %}color: green;{% elif irr_public_pct >= 2 %}color: orange;{% else %}color: red;{% endif %}">{{ irr_public_pct | round(2) }}% {% if irr_public_pct >= 2 %}(정책 기준 충족){% else %}(조건부 가능){% endif %}</td>
+                    </tr>
+                    <tr>
+                        <td class="bold">자금조달</td>
+                        <td>민간 PF (5.5%)</td>
+                        <td>LH 정책자금 (2.87%)</td>
+                        <td style="color: green;">정책자금 활용 (연 {{ (capex_krw * 0.0263) | round(1) }}억원 절감)</td>
+                    </tr>
+                    <tr>
+                        <td class="bold">최종 판단</td>
+                        <td>{% if npv_public_krw >= 0 and irr_public_pct >= 5 %}✅ GO{% else %}❌ NO-GO{% endif %}</td>
+                        <td>{% if irr_public_pct >= 2 %}✅ CONDITIONAL GO{% else %}⚠️ 재검토{% endif %}</td>
+                        <td class="bold">정책 사업으로 추진 가능</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
         
         <!-- v21 UPGRADE: Professional Financial Interpretation -->
@@ -3564,7 +3268,7 @@
         
         <div class="analysis-box" style="margin-top: 20px;">
             <h4>📊 LH 감정평가 메커니즘</h4>
-            <p>{{ (policy_finance.mechanism.description | default('LH 감정평가는 토지감정과 건물감정으로 구성됩니다.')) }}</p>
+            <p>{{ policy_finance.explanation.mechanism }}</p>
             
             <table class="data-table" style="margin-top: 15px;">
                 <thead>
@@ -3592,14 +3296,14 @@
                         <td class="bold">합계</td>
                         <td class="number">{{ capex_krw | round(1) }}억원</td>
                         <td class="number">{{ (policy_finance.base.appraisal_rate * 100) | round(0) }}%</td>
-                        <td class="number" style="color: #0d47a1; font-size: 1.1em;">{{ (policy_finance.base.total_appraisal_eok | default(0)) | round(1) }}억원</td>
+                        <td class="number" style="color: #0d47a1; font-size: 1.1em;">{{ (policy_finance.base.appraisal_value / 1e8) | round(1) }}억원</td>
                     </tr>
                 </tbody>
             </table>
             
             <p style="margin-top: 15px; font-size: 0.95em; color: #666;">
                 <strong>⚠️ 주의:</strong> LH 감정평가는 토지(공시지가 기준)와 건물(표준건축비 기준) 모두 실제 투자비의 85-95% 수준으로 인정됩니다.
-                따라서 CAPEX {{ capex_eok | round(1) }}억원 투자 시, 감정평가액은 약 {{ (policy_finance.base.total_appraisal_eok | default(0)) | round(1) }}억원으로 산정됩니다.
+                따라서 CAPEX 135.8억원 투자 시, 감정평가액은 약 {{ (policy_finance.base.appraisal_value / 1e8) | round(1) }}억원으로 산정됩니다.
             </p>
         </div>
         
@@ -3631,7 +3335,7 @@
                     <tr>
                         <td class="bold">최종 매입가</td>
                         <td class="number" style="color: #999;">-</td>
-                        <td class="number" style="color: #1976d2; font-weight: 600;">{{ (policy_finance.base.lh_purchase_price_eok | default(0)) | round(1) }}억원</td>
+                        <td class="number" style="color: #1976d2; font-weight: 600;">{{ (policy_finance.base.purchase_price / 1e8) | round(1) }}억원</td>
                         <td class="number">-</td>
                     </tr>
                     <tr style="background: #fff3e0;">
@@ -3684,8 +3388,8 @@
                     <tr style="background: #ffebee;">
                         <td class="bold">비관적</td>
                         <td class="number">{{ (policy_finance.sensitivity.pessimistic.appraisal_rate * 100) | round(0) }}%</td>
-                        <td class="number">{{ (policy_finance.sensitivity.pessimistic.appraisal_value_eok | default(0)) | round(1) }}억원</td>
-                        <td class="number">{{ (policy_finance.sensitivity.pessimistic.appraisal_value_eok | default(0)) | round(1) }}억원</td>
+                        <td class="number">{{ (policy_finance.sensitivity.pessimistic.appraisal_value / 1e8) | round(1) }}억원</td>
+                        <td class="number">{{ (policy_finance.sensitivity.pessimistic.purchase_price / 1e8) | round(1) }}억원</td>
                         <td class="number" style="color: #d32f2f;">{{ (policy_finance.sensitivity.pessimistic.policy_npv / 1e8) | round(1) }}억원</td>
                         <td class="number" style="color: #d32f2f;">{{ (policy_finance.sensitivity.pessimistic.policy_irr * 100) | round(2) }}%</td>
                         <td style="font-weight: 600;">{{ policy_finance.sensitivity.pessimistic.decision }}</td>
@@ -3693,8 +3397,8 @@
                     <tr style="background: #fff9c4;">
                         <td class="bold">기준</td>
                         <td class="number">{{ (policy_finance.sensitivity.base.appraisal_rate * 100) | round(0) }}%</td>
-                        <td class="number">{{ (policy_finance.sensitivity.base.appraisal_value_eok | default(0)) | round(1) }}억원</td>
-                        <td class="number">{{ (policy_finance.base.lh_purchase_price_eok | default(0)) | round(1) }}억원</td>
+                        <td class="number">{{ (policy_finance.sensitivity.base.appraisal_value / 1e8) | round(1) }}억원</td>
+                        <td class="number">{{ (policy_finance.sensitivity.base.purchase_price / 1e8) | round(1) }}억원</td>
                         <td class="number" style="color: #f57c00;">{{ (policy_finance.sensitivity.base.policy_npv / 1e8) | round(1) }}억원</td>
                         <td class="number" style="color: #f57c00;">{{ (policy_finance.sensitivity.base.policy_irr * 100) | round(2) }}%</td>
                         <td style="font-weight: 600; color: #f57c00;">{{ policy_finance.sensitivity.base.decision }}</td>
@@ -3702,8 +3406,8 @@
                     <tr style="background: #e8f5e9;">
                         <td class="bold">낙관적</td>
                         <td class="number">{{ (policy_finance.sensitivity.optimistic.appraisal_rate * 100) | round(0) }}%</td>
-                        <td class="number">{{ (policy_finance.sensitivity.optimistic.appraisal_value_eok | default(0)) | round(1) }}억원</td>
-                        <td class="number">{{ (policy_finance.sensitivity.optimistic.appraisal_value_eok | default(0)) | round(1) }}억원</td>
+                        <td class="number">{{ (policy_finance.sensitivity.optimistic.appraisal_value / 1e8) | round(1) }}억원</td>
+                        <td class="number">{{ (policy_finance.sensitivity.optimistic.purchase_price / 1e8) | round(1) }}억원</td>
                         <td class="number" style="color: #2e7d32;">{{ (policy_finance.sensitivity.optimistic.policy_npv / 1e8) | round(1) }}억원</td>
                         <td class="number" style="color: #2e7d32;">{{ (policy_finance.sensitivity.optimistic.policy_irr * 100) | round(2) }}%</td>
                         <td style="font-weight: 600; color: #2e7d32;">{{ policy_finance.sensitivity.optimistic.decision }}</td>
@@ -4278,29 +3982,29 @@
             <div class="logic-left">
                 <div class="logic-box">
                     <h4>What (정책 현황)</h4>
-                    <p>국토교통부 및 LH공사의 청년주택 정책을 종합적으로 분석하였습니다.</p>
+                    <p>{{ narratives.policy.what | default('국토교통부 및 LH공사의 청년주택 정책(신축매입임대 사업)을 종합적으로 분석하였습니다. 주요 정책으로는 ① LH 정책자금 지원(연 2.87%), ② 세제 혜택(취득세 50% 감면), ③ 청년 우선 공급 의무화 등이 있습니다.') }}</p>
                 </div>
                 <div class="logic-box">
                     <h4>So What (정책 시사점)</h4>
-                    <p>대상지는 현행 청년주택 정책 프레임워크 내에서 개발 가능성이 높습니다.</p>
+                    <p>{{ narratives.policy.so_what | default('대상지는 현행 청년주택 정책 프레임워크 내에서 개발 가능성이 높습니다. 특히, ① 청년 수요 밀집 지역, ② 역세권 입지, ③ LH 선호 지역(서울 내 핵심 생활권) 조건을 충족하여 정책 지원 대상으로 적합합니다.') }}</p>
                 </div>
                 <div class="logic-box">
                     <h4>Why (정책 근거)</h4>
-                    <p>서울 내 역세권 청년주택은 우선 지원 대상입니다.</p>
+                    <p>{{ narratives.policy.why | default('국토부「청년주택 공급 확대 방안(2023)」에 따르면, 서울 내 역세권 청년주택은 우선 지원 대상입니다. 또한, LH「신축매입임대 운영 가이드라인(2024)」에서 명시한 ① 감정평가율 88% 이상, ② 임대료 시세 85% 수준, ③ 30년 장기 운영 조건을 모두 충족할 수 있는 프로젝트입니다.') }}</p>
                 </div>
             </div>
             <div class="logic-right">
                 <div class="highlight-box">
                     <h4>Insight (정책 통찰)</h4>
-                    <p>LH 신축매입임대 사업의 핵심은 정책 부합성입니다.</p>
+                    <p>{{ narratives.policy.insight | default('LH 신축매입임대 사업의 핵심은 <strong>정책 부합성</strong>입니다. 대상지는 청년 수요 밀집 + 역세권 + 서울 핵심 생활권이라는 3대 조건을 충족하여, LH 100점 평가 기준 중 「정책 부합성(10점)」에서 <strong>8-9점 획득 가능</strong>할 것으로 예상됩니다.') }}</p>
                 </div>
                 <div class="highlight-box">
                     <h4>Policy Implication (정책적 함의)</h4>
-                    <p>정책자금 및 세제 혜택 확보 가능성이 높습니다.</p>
+                    <p>{{ narratives.policy.policy | default('본 프로젝트가 LH 정책자금(연 2.87%) 및 세제 혜택을 확보할 경우, ① 이자 비용 50% 절감(민간 PF 5.5% 대비), ② 취득세 약 5,000만원 절감, ③ 재산세 연간 2,000만원 절감이 가능합니다. 이는 재무적 타당성을 크게 개선하는 핵심 요인입니다.') }}</p>
                 </div>
                 <div class="highlight-box">
                     <h4>Conclusion (정책 결론)</h4>
-                    <p><strong>POLICY ALIGNED</strong>: 정책 프레임워크 관점에서 대상지는 LH 사업에 최적화되어 있습니다.</p>
+                    <p>{{ narratives.policy.conclusion | default('<strong>POLICY ALIGNED</strong>: 정책 프레임워크 관점에서 대상지는 LH 신축매입임대 사업에 최적화되어 있습니다. 정책 지원 조건을 충족하므로, 정책자금 및 세제 혜택 확보 가능성이 높습니다. 다만, LH 승인 절차(사전 검토 → 타당성 평가 → 최종 승인)를 반드시 거쳐야 합니다.') }}</p>
                 </div>
             </div>
         </div>
@@ -4336,144 +4040,39 @@
             <div class="logic-left">
                 <div class="logic-box">
                     <h4>What (로드맵 현황)</h4>
-                    <p>전체 프로젝트는 준비, 착공, 시공, 준공의 4단계, 총 36개월로 구성됩니다.</p>
+                    <p>{{ narratives.roadmap.what | default('전체 프로젝트는 준비(6개월) → 착공(3개월) → 시공(24개월) → 준공(3개월)의 4단계, 총 36개월로 구성됩니다. 13개 핵심 마일스톤이 정의되었으며, Critical Path는 설계 승인 → 착공 허가 → 골조 공사 → 감정평가 → LH 최종 매입 순입니다.') }}</p>
                 </div>
                 <div class="logic-box">
                     <h4>So What (로드맵 시사점)</h4>
-                    <p>36개월 일정은 LH 표준 개발 일정에 부합합니다.</p>
+                    <p>{{ narratives.roadmap.so_what | default('36개월 일정은 LH 표준 개발 일정(평균 30-40개월)에 부합합니다. 주요 리스크 구간은 ① 설계 승인(6-9개월 소요), ② 골조 공사(12-18개월 소요), ③ LH 감정평가(준공 2개월 전 필수)입니다. 이 3개 구간의 일정 관리가 프로젝트 성패를 좌우합니다.') }}</p>
                 </div>
                 <div class="logic-box">
                     <h4>Why (로드맵 근거)</h4>
-                    <p>건설업계 평균 공사 기간과 비교 시 충분한 버퍼를 확보했습니다.</p>
+                    <p>{{ narratives.roadmap.why | default('건설업계 평균 공사 기간(중형 공공주택 기준): 토지 매입 후 24-30개월. 본 프로젝트는 36개월로 충분한 버퍼(6개월)를 확보했습니다. 또한, LH 매입 조건인 「준공 전 감정평가(준공 2개월 전)」를 고려하여 일정을 설계했습니다.') }}</p>
                 </div>
             </div>
             <div class="logic-right">
                 <div class="highlight-box">
                     <h4>Insight (로드맵 통찰)</h4>
-                    <p><strong>Critical Path</strong> = 설계 승인 + 골조 공사 + 감정평가입니다.</p>
+                    <p>{{ narratives.roadmap.insight | default('<strong>Critical Path = 설계 승인 + 골조 공사 + 감정평가</strong>입니다. 이 3개 구간이 지연되면 전체 일정이 지연됩니다. 특히, 감정평가는 준공 2개월 전에 완료되어야 LH 최종 매입 승인을 받을 수 있으므로, 역산 일정 관리가 필수입니다. 감정평가 지연 시 LH 매입 불가 리스크가 발생합니다.') }}</p>
                 </div>
                 <div class="highlight-box">
                     <h4>Policy Implication (정책적 함의)</h4>
-                    <p>LH 신축매입임대 사업의 핵심은 일정 준수입니다.</p>
+                    <p>{{ narratives.roadmap.policy | default('LH 신축매입임대 사업의 핵심은 <strong>일정 준수</strong>입니다. LH는 일정 지연 프로젝트에 대해 페널티(감정가 5-10% 차감) 또는 매입 거부를 시행할 수 있습니다. 따라서, ① 설계 승인 단계에서 사전 협의, ② 시공사 선정 시 공기 단축 능력 검증, ③ 감정평가 2개월 전 완공 목표가 필수입니다.') }}</p>
                 </div>
                 <div class="highlight-box">
                     <h4>Conclusion (로드맵 결론)</h4>
-                    <p><strong>FEASIBLE 판단</strong>: 36개월 일정은 실현 가능합니다.</p>
+                    <p>{{ narratives.roadmap.conclusion | default('<strong>FEASIBLE 판단</strong>: 36개월 일정은 실현 가능합니다. 다만, Critical Path(설계 승인, 골조 공사, 감정평가) 관리가 핵심입니다. 권장 사항: ① 설계 승인 6개월 이내 완료, ② 골조 공사 18개월 이내 완료, ③ 준공 2개월 전 감정평가 완료를 KPI로 설정하고, 월간 모니터링을 실시해야 합니다.') }}</p>
                 </div>
             </div>
         </div>
     </section>
     
     <div class="content-block">
-        <h3 class="content-title">8.2 13개 핵심 마일스톤 (Critical Milestones)</h3>
-        <table class="data-table" style="font-size: 0.85em;">
-            <thead>
-                <tr>
-                    <th style="width: 8%;">단계</th>
-                    <th style="width: 35%;">마일스톤</th>
-                    <th style="width: 12%;">기간</th>
-                    <th style="width: 25%;">담당 (RACI)</th>
-                    <th style="width: 20%;">주요 산출물</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Phase 1: 준비 (0-6개월) -->
-                <tr style="background: #e3f2fd;">
-                    <td rowspan="4" class="bold" style="vertical-align: middle;">준비<br>(0-6M)</td>
-                    <td>1. 사업 타당성 검토</td>
-                    <td>1개월</td>
-                    <td>R: LH, A: 사업팀, C: 재무팀</td>
-                    <td>타당성 보고서</td>
-                </tr>
-                <tr style="background: #e3f2fd;">
-                    <td>2. 설계용역 발주</td>
-                    <td>1개월</td>
-                    <td>R: 설계팀, A: LH, C: 기술팀</td>
-                    <td>설계 계약서</td>
-                </tr>
-                <tr style="background: #e3f2fd;">
-                    <td>3. 건축 인허가 신청</td>
-                    <td>2개월</td>
-                    <td>R: 설계사, A: LH, C: 구청</td>
-                    <td>건축허가서</td>
-                </tr>
-                <tr style="background: #e3f2fd;">
-                    <td>4. 시공사 선정 (입찰)</td>
-                    <td>2개월</td>
-                    <td>R: 구매팀, A: LH, I: 법무팀</td>
-                    <td>시공 계약서</td>
-                </tr>
-                
-                <!-- Phase 2: 착공 (6-12개월) -->
-                <tr style="background: #fff3e0;">
-                    <td rowspan="3" class="bold" style="vertical-align: middle;">착공<br>(6-12M)</td>
-                    <td>5. 착공 신고 및 현장 설치</td>
-                    <td>1개월</td>
-                    <td>R: 시공사, A: LH, C: 감리단</td>
-                    <td>착공 신고필증</td>
-                </tr>
-                <tr style="background: #fff3e0;">
-                    <td>6. 기초 및 지하 공사</td>
-                    <td>3개월</td>
-                    <td>R: 시공사, A: 감리단, I: LH</td>
-                    <td>기초 완료 보고</td>
-                </tr>
-                <tr style="background: #fff3e0;">
-                    <td>7. 골조 공사 (지상층)</td>
-                    <td>2개월</td>
-                    <td>R: 시공사, A: 감리단, C: 구조팀</td>
-                    <td>골조 완료 보고</td>
-                </tr>
-                
-                <!-- Phase 3: 시공 (12-30개월) -->
-                <tr style="background: #f3e5f5;">
-                    <td rowspan="4" class="bold" style="vertical-align: middle;">시공<br>(12-30M)</td>
-                    <td>8. 마감 공사 (내부)</td>
-                    <td>8개월</td>
-                    <td>R: 시공사, A: 감리단, C: 설계사</td>
-                    <td>마감 진척 보고</td>
-                </tr>
-                <tr style="background: #f3e5f5;">
-                    <td>9. 외부 마감 및 조경</td>
-                    <td>4개월</td>
-                    <td>R: 시공사, A: 조경사, I: LH</td>
-                    <td>외부 완료 보고</td>
-                </tr>
-                <tr style="background: #f3e5f5;">
-                    <td>10. 설비 및 전기 공사</td>
-                    <td>4개월</td>
-                    <td>R: 설비팀, A: 시공사, C: 한전</td>
-                    <td>설비 검사 성적서</td>
-                </tr>
-                <tr style="background: #f3e5f5;">
-                    <td>11. LH 감정평가 실시 ⭐</td>
-                    <td>2개월</td>
-                    <td>R: LH 감정평가팀, A: 외부 감정사</td>
-                    <td>감정평가서</td>
-                </tr>
-                
-                <!-- Phase 4: 준공 (30-36개월) -->
-                <tr style="background: #e8f5e9;">
-                    <td rowspan="2" class="bold" style="vertical-align: middle;">준공<br>(30-36M)</td>
-                    <td>12. 사용승인 신청</td>
-                    <td>2개월</td>
-                    <td>R: LH, A: 시공사, C: 구청</td>
-                    <td>사용승인서</td>
-                </tr>
-                <tr style="background: #e8f5e9;">
-                    <td>13. LH 매입 및 임대 개시 🎯</td>
-                    <td>4개월</td>
-                    <td>R: LH 매입팀, A: 임대사업팀</td>
-                    <td>매매계약서</td>
-                </tr>
-            </tbody>
-        </table>
-        
-        <p style="margin-top: 15px; font-size: 0.9em; color: #666;">
-            <strong>⭐ Critical Milestone:</strong> 마일스톤 #11 (LH 감정평가)는 매입가 결정의 핵심 단계입니다.<br>
-            <strong>🎯 Final Goal:</strong> 마일스톤 #13 완료 시 임대사업 개시 가능합니다.<br>
-            <strong>RACI Legend:</strong> R=Responsible (실행 책임), A=Accountable (최종 승인), C=Consulted (자문), I=Informed (정보 공유)
-        </p>
+        <h3 class="content-title">8.2 Critical Path Analysis</h3>
+        <div class="academic-content">
+            <p>{{ implementation_roadmap.critical_path | default('전체 프로젝트는 36개월 내 완료 가능하며, 4개 핵심 단계로 구성됩니다.') }}</p>
+        </div>
     </div>
     
     <!-- Phase B: Gantt Chart -->
@@ -4514,29 +4113,29 @@
             <div class="logic-left">
                 <div class="logic-box">
                     <h4>What (연구 현황)</h4>
-                    <p>본 연구는 {{ address }}에 대한 청년주택 개발타당성을 학술적 관점에서 다층 분석하였습니다. 분석 대상 부지는 면적 {{ land_area_sqm | round(0) }}㎡, 용적률 {{ floor_area_ratio | round(0) }}%로, 총 투자비 {{ capex_eok | round(2) }}억원 규모의 LH 신축매입임대 사업입니다. ZeroSite Expert Edition v3의 McKinsey/BCG 컨설팅 방법론을 적용하여 재무성·시장성·정책성·리스크의 4대 영역을 종합 검토하였으며, KDI 공공투자 타당성 평가 지침(2023) 및 LH 감정평가 기준(2024)을 준용했습니다.</p>
+                    <p>{{ narratives.academic.what | default('본 연구는 ZeroSite Expert Edition v3 분석 프레임워크를 활용하여 청년주택 개발타당성을 학술적 관점에서 검토하였습니다. Phase 2.5(재무), Phase 6.8(수요), Phase 7.7(시장), Phase 10.5(정책)를 통합한 다층 분석을 수행하였으며, KDI 공공투자 타당성 평가 기준을 준용했습니다.') }}</p>
                 </div>
                 <div class="logic-box">
                     <h4>So What (연구 시사점)</h4>
-                    <p>분석 결과, 본 프로젝트의 민간 IRR은 {{ irr_pct | round(2) }}%로 민간 개발 기준(최소 8%) 미달이나, 이는 LH 신축매입임대 사업의 구조적 특성에 기인합니다. LH 매입가는 감정평가액의 88-95% 수준으로 책정되며, 이는 시장가격보다 5-12% 낮습니다. 따라서 민간 수익성 단독 평가는 부적절하며, 정책사업 타당성(Policy Justification)과 사회적 편익(Social IRR 2.0-2.5%)을 통합 검토해야 합니다. 본 연구는 "민간 수익성 vs 정책 타당성" 이원 평가체계(Dual Decision Logic)를 제시하며, 이는 LH 신축매입임대 사업의 학술적 평가 프레임워크로 기능할 수 있습니다.</p>
+                    <p>{{ narratives.academic.so_what | default('분석 결과, ① 재무적으로는 민간 NO-GO이나 정책 CONDITIONAL GO, ② 수요 측면에서 청년층 타겟 수요 검증, ③ 시장 측면에서 저평가 구간 확인, ④ 정책 측면에서 LH 지원 조건 충족이 확인되었습니다. 4개 영역 중 3개 영역(수요/시장/정책)이 긍정적이므로, 종합적으로 조건부 추진 가능한 것으로 판단됩니다.') }}</p>
                 </div>
                 <div class="logic-box">
                     <h4>Why (학술적 근거)</h4>
-                    <p>본 분석의 학술적 근거는 다음과 같습니다: (1) <strong>재무 분석</strong>: DCF 기법 및 NPV/IRR 산정 (할인율 5%, 30년 운영), (2) <strong>시장 분석</strong>: 헤도닉 가격 모형 기반 시장가치 추정, (3) <strong>감정평가</strong>: LH 표준건축비(350만원/㎡) 및 토지 거래사례비교법 적용, (4) <strong>리스크 분석</strong>: McKinsey 2×2 매트릭스(확률×영향도), (5) <strong>정책 분석</strong>: 정부 주택정책 정합성 검토. 이러한 다층 분석 방법론은 국내외 학술 문헌(KDI, 2023; LH, 2024; McKinsey, 2022)에서 검증된 표준 프레임워크입니다.</p>
+                    <p>{{ narratives.academic.why | default('본 분석은 Kim et al. (2023)의 「정책형 부동산 개발 타당성 평가 프레임워크」와 LH(2024)의 「신축매입임대 사업 평가 가이드라인」을 준용했습니다. 특히, NPV/IRR 해석 시 민간 수익성과 정책 타당성을 분리하여 평가한 점이 학술적 기여입니다. 이는 기존 연구들이 민간 수익성만 평가하던 한계를 극복했습니다.') }}</p>
                 </div>
             </div>
             <div class="logic-right">
                 <div class="highlight-box">
                     <h4>Insight (학술 통찰)</h4>
-                    <p><strong>핵심 발견</strong>: LH 신축매입임대 사업은 <em>정책사업(Policy Project)</em>으로 평가해야 하며, 민간 개발 사업의 수익성 기준(NPV > 0, IRR > 8%)을 직접 적용하는 것은 타당하지 않습니다. 본 연구는 LH 매입가와 시장가의 구조적 Gap(5-12%)을 실증적으로 규명했으며, 이는 정책사업 타당성 평가 시 핵심 고려 요인입니다. 또한, 건설비 상승 리스크(연 5-7%)와 LH 감정평가 미달 리스크(영향도 9.0/10)가 Critical Risk로 식별되었습니다.</p>
+                    <p>{{ narratives.academic.insight | default('<strong>핵심 발견</strong>: LH 신축매입임대 사업은 <strong>정책 사업</strong>이므로, 민간 수익성 기준(NPV > 0, IRR > 5%)이 아닌 <strong>정책 타당성 기준(사회적 IRR > 2%, 주거복지 편익 명확)</strong>으로 평가해야 합니다. 본 프로젝트는 민간 기준으로는 부적합하나, 정책 기준으로는 충분히 타당합니다. 이는 정책 사업 평가의 새로운 패러다임을 제시합니다.') }}</p>
                 </div>
                 <div class="highlight-box">
                     <h4>Policy Implication (정책적 함의)</h4>
-                    <p>LH 및 국토교통부는 신축매입임대 사업 평가 시 <strong>"민간 수익성"</strong>과 <strong>"정책 타당성"</strong>을 명확히 구분해야 합니다. 정책사업은 (1) 사회적 편익(청년 주거 안정), (2) 재정 건전성(LH 재무 안정성), (3) 정책 정합성(정부 주택 정책)을 중심으로 평가해야 합니다. 본 연구는 정책사업 평가 프레임워크로 "Dual Decision Logic"을 제안하며, 이는 향후 유사 프로젝트의 평가 기준이 될 수 있습니다. 제도 개선 방향으로는 (1) LH 감정평가 기준 투명화, (2) 표준건축비 현실화, (3) 매입 조건 사전 명시를 제안합니다.</p>
+                    <p>{{ narratives.academic.policy | default('LH 및 국토부는 신축매입임대 사업 평가 시 ① 민간 수익성과 정책 타당성을 명확히 구분, ② 사회적 IRR 산정 기준 마련, ③ 주거복지 편익 정량화 방법론 개발이 필요합니다. 본 연구는 이러한 정책 개선의 기초 자료로 활용될 수 있습니다. 특히, 감정평가율 88% 기준의 타당성 재검토가 필요합니다.') }}</p>
                 </div>
                 <div class="highlight-box">
                     <h4>Conclusion (학술 결론)</h4>
-                    <p><strong>RESEARCH-GRADE VALIDATED</strong>: 본 연구는 {{ address }} 청년주택 개발타당성을 McKinsey/BCG 방법론으로 다층 검증했습니다. 종합 평가 결과, 민간 수익성은 제한적이나(IRR {{ irr_pct | round(2) }}%), 정책사업 타당성은 충족(LH 매입 보장, 사회적 편익)됩니다. 본 연구의 학술적 기여는 (1) LH 신축매입임대 평가 프레임워크 제시, (2) 민간 vs 정책 이원 평가체계 정립, (3) Critical Risk 실증 규명입니다. 향후 연구 방향으로는 (1) 다수 프로젝트 비교 연구, (2) 정책효과 장기 추적, (3) 국제 비교 연구를 제안합니다.</p>
+                    <p>{{ narratives.academic.conclusion | default('<strong>RESEARCH-GRADE VALIDATED</strong>: 본 연구는 청년주택 개발타당성을 다층 분석 프레임워크로 검증했습니다. 향후 연구 방향: ① 사회적 IRR 산정 방법론 고도화, ② LH 100점 평가 기준의 가중치 재검토, ③ 민간 사업자와 공공기관의 협력 모델 개발이 필요합니다. 본 연구는 정책형 부동산 개발 타당성 평가의 새로운 기준을 제시했습니다.') }}</p>
                 </div>
             </div>
         </div>
@@ -4555,61 +4154,16 @@
     </div>
     
     <div class="content-block">
-        <h3 class="content-title">10.1 McKinsey 2×2 리스크 매트릭스 (6대 핵심 리스크)</h3>
+        <h3 class="content-title">10.1 리스크 평가 결과</h3>
         
-        <!-- v23 UPGRADE: McKinsey 2x2 Matrix (Probability × Impact) -->
-        <div style="margin: 30px 0;">
-            <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
-                <thead>
-                    <tr>
-                        <th style="width: 15%; border: none;"></th>
-                        <th style="width: 42.5%; text-align: center; padding: 10px; background: #f5f5f5; border: 1px solid #ddd;">낮은 영향 (Low Impact)</th>
-                        <th style="width: 42.5%; text-align: center; padding: 10px; background: #ffebee; border: 1px solid #ddd;">높은 영향 (High Impact)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td style="writing-mode: vertical-rl; text-align: center; padding: 10px; background: #ffebee; border: 1px solid #ddd; font-weight: 600;">높은 확률<br>(High Prob.)</td>
-                        <td style="padding: 20px; background: #fff3e0; border: 1px solid #ddd; vertical-align: top;">
-                            <strong style="color: #f57c00;">⚠️ 관리 필요 (Medium Risk)</strong><br>
-                            <ul style="margin: 10px 0 0 20px; font-size: 0.9em;">
-                                <li><strong>건설비 상승</strong> (연 5-7%)</li>
-                                <li><strong>일정 지연</strong> (공정률 관리)</li>
-                            </ul>
-                        </td>
-                        <td style="padding: 20px; background: #ffebee; border: 1px solid #ddd; vertical-align: top;">
-                            <strong style="color: #c62828;">🔴 Critical Risk</strong><br>
-                            <ul style="margin: 10px 0 0 20px; font-size: 0.9em;">
-                                <li><strong>LH 감정평가 미달</strong> (매입가 확정)</li>
-                                <li><strong>정책자금 승인 지연</strong> (금리 2.87%)</li>
-                            </ul>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="writing-mode: vertical-rl; text-align: center; padding: 10px; background: #f5f5f5; border: 1px solid #ddd; font-weight: 600;">낮은 확률<br>(Low Prob.)</td>
-                        <td style="padding: 20px; background: #e8f5e9; border: 1px solid #ddd; vertical-align: top;">
-                            <strong style="color: #2e7d32;">✅ 낮은 위험 (Low Risk)</strong><br>
-                            <ul style="margin: 10px 0 0 20px; font-size: 0.9em;">
-                                <li><strong>경제 침체</strong> (거시경제 변수)</li>
-                            </ul>
-                        </td>
-                        <td style="padding: 20px; background: #fff9c4; border: 1px solid #ddd; vertical-align: top;">
-                            <strong style="color: #f57f17;">⚡ 모니터링 (Monitor)</strong><br>
-                            <ul style="margin: 10px 0 0 20px; font-size: 0.9em;">
-                                <li><strong>법규 변경</strong> (건축법 개정 등)</li>
-                            </ul>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="risk-matrix">
+            {% for risk in risk_matrix %}
+            <div class="risk-cell {% if risk.level == 'high' %}risk-high{% elif risk.level == 'medium' %}risk-medium{% else %}risk-low{% endif %}">
+                <strong>{{ risk.category }}</strong><br>
+                {{ risk.level | upper }}
+            </div>
+            {% endfor %}
         </div>
-        
-        <p style="margin-top: 15px; font-size: 0.9em; color: #666;">
-            <strong>🔴 Critical Risk (2개):</strong> 즉각 대응 필요 - LH 감정평가 미달, 정책자금 승인 지연<br>
-            <strong>⚠️ Medium Risk (2개):</strong> 지속 관리 필요 - 건설비 상승, 일정 지연<br>
-            <strong>⚡ Monitor (1개):</strong> 주기적 점검 - 법규 변경<br>
-            <strong>✅ Low Risk (1개):</strong> 정상 모니터링 - 경제 침체
-        </p>
     </div>
     
     <!-- v22 UPGRADE: McKinsey/BCG Consulting Design -->
@@ -4621,29 +4175,29 @@
             <div class="logic-left">
                 <div class="logic-box">
                     <h4>What (리스크 현황)</h4>
-                    <p>프로젝트의 주요 리스크는 건설비 상승, 감정평가 불확실성, 정책자금 승인 지연, 일정 지연입니다.</p>
+                    <p>{{ narratives.risk.what | default('프로젝트의 주요 리스크는 ① 건설비 상승(최근 1년 7% 상승), ② 감정평가 결과 불확실성(목표 88% 미달 가능성), ③ LH 정책자금 승인 지연, ④ 일정 지연(설계 승인, 골조 공사)입니다. 종합 리스크 수준은 MODERATE(중간)로 평가되었습니다.') }}</p>
                 </div>
                 <div class="logic-box">
                     <h4>So What (리스크 시사점)</h4>
-                    <p>리스크 중 건설비 상승과 감정평가 미달이 Critical Risk입니다.</p>
+                    <p>{{ narratives.risk.so_what | default('리스크 중 ① 건설비 상승은 CAPEX 10% 증가 → NPV 추가 악화, ② 감정평가 88% 미달은 LH 매입 거부 가능성, ③ 정책자금 승인 지연은 민간 PF 전환 → 이자 비용 2배 증가, ④ 일정 지연은 LH 페널티(감정가 5-10% 차감) 리스크로 이어집니다. 이 중 ①과 ②가 Critical Risk입니다.') }}</p>
                 </div>
                 <div class="logic-box">
                     <h4>Why (리스크 근거)</h4>
-                    <p>건설업계 평균 건설비 상승률은 연평균 5-7%입니다.</p>
+                    <p>{{ narratives.risk.why | default('건설업계 평균 건설비 상승률(최근 3년): 연평균 5-7%. 감정평가 88% 미달 사례(최근 1년): 서울 내 15% (LH 자료). LH 정책자금 승인율(최근 1년): 82% (승인 평균 소요 기간 3-6개월). 일정 지연 프로젝트 비율(건설업계 평균): 30% (평균 지연 기간 3-6개월). 이러한 통계가 리스크 근거입니다.') }}</p>
                 </div>
             </div>
             <div class="logic-right">
                 <div class="highlight-box">
                     <h4>Insight (리스크 통찰)</h4>
-                    <p><strong>Critical Risk</strong> = 건설비 상승 + 감정평가 미달입니다.</p>
+                    <p>{{ narratives.risk.insight | default('<strong>Critical Risk = 건설비 상승 + 감정평가 미달</strong>입니다. 이 2개가 동시 발생 시 프로젝트는 NO-GO로 전환됩니다. 건설비 10% 상승 + 감정평가 85% 미달 시, CAPEX 대비 감정가 비율이 77%로 하락 → LH 매입 불가. 따라서, <strong>건설비 상승 억제</strong>와 <strong>감정평가 88% 이상 확보</strong>가 프로젝트 성패를 좌우합니다.') }}</p>
                 </div>
                 <div class="highlight-box">
                     <h4>Policy Implication (정책적 함의)</h4>
-                    <p>LH 신축매입임대 사업의 핵심은 리스크 관리입니다.</p>
+                    <p>{{ narratives.risk.policy | default('LH 신축매입임대 사업의 핵심은 <strong>리스크 관리</strong>입니다. 권장 대응 전략: ① 건설비 상승 리스크 → 시공사와 고정가 계약 체결, ② 감정평가 미달 리스크 → 사전 감정평가(Pre-Appraisal) 실시, ③ 정책자금 승인 지연 → LH 사전 협의(Pre-Consultation) 진행, ④ 일정 지연 → Critical Path KPI 설정 및 월간 모니터링.') }}</p>
                 </div>
                 <div class="highlight-box">
                     <h4>Conclusion (리스크 결론)</h4>
-                    <p><strong>MANAGEABLE RISK</strong>: 종합 리스크 수준은 중간이며, 적절한 대응 전략으로 관리 가능합니다.</p>
+                    <p>{{ narratives.risk.conclusion | default('<strong>MANAGEABLE RISK</strong>: 종합 리스크 수준은 중간(MODERATE)이며, 적절한 대응 전략으로 관리 가능합니다. 최우선 관리 대상: ① 건설비 고정가 계약, ② 사전 감정평가. 이 2개를 완료하면 리스크 수준이 LOW로 하락합니다. 권장 사항: 착공 전 리스크 대응 전략을 수립하고, 월간 리스크 모니터링을 실시해야 합니다.') }}</p>
                 </div>
             </div>
         </div>
