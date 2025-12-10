@@ -81,14 +81,28 @@ class SensitivityAnalyzer:
         summary = self._calculate_summary(scenarios)
         
         # Generate tornado diagram data
-        tornado_data = self._generate_tornado_data(scenarios)
+        tornado_dict = self._generate_tornado_data(scenarios)
+        
+        # Transform tornado data for template (list of dicts)
+        tornado_list = []
+        for factor in tornado_dict['factors']:
+            tornado_list.append({
+                'variable': f"{factor['factor']} ({factor['variation']})",
+                'range_display': factor['variation'],
+                'downside_eok': round(factor['impact_negative'], 2),
+                'upside_eok': round(factor['impact_positive'], 2),
+                'variability_eok': round(factor['total_range'], 2),
+                'relative_importance': round(factor['total_range'] / tornado_dict['factors'][0]['total_range'] * 100, 1) if tornado_dict['factors'][0]['total_range'] > 0 else 0
+            })
         
         logger.info(f"✅ 민감도 분석 완료: {len(scenarios)}개 시나리오")
+        logger.info(f"   가장 민감한 변수: {tornado_dict['most_sensitive']}")
         
         return {
             'scenarios': scenarios,
             'summary': summary,
-            'tornado_data': tornado_data,
+            'tornado_data': tornado_list,
+            'tornado_raw': tornado_dict,  # Keep original for reference
             'analysis_date': '2025-12-10',
             'methodology': 'CAPEX ±10%, 감정평가율 ±5% (9개 시나리오)'
         }
@@ -149,8 +163,11 @@ class SensitivityAnalyzer:
         
         return {
             'scenario_name': scenario_name,
+            'is_base': (capex_variation == 0 and appraisal_variation == 0),
             'capex_variation_pct': capex_variation * 100,
             'appraisal_variation_pct': appraisal_variation * 100,
+            'capex_eok': round(adjusted_capex / 1e8, 2),
+            'appraisal_rate': adjusted_appraisal_rate,
             'adjusted_capex_won': adjusted_capex,
             'adjusted_capex_eok': round(adjusted_capex / 1e8, 2),
             'adjusted_appraisal_rate': adjusted_appraisal_rate,

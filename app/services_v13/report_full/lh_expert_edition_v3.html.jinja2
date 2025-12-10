@@ -3735,6 +3735,205 @@
     </div>
     {% endif %}
     
+    <!-- v23 NEW: CAPEX & 감정평가율 종합 민감도 분석 (Comprehensive Sensitivity Analysis) -->
+    {% if sensitivity_analysis_v23 %}
+    <div class="content-block" style="page-break-before: always;">
+        <h3 class="content-title">{{ "6.5" if policy_finance else "6.4" }} v23 종합 민감도 분석 (CAPEX ±10% × 감정평가율 ±5%)</h3>
+        
+        <div class="highlight-box" style="background: linear-gradient(135deg, #fff3e0, #ffe0b2); border-left: 5px solid #ff9800;">
+            <h4>🎯 v23 고급 민감도 분석: 핵심 변수 영향 평가</h4>
+            <p><strong>분석 목적:</strong> CAPEX와 감정평가율의 변동이 사업 수익성에 미치는 영향을 체계적으로 분석하여, 의사결정 리스크를 최소화합니다.</p>
+            <ul style="margin-top: 10px; margin-left: 20px; line-height: 1.8;">
+                <li><strong>변수 1:</strong> CAPEX ±10% (270억 ~ 300억 ~ 330억)</li>
+                <li><strong>변수 2:</strong> 감정평가율 ±5% (87% ~ 92% ~ 97%)</li>
+                <li><strong>분석 시나리오:</strong> 총 9개 조합 (3×3 매트릭스)</li>
+                <li><strong>핵심 지표:</strong> 수익(억원), ROI(%), IRR(%), GO/NO-GO 판단</li>
+            </ul>
+        </div>
+        
+        <!-- v23 Summary Statistics -->
+        {% set base_scenario = sensitivity_scenarios | selectattr('is_base', 'equalto', true) | list | first %}
+        <div class="strategy-box" style="margin-top: 20px;">
+            <h4>📊 민감도 분석 요약</h4>
+            <table class="data-table" style="margin-top: 15px;">
+                <thead>
+                    <tr>
+                        <th>지표</th>
+                        <th>최소값</th>
+                        <th>기준값</th>
+                        <th>최대값</th>
+                        <th>변동폭</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="bold">수익 (억원)</td>
+                        <td class="number" style="color: #d32f2f;">{{ sensitivity_summary.profit_min_eok | round(2) }}</td>
+                        <td class="number" style="color: #f57c00;">{{ base_scenario.profit_eok | round(2) }}</td>
+                        <td class="number" style="color: #2e7d32;">{{ sensitivity_summary.profit_max_eok | round(2) }}</td>
+                        <td class="number bold" style="color: #0d47a1;">{{ sensitivity_summary.profit_range_eok | round(2) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bold">ROI (%)</td>
+                        <td class="number" style="color: #d32f2f;">{{ sensitivity_summary.roi_min_pct | round(2) }}%</td>
+                        <td class="number" style="color: #f57c00;">{{ base_scenario.roi_pct | round(2) }}%</td>
+                        <td class="number" style="color: #2e7d32;">{{ sensitivity_summary.roi_max_pct | round(2) }}%</td>
+                        <td class="number bold" style="color: #0d47a1;">{{ sensitivity_summary.roi_range_pct | round(2) }}%p</td>
+                    </tr>
+                    <tr>
+                        <td class="bold">IRR (%)</td>
+                        <td class="number" style="color: #d32f2f;">{{ sensitivity_summary.irr_min_pct | round(2) }}%</td>
+                        <td class="number" style="color: #f57c00;">{{ base_scenario.irr_pct | round(2) }}%</td>
+                        <td class="number" style="color: #2e7d32;">{{ sensitivity_summary.irr_max_pct | round(2) }}%</td>
+                        <td class="number bold" style="color: #0d47a1;">{{ sensitivity_summary.irr_range_pct | round(2) }}%p</td>
+                    </tr>
+                    <tr style="background: #e3f2fd;">
+                        <td class="bold">의사결정</td>
+                        <td colspan="3" class="bold" style="text-align: center;">
+                            GO {{ sensitivity_summary.go_count }}개 ({{ sensitivity_summary.go_probability_pct | round(1) }}%) / 
+                            NO-GO {{ sensitivity_summary.no_go_count }}개 ({{ (100 - sensitivity_summary.go_probability_pct) | round(1) }}%)
+                        </td>
+                        <td class="bold" style="text-align: center; {% if sensitivity_summary.go_probability_pct >= 50 %}color: #2e7d32;{% else %}color: #d32f2f;{% endif %}">
+                            {% if sensitivity_summary.go_probability_pct >= 50 %}
+                            ✓ 사업 가능
+                            {% else %}
+                            ✗ 사업 위험
+                            {% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- v23 9-Scenario Matrix -->
+        <div class="strategy-box" style="margin-top: 20px;">
+            <h4>🔍 상세 시나리오 분석 (9개 조합)</h4>
+            <table class="data-table" style="margin-top: 15px; font-size: 0.9em;">
+                <thead>
+                    <tr>
+                        <th rowspan="2">CAPEX<br>(억원)</th>
+                        <th rowspan="2">감정평가율<br>(%)</th>
+                        <th rowspan="2">LH 매입가<br>(억원)</th>
+                        <th rowspan="2">수익<br>(억원)</th>
+                        <th rowspan="2">ROI<br>(%)</th>
+                        <th rowspan="2">IRR<br>(%)</th>
+                        <th rowspan="2">판단</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scenario in sensitivity_scenarios %}
+                    <tr {% if scenario.is_base %}style="background: #fff9c4; font-weight: 600;"{% elif 'GO' in scenario.decision %}style="background: #e8f5e9;"{% else %}style="background: #ffebee;"{% endif %}>
+                        <td class="number">{{ scenario.capex_eok | round(1) }}</td>
+                        <td class="number">{{ (scenario.appraisal_rate * 100) | round(0) }}%</td>
+                        <td class="number">{{ scenario.lh_purchase_price_eok | round(1) }}</td>
+                        <td class="number" style="{% if scenario.profit_eok >= 0 %}color: #2e7d32;{% else %}color: #d32f2f;{% endif %} font-weight: 600;">
+                            {{ scenario.profit_eok | round(2) }}
+                        </td>
+                        <td class="number" style="{% if scenario.roi_pct >= 8.0 %}color: #2e7d32;{% else %}color: #d32f2f;{% endif %}">
+                            {{ scenario.roi_pct | round(2) }}%
+                        </td>
+                        <td class="number" style="{% if scenario.irr_pct >= 8.0 %}color: #2e7d32;{% elif scenario.irr_pct >= 2.0 %}color: #f57c00;{% else %}color: #d32f2f;{% endif %}">
+                            {{ scenario.irr_pct | round(2) }}%
+                        </td>
+                        <td class="bold" style="text-align: center; {% if 'GO' in scenario.decision %}color: #2e7d32;{% else %}color: #d32f2f;{% endif %}">
+                            {{ scenario.decision }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <p style="margin-top: 15px; font-size: 0.95em; color: #666;">
+                <strong>📌 주석:</strong> 
+                <span style="background: #fff9c4; padding: 2px 6px; border-radius: 3px; margin-left: 5px;">■ 기준 시나리오</span>
+                <span style="background: #e8f5e9; padding: 2px 6px; border-radius: 3px; margin-left: 5px;">■ GO 시나리오</span>
+                <span style="background: #ffebee; padding: 2px 6px; border-radius: 3px; margin-left: 5px;">■ NO-GO 시나리오</span>
+            </p>
+        </div>
+        
+        <!-- v23 Tornado Diagram Data -->
+        <div class="strategy-box" style="margin-top: 20px;">
+            <h4>📈 토네이도 다이어그램: 변수별 영향도 순위</h4>
+            <p style="margin-bottom: 15px;">각 변수가 사업 수익에 미치는 영향을 정량화하여 중요도를 시각화합니다.</p>
+            
+            <table class="data-table" style="margin-top: 15px;">
+                <thead>
+                    <tr>
+                        <th>순위</th>
+                        <th>변수명</th>
+                        <th>변동폭</th>
+                        <th>음(−) 영향</th>
+                        <th>양(+) 영향</th>
+                        <th>총 변동폭</th>
+                        <th>상대적 영향력</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in sensitivity_tornado %}
+                    <tr {% if loop.index == 1 %}style="background: #fff3e0;"{% endif %}>
+                        <td class="bold" style="text-align: center; {% if loop.index == 1 %}color: #e65100; font-size: 1.1em;{% endif %}">{{ loop.index }}</td>
+                        <td class="bold">{{ item.variable }}</td>
+                        <td class="number">{{ item.range_display }}</td>
+                        <td class="number" style="color: #d32f2f;">{{ item.downside_eok | round(2) }}억</td>
+                        <td class="number" style="color: #2e7d32;">{{ item.upside_eok | round(2) }}억</td>
+                        <td class="number bold" style="color: #0d47a1; font-size: 1.05em;">{{ item.variability_eok | round(2) }}억</td>
+                        <td style="text-align: center;">
+                            <div style="background: linear-gradient(90deg, #e8f5e9 0%, #ff9800 {{ item.relative_importance }}%, #ffebee 100%); height: 20px; border-radius: 3px; position: relative;">
+                                <span style="position: absolute; width: 100%; text-align: center; font-weight: 600; color: #000; line-height: 20px;">
+                                    {% if loop.index == 1 %}🔥 {{ item.relative_importance }}%{% else %}{{ item.relative_importance }}%{% endif %}
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <p style="margin-top: 15px; padding: 15px; background: #fff3e0; border-left: 4px solid #ff9800; font-weight: 500;">
+                <strong>💡 핵심 인사이트:</strong> 
+                {{ sensitivity_tornado[0].variable }}가 가장 민감한 변수로, 
+                {{ sensitivity_tornado[0].range_display }} 변동 시 수익이 {{ sensitivity_tornado[0].variability_eok | round(2) }}억원 변동합니다. 
+                {% if sensitivity_tornado | length > 1 %}
+                이는 {{ sensitivity_tornado[1].variable }}({{ sensitivity_tornado[1].variability_eok | round(2) }}억)보다 
+                {{ (sensitivity_tornado[0].variability_eok / sensitivity_tornado[1].variability_eok) | round(1) }}배 더 큰 영향력을 가집니다.
+                {% endif %}
+            </p>
+        </div>
+        
+        <!-- v23 Strategic Recommendations -->
+        <div class="highlight-box" style="margin-top: 20px; background: linear-gradient(135deg, #e1f5fe, #b3e5fc); border-left: 5px solid #0288d1;">
+            <h4>🎯 전략적 제언</h4>
+            <p><strong>민감도 분석 결과를 기반으로 한 사업 추진 전략:</strong></p>
+            
+            <ol style="margin-top: 10px; margin-left: 20px; line-height: 2.0;">
+                <li>
+                    <strong>CAPEX 최적화:</strong> 
+                    {% if sensitivity_tornado[0].variable == 'CAPEX (±10%)' %}
+                    CAPEX가 가장 민감한 변수이므로, 토지비·공사비 절감을 최우선 과제로 삼아야 합니다. 
+                    CAPEX 10% 절감 시 수익이 약 {{ sensitivity_tornado[0].upside_eok | abs | round(1) }}억 개선됩니다.
+                    {% else %}
+                    CAPEX 관리를 철저히 하여 예산 초과를 방지해야 합니다.
+                    {% endif %}
+                </li>
+                <li>
+                    <strong>감정평가율 협상:</strong> 
+                    LH와의 사전 협의를 통해 최소 {{ (base_scenario.appraisal_rate * 100) | round(0) }}% 이상의 감정평가율을 확보해야 합니다. 
+                    5%p 상승 시 수익이 약 {{ (sensitivity_tornado | selectattr('variable', 'search', '감정평가율') | list | first).upside_eok | round(1) }}억 개선됩니다.
+                </li>
+                <li>
+                    <strong>리스크 관리:</strong> 
+                    현재 GO 확률은 {{ sensitivity_summary.go_probability_pct | round(1) }}%입니다. 
+                    {% if sensitivity_summary.go_probability_pct < 50 %}
+                    사업 추진 시 CAPEX 절감 또는 감정평가율 상향 전략이 필수적입니다.
+                    {% else %}
+                    사업 추진이 가능하나, CAPEX 초과 방지를 위한 철저한 관리가 필요합니다.
+                    {% endif %}
+                </li>
+            </ol>
+        </div>
+    </div>
+    {% endif %}
+    
     <!-- v18 NEW: 거래형 재무 분석 섹션 (Transaction-Based Financial Analysis) -->
     {% if v18_transaction %}
     <div class="content-block" style="page-break-before: always;">
