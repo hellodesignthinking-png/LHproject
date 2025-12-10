@@ -2878,24 +2878,91 @@
     </div>
     
     <div class="content-block">
-        <h3 class="content-title">4.1 시장 신호 분석</h3>
+        <h3 class="content-title">4.1 실거래가 기반 토지가격 분석 (NEW v23)</h3>
+        
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">데이터 신뢰도</div>
+                <div class="metric-value" style="font-size: 13pt;">{{ land_data_reliability | default('MEDIUM') }}</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">거래 사례 수</div>
+                <div class="metric-value">{{ land_trade_count | default(0) }}<span class="metric-unit">건</span></div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">평균 단가</div>
+                <div class="metric-value">{{ (market_land_price_man_per_sqm | default(0)) | round(1) }}<span class="metric-unit">만원/㎡</span></div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">시장 토지가치</div>
+                <div class="metric-value">{{ (market_land_value_eok | default(0)) | round(2) }}<span class="metric-unit">억원</span></div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 10px; padding: 8px; background-color: #f8f9fa; border-left: 3px solid #0066cc;">
+            <p style="margin: 0; font-size: 9pt; color: #333;">
+                <strong>데이터 소스:</strong> {{ land_data_source | default('최근 12개월 실거래가 평균') }}
+            </p>
+        </div>
+    </div>
+    
+    {% if land_trades and land_trades|length > 0 %}
+    <div class="content-block">
+        <h3 class="content-title">4.1.1 최근 거래 사례 (Top 10)</h3>
+        
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>거래일</th>
+                    <th>면적(㎡)</th>
+                    <th>금액(만원)</th>
+                    <th>단가(만원/㎡)</th>
+                    <th>위치</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for trade in land_trades[:10] %}
+                <tr>
+                    <td class="number">{{ loop.index }}</td>
+                    <td class="number">{{ trade.deal_date }}</td>
+                    <td class="number">{{ (trade.land_area | default(0)) | round(1) }}</td>
+                    <td class="number">{{ '{:,.0f}'.format(trade.deal_amount | default(0)) }}</td>
+                    <td class="number bold">{{ (trade.price_per_sqm | default(0)) | round(1) }}</td>
+                    <td>{{ trade.dong | default('') }} {{ trade.jibun | default('') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" class="bold">평균</td>
+                    <td class="number bold">{{ (market_land_price_man_per_sqm | default(0)) | round(1) }}</td>
+                    <td>-</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    {% endif %}
+    
+    <div class="content-block">
+        <h3 class="content-title">4.2 시장 신호 분석</h3>
         
         <div class="metrics-grid">
             <div class="metric-card">
                 <div class="metric-label">Market Signal</div>
-                <div class="metric-value" style="font-size: 13pt;">{{ market_signal }}</div>
+                <div class="metric-value" style="font-size: 13pt;">{{ market_signal | default('NEUTRAL') }}</div>
             </div>
             <div class="metric-card">
                 <div class="metric-label">시장 온도</div>
-                <div class="metric-value" style="font-size: 13pt;">{{ market_temperature }}</div>
+                <div class="metric-value" style="font-size: 13pt;">{{ market_temperature | default('NORMAL') }}</div>
             </div>
             <div class="metric-card">
                 <div class="metric-label">가격 차이</div>
-                <div class="metric-value">{{ market_delta_pct | round(1) }}<span class="metric-unit">%</span></div>
+                <div class="metric-value">{{ (market_delta_pct | default(0)) | round(1) }}<span class="metric-unit">%</span></div>
             </div>
             <div class="metric-card">
                 <div class="metric-label">ZeroSite 산정가</div>
-                <div class="metric-value">{{ zerosite_price_man_per_sqm }}<span class="metric-unit">만원/㎡</span></div>
+                <div class="metric-value">{{ (zerosite_price_man_per_sqm | default(0)) }}<span class="metric-unit">만원/㎡</span></div>
             </div>
         </div>
     </div>
@@ -2939,7 +3006,136 @@
     </div>
     
     <div class="content-block">
-        <h3 class="content-title">4.3 가격 비교 분석</h3>
+        <h3 class="content-title">4.3 3계층 토지가격 비교 분석 (v23 Real Land Value Engine)</h3>
+        
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th rowspan="2">구분</th>
+                    <th rowspan="2">단가 (만원/㎡)</th>
+                    <th rowspan="2">총액 (억원)</th>
+                    <th colspan="2">시장가 대비</th>
+                </tr>
+                <tr>
+                    <th>차이(억원)</th>
+                    <th>비율(%)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="background-color: #e3f2fd;">
+                    <td class="bold">① 시장 토지가 (Market)</td>
+                    <td class="number bold">{{ (market_land_price_man_per_sqm | default(0)) | round(1) }}</td>
+                    <td class="number bold">{{ (market_land_value_eok | default(0)) | round(2) }}</td>
+                    <td class="number">-</td>
+                    <td class="number">100.0%</td>
+                </tr>
+                <tr>
+                    <td class="bold">② LH 감정평가 (Appraisal)</td>
+                    <td class="number">{{ ((lh_land_appraisal_eok | default(0)) / (land_area_sqm | default(1)) * 10000) | round(1) }}</td>
+                    <td class="number">{{ (lh_land_appraisal_eok | default(0)) | round(2) }}</td>
+                    <td class="number">{{ ((lh_land_appraisal_eok | default(0)) - (market_land_value_eok | default(0))) | round(2) }}</td>
+                    <td class="number">{{ (((lh_land_appraisal_eok | default(0)) / (market_land_value_eok | default(1))) * 100) | round(1) }}%</td>
+                </tr>
+                <tr>
+                    <td class="bold">③ CAPEX 토지비 (Fallback)</td>
+                    <td class="number">{{ ((land_cost_eok | default(0)) / (land_area_sqm | default(1)) * 10000) | round(1) }}</td>
+                    <td class="number">{{ (land_cost_eok | default(0)) | round(2) }}</td>
+                    <td class="number">{{ ((land_cost_eok | default(0)) - (market_land_value_eok | default(0))) | round(2) }}</td>
+                    <td class="number">{{ (((land_cost_eok | default(0)) / (market_land_value_eok | default(1))) * 100) | round(1) }}%</td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="5" class="bold" style="padding: 15px; background-color: #fff3cd;">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <span>💡 <strong>Insight:</strong> 
+                            {% if (market_land_value_eok | default(0)) > 0 %}
+                                시장가 대비 LH 감정평가는 {{ (((lh_land_appraisal_eok | default(0)) / (market_land_value_eok | default(1))) * 100) | round(1) }}% 수준입니다.
+                                {% if ((lh_land_appraisal_eok | default(0)) / (market_land_value_eok | default(1))) < 0.9 %}
+                                    <span style="color: #d32f2f;">⚠️ 감정평가 미달 리스크 존재</span>
+                                {% else %}
+                                    <span style="color: #388e3c;">✅ 감정평가 양호</span>
+                                {% endif %}
+                            {% else %}
+                                실거래가 데이터 부족으로 CAPEX 기반 추정값 사용
+                            {% endif %}
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+        
+        <div style="margin-top: 15px; padding: 12px; background-color: #f5f5f5; border-radius: 4px;">
+            <h4 style="margin: 0 0 8px 0; font-size: 10pt; color: #333;">📌 3계층 가격 산정 방식</h4>
+            <ul style="margin: 0; padding-left: 20px; font-size: 9pt; line-height: 1.6;">
+                <li><strong>시장 토지가:</strong> 최근 12개월 실거래가 평균 ({{ land_trade_count | default(0) }}건 분석)</li>
+                <li><strong>LH 감정평가:</strong> 시장가 × 92% (LH 표준 감정평가율)</li>
+                <li><strong>CAPEX 토지비:</strong> 총사업비 내 토지비 비율 (데이터 부족 시 Fallback)</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="content-block">
+        <h3 class="content-title">4.4 종합 가격 비교 (실거래가 vs LH vs CAPEX)</h3>
+        
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>구분</th>
+                    <th>토지가 (억원)</th>
+                    <th>건물가 (억원)</th>
+                    <th>총액 (억원)</th>
+                    <th>비고</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="background-color: #e3f2fd;">
+                    <td class="bold">시장 기준 (Market)</td>
+                    <td class="number bold">{{ (market_land_value_eok | default(0)) | round(2) }}</td>
+                    <td class="number">-</td>
+                    <td class="number bold">{{ (market_land_value_eok | default(0)) | round(2) }}</td>
+                    <td>실거래가 평균</td>
+                </tr>
+                <tr>
+                    <td class="bold">LH 감정평가 (Appraisal)</td>
+                    <td class="number">{{ (lh_land_appraisal_eok | default(0)) | round(2) }}</td>
+                    <td class="number">{{ (lh_building_appraisal_eok | default(0)) | round(2) }}</td>
+                    <td class="number bold">{{ (lh_total_appraisal_eok | default(0)) | round(2) }}</td>
+                    <td>토지 92% + 건물 350만원/㎡</td>
+                </tr>
+                <tr>
+                    <td class="bold">CAPEX 예산 (Budget)</td>
+                    <td class="number">{{ (land_cost_eok | default(0)) | round(2) }}</td>
+                    <td class="number">{{ (direct_cost_eok | default(0)) | round(2) }}</td>
+                    <td class="number bold">{{ (capex_eok | default(0)) | round(2) }}</td>
+                    <td>총사업비 기준</td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="5" class="bold">평가 결과</td>
+                </tr>
+                <tr>
+                    <td colspan="5" style="padding: 12px;">
+                        {% if (lh_total_appraisal_eok | default(0)) > (capex_eok | default(0)) %}
+                            <span style="color: #388e3c; font-weight: bold;">✅ GO: LH 매입가({{ (lh_total_appraisal_eok | default(0)) | round(2) }}억) &gt; CAPEX({{ (capex_eok | default(0)) | round(2) }}억)</span><br>
+                            <span style="font-size: 9pt;">→ 예상 수익: <strong>{{ ((lh_total_appraisal_eok | default(0)) - (capex_eok | default(0))) | round(2) }}억원</strong></span>
+                        {% elif (lh_total_appraisal_eok | default(0)) > (capex_eok | default(0)) * 0.95 %}
+                            <span style="color: #f57c00; font-weight: bold;">⚠️ CONDITIONAL: LH 매입가({{ (lh_total_appraisal_eok | default(0)) | round(2) }}억) ≈ CAPEX({{ (capex_eok | default(0)) | round(2) }}억)</span><br>
+                            <span style="font-size: 9pt;">→ 감정평가 상승 필요</span>
+                        {% else %}
+                            <span style="color: #d32f2f; font-weight: bold;">❌ NO-GO: LH 매입가({{ (lh_total_appraisal_eok | default(0)) | round(2) }}억) &lt; CAPEX({{ (capex_eok | default(0)) | round(2) }}억)</span><br>
+                            <span style="font-size: 9pt;">→ 예상 손실: <strong>{{ ((lh_total_appraisal_eok | default(0)) - (capex_eok | default(0))) | round(2) }}억원</strong></span>
+                        {% endif %}
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    
+    <div class="content-block">
+        <h3 class="content-title">4.5 가격 평가 결과</h3>
         
         <table class="data-table">
             <thead>
@@ -2959,7 +3155,7 @@
                 </tr>
                 <tr>
                     <td class="bold">시장 평균가</td>
-                    <td class="number">{{ (market_price_man_per_sqm | default(0)) | round(1) }}</td>
+                    <td class="number">{{ (market_land_price_man_per_sqm | default(0)) | round(1) }}</td>
                     <td class="number">{{ (market_land_value_eok | default(0)) | round(2) }}</td>
                     <td class="number">{{ (market_delta_pct | default(0)) | round(1) }}%</td>
                 </tr>

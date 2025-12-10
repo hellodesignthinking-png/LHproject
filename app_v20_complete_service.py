@@ -22,6 +22,14 @@ from pathlib import Path
 from datetime import datetime
 import json
 import os
+import logging
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(levelname)s:%(name)s:%(message)s'
+)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
@@ -1110,29 +1118,109 @@ def add_template_aliases(context):
     ctx['total_construction_cost_eok'] = to_eok(capex_won)
     ctx['total_project_cost_eok'] = to_eok(capex_won)
     
+    logger.info(f"📊 CAPEX 기본값: {ctx['capex_eok']:.2f}억원")
+    
     # ========================================================================
-    # v23 FIX #2: MARKET VALUATION - Transaction-based Market Price
+    # v23 REAL LAND VALUE ENGINE - Transaction-based Market Price
     # ========================================================================
-    # Market price = Real transaction data (실거래가 기반)
-    # This is DIFFERENT from construction cost
+    # NEW: Use actual government real estate transaction API
+    # 3-Layer Land Valuation: Market → LH Appraisal → CAPEX Fallback
     
-    # Get actual market data from context (if available)
-    v18_transaction = ctx.get('v18_transaction', {})
-    land_comps = v18_transaction.get('land_comps', [])
+    try:
+        from app.services_v13.land_trade_api import LandValueCalculator, get_lawd_code_from_address
+        
+        # Initialize calculator
+        calculator = LandValueCalculator()
+        
+        # Extract address and lawd_code
+        address = ctx.get('address', '서울특별시 강남구 역삼동 825')
+        lawd_cd = get_lawd_code_from_address(address)
+        appraisal_price_input = ctx.get('appraisal_price', 20000000)  # 만원/㎡
+        
+        # Calculate all land values (Market, LH, CAPEX)
+        land_values = calculator.calculate_all(
+            address=address,
+            lawd_cd=lawd_cd,
+            land_area_sqm=land_area,
+            gross_floor_area=gross_floor_area,
+            capex_won=capex_won,
+            appraisal_price_manwon=appraisal_price_input / 10000  # Convert to 만원/㎡
+        )
+        
+        # Extract Market Value
+        market_data = land_values.get('market', {})
+        market_land_value_won = market_data.get('market_land_value_won', 0)
+        avg_land_price_per_sqm = market_data.get('avg_price_per_sqm', appraisal_price_input)
+        
+        # Store market data
+        ctx['market_land_value_won'] = market_land_value_won
+        ctx['market_land_value_eok'] = to_eok(market_land_value_won)
+        ctx['market_land_price_man_per_sqm'] = round(avg_land_price_per_sqm, 1)
+        
+        # Store trade data for report
+        ctx['land_trades'] = market_data.get('trades', [])
+        ctx['land_trade_count'] = market_data.get('trade_count', 0)
+        ctx['land_data_reliability'] = market_data.get('reliability', 'NONE')
+        ctx['land_data_source'] = market_data.get('data_source', 'CAPEX Fallback')
+        
+        logger.info(f"✅ Real Land Value Engine: {ctx['market_land_value_eok']}억원 (신뢰도: {ctx['land_data_reliability']})")
+        
+    except Exception as e:
+        logger.error(f"❌ Real Land Value Engine 실패, Fallback 적용: {str(e)}")
+        
+        # Fallback to old method
+        v18_transaction = ctx.get('v18_transaction', {})
+        land_comps = v18_transaction.get('land_comps', [])
+        
+        if land_comps and len(land_comps) > 0:
+            avg_land_price_per_sqm = sum([comp.get('unit_price', 0) for comp in land_comps]) / len(land_comps)
+        else:
+            appraisal_price = ctx.get('appraisal_price', 20000000)
+            avg_land_price_per_sqm = appraisal_price * 10000
+        
+        market_land_value_won = avg_land_price_per_sqm * land_area
+        ctx['market_land_value_won'] = market_land_value_won
+        ctx['market_land_value_eok'] = to_eok(market_land_value_won)
+        ctx['market_land_price_man_per_sqm'] = to_man_per_sqm(avg_land_price_per_sqm)
+        
+        # Empty trade data
+        ctx['land_trades'] = []
+        ctx['land_trade_count'] = 0
+        ctx['land_data_reliability'] = 'LOW'
+        ctx['land_data_source'] = 'Fallback (Old Method)'
     
-    # Calculate market-based land value (NOT construction cost)
-    if land_comps and len(land_comps) > 0:
-        # Use average transaction price from comparable sales
-        avg_land_price_per_sqm = sum([comp.get('unit_price', 0) for comp in land_comps]) / len(land_comps)
-    else:
-        # Fallback: estimate from appraisal price
-        appraisal_price = ctx.get('appraisal_price', 20000000)  # 만원/㎡
-        avg_land_price_per_sqm = appraisal_price * 10000  # Convert to KRW/㎡
+    # ========================================================================
+    # v23 IMPROVEMENT #1: Dynamic CAPEX Land Cost Calculation (Execute Here)
+    # ========================================================================
+    # NOW market_land_value_won is defined, execute dynamic calculation
     
-    # Market valuation for LAND only (토지 시장가치)
-    market_land_value_won = avg_land_price_per_sqm * land_area
-    ctx['market_land_value_eok'] = to_eok(market_land_value_won)
-    ctx['market_land_price_man_per_sqm'] = to_man_per_sqm(avg_land_price_per_sqm)
+    try:
+        from app.services_v13.dynamic_capex_calculator import DynamicCapexCalculator
+        
+        capex_calculator = DynamicCapexCalculator()
+        
+        # Dynamic land cost calculation
+        land_cost_result = capex_calculator.calculate_dynamic_land_cost(
+            market_land_value=market_land_value_won,
+            capex_total=capex_won,
+            use_dynamic=True  # Set to False to use old fixed 25% method
+        )
+        
+        land_cost_won_dynamic = land_cost_result['land_cost_won']
+        ctx['land_cost_eok_dynamic'] = land_cost_result['land_cost_eok']
+        ctx['land_cost_ratio_pct'] = land_cost_result['land_cost_ratio_pct']
+        ctx['land_cost_method'] = land_cost_result['method']
+        ctx['land_cost_recommendation'] = land_cost_result['recommendation']
+        
+        # Store full result for reporting
+        ctx['dynamic_land_cost_analysis'] = land_cost_result
+        
+        logger.info(f"✅ Dynamic Land Cost: {ctx['land_cost_eok_dynamic']:.2f}억원 ({ctx['land_cost_ratio_pct']:.1f}%)")
+        
+    except Exception as e:
+        logger.error(f"❌ Dynamic Land Cost 계산 실패, Fallback 적용: {str(e)}")
+        land_cost_won_dynamic = None
+        ctx['land_cost_method'] = 'Fixed Ratio (Fallback)'
     
     # ZeroSite Model Valuation (AI-predicted market value)
     # This should come from actual model output, not construction cost
@@ -1299,14 +1387,29 @@ def add_template_aliases(context):
         # Handle string 'inf' or other conversion failures
         ctx['payback_years'] = 30.0  # Default to 30 years if conversion fails
     
+    # Store market_land_value_won with a safe default
+    market_land_value_won = 0  # Will be updated by Real Land Value Engine
+    
+    # ========================================================================
+    # v23 IMPROVEMENT #1: Dynamic CAPEX Land Cost Calculation (Placeholder)
+    # ========================================================================
+    # NOTE: Will be executed AFTER Real Land Value Engine calculates market_land_value_won
+    capex_calculator = None  # Initialize placeholder
+    land_cost_won_from_dynamic = None  # Will be calculated after market_land_value_won is available
+    ctx['land_cost_ratio_pct'] = 25.0  # Default ratio
+    ctx['land_cost_method'] = 'Fixed Ratio (Default)'  # Will be updated
+    
     # ========================================================================
     # v23 FIX #6: CAPEX BREAKDOWN - Correct Unit Calculations
     # ========================================================================
     # Problem: Previously "2.5만원/㎡" appeared (100x too small)
     # Solution: Calculate sqm units AFTER eok conversion
     
-    # Land Cost (typically 25% of CAPEX)
+    # Land Cost (Default 25%, will be overridden by dynamic calculation if available)
     land_cost_won = ctx.get('land_cost_krw', capex_won * 0.25)
+    if land_cost_won_from_dynamic is not None:
+        land_cost_won = land_cost_won_from_dynamic
+    
     ctx['land_cost_eok'] = to_eok(land_cost_won)
     ctx['land_cost_per_sqm_man'] = to_man_per_sqm(land_cost_won / land_area) if land_area > 0 else 0
     
@@ -1336,6 +1439,30 @@ def add_template_aliases(context):
     ctx['building_cost_per_sqm_man'] = to_man_per_sqm(building_capex_won / gross_floor_area) if gross_floor_area > 0 else 0
     
     # ========================================================================
+    # v23 IMPROVEMENT #2: LH Construction Cost Validation
+    # ========================================================================
+    # NEW: LH 인정 건축비 검증
+    
+    try:
+        construction_validation = capex_calculator.validate_construction_cost(
+            capex_building_cost=direct_cost_won,
+            gross_floor_area=gross_floor_area
+        )
+        
+        ctx['construction_validation'] = construction_validation
+        ctx['construction_validation_status'] = construction_validation['status']
+        ctx['construction_validation_message'] = construction_validation['message']
+        
+        if construction_validation['status'] == 'ERROR':
+            logger.warning(f"⚠️ 건축비 검증: {construction_validation['message']}")
+        else:
+            logger.info(f"✅ 건축비 검증: {construction_validation['status']}")
+        
+    except Exception as e:
+        logger.error(f"❌ 건축비 검증 실패: {str(e)}")
+        ctx['construction_validation_status'] = 'UNKNOWN'
+    
+    # ========================================================================
     # v23 FIX #7: MARKET PRICES - Separate from Construction Cost
     # ========================================================================
     # Market price = Transaction-based (already calculated above)
@@ -1343,6 +1470,36 @@ def add_template_aliases(context):
     
     ctx['market_avg_price_per_sqm_man'] = ctx['market_land_price_man_per_sqm']
     ctx['market_price_man_per_sqm'] = ctx['market_land_price_man_per_sqm']
+    
+    # ========================================================================
+    # v23 IMPROVEMENT #3: Sensitivity Analysis
+    # ========================================================================
+    # NEW: CAPEX ±10%, 감정평가율 ±5% 민감도 분석
+    
+    try:
+        from app.services_v13.sensitivity_analysis import SensitivityAnalyzer
+        
+        sensitivity_analyzer = SensitivityAnalyzer()
+        
+        sensitivity_result = sensitivity_analyzer.analyze_comprehensive(
+            base_capex=capex_won,
+            base_appraisal_rate=land_appraisal_rate,
+            market_land_value=market_land_value_won,
+            gross_floor_area=gross_floor_area
+        )
+        
+        ctx['sensitivity_analysis_v23'] = sensitivity_result
+        ctx['sensitivity_scenarios'] = sensitivity_result['scenarios']
+        ctx['sensitivity_summary'] = sensitivity_result['summary']
+        ctx['sensitivity_tornado'] = sensitivity_result['tornado_data']
+        
+        logger.info(f"✅ 민감도 분석 완료: {len(sensitivity_result['scenarios'])}개 시나리오")
+        logger.info(f"   수익 범위: {sensitivity_result['summary']['profit_min_eok']:.2f}억 ~ {sensitivity_result['summary']['profit_max_eok']:.2f}억")
+        logger.info(f"   GO 확률: {sensitivity_result['summary']['go_probability_pct']:.1f}%")
+        
+    except Exception as e:
+        logger.error(f"❌ 민감도 분석 실패: {str(e)}")
+        ctx['sensitivity_analysis_v23'] = None
     
     # v23 DEBUG: Verify critical variables are set
     critical_vars = ['zerosite_market_value_eok', 'zerosite_price_man_per_sqm', 'lh_total_appraisal_eok']
@@ -1352,6 +1509,13 @@ def add_template_aliases(context):
     
     # Keep original KRW values for calculations, but add display versions
     # This way templates can use {{ capex_eok }} 억원 instead of {{ capex_krw }} 억원
+    
+    logger.info("="*80)
+    logger.info("✅ v23 Complete Context Building with Improvements")
+    logger.info(f"   • Dynamic Land Cost: {ctx.get('land_cost_eok', 0):.2f}억 ({ctx.get('land_cost_ratio_pct', 0):.1f}%)")
+    logger.info(f"   • Construction Validation: {ctx.get('construction_validation_status', 'N/A')}")
+    logger.info(f"   • Sensitivity Analysis: {'완료' if ctx.get('sensitivity_analysis_v23') else '미실행'}")
+    logger.info("="*80)
     
     return ctx
 
