@@ -1,0 +1,36 @@
+# Complete list of v3 template variables needed
+
+## Basic Metrics
+building_height_m
+total_investment_eok
+estimated_value_eok
+profit_margin_pct
+roi_pct
+
+## Location
+location_score
+accessibility_score
+subway_distance_m
+bus_stops_nearby
+
+## Market
+market_growth_rate
+competition_level
+demand_supply_ratio
+
+## Policy
+policy_compliance_score
+lh_priority_area
+incentive_available
+
+## Timeline  
+project_start_date
+project_end_date
+construction_start_date
+construction_end_date
+
+## Additional
+floor_height_m
+unit_size_avg
+efficiency_ratio
+green_building_cert

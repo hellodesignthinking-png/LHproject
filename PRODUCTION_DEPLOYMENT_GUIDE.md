@@ -1,387 +1,557 @@
-# 🚀 Production Deployment Guide - Expert Edition v3
+# 🚀 ZeroSite v3 Production Deployment Guide
 
-## ✅ Current Status: READY FOR PRODUCTION
-
-**Date**: 2025-12-06  
-**Version**: Expert Edition v3  
-**API Version**: v13  
-**Status**: ✅ All Systems Operational
+**버전**: v3.0.0  
+**작성일**: 2025-12-10  
+**상태**: PRODUCTION READY ✅
 
 ---
 
-## 📊 What's Fixed
+## 📋 Table of Contents
 
-### **Before (User Complaint)**:
-```
-❌ CAPEX: 0.00억원
-❌ NPV: 0.00억원
-❌ IRR: 0.00%
-❌ Demand: "미제공"
-❌ Market: "미제공"
-❌ PDF: Empty report
-```
+1. [System Requirements](#system-requirements)
+2. [Installation](#installation)
+3. [Configuration](#configuration)
+4. [Deployment Options](#deployment-options)
+5. [API Integration](#api-integration)
+6. [Performance Optimization](#performance-optimization)
+7. [Monitoring & Maintenance](#monitoring--maintenance)
+8. [Troubleshooting](#troubleshooting)
 
-### **After (Current State)**:
+---
+
+## 🖥️ System Requirements
+
+### Minimum Requirements
+- **OS**: Linux (Ubuntu 20.04+) / macOS 10.15+ / Windows 10+
+- **Python**: 3.10+
+- **RAM**: 2GB
+- **Disk**: 500MB
+- **CPU**: 2 cores
+
+### Recommended Requirements
+- **OS**: Linux (Ubuntu 22.04+)
+- **Python**: 3.12+
+- **RAM**: 4GB+
+- **Disk**: 1GB+
+- **CPU**: 4+ cores
+
+### Dependencies
 ```
-✅ CAPEX: 145.18억원 (REAL VALUE)
-✅ NPV: -140.79억원 (REAL VALUE)
-✅ IRR: -3754.63% (REAL VALUE)
-✅ Demand: 64.2 (REAL SCORE)
-✅ Market: UNDERVALUED (REAL SIGNAL)
-✅ HTML: Complete 68-page report
+Python 3.10+
+plotly>=6.5.0
+weasyprint (optional, for PDF)
+jinja2>=3.1.0
 ```
 
 ---
 
-## 🔧 Production API Endpoint
+## 📦 Installation
 
-### **Base URL**: 
-```
-https://your-production-domain.com/api/v13
-```
-
-### **Endpoint**: `POST /api/v13/report`
-
-### **Request Format**:
-```json
-{
-  "address": "서울특별시 마포구 월드컵북로 120",
-  "land_area_sqm": 660.0,
-  "merge": false,
-  "appraisal_price": null
-}
-```
-
-### **Response Format**:
-```json
-{
-  "report_id": "uuid-string",
-  "status": "processing",
-  "message": "Report generation started"
-}
-```
-
-### **Download PDF**: `GET /api/v13/report/{report_id}`
-
-### **Get Summary**: `GET /api/v13/report/{report_id}/summary`
-
----
-
-## 🧪 Testing Your Frontend Integration
-
-### **Step 1: Test API Endpoint Directly**
-
+### 1. Clone Repository
 ```bash
-# Test report generation
-curl -X POST http://localhost:8000/api/v13/report \
+git clone https://github.com/hellodesignthinking-png/LHproject.git
+cd LHproject
+git checkout feature/expert-report-generator  # or main after PR merge
+```
+
+### 2. Create Virtual Environment
+```bash
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
+
+# Or install manually
+pip install plotly>=6.5.0 jinja2>=3.1.0 weasyprint
+```
+
+### 4. Verify Installation
+```bash
+python generate_v3_full_report.py
+# Should generate report in < 2 seconds
+```
+
+---
+
+## ⚙️ Configuration
+
+### Environment Variables
+Create `.env` file:
+```bash
+# Report Configuration
+REPORT_OUTPUT_DIR=generated_reports
+REPORT_TEMPLATE_DIR=app/services_v13/report_full
+
+# Chart Configuration
+CHART_WIDTH=1200
+CHART_HEIGHT=500
+PLOTLY_CDN_VERSION=2.27.0
+
+# Performance
+MAX_CONCURRENT_REPORTS=5
+CACHE_ENABLED=true
+CACHE_TTL=3600
+
+# Logging
+LOG_LEVEL=INFO
+LOG_FILE=zerosite.log
+```
+
+### Config File (config.yaml)
+```yaml
+report:
+  output_dir: "generated_reports"
+  template_dir: "app/services_v13/report_full"
+  default_format: "html"
+  enable_pdf: true
+
+charts:
+  enabled: true
+  width: 1200
+  height: 500
+  interactive: true
+  cdn_version: "2.27.0"
+
+performance:
+  max_concurrent: 5
+  cache_enabled: true
+  cache_ttl: 3600
+
+security:
+  api_key_required: true
+  rate_limit: 100  # requests per hour
+  allowed_origins: ["*"]
+```
+
+---
+
+## 🚀 Deployment Options
+
+### Option 1: Standalone Application
+
+#### Quick Start
+```bash
+cd /path/to/LHproject
+python generate_v3_full_report.py
+```
+
+#### Batch Processing
+```python
+# batch_generate.py
+from generate_v3_full_report import V3FullReportGenerator
+
+generator = V3FullReportGenerator()
+
+projects = [
+    {"address": "서울특별시 강남구 테헤란로 123", "land_area": 1000, ...},
+    {"address": "서울특별시 마포구 월드컵북로 120", "land_area": 1500, ...},
+    # ... more projects
+]
+
+for project in projects:
+    try:
+        html = generator.generate_report(**project)
+        output = generator.save_report(html)
+        print(f"✅ Generated: {output}")
+    except Exception as e:
+        print(f"❌ Error: {e}")
+```
+
+---
+
+### Option 2: Web API (FastAPI)
+
+#### Setup
+```bash
+pip install fastapi uvicorn
+```
+
+#### API Server (`app_api.py`)
+```python
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse, FileResponse
+from pydantic import BaseModel
+from generate_v3_full_report import V3FullReportGenerator
+import os
+
+app = FastAPI(title="ZeroSite Report API", version="3.0.0")
+generator = V3FullReportGenerator()
+
+class ReportRequest(BaseModel):
+    address: str
+    land_area: float
+    land_params: dict
+    unit_type: str = "청년"
+    land_price_per_sqm: float = 5_000_000
+
+@app.post("/api/v3/report/generate", response_class=HTMLResponse)
+async def generate_report(request: ReportRequest):
+    """Generate v3 Full Complete Report"""
+    try:
+        html = generator.generate_report(
+            address=request.address,
+            land_area=request.land_area,
+            land_params=request.land_params,
+            unit_type=request.unit_type,
+            land_price_per_sqm=request.land_price_per_sqm
+        )
+        return HTMLResponse(content=html)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v3/report/generate-pdf")
+async def generate_pdf_report(request: ReportRequest):
+    """Generate v3 Report and return PDF"""
+    try:
+        html = generator.generate_report(**request.dict())
+        output_path = generator.save_report(html)
+        
+        # Convert to PDF
+        from weasyprint import HTML
+        pdf_path = output_path.replace(".html", ".pdf")
+        HTML(output_path).write_pdf(pdf_path)
+        
+        return FileResponse(
+            pdf_path,
+            media_type="application/pdf",
+            filename=os.path.basename(pdf_path)
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v3/health")
+async def health_check():
+    """Health check endpoint"""
+    return {"status": "healthy", "version": "3.0.0"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+```
+
+#### Run API Server
+```bash
+python app_api.py
+
+# Or with uvicorn directly
+uvicorn app_api:app --host 0.0.0.0 --port 8000 --reload
+```
+
+#### API Usage Examples
+```bash
+# 1. Generate HTML Report
+curl -X POST "http://localhost:8000/api/v3/report/generate" \
   -H "Content-Type: application/json" \
   -d '{
-    "address": "서울특별시 강남구 역삼동 123",
-    "land_area_sqm": 500.0
-  }'
+    "address": "서울특별시 강남구 테헤란로 123",
+    "land_area": 1000,
+    "land_params": {"bcr": 60, "far": 200, "max_floors": 8, "zone_type": "제2종일반주거지역"},
+    "unit_type": "청년",
+    "land_price_per_sqm": 5000000
+  }' > report.html
 
-# Response:
-# {"report_id": "abc-123-def-456", "status": "success"}
+# 2. Generate PDF Report
+curl -X POST "http://localhost:8000/api/v3/report/generate-pdf" \
+  -H "Content-Type: application/json" \
+  -d '{ ... }' > report.pdf
 
-# Download report
-curl -o test_report.pdf http://localhost:8000/api/v13/report/abc-123-def-456
+# 3. Health Check
+curl "http://localhost:8000/api/v3/health"
 ```
 
-### **Step 2: Verify Financial Values in Response**
+---
+
+### Option 3: Docker Container
+
+#### Dockerfile
+```dockerfile
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    libcairo2 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libgdk-pixbuf2.0-0 \
+    libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application
+COPY . .
+
+# Expose port
+EXPOSE 8000
+
+# Run API server
+CMD ["uvicorn", "app_api:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+#### Build and Run
+```bash
+# Build image
+docker build -t zerosite-v3:latest .
+
+# Run container
+docker run -d -p 8000:8000 --name zerosite-v3 zerosite-v3:latest
+
+# Check logs
+docker logs zerosite-v3
+
+# Stop container
+docker stop zerosite-v3
+```
+
+#### Docker Compose (`docker-compose.yml`)
+```yaml
+version: '3.8'
+
+services:
+  zerosite-api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - LOG_LEVEL=INFO
+      - CACHE_ENABLED=true
+    volumes:
+      - ./generated_reports:/app/generated_reports
+    restart: unless-stopped
+```
 
 ```bash
-# Get report summary
-curl http://localhost:8000/api/v13/report/abc-123-def-456/summary
-
-# Expected response:
-{
-  "report_id": "abc-123-def-456",
-  "address": "서울특별시 강남구 역삼동 123",
-  "housing_type": "청년형",
-  "npv_krw": -14079349335.97,
-  "irr_pct": -3754.63,
-  "payback_years": "N/A",
-  "market_signal": "UNDERVALUED",
-  "generated_at": "2025-12-06T..."
-}
+docker-compose up -d
 ```
 
 ---
 
-## 🔍 Verification Checklist
+## 🔌 API Integration
 
-### **Before Deploying to Production**:
-
-- [x] ✅ Context Builder generates 14 sections
-- [x] ✅ Financial Engine calculates real CAPEX/NPV/IRR
-- [x] ✅ Demand Predictor returns scores (Phase 6.8)
-- [x] ✅ Market Analyzer returns signals (Phase 7.7)
-- [x] ✅ HTML generation produces 50+ page reports
-- [x] ✅ Unit conversion (KRW → 억원) working
-- [x] ✅ Test suite passes all validations
-- [ ] ⏳ PDF export library conflict resolved (optional)
-- [ ] ⏳ Frontend integration tested
-- [ ] ⏳ End-to-end user flow tested
-
----
-
-## 📱 Frontend Integration Code
-
-### **React/TypeScript Example**:
-
-```typescript
-// API call to generate report
-async function generateReport(address: string, landArea: number) {
-  const response = await fetch('/api/v13/report', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      address: address,
-      land_area_sqm: landArea,
-      merge: false
-    })
-  });
-  
-  const data = await response.json();
-  return data.report_id;
-}
-
-// Download PDF
-async function downloadReport(reportId: string) {
-  const response = await fetch(`/api/v13/report/${reportId}`);
-  const blob = await response.blob();
-  
-  // Create download link
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `LH_Report_${reportId}.pdf`;
-  a.click();
-}
-
-// Get summary for display
-async function getReportSummary(reportId: string) {
-  const response = await fetch(`/api/v13/report/${reportId}/summary`);
-  const summary = await response.json();
-  
-  return {
-    capex: summary.capex_krw / 100_000_000, // Convert to 억원
-    npv: summary.npv_krw / 100_000_000,
-    irr: summary.irr_pct,
-    demand: summary.demand_score,
-    market: summary.market_signal
-  };
-}
-```
-
----
-
-## 🎯 What Users Will See Now
-
-### **1. Report Generation Page**:
-```
-[입력]
-주소: 서울특별시 강남구 역삼동 123
-토지면적: 500㎡
-
-[버튼] 보고서 생성
-
-[결과]
-✅ 보고서 생성 완료!
-📊 총 사업비: 145.18억원
-📈 순현재가치: -140.79억원
-📊 내부수익률: -3754.63%
-🏠 수요 점수: 64.2
-📈 시장 신호: UNDERVALUED
-
-[다운로드 PDF]
-```
-
-### **2. PDF Report Contents**:
-- ✅ **Cover Page**: Title, date, address
-- ✅ **Executive Summary**: 2-3 pages with real metrics
-- ✅ **Financial Analysis**: NPV, IRR, Cash Flow (10 years)
-- ✅ **Market Analysis**: Signal, Temperature, Competition
-- ✅ **Demand Analysis**: AI scores by housing type
-- ✅ **Policy Framework**: 8-10 pages of regulations
-- ✅ **Implementation Roadmap**: 36-month plan
-- ✅ **Academic Conclusion**: 4-6 pages of research
-- ✅ **Total**: 50-60 pages of professional content
-
----
-
-## 🚨 Troubleshooting
-
-### **Issue 1: Still seeing 0.00억원 in reports**
-**Cause**: Old server cache or not using updated API  
-**Fix**:
-```bash
-# Restart FastAPI server
-pkill -9 uvicorn
-cd /home/user/webapp
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-### **Issue 2: Frontend not calling updated endpoint**
-**Cause**: Frontend still calling old `/api/v11` or `/api/v12`  
-**Fix**: Update frontend to use `/api/v13/report`
-
-### **Issue 3: PDF not downloading**
-**Cause**: Report ID expired or not found  
-**Fix**: Check report cache, regenerate if needed
-
-### **Issue 4: "미제공" still showing**
-**Cause**: Template not updated or old cached template  
-**Fix**: 
-```bash
-# Force template reload
-cd /home/user/webapp
-python -c "from app.services_v13.report_full.report_context_builder import ReportContextBuilder; print('Template loaded')"
-```
-
----
-
-## 📈 Performance Expectations
-
-| **Operation** | **Time** | **Notes** |
-|---------------|----------|-----------|
-| Context Build | ~1.5s | Phase 2.5/6.8/7.7 computation |
-| HTML Generation | ~0.8s | Jinja2 template rendering |
-| PDF Conversion | ~3-5s | WeasyPrint processing (if fixed) |
-| **Total** | **~6s** | End-to-end report generation |
-
----
-
-## 🔐 Security Considerations
-
-### **API Rate Limiting** (Recommended):
+### Python Client
 ```python
-from fastapi_limiter import FastAPILimiter
-from fastapi_limiter.depends import RateLimiter
+import requests
 
-@router.post("/report")
-@limiter.limit("10/minute")  # 10 reports per minute per IP
-async def generate_report(...):
+class ZeroSiteClient:
+    def __init__(self, base_url="http://localhost:8000"):
+        self.base_url = base_url
+    
+    def generate_report(self, project_data):
+        response = requests.post(
+            f"{self.base_url}/api/v3/report/generate",
+            json=project_data
+        )
+        response.raise_for_status()
+        return response.text
+    
+    def generate_pdf(self, project_data):
+        response = requests.post(
+            f"{self.base_url}/api/v3/report/generate-pdf",
+            json=project_data
+        )
+        response.raise_for_status()
+        return response.content
+
+# Usage
+client = ZeroSiteClient()
+html = client.generate_report({
+    "address": "서울특별시 강남구 테헤란로 123",
+    "land_area": 1000,
+    "land_params": {"bcr": 60, "far": 200, "max_floors": 8},
+    "unit_type": "청년"
+})
+```
+
+### JavaScript/Node.js Client
+```javascript
+const axios = require('axios');
+
+async function generateReport(projectData) {
+  const response = await axios.post(
+    'http://localhost:8000/api/v3/report/generate',
+    projectData,
+    { headers: { 'Content-Type': 'application/json' } }
+  );
+  return response.data;
+}
+
+// Usage
+const report = await generateReport({
+  address: "서울특별시 강남구 테헤란로 123",
+  land_area: 1000,
+  land_params: { bcr: 60, far: 200, max_floors: 8 },
+  unit_type: "청년"
+});
+```
+
+---
+
+## ⚡ Performance Optimization
+
+### 1. Caching
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=100)
+def generate_cached_report(address, land_area, unit_type):
+    # Cache report generation for same inputs
+    return generator.generate_report(address, land_area, ...)
+```
+
+### 2. Parallel Processing
+```python
+from concurrent.futures import ThreadPoolExecutor
+
+def generate_multiple_reports(projects):
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = [
+            executor.submit(generator.generate_report, **project)
+            for project in projects
+        ]
+        results = [f.result() for f in futures]
+    return results
+```
+
+### 3. Chart Optimization
+```python
+# Reduce chart resolution for faster rendering
+context["charts"]["cashflow_30year"] = self.chart_generator.generate_cashflow_chart(
+    data,
+    width=800,  # Reduced from 1200
+    height=400   # Reduced from 500
+)
+```
+
+---
+
+## 📊 Monitoring & Maintenance
+
+### Logging Setup
+```python
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('zerosite.log'),
+        logging.StreamHandler()
+    ]
+)
+
+logger = logging.getLogger(__name__)
+logger.info("Report generated successfully")
+```
+
+### Metrics Collection
+```python
+import time
+
+def track_performance(func):
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        result = func(*args, **kwargs)
+        duration = time.time() - start
+        logger.info(f"{func.__name__} took {duration:.2f}s")
+        return result
+    return wrapper
+
+@track_performance
+def generate_report(...):
     ...
 ```
 
-### **Input Validation**:
-- ✅ Address: Max 200 characters
-- ✅ Land Area: 10㎡ ~ 10,000㎡
-- ✅ Zone Type: Enum validation
+### Health Monitoring
+```bash
+# Check API health
+curl http://localhost:8000/api/v3/health
 
-### **Report Storage**:
-- ⚠️ Current: In-memory cache (temporary)
-- 🎯 Recommended: Database + S3/Cloud Storage
-- 🕐 TTL: 24 hours for generated reports
+# Monitor logs
+tail -f zerosite.log
 
----
-
-## 📊 Monitoring & Logging
-
-### **Key Metrics to Track**:
-1. **Report Generation Success Rate**
-   - Target: > 95%
-   - Current: ~100% (in testing)
-
-2. **Generation Time**
-   - Target: < 10s
-   - Current: ~6s average
-
-3. **Financial Values**
-   - Monitor: CAPEX/NPV/IRR non-zero rate
-   - Target: 100% (no more 0.00억원)
-
-4. **User Satisfaction**
-   - Monitor: Report download completion rate
-   - Track: User feedback on data accuracy
-
-### **Logging Example**:
-```python
-logger.info(f"Report generated: {report_id}")
-logger.info(f"  Address: {address}")
-logger.info(f"  CAPEX: {capex_krw/100_000_000:.2f}억원")
-logger.info(f"  NPV: {npv_krw/100_000_000:.2f}억원")
-logger.info(f"  Market: {market_signal}")
-logger.info(f"  Generation time: {elapsed_ms}ms")
+# Check system resources
+htop
 ```
 
 ---
 
-## 🎯 Next Steps for Full Production
+## 🐛 Troubleshooting
 
-### **Phase 1: Immediate (This Week)**
-- [x] ✅ Fix context generation → DONE
-- [x] ✅ Verify financial calculations → DONE
-- [x] ✅ Test HTML generation → DONE
-- [ ] 🔄 Test with live frontend
-- [ ] 🔄 Deploy to staging environment
-- [ ] 🔄 User acceptance testing (UAT)
+### Common Issues
 
-### **Phase 2: Short-term (Next Week)**
-- [ ] 📝 Fix PDF export library conflict
-- [ ] 📝 Add report caching to database
-- [ ] 📝 Implement rate limiting
-- [ ] 📝 Add monitoring dashboard
-- [ ] 📝 Write API documentation (Swagger)
+#### Issue 1: Import Error
+```
+ModuleNotFoundError: No module named 'plotly'
+```
+**Solution**:
+```bash
+pip install plotly>=6.5.0
+```
 
-### **Phase 3: Long-term (Next Month)**
-- [ ] 📝 Implement report versioning
-- [ ] 📝 Add batch report generation
-- [ ] 📝 Create admin panel for reports
-- [ ] 📝 Add export formats (Excel, Word)
-- [ ] 📝 Implement A/B testing for templates
+#### Issue 2: Template Not Found
+```
+jinja2.exceptions.TemplateNotFound: lh_expert_edition_v3.html.jinja2
+```
+**Solution**:
+```bash
+# Ensure template directory exists
+ls app/services_v13/report_full/lh_expert_edition_v3.html.jinja2
+```
 
----
+#### Issue 3: PDF Generation Fails
+```
+OSError: cannot load library 'cairo'
+```
+**Solution** (Ubuntu/Debian):
+```bash
+sudo apt-get install libcairo2 libpango-1.0-0 libpangocairo-1.0-0
+pip install weasyprint
+```
 
-## 🔗 Important Links
-
-- **GitHub PR**: https://github.com/hellodesignthinking-png/LHproject/pull/6
-- **Live HTML Demo**: https://9000-i65g3ela1oephi4loymka-ad490db5.sandbox.novita.ai/expert_edition_v3.html
-- **API Documentation**: `/docs` (FastAPI auto-generated)
-- **Test Results**: `PRODUCTION_TEST_RESULTS.md`
-
----
-
-## ✅ Final Checklist Before Going Live
-
-### **Pre-Deployment**:
-- [x] ✅ Code reviewed and tested
-- [x] ✅ All engines verified (Phase 2.5/6.8/7.7)
-- [x] ✅ Context building produces real values
-- [x] ✅ HTML generation working
-- [x] ✅ Test suite passing
-- [ ] ⏳ Frontend integration tested
-- [ ] ⏳ Staging environment tested
-- [ ] ⏳ Performance benchmarks met
-- [ ] ⏳ Security audit completed
-
-### **Post-Deployment**:
-- [ ] Monitor error rates for 24 hours
-- [ ] Verify first 10 user reports manually
-- [ ] Check financial values are non-zero
-- [ ] Gather user feedback
-- [ ] Document any issues
+#### Issue 4: Slow Chart Generation
+**Solution**: Reduce chart resolution or disable some charts
+```python
+# In generate_v3_full_report.py
+ENABLE_CHARTS = False  # Temporarily disable for faster generation
+```
 
 ---
 
-## 🎉 Congratulations!
+## 📚 Additional Resources
 
-**Your Expert Edition v3 system is ready for production!**
-
-All major components are operational:
-- ✅ Context Builder (14 sections)
-- ✅ Financial Engine (NPV/IRR/Payback)
-- ✅ AI Demand Intelligence (Scores)
-- ✅ Market Analyzer (Signals)
-- ✅ Expert Edition Template (50-60 pages)
-- ✅ Real Values Generation (No more 0.00억원!)
-
-**Next generated reports will show REAL financial data to your users!** 🚀
+- **Documentation**: `/docs`
+- **API Reference**: `/api/v3/docs` (when API server running)
+- **GitHub Issues**: https://github.com/hellodesignthinking-png/LHproject/issues
+- **Support**: 프로젝트 팀 문의
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: 2025-12-06  
-**Status**: ✅ Production Ready  
-**Contact**: Development Team
+## ✅ Deployment Checklist
+
+- [ ] Python 3.10+ installed
+- [ ] Dependencies installed (`pip install -r requirements.txt`)
+- [ ] Configuration file created (`.env` or `config.yaml`)
+- [ ] Test report generation (`python generate_v3_full_report.py`)
+- [ ] API server tested (if using API option)
+- [ ] Docker image built (if using Docker)
+- [ ] Monitoring setup (logging, metrics)
+- [ ] Backup strategy configured
+- [ ] Security measures applied (API keys, rate limiting)
+- [ ] Documentation reviewed
+
+---
+
+**🎯 Ready for Production!**
+
+**Last Updated**: 2025-12-10  
+**Version**: v3.0.0  
+**Status**: ✅ PRODUCTION READY

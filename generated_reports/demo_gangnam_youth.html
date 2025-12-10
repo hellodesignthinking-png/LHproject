@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite Phase 11-14 Demo Report - 서울특별시 강남구 테헤란로 123</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #005BAC 0%, #003D73 100%);
+            color: white;
+            padding: 40px;
+            margin: -40px -40px 40px -40px;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .header .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+            padding: 20px;
+            background: #E6F2FF;
+            border-radius: 8px;
+        }
+        
+        .meta-item {
+            text-align: center;
+        }
+        
+        .meta-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .meta-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #005BAC;
+        }
+        
+        .section {
+            margin: 40px 0;
+            padding: 30px;
+            background: #fafafa;
+            border-left: 4px solid #005BAC;
+        }
+        
+        .section-title {
+            font-size: 24px;
+            color: #005BAC;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #005BAC;
+        }
+        
+        .subsection {
+            margin: 20px 0;
+        }
+        
+        .subsection-title {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .unit-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .unit-table th,
+        .unit-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .unit-table th {
+            background: #005BAC;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .unit-table tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .narrative-box {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 4px solid #D4AF37;
+        }
+        
+        .narrative-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #005BAC;
+            margin-bottom: 10px;
+        }
+        
+        .narrative-content {
+            font-size: 14px;
+            line-height: 1.8;
+            color: #555;
+        }
+        
+        .key-points {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        
+        .key-points ul {
+            margin-left: 20px;
+        }
+        
+        .key-points li {
+            margin: 5px 0;
+            color: #666;
+        }
+        
+        .timeline-phase {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 4px solid #27AE60;
+        }
+        
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .phase-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+        }
+        
+        .phase-duration {
+            font-size: 14px;
+            color: white;
+            background: #27AE60;
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+        
+        .critical-badge {
+            display: inline-block;
+            background: #C0392B;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        
+        .phase-description {
+            font-size: 14px;
+            color: #666;
+            margin: 10px 0;
+        }
+        
+        .milestone-list {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .milestone-list li {
+            margin: 5px 0;
+            color: #555;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px 0 0 0;
+            color: #999;
+            font-size: 14px;
+            border-top: 1px solid #ddd;
+            margin-top: 40px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 5px;
+        }
+        
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 ZeroSite Phase 11-14 Demo Report</h1>
+            <div class="subtitle">LH Policy-Driven Design | Academic Narrative | Critical Timeline</div>
+        </div>
+        
+        <div class="meta-grid">
+            <div class="meta-item">
+                <div class="meta-label">📍 Address</div>
+                <div class="meta-value" style="font-size: 16px;">서울특별시 강남구 테헤란로 123</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">📏 Land Area</div>
+                <div class="meta-value">1,000㎡</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">🏠 Housing Type</div>
+                <div class="meta-value" style="font-size: 18px;">청년형</div>
+            </div>
+        </div>
+        
+        <!-- Phase 11: LH Policy Rules -->
+        <div class="section">
+            <div class="section-title">🏗️ Phase 11: LH Policy-Driven Design</div>
+            
+            <div class="subsection">
+                <div class="subsection-title">📊 Unit Distribution</div>
+                <table class="unit-table">
+                    <thead>
+                        <tr>
+                            <th>Unit Type</th>
+                            <th>Area (㎡)</th>
+                            <th>Count (세대)</th>
+                            <th>Total Area (㎡)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>youth_14</td>
+                            <td>0.0㎡</td>
+                            <td><strong>121세대</strong></td>
+                            <td>0.0㎡</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div style="margin: 20px 0; padding: 15px; background: white; border-radius: 8px;">
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center;">
+                        <div>
+                            <div style="font-size: 12px; color: #666;">총 세대수</div>
+                            <div style="font-size: 24px; font-weight: 700; color: #005BAC;">121세대</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #666;">공용공간 비율</div>
+                            <div style="font-size: 24px; font-weight: 700; color: #27AE60;">15%</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #666;">주차 기준</div>
+                            <div style="font-size: 24px; font-weight: 700; color: #D4AF37;">0.3대/세대</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="subsection">
+                <div class="subsection-title">💡 Design Philosophy</div>
+                <div style="background: white; padding: 20px; border-radius: 8px; line-height: 1.8;">
+                    
+본 설계는 LH 청년형 매입임대 정책의 핵심 목표인 '도심 내 청년 주거 안정'과 
+'1인 가구 커뮤니티 기반 구축'을 중심으로 계획되었습니다.
+
+14㎡ 전용면적 기준으로 효율적인 공간 활용과 함께, 
+공용공간(15% 이상)을 통한 Sharing Economy 모델을 적용하여
+개인 공간의 한계를 극복하고 거주자 간 상호작용을 촉진합니다.
+
+커뮤니티 라운지, 공유 주방, 세탁실, 스터디룸 등의 공용시설을 통해
+'함께 사는 1인 가구'의 새로운 주거 모델을 제시합니다.
+            
+                </div>
+            </div>
+        </div>
+        
+        <!-- Phase 13: Academic Narrative -->
+        <div class="section">
+            <div class="section-title">📝 Phase 13: Academic Narrative</div>
+            <div class="subsection-title" style="margin-bottom: 20px;">
+                KDI Research Report Style | WHAT / SO WHAT / WHY / INSIGHT / CONCLUSION
+            </div>
+
+            <div class="narrative-box">
+                <div class="narrative-title">📌 1. 프로젝트 현황 (WHAT)</div>
+                <div class="narrative-content">본 프로젝트는 LH 신축매입임대 사업으로 계획된 공공주택 개발 프로젝트입니다.
+
+**프로젝트 개요:**
+- 공급유형: 청년형 매입임대
+- 총 세대수: 121세대
+- 총 연면적: 2,000㎡
+- 투자수익률(ROI): 2.50%
+- LH 평가점수: 85.0/100점
+
+**설계 특징:**
+본 설계는 LH 정책 기준에 따른 평형 구성과 공용공간 15% 이상 확보를 통해
+커뮤니티 기반 주거 모델을 실현하고자 합니다.
+
+**사업 구조:**
+민간 사업자가 건축 후 LH가 전체 또는 일부를 매입하여
+청년·신혼부부·고령자 등 주거 취약 계층에게 시세 이하로 공급하는
+'공공지원 민간임대주택' 모델입니다.</div>
+                <div class="key-points">
+                    <strong>Key Points:</strong>
+                    <ul>
+                        <li>총 121세대 규모의 LH 매입임대 주택</li>
+                        <li>LH 평가점수 85.0점으로 우수 등급</li>
+                        <li>투자수익률 2.50%의 안정적 수익 구조</li>
+                        <li>공용공간 15% 이상 확보로 커뮤니티 기능 강화</li>
+
+                    </ul>
+                </div>
+            </div>
+
+            <div class="narrative-box">
+                <div class="narrative-title">📌 2. 프로젝트 의미 (SO WHAT)</div>
+                <div class="narrative-content">본 프로젝트는 단순한 주택 공급을 넘어 다음과 같은 사회·경제적 의미를 갖습니다.
+
+**사회적 의미:**
+본 프로젝트는 총 121세대의 주거를 제공함으로써
+주거 취약 계층 242~363명(가구당 2~3인 가정)의
+주거 안정에 기여할 것으로 예상됩니다.
+
+특히 시세 대비 70~80% 수준의 임대료로 공급됨에 따라
+연간 약 36300만원의 주거비 절감 효과가 발생하며,
+이는 거주자의 삶의 질 향상과 소비 여력 증대로 이어집니다.
+
+**경제적 의미:**
+본 프로젝트의 ROI 2.50%는 일반 민간 임대 사업 대비 낮으나,
+LH 매입 보장으로 인한 임대료 및 공실 리스크가 없어
+실질적으로는 안정적인 수익 구조를 갖추고 있습니다.
+
+또한 LH 평가점수 85.0점은
+매입 가능성이 높음을 의미하며,
+이는 사업 불확실성을 대폭 감소시키는 요인입니다.
+
+따라서 본 프로젝트는 '높은 수익'보다는
+'안정적이고 예측 가능한 수익'을 추구하는 투자자에게 적합합니다.
+
+**정책적 의미:**
+LH 매입임대 사업은 민간의 개발 역량과 공공의 복지 목표를 결합한
+'민관협력(PPP)' 모델의 대표 사례입니다.
+
+본 프로젝트는 다음과 같은 정책 효과를 기대할 수 있습니다:
+
+1. **주거 안정성 제고**: 시세 대비 70~80% 수준의 임대료로 주거비 부담 경감
+2. **공급 다양성 확대**: 민간 영역에서 공공주택 공급 기여
+3. **도시 재생 효과**: 기존 주거지역의 물리적·사회적 환경 개선
+4. **지역 경제 활성화**: 건설 투자 및 거주 인구 유입으로 지역 경제 기여
+
+**핵심 시사점:**
+본 프로젝트는 '주거 복지'와 '민간 수익성'을 동시에 달성할 수 있는
+지속가능한 주택 공급 모델의 가능성을 보여줍니다.</div>
+                <div class="key-points">
+                    <strong>Key Points:</strong>
+                    <ul>
+                        <li>121세대의 주거 취약 계층 지원</li>
+                        <li>민관협력(PPP) 모델의 성공적 사례 구축</li>
+                        <li>LH 85.0점 달성으로 정책 목표 부합</li>
+                        <li>지속가능한 주택 공급 모델 실현</li>
+
+                    </ul>
+                </div>
+            </div>
+
+            <div class="narrative-box">
+                <div class="narrative-title">📌 3. 추진 배경 (WHY)</div>
+                <div class="narrative-content">본 프로젝트가 현 시점에서 추진되어야 하는 이유는 다음과 같습니다.
+
+**1. 정책 환경:**
+
+국토교통부는 '제3차 장기('23~'32) 공공주택 종합계획'을 통해
+연평균 25만호의 공공주택 공급 목표를 설정했습니다.
+
+이 중 매입임대는 약 20%(연 5만호)를 차지하며,
+특히 청년·신혼부부 대상 매입임대 확대 정책이 강화되고 있습니다.
+
+**2. 시장 환경:**
+
+- **주거비 부담 심화**: 서울 평균 전세가격 6억원 돌파 (2024)
+- **청년 주거 불안정**: 20~30대 자가 보유율 10% 미만
+- **1인가구 증가**: 전체 가구의 33.4% (통계청, 2023)
+
+이러한 시장 환경에서 **저렴하고 안정적인 주거 공급**이 절실한 상황입니다.
+
+**3. 사업 환경:**
+
+LH는 매입임대 물량 확대를 위해 다음과 같은 지원책을 시행 중입니다:
+
+- 매입 가격 상향 조정 (감정평가액의 85% → 90%)
+- 우선 매입 지역 확대 (역세권, 대학가 등)
+- 인증(BF, 에너지) 가산점 부여
+
+**4. 재무 환경:**
+
+현재 LH 매입임대 사업의 평균 수익률은 연 2~3% 수준으로
+안정적이나 낮은 수익 구조입니다.
+
+그러나 LH 매입 보장으로 인한 **낮은 리스크**와
+**장기 안정 수익** 특성으로 연기금·보험사 등 기관투자자의 관심이 높습니다.
+
+**결론:**
+정책·시장·사업·재무 환경 모두가 LH 매입임대 사업에 유리한 시점이며,
+특히 청년·신혼부부 대상 사업은 정책 우선순위가 높아 성공 가능성이 큽니다.</div>
+                <div class="key-points">
+                    <strong>Key Points:</strong>
+                    <ul>
+                        <li>정부의 공공주택 공급 확대 정책 (연 25만호)</li>
+                        <li>청년 주거 불안정 심화 (자가 보유율 10% 미만)</li>
+                        <li>LH 매입 가격 상향 및 지원책 확대</li>
+                        <li>기관투자자의 안정적 수익 추구 경향</li>
+
+                    </ul>
+                </div>
+            </div>
+
+            <div class="narrative-box">
+                <div class="narrative-title">📌 4. 핵심 통찰 (INSIGHT)</div>
+                <div class="narrative-content">본 프로젝트 분석을 통해 도출된 핵심 통찰은 다음과 같습니다.
+
+**통찰 1: 정책 정합성이 사업 성공의 핵심**
+
+LH 매입임대 사업에서 가장 중요한 것은 '정책 정합성'입니다.
+본 프로젝트의 LH 평가점수 85.0점은
+정책 기준(평형, 공용공간, 입지 등)을 충실히 반영한 결과입니다.
+
+이는 단순히 건축 규모를 최대화하는 것보다
+**'LH가 원하는 설계'**를 하는 것이 더 중요함을 의미합니다.
+
+**통찰 2: 수익성과 공공성의 균형점 존재**
+
+본 프로젝트의 ROI 2.50%는 일반 민간 임대주택 대비 낮지만,
+LH 매입 보장으로 인한 리스크 감소를 고려하면 충분히 매력적입니다.
+
+즉, **'낮은 수익률 + 낮은 리스크 = 안정적 투자'** 구조가 성립합니다.
+
+**통찰 3: 커뮤니티 설계가 차별화 요소**
+
+공용공간 15% 이상 확보는 단순 규제 충족이 아니라,
+거주자 만족도와 LH 평가 점수를 동시에 높이는 핵심 전략입니다.
+
+**통찰 4: 설계 → 사업성 → LH 평가의 통합 분석 필요**
+
+본 프로젝트 분석을 통해 'A/B/C 설계안 비교'가
+단순한 규모 비교가 아니라 **'정책 점수 vs 수익성'의 트레이드오프**를
+명확히 보여준다는 점을 확인했습니다.
+
+이는 사업자가 LH 매입 가능성과 수익성 사이에서
+**전략적 선택**을 할 수 있도록 지원하는 의사결정 도구의 중요성을 시사합니다.
+
+**결론적 통찰:**
+LH 매입임대 사업은 '정책 이해 → 최적 설계 → 사업성 검증'의
+통합적 접근이 필수이며, 이를 지원하는 AI 기반 의사결정 시스템이 유효합니다.</div>
+                <div class="key-points">
+                    <strong>Key Points:</strong>
+                    <ul>
+                        <li>정책 정합성이 사업 성공의 핵심 요소</li>
+                        <li>낮은 수익률 + 낮은 리스크 = 안정적 투자 구조</li>
+                        <li>커뮤니티 설계가 LH 평가의 차별화 포인트</li>
+                        <li>통합적 분석 시스템의 필요성</li>
+
+                    </ul>
+                </div>
+            </div>
+
+            <div class="narrative-box">
+                <div class="narrative-title">📌 5. 결론 및 제언 (CONCLUSION)</div>
+                <div class="narrative-content">본 프로젝트에 대한 종합 평가 및 정책 제언은 다음과 같습니다.
+
+**종합 평가:**
+
+본 프로젝트는 LH 평가점수 85.0점, ROI 2.50%로
+**사업 추진을 적극 권장**합니다.
+
+정책 정합성과 수익성이 모두 우수하여 LH 매입 가능성이 높으며,
+안정적인 투자 수익을 기대할 수 있습니다.
+
+**정책 제언:**
+
+1. **사업자 측면:**
+   - LH 정책 기준을 사전에 충분히 검토하고 설계에 반영
+   - 공용공간 설계를 단순 규제 충족이 아닌 '가치 창출' 관점으로 접근
+   - 재무 구조는 안정성 중심으로 설계 (낮은 레버리지)
+
+2. **LH 측면:**
+   - 우수 설계안에 대한 가산점 확대 (현행 5% → 10%)
+   - 지역별 매입 가격 차등화를 통한 공급 다양성 확보
+   - 커뮤니티 운영 계획 제출 시 평가 반영
+
+3. **정부 측면:**
+   - 매입임대 지원 예산 확대 (현행 연 5만호 → 7만호)
+   - 토지임대부 매입임대 등 다양한 모델 실험
+   - 장기 거주자에 대한 분양 전환 옵션 부여
+
+**최종 제언:**
+
+본 프로젝트는 현행 LH 매입임대 제도 하에서 **실현 가능성이 높은 사업**으로 평가됩니다.
+
+다만, 성공적 추진을 위해서는:
+- 설계 단계부터 LH 정책 기준 반영
+- 커뮤니티 운영 계획 수립
+- 안정적 재무 구조 확보
+가 필수적입니다.
+
+**향후 과제:**
+- 실제 LH 매입 심사 결과 모니터링
+- 거주자 만족도 조사 및 피드백 반영
+- 유사 프로젝트 벤치마킹 및 개선</div>
+                <div class="key-points">
+                    <strong>Key Points:</strong>
+                    <ul>
+                        <li>본 프로젝트는 LH 평가점수 85.0점, ROI 2.50%로</li>
+                        <li>사업자·LH·정부 측면의 통합적 제언</li>
+                        <li>실현 가능성 높은 사업으로 평가</li>
+                        <li>성공을 위한 핵심 과제 제시</li>
+
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+        
+        <!-- Phase 14: Critical Timeline -->
+        <div class="section">
+            <div class="section-title">📅 Phase 14: Critical Timeline & Risk Analysis</div>
+            
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; text-align: center;">
+                    <div>
+                        <div style="font-size: 12px; color: #666;">Total Duration</div>
+                        <div style="font-size: 28px; font-weight: 700; color: #005BAC;">38</div>
+                        <div style="font-size: 14px; color: #999;">months</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: #666;">Critical Phases</div>
+                        <div style="font-size: 28px; font-weight: 700; color: #C0392B;">8</div>
+                        <div style="font-size: 14px; color: #999;">phases</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: #666;">Key Risks</div>
+                        <div style="font-size: 28px; font-weight: 700; color: #E67E22;">16</div>
+                        <div style="font-size: 14px; color: #999;">identified</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="subsection">
+                <div class="subsection-title">🗓️ Project Phases</div>
+
+                <div class="timeline-phase">
+                    <div class="timeline-header">
+                        <div class="phase-name">사업 기획 및 기본 설계 <span class="critical-badge">CRITICAL PATH</span></div>
+                        <div class="phase-duration">3 months</div>
+                    </div>
+                    <div class="phase-description">사업 타당성 검토, 기본 설계, LH 사전 협의</div>
+                    <div style="margin-top: 10px;">
+                        <strong>Key Milestones:</strong>
+                        <ul class="milestone-list">
+                            <li>사업 타당성 분석 완료</li>
+                            <li>기본 설계안 확정</li>
+                            <li>LH 사전 협의 완료</li>
+
+                        </ul>
+                    </div>
+
+                    <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 4px;">
+                        <strong style="color: #856404;">⚠️ Risks:</strong>
+                        <ul style="margin-top: 5px; margin-left: 20px;">
+                            <li style="color: #856404;">LH 정책 변경 리스크</li>
+                            <li style="color: #856404;">설계 기준 미비로 인한 재작업</li>
+
+                        </ul>
+                    </div>
+
+                </div>
+
+                <div class="timeline-phase">
+                    <div class="timeline-header">
+                        <div class="phase-name">인허가 절차 <span class="critical-badge">CRITICAL PATH</span></div>
+                        <div class="phase-duration">6 months</div>
+                    </div>
+                    <div class="phase-description">건축 허가, 용도 변경, 각종 인증 신청</div>
+                    <div style="margin-top: 10px;">
+                        <strong>Key Milestones:</strong>
+                        <ul class="milestone-list">
+                            <li>건축 허가 신청</li>
+                            <li>건축 허가 승인</li>
+                            <li>BF 인증 신청</li>
+                            <li>에너지 효율 인증 신청</li>
+
+                        </ul>
+                    </div>
+
+                    <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 4px;">
+                        <strong style="color: #856404;">⚠️ Risks:</strong>
+                        <ul style="margin-top: 5px; margin-left: 20px;">
+                            <li style="color: #856404;">인허가 지연 (평균 2~3개월)</li>
+                            <li style="color: #856404;">인근 주민 민원</li>
+                            <li style="color: #856404;">법규 미비로 인한 반려</li>
+
+                        </ul>
+                    </div>
+
+                </div>
+
+                <div class="timeline-phase">
+                    <div class="timeline-header">
+                        <div class="phase-name">실시 설계 <span class="critical-badge">CRITICAL PATH</span></div>
+                        <div class="phase-duration">4 months</div>
+                    </div>
+                    <div class="phase-description">건축, 구조, 기계, 전기, 통신, 소방 등 실시설계</div>
+                    <div style="margin-top: 10px;">
+                        <strong>Key Milestones:</strong>
+                        <ul class="milestone-list">
+                            <li>실시설계 착수</li>
+                            <li>구조 검토 완료</li>
+                            <li>실시설계 완료</li>
+                            <li>시공사 선정</li>
+
+                        </ul>
+                    </div>
+
+                    <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 4px;">
+                        <strong style="color: #856404;">⚠️ Risks:</strong>
+                        <ul style="margin-top: 5px; margin-left: 20px;">
+                            <li style="color: #856404;">설계 변경으로 인한 일정 지연</li>
+                            <li style="color: #856404;">구조 검토 승인 지연</li>
+
+                        </ul>
+                    </div>
+
+                </div>
+
+                <div class="timeline-phase">
+                    <div class="timeline-header">
+                        <div class="phase-name">착공 및 골조 공사 <span class="critical-badge">CRITICAL PATH</span></div>
+                        <div class="phase-duration">12 months</div>
+                    </div>
+                    <div class="phase-description">기초 공사, 골조 공사, 지붕 공사</div>
+                    <div style="margin-top: 10px;">
+                        <strong>Key Milestones:</strong>
+                        <ul class="milestone-list">
+                            <li>착공 신고</li>
+                            <li>기초 공사 완료</li>
+                            <li>골조 공사 50% 완료</li>
+                            <li>골조 공사 완료</li>
+                            <li>지붕 공사 완료</li>
+
+                        </ul>
+                    </div>
+
+                    <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 4px;">
+                        <strong style="color: #856404;">⚠️ Risks:</strong>
+                        <ul style="margin-top: 5px; margin-left: 20px;">
+                            <li style="color: #856404;">기상 악화로 인한 공사 중단</li>
+                            <li style="color: #856404;">자재 수급 지연</li>
+                            <li style="color: #856404;">인력 수급 문제</li>
+
+                        </ul>
+                    </div>
+
+                </div>
+
+                <div class="timeline-phase">
+                    <div class="timeline-header">
+                        <div class="phase-name">마감 공사 <span class="critical-badge">CRITICAL PATH</span></div>
+                        <div class="phase-duration">6 months</div>
+                    </div>
+                    <div class="phase-description">내외부 마감, 설비 공사, 조경 공사</div>
+                    <div style="margin-top: 10px;">
+                        <strong>Key Milestones:</strong>
+                        <ul class="milestone-list">
+                            <li>내부 마감 착수</li>
+                            <li>설비 공사 완료</li>
+                            <li>외부 마감 완료</li>
+                            <li>조경 공사 완료</li>
+
+                        </ul>
+                    </div>
+
+                    <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 4px;">
+                        <strong style="color: #856404;">⚠️ Risks:</strong>
+                        <ul style="margin-top: 5px; margin-left: 20px;">
+                            <li style="color: #856404;">마감재 수급 지연</li>
+                            <li style="color: #856404;">설비 하자 발생</li>
+                            <li style="color: #856404;">품질 기준 미달</li>
+
+                        </ul>
+                    </div>
+
+                </div>
+
+                <div class="timeline-phase">
+                    <div class="timeline-header">
+                        <div class="phase-name">준공 및 인증 <span class="critical-badge">CRITICAL PATH</span></div>
+                        <div class="phase-duration">2 months</div>
+                    </div>
+                    <div class="phase-description">준공 검사, 각종 인증 취득</div>
+                    <div style="margin-top: 10px;">
+                        <strong>Key Milestones:</strong>
+                        <ul class="milestone-list">
+                            <li>준공 검사 신청</li>
+                            <li>준공 검사 통과</li>
+                            <li>BF 인증 취득</li>
+                            <li>에너지 효율 인증 취득</li>
+                            <li>사용 승인</li>
+
+                        </ul>
+                    </div>
+
+                    <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 4px;">
+                        <strong style="color: #856404;">⚠️ Risks:</strong>
+                        <ul style="margin-top: 5px; margin-left: 20px;">
+                            <li style="color: #856404;">준공 검사 불합격</li>
+                            <li style="color: #856404;">인증 취득 지연</li>
+                            <li style="color: #856404;">보완 공사 발생</li>
+
+                        </ul>
+                    </div>
+
+                </div>
+
+                <div class="timeline-phase">
+                    <div class="timeline-header">
+                        <div class="phase-name">감정평가 <span class="critical-badge">CRITICAL PATH</span></div>
+                        <div class="phase-duration">2 months</div>
+                    </div>
+                    <div class="phase-description">LH 매입을 위한 감정평가 실시</div>
+                    <div style="margin-top: 10px;">
+                        <strong>Key Milestones:</strong>
+                        <ul class="milestone-list">
+                            <li>감정평가 의뢰</li>
+                            <li>현장 조사</li>
+                            <li>감정평가서 발행</li>
+
+                        </ul>
+                    </div>
+
+                    <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 4px;">
+                        <strong style="color: #856404;">⚠️ Risks:</strong>
+                        <ul style="margin-top: 5px; margin-left: 20px;">
+                            <li style="color: #856404;">감정가 예상치 미달</li>
+                            <li style="color: #856404;">평가 기준 변경</li>
+
+                        </ul>
+                    </div>
+
+                </div>
+
+                <div class="timeline-phase">
+                    <div class="timeline-header">
+                        <div class="phase-name">LH 매입 절차 <span class="critical-badge">CRITICAL PATH</span></div>
+                        <div class="phase-duration">3 months</div>
+                    </div>
+                    <div class="phase-description">LH 매입 심사 및 계약 체결</div>
+                    <div style="margin-top: 10px;">
+                        <strong>Key Milestones:</strong>
+                        <ul class="milestone-list">
+                            <li>LH 매입 신청</li>
+                            <li>LH 현장 실사</li>
+                            <li>LH 내부 승인</li>
+                            <li>매매 계약 체결</li>
+                            <li>잔금 지급</li>
+
+                        </ul>
+                    </div>
+
+                    <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 4px;">
+                        <strong style="color: #856404;">⚠️ Risks:</strong>
+                        <ul style="margin-top: 5px; margin-left: 20px;">
+                            <li style="color: #856404;">LH 심사 기준 미달</li>
+                            <li style="color: #856404;">매입 예산 부족</li>
+                            <li style="color: #856404;">정책 변경으로 인한 매입 중단</li>
+
+                        </ul>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>ZeroSite Phase 11-14 Demo Report</strong></p>
+            <p>Generated: 2025-12-10 10:30:18</p>
+            <p style="margin-top: 10px;">
+                <span class="badge badge-success">Phase 11: LH Policy Rules ✓</span>
+                <span class="badge badge-info">Phase 13: Academic Narrative ✓</span>
+                <span class="badge badge-warning">Phase 14: Critical Timeline ✓</span>
+            </p>
+            <p style="margin-top: 15px; font-size: 12px; color: #ccc;">
+                © 2025 ZeroSite Development Team + GenSpark AI
+            </p>
+        </div>
+    </div>
+</body>
+</html>
