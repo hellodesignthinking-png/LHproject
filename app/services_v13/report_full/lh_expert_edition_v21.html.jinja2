@@ -11,8 +11,8 @@
     </style>
 </head>
 <body>
-    {# Import v21 UI Component Macros #}
-    {% import "v21_layout_components.html" as ui %}
+    {# Import v21 UI Component Macros - TEMPORARILY DISABLED FOR TESTING #}
+    {# % import "v21_layout_components.html" as ui % #}
     
     {# ================================================================
        COVER PAGE - Professional LH Blue Design
@@ -249,11 +249,17 @@
                 </div>
                 
                 <div class="sidebar">
-                    {{ ui.policy_citation(
-                        "LH 정책 근거", 
-                        "본 사업은 「공공주택 특별법」 제2조(정의), 제4조(공공주택의 건설·공급) 및 LH 「공공주택 사업관리 지침」에 따라 추진됩니다. 청년·신혼부부 주택 공급은 정부의 주거복지 로드맵 및 LH 중장기 전략과 연계되어 있습니다.",
-                        "「공공주택 특별법」 제2조, 제4조"
-                    )|safe }}
+                    {# Policy citation - temporarily disabled #}
+                    <div style="background: #E6F2FF; border: 2px solid #005BAC; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                        <h4 style="color: #005BAC; margin-bottom: 10px;">LH 정책 근거</h4>
+                        <p style="font-size: 10pt; line-height: 1.7;">
+                            본 사업은 「공공주택 특별법」 제2조(정의), 제4조(공공주택의 건설·공급) 및 LH 「공공주택 사업관리 지침」에 따라 추진됩니다. 
+                            청년·신혼부부 주택 공급은 정부의 주거복지 로드맵 및 LH 중장기 전략과 연계되어 있습니다.
+                        </p>
+                        <p style="font-size: 9pt; color: #666; margin-top: 10px;">
+                            <strong>출처:</strong> 「공공주택 특별법」 제2조, 제4조
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
