@@ -1,13 +1,14 @@
 """
-외부 API 서비스 모듈
+ZeroSite Enhanced Services
+
+Backend enhancement modules for Land Report functionality
+Integrates with Phase 7 Comparable Valuation Engine
 """
 
-from .kakao_service import KakaoService
-from .land_regulation_service import LandRegulationService
-from .mois_service import MOISService
-
+__version__ = "1.0.0"
 __all__ = [
-    "KakaoService",
-    "LandRegulationService",
-    "MOISService",
+    "TransactionGenerator",
+    "WeightedPriceAdjuster",
+    "ConfidenceScore",
+    "SummaryTextGenerator"
 ]

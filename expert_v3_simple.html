@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 ZeroSite Expert Edition v3 - 청년주택 개발 타당성 분석</title>
+    
+    <!-- CACHE PREVENTION -->
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 50px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+        }
+        
+        .version-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.25);
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+        
+        h1 {
+            font-size: 36px;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .subtitle {
+            font-size: 18px;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+        
+        .info-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .info-section h2 {
+            color: #667eea;
+            font-size: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 15px;
+        }
+        
+        label .required {
+            color: #ef4444;
+            margin-left: 5px;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .input-group > div {
+            flex: 1;
+        }
+        
+        .button-primary {
+            width: 100%;
+            padding: 20px;
+            font-size: 18px;
+            font-weight: 700;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .button-primary:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+        
+        .button-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .button-secondary {
+            padding: 18px 35px;
+            font-size: 16px;
+            font-weight: 600;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            background: white;
+            color: #667eea;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .button-secondary:hover:not(:disabled) {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .button-secondary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .results {
+            display: none;
+            margin-top: 50px;
+            padding: 40px;
+            background: #f1f5f9;
+            border-radius: 15px;
+            border-left: 6px solid #10b981;
+        }
+        
+        .results.show {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .results h2 {
+            color: #10b981;
+            font-size: 26px;
+            margin-bottom: 25px;
+        }
+        
+        .download-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            display: none;
+            padding: 25px;
+            background: #fef2f2;
+            border-left: 5px solid #ef4444;
+            border-radius: 10px;
+            color: #991b1b;
+            margin-top: 20px;
+        }
+        
+        .error.show {
+            display: block;
+        }
+        
+        .success-message {
+            padding: 20px;
+            background: #f0fdf4;
+            border-left: 5px solid #10b981;
+            border-radius: 10px;
+            color: #14532d;
+            margin-bottom: 25px;
+        }
+        
+        .meta-info {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+        }
+        
+        .meta-info strong {
+            color: #374151;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+        
+        .feature-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .feature-icon {
+            width: 24px;
+            height: 24px;
+            background: #667eea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        
+        .footer {
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 2px solid #e5e7eb;
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- HEADER -->
+    <div class="header">
+        <div class="version-badge">EXPERT EDITION v3.0</div>
+        <h1>🏡 ZeroSite</h1>
+        <div class="subtitle">청년주택 개발 타당성 전문가 분석 시스템</div>
+    </div>
+
+    <!-- INFO SECTION -->
+    <div class="info-section">
+        <h2>📊 v3 보고서 특징</h2>
+        <ul class="feature-list">
+            <li>
+                <div class="feature-icon">✓</div>
+                <div><strong>Academic Research-Grade Report</strong> - 학술 연구급 전문 보고서 (60+ pages)</div>
+            </li>
+            <li>
+                <div class="feature-icon">✓</div>
+                <div><strong>ZeroSite v15 Phase 2</strong> - LH 정책자금 사업 타당성 분석</div>
+            </li>
+            <li>
+                <div class="feature-icon">✓</div>
+                <div><strong>7개 섹션 심층 분석</strong> - Executive Summary, 대상지 개요, 도시계획/법규, AI 수요예측, 시장분석, 공사비, 재무분석</div>
+            </li>
+            <li>
+                <div class="feature-icon">✓</div>
+                <div><strong>Professional Typography</strong> - 세련된 디자인 + Blue(#0059c8) 컬러 스킴</div>
+            </li>
+            <li>
+                <div class="feature-icon">✓</div>
+                <div><strong>PDF 다운로드</strong> - 즉시 출력 가능한 전문가급 보고서</div>
+            </li>
+        </ul>
+    </div>
+
+    <!-- INPUT FORM -->
+    <form id="reportForm">
+        <div class="form-group">
+            <label for="address">
+                📍 대상 토지 주소 
+                <span class="required">*</span>
+            </label>
+            <input 
+                type="text" 
+                id="address" 
+                name="address" 
+                placeholder="예: 서울특별시 마포구 월드컵북로 120"
+                required
+            >
+        </div>
+
+        <div class="input-group">
+            <div class="form-group">
+                <label for="land_area">
+                    📐 대지면적 (㎡)
+                    <span class="required">*</span>
+                </label>
+                <input 
+                    type="number" 
+                    id="land_area" 
+                    name="land_area" 
+                    placeholder="예: 30.0"
+                    step="0.1"
+                    min="0"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="unit_type">
+                    🏠 주택 유형
+                    <span class="required">*</span>
+                </label>
+                <select id="unit_type" name="unit_type" required>
+                    <option value="">-- 선택하세요 --</option>
+                    <option value="청년">청년</option>
+                    <option value="신혼부부I">신혼부부 I</option>
+                    <option value="신혼부부II">신혼부부 II</option>
+                    <option value="고령자">고령자</option>
+                    <option value="다자녀">다자녀</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="zone_type">
+                🗺️ 용도지역
+            </label>
+            <input 
+                type="text" 
+                id="zone_type" 
+                name="zone_type" 
+                placeholder="자동 탐지 (선택사항)"
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="land_appraisal_price">
+                💰 토지 감정가 (원)
+            </label>
+            <input 
+                type="number" 
+                id="land_appraisal_price" 
+                name="land_appraisal_price" 
+                placeholder="예: 5000000000 (선택사항)"
+                step="1000000"
+                min="0"
+            >
+        </div>
+
+        <button type="submit" class="button-primary" id="generateBtn">
+            📄 Expert Edition v3 보고서 생성
+        </button>
+    </form>
+
+    <!-- LOADING -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p style="font-size: 18px; font-weight: 600;">보고서 생성 중...</p>
+        <p style="margin-top: 10px; color: #6b7280;">v3 Expert Edition 템플릿 적용 중 (약 30-60초 소요)</p>
+    </div>
+
+    <!-- ERROR -->
+    <div class="error" id="error">
+        <strong>❌ 오류 발생</strong>
+        <p id="errorMessage" style="margin-top: 10px;"></p>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="results" id="results">
+        <div class="success-message">
+            <strong>✅ Expert Edition v3 보고서 생성 완료!</strong>
+            <p style="margin-top: 8px;">전문가급 60+ 페이지 보고서가 준비되었습니다.</p>
+        </div>
+
+        <h2>📥 보고서 다운로드</h2>
+        
+        <div class="download-buttons">
+            <button class="button-secondary" id="downloadPdfBtn">
+                📄 PDF 다운로드
+            </button>
+            <button class="button-secondary" id="downloadHtmlBtn">
+                🌐 HTML 다운로드
+            </button>
+        </div>
+
+        <div class="meta-info">
+            <strong>생성 정보:</strong><br>
+            분석 ID: <span id="analysisId">-</span><br>
+            생성 시각: <span id="generatedAt">-</span><br>
+            보고서 버전: <strong>ZeroSite Expert Edition v3</strong>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <strong>ZeroSite Expert Edition v3</strong><br>
+        Academic Research-Grade Land Valuation Report System<br>
+        © 2025 Antenna Holdings. All rights reserved.
+    </div>
+</div>
+
+<script>
+    const API_BASE = window.location.origin;
+    const REPORT_API_URL = `${API_BASE}/api/v9/real/generate-report`;
+
+    const form = document.getElementById('reportForm');
+    const loading = document.getElementById('loading');
+    const error = document.getElementById('error');
+    const results = document.getElementById('results');
+    const generateBtn = document.getElementById('generateBtn');
+
+    let currentReportData = null;
+
+    // Form submit handler
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await generateReport();
+    });
+
+    async function generateReport() {
+        // Hide previous results/errors
+        results.classList.remove('show');
+        error.classList.remove('show');
+        
+        // Show loading
+        loading.classList.add('show');
+        generateBtn.disabled = true;
+
+        try {
+            // Collect form data
+            const formData = new FormData(form);
+            const requestBody = {
+                address: formData.get('address'),
+                land_area: parseFloat(formData.get('land_area')),
+                unit_type: formData.get('unit_type'),
+                zone_type: formData.get('zone_type') || undefined,
+                land_appraisal_price: formData.get('land_appraisal_price') 
+                    ? parseInt(formData.get('land_appraisal_price'))
+                    : undefined
+            };
+
+            console.log('Generating Expert v3 report...', requestBody);
+
+            // Call API (HTML version first to get data)
+            const timestamp = Date.now();
+            const response = await fetch(`${REPORT_API_URL}?output_format=html&_t=${timestamp}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status} ${response.statusText}`);
+            }
+
+            const blob = await response.blob();
+            currentReportData = {
+                htmlBlob: blob,
+                requestBody: requestBody,
+                timestamp: timestamp
+            };
+
+            // Show results
+            loading.classList.remove('show');
+            results.classList.add('show');
+            generateBtn.disabled = false;
+
+            // Update metadata
+            document.getElementById('analysisId').textContent = `v3-${timestamp}`;
+            document.getElementById('generatedAt').textContent = new Date().toLocaleString('ko-KR');
+
+            console.log('✅ Expert v3 report generated successfully');
+
+        } catch (err) {
+            console.error('Report generation failed:', err);
+            
+            loading.classList.remove('show');
+            error.classList.add('show');
+            generateBtn.disabled = false;
+            
+            document.getElementById('errorMessage').textContent = err.message;
+        }
+    }
+
+    // PDF download handler
+    document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
+        if (!currentReportData) return;
+
+        const btn = document.getElementById('downloadPdfBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ PDF 생성 중...';
+
+        try {
+            const timestamp = Date.now();
+            const response = await fetch(`${REPORT_API_URL}?output_format=pdf&_t=${timestamp}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(currentReportData.requestBody)
+            });
+
+            if (!response.ok) {
+                throw new Error('PDF 생성 실패');
+            }
+
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ZeroSite_ExpertEdition_v3_${timestamp}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            btn.textContent = '✅ PDF 다운로드 완료';
+            setTimeout(() => {
+                btn.textContent = '📄 PDF 다운로드';
+                btn.disabled = false;
+            }, 2000);
+
+        } catch (err) {
+            console.error('PDF download failed:', err);
+            alert('PDF 다운로드 실패: ' + err.message);
+            btn.textContent = '📄 PDF 다운로드';
+            btn.disabled = false;
+        }
+    });
+
+    // HTML download handler
+    document.getElementById('downloadHtmlBtn').addEventListener('click', () => {
+        if (!currentReportData || !currentReportData.htmlBlob) return;
+
+        const url = URL.createObjectURL(currentReportData.htmlBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ZeroSite_ExpertEdition_v3_${currentReportData.timestamp}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+</script>
+
+</body>
+</html>

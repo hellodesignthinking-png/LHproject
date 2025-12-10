@@ -452,9 +452,10 @@ class LHReportGeneratorV75Final:
             data, basic_info, inferred_data, tone, poi_analysis
         ))
         
-        # Part 5: Financial Feasibility (8-10 pages, enhanced)
+        # Part 5: Financial Feasibility (8-10 pages, enhanced) + 🔥 LH Score Table
         sections.append(self._generate_financial_analysis_enhanced(
-            financial_analysis, lh_price_sim, basic_info, tone
+            financial_analysis, lh_price_sim, basic_info, tone,
+            lh_evaluation=data.get('lh_evaluation')  # 🔥 Phase 4.2: Pass LH data
         ))
         
         # Part 6: Risk Mitigation (5-6 pages, implementation)
@@ -472,10 +473,11 @@ class LHReportGeneratorV75Final:
             basic_info, financial_analysis, risk_assessment, tone
         ))
         
-        # Part 9: Final Recommendation (2-3 pages, decision framework)
+        # Part 9: Final Recommendation (2-3 pages, decision framework) + 🔥 LH Decision/Proposals
         sections.append(self._generate_final_recommendation(
             financial_analysis, lh_price_sim, risk_assessment,
-            alternative_comparison, basic_info, tone
+            alternative_comparison, basic_info, tone,
+            lh_evaluation=data.get('lh_evaluation')  # 🔥 Phase 4.2: Pass LH data
         ))
         
         # Assemble report
@@ -1435,9 +1437,13 @@ class LHReportGeneratorV75Final:
         """
     
     def _generate_financial_analysis_enhanced(
-        self, financial, lh_sim, basic_info, tone
+        self, financial, lh_sim, basic_info, tone, lh_evaluation=None
     ) -> Dict[str, Any]:
-        """Generate enhanced financial analysis (8-10 pages) - 공사비연동제 방식 (v8.5 스타일)"""
+        """Generate enhanced financial analysis (8-10 pages) - 공사비연동제 방식 (v8.5 스타일)
+        
+        Args:
+            lh_evaluation: 🔥 Phase 4.2 - LH Decision Engine evaluation data
+        """
         
         # Extract financial data
         capex = financial.get('capex', {})
@@ -1733,6 +1739,11 @@ class LHReportGeneratorV75Final:
             </div>
         </div>
         """
+        
+        # 🔥 Phase 4.2: Add LH 100-Point Score Table (Section 6.2)
+        if lh_evaluation:
+            html += self._generate_lh_score_table_html(lh_evaluation)
+        
         return {'title': 'Financial Analysis (공사비연동제)', 'html': html, 'level': 1}
     
     def _generate_risk_mitigation_enhanced(
@@ -1952,7 +1963,7 @@ class LHReportGeneratorV75Final:
         return {'title': '36-Month Execution Roadmap', 'html': html, 'level': 1}
     
     def _generate_final_recommendation(
-        self, financial, lh_sim, risk, alternatives, basic_info, tone
+        self, financial, lh_sim, risk, alternatives, basic_info, tone, lh_evaluation=None
     ) -> Dict[str, Any]:
         """Generate final recommendation (8-10 pages) - Academic Research Paper Style
         
@@ -1961,6 +1972,9 @@ class LHReportGeneratorV75Final:
         - 분석 방법론 (Methodology): 평가 기준 및 분석 프레임워크
         - 결과 및 논의 (Results & Discussion): 상세 분석 결과
         - 결론 및 제언 (Conclusion & Recommendations): 최종 권고사항
+        
+        Args:
+            lh_evaluation: 🔥 Phase 4.2 - LH Decision Engine evaluation data
         """
         
         # 핵심 재무 지표
@@ -2477,6 +2491,13 @@ class LHReportGeneratorV75Final:
             </div>
         </div>
         """
+        
+        # 🔥 Phase 4.2: Add LH Decision Engine Sections
+        if lh_evaluation:
+            html += self._generate_lh_decision_html(lh_evaluation)
+            html += self._generate_improvement_proposals_html(lh_evaluation)
+            html += self._generate_risk_assessment_enhanced_html(lh_evaluation)
+        
         return {'title': 'Final Recommendation', 'html': html, 'level': 1}
     
     def _generate_weakness_list(self, financial, risk, lh_sim) -> str:
@@ -2548,6 +2569,408 @@ class LHReportGeneratorV75Final:
             'N/A': '평가가 불가능하거나 데이터가 부족합니다.'
         }
         return descriptions.get(rating, '평가 정보가 없습니다.')
+    
+    # ============================================================
+    # 🔥 Phase 4.2: LH Decision Engine Integration Methods
+    # ============================================================
+    
+    def _generate_lh_score_table_html(self, lh_evaluation: Dict[str, Any]) -> str:
+        """
+        Generate LH 100-point score table HTML (Section 6.2)
+        
+        Args:
+            lh_evaluation: LH evaluation data from Phase 3
+            
+        Returns:
+            HTML table string
+        """
+        if not lh_evaluation:
+            return ""
+        
+        score_breakdown = lh_evaluation.get('score_breakdown', {})
+        
+        html = """
+        <div style="margin: 30px 0;">
+            <h3 class="subsubsection-title">6.2 LH 100점 평가 점수표 (LH 100-Point Evaluation Score)</h3>
+            <p class="paragraph">
+                본 사업은 LH(한국토지주택공사)의 100점 평가 체계를 기준으로 
+                종합적인 사업성 평가를 수행하였다. 평가는 입지 적합성(25점), 
+                사업 타당성(30점), 시장 경쟁력(20점), 재무 건전성(15점), 
+                법규 준수(10점)의 5개 영역으로 구성된다.
+            </p>
+            
+            <table style="width: 100%; margin: 20px 0;">
+                <thead>
+                    <tr style="background: #0047AB; color: white;">
+                        <th style="padding: 12px; text-align: left;">평가 항목</th>
+                        <th style="padding: 12px; text-align: center;">배점</th>
+                        <th style="padding: 12px; text-align: center;">득점</th>
+                        <th style="padding: 12px; text-align: center;">비율</th>
+                    </tr>
+                </thead>
+                <tbody>
+        """
+        
+        # Location Suitability
+        location_score = score_breakdown.get('location_score', 0)
+        html += f"""
+                    <tr>
+                        <td style="padding: 12px; font-weight: bold;">1. 입지 적합성 (Location Suitability)</td>
+                        <td style="padding: 12px; text-align: center;">25</td>
+                        <td style="padding: 12px; text-align: center; font-weight: bold;">{location_score:.1f}</td>
+                        <td style="padding: 12px; text-align: center;">{location_score/25*100:.0f}%</td>
+                    </tr>
+        """
+        
+        # Business Feasibility
+        feasibility_score = score_breakdown.get('feasibility_score', 0)
+        html += f"""
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 12px; font-weight: bold;">2. 사업 타당성 (Business Feasibility)</td>
+                        <td style="padding: 12px; text-align: center;">30</td>
+                        <td style="padding: 12px; text-align: center; font-weight: bold;">{feasibility_score:.1f}</td>
+                        <td style="padding: 12px; text-align: center;">{feasibility_score/30*100:.0f}%</td>
+                    </tr>
+        """
+        
+        # Market Competitiveness
+        market_score = score_breakdown.get('market_score', 0)
+        html += f"""
+                    <tr>
+                        <td style="padding: 12px; font-weight: bold;">3. 시장 경쟁력 (Market Competitiveness)</td>
+                        <td style="padding: 12px; text-align: center;">20</td>
+                        <td style="padding: 12px; text-align: center; font-weight: bold;">{market_score:.1f}</td>
+                        <td style="padding: 12px; text-align: center;">{market_score/20*100:.0f}%</td>
+                    </tr>
+        """
+        
+        # Financial Soundness
+        financial_score = score_breakdown.get('financial_score', 0)
+        html += f"""
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 12px; font-weight: bold;">4. 재무 건전성 (Financial Soundness)</td>
+                        <td style="padding: 12px; text-align: center;">15</td>
+                        <td style="padding: 12px; text-align: center; font-weight: bold;">{financial_score:.1f}</td>
+                        <td style="padding: 12px; text-align: center;">{financial_score/15*100:.0f}%</td>
+                    </tr>
+        """
+        
+        # Regulatory Compliance
+        regulatory_score = score_breakdown.get('regulatory_score', 0)
+        html += f"""
+                    <tr>
+                        <td style="padding: 12px; font-weight: bold;">5. 법규 준수 (Regulatory Compliance)</td>
+                        <td style="padding: 12px; text-align: center;">10</td>
+                        <td style="padding: 12px; text-align: center; font-weight: bold;">{regulatory_score:.1f}</td>
+                        <td style="padding: 12px; text-align: center;">{regulatory_score/10*100:.0f}%</td>
+                    </tr>
+        """
+        
+        # Total Score
+        total_score = lh_evaluation.get('total_score', 0)
+        grade = lh_evaluation.get('grade', 'N/A')
+        grade_color = self._get_grade_color(grade)
+        
+        html += f"""
+                    <tr style="background: #e9ecef; font-weight: bold;">
+                        <td style="padding: 15px; font-size: 12pt;">총점 / 등급</td>
+                        <td style="padding: 15px; text-align: center; font-size: 12pt;">100</td>
+                        <td style="padding: 15px; text-align: center; font-size: 14pt; color: {grade_color};">{total_score:.1f}</td>
+                        <td style="padding: 15px; text-align: center; font-size: 14pt; color: {grade_color};">{grade}</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <p class="paragraph">
+                종합 평가 결과, 본 사업은 <strong style="color: {grade_color};">{total_score:.1f}점 ({grade}등급)</strong>을 
+                기록하여 {self._get_grade_description(grade)}
+            </p>
+        </div>
+        """
+        
+        return html
+    
+    def _get_grade_color(self, grade: str) -> str:
+        """Get color for grade"""
+        colors = {
+            'A': '#28a745',  # Green
+            'B': '#17a2b8',  # Blue
+            'C': '#ffc107',  # Yellow
+            'D': '#fd7e14',  # Orange
+            'F': '#dc3545',  # Red
+            'N/A': '#6c757d'  # Gray
+        }
+        return colors.get(grade, '#6c757d')
+    
+    def _get_grade_description(self, grade: str) -> str:
+        """Get description for grade"""
+        descriptions = {
+            'A': 'LH 매입 가능성이 매우 높은 우수 프로젝트로 평가됩니다.',
+            'B': 'LH 매입 가능성이 높은 양호한 프로젝트로 평가됩니다.',
+            'C': '조건부 개선을 통해 LH 매입 가능성을 제고할 수 있는 프로젝트입니다.',
+            'D': '사업성 개선이 필요한 프로젝트로, 전면 재검토가 권장됩니다.',
+            'F': '현재 조건으로는 LH 매입이 어려운 프로젝트로 평가됩니다.',
+            'N/A': '평가 정보가 부족하여 등급을 산정할 수 없습니다.'
+        }
+        return descriptions.get(grade, '평가 정보가 없습니다.')
+    
+    def _generate_lh_decision_html(self, lh_evaluation: Dict[str, Any]) -> str:
+        """
+        Generate LH Decision section HTML (Section 8.1)
+        
+        Args:
+            lh_evaluation: LH evaluation data from Phase 3
+            
+        Returns:
+            HTML section string
+        """
+        if not lh_evaluation:
+            return ""
+        
+        decision = lh_evaluation.get('decision', 'UNKNOWN')
+        total_score = lh_evaluation.get('total_score', 0)
+        grade = lh_evaluation.get('grade', 'N/A')
+        confidence = lh_evaluation.get('confidence', 0) * 100
+        risk_level = lh_evaluation.get('risk_level', 'UNKNOWN')
+        executive_summary = lh_evaluation.get('executive_summary', '')
+        
+        # Decision styling
+        decision_colors = {
+            'GO': '#28a745',
+            'REVIEW': '#ffc107',
+            'NO_GO': '#dc3545'
+        }
+        decision_color = decision_colors.get(decision, '#6c757d')
+        
+        risk_colors = {
+            'LOW': '#28a745',
+            'MEDIUM': '#ffc107',
+            'HIGH': '#fd7e14',
+            'CRITICAL': '#dc3545'
+        }
+        risk_color = risk_colors.get(risk_level, '#6c757d')
+        
+        # Decision labels
+        decision_labels = {
+            'GO': 'GO (사업 추진 권장)',
+            'REVIEW': 'REVIEW (조건부 추진)',
+            'NO_GO': 'NO-GO (사업 재검토 필요)'
+        }
+        decision_label = decision_labels.get(decision, decision)
+        
+        html = f"""
+        <div style="margin: 40px 0;">
+            <h3 class="subsubsection-title">8.1 LH 최종 판정 (Final Decision)</h3>
+            
+            <div style="background: #f8f9fa; padding: 30px; border-radius: 8px; border-left: 5px solid {decision_color};">
+                <table style="width: 100%; border: none;">
+                    <tr>
+                        <td style="padding: 10px; border: none; font-weight: bold; font-size: 11pt;">최종 판정</td>
+                        <td style="padding: 10px; border: none; font-size: 14pt; font-weight: bold; color: {decision_color};">
+                            {decision_label}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: none; font-weight: bold; font-size: 11pt;">종합 점수</td>
+                        <td style="padding: 10px; border: none; font-size: 12pt;">
+                            <strong>{total_score:.1f} / 100</strong> (등급: <strong style="color: {decision_color};">{grade}</strong>)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: none; font-weight: bold; font-size: 11pt;">신뢰도</td>
+                        <td style="padding: 10px; border: none; font-size: 12pt;">
+                            <strong>{confidence:.0f}%</strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: none; font-weight: bold; font-size: 11pt;">리스크 수준</td>
+                        <td style="padding: 10px; border: none; font-size: 12pt; color: {risk_color}; font-weight: bold;">
+                            {risk_level}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            
+            <p class="paragraph" style="margin-top: 20px;">
+                <strong>종합 의견:</strong> {executive_summary}
+            </p>
+        </div>
+        """
+        
+        return html
+    
+    def _generate_improvement_proposals_html(self, lh_evaluation: Dict[str, Any]) -> str:
+        """
+        Generate Improvement Proposals section HTML (Section 8.2)
+        
+        Args:
+            lh_evaluation: LH evaluation data from Phase 3
+            
+        Returns:
+            HTML section string
+        """
+        if not lh_evaluation:
+            return ""
+        
+        proposals = lh_evaluation.get('improvement_proposals', [])
+        
+        if not proposals:
+            return """
+            <div style="margin: 30px 0;">
+                <h3 class="subsubsection-title">8.2 개선 제안 사항 (Improvement Proposals)</h3>
+                <p class="paragraph">
+                    현재 평가 기준 상 특별한 개선 사항이 식별되지 않았습니다. 
+                    그러나 지속적인 모니터링 및 시장 변화 대응이 필요합니다.
+                </p>
+            </div>
+            """
+        
+        html = """
+        <div style="margin: 30px 0;">
+            <h3 class="subsubsection-title">8.2 개선 제안 사항 (Improvement Proposals)</h3>
+            <p class="paragraph">
+                본 사업의 경쟁력 제고 및 리스크 완화를 위해 다음과 같은 개선 방안을 제안한다.
+            </p>
+            
+            <table style="width: 100%; margin: 20px 0;">
+                <thead>
+                    <tr style="background: #0047AB; color: white;">
+                        <th style="padding: 12px; text-align: center; width: 10%;">우선순위</th>
+                        <th style="padding: 12px; text-align: center; width: 15%;">영역</th>
+                        <th style="padding: 12px; text-align: left;">개선 제안</th>
+                        <th style="padding: 12px; text-align: left;">기대 효과</th>
+                    </tr>
+                </thead>
+                <tbody>
+        """
+        
+        priority_colors = {
+            'HIGH': '#dc3545',
+            'MEDIUM': '#ffc107',
+            'LOW': '#17a2b8'
+        }
+        
+        priority_labels = {
+            'HIGH': '높음',
+            'MEDIUM': '중간',
+            'LOW': '낮음'
+        }
+        
+        category_labels = {
+            'location': '입지',
+            'feasibility': '사업성',
+            'market': '시장',
+            'financial': '재무',
+            'regulatory': '법규'
+        }
+        
+        for idx, proposal in enumerate(proposals):
+            priority = proposal.get('priority', 'MEDIUM')
+            category = proposal.get('category', '')
+            issue = proposal.get('issue', '')
+            proposal_text = proposal.get('proposal', '')
+            impact = proposal.get('impact', '')
+            
+            priority_color = priority_colors.get(priority, '#6c757d')
+            priority_label = priority_labels.get(priority, priority)
+            category_label = category_labels.get(category, category)
+            
+            bg_color = '#f8f9fa' if idx % 2 == 1 else 'white'
+            
+            html += f"""
+                    <tr style="background: {bg_color};">
+                        <td style="padding: 12px; text-align: center; font-weight: bold; color: {priority_color};">
+                            {priority_label}
+                        </td>
+                        <td style="padding: 12px; text-align: center; font-weight: bold;">
+                            {category_label}
+                        </td>
+                        <td style="padding: 12px;">
+                            <strong>문제점:</strong> {issue}<br/>
+                            <strong>제안:</strong> {proposal_text}
+                        </td>
+                        <td style="padding: 12px;">
+                            {impact}
+                        </td>
+                    </tr>
+            """
+        
+        html += """
+                </tbody>
+            </table>
+        </div>
+        """
+        
+        return html
+    
+    def _generate_risk_assessment_enhanced_html(self, lh_evaluation: Dict[str, Any]) -> str:
+        """
+        Generate enhanced Risk Assessment section HTML (Section 8.3)
+        
+        Args:
+            lh_evaluation: LH evaluation data from Phase 3
+            
+        Returns:
+            HTML section string
+        """
+        if not lh_evaluation:
+            return ""
+        
+        risk_assessment = lh_evaluation.get('risk_assessment', '')
+        risk_level = lh_evaluation.get('risk_level', 'UNKNOWN')
+        critical_blockers = lh_evaluation.get('critical_blockers', [])
+        
+        risk_colors = {
+            'LOW': '#28a745',
+            'MEDIUM': '#ffc107',
+            'HIGH': '#fd7e14',
+            'CRITICAL': '#dc3545'
+        }
+        risk_color = risk_colors.get(risk_level, '#6c757d')
+        
+        html = f"""
+        <div style="margin: 30px 0;">
+            <h3 class="subsubsection-title">8.3 리스크 평가 (Risk Assessment)</h3>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 5px solid {risk_color}; margin: 20px 0;">
+                <p style="margin: 0; font-weight: bold; font-size: 12pt;">
+                    전체 리스크 수준: <span style="color: {risk_color}; font-size: 14pt;">{risk_level}</span>
+                </p>
+            </div>
+            
+            <p class="paragraph">
+                {risk_assessment}
+            </p>
+        """
+        
+        # Critical Blockers (if any)
+        if critical_blockers:
+            html += """
+            <div style="background: #fff3cd; padding: 20px; border-radius: 8px; border-left: 5px solid #dc3545; margin: 20px 0;">
+                <h4 style="color: #dc3545; margin-top: 0;">⚠️ Critical Blockers (사업 진행 불가 요인)</h4>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+            """
+            
+            for blocker in critical_blockers:
+                html += f"<li style='margin: 5px 0; color: #721c24;'><strong>{blocker}</strong></li>"
+            
+            html += """
+                </ul>
+                <p style="margin: 10px 0 0 0; color: #721c24;">
+                    <strong>조치 필요:</strong> 위 Critical Blocker를 해소하지 않으면 사업 추진이 불가능합니다.
+                </p>
+            </div>
+            """
+        
+        html += """
+        </div>
+        """
+        
+        return html
+    
+    # ============================================================
+    # End of Phase 4.2 LH Methods
+    # ============================================================
     
     def _assemble_final_report(self, sections: List[Dict], basic_info: Dict) -> str:
         """Assemble all sections into complete HTML report"""

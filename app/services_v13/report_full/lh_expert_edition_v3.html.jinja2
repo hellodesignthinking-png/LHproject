@@ -2695,14 +2695,32 @@
                 </tr>
                 <tr>
                     <td class="bold">주차대수</td>
-                    <td class="number">{{ parking_spaces | default((land_area_sqm * 2.0 / 45) | round(0)) }}대 (법정 {{ required_parking | default((land_area_sqm * 2.0 / 45) | round(0)) }}대)</td>
-                    <td>1.0대/세대</td>
+                    <td class="number">{% if phase11 and phase11.total_units %}{{ (phase11.total_units * phase11.parking_ratio) | round(0) | int }}{% else %}{{ parking_spaces | default((land_area_sqm * 2.0 / 45) | round(0)) }}{% endif %}대 ({{ phase11.parking_ratio if phase11 else '1.0' }}대/세대)</td>
+                    <td>{% if phase11 %}LH 정책 기준 (서울: 0.3, 일반: 0.2){% else %}1.0대/세대{% endif %}</td>
                 </tr>
                 <tr>
                     <td class="bold">세대수</td>
-                    <td class="number">{{ (land_area_sqm / 100 * 5) | round(0) | int }}세대</td>
-                    <td>전용면적 기준</td>
+                    <td class="number">{% if phase11 and phase11.total_units %}{{ phase11.total_units }}{% else %}{{ (land_area_sqm / 100 * 5) | round(0) | int }}{% endif %}세대</td>
+                    <td>{% if phase11 %}Phase 11: LH 정책 기준 자동 산정{% else %}전용면적 기준{% endif %}</td>
                 </tr>
+                {% if phase11 and phase11.unit_distribution %}
+                <tr>
+                    <td class="bold">세대 구성</td>
+                    <td colspan="2">
+                        <div style="font-size: 0.9em; line-height: 1.6;">
+                        {% for type_key, unit_data in phase11.unit_distribution.items() %}
+                            <strong>{{ unit_data.size_avg }}㎡형</strong>: {{ unit_data.count }}세대 ({{ (unit_data.count / phase11.total_units * 100) | round(1) }}%)
+                            {% if not loop.last %} | {% endif %}
+                        {% endfor %}
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="bold">공용면적</td>
+                    <td class="number">{{ phase11.common_area_ratio }}% (LH 정책: 15% 이상)</td>
+                    <td>공유 라운지, 커뮤니티 시설 포함</td>
+                </tr>
+                {% endif %}
                 <tr>
                     <td class="bold">평균 세대면적</td>
                     <td class="number">{{ (total_floor_area_sqm * 0.75 / (land_area_sqm / 100 * 5)) | round(1) }}㎡ ({{ ((total_floor_area_sqm * 0.75 / (land_area_sqm / 100 * 5)) / 3.3058) | round(1) }}평)</td>
@@ -2726,10 +2744,14 @@
         <h3 class="content-title">2. 설계 개념 및 공간 구성</h3>
         
         <div class="analysis-box">
-            <h4>💡 설계 철학</h4>
+            <h4>💡 설계 철학 (Phase 11: LH Policy-Driven Design)</h4>
+            {% if phase11 and phase11.design_philosophy %}
+            <p>{{ phase11.design_philosophy | safe }}</p>
+            {% else %}
             <p>본 프로젝트는 <strong>청년층의 라이프스타일을 고려한 커뮤니티 기반 공동주택</strong>으로 계획되었습니다. 
             단순한 주거 공간을 넘어, 입주자 간 교류와 협력을 촉진하는 <strong>공유 경제(Sharing Economy)</strong> 개념을 
             적용하여, 1인 가구의 사회적 고립감을 해소하고 삶의 질을 향상시키는 것을 목표로 합니다.</p>
+            {% endif %}
         </div>
         
         <div class="analysis-box">
@@ -4828,12 +4850,25 @@
         <div class="logic-grid">
             <div class="logic-left">
                 <div class="logic-box">
-                    <h4>What (로드맵 현황)</h4>
+                    <h4>What (로드맵 현황) - Phase 14 Analysis</h4>
+                    {% if phase14 and phase14.total_duration %}
+                    <p>Phase 14 Critical Path Analyzer 기반: 전체 프로젝트는 <strong>{{ phase14.phases | length }}단계, 총 {{ phase14.total_duration }}개월</strong>로 구성됩니다.</p>
+                    <ul style="font-size: 0.9em; margin-top: 8px;">
+                    {% for phase in phase14.phases %}
+                        <li>{{ phase.name }}: {{ phase.duration }}개월{% if phase.is_critical %} <span style="color: #d32f2f;">★ Critical</span>{% endif %}</li>
+                    {% endfor %}
+                    </ul>
+                    {% else %}
                     <p>전체 프로젝트는 준비, 착공, 시공, 준공의 4단계, 총 36개월로 구성됩니다.</p>
+                    {% endif %}
                 </div>
                 <div class="logic-box">
                     <h4>So What (로드맵 시사점)</h4>
+                    {% if phase14 %}
+                    <p>{{ phase14.total_duration }}개월 일정은 LH 표준 개발 일정에 부합하며, <strong>{{ phase14.critical_path | length }}개 Critical Phase</strong>가 식별되었습니다.</p>
+                    {% else %}
                     <p>36개월 일정은 LH 표준 개발 일정에 부합합니다.</p>
+                    {% endif %}
                 </div>
                 <div class="logic-box">
                     <h4>Why (로드맵 근거)</h4>
@@ -4843,15 +4878,37 @@
             <div class="logic-right">
                 <div class="highlight-box">
                     <h4>Insight (로드맵 통찰)</h4>
+                    {% if phase14 and phase14.critical_path %}
+                    <p><strong>Critical Path</strong>: 
+                    {% for cp_id in phase14.critical_path %}
+                        {% set cp_phase = phase14.phases | selectattr("name", "search", "Design|Construction|LH Review") | first %}
+                        {% if cp_phase %}{{ cp_phase.name }}{% endif %}{% if not loop.last %} + {% endif %}
+                    {% endfor %}
+                    </p>
+                    {% else %}
                     <p><strong>Critical Path</strong> = 설계 승인 + 골조 공사 + 감정평가입니다.</p>
+                    {% endif %}
                 </div>
                 <div class="highlight-box">
-                    <h4>Policy Implication (정책적 함의)</h4>
+                    <h4>Phase 14: Key Risks Identified</h4>
+                    {% if phase14 and phase14.key_risks %}
+                    <ul style="font-size: 0.85em; margin-top: 8px;">
+                    {% for risk in phase14.key_risks[:5] %}
+                        <li>{{ risk }}</li>
+                    {% endfor %}
+                    </ul>
+                    <p style="margin-top: 8px; font-size: 0.85em;"><em>총 {{ phase14.key_risks | length }}개 리스크 식별됨</em></p>
+                    {% else %}
                     <p>LH 신축매입임대 사업의 핵심은 일정 준수입니다.</p>
+                    {% endif %}
                 </div>
                 <div class="highlight-box">
                     <h4>Conclusion (로드맵 결론)</h4>
+                    {% if phase14 %}
+                    <p><strong>FEASIBLE 판단</strong>: {{ phase14.total_duration }}개월 일정은 데이터 기반 분석 결과 실현 가능합니다.</p>
+                    {% else %}
                     <p><strong>FEASIBLE 판단</strong>: 36개월 일정은 실현 가능합니다.</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -4998,11 +5055,98 @@
         <div class="section-subtitle">Research-Grade Summary & Future Research Directions</div>
     </div>
     
-    <!-- v22 UPGRADE: McKinsey/BCG Consulting Design -->
+    <!-- v22 UPGRADE: McKinsey/BCG Consulting Design + Phase 13 Integration -->
     <section class="logic-section">
         <div class="content-block">
-            <h3 class="content-title">9.1 학술적 결론</h3>
+            <h3 class="content-title">9.1 학술적 결론 (Phase 13: Academic Narrative Engine)</h3>
         </div>
+        {% if phase13 and phase13.narratives %}
+        <div class="logic-grid">
+            <div class="logic-left">
+                <div class="logic-box">
+                    <h4>What (연구 현황)</h4>
+                    {% if phase13.narratives.what %}
+                    <p>{{ phase13.narratives.what.content | safe }}</p>
+                    {% if phase13.narratives.what.key_points %}
+                    <ul style="font-size: 0.9em; margin-top: 10px;">
+                    {% for point in phase13.narratives.what.key_points %}
+                        <li>{{ point }}</li>
+                    {% endfor %}
+                    </ul>
+                    {% endif %}
+                    {% else %}
+                    <p>본 연구는 {{ address }}에 대한 청년주택 개발타당성을 학술적 관점에서 다층 분석하였습니다. 분석 대상 부지는 면적 {{ land_area_sqm | round(0) }}㎡, 용적률 {{ floor_area_ratio | round(0) }}%로, 총 투자비 {{ capex_eok | round(2) }}억원 규모의 LH 신축매입임대 사업입니다.</p>
+                    {% endif %}
+                </div>
+                <div class="logic-box">
+                    <h4>So What (연구 시사점)</h4>
+                    {% if phase13.narratives.so_what %}
+                    <p>{{ phase13.narratives.so_what.content | safe }}</p>
+                    {% if phase13.narratives.so_what.key_points %}
+                    <ul style="font-size: 0.9em; margin-top: 10px;">
+                    {% for point in phase13.narratives.so_what.key_points %}
+                        <li>{{ point }}</li>
+                    {% endfor %}
+                    </ul>
+                    {% endif %}
+                    {% else %}
+                    <p>분석 결과, 본 프로젝트의 민간 IRR은 {{ irr_pct | round(2) }}%로 민간 개발 기준(최소 8%) 미달이나, 이는 LH 신축매입임대 사업의 구조적 특성에 기인합니다.</p>
+                    {% endif %}
+                </div>
+                <div class="logic-box">
+                    <h4>Why (학술적 근거)</h4>
+                    {% if phase13.narratives.why %}
+                    <p>{{ phase13.narratives.why.content | safe }}</p>
+                    {% if phase13.narratives.why.key_points %}
+                    <ul style="font-size: 0.9em; margin-top: 10px;">
+                    {% for point in phase13.narratives.why.key_points %}
+                        <li>{{ point }}</li>
+                    {% endfor %}
+                    </ul>
+                    {% endif %}
+                    {% else %}
+                    <p>본 분석의 학술적 근거는 다음과 같습니다: (1) <strong>재무 분석</strong>: DCF 기법 및 NPV/IRR 산정 (할인율 5%, 30년 운영), (2) <strong>시장 분석</strong>: 헤도닉 가격 모형 기반 시장가치 추정.</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="logic-right">
+                <div class="highlight-box">
+                    <h4>Insight (학술 통찰)</h4>
+                    {% if phase13.narratives.insight %}
+                    <p>{{ phase13.narratives.insight.content | safe }}</p>
+                    {% if phase13.narratives.insight.key_points %}
+                    <ul style="font-size: 0.9em; margin-top: 10px;">
+                    {% for point in phase13.narratives.insight.key_points %}
+                        <li>{{ point }}</li>
+                    {% endfor %}
+                    </ul>
+                    {% endif %}
+                    {% else %}
+                    <p><strong>핵심 발견</strong>: LH 신축매입임대 사업은 <em>정책사업(Policy Project)</em>으로 평가해야 하며, 민간 개발 사업의 수익성 기준(NPV > 0, IRR > 8%)을 직접 적용하는 것은 타당하지 않습니다.</p>
+                    {% endif %}
+                </div>
+                <div class="highlight-box">
+                    <h4>Policy Implication (정책적 함의)</h4>
+                    <p>LH 및 국토교통부는 신축매입임대 사업 평가 시 <strong>"민간 수익성"</strong>과 <strong>"정책 타당성"</strong>을 명확히 구분해야 합니다. 정책사업은 (1) 사회적 편익(청년 주거 안정), (2) 재정 건전성(LH 재무 안정성), (3) 정책 정합성(정부 주택 정책)을 중심으로 평가해야 합니다.</p>
+                </div>
+                <div class="highlight-box">
+                    <h4>Conclusion (학술 결론)</h4>
+                    {% if phase13.narratives.conclusion %}
+                    <p>{{ phase13.narratives.conclusion.content | safe }}</p>
+                    {% if phase13.narratives.conclusion.key_points %}
+                    <ul style="font-size: 0.9em; margin-top: 10px;">
+                    {% for point in phase13.narratives.conclusion.key_points %}
+                        <li>{{ point }}</li>
+                    {% endfor %}
+                    </ul>
+                    {% endif %}
+                    {% else %}
+                    <p><strong>RESEARCH-GRADE VALIDATED</strong>: 본 연구는 {{ address }} 청년주택 개발타당성을 McKinsey/BCG 방법론으로 다층 검증했습니다. 종합 평가 결과, 민간 수익성은 제한적이나(IRR {{ irr_pct | round(2) }}%), 정책사업 타당성은 충족(LH 매입 보장, 사회적 편익)됩니다.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% else %}
         <div class="logic-grid">
             <div class="logic-left">
                 <div class="logic-box">
@@ -5033,6 +5177,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
     </section>
 </div>
 

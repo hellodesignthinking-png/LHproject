@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏠 ZeroSite Land Report v3 - 토지감정평가</title>
+    
+    <!-- Cache Prevention -->
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Header */
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .logo {
+            font-size: 32px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .header-subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+        }
+        
+        .nav-tab {
+            padding: 15px 30px;
+            background: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            white-space: nowrap;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .nav-tab:hover {
+            background: #f5f5f5;
+            transform: translateY(-2px);
+        }
+        
+        .nav-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* Form */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .required {
+            color: #e74c3c;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .input-hint {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+        
+        /* Button */
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background: #e0e0e0;
+        }
+        
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Results */
+        .results {
+            display: none;
+        }
+        
+        .results.active {
+            display: block;
+        }
+        
+        .result-highlight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .result-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .result-value {
+            font-size: 32px;
+            font-weight: 900;
+            margin-bottom: 5px;
+        }
+        
+        .result-subvalue {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .confidence-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            margin-top: 10px;
+        }
+        
+        .confidence-high {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .confidence-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .confidence-low {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .result-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .result-item-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .result-item-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+        
+        .recommendation-box {
+            background: #f0f8ff;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .recommendation-status {
+            font-size: 20px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .recommendation-detail {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        /* Alert */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .alert.active {
+            display: block;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+            margin-top: 40px;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">🏠 ZeroSite Land Report</div>
+            <div class="header-subtitle">Expert Edition v3 · 토지감정평가 전문 분석 시스템</div>
+        </div>
+        
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <a href="/v9/index_REAL.html" class="nav-tab">🏢 LH 신축매입</a>
+            <a href="/v9/expert_edition_v3.html" class="nav-tab">📊 Expert v3</a>
+            <a href="/v9/land_report_v3.html" class="nav-tab active">🏠 토지감정평가</a>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Panel: Input Form -->
+            <div class="card">
+                <h2 class="card-title">📝 토지 정보 입력</h2>
+                
+                <div id="alert" class="alert alert-error"></div>
+                
+                <form id="landReportForm">
+                    <div class="form-group">
+                        <label>주소 <span class="required">*</span></label>
+                        <input 
+                            type="text" 
+                            id="address" 
+                            name="address"
+                            placeholder="예: 서울특별시 강남구 역삼동 123-45"
+                            required
+                        >
+                        <div class="input-hint">정확한 지번 주소를 입력해주세요</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>토지 면적 (㎡) <span class="required">*</span></label>
+                        <input 
+                            type="number" 
+                            id="landSize" 
+                            name="landSize"
+                            placeholder="예: 1000"
+                            min="1"
+                            step="0.01"
+                            required
+                        >
+                        <div class="input-hint">토지대장 상의 면적을 입력해주세요</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>용도지역 <span class="required">*</span></label>
+                        <select id="zoneType" name="zoneType" required>
+                            <option value="">선택하세요</option>
+                            <option value="제1종일반주거지역">제1종일반주거지역</option>
+                            <option value="제2종일반주거지역" selected>제2종일반주거지역</option>
+                            <option value="제3종일반주거지역">제3종일반주거지역</option>
+                            <option value="준주거지역">준주거지역</option>
+                            <option value="준공업지역">준공업지역</option>
+                            <option value="일반상업지역">일반상업지역</option>
+                            <option value="근린상업지역">근린상업지역</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>요청 매입가 (원)</label>
+                        <input 
+                            type="number" 
+                            id="askingPrice" 
+                            name="askingPrice"
+                            placeholder="예: 10000000000 (선택사항)"
+                            min="0"
+                            step="1000000"
+                        >
+                        <div class="input-hint">희망 매입가를 입력하면 투자 판정을 제공합니다</div>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="generatePdf" name="generatePdf">
+                        <label for="generatePdf" style="margin-bottom: 0;">PDF 보고서 생성 (3페이지)</label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        🔍 토지감정평가 실행
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Right Panel: Results -->
+            <div class="card">
+                <h2 class="card-title">📊 분석 결과</h2>
+                
+                <!-- Loading State -->
+                <div id="loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>토지 감정평가 중...</p>
+                    <p style="font-size: 14px; color: #999; margin-top: 10px;">
+                        10개 거래사례 분석 및 4-factor 보정 수행 중
+                    </p>
+                </div>
+                
+                <!-- Results -->
+                <div id="results" class="results">
+                    <div class="result-highlight">
+                        <div class="result-label">감정평가액</div>
+                        <div class="result-value" id="estimatedPrice">-</div>
+                        <div class="result-subvalue" id="pricePerSqm">-</div>
+                        <div class="confidence-badge" id="confidenceBadge">-</div>
+                    </div>
+                    
+                    <div class="result-grid">
+                        <div class="result-item">
+                            <div class="result-item-label">최저가</div>
+                            <div class="result-item-value" id="priceRangeLow">-</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-item-label">최고가</div>
+                            <div class="result-item-value" id="priceRangeHigh">-</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-item-label">거래사례</div>
+                            <div class="result-item-value" id="transactionCount">-</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-item-label">위치</div>
+                            <div class="result-item-value" id="location">-</div>
+                        </div>
+                    </div>
+                    
+                    <div id="recommendationBox" class="recommendation-box" style="display: none;">
+                        <div class="recommendation-status" id="recommendationStatus">-</div>
+                        <div class="recommendation-detail" id="recommendationDetail">-</div>
+                    </div>
+                    
+                    <button id="downloadPdfBtn" class="btn btn-secondary" style="display: none;">
+                        📄 PDF 보고서 다운로드
+                    </button>
+                    
+                    <button id="newAnalysisBtn" class="btn btn-secondary" onclick="resetForm()">
+                        🔄 새로운 분석
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>© 2025 ZeroSite Expert Edition v3. All rights reserved.</p>
+            <p>Powered by GenSpark AI Enhanced Services</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = '/api/v3';
+        let currentReportId = null;
+
+        // Form submission
+        document.getElementById('landReportForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Hide alert
+            hideAlert();
+            
+            // Get form data
+            const address = document.getElementById('address').value.trim();
+            const landSize = parseFloat(document.getElementById('landSize').value);
+            const zoneType = document.getElementById('zoneType').value;
+            const askingPriceInput = document.getElementById('askingPrice').value.trim();
+            const askingPrice = askingPriceInput ? parseFloat(askingPriceInput) : null;
+            const generatePdf = document.getElementById('generatePdf').checked;
+            
+            // Validation
+            if (!address || address.length < 5) {
+                showAlert('주소를 정확히 입력해주세요 (최소 5자)', 'error');
+                return;
+            }
+            
+            if (!landSize || landSize <= 0) {
+                showAlert('토지 면적을 입력해주세요', 'error');
+                return;
+            }
+            
+            if (!zoneType) {
+                showAlert('용도지역을 선택해주세요', 'error');
+                return;
+            }
+            
+            // Show loading
+            showLoading();
+            
+            try {
+                // Call API
+                const response = await fetch(`${API_BASE_URL}/land-report`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        address: address,
+                        land_size_sqm: landSize,
+                        zone_type: zoneType,
+                        asking_price: askingPrice,
+                        generate_pdf: generatePdf
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || '분석 실패');
+                }
+                
+                const data = await response.json();
+                currentReportId = data.report_id;
+                
+                // Display results
+                displayResults(data);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                hideLoading();
+                showAlert('분석 중 오류가 발생했습니다: ' + error.message, 'error');
+            }
+        });
+
+        function showLoading() {
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('results').classList.remove('active');
+            document.getElementById('submitBtn').disabled = true;
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('active');
+            document.getElementById('submitBtn').disabled = false;
+        }
+
+        function displayResults(data) {
+            hideLoading();
+            
+            const valuation = data.valuation;
+            const recommendation = data.recommendation;
+            
+            // Estimated price
+            document.getElementById('estimatedPrice').textContent = 
+                '₩' + valuation.estimated_price_krw.toLocaleString('ko-KR');
+            
+            // Price per sqm
+            document.getElementById('pricePerSqm').textContent = 
+                '₩' + valuation.price_per_sqm_krw.toLocaleString('ko-KR') + '/㎡';
+            
+            // Confidence badge
+            const confidenceScore = (valuation.confidence_score * 100).toFixed(0);
+            const confidenceLevel = valuation.confidence_level;
+            const confidenceBadge = document.getElementById('confidenceBadge');
+            confidenceBadge.textContent = `${confidenceScore}% (${confidenceLevel})`;
+            
+            if (confidenceLevel === 'HIGH') {
+                confidenceBadge.className = 'confidence-badge confidence-high';
+            } else if (confidenceLevel === 'MEDIUM') {
+                confidenceBadge.className = 'confidence-badge confidence-medium';
+            } else {
+                confidenceBadge.className = 'confidence-badge confidence-low';
+            }
+            
+            // Price range
+            document.getElementById('priceRangeLow').textContent = 
+                '₩' + valuation.price_range.low.toLocaleString('ko-KR');
+            document.getElementById('priceRangeHigh').textContent = 
+                '₩' + valuation.price_range.high.toLocaleString('ko-KR');
+            
+            // Transaction count
+            document.getElementById('transactionCount').textContent = 
+                valuation.transaction_count + '건';
+            
+            // Location
+            const coord = valuation.coordinate;
+            document.getElementById('location').textContent = 
+                coord.region || coord.district || '-';
+            
+            // Recommendation (if available)
+            if (recommendation && recommendation.status) {
+                const recBox = document.getElementById('recommendationBox');
+                recBox.style.display = 'block';
+                
+                document.getElementById('recommendationStatus').textContent = 
+                    (recommendation.emoji || '') + ' ' + recommendation.status;
+                
+                if (recommendation.difference_krw) {
+                    document.getElementById('recommendationDetail').textContent = 
+                        `시세 차이: ₩${Math.abs(recommendation.difference_krw).toLocaleString('ko-KR')} (${recommendation.difference_pct.toFixed(2)}%)`;
+                } else {
+                    document.getElementById('recommendationDetail').textContent = '';
+                }
+            }
+            
+            // PDF download button
+            if (data.pdf_url) {
+                const pdfBtn = document.getElementById('downloadPdfBtn');
+                pdfBtn.style.display = 'block';
+                pdfBtn.onclick = () => {
+                    window.open(data.pdf_url, '_blank');
+                };
+            }
+            
+            // Show results
+            document.getElementById('results').classList.add('active');
+        }
+
+        function resetForm() {
+            document.getElementById('landReportForm').reset();
+            document.getElementById('results').classList.remove('active');
+            document.getElementById('downloadPdfBtn').style.display = 'none';
+            document.getElementById('recommendationBox').style.display = 'none';
+            currentReportId = null;
+            hideAlert();
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type} active`;
+        }
+
+        function hideAlert() {
+            const alert = document.getElementById('alert');
+            alert.classList.remove('active');
+        }
+
+        // Format number input
+        document.getElementById('askingPrice').addEventListener('input', (e) => {
+            const value = e.target.value.replace(/[^0-9]/g, '');
+            e.target.value = value;
+        });
+    </script>
+</body>
+</html>

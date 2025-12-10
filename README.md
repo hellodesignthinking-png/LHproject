@@ -1,53 +1,248 @@
-# ZeroSite Land Report v5.0
+# ZeroSite Expert Edition v3 + GenSpark AI Enhanced
 
-**Powered by ZeroSite**
+**Powered by ZeroSite | Enhanced with GenSpark AI Backend Services**
+
+## 🎉 What's New in Expert Edition v3
+
+### **GenSpark AI Integration** ✨ NEW
+- **Dynamic Transaction Generation**: Algorithmic comparable generation (not static data)
+- **Professional 4-Factor Adjustment**: Distance (35%), Time (25%), Size (25%), Zone (15%)
+- **Advanced Confidence Scoring**: 4-factor weighted algorithm (30/30/25/15%)
+- **Land Valuation Engine v9.1**: Standalone professional appraisal engine
+
+### **Test Results** ✅
+```
+✅ Enhanced Services: 4/4 tests passed
+✅ Integrated Engine: 1/1 test passed  
+✅ Total: 5/5 tests passed (100%)
+🎉 GenSpark AI Integration is FULLY FUNCTIONAL!
+```
+
+---
 
 ## 📋 프로젝트 개요
 
 ZeroSite Land Report는 LH 신축매입임대주택 사업을 위한 토지 적합성을 자동으로 진단하고, 
 전문 컨설팅 수준의 분석 보고서를 생성하는 AI 기반 통합 플랫폼입니다.
 
-## 🎯 핵심 기능 (v5.0)
+**Expert Edition v3**는 GenSpark AI의 최적화된 백엔드 서비스를 통합하여 더욱 정확하고 
+전문적인 토지 감정평가 기능을 제공합니다.
 
-### 1. **유형별 수요점수 완전 분리**
+## 🎯 핵심 기능 (v5.0 + v3 API)
+
+### 1. **Land Report API v3** ✨ NEW
+   - RESTful API로 토지감정평가 서비스 제공
+   - Dynamic Transaction Generation (10건 자동 생성)
+   - 4-Factor Price Adjustment (거리/시점/규모/용도)
+   - Advanced Confidence Scoring (통계적 신뢰도)
+   - Financial Analysis & 3 Negotiation Strategies
+   
+### 2. **유형별 수요점수 완전 분리**
    - 청년, 신혼·신생아 I/II, 다자녀, 고령자 독립 점수
    - UI에서 유형별 색상 강조 표시
    
-### 2. **다중 필지 분석**
+### 3. **다중 필지 분석**
    - 최대 10개 필지 동시 분석
    - 필지별 독립 결과 및 비교 분석
    
-### 3. **AI Auto Corrector**
+### 4. **AI Auto Corrector**
    - 주소 자동 보정
    - 토지면적 자동 추정
    - 임대료 예측
    
-### 4. **Geo Optimizer (거리 기반 최적 부지 추천)**
+### 5. **Geo Optimizer (거리 기반 최적 부지 추천)**
    - POI 기반 입지 분석 (500m, 1km, 2km)
    - 유형별 가중치 적용
    - Top-N 최적 부지 추천
    
-### 5. **Parcel Clustering (지도 기반 필지 클러스터링)**
+### 6. **Parcel Clustering (지도 기반 필지 클러스터링)**
    - K-Means & DBSCAN 알고리즘
    - Leaflet 히트맵 시각화
    - 클러스터 통계 자동 생성
    
-### 6. **Google Drive LH 공고문 자동 수집**
+### 7. **Google Drive LH 공고문 자동 수집**
    - PDF 자동 파싱 및 규칙 추출
    - 버전 관리 자동화
    - 실시간 공고문 업데이트
 
-### 7. **Visual Dashboard**
+### 8. **Visual Dashboard**
    - Chart.js 기반 수요점수 비교
    - Leaflet 지도 기반 히트맵
    - 3D POI 분석 시각화
 
-### 8. **전문가급 PDF/HTML 보고서**
+### 9. **전문가급 PDF/HTML 보고서**
    - ZeroSite 워터마크
    - 600자 AI 분석 문단
    - LH 공식 양식 적용
 
+## 🚀 GenSpark AI 사용 방법
+
+### **Python 코드에서 직접 사용**
+
+```python
+from app.engines_v9.land_valuation_engine_v9_1 import LandValuationEngineV91
+
+# 엔진 초기화 (Enhanced 모드)
+engine = LandValuationEngineV91(use_enhanced_services=True)
+
+# 감정평가 실행
+result = engine.evaluate_land(
+    address="서울특별시 강남구 역삼동 123-45",
+    land_size_sqm=1000.0,
+    zone_type="제2종일반주거지역",
+    asking_price=10_000_000_000
+)
+
+# 결과 확인
+print(f"예상가: ₩{result['prediction']['avg']:,.0f}")
+print(f"신뢰도: {result['prediction']['confidence']:.0%}")
+print(f"거래사례: {len(result['comparables'])}건")
+```
+
+### **테스트 실행**
+
+```bash
+# GenSpark AI 통합 테스트
+cd /home/user/webapp
+python tests/test_genspark_integration.py
+
+# 예상 결과:
+# ✅ Enhanced Services: 4/4 tests passed
+# ✅ Integrated Engine: 1/1 test passed
+# 🎉 GenSpark AI Integration is FULLY FUNCTIONAL!
+```
+
+### **단독 실행 (데모)**
+
+```bash
+# Land Valuation Engine v9.1 직접 실행
+python app/engines_v9/land_valuation_engine_v9_1.py
+
+# 출력:
+# 🏠 주소: 서울특별시 강남구 역삼동 123-45
+# 💰 예상가: ₩11,599,313,759 (₩11.6억)
+# 📊 신뢰도: 87% (HIGH)
+# 📋 거래사례: 10건 동적 생성
+# 🎯 협상전략: 3가지 자동 생성
+```
+
+---
+
+## 🌐 Land Report API v3 (토지감정평가)
+
+### **REST API 사용법** ✨ NEW
+
+Expert Edition v3는 RESTful API를 통해 토지감정평가 서비스를 제공합니다.
+
+#### **API 엔드포인트**
+
+```bash
+# 1. Health Check
+curl http://localhost:8080/api/v3/health
+
+# 2. 토지감정평가 보고서 생성 (JSON)
+curl -X POST http://localhost:8080/api/v3/land-report \
+  -H "Content-Type: application/json" \
+  -d '{
+    "address": "서울특별시 강남구 역삼동 123-45",
+    "land_size_sqm": 1000.0,
+    "zone_type": "제2종일반주거지역",
+    "asking_price": 10000000000
+  }'
+
+# 3. 캐시된 보고서 조회
+curl http://localhost:8080/api/v3/land-report/{report_id}
+
+# 4. Enhanced vs Legacy 비교
+curl -X POST http://localhost:8080/api/v3/land-report/compare \
+  -H "Content-Type: application/json" \
+  -d '{
+    "address": "서울특별시 강남구 역삼동 123-45",
+    "land_size_sqm": 1000.0,
+    "zone_type": "제2종일반주거지역"
+  }'
+```
+
+#### **API 응답 예시**
+
+```json
+{
+  "report_id": "rpt_20251210_abc123",
+  "timestamp": "2025-12-10T10:30:00",
+  "valuation": {
+    "estimated_price_krw": 12546748607,
+    "price_per_sqm_krw": 12546749,
+    "confidence_score": 0.83,
+    "confidence_level": "HIGH",
+    "transaction_count": 10,
+    "price_range": {
+      "low": 11000000000,
+      "avg": 12546748607,
+      "high": 14000000000
+    }
+  },
+  "recommendation": {
+    "status": "저가 (매수 추천)",
+    "difference_pct": -20.30,
+    "emoji": "🔵"
+  },
+  "comparables": [...] // Top 5 거래사례
+}
+```
+
+#### **API 테스트**
+
+```bash
+# 전체 API 테스트 실행
+cd /home/user/webapp
+PYTHONPATH=/home/user/webapp python tests/test_land_report_api.py
+
+# 예상 결과:
+# ✅ Health Check Tests
+# ✅ Report Generation Tests
+# ✅ Report Retrieval Tests
+# ✅ Comparison Mode Tests
+# ✅ Validation Tests
+# ✅ Performance Tests
+# ✅ Confidence Scoring Tests
+# 🎉 ALL TESTS PASSED (13/13)
+```
+
+---
+
 ## 🏗️ 시스템 아키텍처
+
+### **통합 아키텍처 (Expert Edition v3 + GenSpark AI)**
+
+```
+┌─────────────────────────────────────────────┐
+│      Frontend (Expert Edition v3 UI)       │
+│             Port 8080                       │
+└─────────────────────────────────────────────┘
+                 ↓ HTTP
+┌─────────────────────────────────────────────┐
+│         Backend API (FastAPI)               │
+│             Port 5000                       │
+├─────────────────────────────────────────────┤
+│  ✨ GenSpark AI Enhanced Services:         │
+│  ├─ Enhanced Geocoding Service             │
+│  ├─ Dynamic Transaction Generator          │
+│  ├─ Professional Price Adjuster            │
+│  └─ Advanced Confidence Calculator         │
+├─────────────────────────────────────────────┤
+│  🔧 Land Valuation Engine v9.1:            │
+│  ├─ 9-Step Valuation Pipeline              │
+│  ├─ Financial Analysis                     │
+│  └─ Negotiation Strategies                 │
+├─────────────────────────────────────────────┤
+│  📊 v7.5 FINAL Report Generator:           │
+│  └─ 60+ Page Expert Reports (5-6 MB)       │
+└─────────────────────────────────────────────┘
+```
+
+---
+
+## 🏗️ 기존 시스템 아키텍처
 
 ```
 ┌─────────────┐

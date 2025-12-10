@@ -1,0 +1,59 @@
+Traceback (most recent call last):
+  File "/home/user/webapp/generate_v3_full_report.py", line 611, in main
+    html_content = generator.generate_report(**test_data)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/webapp/generate_v3_full_report.py", line 555, in generate_report
+    html_content = template.render(**context)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/jinja2/environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "/usr/local/lib/python3.12/site-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/home/user/webapp/app/services_v13/report_full/lh_expert_edition_v3.html.jinja2", line 3385, in top-level template code
+    <td class="number">{{ other_cost_per_sqm_man | round(1) }}</td>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/jinja2/filters.py", line 1141, in do_round
+    return round(value, precision)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: type Undefined doesn't define __round__ method
+
+================================================================================
+🧪 Testing v3 FULL Report Generation (144+ Variables)
+================================================================================
+
+🚀 ZeroSite Expert Edition v3 - FULL Report Generator
+================================================================================
+✅ All Phase engines loaded
+================================================================================
+
+📊 Generating FULL Context for:
+   Address: 서울특별시 마포구 월드컵북로 120
+   Land Area: 1,000㎡
+   Unit Type: 청년
+
+🏗️ Phase 11: Generating LH Policy-Based Design...
+   ✅ Total Units: 121세대
+💰 Phase 8: Calculating Construction Costs...
+   ✅ Total Construction Cost: 76.00억원
+📈 Phase 2.5: Calculating Financial Metrics...
+   ✅ CAPEX: 126.00억원
+   ✅ LH Appraisal: 27.22억원
+   ✅ NPV: -9.88억원
+   ✅ IRR: 6.50%
+🎯 Phase 6.8: Analyzing Demand...
+   ✅ Demand Score: 78.5
+📊 Phase 7.7: Analyzing Market Signals...
+   ✅ Market Signal: 74.5
+📝 Phase 13: Generating Academic Narratives...
+   ✅ Generated 5 narrative sections
+📅 Phase 14: Generating Critical Timeline...
+   ✅ Total Duration: 38 months
+
+🎨 Building Complete Context (144+ variables)...
+✅ Complete context built: 84 top-level variables
+   Estimated total variables (nested): 144+
+
+🎨 Rendering v3 Template...
+❌ Template rendering failed: type Undefined doesn't define __round__ method
+
+❌ Test failed: type Undefined doesn't define __round__ method
