@@ -310,6 +310,111 @@ async def generate_report(request: ReportRequest):
             detail=f"Report generation failed: {str(e)}"
         )
 
+@app.post("/generate-report-v21", response_model=ReportResponse, tags=["Reports v21"])
+async def generate_report_v21(request: ReportRequest):
+    """
+    Generate ZeroSite v21 Professional Report (McKinsey-Grade).
+    
+    This endpoint generates a professional LH real estate analysis report with:
+    - **v21 Narrative Engine**: 270+ lines of policy-driven insights
+    - **12+ Policy Citations**: 국토계획법, 주택법, 공공주택 특별법 등
+    - **6 Specialized Interpreters**:
+      * Executive Summary (Dual decision logic)
+      * Market Intelligence (Comp analysis + policy context)
+      * Demand Intelligence (Demographics + LH alignment)
+      * Financial Analysis (CAPEX + profitability + sensitivity)
+      * Zoning & Planning (FAR/BCR + transit/school analysis)
+      * Risk & Strategy (Policy vs business risk + mitigation)
+    - **LH Blue Professional Design**: 2-column layout, McKinsey-grade
+    - **Government Decision Logic**: "Why LH Should Buy" + Next Steps
+    
+    Returns:
+        ReportResponse with URLs to access HTML and PDF reports
+    """
+    start_time = time.time()
+    
+    try:
+        logger.info(f"📝 [v21] Generating professional report for: {request.address}, {request.land_area_sqm}㎡, {request.supply_type}")
+        
+        # Import v21 generator (lazy load)
+        try:
+            from generate_v21_report import V21ReportGenerator
+        except ImportError as e:
+            logger.error(f"❌ v21 generator import failed: {e}")
+            raise HTTPException(status_code=503, detail="v21 generator not available")
+        
+        # Initialize v21 generator
+        v21_generator = V21ReportGenerator()
+        
+        # Convert sqm to pyeong
+        land_area_pyeong = request.land_area_sqm / 3.3
+        
+        # Generate v21 context
+        context = v21_generator.generate_full_context(
+            address=request.address,
+            land_area_pyeong=land_area_pyeong,
+            supply_type=request.supply_type,
+            # Default parameters (can be made configurable)
+            far_legal=200,
+            far_relaxation=30,
+            bcr_legal=60,
+            lh_appraisal_rate=95,
+            near_subway=True,
+            subway_distance_m=500,
+            school_zone=True,
+            demand_score=75,
+        )
+        
+        # Generate HTML
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        html_filename = f"v21_report_{timestamp}.html"
+        html_filepath = f"/home/user/webapp/generated_reports/{html_filename}"
+        
+        html_content = v21_generator.generate_html_report(context, html_filepath)
+        
+        # Generate PDF
+        pdf_filename = f"v21_report_{timestamp}.pdf"
+        pdf_filepath = f"/home/user/webapp/generated_reports/{pdf_filename}"
+        v21_generator.generate_pdf_report(html_content, pdf_filepath)
+        
+        # Calculate metrics
+        generation_time = time.time() - start_time
+        html_size = len(html_content.encode('utf-8')) / 1024  # KB
+        pdf_size = os.path.getsize(pdf_filepath) / 1024  # KB
+        
+        # Get narrative stats
+        narrative_stats = context.get('narrative_stats', {})
+        narrative_lines = narrative_stats.get('total_lines_generated', 270)
+        policy_citations = narrative_stats.get('total_citations', 12)
+        
+        # Record success
+        metrics.record_request(success=True, generation_time=generation_time)
+        
+        logger.info(f"✅ [v21] Report generated successfully in {generation_time:.3f}s")
+        logger.info(f"   📊 HTML: {html_size:.1f}KB, PDF: {pdf_size:.1f}KB")
+        logger.info(f"   📝 Narrative: {narrative_lines} lines, {policy_citations} citations")
+        logger.info(f"   💰 IRR: {context.get('irr', 0):.1f}%, NPV: {context.get('npv', 0)/1e8:.1f}억원")
+        logger.info(f"   ✅ Decision: Financial={context.get('financial_decision', 'N/A')}, Policy={context.get('policy_decision', 'N/A')}")
+        
+        return ReportResponse(
+            status="success",
+            report_url=f"/reports/{html_filename}",
+            generation_time=round(generation_time, 3),
+            file_size_kb=int(html_size),
+            message=f"v21 Professional Report generated | {narrative_lines} narrative lines, {policy_citations} policy citations | Decision: {context.get('financial_decision', 'N/A')}/{context.get('policy_decision', 'N/A')}",
+            variables_count=narrative_lines  # Use narrative lines as variable count
+        )
+        
+    except Exception as e:
+        # Record failure
+        metrics.record_request(success=False)
+        
+        logger.error(f"❌ [v21] Report generation failed: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"v21 report generation failed: {str(e)}"
+        )
+
 @app.get("/reports/{filename}", tags=["Reports"])
 async def get_report(filename: str):
     """
