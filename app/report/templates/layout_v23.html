@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite v23 A/B Scenario Report - {{ address }}</title>
+    <link rel="stylesheet" href="../css/lh_v23.css">
+</head>
+<body>
+    <!-- Cover Page (imported separately) -->
+    
+    <!-- Table of Contents -->
+    <div class="page-break"></div>
+    <section id="toc">
+        <h1>📑 목차</h1>
+        <div class="card">
+            <ol>
+                <li><a href="#executive-summary">Executive Summary (경영진 요약)</a></li>
+                <li><a href="#ab-comparison">A/B 시나리오 비교 분석</a></li>
+                <li><a href="#scenario-details">시나리오 상세 분석</a>
+                    <ul>
+                        <li>2.1. 시나리오 A: {{ scenario_a_type }}</li>
+                        <li>2.2. 시나리오 B: {{ scenario_b_type }}</li>
+                    </ul>
+                </li>
+                <li><a href="#visualization">시각화 분석</a>
+                    <ul>
+                        <li>3.1. 용적률 변화 비교</li>
+                        <li>3.2. 시장 가격 분포</li>
+                    </ul>
+                </li>
+                <li><a href="#recommendation">종합 의견 및 권고사항</a></li>
+            </ol>
+        </div>
+    </section>
+    
+    <!-- Executive Summary -->
+    <div class="page-break"></div>
+    <section id="executive-summary">
+        <div class="section-header">
+            <span class="section-icon">📊</span>
+            <span class="section-number">1.</span>
+            <span class="section-title">Executive Summary</span>
+        </div>
+        
+        <div class="highlight-box">
+            <h3>프로젝트 개요</h3>
+            <p><strong>대상지:</strong> {{ address }}</p>
+            <p><strong>토지면적:</strong> <span class="highlight-number">{{ land_area_sqm | format_number }}</span>㎡ 
+               (<span class="highlight-number">{{ land_area_pyeong | format_number }}</span>평)</p>
+            <p><strong>분석유형:</strong> A/B 시나리오 비교 분석 ({{ scenario_a_type }} vs {{ scenario_b_type }})</p>
+            <p><strong>분석일:</strong> {{ analysis_date }}</p>
+        </div>
+        
+        <h3>핵심 발견사항</h3>
+        {{ executive_summary_content | safe }}
+        
+        <h3>의사결정 프레임워크</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>구분</th>
+                    <th>시나리오 A ({{ scenario_a_type }})</th>
+                    <th>시나리오 B ({{ scenario_b_type }})</th>
+                    <th>우위</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>재무 판정</strong></td>
+                    <td class="text-center">
+                        <span class="decision-badge decision-{{ scenario_a_decision | lower }}">{{ scenario_a_decision }}</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="decision-badge decision-{{ scenario_b_decision | lower }}">{{ scenario_b_decision }}</span>
+                    </td>
+                    <td class="text-center"><strong>{{ financial_winner }}</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>정책 적합성</strong></td>
+                    <td class="text-center">{{ scenario_a_demand_score }}점</td>
+                    <td class="text-center">{{ scenario_b_demand_score }}점</td>
+                    <td class="text-center"><strong>{{ policy_winner }}</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>최종 권고</strong></td>
+                    <td colspan="3" class="text-center">
+                        <span class="highlight">{{ final_recommendation }}</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    
+    <!-- A/B Comparison -->
+    <div class="page-break"></div>
+    <section id="ab-comparison">
+        <div class="section-header">
+            <span class="section-icon">⚖️</span>
+            <span class="section-number">2.</span>
+            <span class="section-title">A/B 시나리오 비교 분석</span>
+        </div>
+        
+        <h3>2.1. 종합 비교표</h3>
+        <table class="data-table comparison-table">
+            <thead>
+                <tr>
+                    <th>비교 항목</th>
+                    <th class="scenario-a">시나리오 A<br>({{ scenario_a_type }})</th>
+                    <th class="scenario-b">시나리오 B<br>({{ scenario_b_type }})</th>
+                    <th>차이</th>
+                    <th>우위</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- FAR -->
+                <tr>
+                    <td><strong>법정 용적률</strong></td>
+                    <td class="text-center">{{ scenario_a_far_legal | format_number }}%</td>
+                    <td class="text-center">{{ scenario_b_far_legal | format_number }}%</td>
+                    <td class="text-center">{{ far_legal_diff | format_number }}%p</td>
+                    <td class="text-center winner">{{ far_legal_winner }}</td>
+                </tr>
+                <tr>
+                    <td><strong>완화 후 용적률</strong></td>
+                    <td class="text-center">{{ scenario_a_far_final | format_number }}%</td>
+                    <td class="text-center">{{ scenario_b_far_final | format_number }}%</td>
+                    <td class="text-center">{{ far_final_diff | format_number }}%p</td>
+                    <td class="text-center winner">{{ far_final_winner }}</td>
+                </tr>
+                <!-- Building -->
+                <tr>
+                    <td><strong>연면적</strong></td>
+                    <td class="text-center">{{ scenario_a_buildable_area | format_number }}㎡</td>
+                    <td class="text-center">{{ scenario_b_buildable_area | format_number }}㎡</td>
+                    <td class="text-center">{{ buildable_area_diff | format_number }}㎡</td>
+                    <td class="text-center winner">{{ buildable_area_winner }}</td>
+                </tr>
+                <tr>
+                    <td><strong>세대수</strong></td>
+                    <td class="text-center">{{ scenario_a_unit_count }}세대</td>
+                    <td class="text-center">{{ scenario_b_unit_count }}세대</td>
+                    <td class="text-center">{{ unit_count_diff }}세대</td>
+                    <td class="text-center winner">{{ unit_count_winner }}</td>
+                </tr>
+                <!-- Financial -->
+                <tr class="lh-gray-bg">
+                    <td colspan="5" class="text-center"><strong>재무 지표</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>총 사업비 (CAPEX)</strong></td>
+                    <td class="text-center">{{ scenario_a_total_capex | format_krw }}억원</td>
+                    <td class="text-center">{{ scenario_b_total_capex | format_krw }}억원</td>
+                    <td class="text-center">{{ capex_diff | format_krw }}억원</td>
+                    <td class="text-center winner">{{ capex_winner }}</td>
+                </tr>
+                <tr>
+                    <td><strong>LH 매입가</strong></td>
+                    <td class="text-center">{{ scenario_a_lh_price | format_krw }}억원</td>
+                    <td class="text-center">{{ scenario_b_lh_price | format_krw }}억원</td>
+                    <td class="text-center">{{ lh_price_diff | format_krw }}억원</td>
+                    <td class="text-center winner">{{ lh_price_winner }}</td>
+                </tr>
+                <tr>
+                    <td><strong>사업 수익</strong></td>
+                    <td class="text-center">{{ scenario_a_profit | format_krw }}억원</td>
+                    <td class="text-center">{{ scenario_b_profit | format_krw }}억원</td>
+                    <td class="text-center">{{ profit_diff | format_krw }}억원</td>
+                    <td class="text-center winner">{{ profit_winner }}</td>
+                </tr>
+                <tr>
+                    <td><strong>ROI</strong></td>
+                    <td class="text-center">{{ scenario_a_roi | format_number }}%</td>
+                    <td class="text-center">{{ scenario_b_roi | format_number }}%</td>
+                    <td class="text-center">{{ roi_diff | format_number }}%p</td>
+                    <td class="text-center winner">{{ roi_winner }}</td>
+                </tr>
+                <tr>
+                    <td><strong>IRR</strong></td>
+                    <td class="text-center">{{ scenario_a_irr | format_number }}%</td>
+                    <td class="text-center">{{ scenario_b_irr | format_number }}%</td>
+                    <td class="text-center">{{ irr_diff | format_number }}%p</td>
+                    <td class="text-center winner">{{ irr_winner }}</td>
+                </tr>
+                <!-- Policy -->
+                <tr class="lh-gray-bg">
+                    <td colspan="5" class="text-center"><strong>정책 지표</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>수요 점수</strong></td>
+                    <td class="text-center">{{ scenario_a_demand_score }}점</td>
+                    <td class="text-center">{{ scenario_b_demand_score }}점</td>
+                    <td class="text-center">{{ demand_score_diff }}점</td>
+                    <td class="text-center winner">{{ demand_score_winner }}</td>
+                </tr>
+                <tr>
+                    <td><strong>시장 점수</strong></td>
+                    <td class="text-center">{{ scenario_a_market_score }}점</td>
+                    <td class="text-center">{{ scenario_b_market_score }}점</td>
+                    <td class="text-center">{{ market_score_diff }}점</td>
+                    <td class="text-center winner">{{ market_score_winner }}</td>
+                </tr>
+                <tr>
+                    <td><strong>위험 점수</strong></td>
+                    <td class="text-center">{{ scenario_a_risk_score }}점</td>
+                    <td class="text-center">{{ scenario_b_risk_score }}점</td>
+                    <td class="text-center">{{ risk_score_diff }}점</td>
+                    <td class="text-center winner">{{ risk_score_winner }}</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3>2.2. 비교 분석 요약</h3>
+        <div class="info-box">
+            {{ comparison_summary | safe }}
+        </div>
+    </section>
+    
+    <!-- Scenario Details -->
+    <div class="page-break"></div>
+    <section id="scenario-details">
+        <div class="section-header">
+            <span class="section-icon">📋</span>
+            <span class="section-number">3.</span>
+            <span class="section-title">시나리오 상세 분석</span>
+        </div>
+        
+        <div class="scenario-comparison">
+            <!-- Scenario A -->
+            <div class="scenario-a-box scenario-box">
+                <div class="scenario-header scenario-a-header">
+                    시나리오 A: {{ scenario_a_type }}
+                </div>
+                {{ scenario_a_details | safe }}
+            </div>
+            
+            <!-- Scenario B -->
+            <div class="scenario-b-box scenario-box">
+                <div class="scenario-header scenario-b-header">
+                    시나리오 B: {{ scenario_b_type }}
+                </div>
+                {{ scenario_b_details | safe }}
+            </div>
+        </div>
+    </section>
+    
+    <!-- Visualization -->
+    <div class="page-break"></div>
+    <section id="visualization">
+        <div class="section-header">
+            <span class="section-icon">📈</span>
+            <span class="section-number">4.</span>
+            <span class="section-title">시각화 분석</span>
+        </div>
+        
+        <h3>4.1. 용적률 변화 비교</h3>
+        <div class="graph-container">
+            <div class="graph-title">A/B 시나리오 용적률 비교</div>
+            <img src="data:image/png;base64,{{ far_chart_base64 }}" alt="FAR Comparison Chart">
+            <div class="graph-description">
+                시나리오 A는 법정 용적률 {{ scenario_a_far_legal }}%에서 {{ scenario_a_far_final }}%로 완화되며, 
+                시나리오 B는 {{ scenario_b_far_legal }}%에서 {{ scenario_b_far_final }}%로 완화됩니다.
+            </div>
+        </div>
+        
+        <h3>4.2. 시장 가격 분포</h3>
+        <div class="graph-container">
+            <div class="graph-title">시장 거래가 분포 분석</div>
+            <img src="data:image/png;base64,{{ market_histogram_base64 }}" alt="Market Price Distribution">
+            <div class="graph-description">
+                평균 거래가: {{ market_avg_price | format_number }}백만원/㎡, 
+                표준편차: {{ market_std_price | format_number }}백만원/㎡, 
+                변동계수: {{ market_cv | format_number }}%
+            </div>
+        </div>
+    </section>
+    
+    <!-- Recommendation -->
+    <div class="page-break"></div>
+    <section id="recommendation">
+        <div class="section-header">
+            <span class="section-icon">💡</span>
+            <span class="section-number">5.</span>
+            <span class="section-title">종합 의견 및 권고사항</span>
+        </div>
+        
+        <div class="success-box">
+            <h3>최종 권고</h3>
+            <p class="highlight" style="font-size: 14pt;">{{ recommendation_conclusion }}</p>
+        </div>
+        
+        <h3>상세 근거</h3>
+        <div class="card">
+            {{ recommendation_rationale | safe }}
+        </div>
+        
+        <h3>실행 계획</h3>
+        <div class="card">
+            {{ action_plan | safe }}
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <div class="page-break"></div>
+    <footer style="text-align: center; padding: 2em; color: #6C757D; border-top: 2px solid #005BAC;">
+        <p><strong>ZeroSite v23 Professional Edition</strong></p>
+        <p>Quality Grade: A+ (McKinsey-Standard) | LH 한국토지주택공사</p>
+        <p style="font-size: 9pt; margin-top: 1em;">
+            본 보고서는 ZeroSite v23 시스템에 의해 자동 생성되었으며, LH 신축매입임대 사업 타당성 분석을 위한 참고자료입니다.<br>
+            생성일: {{ analysis_date }} | 문서번호: {{ document_code }}
+        </p>
+    </footer>
+</body>
+</html>

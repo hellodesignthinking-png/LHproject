@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite v23 - LH 신축매입임대 토지진단 보고서 [A/B 시나리오 비교형]</title>
+    <link rel="stylesheet" href="../css/lh_v23.css">
+    <style>
+        /* Cover page specific styles */
+        .cover-page {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, #005BAC 0%, #003F7D 100%);
+            color: white;
+            position: relative;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .cover-content {
+            z-index: 10;
+        }
+        
+        .cover-logo {
+            font-size: 48pt;
+            font-weight: 900;
+            margin-bottom: 0.5em;
+            letter-spacing: 4px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .cover-title {
+            font-size: 28pt;
+            font-weight: 700;
+            margin-bottom: 0.3em;
+            line-height: 1.4;
+        }
+        
+        .cover-subtitle {
+            font-size: 20pt;
+            font-weight: 400;
+            margin-bottom: 3em;
+            opacity: 0.95;
+            letter-spacing: 2px;
+        }
+        
+        .cover-badge {
+            display: inline-block;
+            background-color: #FF7A00;
+            color: white;
+            padding: 0.5em 2em;
+            border-radius: 30px;
+            font-size: 14pt;
+            font-weight: 700;
+            margin-top: 1em;
+        }
+        
+        .cover-info {
+            position: absolute;
+            bottom: 3em;
+            right: 3em;
+            text-align: right;
+            font-size: 11pt;
+            line-height: 1.8;
+        }
+        
+        .cover-info div {
+            margin-bottom: 0.3em;
+        }
+        
+        .cover-info strong {
+            font-weight: 700;
+        }
+        
+        .cover-watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 120pt;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.05);
+            z-index: 1;
+            letter-spacing: 10px;
+        }
+        
+        .lh-logo-text {
+            position: absolute;
+            top: 2em;
+            left: 2em;
+            font-size: 16pt;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+        
+        @media print {
+            .cover-page {
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="cover-page">
+        <!-- LH Logo Text -->
+        <div class="lh-logo-text">
+            LH 한국토지주택공사
+        </div>
+        
+        <!-- Watermark -->
+        <div class="cover-watermark">
+            ZEROSITE
+        </div>
+        
+        <!-- Main Content -->
+        <div class="cover-content">
+            <div class="cover-logo">
+                ZEROSITE v23
+            </div>
+            
+            <div class="cover-title">
+                LH 신축매입임대<br>
+                토지진단 보고서
+            </div>
+            
+            <div class="cover-subtitle">
+                [A/B 시나리오 비교형]
+            </div>
+            
+            <div class="cover-badge">
+                Professional Edition
+            </div>
+        </div>
+        
+        <!-- Info Section -->
+        <div class="cover-info">
+            <div><strong>대상지:</strong> {{ address }}</div>
+            <div><strong>토지면적:</strong> {{ land_area_sqm | format_number }}㎡ ({{ land_area_pyeong | format_number }}평)</div>
+            <div><strong>분석일:</strong> {{ analysis_date }}</div>
+            <div><strong>문서번호:</strong> {{ document_code }}</div>
+            <div style="margin-top: 1em; opacity: 0.8;">
+                ZeroSite v23 Professional Edition<br>
+                Quality Grade: A+ (McKinsey-Standard)
+            </div>
+        </div>
+    </div>
+</body>
+</html>

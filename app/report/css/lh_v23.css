@@ -1,0 +1,660 @@
+/*
+ * ZeroSite v23 - LH Official Style CSS
+ * ====================================
+ * Professional A4 print-ready stylesheet for LH Land Acquisition Reports
+ * 
+ * Features:
+ * - A4 print mode with page breaks
+ * - LH Blue color system (#005BAC)
+ * - Professional table styles
+ * - Auto-resize graph images
+ * - Highlight system for key metrics
+ * 
+ * Author: ZeroSite v23 Development Team
+ * Version: 23.0.0
+ * Date: 2025-12-10
+ */
+
+/* ========================================
+   1. A4 Print Mode & Page Setup
+   ======================================== */
+
+@page {
+    size: A4;
+    margin: 20mm 15mm;
+}
+
+@media print {
+    body {
+        width: 210mm;
+        height: 297mm;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .page-break {
+        page-break-before: always;
+    }
+    
+    .page-break-after {
+        page-break-after: always;
+    }
+    
+    .no-print {
+        display: none !important;
+    }
+}
+
+/* ========================================
+   2. Global Styles & Typography
+   ======================================== */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Nanum Gothic', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+    font-size: 11pt;
+    line-height: 1.6;
+    color: #333333;
+    background-color: #FFFFFF;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    color: #005BAC;
+    margin-top: 1.5em;
+    margin-bottom: 0.8em;
+}
+
+h1 {
+    font-size: 24pt;
+    border-bottom: 3px solid #005BAC;
+    padding-bottom: 0.5em;
+}
+
+h2 {
+    font-size: 18pt;
+    border-left: 5px solid #005BAC;
+    padding-left: 0.5em;
+}
+
+h3 {
+    font-size: 14pt;
+    color: #333333;
+}
+
+h4 {
+    font-size: 12pt;
+    color: #6C757D;
+}
+
+p {
+    margin-bottom: 1em;
+    text-align: justify;
+}
+
+/* ========================================
+   3. LH Blue Color System
+   ======================================== */
+
+.lh-primary {
+    color: #005BAC !important;
+}
+
+.lh-primary-bg {
+    background-color: #005BAC !important;
+    color: white !important;
+}
+
+.lh-secondary {
+    color: #FF7A00 !important;
+}
+
+.lh-secondary-bg {
+    background-color: #FF7A00 !important;
+    color: white !important;
+}
+
+.lh-success {
+    color: #28A745 !important;
+}
+
+.lh-success-bg {
+    background-color: #28A745 !important;
+    color: white !important;
+}
+
+.lh-warning {
+    color: #FFC107 !important;
+}
+
+.lh-warning-bg {
+    background-color: #FFC107 !important;
+    color: #333333 !important;
+}
+
+.lh-danger {
+    color: #DC3545 !important;
+}
+
+.lh-danger-bg {
+    background-color: #DC3545 !important;
+    color: white !important;
+}
+
+.lh-gray {
+    color: #6C757D !important;
+}
+
+.lh-gray-bg {
+    background-color: #E9ECEF !important;
+}
+
+/* ========================================
+   4. Highlight System
+   ======================================== */
+
+.highlight {
+    color: #005BAC;
+    font-weight: 700;
+}
+
+.highlight-box {
+    background-color: #E3F2FD;
+    border-left: 4px solid #005BAC;
+    padding: 1em;
+    margin: 1em 0;
+}
+
+.highlight-number {
+    color: #005BAC;
+    font-weight: 700;
+    font-size: 1.2em;
+}
+
+.metric-value {
+    color: #005BAC;
+    font-weight: 700;
+    font-size: 1.1em;
+}
+
+/* ========================================
+   5. Table Styles
+   ======================================== */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5em 0;
+    font-size: 10pt;
+}
+
+table.data-table {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+table.data-table thead {
+    background-color: #005BAC;
+    color: white;
+}
+
+table.data-table thead th {
+    padding: 12px 10px;
+    text-align: center;
+    font-weight: 700;
+    border: 1px solid #004A8F;
+}
+
+table.data-table tbody td {
+    padding: 10px;
+    border: 1px solid #DEE2E6;
+}
+
+table.data-table tbody tr:nth-child(even) {
+    background-color: #F8F9FA;
+}
+
+table.data-table tbody tr:hover {
+    background-color: #E3F2FD;
+}
+
+/* Comparison table */
+table.comparison-table thead {
+    background: linear-gradient(135deg, #005BAC 0%, #003F7D 100%);
+    color: white;
+}
+
+table.comparison-table .scenario-a {
+    background-color: #E3F2FD;
+}
+
+table.comparison-table .scenario-b {
+    background-color: #FFF3E0;
+}
+
+table.comparison-table .winner {
+    font-weight: 700;
+    color: #28A745;
+}
+
+/* Table title and description */
+.table-title {
+    font-size: 12pt;
+    font-weight: 700;
+    color: #005BAC;
+    margin-bottom: 0.5em;
+}
+
+.table-description {
+    font-size: 9pt;
+    color: #6C757D;
+    margin-bottom: 1em;
+    font-style: italic;
+}
+
+/* ========================================
+   6. Graph & Image Styles
+   ======================================== */
+
+.graph-container {
+    text-align: center;
+    margin: 2em 0;
+    page-break-inside: avoid;
+}
+
+.graph-container img {
+    max-width: 100%;
+    height: auto;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+}
+
+.graph-title {
+    font-size: 12pt;
+    font-weight: 700;
+    color: #005BAC;
+    margin-bottom: 0.8em;
+}
+
+.graph-description {
+    font-size: 9pt;
+    color: #6C757D;
+    margin-top: 0.8em;
+    font-style: italic;
+}
+
+/* Auto-resize for embedded base64 images */
+img[src^="data:image"] {
+    max-width: 100%;
+    height: auto;
+}
+
+/* ========================================
+   7. 2-Column Layout
+   ======================================== */
+
+.two-column {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2em;
+    margin: 1.5em 0;
+}
+
+.column {
+    break-inside: avoid;
+}
+
+@media print {
+    .two-column {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .two-column {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ========================================
+   8. Section Icons & Headers
+   ======================================== */
+
+.section-header {
+    display: flex;
+    align-items: center;
+    margin-top: 2em;
+    margin-bottom: 1em;
+    padding-bottom: 0.5em;
+    border-bottom: 3px solid #005BAC;
+}
+
+.section-icon {
+    font-size: 24pt;
+    color: #005BAC;
+    margin-right: 0.5em;
+}
+
+.section-number {
+    font-size: 20pt;
+    font-weight: 700;
+    color: #005BAC;
+    margin-right: 0.5em;
+}
+
+.section-title {
+    font-size: 18pt;
+    font-weight: 700;
+    color: #333333;
+}
+
+/* ========================================
+   9. Card & Box Styles
+   ======================================== */
+
+.card {
+    background-color: white;
+    border: 1px solid #DEE2E6;
+    border-radius: 8px;
+    padding: 1.5em;
+    margin: 1em 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    page-break-inside: avoid;
+}
+
+.card-header {
+    font-size: 12pt;
+    font-weight: 700;
+    color: #005BAC;
+    border-bottom: 2px solid #E9ECEF;
+    padding-bottom: 0.5em;
+    margin-bottom: 1em;
+}
+
+.info-box {
+    background-color: #E3F2FD;
+    border-left: 4px solid #005BAC;
+    padding: 1em 1.5em;
+    margin: 1em 0;
+}
+
+.warning-box {
+    background-color: #FFF3E0;
+    border-left: 4px solid #FF7A00;
+    padding: 1em 1.5em;
+    margin: 1em 0;
+}
+
+.success-box {
+    background-color: #E8F5E9;
+    border-left: 4px solid #28A745;
+    padding: 1em 1.5em;
+    margin: 1em 0;
+}
+
+.danger-box {
+    background-color: #FFEBEE;
+    border-left: 4px solid #DC3545;
+    padding: 1em 1.5em;
+    margin: 1em 0;
+}
+
+/* ========================================
+   10. List Styles
+   ======================================== */
+
+ul, ol {
+    margin: 1em 0 1em 2em;
+}
+
+ul li, ol li {
+    margin-bottom: 0.5em;
+}
+
+ul.custom-bullets {
+    list-style: none;
+    margin-left: 0;
+}
+
+ul.custom-bullets li:before {
+    content: "▸";
+    color: #005BAC;
+    font-weight: bold;
+    display: inline-block;
+    width: 1.5em;
+    margin-left: -1.5em;
+}
+
+/* ========================================
+   11. Decision Badge Styles
+   ======================================== */
+
+.decision-badge {
+    display: inline-block;
+    padding: 0.4em 1em;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 10pt;
+    text-transform: uppercase;
+}
+
+.decision-go {
+    background-color: #28A745;
+    color: white;
+}
+
+.decision-conditional {
+    background-color: #FFC107;
+    color: #333333;
+}
+
+.decision-nogo {
+    background-color: #DC3545;
+    color: white;
+}
+
+/* ========================================
+   12. Cover Page Styles
+   ======================================== */
+
+.cover-page {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background: linear-gradient(135deg, #005BAC 0%, #003F7D 100%);
+    color: white;
+    page-break-after: always;
+}
+
+.cover-logo {
+    font-size: 48pt;
+    font-weight: 900;
+    margin-bottom: 0.5em;
+    letter-spacing: 2px;
+}
+
+.cover-title {
+    font-size: 28pt;
+    font-weight: 700;
+    margin-bottom: 0.3em;
+}
+
+.cover-subtitle {
+    font-size: 20pt;
+    font-weight: 400;
+    margin-bottom: 3em;
+    opacity: 0.9;
+}
+
+.cover-info {
+    position: absolute;
+    bottom: 3em;
+    right: 3em;
+    text-align: right;
+    font-size: 11pt;
+}
+
+.cover-info div {
+    margin-bottom: 0.3em;
+}
+
+/* ========================================
+   13. Scenario Comparison Specific Styles
+   ======================================== */
+
+.scenario-comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2em;
+    margin: 2em 0;
+}
+
+.scenario-box {
+    border: 2px solid;
+    border-radius: 8px;
+    padding: 1.5em;
+    page-break-inside: avoid;
+}
+
+.scenario-a-box {
+    border-color: #005BAC;
+    background-color: #E3F2FD;
+}
+
+.scenario-b-box {
+    border-color: #FF7A00;
+    background-color: #FFF3E0;
+}
+
+.scenario-header {
+    font-size: 14pt;
+    font-weight: 700;
+    margin-bottom: 1em;
+    padding-bottom: 0.5em;
+    border-bottom: 2px solid;
+}
+
+.scenario-a-header {
+    color: #005BAC;
+    border-color: #005BAC;
+}
+
+.scenario-b-header {
+    color: #FF7A00;
+    border-color: #FF7A00;
+}
+
+.metric-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5em 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.metric-label {
+    font-weight: 600;
+    color: #6C757D;
+}
+
+.metric-value {
+    font-weight: 700;
+    color: #005BAC;
+}
+
+/* ========================================
+   14. Utility Classes
+   ======================================== */
+
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.text-left {
+    text-align: left;
+}
+
+.text-bold {
+    font-weight: 700;
+}
+
+.text-italic {
+    font-style: italic;
+}
+
+.mb-1 {
+    margin-bottom: 0.5em;
+}
+
+.mb-2 {
+    margin-bottom: 1em;
+}
+
+.mb-3 {
+    margin-bottom: 1.5em;
+}
+
+.mt-1 {
+    margin-top: 0.5em;
+}
+
+.mt-2 {
+    margin-top: 1em;
+}
+
+.mt-3 {
+    margin-top: 1.5em;
+}
+
+.p-1 {
+    padding: 0.5em;
+}
+
+.p-2 {
+    padding: 1em;
+}
+
+.p-3 {
+    padding: 1.5em;
+}
+
+/* ========================================
+   15. Responsive Design
+   ======================================== */
+
+@media (max-width: 768px) {
+    body {
+        font-size: 10pt;
+    }
+    
+    h1 {
+        font-size: 20pt;
+    }
+    
+    h2 {
+        font-size: 16pt;
+    }
+    
+    h3 {
+        font-size: 12pt;
+    }
+    
+    .scenario-comparison {
+        grid-template-columns: 1fr;
+    }
+    
+    table {
+        font-size: 9pt;
+    }
+}
