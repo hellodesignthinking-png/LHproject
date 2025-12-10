@@ -1,0 +1,658 @@
+/**
+ * ZeroSite v21 Professional Design System
+ * LH Blue Corporate Identity + McKinsey Report Standards
+ * 
+ * Author: ZeroSite Development Team
+ * Version: v21 (2025-12-10)
+ * Purpose: Transform technical reports into professional policy documents
+ */
+
+/* ============================================
+   1. DESIGN TOKENS (LH Official Colors)
+   ============================================ */
+
+:root {
+  /* LH Official Blue Palette */
+  --lh-blue-primary: #005BAC;
+  --lh-blue-light: #E6F2FF;
+  --lh-blue-dark: #003D73;
+  --lh-blue-hover: #004A8F;
+  
+  /* Semantic Colors */
+  --success-green: #28A745;
+  --warning-orange: #FFC107;
+  --danger-red: #DC3545;
+  --info-blue: #17A2B8;
+  
+  /* Policy Citation Colors */
+  --policy-yellow-bg: #FFF3CD;
+  --policy-yellow-border: #FFC107;
+  --policy-yellow-text: #856404;
+  
+  /* Neutral Grays */
+  --gray-50: #F8F9FA;
+  --gray-100: #E9ECEF;
+  --gray-200: #DEE2E6;
+  --gray-300: #CED4DA;
+  --gray-400: #ADB5BD;
+  --gray-500: #6C757D;
+  --gray-600: #495057;
+  --gray-700: #343A40;
+  --gray-800: #212529;
+  --gray-900: #000000;
+  
+  /* Typography */
+  --font-primary: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+  --font-mono: 'Courier New', monospace;
+  
+  /* Font Sizes (PT for print) */
+  --font-size-h1: 18pt;
+  --font-size-h2: 16pt;
+  --font-size-h3: 14pt;
+  --font-size-h4: 12pt;
+  --font-size-body: 11pt;
+  --font-size-small: 10pt;
+  --font-size-tiny: 9pt;
+  
+  /* Spacing */
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 20px;
+  --spacing-lg: 30px;
+  --spacing-xl: 40px;
+  
+  /* Layout */
+  --page-width: 210mm; /* A4 */
+  --page-height: 297mm;
+  --page-margin: 20mm;
+  --content-width: 170mm;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.15);
+  
+  /* Borders */
+  --border-thin: 1px;
+  --border-medium: 2px;
+  --border-thick: 4px;
+  --border-radius: 8px;
+}
+
+/* ============================================
+   2. BASE STYLES & TYPOGRAPHY
+   ============================================ */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-primary);
+  font-size: var(--font-size-body);
+  line-height: 1.8;
+  color: var(--gray-800);
+  background: white;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography Hierarchy */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  line-height: 1.4;
+  margin-bottom: var(--spacing-md);
+  color: var(--lh-blue-primary);
+}
+
+h1 { font-size: var(--font-size-h1); }
+h2 { font-size: var(--font-size-h2); }
+h3 { font-size: var(--font-size-h3); }
+h4 { font-size: var(--font-size-h4); }
+
+p {
+  margin-bottom: var(--spacing-sm);
+  text-align: justify;
+  word-break: keep-all;
+  line-height: 1.8;
+}
+
+strong {
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
+em {
+  font-style: italic;
+  color: var(--gray-700);
+}
+
+/* ============================================
+   3. PROFESSIONAL LAYOUT COMPONENTS
+   ============================================ */
+
+/* Cover Page */
+.cover-page-v21 {
+  width: var(--page-width);
+  height: var(--page-height);
+  background: linear-gradient(135deg, var(--lh-blue-primary) 0%, var(--lh-blue-dark) 100%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: var(--spacing-xl);
+  page-break-after: always;
+}
+
+.cover-title {
+  font-size: 24pt;
+  font-weight: 900;
+  margin-bottom: var(--spacing-lg);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.cover-subtitle {
+  font-size: 16pt;
+  font-weight: 400;
+  margin-bottom: var(--spacing-xl);
+  opacity: 0.9;
+}
+
+/* Page Container */
+.page-v21 {
+  width: var(--page-width);
+  min-height: var(--page-height);
+  padding: var(--page-margin);
+  background: white;
+  page-break-after: always;
+  position: relative;
+}
+
+/* Section Container */
+.section-v21 {
+  margin-bottom: var(--spacing-xl);
+  page-break-inside: avoid;
+}
+
+/* Professional Section Header */
+.section-header-v21 {
+  border-bottom: var(--border-medium) solid var(--lh-blue-primary);
+  padding-bottom: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+  color: var(--lh-blue-primary);
+  font-size: var(--font-size-h2);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.section-header-v21 .icon {
+  font-size: 20pt;
+}
+
+.section-subheader-v21 {
+  border-left: var(--border-thick) solid var(--lh-blue-primary);
+  padding-left: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  color: var(--lh-blue-dark);
+  font-size: var(--font-size-h3);
+  font-weight: 600;
+}
+
+/* ============================================
+   4. 2-COLUMN LAYOUT SYSTEM
+   ============================================ */
+
+.content-2column {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+}
+
+.main-content {
+  /* Main content area */
+}
+
+.sidebar-content {
+  /* Right sidebar for notes, highlights */
+}
+
+/* Single column for mobile/print fallback */
+@media print, (max-width: 768px) {
+  .content-2column {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================
+   5. DATA CARD COMPONENTS
+   ============================================ */
+
+.data-card-v21 {
+  background: white;
+  border: var(--border-thin) solid var(--gray-200);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  box-shadow: var(--shadow-md);
+  page-break-inside: avoid;
+}
+
+.data-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+  padding-bottom: var(--spacing-xs);
+  border-bottom: var(--border-thin) solid var(--gray-200);
+}
+
+.data-card-title {
+  font-size: var(--font-size-h4);
+  font-weight: 700;
+  color: var(--lh-blue-primary);
+}
+
+.data-card-badge {
+  background: var(--lh-blue-light);
+  color: var(--lh-blue-primary);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: var(--font-size-small);
+  font-weight: 600;
+}
+
+.data-card-body {
+  margin-bottom: var(--spacing-sm);
+}
+
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--spacing-xs) 0;
+  border-bottom: var(--border-thin) solid var(--gray-100);
+}
+
+.metric-row:last-child {
+  border-bottom: none;
+}
+
+.metric-label {
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+.metric-value {
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
+.metric-value.positive {
+  color: var(--success-green);
+}
+
+.metric-value.negative {
+  color: var(--danger-red);
+}
+
+.metric-value.warning {
+  color: var(--warning-orange);
+}
+
+.data-card-footer {
+  background: var(--gray-50);
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius);
+  margin-top: var(--spacing-sm);
+}
+
+.interpretation-text {
+  font-size: var(--font-size-small);
+  color: var(--gray-600);
+  line-height: 1.6;
+}
+
+/* ============================================
+   6. POLICY CITATION BOXES
+   ============================================ */
+
+.policy-note-box {
+  background: var(--policy-yellow-bg);
+  border-left: var(--border-thick) solid var(--policy-yellow-border);
+  padding: var(--spacing-md);
+  margin: var(--spacing-md) 0;
+  border-radius: 4px;
+  page-break-inside: avoid;
+}
+
+.policy-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-xs);
+  font-weight: 700;
+  color: var(--policy-yellow-text);
+  font-size: var(--font-size-h4);
+}
+
+.policy-content {
+  color: var(--policy-yellow-text);
+  font-size: var(--font-size-body);
+  line-height: 1.7;
+}
+
+.policy-citation {
+  display: block;
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-small);
+  font-style: italic;
+  color: var(--gray-600);
+}
+
+/* ============================================
+   7. PROFESSIONAL TABLES
+   ============================================ */
+
+.table-v21 {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--spacing-md) 0;
+  font-size: var(--font-size-body);
+  page-break-inside: avoid;
+}
+
+.table-v21 thead {
+  background: var(--lh-blue-primary);
+  color: white;
+}
+
+.table-v21 th {
+  padding: var(--spacing-sm);
+  text-align: left;
+  font-weight: 700;
+  border: var(--border-thin) solid var(--lh-blue-dark);
+}
+
+.table-v21 td {
+  padding: var(--spacing-sm);
+  border: var(--border-thin) solid var(--gray-200);
+}
+
+.table-v21 tbody tr:nth-child(even) {
+  background: var(--gray-50);
+}
+
+.table-v21 tbody tr:hover {
+  background: var(--lh-blue-light);
+}
+
+.table-v21 .numeric {
+  text-align: right;
+  font-family: var(--font-mono);
+}
+
+.table-v21 .highlight {
+  background: var(--policy-yellow-bg);
+  font-weight: 700;
+}
+
+/* Table Interpretation Block */
+.table-interpretation {
+  background: var(--gray-50);
+  border-left: var(--border-thick) solid var(--lh-blue-primary);
+  padding: var(--spacing-md);
+  margin: var(--spacing-md) 0;
+  font-size: var(--font-size-body);
+  line-height: 1.7;
+  page-break-inside: avoid;
+}
+
+.table-interpretation h4 {
+  color: var(--lh-blue-primary);
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-size-h4);
+}
+
+/* ============================================
+   8. EXECUTIVE SUMMARY COMPONENTS
+   ============================================ */
+
+.executive-summary-v21 {
+  background: white;
+  padding: var(--spacing-lg);
+  border: var(--border-medium) solid var(--lh-blue-primary);
+  border-radius: var(--border-radius);
+  margin: var(--spacing-lg) 0;
+  page-break-inside: avoid;
+}
+
+.key-findings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
+  margin: var(--spacing-md) 0;
+}
+
+.finding-card {
+  background: var(--gray-50);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  border-left: var(--border-thick) solid var(--lh-blue-primary);
+}
+
+.finding-label {
+  font-size: var(--font-size-small);
+  color: var(--gray-600);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.finding-value {
+  font-size: var(--font-size-h3);
+  font-weight: 900;
+  color: var(--lh-blue-primary);
+}
+
+/* Decision Matrix */
+.decision-matrix {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
+  margin: var(--spacing-md) 0;
+}
+
+.decision-card {
+  background: white;
+  border: var(--border-medium) solid var(--gray-300);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  text-align: center;
+}
+
+.decision-label {
+  font-size: var(--font-size-small);
+  color: var(--gray-600);
+  margin-bottom: var(--spacing-xs);
+}
+
+.decision-result {
+  font-size: var(--font-size-h2);
+  font-weight: 900;
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius);
+}
+
+.decision-result.go {
+  background: var(--success-green);
+  color: white;
+}
+
+.decision-result.conditional {
+  background: var(--warning-orange);
+  color: white;
+}
+
+.decision-result.no-go {
+  background: var(--danger-red);
+  color: white;
+}
+
+/* ============================================
+   9. CHART ENHANCEMENTS
+   ============================================ */
+
+.chart-container-v21 {
+  background: white;
+  padding: var(--spacing-md);
+  border: var(--border-thin) solid var(--gray-200);
+  border-radius: var(--border-radius);
+  margin: var(--spacing-md) 0;
+  page-break-inside: avoid;
+}
+
+.chart-title {
+  font-size: var(--font-size-h4);
+  font-weight: 700;
+  color: var(--lh-blue-primary);
+  margin-bottom: var(--spacing-sm);
+  text-align: center;
+}
+
+.chart-description {
+  font-size: var(--font-size-small);
+  color: var(--gray-600);
+  text-align: center;
+  margin-bottom: var(--spacing-md);
+}
+
+/* ============================================
+   10. HIGHLIGHT & EMPHASIS
+   ============================================ */
+
+.highlight-box {
+  background: var(--lh-blue-light);
+  border: var(--border-thin) solid var(--lh-blue-primary);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  margin: var(--spacing-md) 0;
+}
+
+.callout-success {
+  background: #D4EDDA;
+  border-left: var(--border-thick) solid var(--success-green);
+  padding: var(--spacing-md);
+  margin: var(--spacing-md) 0;
+}
+
+.callout-warning {
+  background: #FFF3CD;
+  border-left: var(--border-thick) solid var(--warning-orange);
+  padding: var(--spacing-md);
+  margin: var(--spacing-md) 0;
+}
+
+.callout-danger {
+  background: #F8D7DA;
+  border-left: var(--border-thick) solid var(--danger-red);
+  padding: var(--spacing-md);
+  margin: var(--spacing-md) 0;
+}
+
+/* ============================================
+   11. BADGES & LABELS
+   ============================================ */
+
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: var(--font-size-small);
+  font-weight: 600;
+}
+
+.badge-primary {
+  background: var(--lh-blue-primary);
+  color: white;
+}
+
+.badge-success {
+  background: var(--success-green);
+  color: white;
+}
+
+.badge-warning {
+  background: var(--warning-orange);
+  color: var(--gray-800);
+}
+
+.badge-danger {
+  background: var(--danger-red);
+  color: white;
+}
+
+/* ============================================
+   12. PAGE BREAKS & PRINT STYLES
+   ============================================ */
+
+@media print {
+  body {
+    background: white;
+  }
+  
+  .page-v21 {
+    page-break-after: always;
+  }
+  
+  .section-v21 {
+    page-break-inside: avoid;
+  }
+  
+  .data-card-v21,
+  .table-v21,
+  .chart-container-v21,
+  .policy-note-box {
+    page-break-inside: avoid;
+  }
+  
+  /* Remove shadows for print */
+  .data-card-v21,
+  .chart-container-v21 {
+    box-shadow: none;
+    border: var(--border-thin) solid var(--gray-300);
+  }
+}
+
+/* ============================================
+   13. UTILITY CLASSES
+   ============================================ */
+
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-justify { text-align: justify; }
+
+.font-bold { font-weight: 700; }
+.font-normal { font-weight: 400; }
+
+.text-primary { color: var(--lh-blue-primary); }
+.text-success { color: var(--success-green); }
+.text-warning { color: var(--warning-orange); }
+.text-danger { color: var(--danger-red); }
+.text-muted { color: var(--gray-500); }
+
+.mb-sm { margin-bottom: var(--spacing-sm); }
+.mb-md { margin-bottom: var(--spacing-md); }
+.mb-lg { margin-bottom: var(--spacing-lg); }
+
+.mt-sm { margin-top: var(--spacing-sm); }
+.mt-md { margin-top: var(--spacing-md); }
+.mt-lg { margin-top: var(--spacing-lg); }
+
+/* ============================================
+   END OF v21 PROFESSIONAL CSS
+   ============================================ */

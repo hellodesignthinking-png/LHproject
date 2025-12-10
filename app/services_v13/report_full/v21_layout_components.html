@@ -1,0 +1,371 @@
+<!--
+ZeroSite v21 Professional Layout Components
+Reusable HTML/Jinja2 components for consistent professional design
+
+Usage: {% include 'v21_layout_components.html' %}
+Then use macros like: {{ section_header('Section Title', '📊') }}
+-->
+
+<!-- ============================================
+     1. SECTION HEADERS
+     ============================================ -->
+
+{% macro section_header(title, icon='') %}
+<div class="section-header-v21">
+  {% if icon %}<span class="icon">{{ icon }}</span>{% endif %}
+  <span>{{ title }}</span>
+</div>
+{% endmacro %}
+
+{% macro section_subheader(title) %}
+<div class="section-subheader-v21">
+  {{ title }}
+</div>
+{% endmacro %}
+
+<!-- ============================================
+     2. DATA CARDS
+     ============================================ -->
+
+{% macro data_card(title, badge='', body_content='', footer_content='') %}
+<div class="data-card-v21">
+  <div class="data-card-header">
+    <h4 class="data-card-title">{{ title }}</h4>
+    {% if badge %}
+    <span class="data-card-badge">{{ badge }}</span>
+    {% endif %}
+  </div>
+  <div class="data-card-body">
+    {{ body_content|safe }}
+  </div>
+  {% if footer_content %}
+  <div class="data-card-footer">
+    <p class="interpretation-text">{{ footer_content|safe }}</p>
+  </div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{% macro metric_row(label, value, value_class='') %}
+<div class="metric-row">
+  <span class="metric-label">{{ label }}</span>
+  <span class="metric-value {{ value_class }}">{{ value }}</span>
+</div>
+{% endmacro %}
+
+<!-- ============================================
+     3. POLICY CITATION BOXES
+     ============================================ -->
+
+{% macro policy_note(title, content, citation='') %}
+<div class="policy-note-box">
+  <div class="policy-header">
+    <span>📋</span>
+    <strong>{{ title }}</strong>
+  </div>
+  <div class="policy-content">
+    <p>{{ content|safe }}</p>
+    {% if citation %}
+    <cite class="policy-citation">{{ citation }}</cite>
+    {% endif %}
+  </div>
+</div>
+{% endmacro %}
+
+<!-- ============================================
+     4. TABLE WITH INTERPRETATION
+     ============================================ -->
+
+{% macro table_with_interpretation(table_html, interpretation_title, interpretation_text) %}
+{{ table_html|safe }}
+
+<div class="table-interpretation">
+  <h4>📊 {{ interpretation_title }}</h4>
+  {{ interpretation_text|safe }}
+</div>
+{% endmacro %}
+
+<!-- ============================================
+     5. 2-COLUMN LAYOUT
+     ============================================ -->
+
+{% macro two_column_layout(main_content, sidebar_content) %}
+<div class="content-2column">
+  <div class="main-content">
+    {{ main_content|safe }}
+  </div>
+  <div class="sidebar-content">
+    {{ sidebar_content|safe }}
+  </div>
+</div>
+{% endmacro %}
+
+<!-- ============================================
+     6. EXECUTIVE SUMMARY COMPONENTS
+     ============================================ -->
+
+{% macro key_finding(label, value, value_class='') %}
+<div class="finding-card">
+  <div class="finding-label">{{ label }}</div>
+  <div class="finding-value {{ value_class }}">{{ value }}</div>
+</div>
+{% endmacro %}
+
+{% macro decision_card(label, result, result_class='') %}
+<div class="decision-card">
+  <div class="decision-label">{{ label }}</div>
+  <div class="decision-result {{ result_class }}">{{ result }}</div>
+</div>
+{% endmacro %}
+
+<!-- ============================================
+     7. HIGHLIGHT & CALLOUT BOXES
+     ============================================ -->
+
+{% macro highlight_box(content) %}
+<div class="highlight-box">
+  {{ content|safe }}
+</div>
+{% endmacro %}
+
+{% macro callout(type, content) %}
+<div class="callout-{{ type }}">
+  {{ content|safe }}
+</div>
+{% endmacro %}
+
+<!-- ============================================
+     8. BADGES
+     ============================================ -->
+
+{% macro badge(text, type='primary') %}
+<span class="badge badge-{{ type }}">{{ text }}</span>
+{% endmacro %}
+
+<!-- ============================================
+     9. CHART CONTAINER
+     ============================================ -->
+
+{% macro chart_container(title, description, chart_html) %}
+<div class="chart-container-v21">
+  <h4 class="chart-title">{{ title }}</h4>
+  {% if description %}
+  <p class="chart-description">{{ description }}</p>
+  {% endif %}
+  <div class="chart-content">
+    {{ chart_html|safe }}
+  </div>
+</div>
+{% endmacro %}
+
+<!-- ============================================
+     10. PROFESSIONAL TABLES
+     ============================================ -->
+
+{% macro professional_table(headers, rows, class_extra='') %}
+<table class="table-v21 {{ class_extra }}">
+  <thead>
+    <tr>
+      {% for header in headers %}
+      <th>{{ header }}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in rows %}
+    <tr>
+      {% for cell in row %}
+      <td>{{ cell }}</td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endmacro %}
+
+<!-- ============================================
+     11. FINANCIAL METRICS TABLE
+     ============================================ -->
+
+{% macro financial_metrics_table(metrics) %}
+<table class="table-v21">
+  <thead>
+    <tr style="background: #005BAC; color: white;">
+      <th style="padding: 12px; border: 1px solid #003D73;">지표 (Metric)</th>
+      <th style="padding: 12px; border: 1px solid #003D73; text-align: right;">값 (Value)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for metric in metrics %}
+    <tr {% if loop.index % 2 == 0 %}style="background: #f8f9fa;"{% endif %}>
+      <td style="padding: 12px; border: 1px solid #dee2e6; font-weight: 600;">{{ metric.label }}</td>
+      <td style="padding: 12px; border: 1px solid #dee2e6; text-align: right; {% if metric.color %}color: {{ metric.color }};{% endif %} {% if metric.bold %}font-weight: 700;{% endif %}">
+        {{ metric.value }}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endmacro %}
+
+<!-- ============================================
+     12. COMPARISON TABLE (2 SCENARIOS)
+     ============================================ -->
+
+{% macro comparison_table(title, items, scenario1_label, scenario2_label) %}
+<div class="data-card-v21">
+  <div class="data-card-header">
+    <h4 class="data-card-title">{{ title }}</h4>
+  </div>
+  <div class="data-card-body">
+    <table class="table-v21">
+      <thead>
+        <tr>
+          <th>항목</th>
+          <th style="text-align: right;">{{ scenario1_label }}</th>
+          <th style="text-align: right;">{{ scenario2_label }}</th>
+          <th style="text-align: right;">차이</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>{{ item.label }}</td>
+          <td class="numeric">{{ item.value1 }}</td>
+          <td class="numeric">{{ item.value2 }}</td>
+          <td class="numeric {% if item.diff_value > 0 %}text-success{% elif item.diff_value < 0 %}text-danger{% endif %}">
+            {{ item.diff }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endmacro %}
+
+<!-- ============================================
+     13. RISK MATRIX
+     ============================================ -->
+
+{% macro risk_matrix(risks) %}
+<table class="table-v21">
+  <thead>
+    <tr>
+      <th style="width: 30%;">리스크</th>
+      <th style="width: 15%; text-align: center;">심각도</th>
+      <th style="width: 15%; text-align: center;">발생가능성</th>
+      <th style="width: 40%;">완화 전략</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for risk in risks %}
+    <tr>
+      <td><strong>{{ risk.name }}</strong><br><span style="font-size: 9pt; color: #6c757d;">{{ risk.description }}</span></td>
+      <td style="text-align: center;">
+        <span class="badge badge-{% if risk.severity == 'HIGH' %}danger{% elif risk.severity == 'MEDIUM' %}warning{% else %}success{% endif %}">
+          {{ risk.severity }}
+        </span>
+      </td>
+      <td style="text-align: center;">
+        <span class="badge badge-{% if risk.probability == 'HIGH' %}danger{% elif risk.probability == 'MEDIUM' %}warning{% else %}success{% endif %}">
+          {{ risk.probability }}
+        </span>
+      </td>
+      <td style="font-size: 10pt;">{{ risk.mitigation }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endmacro %}
+
+<!-- ============================================
+     14. TIMELINE/GANTT VISUAL
+     ============================================ -->
+
+{% macro timeline_item(phase, duration, status, description='') %}
+<div style="border-left: 4px solid #005BAC; padding-left: 15px; margin-bottom: 20px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+    <h4 style="color: #005BAC; margin: 0;">{{ phase }}</h4>
+    <span class="badge badge-{% if status == 'COMPLETE' %}success{% elif status == 'IN_PROGRESS' %}warning{% else %}primary{% endif %}">
+      {{ status }}
+    </span>
+  </div>
+  <p style="margin: 0; font-size: 10pt; color: #6c757d;">
+    <strong>기간:</strong> {{ duration }}
+    {% if description %}<br>{{ description }}{% endif %}
+  </p>
+</div>
+{% endmacro %}
+
+<!-- ============================================
+     15. KEY INSIGHTS SUMMARY
+     ============================================ -->
+
+{% macro key_insights(insights) %}
+<div class="highlight-box">
+  <h4 style="color: #005BAC; margin-bottom: 15px;">💡 핵심 인사이트 (Key Insights)</h4>
+  <ul style="margin: 0; padding-left: 25px; line-height: 2.0;">
+    {% for insight in insights %}
+    <li style="margin-bottom: 10px;"><strong>{{ insight.title }}:</strong> {{ insight.text }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endmacro %}
+
+<!-- ============================================
+     16. RECOMMENDATION BOX
+     ============================================ -->
+
+{% macro recommendation_box(title, recommendations) %}
+<div style="background: #E6F2FF; border: 2px solid #005BAC; border-radius: 8px; padding: 20px; margin: 20px 0;">
+  <h4 style="color: #005BAC; margin-bottom: 15px;">🎯 {{ title }}</h4>
+  <ol style="margin: 0; padding-left: 25px; line-height: 2.0;">
+    {% for rec in recommendations %}
+    <li style="margin-bottom: 10px;">{{ rec }}</li>
+    {% endfor %}
+  </ol>
+</div>
+{% endmacro %}
+
+<!-- ============================================
+     17. COVER PAGE COMPONENT
+     ============================================ -->
+
+{% macro cover_page(title, subtitle, address, date, version='v21') %}
+<div class="cover-page-v21">
+  <div style="margin-bottom: 40px;">
+    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='white'/%3E%3Ctext x='50' y='60' font-size='40' text-anchor='middle' fill='%23005BAC' font-weight='bold'%3ELH%3C/text%3E%3C/svg%3E" 
+         alt="LH Logo" 
+         style="width: 80px; height: 80px; margin-bottom: 20px;">
+  </div>
+  
+  <h1 class="cover-title">{{ title }}</h1>
+  <p class="cover-subtitle">{{ subtitle }}</p>
+  
+  <div style="margin-top: 60px; font-size: 12pt;">
+    <p><strong>대상지:</strong> {{ address }}</p>
+    <p><strong>작성일:</strong> {{ date }}</p>
+    <p><strong>버전:</strong> ZeroSite Expert Edition {{ version }}</p>
+  </div>
+  
+  <div style="margin-top: 80px; font-size: 10pt; opacity: 0.8;">
+    <p>LH 한국토지주택공사 제출용</p>
+    <p>McKinsey-Grade Professional Report</p>
+  </div>
+</div>
+{% endmacro %}
+
+<!-- ============================================
+     18. PAGE FOOTER
+     ============================================ -->
+
+{% macro page_footer(page_num, total_pages, doc_title) %}
+<div style="position: absolute; bottom: 15mm; left: 20mm; right: 20mm; display: flex; justify-content: space-between; font-size: 9pt; color: #6c757d; border-top: 1px solid #dee2e6; padding-top: 8px;">
+  <span>{{ doc_title }}</span>
+  <span>Page {{ page_num }} / {{ total_pages }}</span>
+  <span>ZeroSite Expert Edition v21</span>
+</div>
+{% endmacro %}
+
+<!-- END OF v21 LAYOUT COMPONENTS -->
