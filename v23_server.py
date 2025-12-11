@@ -198,14 +198,19 @@ def save_report_with_url(html_content: str, address: str) -> tuple:
 async def root():
     """Root endpoint"""
     return {
-        "service": "ZeroSite v23 - A/B Scenario Comparison",
-        "version": "23.0.0",
+        "service": "ZeroSite v23 + Expert v3.2 - A/B Scenario Comparison",
+        "version": "23.0.0 + v3.2.0",
         "status": "PRODUCTION READY",
         "endpoints": {
             "health": "/health",
             "metrics": "/metrics",
             "generate_ab_report": "POST /api/v23/generate-ab-report",
+            "generate_expert_v32_report": "POST /api/v3.2/generate-expert-report",
             "api_docs": "/api/v23/docs"
+        },
+        "features": {
+            "v23": "A/B Scenario Comparison with v23.1 visualizations",
+            "v32": "Expert Edition with integrated backend engines, Section 03-1, and enhanced accuracy"
         }
     }
 
@@ -642,6 +647,155 @@ async def list_reports():
         "total": len(reports),
         "reports": reports[:50]  # Limit to 50 most recent
     }
+
+
+# ==========================================
+# v3.2 API Endpoints - Expert Edition
+# ==========================================
+
+class ExpertV32ReportRequest(BaseModel):
+    """Request model for Expert v3.2 report generation"""
+    address: str = Field(..., description="Land address", example="서울특별시 강남구 역삼동 123-45")
+    land_area_sqm: float = Field(..., description="Land area in square meters", example=1650.0, gt=0)
+    bcr_legal: float = Field(50.0, description="Legal building coverage ratio (%)", example=50.0)
+    far_legal: float = Field(300.0, description="Legal floor area ratio (%)", example=300.0)
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "address": "서울특별시 강남구 역삼동 123-45",
+                "land_area_sqm": 1650.0,
+                "bcr_legal": 50.0,
+                "far_legal": 300.0
+            }
+        }
+
+
+class ExpertV32ReportResponse(BaseModel):
+    """Response model for Expert v3.2 report"""
+    status: str
+    report_url: str
+    generation_time: float
+    file_size_kb: int
+    version: str
+    sections_included: list
+    recommended_scenario: str
+    scenario_a_decision: str
+    scenario_b_decision: str
+    metadata: Dict[str, Any]
+    message: str
+
+
+@app.post("/api/v3.2/generate-expert-report", response_model=ExpertV32ReportResponse)
+async def generate_expert_v32_report(request: ExpertV32ReportRequest):
+    """
+    Generate Expert Edition v3.2 Report with Section 03-1 A/B Comparison
+    
+    This endpoint produces a comprehensive expert-grade report featuring:
+    - v3.2 backend engines (Financial, Cost, Market)
+    - Section 03-1: A/B Scenario Comparison (Youth vs. Newlywed)
+    - Enhanced financial accuracy (ROI, NPV, IRR)
+    - Real market data integration
+    - LH 2024 cost standards
+    - Professional PDF-ready HTML output
+    
+    NEW in v3.2:
+    - Integrated backend engines with verified accuracy
+    - A/B comparison with 15+ financial/policy metrics
+    - Enhanced visualizations (FAR chart, market histogram)
+    - LH 2024 FAR relaxation standards
+    """
+    start_time = time.time()
+    metrics["total_requests"] += 1
+    
+    logger.info(f"📋 Expert v3.2 Report request: {request.address}, {request.land_area_sqm}㎡")
+    
+    try:
+        # Import v3.2 generator (lazy import to avoid startup delays)
+        from backend.services_v9.expert_v3_generator import ExpertV3ReportGenerator
+        
+        # Initialize generator
+        logger.info("🔧 Initializing Expert v3.2 Generator...")
+        generator = ExpertV3ReportGenerator()
+        
+        # Generate complete report
+        logger.info("📄 Generating Expert v3.2 report...")
+        result = generator.generate_complete_report(
+            address=request.address,
+            land_area_sqm=request.land_area_sqm,
+            bcr_legal=request.bcr_legal,
+            far_legal=request.far_legal
+        )
+        
+        html_content = result['html']
+        metadata = result['metadata']
+        section_data = result['section_03_1_data']
+        
+        # Save report to static directory
+        logger.info("💾 Saving report...")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        address_hash = hashlib.md5(request.address.encode('utf-8')).hexdigest()[:8]
+        filename = f"expert_v32_{address_hash}_{timestamp}.html"
+        filepath = REPORTS_DIR / filename
+        
+        with open(filepath, 'w', encoding='utf-8') as f:
+            f.write(html_content)
+        
+        # Generate URLs
+        report_url = f"{BASE_URL}/reports/{filename}"
+        download_url = f"{BASE_URL}/reports/{filename}?download=true"
+        
+        # Calculate metrics
+        generation_time = time.time() - start_time
+        file_size_kb = round(len(html_content) / 1024, 2)
+        
+        # Update server metrics
+        metrics["successful_reports"] += 1
+        metrics["total_generation_time"] += generation_time
+        metrics["average_generation_time"] = metrics["total_generation_time"] / metrics["successful_reports"]
+        
+        logger.info(f"✅ Expert v3.2 report generated: {filename}")
+        logger.info(f"⏱️  Generation time: {generation_time:.2f}s")
+        logger.info(f"📊 URL: {report_url}")
+        
+        return ExpertV32ReportResponse(
+            status="success",
+            report_url=report_url,
+            generation_time=round(generation_time, 2),
+            file_size_kb=file_size_kb,
+            version="3.2.0",
+            sections_included=metadata['sections_included'],
+            recommended_scenario=metadata['recommended_scenario'],
+            scenario_a_decision=metadata['scenario_a_decision'],
+            scenario_b_decision=metadata['scenario_b_decision'],
+            metadata={
+                "address": request.address,
+                "land_area_sqm": request.land_area_sqm,
+                "land_area_pyeong": round(request.land_area_sqm / 3.3, 1),
+                "market_price_per_sqm": metadata['market_price_per_sqm'],
+                "market_confidence": metadata['market_confidence'],
+                "download_url": download_url,
+                "generation_date": datetime.now().isoformat()
+            },
+            message=f"Expert v3.2 report successfully generated. Recommended: {section_data['final_recommendation']}"
+        )
+    
+    except Exception as e:
+        # Update failure metrics
+        metrics["failed_reports"] += 1
+        generation_time = time.time() - start_time
+        
+        logger.error(f"❌ Expert v3.2 report generation failed: {str(e)}", exc_info=True)
+        
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "status": "error",
+                "message": f"Expert v3.2 report generation failed: {str(e)}",
+                "generation_time": round(generation_time, 2),
+                "timestamp": datetime.now().isoformat()
+            }
+        )
 
 
 @app.exception_handler(Exception)
