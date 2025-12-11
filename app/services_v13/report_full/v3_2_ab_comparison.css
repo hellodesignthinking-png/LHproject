@@ -1,0 +1,440 @@
+/*
+ * ZeroSite v3.2 - A/B Comparison Additional Styles
+ * ================================================
+ * Supplementary CSS for Section 03-1 A/B Scenario Comparison
+ * Integrates v23.1 visual standards into Expert v3 template
+ * 
+ * Add this to lh_expert_edition_v3.html.jinja2 <style> section
+ * 
+ * Author: ZeroSite v3.2 Development Team
+ * Version: 3.2.0
+ * Date: 2025-12-11
+ */
+
+/* ========================================
+   A/B Comparison Table Styles
+   ======================================== */
+
+.comparison-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 20px 0;
+    font-size: 10pt;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.comparison-table thead {
+    background: linear-gradient(135deg, #005BAC 0%, #0075C9 100%);
+    color: white;
+}
+
+.comparison-table thead th {
+    padding: 12px 10px;
+    text-align: center;
+    font-weight: 700;
+    border: 1px solid #003D73;
+}
+
+/* Scenario A Column (Blue) */
+.comparison-table thead th:nth-child(2),
+.comparison-table tbody td:nth-child(2) {
+    background-color: #E6F2FF;
+    border-left: 3px solid #005BAC;
+}
+
+/* Scenario B Column (Orange) */
+.comparison-table thead th:nth-child(3),
+.comparison-table tbody td:nth-child(3) {
+    background-color: #FFE6CC;
+    border-left: 3px solid #FF7A00;
+}
+
+.comparison-table tbody td {
+    padding: 10px;
+    border: 1px solid #E5E7EB;
+}
+
+.comparison-table tbody td.text-center {
+    text-align: center;
+}
+
+.comparison-table tbody td.text-right {
+    text-align: right;
+    font-family: 'Courier New', monospace;
+}
+
+.comparison-table tbody td.bold {
+    font-weight: 700;
+    color: #2C3E50;
+}
+
+.comparison-table tbody td.winner {
+    font-weight: 700;
+    color: #005BAC;
+    font-size: 11pt;
+}
+
+/* Decision Badges */
+.decision-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 10pt;
+    text-transform: uppercase;
+}
+
+.decision-go {
+    background: linear-gradient(135deg, #27AE60 0%, #2ECC71 100%);
+    color: white;
+    box-shadow: 0 2px 4px rgba(39, 174, 96, 0.3);
+}
+
+.decision-no-go {
+    background: linear-gradient(135deg, #C0392B 0%, #E74C3C 100%);
+    color: white;
+    box-shadow: 0 2px 4px rgba(192, 57, 43, 0.3);
+}
+
+/* ========================================
+   Chart Container Styles (v23.1 Standards)
+   ======================================== */
+
+.chart-container {
+    margin: 24px 0;
+    padding: 20px;
+    background: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.chart-container img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    /* v23.1 Enhanced: Charts generated at DPI 150 */
+}
+
+/* Info Box Styles */
+.info-box {
+    background: #F8F9FA;
+    border-left: 4px solid #005BAC;
+    padding: 16px;
+    margin: 16px 0;
+    border-radius: 4px;
+}
+
+.info-box h4 {
+    color: #005BAC;
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 11pt;
+}
+
+.info-box ul {
+    margin: 10px 0;
+    padding-left: 24px;
+    line-height: 1.8;
+}
+
+.info-box ul li {
+    margin-bottom: 8px;
+}
+
+/* Warning Box Styles */
+.warning-box {
+    background: #FFF3CD;
+    border-left: 4px solid #FF7A00;
+    padding: 16px;
+    margin: 16px 0;
+    border-radius: 4px;
+}
+
+.warning-box h4 {
+    color: #FF7A00;
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 11pt;
+}
+
+/* ========================================
+   Scenario Overview Styles
+   ======================================== */
+
+.scenario-a-header {
+    background: linear-gradient(135deg, #005BAC 0%, #0075C9 100%);
+    color: white;
+    padding: 12px;
+    text-align: center;
+    font-weight: 700;
+    border-radius: 4px 4px 0 0;
+}
+
+.scenario-b-header {
+    background: linear-gradient(135deg, #FF7A00 0%, #FF9933 100%);
+    color: white;
+    padding: 12px;
+    text-align: center;
+    font-weight: 700;
+    border-radius: 4px 4px 0 0;
+}
+
+/* ========================================
+   Metrics Grid (Alternative Layout)
+   ======================================== */
+
+.metrics-grid-ab {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin: 20px 0;
+}
+
+.metric-card-a {
+    background: linear-gradient(135deg, #E6F2FF 0%, #FFFFFF 100%);
+    border: 2px solid #005BAC;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+}
+
+.metric-card-b {
+    background: linear-gradient(135deg, #FFE6CC 0%, #FFFFFF 100%);
+    border: 2px solid #FF7A00;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+}
+
+.metric-label-ab {
+    font-size: 9pt;
+    color: #6C757D;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.metric-value-ab {
+    font-size: 16pt;
+    font-weight: 700;
+    color: #005BAC;
+}
+
+.metric-unit-ab {
+    font-size: 10pt;
+    color: #6C757D;
+    margin-left: 4px;
+}
+
+/* ========================================
+   Responsive Adjustments (Print Friendly)
+   ======================================== */
+
+@media print {
+    .comparison-table {
+        font-size: 9pt;
+        page-break-inside: avoid;
+    }
+    
+    .comparison-table tbody tr {
+        page-break-inside: avoid;
+    }
+    
+    .chart-container {
+        page-break-inside: avoid;
+    }
+    
+    .info-box,
+    .warning-box {
+        page-break-inside: avoid;
+    }
+    
+    /* Ensure colors print correctly */
+    .decision-badge,
+    .comparison-table thead,
+    .scenario-a-header,
+    .scenario-b-header {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        color-adjust: exact;
+    }
+}
+
+/* ========================================
+   Typography Enhancements
+   ======================================== */
+
+.section-number {
+    display: inline-block;
+    background: linear-gradient(135deg, #005BAC 0%, #0075C9 100%);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 10pt;
+    margin-right: 12px;
+    box-shadow: 0 2px 4px rgba(0, 91, 172, 0.3);
+}
+
+.section-title {
+    font-size: 16pt;
+    font-weight: 700;
+    color: #2C3E50;
+    display: inline-block;
+}
+
+.section-subtitle {
+    font-size: 10pt;
+    color: #7F8C8D;
+    font-style: italic;
+    margin-top: 8px;
+    display: block;
+}
+
+.content-title {
+    font-size: 13pt;
+    font-weight: 700;
+    color: #005BAC;
+    margin-top: 24px;
+    margin-bottom: 16px;
+    padding-left: 12px;
+    border-left: 4px solid #005BAC;
+}
+
+/* ========================================
+   Utility Classes
+   ======================================== */
+
+.text-center {
+    text-align: center !important;
+}
+
+.text-right {
+    text-align: right !important;
+}
+
+.text-left {
+    text-align: left !important;
+}
+
+.bold {
+    font-weight: 700 !important;
+}
+
+.mb-20 {
+    margin-bottom: 20px;
+}
+
+.mt-20 {
+    margin-top: 20px;
+}
+
+/* ========================================
+   Animation Effects (Subtle, Print-Safe)
+   ======================================== */
+
+@media screen {
+    .comparison-table tbody tr:hover {
+        background-color: #F8F9FA;
+        transition: background-color 0.2s ease;
+    }
+    
+    .metric-card-a:hover,
+    .metric-card-b:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
+    }
+}
+
+/* ========================================
+   Custom Number Formatting
+   ======================================== */
+
+.number-large {
+    font-family: 'Courier New', monospace;
+    font-weight: 700;
+    color: #005BAC;
+    font-size: 11pt;
+}
+
+.number-small {
+    font-family: 'Courier New', monospace;
+    font-size: 9pt;
+    color: #6C757D;
+}
+
+.currency-krw::before {
+    content: '₩';
+    margin-right: 2px;
+}
+
+.percentage::after {
+    content: '%';
+    margin-left: 2px;
+}
+
+/* ========================================
+   Table Row Color Coding
+   ======================================== */
+
+.lh-gray-bg {
+    background-color: #E9ECEF !important;
+    font-weight: 700 !important;
+}
+
+.lh-blue-light-bg {
+    background-color: #E3F2FD !important;
+}
+
+.lh-orange-light-bg {
+    background-color: #FFF3E0 !important;
+}
+
+/* ========================================
+   Section-Specific Adjustments
+   ======================================== */
+
+/* Section 03-1 specific container */
+#section-03-1 {
+    margin: 40px 0;
+}
+
+#section-03-1 .section-header {
+    background: linear-gradient(135deg, #F8F9FA 0%, #FFFFFF 100%);
+    padding: 20px;
+    border-left: 5px solid #005BAC;
+    margin-bottom: 24px;
+}
+
+/* Ensure proper spacing */
+.content-block {
+    margin-bottom: 32px;
+    page-break-inside: avoid;
+}
+
+/* Final Recommendation Box */
+.final-recommendation {
+    background: linear-gradient(135deg, #005BAC 0%, #0075C9 100%);
+    color: white;
+    padding: 24px;
+    border-radius: 8px;
+    margin: 24px 0;
+    box-shadow: 0 4px 8px rgba(0, 91, 172, 0.3);
+}
+
+.final-recommendation h4 {
+    color: white !important;
+    margin-top: 0;
+}
+
+.final-recommendation p {
+    color: white !important;
+    line-height: 1.8;
+}
+
+/* ========================================
+   End of v3.2 A/B Comparison Styles
+   ======================================== */
