@@ -747,7 +747,7 @@ async def generate_expert_v32_report(request: ExpertV32ReportRequest):
         
         # Calculate metrics
         generation_time = time.time() - start_time
-        file_size_kb = round(len(html_content) / 1024, 2)
+        file_size_kb = int(round(len(html_content) / 1024))
         
         # Update server metrics
         metrics["successful_reports"] += 1
