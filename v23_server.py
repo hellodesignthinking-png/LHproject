@@ -96,8 +96,13 @@ server_start_time = time.time()
 REPORTS_DIR = Path("/home/user/webapp/public/reports")
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
+# Public directory (for test page and other static files)
+PUBLIC_DIR = Path("/home/user/webapp/public")
+PUBLIC_DIR.mkdir(parents=True, exist_ok=True)
+
 # Mount static files for direct access
 app.mount("/reports", StaticFiles(directory=str(REPORTS_DIR)), name="reports")
+app.mount("/public", StaticFiles(directory=str(PUBLIC_DIR), html=True), name="public")
 
 # Base URL (from environment or auto-detect)
 BASE_URL = os.getenv("BASE_URL", "http://localhost:8041")
