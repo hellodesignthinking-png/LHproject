@@ -11,7 +11,7 @@
 ### 방법 1: 인터랙티브 테스트 페이지 ⭐ **추천!**
 
 ```
-https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/test.html
+https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/public/test.html
 ```
 
 **특징:**
@@ -65,7 +65,7 @@ https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/health
 ### Step 2: 테스트 페이지 접속 (1분)
 1. 아래 URL 복사
    ```
-   https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/test.html
+   https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/public/test.html
    ```
 2. 브라우저 주소창에 붙여넣기
 3. Enter 키
@@ -128,7 +128,7 @@ https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/health
 
 | 이름 | URL | 용도 |
 |------|-----|------|
-| **테스트 페이지** | [클릭](https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/test.html) | 가장 쉬운 테스트 |
+| **테스트 페이지** | [클릭](https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/public/test.html) | 가장 쉬운 테스트 |
 | **API 문서** | [클릭](https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/api/v23/docs) | 개발자용 |
 | **Health Check** | [클릭](https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/health) | 서버 상태 |
 | **Metrics** | [클릭](https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/metrics) | 서버 통계 |
@@ -253,7 +253,7 @@ https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/health
 
 **가장 빠른 방법:**
 1. 브라우저 열기
-2. 이 URL 복사: `https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/test.html`
+2. 이 URL 복사: `https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/public/test.html`
 3. 주소창에 붙여넣기
 4. "강남구 리포트 생성" 버튼 클릭
 5. 완료! 🎉

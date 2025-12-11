@@ -12,7 +12,7 @@
 
 **인터랙티브 테스트 페이지:**
 ```
-https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/test.html
+https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/public/test.html
 ```
 
 **주요 기능:**
@@ -175,7 +175,7 @@ POST https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/api/v23/gener
 
 | 용도 | URL | 설명 |
 |------|-----|------|
-| 🎯 **테스트 페이지** | [/test.html](https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/test.html) | 원클릭 테스트 (추천) |
+| 🎯 **테스트 페이지** | [/public/test.html](https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/public/test.html) | 원클릭 테스트 (추천) |
 | 📚 **API 문서** | [/api/v23/docs](https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/api/v23/docs) | Swagger UI |
 | 💚 **Health Check** | [/health](https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/health) | 서버 상태 |
 | 📊 **Metrics** | [/metrics](https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/metrics) | 서버 통계 |
@@ -187,7 +187,7 @@ POST https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/api/v23/gener
 
 ### 방법 1: 테스트 페이지 사용 (초보자)
 1. 브라우저 열기 (Chrome, Firefox, Safari)
-2. URL 입력: `https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/test.html`
+2. URL 입력: `https://8041-ismcj42l609zyihh62150-ad490db5.sandbox.novita.ai/public/test.html`
 3. "강남구 리포트 생성" 버튼 클릭
 4. 결과 확인 (약 1-2초)
 5. 생성된 리포트 링크 클릭 (자동 새 창)
@@ -411,7 +411,7 @@ https://github.com/hellodesignthinking-png/LHproject
 ---
 
 **Status:** 🟢 READY FOR TESTING  
-**Recommended:** Start with `/test.html` for easiest experience  
+**Recommended:** Start with `/public/test.html` for easiest experience  
 **Next Steps:** Phase 3 - GenSpark AI Integration (~6 hours remaining)
 
 **Happy Testing! 🎉**
