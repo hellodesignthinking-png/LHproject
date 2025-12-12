@@ -680,8 +680,10 @@ class ExpertV32ReportResponse(BaseModel):
     """Response model for Expert v3.2 report"""
     status: str
     report_url: str
+    pdf_url: str  # NEW in v3.3: Direct PDF download link
     generation_time: float
     file_size_kb: int
+    pdf_size_kb: int  # NEW in v3.3: PDF file size
     version: str
     sections_included: list
     recommended_scenario: str
@@ -736,39 +738,59 @@ async def generate_expert_v32_report(request: ExpertV32ReportRequest):
         metadata = result['metadata']
         section_data = result['section_03_1_data']
         
-        # Save report to static directory
-        logger.info("💾 Saving report...")
+        # Save HTML report to static directory
+        logger.info("💾 Saving HTML report...")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         address_hash = hashlib.md5(request.address.encode('utf-8')).hexdigest()[:8]
-        filename = f"expert_v32_{address_hash}_{timestamp}.html"
-        filepath = REPORTS_DIR / filename
         
-        with open(filepath, 'w', encoding='utf-8') as f:
+        html_filename = f"expert_v32_{address_hash}_{timestamp}.html"
+        html_filepath = REPORTS_DIR / html_filename
+        
+        with open(html_filepath, 'w', encoding='utf-8') as f:
             f.write(html_content)
         
+        # Generate PDF (NEW in v3.3)
+        logger.info("📄 Generating PDF...")
+        from backend.services_v9.expert_v3_pdf_generator import ExpertV3PDFGenerator
+        
+        pdf_generator = ExpertV3PDFGenerator()
+        pdf_filename = f"expert_v33_{address_hash}_{timestamp}.pdf"
+        pdf_filepath = REPORTS_DIR / pdf_filename
+        
+        pdf_bytes = pdf_generator.generate_pdf_from_html(
+            html_content=html_content,
+            output_path=str(pdf_filepath)
+        )
+        
         # Generate URLs
-        report_url = f"{BASE_URL}/reports/{filename}"
-        download_url = f"{BASE_URL}/reports/{filename}?download=true"
+        report_url = f"{BASE_URL}/reports/{html_filename}"
+        pdf_url = f"{BASE_URL}/reports/{pdf_filename}"
+        download_url = f"{BASE_URL}/reports/{html_filename}?download=true"
         
         # Calculate metrics
         generation_time = time.time() - start_time
         file_size_kb = int(round(len(html_content) / 1024))
+        pdf_size_kb = int(round(len(pdf_bytes) / 1024))
         
         # Update server metrics
         metrics["successful_reports"] += 1
         metrics["total_generation_time"] += generation_time
         metrics["average_generation_time"] = metrics["total_generation_time"] / metrics["successful_reports"]
         
-        logger.info(f"✅ Expert v3.2 report generated: {filename}")
-        logger.info(f"⏱️  Generation time: {generation_time:.2f}s")
-        logger.info(f"📊 URL: {report_url}")
+        # Log success
+        logger.info(f"✅ Expert v3.3 reports generated: HTML + PDF")
+        logger.info(f"   ├─ HTML: {html_filename} ({file_size_kb} KB)")
+        logger.info(f"   ├─ PDF: {pdf_filename} ({pdf_size_kb} KB)")
+        logger.info(f"   └─ Time: {generation_time:.2f}s")
         
         return ExpertV32ReportResponse(
             status="success",
             report_url=report_url,
+            pdf_url=pdf_url,  # NEW in v3.3
             generation_time=round(generation_time, 2),
             file_size_kb=file_size_kb,
-            version="3.2.0",
+            pdf_size_kb=pdf_size_kb,  # NEW in v3.3
+            version="3.3.0",  # Updated version
             sections_included=metadata['sections_included'],
             recommended_scenario=metadata['recommended_scenario'],
             scenario_a_decision=metadata['scenario_a_decision'],
@@ -779,10 +801,12 @@ async def generate_expert_v32_report(request: ExpertV32ReportRequest):
                 "land_area_pyeong": round(request.land_area_sqm / 3.3, 1),
                 "market_price_per_sqm": metadata['market_price_per_sqm'],
                 "market_confidence": metadata['market_confidence'],
+                "html_url": report_url,
+                "pdf_url": pdf_url,  # NEW in v3.3
                 "download_url": download_url,
                 "generation_date": datetime.now().isoformat()
             },
-            message=f"Expert v3.2 report successfully generated. Recommended: {section_data['final_recommendation']}"
+            message=f"Expert v3.3 report (HTML + PDF) successfully generated. Recommended: {section_data['final_recommendation']}"
         )
     
     except Exception as e:
