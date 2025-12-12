@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite v24 Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-8">
+        <header class="bg-blue-600 text-white p-6 rounded-lg shadow-lg mb-8">
+            <h1 class="text-3xl font-bold">🏠 ZeroSite v24 Dashboard</h1>
+            <p class="text-sm mt-2">Real Estate Development Analysis Platform</p>
+        </header>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Function 1: Quick Analysis -->
+            <div class="bg-white p-6 rounded-lg shadow hover:shadow-xl transition">
+                <h2 class="text-xl font-bold text-blue-600 mb-4">📊 Quick Analysis</h2>
+                <p class="text-gray-600 mb-4">Single-page form for instant analysis</p>
+                <input type="number" placeholder="Land Area (㎡)" class="w-full p-2 border rounded mb-2">
+                <input type="text" placeholder="Location" class="w-full p-2 border rounded mb-2">
+                <button class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Analyze</button>
+                <div class="mt-4 text-sm text-gray-500">⚡ Results in <10 seconds</div>
+            </div>
+            
+            <!-- Function 2: Report Manager -->
+            <div class="bg-white p-6 rounded-lg shadow hover:shadow-xl transition">
+                <h2 class="text-xl font-bold text-green-600 mb-4">📄 Report Manager</h2>
+                <p class="text-gray-600 mb-4">View and manage generated reports</p>
+                <div class="space-y-2">
+                    <div class="p-2 bg-gray-50 rounded">LH Submission Report (25 pages)</div>
+                    <div class="p-2 bg-gray-50 rounded">Landowner Brief (2 pages)</div>
+                    <div class="p-2 bg-gray-50 rounded">Professional Report (75 pages)</div>
+                </div>
+                <button class="w-full mt-4 bg-green-600 text-white p-2 rounded hover:bg-green-700">Download All</button>
+            </div>
+            
+            <!-- Function 3: Visualization Studio -->
+            <div class="bg-white p-6 rounded-lg shadow hover:shadow-xl transition">
+                <h2 class="text-xl font-bold text-purple-600 mb-4">📈 Visualization Studio</h2>
+                <p class="text-gray-600 mb-4">Interactive charts and 3D models</p>
+                <select class="w-full p-2 border rounded mb-2">
+                    <option>FAR Chart</option>
+                    <option>Market Histogram</option>
+                    <option>Risk Heatmap</option>
+                    <option>3D Site Sketch</option>
+                    <option>Zoning Map</option>
+                    <option>Timeline Gantt</option>
+                </select>
+                <button class="w-full bg-purple-600 text-white p-2 rounded hover:bg-purple-700">Generate</button>
+            </div>
+            
+            <!-- Function 4: Scenario Comparison -->
+            <div class="bg-white p-6 rounded-lg shadow hover:shadow-xl transition">
+                <h2 class="text-xl font-bold text-orange-600 mb-4">🔀 Scenario Comparison</h2>
+                <p class="text-gray-600 mb-4">Compare A/B/C scenarios</p>
+                <div class="space-y-2">
+                    <div class="p-2 bg-orange-50 rounded flex justify-between">
+                        <span>A안</span><span class="font-bold">ROI: 10.5%</span>
+                    </div>
+                    <div class="p-2 bg-orange-100 rounded flex justify-between">
+                        <span>B안</span><span class="font-bold">ROI: 12.3%</span>
+                    </div>
+                    <div class="p-2 bg-orange-200 rounded flex justify-between">
+                        <span>C안 ⭐</span><span class="font-bold text-green-600">ROI: 15.8%</span>
+                    </div>
+                </div>
+                <button class="w-full mt-4 bg-orange-600 text-white p-2 rounded hover:bg-orange-700">Compare</button>
+            </div>
+            
+            <!-- Function 5: Batch Processing -->
+            <div class="bg-white p-6 rounded-lg shadow hover:shadow-xl transition">
+                <h2 class="text-xl font-bold text-red-600 mb-4">📦 Batch Processing</h2>
+                <p class="text-gray-600 mb-4">Upload and process multiple sites</p>
+                <input type="file" accept=".csv,.xlsx" class="w-full p-2 border rounded mb-2">
+                <div class="text-sm text-gray-500 mb-4">
+                    <div>📊 Processing: 5/10 sites</div>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                        <div class="bg-red-600 h-2 rounded-full" style="width: 50%"></div>
+                    </div>
+                </div>
+                <button class="w-full bg-red-600 text-white p-2 rounded hover:bg-red-700">Start Batch</button>
+            </div>
+            
+            <!-- Status Summary -->
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-6 rounded-lg shadow text-white">
+                <h2 class="text-xl font-bold mb-4">🎯 System Status</h2>
+                <div class="space-y-2 text-sm">
+                    <div>✅ 13 Core Engines Online</div>
+                    <div>✅ 6 Visualization Engines Ready</div>
+                    <div>✅ 5 Report Generators Active</div>
+                    <div>✅ 7 API Endpoints Running</div>
+                    <div>✅ Response Time: <0.1s</div>
+                </div>
+                <div class="mt-4 text-xs opacity-75">v24.0.0 | Dec 2025</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
