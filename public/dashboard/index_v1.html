@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite v24 Dashboard UI 1.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes slide-in {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .animate-slide-in {
+            animation: slide-in 0.3s ease-out;
+        }
+        
+        .suggestion-item {
+            transition: background-color 0.2s;
+        }
+        
+        .progress-fill {
+            transition: width 0.3s ease-out;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold">🏠 ZeroSite v24 Dashboard UI 1.0</h1>
+                    <p class="text-sm mt-1 opacity-90">Real Estate Development Analysis Platform - Enhanced Edition</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="document.getElementById('historyModal').classList.remove('hidden')" 
+                            class="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition">
+                        📜 History
+                    </button>
+                    <button onclick="document.getElementById('wizardModal').classList.remove('hidden')" 
+                            class="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition">
+                        🧙 Wizard
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container mx-auto px-4 py-8">
+        
+        <!-- Analysis Progress Bar (Hidden by default) -->
+        <div id="analysisProgressBar" class="mb-6 bg-white p-4 rounded-lg shadow hidden">
+            <div class="flex justify-between items-center mb-2">
+                <span id="analysisStatusText" class="text-sm font-medium text-gray-700">분석 중...</span>
+                <span class="text-sm text-gray-500">자동으로 업데이트됩니다</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                <div class="progress-fill bg-blue-600 h-3 rounded-full" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Feature Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            <!-- 1. Quick Analysis with Auto-complete -->
+            <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition">
+                <h2 class="text-xl font-bold text-blue-600 mb-4">📊 Quick Analysis</h2>
+                <p class="text-gray-600 mb-4 text-sm">Single-page form with auto-complete</p>
+                
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">토지 면적 (㎡) *</label>
+                        <input 
+                            type="number" 
+                            id="quickLandArea"
+                            placeholder="예: 1000" 
+                            required
+                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">위치 (주소 자동완성) *</label>
+                        <input 
+                            type="text" 
+                            id="quickLocation"
+                            placeholder="주소를 입력하세요..." 
+                            required
+                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        
+                        <!-- Auto-complete Suggestions -->
+                        <div id="addressSuggestions" 
+                             class="absolute z-10 w-full bg-white border border-gray-300 rounded-b-lg shadow-lg max-h-60 overflow-y-auto hidden">
+                        </div>
+                    </div>
+                    
+                    <button 
+                        onclick="runQuickAnalysis()" 
+                        class="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition font-medium">
+                        ⚡ 빠른 분석 시작
+                    </button>
+                </div>
+                
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <div class="flex items-center justify-between text-xs text-gray-500">
+                        <span>✨ Auto-complete enabled</span>
+                        <span>⏱️ Results in &lt;10s</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 2. Report Manager with PDF Viewer -->
+            <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition">
+                <h2 class="text-xl font-bold text-green-600 mb-4">📄 Report Manager</h2>
+                <p class="text-gray-600 mb-4 text-sm">View reports with inline PDF viewer</p>
+                
+                <div class="space-y-2">
+                    <div class="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer flex justify-between items-center"
+                         onclick="viewSampleReport('submission')">
+                        <div>
+                            <div class="font-medium text-sm">LH Submission Report</div>
+                            <div class="text-xs text-gray-500">사업성 검토서 (25 pages)</div>
+                        </div>
+                        <span class="text-blue-600">👁️</span>
+                    </div>
+                    
+                    <div class="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer flex justify-between items-center"
+                         onclick="viewSampleReport('brief')">
+                        <div>
+                            <div class="font-medium text-sm">Landowner Brief</div>
+                            <div class="text-xs text-gray-500">간편 요약서 (2 pages)</div>
+                        </div>
+                        <span class="text-blue-600">👁️</span>
+                    </div>
+                    
+                    <div class="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer flex justify-between items-center"
+                         onclick="viewSampleReport('professional')">
+                        <div>
+                            <div class="font-medium text-sm">Professional Report</div>
+                            <div class="text-xs text-gray-500">종합 분석서 (75 pages)</div>
+                        </div>
+                        <span class="text-blue-600">👁️</span>
+                    </div>
+                </div>
+                
+                <button class="w-full mt-4 bg-green-600 text-white p-3 rounded-lg hover:bg-green-700 transition font-medium">
+                    📥 Download All (ZIP)
+                </button>
+                
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <div class="text-xs text-gray-500 text-center">
+                        ✨ Inline PDF viewer with zoom & download
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 3. Visualization Studio -->
+            <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition">
+                <h2 class="text-xl font-bold text-purple-600 mb-4">📈 Visualization Studio</h2>
+                <p class="text-gray-600 mb-4 text-sm">Interactive charts and 3D models</p>
+                
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">차트 유형 선택</label>
+                        <select id="vizTypeSelect" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500">
+                            <option value="FAR Chart">용적률 분석 (FAR Chart)</option>
+                            <option value="Market Histogram">시장 분포 (Market Histogram)</option>
+                            <option value="Risk Heatmap">리스크 히트맵 (Risk Heatmap)</option>
+                            <option value="3D Site Sketch">3D 부지 스케치</option>
+                            <option value="Zoning Map">용도지역 맵 (Zoning Map)</option>
+                            <option value="Timeline Gantt">개발 타임라인 (Gantt)</option>
+                        </select>
+                    </div>
+                    
+                    <button 
+                        onclick="generateVisualization()"
+                        class="w-full bg-purple-600 text-white p-3 rounded-lg hover:bg-purple-700 transition font-medium">
+                        🎨 Generate Chart
+                    </button>
+                </div>
+                
+                <div class="mt-4 p-3 bg-purple-50 rounded-lg">
+                    <div class="text-xs text-purple-700">
+                        <div class="font-medium mb-1">Supported Formats:</div>
+                        <div>PNG, SVG, PDF, Interactive HTML</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 4. Scenario Comparison -->
+            <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition">
+                <h2 class="text-xl font-bold text-orange-600 mb-4">🔀 Scenario Comparison</h2>
+                <p class="text-gray-600 mb-4 text-sm">Compare A/B/C scenarios side-by-side</p>
+                
+                <div class="space-y-2">
+                    <div class="p-3 bg-orange-50 rounded-lg flex justify-between items-center">
+                        <div>
+                            <span class="font-medium">A안 (현행 계획)</span>
+                            <div class="text-xs text-gray-500 mt-1">용적률 200%, 150세대</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-bold text-orange-600">ROI: 10.5%</div>
+                            <div class="text-xs text-gray-500">IRR: 8.2%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-3 bg-orange-100 rounded-lg flex justify-between items-center">
+                        <div>
+                            <span class="font-medium">B안 (완화 적용)</span>
+                            <div class="text-xs text-gray-500 mt-1">용적률 230%, 180세대</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-bold text-orange-600">ROI: 12.3%</div>
+                            <div class="text-xs text-gray-500">IRR: 9.5%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-3 bg-gradient-to-r from-orange-200 to-orange-300 rounded-lg flex justify-between items-center border-2 border-green-500">
+                        <div>
+                            <span class="font-bold">C안 (최적화) ⭐</span>
+                            <div class="text-xs text-gray-700 mt-1">용적률 250%, 200세대</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-bold text-green-700">ROI: 15.8%</div>
+                            <div class="text-xs text-green-600">IRR: 11.2%</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="w-full mt-4 bg-orange-600 text-white p-3 rounded-lg hover:bg-orange-700 transition font-medium">
+                    🔍 Detailed Comparison
+                </button>
+            </div>
+            
+            <!-- 5. Batch Processing -->
+            <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition">
+                <h2 class="text-xl font-bold text-red-600 mb-4">📦 Batch Processing</h2>
+                <p class="text-gray-600 mb-4 text-sm">Upload and process multiple sites</p>
+                
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">파일 업로드 (CSV/XLSX)</label>
+                        <input 
+                            type="file" 
+                            id="batchFileInput"
+                            accept=".csv,.xlsx" 
+                            class="w-full p-2 border border-gray-300 rounded text-sm file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-red-50 file:text-red-700 hover:file:bg-red-100">
+                    </div>
+                    
+                    <div class="text-sm text-gray-500 bg-gray-50 p-3 rounded">
+                        <div class="font-medium mb-1">📊 Current Status:</div>
+                        <div>Processed: 0/0 sites</div>
+                        <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                            <div class="bg-red-600 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <button 
+                        onclick="startBatchProcessing()"
+                        class="w-full bg-red-600 text-white p-3 rounded-lg hover:bg-red-700 transition font-medium">
+                        🚀 Start Batch Processing
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 6. System Status -->
+            <div class="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-6 rounded-lg shadow-lg text-white">
+                <h2 class="text-xl font-bold mb-4">🎯 System Status</h2>
+                <div class="space-y-2 text-sm">
+                    <div class="flex items-center">
+                        <span class="w-6">✅</span>
+                        <span>13 Core Engines Online</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="w-6">✅</span>
+                        <span>6 Visualization Engines Ready</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="w-6">✅</span>
+                        <span>5 Report Generators Active</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="w-6">✅</span>
+                        <span>7 API Endpoints Running</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="w-6">⚡</span>
+                        <span>Response Time: &lt;100ms</span>
+                    </div>
+                </div>
+                
+                <div class="mt-4 pt-4 border-t border-white border-opacity-30">
+                    <div class="text-xs opacity-75">v24.0.0-UI1.0 | Dec 2025</div>
+                    <div class="text-xs opacity-75 mt-1">Dashboard UI: Enhanced Edition</div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div id="historyModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-2xl w-11/12 max-w-4xl max-h-5/6 flex flex-col">
+            <!-- Header -->
+            <div class="bg-blue-600 text-white p-4 rounded-t-lg flex justify-between items-center">
+                <h3 class="text-xl font-bold">📜 Analysis History</h3>
+                <div class="flex gap-2">
+                    <button onclick="historyManager.clearHistory()" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-sm">
+                        🗑️ Clear All
+                    </button>
+                    <button onclick="document.getElementById('historyModal').classList.add('hidden')" class="px-3 py-1 bg-blue-700 hover:bg-blue-800 rounded text-sm">
+                        ✕ Close
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Content -->
+            <div id="historyContainer" class="flex-1 overflow-y-auto p-6 space-y-3">
+                <!-- History items will be rendered here by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Wizard Modal -->
+    <div id="wizardModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-2xl w-11/12 max-w-3xl max-h-5/6 flex flex-col">
+            <!-- Header -->
+            <div class="bg-purple-600 text-white p-4 rounded-t-lg flex justify-between items-center">
+                <h3 class="text-xl font-bold">🧙 Multi-Step Analysis Wizard</h3>
+                <button onclick="document.getElementById('wizardModal').classList.add('hidden')" class="px-3 py-1 bg-purple-700 hover:bg-purple-800 rounded text-sm">
+                    ✕ Close
+                </button>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="p-4 bg-gray-50">
+                <div class="flex justify-between mb-2">
+                    <span id="stepIndicator1" class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">1</span>
+                    <div class="flex-1 flex items-center mx-2">
+                        <div class="h-1 bg-gray-300 flex-1"></div>
+                    </div>
+                    <span id="stepIndicator2" class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center text-sm font-bold">2</span>
+                    <div class="flex-1 flex items-center mx-2">
+                        <div class="h-1 bg-gray-300 flex-1"></div>
+                    </div>
+                    <span id="stepIndicator3" class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center text-sm font-bold">3</span>
+                    <div class="flex-1 flex items-center mx-2">
+                        <div class="h-1 bg-gray-300 flex-1"></div>
+                    </div>
+                    <span id="stepIndicator4" class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center text-sm font-bold">4</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div id="wizardProgress" class="bg-purple-600 h-2 rounded-full transition-all duration-300" style="width: 25%"></div>
+                </div>
+            </div>
+            
+            <!-- Wizard Content -->
+            <div class="flex-1 overflow-y-auto p-6">
+                
+                <!-- Step 1: Basic Info -->
+                <div id="step1" class="space-y-4">
+                    <h4 class="text-lg font-bold text-gray-800">Step 1: Basic Information</h4>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">토지 면적 (㎡) *</label>
+                        <input type="number" name="landArea" required class="w-full p-2 border rounded">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">위치 (주소) *</label>
+                        <input type="text" name="location" required class="w-full p-2 border rounded">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">용도지역 *</label>
+                        <select name="zoning" required class="w-full p-2 border rounded">
+                            <option value="">선택하세요</option>
+                            <option value="general_residential">일반주거지역</option>
+                            <option value="commercial">상업지역</option>
+                            <option value="industrial">준공업지역</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Development Plan -->
+                <div id="step2" class="space-y-4 hidden">
+                    <h4 class="text-lg font-bold text-gray-800">Step 2: Development Plan</h4>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">주택 유형 *</label>
+                        <select name="housingType" required class="w-full p-2 border rounded">
+                            <option value="">선택하세요</option>
+                            <option value="youth">청년주택</option>
+                            <option value="newlywed">신혼희망타운</option>
+                            <option value="national">국민임대</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">계획 세대수</label>
+                        <input type="number" name="plannedUnits" class="w-full p-2 border rounded">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">건폐율 (%)</label>
+                        <input type="number" name="bcr" class="w-full p-2 border rounded" placeholder="예: 60">
+                    </div>
+                </div>
+                
+                <!-- Step 3: Financial Info -->
+                <div id="step3" class="space-y-4 hidden">
+                    <h4 class="text-lg font-bold text-gray-800">Step 3: Financial Information</h4>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">토지 매입가 (억원)</label>
+                        <input type="number" name="landPrice" class="w-full p-2 border rounded">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">공사비 단가 (만원/㎡)</label>
+                        <input type="number" name="constructionCost" class="w-full p-2 border rounded" placeholder="예: 170">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">분양가 (만원/㎡)</label>
+                        <input type="number" name="salePrice" class="w-full p-2 border rounded">
+                    </div>
+                </div>
+                
+                <!-- Step 4: Review & Submit -->
+                <div id="step4" class="space-y-4 hidden">
+                    <h4 class="text-lg font-bold text-gray-800">Step 4: Review & Submit</h4>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600">모든 정보를 확인하고 분석을 시작하세요.</p>
+                        <div class="mt-4 text-sm space-y-1">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">총 입력 항목:</span>
+                                <span class="font-medium">10개</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">예상 분석 시간:</span>
+                                <span class="font-medium">~30초</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">생성될 보고서:</span>
+                                <span class="font-medium">종합 분석서</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <!-- Footer Buttons -->
+            <div class="bg-gray-50 p-4 rounded-b-lg flex justify-between">
+                <button id="wizardPrevBtn" onclick="wizardManager.prevStep()" class="px-6 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg transition">
+                    ← Previous
+                </button>
+                <button id="wizardNextBtn" onclick="wizardManager.nextStep()" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition">
+                    Next →
+                </button>
+                <button id="wizardSubmitBtn" onclick="wizardManager.submitForm()" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition hidden">
+                    ✓ Submit
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="app.js"></script>
+    <script>
+        // Initialize Wizard after DOM loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            wizardManager = new WizardManager('wizardModal');
+            addressAutoComplete = new AddressAutoComplete('quickLocation', 'addressSuggestions');
+        });
+    </script>
+</body>
+</html>
