@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: zerosite-postgres
+    environment:
+      POSTGRES_DB: zerosite_v24
+      POSTGRES_USER: zerosite
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zerosite"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+    container_name: zerosite-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://zerosite:${DB_PASSWORD:-changeme}@postgres:5432/zerosite_v24
+      ENV: production
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../app:/app/app
+      - ../public:/app/public
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: zerosite-nginx
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ../public:/usr/share/nginx/html
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

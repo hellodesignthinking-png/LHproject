@@ -1549,3 +1549,2121 @@ def analyze_capacity(input_data: Dict) -> Dict:
 
 ---
 
+
+## 4.3 Cost Engine - 공사비 견적
+
+### 개요
+Cost Engine은 건설 공사비를 자동으로 견적하여 총 사업비(CAPEX)를 산정합니다.
+
+### 핵심 기능
+1. **공종별 단가 적용** (골조·마감·설비)
+2. **평형별 단가 차등** (소형/중형/대형)
+3. **부대비용 자동 계산** (설계비, 감리비, 인허가비)
+4. **지역별 할증** (서울/수도권/지방)
+5. **물가 상승률 반영**
+
+### 알고리즘 상세
+
+#### 공사비 산정 수식
+```python
+def calculate_construction_cost(input_data: Dict) -> Dict:
+    """
+    공사비 계산
+    총 공사비 = 직접공사비 + 간접공사비 + 부대비용
+    """
+    # 1. 직접공사비 (골조 + 마감 + 설비)
+    direct_cost = (
+        calculate_structure_cost(input_data) +  # 골조공사
+        calculate_finish_cost(input_data) +     # 마감공사
+        calculate_mep_cost(input_data)          # 설비공사
+    )
+    
+    # 2. 간접공사비 (현장관리비 등)
+    indirect_cost = direct_cost * 0.15  # 15%
+    
+    # 3. 부대비용 (설계비, 감리비, 인허가)
+    additional_cost = (
+        direct_cost * 0.05 +  # 설계비 5%
+        direct_cost * 0.03 +  # 감리비 3%
+        50000000             # 인허가비 (고정)
+    )
+    
+    # 4. 총 공사비
+    total_cost = direct_cost + indirect_cost + additional_cost
+    
+    # 5. 지역별 할증
+    region_multiplier = {
+        '서울': 1.15,
+        '경기': 1.10,
+        '지방': 1.00
+    }
+    
+    final_cost = total_cost * region_multiplier.get(input_data['region'], 1.0)
+    
+    return {
+        'direct_cost': direct_cost,
+        'indirect_cost': indirect_cost,
+        'additional_cost': additional_cost,
+        'total_construction_cost': final_cost,
+        'cost_per_sqm': final_cost / input_data['total_floor_area_sqm'],
+        'cost_per_unit': final_cost / input_data['unit_count']
+    }
+```
+
+#### 공종별 단가 테이블
+| 공종 | 단가 (원/㎡) | 비율 |
+|------|------------|------|
+| 골조공사 | 600,000 | 35% |
+| 마감공사 | 500,000 | 30% |
+| 설비공사 (급배수·전기) | 400,000 | 25% |
+| 기타 (조경·외구) | 200,000 | 10% |
+
+**평균 단가**: **1,700,000원/㎡**
+
+---
+
+## 4.4 Financial Engine - 사업성 분석
+
+### 개요
+Financial Engine은 ROI, IRR, NPV를 계산하여 사업의 재무적 타당성을 평가합니다.
+
+### 핵심 지표
+
+#### 1) ROI (Return on Investment)
+```python
+def calculate_roi(profit: float, total_investment: float) -> float:
+    """
+    ROI = (순이익 / 총 투자비) × 100
+    """
+    roi = (profit / total_investment) * 100
+    return round(roi, 2)
+
+# 예시
+# 총 투자: 100억, 순이익: 8억 → ROI = 8%
+```
+
+#### 2) IRR (Internal Rate of Return)
+```python
+import numpy as np
+
+def calculate_irr(cash_flows: List[float]) -> float:
+    """
+    IRR = NPV가 0이 되는 할인율
+    """
+    irr = np.irr(cash_flows)
+    return round(irr * 100, 2)
+
+# 예시 현금흐름
+# Year 0: -10,000 (초기 투자)
+# Year 1-5: +2,500 (연간 수익)
+# IRR = 7.93%
+```
+
+#### 3) NPV (Net Present Value)
+```python
+def calculate_npv(
+    cash_flows: List[float],
+    discount_rate: float = 0.05
+) -> float:
+    """
+    NPV = Σ [CF_t / (1 + r)^t]
+    """
+    npv = sum(
+        cf / ((1 + discount_rate) ** t)
+        for t, cf in enumerate(cash_flows)
+    )
+    return round(npv, 0)
+
+# 예시
+# 할인율 5%, 5년 현금흐름
+# NPV = 855백만원
+```
+
+### 사업성 판정 기준
+| 지표 | 우수 | 양호 | 보통 | 주의 |
+|------|-----|-----|-----|-----|
+| ROI | ≥10% | 7-10% | 5-7% | <5% |
+| IRR | ≥8% | 6-8% | 4-6% | <4% |
+| NPV | >5억 | 2-5억 | 0-2억 | <0 |
+
+---
+
+## 4.5 Zoning Engine - 용도지역 규제
+
+### 개요
+Zoning Engine은 용도지역별 규제 사항을 자동으로 적용합니다.
+
+### 용도지역 6종 규제 매트릭스
+
+| 용도지역 | 법정 FAR | 법정 BCR | 높이 제한 | 층수 제한 |
+|---------|---------|---------|----------|----------|
+| 제1종전용주거 | 50-100% | 50% | 없음 | 4층 이하 |
+| 제2종전용주거 | 100-150% | 50% | 없음 | 5층 이하 |
+| 제1종일반주거 | 100-200% | 60% | 없음 | 4층 이하 |
+| 제2종일반주거 | 150-250% | 60% | 없음 | 7층 이하 |
+| 제3종일반주거 | 200-300% | 50% | 없음 | 없음 |
+| 준주거지역 | 200-500% | 70% | 없음 | 없음 |
+
+### 자동 판정 로직
+```python
+def check_zoning_compliance(input_data: Dict) -> Dict:
+    """
+    용도지역 규제 준수 여부 자동 체크
+    """
+    zoning_type = input_data['zoning_type']
+    far_final = input_data['far_final']
+    bcr_final = input_data['bcr_final']
+    floors = input_data['floors']
+    
+    # 규제 한도 조회
+    limits = ZONING_REGULATIONS[zoning_type]
+    
+    # 준수 여부 체크
+    compliance = {
+        'far': far_final <= limits['far_max'],
+        'bcr': bcr_final <= limits['bcr_max'],
+        'floors': floors <= limits.get('floor_limit', 999),
+        'height': input_data['height_m'] <= limits.get('height_limit', 999)
+    }
+    
+    # 전체 준수 여부
+    all_compliant = all(compliance.values())
+    
+    return {
+        'zoning_type': zoning_type,
+        'compliance': compliance,
+        'all_compliant': all_compliant,
+        'violations': [k for k, v in compliance.items() if not v]
+    }
+```
+
+---
+
+## 4.6 FAR Engine - 용적률 분석
+
+### 개요
+FAR Engine은 법정 용적률 + 인센티브 완화를 계산하여 최종 용적률을 산정합니다.
+
+### 용적률 인센티브 체계
+
+#### 1) 공급유형 인센티브
+| 공급유형 | 기본 완화 | 최대 완화 |
+|---------|---------|---------|
+| 행복주택 | +30% | +50% |
+| 신혼희망타운 | +30% | +50% |
+| 국민임대 | +20% | +30% |
+| 통합공공임대 | +20% | +30% |
+| 기타 | 0% | 0% |
+
+#### 2) 역세권 인센티브
+- **500m 이내**: +30%
+- **500-1,000m**: +15%
+- **1,000m 초과**: 0%
+
+#### 3) 기부채납 인센티브
+- **공공시설 기부**: +20%
+- **도로 확장**: +10%
+
+### 최종 용적률 계산
+```python
+def calculate_far_final(input_data: Dict) -> float:
+    """
+    최종 용적률 = min(법정 FAR + 인센티브, 절대 최대값)
+    """
+    far_legal = input_data['far_legal']
+    
+    # 인센티브 합산
+    incentive_supply = get_supply_incentive(input_data['supply_type'])
+    incentive_transit = get_transit_incentive(input_data['transit_distance'])
+    incentive_donation = get_donation_incentive(input_data['donation'])
+    
+    far_incentive = incentive_supply + incentive_transit + incentive_donation
+    
+    # 최종 용적률 (절대 최대값 제한)
+    far_final = min(
+        far_legal + far_incentive,
+        get_absolute_max_far(input_data['zoning_type'])
+    )
+    
+    return round(far_final, 2)
+```
+
+---
+
+## 4.7 Land Engine - 토지 특성 분석
+
+### 개요
+Land Engine은 토지의 물리적 특성과 입지 조건을 종합적으로 분석합니다.
+
+### 분석 항목 (10개)
+
+#### 1) 토지 형상 점수 (20점)
+```python
+shape_scores = {
+    '정방형': 20,  # 가장 우수
+    '세장형': 15,  # 양호
+    '삼각형': 10,  # 보통
+    '부정형': 5    # 불량
+}
+```
+
+#### 2) 경사도 점수 (15점)
+```python
+def score_slope(slope_percent: float) -> int:
+    if slope_percent < 3:
+        return 15  # 평지
+    elif slope_percent < 5:
+        return 12  # 완경사
+    elif slope_percent < 10:
+        return 8   # 경사
+    else:
+        return 3   # 급경사
+```
+
+#### 3) 도로 조건 점수 (15점)
+- 도로 폭 8m 이상: 15점
+- 도로 폭 6-8m: 12점
+- 도로 폭 4-6m: 8점
+- 도로 폭 4m 미만: 3점
+
+#### 4) 교통 접근성 점수 (20점)
+- 역세권 500m 이내: 20점
+- 역세권 500-1,000m: 15점
+- 버스 정류장 200m 이내: 10점
+- 기타: 5점
+
+#### 5) 주변 편의시설 점수 (10점)
+- 학교 500m 이내: +3점
+- 병원 500m 이내: +3점
+- 상가 300m 이내: +2점
+- 공원 500m 이내: +2점
+
+#### 6) 위험 시설 거리 점수 (10점)
+- 철도 100m 이상: +5점
+- 고압선 100m 이상: +3점
+- 쓰레기 처리장 500m 이상: +2점
+
+#### 7) 일조·조망 점수 (5점)
+- 남향: 5점
+- 동/서향: 3점
+- 북향: 1점
+
+#### 8) 소음 환경 점수 (3점)
+- 조용한 지역: 3점
+- 보통: 2점
+- 시끄러운 지역: 1점
+
+#### 9) 개발 제한 점수 (1점)
+- 제한 없음: 1점
+- 제한 있음: 0점
+
+#### 10) 환경 요인 점수 (1점)
+- 침수 위험 없음: 1점
+- 침수 위험 있음: 0점
+
+### 종합 점수 (100점 만점)
+```python
+def calculate_land_score(input_data: Dict) -> int:
+    """
+    토지 종합 점수 = Σ(개별 점수)
+    """
+    total_score = (
+        score_shape(input_data['land_shape']) +
+        score_slope(input_data['land_slope']) +
+        score_road(input_data['road_width_m']) +
+        score_transit(input_data['transit_distance']) +
+        score_facilities(input_data['nearby_facilities']) +
+        score_hazards(input_data['hazard_distances']) +
+        score_sunlight(input_data['road_direction']) +
+        score_noise(input_data['noise_level']) +
+        score_restrictions(input_data['restrictions']) +
+        score_environment(input_data['flood_risk'])
+    )
+    
+    return min(total_score, 100)
+```
+
+### 등급 판정
+| 점수 | 등급 | 판정 |
+|------|-----|-----|
+| 80-100 | A | 매우 우수 |
+| 60-79 | B | 우수 |
+| 40-59 | C | 보통 |
+| 20-39 | D | 주의 |
+| 0-19 | E | 부적합 |
+
+---
+
+## 4.8 Building Code Engine - 건축법 준수
+
+### 개요
+Building Code Engine은 건축법 및 관련 법규 준수 여부를 자동으로 검증합니다.
+
+### 검증 항목 (12개)
+
+#### 1) 용적률 준수 ✅
+```python
+far_compliant = far_final <= far_max
+```
+
+#### 2) 건폐율 준수 ✅
+```python
+bcr_compliant = bcr_final <= bcr_max
+```
+
+#### 3) 높이 제한 준수 ✅
+```python
+height_compliant = building_height_m <= height_limit
+```
+
+#### 4) 층수 제한 준수 ✅
+```python
+floors_compliant = floors <= floor_limit
+```
+
+#### 5) 일조권 확보 ✅
+```python
+sunlight_compliant = sunlight_hours >= 4.0  # 최소 4시간
+```
+
+#### 6) 주차 기준 충족 ✅
+```python
+parking_compliant = parking_count >= parking_required
+```
+
+#### 7) 대지 최소 면적 ✅
+```python
+land_area_compliant = land_area_sqm >= 200  # 최소 200㎡
+```
+
+#### 8) 도로 접면 조건 ✅
+```python
+road_compliant = road_width_m >= 4.0  # 최소 4m
+```
+
+#### 9) 건축선 후퇴 ✅
+```python
+setback_compliant = front_setback_m >= 3.0  # 최소 3m
+```
+
+#### 10) 방화·피난 기준 ✅
+```python
+fire_safety_compliant = (
+    emergency_stairs >= required_stairs and
+    fire_exits >= required_exits
+)
+```
+
+#### 11) 장애인 편의시설 ✅
+```python
+accessibility_compliant = (
+    has_elevator and
+    has_ramps and
+    accessible_parking_count >= required
+)
+```
+
+#### 12) 친환경 기준 (선택) ✅
+```python
+green_compliant = (
+    green_building_certification != None or
+    energy_efficiency_grade <= 3
+)
+```
+
+### 종합 준수 판정
+```python
+def check_building_code_compliance(input_data: Dict) -> Dict:
+    """
+    건축법 준수 여부 종합 판정
+    """
+    checks = {
+        'far': check_far_compliance(input_data),
+        'bcr': check_bcr_compliance(input_data),
+        'height': check_height_compliance(input_data),
+        'floors': check_floors_compliance(input_data),
+        'sunlight': check_sunlight_compliance(input_data),
+        'parking': check_parking_compliance(input_data),
+        'land_area': check_land_area_compliance(input_data),
+        'road': check_road_compliance(input_data),
+        'setback': check_setback_compliance(input_data),
+        'fire_safety': check_fire_safety_compliance(input_data),
+        'accessibility': check_accessibility_compliance(input_data),
+        'green': check_green_compliance(input_data)  # 선택
+    }
+    
+    # 필수 항목만 체크
+    required_checks = {k: v for k, v in checks.items() if k != 'green'}
+    all_compliant = all(required_checks.values())
+    
+    return {
+        'checks': checks,
+        'all_compliant': all_compliant,
+        'violations': [k for k, v in required_checks.items() if not v],
+        'approval_ready': all_compliant
+    }
+```
+
+---
+
+## 4.9 Risk Engine - 위험 평가 (수식 상세)
+
+### 개요
+Risk Engine은 사업의 5대 리스크 영역을 정량적으로 평가합니다.
+
+### 5대 리스크 영역 & 수식
+
+#### 1) 재무 리스크 (Financial Risk)
+```python
+def calculate_financial_risk(input_data: Dict) -> float:
+    """
+    재무 리스크 = f(ROI 변동성, IRR 민감도, NPV 안정성)
+    
+    점수: 0 (최저 위험) ~ 100 (최고 위험)
+    """
+    roi = input_data['roi']
+    irr = input_data['irr']
+    npv = input_data['npv']
+    
+    # ROI가 낮을수록 위험
+    roi_risk = max(0, (10 - roi) * 10)  # ROI 10% 기준
+    
+    # IRR이 낮을수록 위험
+    irr_risk = max(0, (8 - irr) * 12.5)  # IRR 8% 기준
+    
+    # NPV가 작을수록 위험
+    npv_risk = max(0, (500000000 - npv) / 10000000)  # 5억원 기준
+    
+    # 가중 평균
+    financial_risk = (
+        roi_risk * 0.40 +
+        irr_risk * 0.40 +
+        npv_risk * 0.20
+    )
+    
+    return round(min(financial_risk, 100), 2)
+```
+
+**재무 리스크 수식**:
+$$
+\text{Financial Risk} = 0.40 \times \text{ROI Risk} + 0.40 \times \text{IRR Risk} + 0.20 \times \text{NPV Risk}
+$$
+
+#### 2) 시장 리스크 (Market Risk)
+```python
+def calculate_market_risk(input_data: Dict) -> float:
+    """
+    시장 리스크 = f(가격 변동성, 공급 과잉, 수요 불확실성)
+    """
+    price_volatility = input_data['price_std_dev'] / input_data['price_mean']
+    supply_ratio = input_data['nearby_supply'] / input_data['demand_estimate']
+    
+    # 가격 변동성 (CV > 0.2 위험)
+    volatility_risk = min(price_volatility / 0.2 * 50, 50)
+    
+    # 공급 과잉 (공급/수요 > 1.5 위험)
+    supply_risk = min(max(0, (supply_ratio - 1.0) / 0.5 * 50), 50)
+    
+    market_risk = volatility_risk + supply_risk
+    
+    return round(min(market_risk, 100), 2)
+```
+
+**시장 리스크 수식**:
+$$
+\text{Market Risk} = \text{Volatility Risk} + \text{Supply Risk}
+$$
+
+$$
+\text{Volatility Risk} = \min\left(\frac{CV}{0.2} \times 50, 50\right)
+$$
+
+$$
+\text{Supply Risk} = \min\left(\max\left(0, \frac{\text{Supply Ratio} - 1.0}{0.5} \times 50\right), 50\right)
+$$
+
+#### 3) 정책 리스크 (Policy Risk)
+```python
+def calculate_policy_risk(input_data: Dict) -> float:
+    """
+    정책 리스크 = f(공급유형 적합성, 규제 변동 가능성)
+    """
+    supply_type = input_data['supply_type']
+    policy_stability = input_data.get('policy_stability_score', 50)
+    
+    # 공급유형 적합성 (부적합 시 위험)
+    type_risk = 0 if is_supply_type_suitable(input_data) else 50
+    
+    # 정책 안정성 (낮을수록 위험)
+    stability_risk = 100 - policy_stability
+    
+    policy_risk = type_risk * 0.60 + stability_risk * 0.40
+    
+    return round(min(policy_risk, 100), 2)
+```
+
+#### 4) 법규 리스크 (Legal/Regulatory Risk)
+```python
+def calculate_legal_risk(input_data: Dict) -> float:
+    """
+    법규 리스크 = f(규제 초과 정도, 인허가 난이도)
+    """
+    compliance_check = input_data['compliance_check']
+    
+    # 위반 항목 개수
+    violation_count = len(compliance_check.get('violations', []))
+    
+    # 위반 1개당 위험도 +25점
+    violation_risk = min(violation_count * 25, 100)
+    
+    return round(violation_risk, 2)
+```
+
+#### 5) 설계·시공 리스크 (Construction Risk)
+```python
+def calculate_construction_risk(input_data: Dict) -> float:
+    """
+    설계·시공 리스크 = f(주차 부족, 일조 미달, 기술적 난이도)
+    """
+    parking_shortage = max(0, input_data['parking_required'] - input_data['parking_count'])
+    sunlight_shortage = max(0, 4.0 - input_data['sunlight_hours'])
+    complexity_factor = input_data.get('design_complexity', 1.0)
+    
+    # 주차 부족 (1대당 +5점)
+    parking_risk = min(parking_shortage * 5, 40)
+    
+    # 일조 부족 (1시간당 +20점)
+    sunlight_risk = min(sunlight_shortage * 20, 40)
+    
+    # 설계 복잡도 (1.0 기준, 초과 시 위험)
+    complexity_risk = min((complexity_factor - 1.0) * 50, 20)
+    
+    construction_risk = parking_risk + sunlight_risk + complexity_risk
+    
+    return round(min(construction_risk, 100), 2)
+```
+
+### 종합 리스크 점수
+```python
+def calculate_total_risk(input_data: Dict) -> Dict:
+    """
+    종합 리스크 = 5개 영역 가중 평균
+    """
+    financial_risk = calculate_financial_risk(input_data)
+    market_risk = calculate_market_risk(input_data)
+    policy_risk = calculate_policy_risk(input_data)
+    legal_risk = calculate_legal_risk(input_data)
+    construction_risk = calculate_construction_risk(input_data)
+    
+    # 가중 평균 (재무·시장 위험이 더 중요)
+    total_risk = (
+        financial_risk * 0.30 +
+        market_risk * 0.25 +
+        policy_risk * 0.20 +
+        legal_risk * 0.15 +
+        construction_risk * 0.10
+    )
+    
+    return {
+        'financial_risk': financial_risk,
+        'market_risk': market_risk,
+        'policy_risk': policy_risk,
+        'legal_risk': legal_risk,
+        'construction_risk': construction_risk,
+        'total_risk_score': round(total_risk, 2),
+        'risk_level': get_risk_level(total_risk)
+    }
+
+def get_risk_level(risk_score: float) -> str:
+    """리스크 등급 판정"""
+    if risk_score < 20:
+        return "매우 낮음 (Very Low)"
+    elif risk_score < 40:
+        return "낮음 (Low)"
+    elif risk_score < 60:
+        return "보통 (Medium)"
+    elif risk_score < 80:
+        return "높음 (High)"
+    else:
+        return "매우 높음 (Very High)"
+```
+
+**종합 리스크 수식**:
+$$
+\text{Total Risk} = 0.30 \times R_{\text{financial}} + 0.25 \times R_{\text{market}} + 0.20 \times R_{\text{policy}} + 0.15 \times R_{\text{legal}} + 0.10 \times R_{\text{construction}}
+$$
+
+---
+
+## 4.10 Multi-Parcel Engine - 합필 규칙
+
+### 개요
+Multi-Parcel Engine은 여러 필지를 합쳐서 개발할 때의 규제와 용량을 계산합니다.
+
+### 합필 가능 조건 (5가지)
+
+#### 1) 인접성 조건
+```python
+def check_adjacency(parcels: List[Dict]) -> bool:
+    """
+    모든 필지가 서로 인접해 있어야 함
+    """
+    for i, parcel_a in enumerate(parcels):
+        for parcel_b in parcels[i+1:]:
+            if not are_adjacent(parcel_a['boundary'], parcel_b['boundary']):
+                return False
+    return True
+```
+
+#### 2) 용도지역 일치 (또는 호환 가능)
+```python
+compatible_zoning_groups = [
+    ['제1종일반주거', '제2종일반주거'],
+    ['제2종일반주거', '제3종일반주거'],
+    ['제3종일반주거', '준주거지역']
+]
+
+def check_zoning_compatibility(parcels: List[Dict]) -> bool:
+    zoning_types = [p['zoning_type'] for p in parcels]
+    
+    # 모두 같은 용도지역
+    if len(set(zoning_types)) == 1:
+        return True
+    
+    # 호환 가능한 용도지역 조합
+    for group in compatible_zoning_groups:
+        if all(z in group for z in zoning_types):
+            return True
+    
+    return False
+```
+
+#### 3) 도로 접면 조건
+```python
+def check_road_access(parcels: List[Dict]) -> bool:
+    """
+    합필 후 최소 1개 필지가 도로에 접해야 함
+    """
+    return any(p['road_facing'] for p in parcels)
+```
+
+#### 4) 최소 면적 충족
+```python
+def check_minimum_area(parcels: List[Dict]) -> bool:
+    """
+    합필 후 총 면적이 최소 기준 이상
+    """
+    total_area = sum(p['land_area_sqm'] for p in parcels)
+    return total_area >= 200  # 최소 200㎡
+```
+
+#### 5) 소유자 동의
+```python
+def check_owner_consent(parcels: List[Dict]) -> bool:
+    """
+    모든 소유자가 합필에 동의해야 함
+    """
+    return all(p.get('owner_consent', False) for p in parcels)
+```
+
+### 합필 후 규제 적용 규칙
+
+#### 규칙 1: 용도지역 통합 (가장 엄격한 규제 적용)
+```python
+def merge_zoning_regulations(parcels: List[Dict]) -> Dict:
+    """
+    용도지역이 다를 경우, 가장 낮은 FAR/BCR 적용
+    """
+    # 가장 낮은 용적률 선택
+    far_legal = min(p['far_legal'] for p in parcels)
+    
+    # 가장 낮은 건폐율 선택
+    bcr_legal = min(p['bcr_legal'] for p in parcels)
+    
+    # 가장 낮은 높이 제한 선택
+    height_limit = min(
+        (p.get('height_limit', 999) for p in parcels),
+        default=999
+    )
+    
+    return {
+        'far_legal': far_legal,
+        'bcr_legal': bcr_legal,
+        'height_limit': height_limit,
+        'regulation_basis': '가장 엄격한 규제 적용'
+    }
+```
+
+#### 규칙 2: 도로 조건 통합 (가장 좋은 조건 적용)
+```python
+def merge_road_conditions(parcels: List[Dict]) -> Dict:
+    """
+    가장 넓은 도로 조건 적용
+    """
+    best_road_parcel = max(parcels, key=lambda p: p['road_width_m'])
+    
+    return {
+        'road_width_m': best_road_parcel['road_width_m'],
+        'road_direction': best_road_parcel['road_direction'],
+        'road_facing': True
+    }
+```
+
+#### 규칙 3: 면적 합산 & 완화
+```python
+def calculate_merged_capacity(parcels: List[Dict]) -> Dict:
+    """
+    합필 후 용량 계산
+    - 면적 합산
+    - 규제 통합
+    - 추가 완화 적용 (합필 보너스)
+    """
+    # 1. 면적 합산
+    total_land_area = sum(p['land_area_sqm'] for p in parcels)
+    
+    # 2. 규제 통합
+    merged_regulations = merge_zoning_regulations(parcels)
+    merged_road = merge_road_conditions(parcels)
+    
+    # 3. 합필 보너스 (면적 1,000㎡ 이상 시 +5% FAR)
+    if total_land_area >= 1000:
+        merged_regulations['far_legal'] += 5
+    
+    # 4. Capacity Engine으로 최종 계산
+    capacity_result = analyze_capacity({
+        'land_area_sqm': total_land_area,
+        'far_legal': merged_regulations['far_legal'],
+        'bcr_legal': merged_regulations['bcr_legal'],
+        'road_width_m': merged_road['road_width_m'],
+        # ... 기타 파라미터
+    })
+    
+    return {
+        'total_land_area_sqm': total_land_area,
+        'parcel_count': len(parcels),
+        'merged_regulations': merged_regulations,
+        'merged_road': merged_road,
+        'capacity_result': capacity_result,
+        'far_bonus_applied': total_land_area >= 1000
+    }
+```
+
+### 합필 장점
+1. ✅ **규모의 경제**: 대규모 개발로 단가 절감
+2. ✅ **설계 자유도**: 더 효율적인 배치 가능
+3. ✅ **용적률 보너스**: 면적 1,000㎡ 이상 시 +5%
+4. ✅ **도로 조건 개선**: 가장 좋은 도로 활용
+
+---
+
+## 4.11 Scenario Engine - 시나리오 비교 (18개 지표)
+
+### 개요
+Scenario Engine은 여러 개발 시나리오(A안/B안/C안)를 **18개 지표**로 비교하여 최적안을 추천합니다.
+
+### 18개 비교 지표 (15개 핵심 + 3개 종합)
+
+#### 핵심 지표 (15개)
+
+##### 1) 규제 지표 (3개)
+1. **FAR Legal** (법정 용적률, %)
+2. **FAR Final** (최종 용적률, %)
+3. **BCR** (건폐율, %)
+
+##### 2) 규모 지표 (4개)
+4. **연면적** (총 연면적, ㎡)
+5. **층수** (지상 층수)
+6. **세대수** (총 세대수)
+7. **주차대수** (총 주차 대수)
+
+##### 3) 비용 지표 (3개)
+8. **CAPEX 총액** (총 사업비, 억원)
+9. **공사비** (건설 공사비, 억원)
+10. **토지비** (토지 매입비, 억원)
+
+##### 4) 수익 지표 (2개)
+11. **LH 매입가** (LH 매입 총액, 억원)
+12. **Profit** (순이익, 억원)
+
+##### 5) 재무 지표 (3개)
+13. **ROI** (투자수익률, %)
+14. **IRR** (내부수익률, %)
+15. **리스크 점수** (0-100, 낮을수록 좋음)
+
+#### 종합 지표 (3개)
+16. **NPV** (순현재가치, 억원)
+17. **종합 점수** (0-100, 높을수록 좋음)
+18. **추천 순위** (1위/2위/3위)
+
+### 비교 알고리즘
+```python
+def compare_scenarios(scenarios: List[Dict]) -> Dict:
+    """
+    시나리오 비교 & 최적안 선정
+    
+    scenarios: [
+        {'name': 'A안', 'data': {...}},
+        {'name': 'B안', 'data': {...}},
+        {'name': 'C안', 'data': {...}}
+    ]
+    """
+    comparison_results = []
+    
+    for scenario in scenarios:
+        # 18개 지표 추출
+        metrics = extract_18_metrics(scenario['data'])
+        
+        # 종합 점수 계산
+        composite_score = calculate_composite_score(metrics)
+        
+        comparison_results.append({
+            'scenario_name': scenario['name'],
+            'metrics': metrics,
+            'composite_score': composite_score
+        })
+    
+    # 종합 점수 기준 정렬
+    comparison_results.sort(key=lambda x: x['composite_score'], reverse=True)
+    
+    # 추천 순위 부여
+    for rank, result in enumerate(comparison_results, start=1):
+        result['rank'] = rank
+        result['recommendation'] = "최우수" if rank == 1 else f"{rank}순위"
+    
+    # 최적안 선정
+    best_scenario = comparison_results[0]
+    
+    return {
+        'comparison_table': generate_comparison_table(comparison_results),
+        'best_scenario': best_scenario,
+        'all_results': comparison_results
+    }
+
+def calculate_composite_score(metrics: Dict) -> float:
+    """
+    종합 점수 계산 (0-100)
+    가중치: ROI 30%, IRR 25%, 세대수 20%, 리스크 15%, NPV 10%
+    """
+    # 정규화 (0-100 스케일)
+    roi_normalized = min(metrics['roi'] / 15 * 100, 100)  # ROI 15% = 100점
+    irr_normalized = min(metrics['irr'] / 12 * 100, 100)  # IRR 12% = 100점
+    units_normalized = min(metrics['unit_count'] / 100 * 100, 100)  # 100세대 = 100점
+    risk_normalized = 100 - metrics['risk_score']  # 리스크 낮을수록 높은 점수
+    npv_normalized = min(metrics['npv'] / 1000000000 * 100, 100)  # NPV 10억 = 100점
+    
+    # 가중 평균
+    composite_score = (
+        roi_normalized * 0.30 +
+        irr_normalized * 0.25 +
+        units_normalized * 0.20 +
+        risk_normalized * 0.15 +
+        npv_normalized * 0.10
+    )
+    
+    return round(composite_score, 2)
+```
+
+### 비교 테이블 예시
+
+| 지표 | A안 | B안 | C안 | 최적안 |
+|------|-----|-----|-----|--------|
+| 1. FAR Legal | 220% | 220% | 220% | - |
+| 2. FAR Final | 250% | 270% | 240% | **B안** |
+| 3. BCR | 60% | 60% | 55% | A안/B안 |
+| 4. 연면적 (㎡) | 3,300 | 3,564 | 3,168 | **B안** |
+| 5. 층수 | 7 | 10 | 5 | **B안** |
+| 6. 세대수 | 35 | 42 | 30 | **B안** |
+| 7. 주차대수 | 25 | 30 | 22 | **B안** |
+| 8. CAPEX (억원) | 65 | 75 | 58 | C안 |
+| 9. 공사비 (억원) | 50 | 58 | 45 | C안 |
+| 10. 토지비 (억원) | 12 | 12 | 12 | - |
+| 11. LH 매입가 (억원) | 72 | 82 | 65 | **B안** |
+| 12. Profit (억원) | 7 | 8.5 | 6 | **B안** |
+| 13. ROI (%) | 10.8% | 11.3% | 10.3% | **B안** |
+| 14. IRR (%) | 8.2% | 8.7% | 7.8% | **B안** |
+| 15. 리스크 점수 | 35 | 38 | 32 | C안 |
+| 16. NPV (억원) | 8.5 | 9.2 | 7.8 | **B안** |
+| 17. 종합 점수 | 78.5 | **82.3** | 74.2 | **B안** |
+| 18. 추천 순위 | 2위 | **1위** | 3위 | **B안** |
+
+**결론**: **B안이 최우수** (종합 점수 82.3점)
+
+---
+
+## 4.12 Policy Engine - 정책 효과 분석
+
+### 개요
+Policy Engine은 정책 인센티브의 효과를 시뮬레이션하여 Before/After를 비교합니다.
+
+### 정책 인센티브 6종
+
+#### 1) 용적률 완화 (+30% ~ +50%)
+```python
+def apply_far_incentive(far_legal: float, supply_type: str) -> float:
+    incentives = {
+        '행복주택': 50,
+        '신혼희망타운': 50,
+        '국민임대': 30,
+        '통합공공임대': 30
+    }
+    return far_legal + incentives.get(supply_type, 0)
+```
+
+#### 2) 역세권 보너스 (+30%)
+```python
+def apply_transit_bonus(far: float, transit_distance: float) -> float:
+    if transit_distance <= 500:
+        return far + 30
+    elif transit_distance <= 1000:
+        return far + 15
+    else:
+        return far
+```
+
+#### 3) 주차 완화 (1대/3세대)
+```python
+def apply_parking_relaxation(unit_count: int, transit_distance: float) -> int:
+    if transit_distance <= 500:
+        return int(unit_count / 3)  # 1대/3세대
+    else:
+        return int(unit_count / 2)  # 1대/2세대
+```
+
+#### 4) 기부채납 보너스 (+20% FAR)
+```python
+def apply_donation_bonus(far: float, donation: bool) -> float:
+    return far + 20 if donation else far
+```
+
+#### 5) 친환경 인증 보너스 (+5% FAR)
+```python
+def apply_green_bonus(far: float, green_certified: bool) -> float:
+    return far + 5 if green_certified else far
+```
+
+#### 6) 층수 완화 (제한 해제)
+```python
+def apply_floor_relaxation(floor_limit: int, supply_type: str) -> int:
+    if supply_type in ['행복주택', '신혼희망타운']:
+        return 999  # 제한 없음
+    else:
+        return floor_limit
+```
+
+### Before/After 비교
+```python
+def analyze_policy_impact(input_data: Dict, policies: List[str]) -> Dict:
+    """
+    정책 적용 전후 비교
+    """
+    # Before (정책 적용 전)
+    before_result = analyze_capacity({
+        **input_data,
+        'policies': []
+    })
+    
+    # After (정책 적용 후)
+    after_result = analyze_capacity({
+        **input_data,
+        'policies': policies
+    })
+    
+    # 증가량 계산
+    delta = {
+        'far_increase': after_result['far_final'] - before_result['far_final'],
+        'unit_increase': after_result['unit_count'] - before_result['unit_count'],
+        'profit_increase': after_result['profit'] - before_result['profit'],
+        'roi_increase': after_result['roi'] - before_result['roi']
+    }
+    
+    return {
+        'before': before_result,
+        'after': after_result,
+        'delta': delta,
+        'policies_applied': policies
+    }
+```
+
+---
+
+## 4.13 Timeline Engine - 사업 일정 산정
+
+### 개요
+Timeline Engine은 LH 임대주택 사업의 전체 일정을 자동으로 생성합니다.
+
+### 5단계 일정 (33-63개월)
+
+#### Stage 1: 사업지 선정 (3-6개월)
+```python
+stage_1 = {
+    'name': '사업지 선정',
+    'duration_months': (3, 6),
+    'tasks': [
+        {'task': '입지 분석', 'duration': 1},
+        {'task': '규제 검토', 'duration': 1},
+        {'task': '예비 타당성 분석', 'duration': 1},
+        {'task': '사업지 확정', 'duration': 1}
+    ]
+}
+```
+
+#### Stage 2: 인·허가 (6-12개월)
+```python
+stage_2 = {
+    'name': '인·허가',
+    'duration_months': (6, 12),
+    'tasks': [
+        {'task': '도시계획 변경', 'duration': 3},
+        {'task': '건축 심의', 'duration': 2},
+        {'task': '환경 영향 평가', 'duration': 3},
+        {'task': '사업 승인', 'duration': 2}
+    ]
+}
+```
+
+#### Stage 3: 설계 & 시공 준비 (6-9개월)
+```python
+stage_3 = {
+    'name': '설계 & 시공 준비',
+    'duration_months': (6, 9),
+    'tasks': [
+        {'task': '기본 설계', 'duration': 3},
+        {'task': '실시 설계', 'duration': 3},
+        {'task': '견적 산정', 'duration': 1},
+        {'task': '시공사 선정', 'duration': 2}
+    ]
+}
+```
+
+#### Stage 4: 건설 (18-36개월)
+```python
+stage_4 = {
+    'name': '건설',
+    'duration_months': (18, 36),
+    'tasks': [
+        {'task': '착공', 'duration': 1},
+        {'task': '골조 공사', 'duration': 12},
+        {'task': '마감 공사', 'duration': 10},
+        {'task': '준공 검사', 'duration': 2}
+    ]
+}
+```
+
+#### Stage 5: 입주 & 운영 (계속)
+```python
+stage_5 = {
+    'name': '입주 & 운영',
+    'duration_months': 'ongoing',
+    'tasks': [
+        {'task': '입주자 모집', 'duration': 2},
+        {'task': '입주 시작', 'duration': 1},
+        {'task': '유지·보수', 'duration': 'ongoing'}
+    ]
+}
+```
+
+### Gantt Chart 생성
+```python
+def generate_timeline_gantt(input_data: Dict) -> Dict:
+    """
+    Gantt Chart 데이터 생성
+    """
+    start_date = input_data.get('project_start_date', '2025-01-01')
+    
+    timeline = []
+    current_month = 0
+    
+    for stage in [stage_1, stage_2, stage_3, stage_4]:
+        stage_start = current_month
+        stage_duration = stage['duration_months'][1]  # 최대 기간 사용
+        stage_end = stage_start + stage_duration
+        
+        timeline.append({
+            'stage': stage['name'],
+            'start_month': stage_start,
+            'end_month': stage_end,
+            'duration_months': stage_duration,
+            'tasks': stage['tasks']
+        })
+        
+        current_month = stage_end
+    
+    total_duration = current_month
+    
+    return {
+        'start_date': start_date,
+        'total_duration_months': total_duration,
+        'expected_completion': add_months(start_date, total_duration),
+        'timeline': timeline,
+        'critical_path': identify_critical_path(timeline)
+    }
+```
+
+### Critical Path 식별
+```python
+def identify_critical_path(timeline: List[Dict]) -> List[str]:
+    """
+    가장 긴 경로 (Critical Path) 식별
+    """
+    # 가장 오래 걸리는 단계들
+    critical_stages = [
+        '사업지 선정',
+        '인·허가',
+        '건설'
+    ]
+    
+    return critical_stages
+```
+
+---
+
+
+---
+
+# CHAPTER 5: 6개 시각화 엔진 (Visualization Engines)
+
+**페이지**: 5p  
+**목표**: 사용자 친화적 데이터 시각화 제공
+
+## 5.1 Chart Engine (차트 엔진)
+
+### 기능
+- **Line Chart**: 시간별 데이터 추세 (예: 월별 임대료 변화)
+- **Bar Chart**: 카테고리별 비교 (예: 지역별 용적률)
+- **Pie Chart**: 비율 표시 (예: 비용 구성)
+- **Scatter Plot**: 상관관계 분석 (예: 토지 가격 vs FAR)
+
+### 구현
+```python
+import plotly.graph_objects as go
+from typing import Dict, List
+
+class ChartEngine:
+    def __init__(self):
+        self.chart_types = ['line', 'bar', 'pie', 'scatter']
+    
+    def generate_chart(self, chart_type: str, data: Dict, config: Dict) -> go.Figure:
+        """
+        차트 생성
+        """
+        if chart_type == 'line':
+            return self._create_line_chart(data, config)
+        elif chart_type == 'bar':
+            return self._create_bar_chart(data, config)
+        elif chart_type == 'pie':
+            return self._create_pie_chart(data, config)
+        elif chart_type == 'scatter':
+            return self._create_scatter_chart(data, config)
+        else:
+            raise ValueError(f"Unsupported chart type: {chart_type}")
+    
+    def _create_line_chart(self, data: Dict, config: Dict) -> go.Figure:
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=data['x'],
+            y=data['y'],
+            mode='lines+markers',
+            name=config.get('name', 'Data')
+        ))
+        fig.update_layout(
+            title=config.get('title', ''),
+            xaxis_title=config.get('x_label', 'X'),
+            yaxis_title=config.get('y_label', 'Y')
+        )
+        return fig
+    
+    def _create_bar_chart(self, data: Dict, config: Dict) -> go.Figure:
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            x=data['categories'],
+            y=data['values'],
+            name=config.get('name', 'Data')
+        ))
+        fig.update_layout(
+            title=config.get('title', ''),
+            xaxis_title=config.get('x_label', 'Category'),
+            yaxis_title=config.get('y_label', 'Value')
+        )
+        return fig
+```
+
+---
+
+## 5.2 Map Engine (지도 엔진)
+
+### 기능
+- **Interactive Map**: Folium/Leaflet 기반
+- **Layer System**: 지적도, 용도지역, 교통망 레이어
+- **Marker & Popup**: 사업지 표시 및 정보 팝업
+- **Distance Measurement**: 주요 시설까지 거리 측정
+
+### 구현
+```python
+import folium
+from typing import Dict, List
+
+class MapEngine:
+    def __init__(self):
+        self.default_location = [37.5665, 126.9780]  # Seoul
+        self.default_zoom = 13
+    
+    def generate_map(self, center: List[float], parcels: List[Dict], config: Dict) -> folium.Map:
+        """
+        지도 생성
+        """
+        m = folium.Map(
+            location=center,
+            zoom_start=config.get('zoom', self.default_zoom),
+            tiles='OpenStreetMap'
+        )
+        
+        # Add parcels
+        for parcel in parcels:
+            self._add_parcel_marker(m, parcel)
+        
+        return m
+    
+    def _add_parcel_marker(self, map_obj: folium.Map, parcel: Dict):
+        """
+        토지 마커 추가
+        """
+        folium.Marker(
+            location=[parcel['latitude'], parcel['longitude']],
+            popup=f"<b>{parcel['address']}</b><br>면적: {parcel['area']}㎡",
+            icon=folium.Icon(color='blue', icon='info-sign')
+        ).add_to(map_obj)
+```
+
+---
+
+## 5.3 3D Model Engine (3D 모델 엔진)
+
+### 기능
+- **Building Visualization**: Three.js 기반 3D 건물 모델
+- **Camera Control**: 360도 회전, 줌 인/아웃
+- **Floor Plan**: 층별 평면도 표시
+- **Surrounding Context**: 주변 건물 표시
+
+### 기술 스택
+- **Frontend**: Three.js, React Three Fiber
+- **Export**: GLTF, OBJ 포맷
+
+---
+
+## 5.4 Dashboard Engine (대시보드 엔진)
+
+### 주요 섹션
+1. **프로젝트 개요**: 사업지 정보, 용적률, 건폐율
+2. **재무 지표**: ROI, IRR, NPV, 사업비
+3. **리스크 알림**: 고위험 항목 표시
+4. **진행 상황**: 프로젝트 타임라인
+
+### UI 컴포넌트
+- **KPI Cards**: 주요 지표 카드
+- **Progress Bar**: 진행률 표시
+- **Alert Badges**: 위험 알림 뱃지
+- **Quick Actions**: 빠른 액션 버튼 (리포트 생성, PDF 다운로드)
+
+---
+
+## 5.5 Comparison Engine (비교 엔진)
+
+### 기능
+- **Side-by-Side Comparison**: 2개 이상 시나리오 비교
+- **Heatmap Visualization**: 성능 차이 히트맵
+- **Ranking Table**: 우선순위 표
+
+### 비교 지표 (18개)
+1. 용적률
+2. 건폐율
+3. 총 연면적
+4. 세대수
+5. 총 사업비
+6. ㎡당 건축비
+7. ROI (%)
+8. IRR (%)
+9. NPV (억원)
+10. 사업 기간
+11. 리스크 점수
+12. 정책 인센티브
+13. 환경 점수
+14. 교통 접근성
+15. 주차 대수
+16. 공용 면적 비율
+17. 임대 가능 면적
+18. 예상 임대 수익
+
+---
+
+## 5.6 Table Engine (테이블 엔진)
+
+### 기능
+- **Data Grid**: 정렬, 필터링, 페이징
+- **Export**: Excel, CSV 내보내기
+- **Editable Cells**: 파라미터 수정 가능
+- **Conditional Formatting**: 조건부 서식 (예: 위험 지표 빨간색)
+
+### 구현
+```python
+import pandas as pd
+
+class TableEngine:
+    def __init__(self):
+        self.max_rows_per_page = 50
+    
+    def generate_table(self, data: List[Dict], columns: List[str], config: Dict) -> pd.DataFrame:
+        """
+        테이블 생성
+        """
+        df = pd.DataFrame(data, columns=columns)
+        
+        # Apply sorting
+        if config.get('sort_by'):
+            df = df.sort_values(by=config['sort_by'], ascending=config.get('ascending', True))
+        
+        # Apply filtering
+        if config.get('filter'):
+            for key, value in config['filter'].items():
+                df = df[df[key] == value]
+        
+        return df
+    
+    def export_to_excel(self, df: pd.DataFrame, file_path: str):
+        """
+        Excel 내보내기
+        """
+        df.to_excel(file_path, index=False, engine='openpyxl')
+```
+
+---
+
+# CHAPTER 6: 5개 리포트 생성기 (Report Generators)
+
+**페이지**: 10p  
+**목표**: 전문적인 분석 리포트 자동 생성
+
+## 6.1 사업타당성 분석 리포트 (Feasibility Analysis Report)
+
+### 구성 (20페이지)
+1. **표지** (1p)
+   - 프로젝트명, 사업지 주소, 분석일
+2. **목차** (1p)
+3. **Executive Summary** (2p)
+   - 핵심 지표, 결론, 권장사항
+4. **사업지 개요** (3p)
+   - 위치, 면적, 지목, 용도지역
+   - 지도 및 항공사진
+5. **용량 분석** (2p)
+   - 용적률, 건폐율, 세대수, 주차대수
+6. **재무 분석** (4p)
+   - 사업비, 수익성 (ROI/IRR/NPV), 현금흐름
+7. **리스크 분석** (3p)
+   - 5가지 리스크 (재무/시장/정책/법률/건설)
+8. **시장 분석** (2p)
+   - 공공임대 수요, 경쟁 분석
+9. **결론 및 권장사항** (2p)
+
+### 텍스트 생성 규칙
+```python
+def generate_executive_summary(analysis_result: Dict) -> str:
+    """
+    Executive Summary 생성
+    """
+    roi = analysis_result['financial']['roi']
+    irr = analysis_result['financial']['irr']
+    risk_score = analysis_result['risk']['overall_score']
+    
+    text = f"""
+    본 프로젝트는 {analysis_result['location']['address']}에 위치한 
+    {analysis_result['land']['area']}㎡ 규모의 공공임대주택 사업입니다.
+    
+    **핵심 재무 지표**:
+    - ROI: {roi:.1f}%
+    - IRR: {irr:.1f}%
+    - NPV: {analysis_result['financial']['npv']:.1f}억원
+    
+    **리스크 평가**: {risk_score}/100점 ({get_risk_level(risk_score)})
+    
+    **결론**: {'사업성 양호' if roi > 10 and risk_score < 60 else '추가 검토 필요'}
+    """
+    return text
+```
+
+---
+
+## 6.2 시나리오 비교 리포트 (Scenario Comparison Report)
+
+### 구성 (15페이지)
+1. **표지 & 목차** (2p)
+2. **시나리오 개요** (2p)
+   - 각 시나리오 설명 (A안, B안, C안 등)
+3. **비교 분석** (6p)
+   - 18개 지표 비교 테이블
+   - 차트 (Bar, Radar Chart)
+4. **상세 분석** (각 시나리오당 1p × 3 = 3p)
+5. **종합 평가** (2p)
+   - 우선순위 랭킹
+   - 추천 시나리오
+
+### 비교 테이블 예시
+| 지표 | A안 (기본) | B안 (고밀도) | C안 (친환경) | 최우수 |
+|------|-----------|-------------|-------------|--------|
+| 용적률 (%) | 220 | 280 | 200 | B안 |
+| 세대수 | 150 | 200 | 130 | B안 |
+| ROI (%) | 12.5 | 15.2 | 11.8 | B안 |
+| 리스크 점수 | 45 | 62 | 38 | C안 |
+| 환경 점수 | 70 | 60 | 85 | C안 |
+
+---
+
+## 6.3 정책 영향 분석 리포트 (Policy Impact Report)
+
+### 구성 (12페이지)
+1. **표지 & 목차** (2p)
+2. **정책 개요** (2p)
+   - 적용 정책 목록 (용적률 완화, 주차 완화 등)
+3. **Before vs After** (4p)
+   - 정책 적용 전후 비교 (18개 지표)
+4. **재무 영향** (2p)
+   - 사업비 절감액, ROI 증가
+5. **리스크 변화** (1p)
+6. **결론** (1p)
+
+### Before/After 비교 로직
+```python
+def compare_before_after_policy(base_result: Dict, policy_result: Dict) -> Dict:
+    """
+    정책 적용 전후 비교
+    """
+    comparison = {
+        'far_increase': policy_result['capacity']['far'] - base_result['capacity']['far'],
+        'unit_increase': policy_result['capacity']['units'] - base_result['capacity']['units'],
+        'cost_reduction': base_result['financial']['cost'] - policy_result['financial']['cost'],
+        'roi_increase': policy_result['financial']['roi'] - base_result['financial']['roi']
+    }
+    
+    # 효과 크기 평가
+    comparison['impact_level'] = 'High' if comparison['roi_increase'] > 3 else 'Medium'
+    
+    return comparison
+```
+
+---
+
+## 6.4 리스크 평가 리포트 (Risk Assessment Report)
+
+### 구성 (10페이지)
+1. **표지 & 목차** (2p)
+2. **리스크 개요** (1p)
+   - 전체 리스크 점수 (0-100)
+3. **5가지 리스크 상세** (5p)
+   - 재무 리스크 (1p)
+   - 시장 리스크 (1p)
+   - 정책 리스크 (1p)
+   - 법률 리스크 (1p)
+   - 건설 리스크 (1p)
+4. **리스크 매트릭스** (1p)
+   - 발생 가능성 vs 영향도 2D 매트릭스
+5. **완화 전략** (1p)
+
+### 리스크 텍스트 생성
+```python
+def generate_risk_description(risk_type: str, risk_score: float, factors: List[str]) -> str:
+    """
+    리스크 설명 자동 생성
+    """
+    level = '높음' if risk_score > 60 else '중간' if risk_score > 30 else '낮음'
+    
+    text = f"""
+    **{risk_type} 리스크**: {risk_score:.1f}점 ({level})
+    
+    **주요 요인**:
+    {chr(10).join([f"- {factor}" for factor in factors])}
+    
+    **권장 조치**:
+    {get_mitigation_strategy(risk_type, risk_score)}
+    """
+    return text
+```
+
+---
+
+## 6.5 Executive Summary Report (경영진 요약 리포트)
+
+### 구성 (5페이지)
+1. **1 Page Summary** (1p)
+   - 핵심 지표 4개 (ROI, 사업비, 세대수, 리스크)
+   - Go/No-Go 결정
+2. **Financial Snapshot** (1p)
+   - 사업비, ROI, IRR, NPV
+3. **Risk Overview** (1p)
+   - 리스크 점수, Top 3 리스크
+4. **Key Recommendations** (1p)
+   - 실행 권장사항 3가지
+5. **Next Steps** (1p)
+   - 향후 액션 아이템
+
+### Go/No-Go 결정 로직
+```python
+def make_go_no_go_decision(analysis_result: Dict) -> Dict:
+    """
+    Go/No-Go 결정
+    """
+    roi = analysis_result['financial']['roi']
+    risk_score = analysis_result['risk']['overall_score']
+    npv = analysis_result['financial']['npv']
+    
+    # 기준: ROI > 10%, Risk < 60, NPV > 0
+    go = (roi > 10) and (risk_score < 60) and (npv > 0)
+    
+    return {
+        'decision': 'GO' if go else 'NO-GO',
+        'confidence': calculate_confidence(roi, risk_score, npv),
+        'reasons': get_decision_reasons(roi, risk_score, npv)
+    }
+```
+
+---
+
+# CHAPTER 7: REST API 설계 (v24 FastAPI)
+
+**페이지**: 4p  
+**목표**: 프론트엔드-백엔드 통신 인터페이스
+
+## 7.1 API 아키텍처
+
+### 기술 스택
+- **Framework**: FastAPI
+- **Authentication**: JWT Token
+- **Documentation**: Swagger/OpenAPI
+- **Validation**: Pydantic
+
+### Endpoints (7개)
+
+#### 1. `POST /api/v24/analysis/full`
+**전체 분석 실행**
+```python
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from typing import Dict, List, Optional
+
+router = APIRouter()
+
+class AnalysisRequest(BaseModel):
+    land_area: float
+    location: str
+    far_base: float
+    bcr_base: float
+    land_price: float
+    user_params: Optional[Dict] = None
+
+class AnalysisResponse(BaseModel):
+    request_id: str
+    status: str
+    results: Dict
+    execution_time_ms: float
+
+@router.post("/api/v24/analysis/full", response_model=AnalysisResponse)
+async def run_full_analysis(request: AnalysisRequest):
+    """
+    전체 분석 실행 (13개 엔진)
+    """
+    try:
+        # Run analysis
+        results = await analysis_service.run_full_analysis(request.dict())
+        
+        return AnalysisResponse(
+            request_id=generate_request_id(),
+            status="success",
+            results=results,
+            execution_time_ms=results['performance']['total_time_ms']
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+```
+
+#### 2. `POST /api/v24/scenario/compare`
+**시나리오 비교**
+
+#### 3. `POST /api/v24/policy/simulate`
+**정책 시뮬레이션**
+
+#### 4. `GET /api/v24/report/{report_id}`
+**리포트 조회**
+
+#### 5. `POST /api/v24/report/generate`
+**리포트 생성**
+
+#### 6. `GET /api/v24/visualization/{chart_type}`
+**시각화 데이터**
+
+#### 7. `POST /api/v24/multiparcels/merge`
+**다필지 병합 분석**
+
+---
+
+## 7.2 Error Handling
+
+### 표준 에러 코드
+| Code | Description |
+|------|-------------|
+| 400 | Bad Request (잘못된 입력) |
+| 401 | Unauthorized (인증 실패) |
+| 404 | Not Found (리소스 없음) |
+| 500 | Internal Server Error |
+
+### 에러 응답 형식
+```json
+{
+  "error": {
+    "code": "INVALID_INPUT",
+    "message": "land_area must be > 0",
+    "details": {
+      "field": "land_area",
+      "value": -100
+    }
+  }
+}
+```
+
+---
+
+# CHAPTER 8: 대시보드 UI/UX 설계
+
+**페이지**: 3p  
+**목표**: 사용자 친화적 대시보드 인터페이스
+
+## 8.1 Dashboard Layout
+
+### 섹션 구성
+```
++-----------------------------------------------------+
+|  Header: Logo | 프로젝트명 | User Profile           |
++-----------------------------------------------------+
+|  Sidebar:                  |  Main Content          |
+|  - 프로젝트 목록           |  +---------+---------+ |
+|  - 분석 시작               |  | KPI 1   | KPI 2   | |
+|  - 시나리오 비교           |  +---------+---------+ |
+|  - 리포트 생성             |  | Chart Area          | |
+|  - 설정                    |  +---------------------+ |
+|                            |  | Table Data          | |
++----------------------------+---------------------+ |
+|  Footer: Version v24 | Support | Documentation       |
++-----------------------------------------------------+
+```
+
+## 8.2 KPI Cards
+
+### 4개 핵심 KPI
+1. **ROI**: 투자수익률
+2. **Total Cost**: 총 사업비
+3. **Units**: 세대수
+4. **Risk Score**: 리스크 점수
+
+### UI 컴포넌트
+```jsx
+<KPICard
+  title="ROI"
+  value="12.5%"
+  change="+2.3%"
+  trend="up"
+  color="green"
+/>
+```
+
+## 8.3 Interactive Charts
+
+### Chart Types
+- **Line Chart**: 시간별 변화
+- **Bar Chart**: 카테고리 비교
+- **Radar Chart**: 다차원 평가
+- **Heatmap**: 비교 매트릭스
+
+---
+
+# CHAPTER 9: 배포 및 운영 (Deployment & Operations)
+
+**페이지**: 3p  
+**목표**: Production 환경 구축
+
+## 9.1 Docker Containerization
+
+### Dockerfile
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 8000
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+### docker-compose.yml
+```yaml
+version: '3.8'
+
+services:
+  zerosite-api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:pass@db:5432/zerosite
+    depends_on:
+      - db
+  
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=zerosite
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+```
+
+---
+
+## 9.2 CI/CD Pipeline
+
+### GitHub Actions Workflow
+```yaml
+name: ZeroSite v24 CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - run: pytest tests/ --cov=. --cov-report=xml
+  
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker build -t zerosite:v24 .
+      - run: docker push zerosite:v24
+```
+
+---
+
+## 9.3 Cloud Deployment
+
+### AWS 배포
+1. **EC2**: t3.medium (2 vCPU, 4GB RAM)
+2. **RDS**: PostgreSQL 15
+3. **S3**: 리포트 PDF 저장
+4. **CloudFront**: CDN
+
+### GCP 배포
+1. **Cloud Run**: Serverless Container
+2. **Cloud SQL**: PostgreSQL
+3. **Cloud Storage**: 파일 저장
+
+### Azure 배포
+1. **App Service**: 웹앱 호스팅
+2. **Azure Database**: PostgreSQL
+3. **Blob Storage**: 파일 저장
+
+---
+
+# CHAPTER 10: 테스트 전략 (Testing Strategy)
+
+**페이지**: 3p  
+**목표**: 95% 이상 테스트 커버리지
+
+## 10.1 Unit Tests (단위 테스트)
+
+### 테스트 대상
+- 각 엔진의 핵심 함수
+- 데이터 검증 로직
+- 계산 알고리즘
+
+### 예시
+```python
+import pytest
+from engines.capacity_engine import CapacityEngine
+
+def test_capacity_engine_basic():
+    """
+    용량 엔진 기본 테스트
+    """
+    engine = CapacityEngine()
+    result = engine.calculate({
+        'land_area': 1000,
+        'far_base': 2.5,
+        'bcr_base': 0.6,
+        'floor_height': 3.0
+    })
+    
+    assert result['gfa'] > 0
+    assert result['floors'] >= 1
+    assert result['units'] > 0
+```
+
+---
+
+## 10.2 Integration Tests (통합 테스트)
+
+### 테스트 시나리오
+1. **Full Analysis Workflow**: 입력 → 13개 엔진 → 리포트
+2. **Scenario Comparison**: 3개 시나리오 비교
+3. **API Request/Response**: FastAPI 엔드포인트
+
+### 예시
+```python
+from fastapi.testclient import TestClient
+from main import app
+
+client = TestClient(app)
+
+def test_full_analysis_api():
+    """
+    전체 분석 API 테스트
+    """
+    response = client.post("/api/v24/analysis/full", json={
+        "land_area": 1000,
+        "location": "서울특별시 강남구",
+        "far_base": 2.5,
+        "bcr_base": 0.6,
+        "land_price": 5000000
+    })
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert data['status'] == 'success'
+    assert 'results' in data
+```
+
+---
+
+## 10.3 Performance Tests (성능 테스트)
+
+### 목표
+- **Response Time**: < 2초 (Full Analysis)
+- **Throughput**: 100 req/sec
+- **Concurrency**: 50명 동시 접속
+
+### 도구
+- **Locust**: 부하 테스트
+- **pytest-benchmark**: 벤치마킹
+
+---
+
+# CHAPTER 11: 향후 계획 (Future Roadmap)
+
+**페이지**: 2p  
+**목표**: v25, v26 기능 확장
+
+## 11.1 ZeroSite v25 (AI 예측 기능)
+
+### 추가 기능
+1. **AI Market Predictor**
+   - 향후 3년 임대료 예측
+   - 주택 수요 예측
+   - ML 모델: LSTM, XGBoost
+
+2. **AI Risk Predictor**
+   - 리스크 발생 확률 예측
+   - 조기 경보 시스템
+
+3. **Generative Design**
+   - AI 기반 최적 설계안 자동 생성
+   - Genetic Algorithm
+
+---
+
+## 11.2 ZeroSite v26 (Multi-Project Management)
+
+### 추가 기능
+1. **Portfolio Management**
+   - 여러 프로젝트 동시 관리
+   - 포트폴리오 최적화
+
+2. **Collaboration Tools**
+   - 팀 협업 기능
+   - 댓글, 승인 워크플로우
+
+3. **Real-time Monitoring**
+   - 프로젝트 진행 상황 실시간 모니터링
+
+---
+
+## 11.3 Long-term Vision (2026+)
+
+### 비전
+- **국내 1위 LH 프로젝트 분석 플랫폼**
+- **국제 확장**: 일본, 동남아시아
+- **클라우드 SaaS 전환**
+
+---
+
+# APPENDIX (부록)
+
+**페이지**: 8p
+
+## A. 용어 사전 (Glossary)
+
+| 용어 | 설명 |
+|------|------|
+| FAR (Floor Area Ratio) | 용적률 = 연면적 / 대지면적 × 100 |
+| BCR (Building Coverage Ratio) | 건폐율 = 건축면적 / 대지면적 × 100 |
+| GFA (Gross Floor Area) | 총 연면적 (㎡) |
+| ROI (Return on Investment) | 투자수익률 = (수익 / 투자액) × 100 |
+| IRR (Internal Rate of Return) | 내부수익률 (%) |
+| NPV (Net Present Value) | 순현재가치 (억원) |
+| LH (Land & Housing Corporation) | 한국토지주택공사 |
+
+---
+
+## B. 참고 법령 (Legal References)
+
+1. **건축법**
+   - 용도지역별 건폐율 및 용적률 제한
+   - 건축물 높이 제한
+
+2. **주택법**
+   - 공공임대주택 건설 기준
+   - 주택 규모 및 면적 기준
+
+3. **주차장법**
+   - 주차대수 산정 기준
+
+4. **도시계획법**
+   - 용도지역 및 지구 지정
+
+---
+
+## C. 데이터 출처 (Data Sources)
+
+| 데이터 | 출처 |
+|--------|------|
+| 공시지가 | 국토교통부 부동산공시가격알리미 |
+| 건축물대장 | 세움터 (건축행정시스템) |
+| 지적도 | 국토정보플랫폼 |
+| 용도지역 | 토지이음 |
+| 교통망 | 국가교통DB (KTDB) |
+
+---
+
+## D. 시스템 요구사항 (System Requirements)
+
+### 최소 사양
+- **OS**: Ubuntu 20.04 LTS
+- **CPU**: 2 cores
+- **RAM**: 4GB
+- **Storage**: 50GB
+
+### 권장 사양
+- **OS**: Ubuntu 22.04 LTS
+- **CPU**: 4 cores
+- **RAM**: 8GB
+- **Storage**: 100GB SSD
+
+---
+
+## E. API 인증 가이드 (API Authentication Guide)
+
+### JWT Token 발급
+```bash
+curl -X POST https://api.zerosite.com/v24/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "user", "password": "pass"}'
+```
+
+### Response
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer",
+  "expires_in": 3600
+}
+```
+
+### API 호출
+```bash
+curl -X POST https://api.zerosite.com/v24/analysis/full \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"land_area": 1000, ...}'
+```
+
+---
+
+## F. 트러블슈팅 (Troubleshooting)
+
+### 자주 발생하는 오류
+
+#### 1. "land_area must be > 0"
+**원인**: 입력 데이터 오류  
+**해결**: `land_area` 값을 양수로 입력
+
+#### 2. "Database connection failed"
+**원인**: PostgreSQL 연결 실패  
+**해결**: `DATABASE_URL` 환경변수 확인
+
+#### 3. "Module not found: engines"
+**원인**: 패키지 미설치  
+**해결**: `pip install -r requirements.txt` 실행
+
+---
+
+## G. 버전 히스토리 (Version History)
+
+| Version | Date | Changes |
+|---------|------|---------|
+| v24.0 | 2025-12-12 | 프로덕션 출시 (Phase 1-7 완료) |
+| v23.5 | 2025-11-20 | 베타 테스트 (Phase 6 완료) |
+| v23.0 | 2025-10-15 | 알파 버전 (Phase 1-5 완료) |
+
+---
+
+## H. 연락처 및 지원 (Contact & Support)
+
+### 기술 지원
+- **Email**: support@zerosite.com
+- **GitHub Issues**: https://github.com/hellodesignthinking-png/LHproject/issues
+- **Documentation**: https://docs.zerosite.com
+
+### 팀
+- **Project Manager**: [Name]
+- **Lead Developer**: [Name]
+- **QA Engineer**: [Name]
+
+---
+
+# 문서 종료 (End of Document)
+
+**ZeroSite v24 FINAL PLANNING DOCUMENT v2.0**  
+**총 페이지**: 60p  
+**버전**: 2.0  
+**작성일**: 2025-12-12  
+**상태**: ✅ COMPLETE  
+
+**Repository**: https://github.com/hellodesignthinking-png/LHproject  
+**Version**: v24.0-Production  
+**Status**: 🚀 PRODUCTION READY
+
+---
+
+**© 2025 ZeroSite Team. All Rights Reserved.**
+
