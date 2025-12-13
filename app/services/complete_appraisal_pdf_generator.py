@@ -1,14 +1,15 @@
 """
-Complete Appraisal PDF Generator v25.0
+Complete Appraisal PDF Generator v26.0
 완전히 작동하는 상세 감정평가 보고서 생성기
 
 핵심 기능:
-1. ✅ RealTransactionGenerator 통합
+1. ✅ TransactionDataService 통합 (RTMS API + Fallback)
 2. ✅ 정확한 법정동 주소 표시
 3. ✅ 최근 거래일자 우선 정렬
 4. ✅ 거리 계산 & 표시
-5. ✅ 프리미엄 41% 계산 근거 표시
-6. ✅ 깔끔한 PDF 디자인
+5. ✅ 프리미엄 41% 계산 근거 + 텍스트 설명
+6. ✅ 3-법 요약표 추가
+7. ✅ 깔끔한 PDF 디자인
 """
 
 from typing import Dict, List, Any
@@ -24,7 +25,7 @@ class CompleteAppraisalPDFGenerator:
     def __init__(self):
         """초기화"""
         self.PYEONG_CONVERSION = 3.3058
-        logger.info("✅ CompleteAppraisalPDFGenerator v25.0 initialized")
+        logger.info("✅ CompleteAppraisalPDFGenerator v26.0 initialized")
     
     
     def generate_pdf_html(self, appraisal_data: Dict) -> str:
@@ -63,15 +64,16 @@ class CompleteAppraisalPDFGenerator:
         # 표지
         html_sections.append(self._generate_cover_page(appraisal_data))
         
-        # Executive Summary
+        # Executive Summary + 3-법 요약표
         html_sections.append(self._generate_executive_summary(appraisal_data))
+        html_sections.append(self._generate_three_method_summary(appraisal_data))
         
         # 거래사례 비교표
         html_sections.append(self._generate_transaction_table(transactions))
         
-        # 프리미엄 분석
+        # 프리미엄 분석 (텍스트 설명 포함)
         if premium_percentage > 0 or top_5_factors:
-            html_sections.append(self._generate_premium_analysis(premium_info))
+            html_sections.append(self._generate_premium_analysis_with_text(premium_info, appraisal_data))
         
         # 최종 평가액
         html_sections.append(self._generate_final_valuation(appraisal_data))
@@ -85,23 +87,47 @@ class CompleteAppraisalPDFGenerator:
     
     
     def _generate_transactions(self, address: str, land_area_sqm: float) -> List[Dict]:
-        """거래사례 생성 (RealTransactionGenerator 사용)"""
+        """
+        거래사례 생성 (TransactionDataService 사용)
+        
+        우선순위:
+        1. RTMS API (실제 토지 거래 데이터)
+        2. RealTransactionGenerator (강화된 fallback)
+        3. Minimal fallback (최후의 수단)
+        """
         try:
-            from app.services.real_transaction_generator import get_transaction_generator
+            from app.services.transaction_data_service import get_transaction_service
             
-            generator = get_transaction_generator()
-            transactions = generator.generate_transactions(
+            service = get_transaction_service()
+            transactions = service.get_nearby_transactions(
                 address=address,
-                land_area_sqm=land_area_sqm,
-                num_transactions=15
+                radius_km=2.0,
+                months_back=24,
+                max_results=15
             )
             
-            logger.info(f"🏠 RealTransactionGenerator: {len(transactions)} transactions generated")
-            return transactions
+            logger.info(f"🏠 TransactionDataService: {len(transactions)} transactions retrieved")
+            
+            # TransactionDataService 형식 -> PDF 형식 변환
+            converted = []
+            for tx in transactions:
+                converted.append({
+                    'transaction_date': tx.get('deal_date', 'N/A'),
+                    'location': tx.get('address_jibun', 'N/A'),
+                    'distance_km': tx.get('distance_km', 0),
+                    'land_area_sqm': tx.get('area_sqm', 0),
+                    'price_per_sqm': tx.get('price_per_sqm', 0),
+                    'total_price': tx.get('price_total', 0),
+                    'road_name': tx.get('road_name', 'N/A'),
+                    'road_class': tx.get('road_grade', 'minor_road'),
+                    'unit_price_sqm': tx.get('price_per_sqm', 0)
+                })
+            
+            return converted if converted else self._generate_fallback_transactions(address, land_area_sqm)
             
         except Exception as e:
-            logger.error(f"❌ Failed to generate transactions: {e}", exc_info=True)
-            # Fallback to minimal data
+            logger.error(f"❌ Failed to fetch transactions: {e}", exc_info=True)
+            # Fallback to RealTransactionGenerator
             return self._generate_fallback_transactions(address, land_area_sqm)
     
     
@@ -264,8 +290,85 @@ class CompleteAppraisalPDFGenerator:
         """
     
     
-    def _generate_premium_analysis(self, premium_info: Dict) -> str:
-        """프리미엄 분석"""
+    def _generate_three_method_summary(self, data: Dict) -> str:
+        """3-법 요약표 (원가법, 거래사례비교법, 수익환원법)"""
+        
+        # 데이터 추출
+        cost_approach = data.get('cost_approach_value', 0)
+        sales_comparison = data.get('sales_comparison_value', 0)
+        income_approach = data.get('income_approach_value', 0)
+        
+        cost_weight = data.get('cost_weight', 0.2)
+        sales_weight = data.get('sales_weight', 0.5)
+        income_weight = data.get('income_weight', 0.3)
+        
+        # 가중 평균 계산
+        weighted_cost = cost_approach * cost_weight
+        weighted_sales = sales_comparison * sales_weight
+        weighted_income = income_approach * income_weight
+        weighted_avg = weighted_cost + weighted_sales + weighted_income
+        
+        return f"""
+        <div class="section-page">
+            <h1 class="section-title">3대 평가 방식 요약</h1>
+            
+            <table class="method-summary-table">
+                <thead>
+                    <tr>
+                        <th style="width: 30%;">평가 방식</th>
+                        <th style="width: 30%;">평가액 (억원)</th>
+                        <th style="width: 20%;">가중치</th>
+                        <th style="width: 20%;">가중 평가액</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>원가법</strong> (Cost Approach)</td>
+                        <td class="right">{cost_approach:.2f}</td>
+                        <td class="center">{cost_weight*100:.0f}%</td>
+                        <td class="right">{weighted_cost:.2f}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>거래사례비교법</strong> (Sales Comparison)</td>
+                        <td class="right">{sales_comparison:.2f}</td>
+                        <td class="center">{sales_weight*100:.0f}%</td>
+                        <td class="right">{weighted_sales:.2f}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>수익환원법</strong> (Income Approach)</td>
+                        <td class="right">{income_approach:.2f}</td>
+                        <td class="center">{income_weight*100:.0f}%</td>
+                        <td class="right">{weighted_income:.2f}</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="3" class="right"><strong>가중 평균 평가액</strong></td>
+                        <td class="right" style="font-size: 1.2em; font-weight: bold;">
+                            {weighted_avg:.2f}
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+            
+            <div class="method-note">
+                <h4>평가 방식 설명</h4>
+                <ul>
+                    <li><strong>원가법:</strong> 토지의 재조달 원가에서 감가상각을 차감하여 산정</li>
+                    <li><strong>거래사례비교법:</strong> 인근 유사 토지의 거래사례를 기준으로 비교·조정</li>
+                    <li><strong>수익환원법:</strong> 예상 수익을 환원율로 나누어 현재가치로 산정</li>
+                </ul>
+                <p class="note-text">
+                    본 평가에서는 <strong>거래사례비교법에 {sales_weight*100:.0f}%의 가중치</strong>를 부여하였으며,
+                    이는 대상 토지 주변의 활발한 거래 시장과 풍부한 거래사례를 고려한 결과입니다.
+                </p>
+            </div>
+        </div>
+        """
+    
+    
+    def _generate_premium_analysis_with_text(self, premium_info: Dict, appraisal_data: Dict) -> str:
+        """프리미엄 분석 (텍스트 설명 포함)"""
         
         premium_pct = premium_info.get('premium_percentage', 0)
         top_5_factors = premium_info.get('top_5_factors', [])
@@ -293,6 +396,9 @@ class CompleteAppraisalPDFGenerator:
         
         sum_factors = sum(f.get('value', 0) for f in top_5_factors)
         
+        # 프리미엄 텍스트 설명 생성
+        premium_text = self._generate_premium_explanation(top_5_factors, premium_pct, appraisal_data)
+        
         return f"""
         <div class="section-page">
             <h1 class="section-title">프리미엄 요인 분석</h1>
@@ -314,6 +420,11 @@ class CompleteAppraisalPDFGenerator:
                         </td>
                     </tr>
                 </table>
+            </div>
+            
+            <div class="premium-explanation">
+                <h3>프리미엄 {premium_pct:.1f}% 산정 근거</h3>
+                {premium_text}
             </div>
             
             <h3>상위 5개 프리미엄 요인</h3>
@@ -347,6 +458,56 @@ class CompleteAppraisalPDFGenerator:
             </div>
         </div>
         """
+    
+    
+    def _generate_premium_explanation(self, top_5_factors: List[Dict], premium_pct: float, appraisal_data: Dict) -> str:
+        """
+        프리미엄 점수에 대한 텍스트 설명 생성
+        
+        물리적, 입지적, 개발적, 시장적 특성을 종합적으로 설명
+        """
+        # 요인별 분류
+        physical_factors = [f for f in top_5_factors if f.get('category') == '물리적']
+        location_factors = [f for f in top_5_factors if f.get('category') == '입지']
+        development_factors = [f for f in top_5_factors if f.get('category') == '개발']
+        
+        explanations = []
+        
+        # 물리적 특성
+        if physical_factors:
+            physical_names = ', '.join([f['name'] for f in physical_factors])
+            physical_sum = sum([f.get('value', 0) for f in physical_factors])
+            explanations.append(
+                f"<strong>물리적 특성:</strong> {physical_names} 등의 우수한 토지 조건으로 "
+                f"약 {physical_sum:+.1f}%의 프리미엄이 인정됩니다."
+            )
+        
+        # 입지적 특성
+        if location_factors:
+            location_names = ', '.join([f['name'] for f in location_factors])
+            location_sum = sum([f.get('value', 0) for f in location_factors])
+            explanations.append(
+                f"<strong>입지적 특성:</strong> {location_names} 등 뛰어난 접근성과 편의성으로 "
+                f"약 {location_sum:+.1f}%의 추가 가치가 형성되어 있습니다."
+            )
+        
+        # 개발적 특성
+        if development_factors:
+            dev_names = ', '.join([f['name'] for f in development_factors])
+            dev_sum = sum([f.get('value', 0) for f in development_factors])
+            explanations.append(
+                f"<strong>개발 가능성:</strong> {dev_names} 등의 개발 호재로 "
+                f"약 {dev_sum:+.1f}%의 미래가치가 반영되었습니다."
+            )
+        
+        # 종합 평가
+        explanations.append(
+            f"<strong>종합 평가:</strong> 상기 요인들을 종합적으로 고려하여 "
+            f"최종 <strong>{premium_pct:.1f}%의 프리미엄</strong>을 적용하였습니다. "
+            f"이는 대상 토지의 우수한 입지 조건과 개발 잠재력을 객관적으로 반영한 결과입니다."
+        )
+        
+        return '<p>' + '</p><p>'.join(explanations) + '</p>'
     
     
     def _generate_final_valuation(self, data: Dict) -> str:
@@ -563,9 +724,76 @@ class CompleteAppraisalPDFGenerator:
             margin-top: 10px;
         }}
         
+        /* 3-Method Summary */
+        .method-summary-table {{
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+        }}
+        
+        .method-summary-table th,
+        .method-summary-table td {{
+            padding: 12px;
+            border: 1px solid #ddd;
+        }}
+        
+        .method-summary-table thead th {{
+            background: #1a1a2e;
+            color: white;
+            font-weight: 600;
+        }}
+        
+        .method-summary-table .total-row {{
+            background: #fff3cd;
+            font-weight: 700;
+        }}
+        
+        .method-note {{
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 25px;
+        }}
+        
+        .method-note h4 {{
+            color: #1a1a2e;
+            margin-bottom: 15px;
+        }}
+        
+        .method-note ul {{
+            margin-left: 20px;
+            line-height: 1.8;
+        }}
+        
+        .note-text {{
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-left: 4px solid #e94560;
+            font-style: italic;
+        }}
+        
         /* Premium Section */
         .premium-summary {{
             margin: 25px 0;
+        }}
+        
+        .premium-explanation {{
+            background: #f0f8ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+            border-left: 4px solid #1a1a2e;
+        }}
+        
+        .premium-explanation h3 {{
+            color: #1a1a2e;
+            margin-bottom: 15px;
+        }}
+        
+        .premium-explanation p {{
+            line-height: 1.8;
+            margin: 12px 0;
         }}
         
         .highlight-row {{
