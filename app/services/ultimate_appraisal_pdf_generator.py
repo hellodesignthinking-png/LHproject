@@ -3,15 +3,16 @@
 안테나홀딩스 (Antenna Holdings Co., Ltd.)
 
 🎯 핵심 개선사항:
-1. ✅ 실제 주소 표시 (법정동·번지)
+1. ✅ 실제 주소 표시 (법정동·번지) - v28.0 AdvancedAddressParser
 2. ✅ 도로 등급 가중치 (대로 +20%, 중로 +10%)
-3. ✅ 실거래가 수준 평가 (시장가 반영 강화)
+3. ✅ 실거래가 수준 평가 (시장가 반영 강화) - v28.0 SeoulMarketPrices
 4. ✅ 완벽한 A4 레이아웃 (210mm × 297mm)
 5. ✅ 평수 표시 추가 (모든 금액에 평당 가격 병기)
+6. ✅ v28.0 통합: ComprehensiveTransactionCollector로 정확한 거래사례
 
-Version: 2.0 Ultimate
+Version: 2.0 Ultimate + v28.0
 Date: 2025-12-13
-Author: Antenna Holdings Development Team
+Author: Antenna Holdings Development Team + ZeroSite v28.0
 """
 
 from typing import Dict, List, Optional, Tuple, Any
@@ -101,32 +102,62 @@ class UltimateAppraisalPDFGenerator:
         """
         실제 거래사례 수집 (실제 주소 포함)
         
-        🔥 NEW: RealTransactionGenerator 사용
+        🔥 v28.0: ComprehensiveTransactionCollector 사용
         - 정확한 법정동 주소 (구/동/번지)
+        - 실제 시장가 반영 (SeoulMarketPrices)
+        - AdvancedAddressParser 통합
         - 최근 거래일자 우선
         - 거리 기반 정렬
         """
         
-        logger.info(f"🔍 Collecting real transaction cases with actual addresses")
+        logger.info(f"🔍 [v28.0] Collecting real transaction cases with accurate addresses")
         
         try:
-            # 🔥 NEW: Use dedicated transaction generator
-            from app.services.real_transaction_generator import get_transaction_generator
+            # 🔥 v28.0: Use ComprehensiveTransactionCollector
+            from app.services.comprehensive_transaction_collector import get_transaction_collector
             
-            generator = get_transaction_generator()
-            transactions = generator.generate_transactions(
+            collector = get_transaction_collector()
+            transactions = collector.collect_nearby_transactions(
                 address=address,
                 land_area_sqm=land_area_sqm,
-                num_transactions=15
+                max_distance_km=2.0,
+                num_months=24,
+                min_count=10,
+                max_count=15
             )
             
-            logger.info(f"✅ Generated {len(transactions)} high-quality transaction comparables")
-            logger.info(f"   Sample: {transactions[0]['location']} ({transactions[0]['transaction_date']}, {transactions[0]['distance_km']}km)")
+            logger.info(f"✅ [v28.0] Generated {len(transactions)} high-quality transaction comparables")
+            if transactions:
+                logger.info(f"   Sample: {transactions[0]['address']} ({transactions[0]['transaction_date']}, {transactions[0]['distance_km']}km)")
+                logger.info(f"   Price range: {min(t['price_per_sqm'] for t in transactions):,}~{max(t['price_per_sqm'] for t in transactions):,}원/㎡")
             
-            return transactions
+            # Convert format to match expected structure
+            converted_transactions = []
+            for tx in transactions:
+                converted_transactions.append({
+                    'transaction_date': tx['transaction_date'],
+                    'price_per_sqm': tx['price_per_sqm'],
+                    'land_area_sqm': tx['land_area_sqm'],
+                    'total_price': tx['total_price'],
+                    'location': tx['address'],  # v28.0 uses 'address' key
+                    'road_name': tx.get('road_name', '일반도로'),
+                    'road_class': tx.get('road_class', '소로'),
+                    'distance_km': tx['distance_km'],
+                    'building_type': '토지',
+                    'floor': '-',
+                    'time_adjustment': self._calculate_time_adjustment(datetime.strptime(tx['transaction_date'], '%Y-%m-%d')),
+                    'location_adjustment': self._calculate_location_adjustment_with_road(
+                        tx['distance_km'], 
+                        1.20 if '대로' in tx.get('road_name', '') else 1.10 if '로' in tx.get('road_name', '') else 1.00
+                    ),
+                    'individual_adjustment': 1.00,
+                })
+            
+            return converted_transactions
             
         except Exception as e:
-            logger.error(f"❌ Failed to generate transactions: {e}")
+            logger.error(f"❌ [v28.0] Failed to collect transactions: {e}")
+            logger.error(f"   Falling back to old method")
             # Fallback to old method
             return self._generate_enhanced_fallback_sales(address, land_area_sqm, zone_type)
     
