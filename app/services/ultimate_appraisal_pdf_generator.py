@@ -60,35 +60,40 @@ class UltimateAppraisalPDFGenerator:
         # 🔥 V34.0: Use transactions from appraisal_data if available (from SmartTransactionCollectorV34)
         comparable_sales = []
         
-        if appraisal_data.get('transactions'):
+        if appraisal_data.get('transactions') and isinstance(appraisal_data['transactions'], list) and len(appraisal_data['transactions']) > 0:
             logger.info(f"✅ [V34.0] Using {len(appraisal_data['transactions'])} transactions from SmartTransactionCollectorV34")
             
             # Convert v34.0 format to PDF format
-            for tx in appraisal_data['transactions']:
-                comparable_sales.append({
-                    'transaction_date': tx['transaction_date'],
-                    'price_per_sqm': tx['price_per_sqm'],
-                    'land_area_sqm': tx['land_area_sqm'],
-                    'total_price': tx['total_price'],
-                    'location': tx['address'],  # v34.0 accurate address!
-                    'road_name': tx.get('road_name', '일반도로'),
-                    'road_class': tx.get('road_class', '소로'),
-                    'distance_km': tx['distance_km'],
-                    'building_type': '토지',
-                    'floor': '-',
-                    'time_adjustment': self._calculate_time_adjustment(datetime.strptime(tx['transaction_date'], '%Y-%m-%d')),
-                    'location_adjustment': self._calculate_location_adjustment_with_road(
-                        tx['distance_km'], 
-                        1.20 if '대로' in tx.get('road_name', '') else 1.10 if '로' in tx.get('road_name', '') else 1.00
-                    ),
-                    'individual_adjustment': 1.00,
-                })
-            
-            logger.info(f"   Sample: {comparable_sales[0]['location']} ({comparable_sales[0]['transaction_date']}, {comparable_sales[0]['distance_km']}km)")
-        else:
-            logger.warning("⚠️ [V34.0] No transactions in appraisal_data, using fallback collector")
-            # Fallback to old method
-            comparable_sales = self._collect_real_comparable_sales(
+            try:
+                for tx in appraisal_data['transactions']:
+                    comparable_sales.append({
+                        'transaction_date': tx['transaction_date'],
+                        'price_per_sqm': tx['price_per_sqm'],
+                        'land_area_sqm': tx['land_area_sqm'],
+                        'total_price': tx['total_price'],
+                        'location': tx['address'],  # v34.0 accurate address!
+                        'road_name': tx.get('road_name', '일반도로'),
+                        'road_class': tx.get('road_class', '소로'),
+                        'distance_km': tx['distance_km'],
+                        'building_type': '토지',
+                        'floor': '-',
+                        'time_adjustment': self._calculate_time_adjustment(datetime.strptime(tx['transaction_date'], '%Y-%m-%d')),
+                        'location_adjustment': self._calculate_location_adjustment_with_road(
+                            tx['distance_km'], 
+                            1.20 if '대로' in tx.get('road_name', '') else 1.10 if '로' in tx.get('road_name', '') else 1.00
+                        ),
+                        'individual_adjustment': 1.00,
+                    })
+                
+                logger.info(f"   Sample: {comparable_sales[0]['location']} ({comparable_sales[0]['transaction_date']}, {comparable_sales[0]['distance_km']}km)")
+            except Exception as e:
+                logger.error(f"❌ [V34.0] Failed to convert transactions: {e}")
+                comparable_sales = []
+        
+        # Always use fallback if no comparable sales were generated
+        if not comparable_sales:
+            logger.warning("⚠️ [V34.0] No valid transactions, using enhanced fallback generator")
+            comparable_sales = self._generate_enhanced_fallback_sales(
                 address=appraisal_data.get('address', '서울시 강남구'),
                 land_area_sqm=appraisal_data.get('land_area_sqm', 660),
                 zone_type=appraisal_data.get('zone_type', '제3종일반주거지역')
@@ -207,8 +212,8 @@ class UltimateAppraisalPDFGenerator:
             
         except Exception as e:
             logger.error(f"❌ [v28.0] Failed to collect transactions: {e}")
-            logger.error(f"   Falling back to old method")
-            # Fallback to old method
+            logger.error(f"   Using enhanced fallback generator")
+            # Fallback to enhanced method
             return self._generate_enhanced_fallback_sales(address, land_area_sqm, zone_type)
     
     

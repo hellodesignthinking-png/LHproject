@@ -696,23 +696,26 @@ async def generate_appraisal_pdf(request: AppraisalRequest):
             return words[-1] if words else "Unknown"
         
         jibun = extract_jibun(request.address)
-        filename_ascii = f"Appraisal_Report_{jibun}_{timestamp}.pdf"
+        # v34.0 ENCODING FIX: Use only ASCII characters in filename
+        # Korean characters will be in Content-Disposition header separately
+        timestamp_clean = timestamp.replace(':', '').replace('-', '')
+        filename_ascii = f"Appraisal_Report_{timestamp_clean}.pdf"
         
         # URL encode Korean filename for proper browser display
         from urllib.parse import quote
-        filename_korean = f"{jibun}_감정평가보고서.pdf"
-        encoded_filename = quote(filename_korean.encode('utf-8'))
+        filename_korean = f"감정평가보고서_{timestamp}.pdf"
+        encoded_filename = quote(filename_korean)
         
         logger.info(f"PDF generated successfully: {filename_ascii}")
         
         # Step 5: Return FileResponse with PDF
-        # Use ASCII filename in parameter, UTF-8 filename in header
+        # v34.0 ENCODING FIX: Use only ASCII in base filename, UTF-8 for display name
         return FileResponse(
             path=tmp_file_path,
             media_type="application/pdf",
             filename=filename_ascii,
             headers={
-                "Content-Disposition": f"attachment; filename={filename_ascii}; filename*=UTF-8''{encoded_filename}"
+                "Content-Disposition": f"attachment; filename=\"{filename_ascii}\"; filename*=UTF-8''{encoded_filename}"
             }
         )
         

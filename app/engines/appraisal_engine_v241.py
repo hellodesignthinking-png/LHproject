@@ -201,37 +201,38 @@ class AppraisalEngineV241(BaseEngine):
         # ========================================
         generated_transactions = []
         
-        if not comparable_sales:
-            self.logger.info(f"🔍 Generating transaction data for: {gu} {dong}")
-            try:
-                from app.services.smart_transaction_collector_v34 import SmartTransactionCollectorV34
-                collector = SmartTransactionCollectorV34()
+        # ALWAYS generate transactions for PDF display (v34.0 FIX)
+        self.logger.info(f"🔍 [V34.0] Generating transaction data for: {gu} {dong}")
+        try:
+            from app.services.smart_transaction_collector_v34 import SmartTransactionCollectorV34
+            collector = SmartTransactionCollectorV34()
+            
+            # Generate 15 transactions based on actual gu/dong
+            generated_transactions = collector.collect_transactions(
+                address=address,
+                gu=gu,
+                dong=dong,
+                land_area_sqm=land_area,
+                num_transactions=15
+            )
+            
+            self.logger.info(f"✅ [V34.0] Generated {len(generated_transactions)} transactions for {gu} {dong}")
+            
+            # Use transactions for comparable sales if not provided
+            if not comparable_sales and generated_transactions:
+                self.logger.info(f"   Using generated transactions as comparable sales")
+                for tx in generated_transactions[:5]:
+                    comparable_sales.append({
+                        'price_per_sqm': tx['price_per_sqm'],
+                        'time_adjustment': 1.0,  # Already adjusted in generation
+                        'location_adjustment': 1.0,  # Same dong
+                        'individual_adjustment': 1.0,
+                        'weight': 0.2  # Equal weight for 5 comparables
+                    })
+                self.logger.info(f"✅ Using {len(comparable_sales)} comparable sales from generated data")
                 
-                # Generate 15 transactions based on actual gu/dong
-                generated_transactions = collector.collect_transactions(
-                    address=address,
-                    gu=gu,
-                    dong=dong,
-                    land_area_sqm=land_area,
-                    num_transactions=15
-                )
-                
-                self.logger.info(f"✅ Generated {len(generated_transactions)} transactions for {gu} {dong}")
-                
-                # Use top 5 nearest transactions for comparable sales
-                if generated_transactions:
-                    for tx in generated_transactions[:5]:
-                        comparable_sales.append({
-                            'price_per_sqm': tx['price_per_sqm'],
-                            'time_adjustment': 1.0,  # Already adjusted in generation
-                            'location_adjustment': 1.0,  # Same dong
-                            'individual_adjustment': 1.0,
-                            'weight': 0.2  # Equal weight for 5 comparables
-                        })
-                    self.logger.info(f"✅ Using {len(comparable_sales)} comparable sales from generated data")
-                
-            except Exception as e:
-                self.logger.error(f"❌ Transaction generation failed: {e}")
+        except Exception as e:
+            self.logger.error(f"❌ Transaction generation failed: {e}")
         
         # 🔥 AUTO-FETCH REAL TRANSACTION DATA if no comparable sales provided (fallback)
         if not comparable_sales and self.market_data_api:
