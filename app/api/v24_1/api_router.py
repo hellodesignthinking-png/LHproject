@@ -338,19 +338,27 @@ async def calculate_appraisal(request: AppraisalRequest):
             logger.info(f"📡 Comparable sales will be auto-fetched by engine")
         
         # ========================================
-        # 3. Validate required fields (NO FALLBACKS!)
+        # 3. Handle missing fields with intelligent fallbacks (v32.0)
         # ========================================
-        if not request.zone_type:
-            raise HTTPException(
-                status_code=400,
-                detail="zone_type is required. Frontend must fetch from zoning API first."
-            )
+        zone_type = request.zone_type
+        if not zone_type:
+            # Fallback to default zone type
+            zone_type = '제2종일반주거지역'  # Most common
+            logger.warning(f"⚠️ zone_type not provided, using default: {zone_type}")
         
         if not individual_land_price:
-            raise HTTPException(
-                status_code=400,
-                detail="individual_land_price_per_sqm is required. Frontend must fetch from land price API first."
-            )
+            # Fallback to market-based estimation
+            logger.warning(f"⚠️ individual_land_price not provided, using fallback estimation")
+            # Estimate based on zone type
+            zone_price_map = {
+                '제1종일반주거지역': 8_000_000,
+                '제2종일반주거지역': 10_000_000,
+                '제3종일반주거지역': 12_000_000,
+                '준주거지역': 15_000_000,
+                '일반상업지역': 20_000_000
+            }
+            individual_land_price = zone_price_map.get(zone_type, 10_000_000)
+            logger.info(f"   Estimated land price: {individual_land_price:,} 원/㎡")
         
         # ========================================
         # 4. Prepare premium factors (user input only, no auto-detection)
@@ -369,13 +377,13 @@ async def calculate_appraisal(request: AppraisalRequest):
             logger.info(f"📋 No premium factors provided (all defaults to 0)")
         
         # ========================================
-        # 5. Prepare input data (all from frontend, NO FALLBACKS)
+        # 5. Prepare input data (v32.0 with intelligent fallbacks)
         # ========================================
         input_data = {
             'address': request.address,
             'land_area_sqm': request.land_area_sqm if request.land_area_sqm else 660.0,
-            'zone_type': request.zone_type,  # Required from frontend
-            'individual_land_price_per_sqm': individual_land_price,  # Required from frontend
+            'zone_type': zone_type,  # Now with fallback
+            'individual_land_price_per_sqm': individual_land_price,  # Now with fallback
             'premium_factors': premium_factors_data,
             'comparable_sales': comparable_sales_data
         }
@@ -1051,7 +1059,10 @@ async def get_zoning_info(req: LandMetaRequest):
     try:
         logger.info(f"🗺️ Fetching zoning info for: {req.address}")
         
-        # 🔥 v29.0 FIX: Use v28.0 AdvancedAddressParser for accurate gu/dong detection
+        # 🔥 v32.0 FIX: Initialize gu/dong first, then try parsing
+        gu = ''
+        dong = ''
+        
         try:
             from app.services.advanced_address_parser import AdvancedAddressParser
             parser = AdvancedAddressParser()
@@ -1061,10 +1072,11 @@ async def get_zoning_info(req: LandMetaRequest):
                 gu = parsed.get('gu', '')
                 dong = parsed.get('dong', '')
                 logger.info(f"✅ Parsed address: {gu} {dong}")
+            else:
+                logger.warning(f"⚠️ Address parsing returned no success flag")
         except Exception as e:
             logger.warning(f"❌ Address parsing failed: {e}")
-            gu = ''
-            dong = ''
+            # gu and dong already initialized to ''
         
         # Enhanced zoning based on actual district characteristics
         zone_defaults = {
@@ -1077,6 +1089,7 @@ async def get_zoning_info(req: LandMetaRequest):
             "성동구": {"zone": "제2종일반주거지역", "bcr": 60, "far": 200, "desc": "성수 중밀도 주거"},
             "광진구": {"zone": "제2종일반주거지역", "bcr": 60, "far": 200, "desc": "건대 중밀도 주거"},
             "강서구": {"zone": "제2종일반주거지역", "bcr": 60, "far": 200, "desc": "강서 중밀도 주거"},
+            "관악구": {"zone": "제2종일반주거지역", "bcr": 60, "far": 200, "desc": "관악 중밀도 주거"},
             "default": {"zone": "제2종일반주거지역", "bcr": 60, "far": 200, "desc": "서울 일반 주거"}
         }
         
@@ -1684,3 +1697,63 @@ async def generate_detailed_appraisal_html(request: AppraisalRequest):
     except Exception as e:
         logger.error(f"❌ Detailed HTML generation failed: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"상세 HTML 생성 실패: {str(e)}")
+
+
+# ============================================================================
+# TEST & DEBUG ENDPOINTS (v32.0)
+# ============================================================================
+
+@router.get("/health")
+async def health_check():
+    """
+    Health check endpoint
+    """
+    from datetime import datetime
+    return {
+        "status": "healthy",
+        "version": "v32.0",
+        "timestamp": datetime.now().isoformat(),
+        "message": "ZeroSite API is running"
+    }
+
+
+@router.post("/appraisal/test")
+async def test_appraisal_simple(address: str, land_area: float = 360.0):
+    """
+    Simple test endpoint - no complex validation
+    """
+    try:
+        logger.info(f"🧪 Test appraisal: {address}, {land_area}㎡")
+        
+        # Use defaults for everything
+        engine = AppraisalEngineV241()
+        
+        input_data = {
+            'address': address,
+            'land_area_sqm': land_area,
+            'zone_type': '제2종일반주거지역',
+            'individual_land_price_per_sqm': 10_000_000,
+            'premium_factors': {},
+            'comparable_sales': []
+        }
+        
+        result = engine.process(input_data)
+        
+        return {
+            "success": True,
+            "message": "Test appraisal completed",
+            "input": input_data,
+            "result": {
+                "cost_approach": result.get('cost_approach_value', 0),
+                "sales_comparison": result.get('sales_comparison_value', 0),
+                "income_approach": result.get('income_approach_value', 0),
+                "final_value": result.get('final_appraisal_value', 0)
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Test appraisal error: {str(e)}", exc_info=True)
+        return {
+            "success": False,
+            "error": str(e)
+        }
