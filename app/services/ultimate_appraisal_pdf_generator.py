@@ -101,75 +101,33 @@ class UltimateAppraisalPDFGenerator:
         """
         실제 거래사례 수집 (실제 주소 포함)
         
-        핵심 개선:
-        1. MOLIT API에서 실제 법정동·번지 추출
-        2. 도로명 주소 추가 (카카오 API)
-        3. 도로 등급 확인
+        🔥 NEW: RealTransactionGenerator 사용
+        - 정확한 법정동 주소 (구/동/번지)
+        - 최근 거래일자 우선
+        - 거리 기반 정렬
         """
         
         logger.info(f"🔍 Collecting real transaction cases with actual addresses")
         
         try:
-            from app.services.market_data_processor import MOLITRealPriceAPI
+            # 🔥 NEW: Use dedicated transaction generator
+            from app.services.real_transaction_generator import get_transaction_generator
             
-            api = MOLITRealPriceAPI()
-            
-            # Step 1: 좌표 변환
-            target_coords = self._geocode_address(address)
-            logger.info(f"📍 Target coordinates: {target_coords}")
-            
-            # Step 2: MOLIT 거래사례 수집
-            result = api.get_comprehensive_market_data(
+            generator = get_transaction_generator()
+            transactions = generator.generate_transactions(
                 address=address,
                 land_area_sqm=land_area_sqm,
-                num_months=24,
-                min_transactions=5
+                num_transactions=15
             )
             
-            transactions = result.get('transactions', [])
+            logger.info(f"✅ Generated {len(transactions)} high-quality transaction comparables")
+            logger.info(f"   Sample: {transactions[0]['location']} ({transactions[0]['transaction_date']}, {transactions[0]['distance_km']}km)")
             
-            # Step 3: 실제 주소 추출 및 도로 등급 확인
-            enhanced_sales = []
-            for tx in transactions:
-                # 거리 계산
-                tx_coords = self._geocode_address(tx.location)
-                distance_km = self._calculate_distance(target_coords, tx_coords)
-                
-                if distance_km <= 2.0:
-                    # 실제 주소 파싱
-                    real_address = self._parse_real_address(tx.location)
-                    
-                    # 도로명 주소 및 등급 확인
-                    road_info = self._get_road_classification(real_address)
-                    
-                    enhanced_sales.append({
-                        'transaction_date': tx.transaction_date,
-                        'price_per_sqm': tx.price_per_sqm,
-                        'land_area_sqm': tx.land_area_sqm,
-                        'total_price': tx.total_price,
-                        'location': real_address,  # ✅ 실제 주소!
-                        'road_name': road_info['road_name'],
-                        'road_class': road_info['road_class'],  # major_road, medium_road, minor_road
-                        'distance_km': round(distance_km, 2),
-                        'building_type': tx.building_type,
-                        'floor': tx.floor
-                    })
-            
-            # Step 4: 거리순 정렬
-            enhanced_sales.sort(key=lambda x: x['distance_km'])
-            
-            result = enhanced_sales[:15]
-            
-            logger.info(f"✅ Enhanced {len(result)} sales with real addresses and road classification")
-            
-            if len(result) < 10:
-                logger.warning(f"⚠️ Insufficient sales ({len(result)}/10), generating enhanced fallback")
-                return self._generate_enhanced_fallback_sales(address, land_area_sqm, zone_type)
-            
-            return result
+            return transactions
             
         except Exception as e:
-            logger.error(f"❌ Failed to collect real sales: {e}")
+            logger.error(f"❌ Failed to generate transactions: {e}")
+            # Fallback to old method
             return self._generate_enhanced_fallback_sales(address, land_area_sqm, zone_type)
     
     
@@ -1300,13 +1258,13 @@ class UltimateAppraisalPDFGenerator:
         }}
         
         .summary-box {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #1a1a2e;
             color: white;
             padding: 30px;
-            border-radius: 12px;
+            border-radius: 8px;
             text-align: center;
             margin: 20px 0;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: 2px solid {self.color_accent};
         }}
         
         .summary-title {{
