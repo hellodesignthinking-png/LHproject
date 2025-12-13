@@ -1440,15 +1440,19 @@ async def generate_detailed_appraisal_pdf(request: AppraisalRequest):
         }
         
         # ========================================
-        # Step 5: Generate detailed PDF using Ultimate generator
+        # Step 5: Generate detailed PDF using COMPLETE generator (v25.0)
         # ========================================
-        pdf_generator = UltimateAppraisalPDFGenerator()
+        from app.services.complete_appraisal_pdf_generator import get_pdf_generator
+        
+        pdf_generator = get_pdf_generator()
         
         # Add address info
         appraisal_result['address'] = request.address
         appraisal_result['land_area_sqm'] = request.land_area_sqm
         appraisal_result['zone_type'] = request.zone_type
         appraisal_result['individual_land_price'] = individual_land_price
+        
+        logger.info("🎯 Using CompleteAppraisalPDFGenerator v25.0")
         
         # Generate HTML first (for debugging)
         html_content = pdf_generator.generate_pdf_html(
