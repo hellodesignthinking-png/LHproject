@@ -58,6 +58,9 @@ from app.api.endpoints.mvp_analyze import router as mvp_router
 # ✨ v13.0: Import Report Engine v13 router with v15 Phase 1 enhancements
 from app.routers.report_v13 import router as report_v13_router
 
+# ✨ v24.1: Import ZeroSite v24.1 Complete API Router
+from app.api.v24_1.api_router import router as api_v241_router
+
 # ✨ v11.0 ENHANCEMENTS: Import middleware and utilities
 from app.middleware.rate_limiter import RateLimiter, RateLimitConfig
 from app.middleware.cache_manager import cache_manager, start_cache_cleanup_task
@@ -160,6 +163,9 @@ app.include_router(mvp_router)
 # ✨ v13.0: Include Report Engine v13 with v15 Phase 1 Decision Engine
 app.include_router(report_v13_router)
 
+# ✨ v24.1: Include ZeroSite v24.1 Complete API
+app.include_router(api_v241_router)
+
 # 정적 파일 서빙
 static_path = Path(__file__).parent.parent / "static"
 if static_path.exists():
@@ -170,12 +176,17 @@ frontend_v9_path = Path(__file__).parent.parent / "frontend_v9"
 if frontend_v9_path.exists():
     app.mount("/v9", StaticFiles(directory=str(frontend_v9_path), html=True), name="frontend_v9")
 
+# ✨ v24.1: Mount public directory for Entry OS screen
+public_path = Path(__file__).parent.parent / "public"
+if public_path.exists():
+    app.mount("/public", StaticFiles(directory=str(public_path), html=True), name="public")
+
 
 @app.get("/")
 async def root():
-    """메인 페이지 - Admin Dashboard로 리다이렉트 (v11.0 HYBRID v2)"""
-    # v11.0 HYBRID v2 Admin Dashboard로 리다이렉트
-    return RedirectResponse(url="/static/admin_dashboard.html", status_code=302)
+    """메인 페이지 - ZeroSite v24.1 Entry OS Screen"""
+    # v24.1 Entry OS Screen으로 리다이렉트
+    return RedirectResponse(url="/public/index.html", status_code=302)
 
 
 @app.get("/v11")

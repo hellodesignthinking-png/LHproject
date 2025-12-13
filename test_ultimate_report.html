@@ -1,0 +1,1681 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>토지 감정평가 보고서 - Antenna Holdings</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+            font-size: 11pt;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            margin: 0 auto 10mm;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            page-break-after: always;
+            position: relative;
+        }
+        
+        @media print {
+            body {
+                background: white;
+            }
+            .page {
+                width: 100%;
+                min-height: 100vh;
+                margin: 0;
+                box-shadow: none;
+                page-break-after: always;
+            }
+        }
+        
+        /* Cover Page */
+        .cover-page {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+        }
+        
+        .cover-logo {
+            margin-bottom: 50px;
+        }
+        
+        .logo-text {
+            font-size: 36pt;
+            font-weight: 700;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+        }
+        
+        .logo-subtitle {
+            font-size: 14pt;
+            font-weight: 300;
+            letter-spacing: 2px;
+            opacity: 0.9;
+        }
+        
+        .cover-title {
+            font-size: 32pt;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .cover-subtitle {
+            font-size: 18pt;
+            font-weight: 300;
+            margin-bottom: 60px;
+            opacity: 0.9;
+        }
+        
+        .cover-info {
+            width: 80%;
+            max-width: 500px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: 500;
+            opacity: 0.8;
+        }
+        
+        .info-value {
+            font-weight: 600;
+            text-align: right;
+        }
+        
+        .cover-footer {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 10pt;
+            opacity: 0.8;
+        }
+        
+        .company-name {
+            font-size: 14pt;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .company-name-en {
+            font-size: 11pt;
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+        
+        .company-address, .company-contact {
+            font-size: 9pt;
+            margin-top: 5px;
+        }
+        
+        /* Typography */
+        .section-title {
+            font-size: 20pt;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #e94560;
+        }
+        
+        .subsection-title {
+            font-size: 14pt;
+            font-weight: 600;
+            color: #16213e;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        
+        /* Summary Box */
+        .summary-box {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 25px 0;
+        }
+        
+        .summary-title {
+            font-size: 14pt;
+            font-weight: 300;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+        
+        .final-value {
+            font-size: 36pt;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .value-details {
+            font-size: 12pt;
+            font-weight: 300;
+            opacity: 0.9;
+        }
+        
+        .separator {
+            margin: 0 15px;
+        }
+        
+        /* Confidence Badge */
+        .confidence-badge {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 12pt;
+            font-weight: 600;
+            color: white;
+            margin: 20px 0;
+        }
+        
+        .confidence-summary {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .confidence-badge-large {
+            display: inline-block;
+            padding: 20px 40px;
+            border-radius: 50px;
+            font-size: 18pt;
+            font-weight: 600;
+            color: white;
+        }
+        
+        /* Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 10pt;
+        }
+        
+        .data-table th {
+            background: #1a1a2e;
+            color: white;
+            padding: 12px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .data-table td {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+        }
+        
+        .data-table tbody tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        .data-table tbody tr:hover {
+            background: #f0f0f0;
+        }
+        
+        .highlight-row {
+            background: #fff3cd !important;
+            font-weight: 600;
+        }
+        
+        .small-text {
+            font-size: 9pt;
+        }
+        
+        /* Lists */
+        .key-findings {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+        
+        .key-findings li {
+            margin: 10px 0;
+            line-height: 1.7;
+        }
+        
+        .legal-list {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .legal-list li {
+            margin: 12px 0;
+            line-height: 1.8;
+        }
+        
+        /* Boxes */
+        .note-box, .disclaimer-box, .warning-box, .data-source-box, .formula-box, .calculation-box, .contact-box, .footer-box {
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        
+        .note-box {
+            background: #e7f3ff;
+            border-color: #2196f3;
+        }
+        
+        .disclaimer-box {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+        
+        .warning-box {
+            background: #ffebee;
+            border-color: #f44336;
+        }
+        
+        .data-source-box {
+            background: #f1f8e9;
+            border-color: #8bc34a;
+            font-size: 9pt;
+        }
+        
+        .formula-box {
+            background: #f3e5f5;
+            border-color: #9c27b0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .calculation-box {
+            background: #e0f2f1;
+            border-color: #009688;
+        }
+        
+        .contact-box {
+            background: #fafafa;
+            border-color: #1a1a2e;
+            text-align: center;
+        }
+        
+        .footer-box {
+            background: #fafafa;
+            border-color: #ccc;
+        }
+        
+        /* Badges */
+        .badge-high {
+            background: #06d6a0;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+        
+        .badge-medium {
+            background: #f77f00;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+        
+        .badge-low {
+            background: #e94560;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+        
+        /* Final Result Box */
+        .final-result-box {
+            background: linear-gradient(135deg, #e94560 0%, #f77f00 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 25px 0;
+        }
+        
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .result-row:last-child {
+            border-bottom: none;
+        }
+        
+        .result-label {
+            font-size: 14pt;
+            font-weight: 400;
+        }
+        
+        .result-value {
+            font-size: 16pt;
+            font-weight: 700;
+        }
+        
+        /* Utility */
+        .highlight-value {
+            color: #e94560;
+            font-weight: 700;
+        }
+        
+        .data-source {
+            font-size: 8pt;
+            color: #666;
+            font-style: italic;
+        }
+        
+        /* Page Counter */
+        @page {
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+            }
+        }
+    </style>
+</head>
+<body>
+    
+        <div class="page cover-page">
+            <div class="cover-content">
+                <div class="cover-logo">
+                    <div class="logo-text">ANTENNA HOLDINGS</div>
+                    <div class="logo-subtitle">Professional Appraisal Report</div>
+                </div>
+                
+                <h1 class="cover-title">토지 감정평가 보고서</h1>
+                <h2 class="cover-subtitle">Land Appraisal Report</h2>
+                
+                <div class="cover-info">
+                    <div class="info-row">
+                        <span class="info-label">보고서 번호</span>
+                        <span class="info-value">ANTENNA-20251213-0209</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">평가 대상</span>
+                        <span class="info-value">서울시 마포구 월드컵북로 120</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">토지면적</span>
+                        <span class="info-value">660.00 ㎡ (199.65 평)</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">용도지역</span>
+                        <span class="info-value">제3종일반주거지역</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">평가기준일</span>
+                        <span class="info-value">2025년 12월 13일</span>
+                    </div>
+                </div>
+                
+                <div class="cover-footer">
+                    <div class="company-name">안테나홀딩스 주식회사</div>
+                    <div class="company-name-en">Antenna Holdings Co., Ltd.</div>
+                    <div class="company-address">서울특별시 강남구 테헤란로 427 위워크타워</div>
+                    <div class="company-contact">Tel: 02-6952-7000 | Email: appraisal@antennaholdings.com</div>
+                </div>
+            </div>
+        </div>
+        
+
+
+        <div class="section-page">
+            <h1 class="section-title">평가 개요 (Executive Summary)</h1>
+            
+            <div class="summary-box">
+                <h2 class="summary-title">최종 평가액</h2>
+                <div class="final-value">67.65 억원</div>
+                <div class="value-details">
+                    <span>㎡당 10,249,838 원</span>
+                    <span class="separator">|</span>
+                    <span style="color:#FFD700; font-weight:700; font-size:1.2em;">평당 33,883,914 원</span>
+                </div>
+            </div>
+            
+            <div class="confidence-badge" style="background: #f77f00; margin:20px 0;">
+                신뢰도: MEDIUM
+            </div>
+            
+            <div style="background:#f8f9fa; padding:20px; border-radius:8px; margin:20px 0;">
+                <h3 style="margin:0 0 15px 0; font-size:14pt;">토지 정보</h3>
+                <table style="width:100%; border:none;">
+                    <tr style="border:none;">
+                        <th style="width:30%; text-align:left; border:none; background:none; font-weight:600;">토지면적</th>
+                        <td style="border:none; text-align:left;">
+                            <strong>660.00 ㎡</strong> 
+                            (<strong style="color:#e94560; font-size:1.1em;">199.65 평</strong>)
+                        </td>
+                    </tr>
+                    <tr style="border:none;">
+                        <th style="text-align:left; border:none; background:none; font-weight:600;">용도지역</th>
+                        <td style="border:none; text-align:left;">제3종일반주거지역</td>
+                    </tr>
+                    <tr style="border:none;">
+                        <th style="text-align:left; border:none; background:none; font-weight:600;">개별공시지가</th>
+                        <td style="border:none; text-align:left;">
+                            7,000,000 원/㎡
+                            (23,140,600 원/평)
+                        </td>
+                    </tr>
+                    <tr style="border:none;">
+                        <th style="text-align:left; border:none; background:none; font-weight:600;">시장 반영률</th>
+                        <td style="border:none; text-align:left;">
+                            <strong>76%</strong>
+                            <small style="color:#666;"> (개별공시지가 ÷ 실거래가)</small>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            
+            <h3 class="subsection-title">감정평가 3방식 종합</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>평가방식</th>
+                        <th>평가액 (억원)</th>
+                        <th>평당 가격</th>
+                        <th>가중치</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>원가법 (Cost Approach)</td>
+                        <td>46.20</td>
+                        <td>23,140,600 원</td>
+                        <td>40%</td>
+                    </tr>
+                    <tr>
+                        <td>거래사례비교법 (Sales Comparison)</td>
+                        <td>60.99</td>
+                        <td style="font-weight:700; color:#1565c0;">30,546,229 원</td>
+                        <td><strong>40%</strong></td>
+                    </tr>
+                    <tr>
+                        <td>수익환원법 (Income Approach)</td>
+                        <td>67.50</td>
+                        <td>33,809,318 원</td>
+                        <td>20%</td>
+                    </tr>
+                    <tr style="background:#fff3cd; font-weight:700;">
+                        <td>최종 평가액</td>
+                        <td>67.65</td>
+                        <td style="color:#e94560; font-size:1.1em;">33,883,914 원</td>
+                        <td>100%</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            
+            
+            <h3 class="subsection-title">주요 발견 사항</h3>
+            <ul class="key-findings">
+                <li>총 <strong>12개</strong>의 실거래 사례를 수집하여 분석 (2km 반경, 최근 2년)</li>
+                <li>모든 거래사례에 <strong>실제 법정동·번지</strong> 및 도로명 주소 확인</li>
+                <li>도로 등급별 가중치 적용: 대로 +20%, 중로 +10%, 소로 0%</li>
+                <li>거래사례 평균 단가: <strong>9,240,193 원/㎡</strong> 
+                    (<strong>30,546,229 원/평</strong>)</li>
+                <li>용도지역 프리미엄: <strong>20%</strong> 추가 반영</li>
+            </ul>
+            
+            <div class="disclaimer-box">
+                <h4>유의사항</h4>
+                <p>본 감정평가는 참고용으로 작성되었으며, 공식 감정평가서가 아닙니다. 
+                실제 거래 시 공인 감정평가사의 정식 평가가 필요합니다.</p>
+            </div>
+        </div>
+        
+
+
+        <div class="page">
+            <h1 class="section-title">대상 부동산 개요</h1>
+            
+            <h3 class="subsection-title">기본 정보</h3>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 30%;">항목</th>
+                    <th style="width: 70%;">내용</th>
+                </tr>
+                <tr>
+                    <td>소재지</td>
+                    <td>서울시 마포구 월드컵북로 120</td>
+                </tr>
+                <tr>
+                    <td>토지면적</td>
+                    <td>660.00 ㎡ (199.65 평)</td>
+                </tr>
+                <tr>
+                    <td>용도지역</td>
+                    <td>제3종일반주거지역</td>
+                </tr>
+                <tr>
+                    <td>개별공시지가</td>
+                    <td>7,000,000 원/㎡<br>
+                    <span class="data-source">출처: 국토교통부 개별공시지가</span></td>
+                </tr>
+                <tr>
+                    <td>평가기준일</td>
+                    <td>2025년 12월 13일</td>
+                </tr>
+            </table>
+            
+            <h3 class="subsection-title">토지 특성</h3>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 30%;">항목</th>
+                    <th style="width: 70%;">내용</th>
+                </tr>
+                <tr>
+                    <td>지목</td>
+                    <td>대 (토지만 평가, 건물 없음)</td>
+                </tr>
+                <tr>
+                    <td>지형</td>
+                    <td>평지 (추정)</td>
+                </tr>
+                <tr>
+                    <td>도로 접면</td>
+                    <td>일반도로 접면 (추정)</td>
+                </tr>
+                <tr>
+                    <td>토지 이용 현황</td>
+                    <td>나대지 또는 기존 건물 철거 예정지</td>
+                </tr>
+            </table>
+            
+            <div class="note-box">
+                <h4>평가 목적</h4>
+                <p>본 감정평가는 토지의 현재 시장 가치를 평가하기 위한 것으로, 
+                개발 가능성 및 용도지역 특성을 고려하여 산정되었습니다.</p>
+            </div>
+        </div>
+        
+
+
+        <div class="page">
+            <h1 class="section-title">시장 분석 (Market Analysis)</h1>
+            
+            <h3 class="subsection-title">지역 부동산 시장 동향</h3>
+            <p>
+            대상 부동산이 위치한 <strong>서울시</strong> 지역은 
+            최근 2년간 안정적인 부동산 시장을 유지하고 있습니다.
+            </p>
+            
+            <h3 class="subsection-title">거래 동향</h3>
+            <ul class="key-findings">
+                <li><strong>거래량:</strong> 최근 2년간 주변 2km 반경 내 토지 거래 활발</li>
+                <li><strong>가격 추세:</strong> 연평균 약 4% 상승세 (추정)</li>
+                <li><strong>용도지역:</strong> 제3종일반주거지역 지역으로 개발 가능성 존재</li>
+            </ul>
+            
+            <h3 class="subsection-title">데이터 출처</h3>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 40%;">항목</th>
+                    <th style="width: 60%;">출처</th>
+                </tr>
+                <tr>
+                    <td>실거래가 정보</td>
+                    <td>국토교통부 실거래가 공개시스템 (MOLIT API)</td>
+                </tr>
+                <tr>
+                    <td>개별공시지가</td>
+                    <td>국토교통부 공시지가 정보시스템</td>
+                </tr>
+                <tr>
+                    <td>좌표 정보</td>
+                    <td>카카오 맵 API (Kakao REST API)</td>
+                </tr>
+                <tr>
+                    <td>거리 계산</td>
+                    <td>Haversine Formula (지구 곡률 반영)</td>
+                </tr>
+            </table>
+            
+            <div class="note-box">
+                <h4>분석 기준</h4>
+                <p>본 시장 분석은 국토교통부 실거래가 공개시스템 및 카카오 맵 API를 활용하여 
+                주변 2km 반경 내 최근 2년간의 거래사례를 수집·분석한 결과입니다.</p>
+            </div>
+        </div>
+        
+
+
+        <div class="section-page">
+            <h1 class="section-title">거래사례 비교표</h1>
+            
+            <p style="margin:15px 0;">
+                주변 2km 반경 내 최근 2년간 유사 면적(±30%) 토지 거래사례 <strong>12건</strong>을 수집하였습니다.
+            </p>
+            
+            <table class="comparable-sales-table data-table">
+                <thead>
+                    <tr>
+                        <th style="width:6%;">번호</th>
+                        <th style="width:12%;">거래일</th>
+                        <th style="width:30%;">실제 주소 및 도로</th>
+                        <th style="width:8%;">거리<br>(km)</th>
+                        <th style="width:14%;">면적</th>
+                        <th style="width:20%;">단가</th>
+                        <th style="width:10%;">총액<br>(억원)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+            <tr>
+                <td>1</td>
+                <td>2025-08-21</td>
+                <td style="text-align:left; padding-left:8px; font-size:7.5pt; line-height:1.3;">
+                    서울 마포구 합정동 965번지<br>
+                    <small style="color:#666;">샘플길 <span style="background:#f77f00; color:white; padding:2px 6px; border-radius:3px; font-size:7pt;">중로</span></small>
+                </td>
+                <td>0.32</td>
+                <td>763.00 ㎡<br><small style='color:#666;'>(230.81 평)</small></td>
+                <td class="price-cell">8,310,626 원/㎡<br><small style='color:#666;'>(27,473,267 원/평)</small></td>
+                <td>63.41</td>
+            </tr>
+            
+            <tr>
+                <td>2</td>
+                <td>2025-02-13</td>
+                <td style="text-align:left; padding-left:8px; font-size:7.5pt; line-height:1.3;">
+                    서울 마포구 상암동 931번지<br>
+                    <small style="color:#666;">샘플대로 <span style="background:#e94560; color:white; padding:2px 6px; border-radius:3px; font-size:7pt;">대로</span></small>
+                </td>
+                <td>0.35</td>
+                <td>678.00 ㎡<br><small style='color:#666;'>(205.09 평)</small></td>
+                <td class="price-cell">10,634,743 원/㎡<br><small style='color:#666;'>(35,156,333 원/평)</small></td>
+                <td>72.10</td>
+            </tr>
+            
+            <tr>
+                <td>3</td>
+                <td>2024-09-04</td>
+                <td style="text-align:left; padding-left:8px; font-size:7.5pt; line-height:1.3;">
+                    서울 마포구 서교동 852번지<br>
+                    <small style="color:#666;">샘플길 <span style="background:#f77f00; color:white; padding:2px 6px; border-radius:3px; font-size:7pt;">중로</span></small>
+                </td>
+                <td>0.54</td>
+                <td>578.00 ㎡<br><small style='color:#666;'>(174.84 평)</small></td>
+                <td class="price-cell">9,265,722 원/㎡<br><small style='color:#666;'>(30,630,624 원/평)</small></td>
+                <td>53.56</td>
+            </tr>
+            
+            <tr>
+                <td>4</td>
+                <td>2025-10-22</td>
+                <td style="text-align:left; padding-left:8px; font-size:7.5pt; line-height:1.3;">
+                    서울 마포구 서교동 437번지<br>
+                    <small style="color:#666;">테스트길 <span style="background:#f77f00; color:white; padding:2px 6px; border-radius:3px; font-size:7pt;">중로</span></small>
+                </td>
+                <td>0.89</td>
+                <td>652.00 ㎡<br><small style='color:#666;'>(197.23 평)</small></td>
+                <td class="price-cell">10,449,676 원/㎡<br><small style='color:#666;'>(34,544,539 원/평)</small></td>
+                <td>68.13</td>
+            </tr>
+            
+            <tr>
+                <td>5</td>
+                <td>2024-06-01</td>
+                <td style="text-align:left; padding-left:8px; font-size:7.5pt; line-height:1.3;">
+                    서울 마포구 연남동 712번지<br>
+                    <small style="color:#666;">테스트소로 <span style="background:#999; color:white; padding:2px 6px; border-radius:3px; font-size:7pt;">소로</span></small>
+                </td>
+                <td>1.04</td>
+                <td>716.00 ㎡<br><small style='color:#666;'>(216.59 평)</small></td>
+                <td class="price-cell">9,177,176 원/㎡<br><small style='color:#666;'>(30,337,908 원/평)</small></td>
+                <td>65.71</td>
+            </tr>
+            
+            <tr>
+                <td>6</td>
+                <td>2024-10-17</td>
+                <td style="text-align:left; padding-left:8px; font-size:7.5pt; line-height:1.3;">
+                    서울 마포구 상암동 973번지<br>
+                    <small style="color:#666;">샘플대로 <span style="background:#e94560; color:white; padding:2px 6px; border-radius:3px; font-size:7pt;">대로</span></small>
+                </td>
+                <td>1.11</td>
+                <td>707.00 ㎡<br><small style='color:#666;'>(213.87 평)</small></td>
+                <td class="price-cell">9,261,142 원/㎡<br><small style='color:#666;'>(30,615,483 원/평)</small></td>
+                <td>65.48</td>
+            </tr>
+            
+            <tr>
+                <td>7</td>
+                <td>2024-03-12</td>
+                <td style="text-align:left; padding-left:8px; font-size:7.5pt; line-height:1.3;">
+                    서울 마포구 공덕동 268번지<br>
+                    <small style="color:#666;">샘플길 <span style="background:#f77f00; color:white; padding:2px 6px; border-radius:3px; font-size:7pt;">중로</span></small>
+                </td>
+                <td>1.31</td>
+                <td>605.00 ㎡<br><small style='color:#666;'>(183.01 평)</small></td>
+                <td class="price-cell">9,317,046 원/㎡<br><small style='color:#666;'>(30,800,291 원/평)</small></td>
+                <td>56.37</td>
+            </tr>
+            
+            <tr>
+                <td>8</td>
+                <td>2024-07-10</td>
+                <td style="text-align:left; padding-left:8px; font-size:7.5pt; line-height:1.3;">
+                    서울 마포구 연남동 248번지<br>
+                    <small style="color:#666;">테스트길 <span style="background:#f77f00; color:white; padding:2px 6px; border-radius:3px; font-size:7pt;">중로</span></small>
+                </td>
+                <td>1.35</td>
+                <td>594.00 ㎡<br><small style='color:#666;'>(179.68 평)</small></td>
+                <td class="price-cell">9,499,260 원/㎡<br><small style='color:#666;'>(31,402,654 원/평)</small></td>
+                <td>56.43</td>
+            </tr>
+            
+            <tr>
+                <td>9</td>
+                <td>2025-08-06</td>
+                <td style="text-align:left; padding-left:8px; font-size:7.5pt; line-height:1.3;">
+                    서울 마포구 서교동 876번지<br>
+                    <small style="color:#666;">샘플로 <span style="background:#e94560; color:white; padding:2px 6px; border-radius:3px; font-size:7pt;">대로</span></small>
+                </td>
+                <td>1.47</td>
+                <td>651.00 ㎡<br><small style='color:#666;'>(196.93 평)</small></td>
+                <td class="price-cell">9,367,327 원/㎡<br><small style='color:#666;'>(30,966,510 원/평)</small></td>
+                <td>60.98</td>
+            </tr>
+            
+            <tr>
+                <td>10</td>
+                <td>2025-11-09</td>
+                <td style="text-align:left; padding-left:8px; font-size:7.5pt; line-height:1.3;">
+                    서울 마포구 망원동 441번지<br>
+                    <small style="color:#666;">샘플소로 <span style="background:#999; color:white; padding:2px 6px; border-radius:3px; font-size:7pt;">소로</span></small>
+                </td>
+                <td>1.62</td>
+                <td>680.00 ㎡<br><small style='color:#666;'>(205.70 평)</small></td>
+                <td class="price-cell">8,519,445 원/㎡<br><small style='color:#666;'>(28,163,581 원/평)</small></td>
+                <td>57.93</td>
+            </tr>
+            
+            <tr>
+                <td>11</td>
+                <td>2025-07-18</td>
+                <td style="text-align:left; padding-left:8px; font-size:7.5pt; line-height:1.3;">
+                    서울 마포구 합정동 275번지<br>
+                    <small style="color:#666;">테스트로 <span style="background:#e94560; color:white; padding:2px 6px; border-radius:3px; font-size:7pt;">대로</span></small>
+                </td>
+                <td>1.69</td>
+                <td>642.00 ㎡<br><small style='color:#666;'>(194.20 평)</small></td>
+                <td class="price-cell">8,808,245 원/㎡<br><small style='color:#666;'>(29,118,296 원/평)</small></td>
+                <td>56.55</td>
+            </tr>
+            
+            <tr>
+                <td>12</td>
+                <td>2025-08-03</td>
+                <td style="text-align:left; padding-left:8px; font-size:7.5pt; line-height:1.3;">
+                    서울 마포구 서교동 498번지<br>
+                    <small style="color:#666;">샘플대로 <span style="background:#e94560; color:white; padding:2px 6px; border-radius:3px; font-size:7pt;">대로</span></small>
+                </td>
+                <td>1.75</td>
+                <td>740.00 ㎡<br><small style='color:#666;'>(223.85 평)</small></td>
+                <td class="price-cell">8,271,905 원/㎡<br><small style='color:#666;'>(27,345,264 원/평)</small></td>
+                <td>61.21</td>
+            </tr>
+            
+                </tbody>
+            </table>
+            
+            <div class="data-source-box">
+                <strong>✅ 데이터 출처:</strong><br>
+                • 실제 주소: 국토교통부 실거래가 공개시스템 (MOLIT API)<br>
+                • 도로명 및 도로 등급: 카카오 맵 API 주소 검색<br>
+                • 거리 계산: Haversine Formula (지구 곡률 반영)<br>
+                • 도로 가중치: 대로 +20%, 중로 +10%, 소로 0%
+            </div>
+        </div>
+        
+
+
+        <div class="page">
+            <h1 class="section-title">거래사례비교법 상세</h1>
+            
+            <h3 class="subsection-title">평가 방법 설명</h3>
+            <p>
+            거래사례비교법은 대상 부동산과 유사한 조건의 거래사례를 수집하여, 
+            시점·위치·개별요인을 보정한 후 가중평균 단가를 산정하는 방법입니다.
+            </p>
+            
+            <div class="formula-box">
+                <strong>계산식:</strong><br>
+                평가액 = [Σ(거래사례 단가 × 시점보정 × 위치보정 × 개별보정 × 가중치) / Σ가중치] × 대상 토지면적
+            </div>
+            
+            <h3 class="subsection-title">보정 요인</h3>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 25%;">보정 요인</th>
+                    <th style="width: 75%;">적용 기준</th>
+                </tr>
+                <tr>
+                    <td>시점 보정</td>
+                    <td>• 3개월 이내: 1.00<br>
+                        • 6개월 이내: 1.02 (연 4% 상승 가정)<br>
+                        • 1년 이내: 1.04<br>
+                        • 2년 이내: 1.08</td>
+                </tr>
+                <tr>
+                    <td>위치 보정</td>
+                    <td>• 0.5km 이내: 1.00<br>
+                        • 1.0km 이내: 0.98<br>
+                        • 2.0km 이내: 0.95</td>
+                </tr>
+                <tr>
+                    <td>개별 보정</td>
+                    <td>• 지형, 도로 접면, 토지 모양 등 고려<br>
+                        • 기본값: 1.00 (표준 조건)</td>
+                </tr>
+            </table>
+            
+            <h3 class="subsection-title">거래사례별 보정 계산</h3>
+            <table class="data-table small-text">
+                <thead>
+                    <tr>
+                        <th>번호</th>
+                        <th>거래일</th>
+                        <th>원단가<br>(원/㎡)</th>
+                        <th>시점<br>보정</th>
+                        <th>위치<br>보정</th>
+                        <th>개별<br>보정</th>
+                        <th>보정단가<br>(원/㎡)</th>
+                        <th>가중치</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+            <tr>
+                <td>1</td>
+                <td>2025-08-21</td>
+                <td>8,310,626</td>
+                <td>1.020</td>
+                <td>1.100</td>
+                <td>1.000</td>
+                <td>9,324,522</td>
+                <td>2.381</td>
+            </tr>
+            
+            <tr>
+                <td>2</td>
+                <td>2025-02-13</td>
+                <td>10,634,743</td>
+                <td>1.040</td>
+                <td>1.200</td>
+                <td>1.000</td>
+                <td>13,272,159</td>
+                <td>2.222</td>
+            </tr>
+            
+            <tr>
+                <td>3</td>
+                <td>2024-09-04</td>
+                <td>9,265,722</td>
+                <td>1.080</td>
+                <td>1.078</td>
+                <td>1.000</td>
+                <td>10,787,524</td>
+                <td>1.562</td>
+            </tr>
+            
+            <tr>
+                <td>4</td>
+                <td>2025-10-22</td>
+                <td>10,449,676</td>
+                <td>1.000</td>
+                <td>1.078</td>
+                <td>1.000</td>
+                <td>11,264,750</td>
+                <td>1.010</td>
+            </tr>
+            
+            <tr>
+                <td>5</td>
+                <td>2024-06-01</td>
+                <td>9,177,176</td>
+                <td>1.080</td>
+                <td>0.950</td>
+                <td>1.000</td>
+                <td>9,415,782</td>
+                <td>0.877</td>
+            </tr>
+            
+            <tr>
+                <td>6</td>
+                <td>2024-10-17</td>
+                <td>9,261,142</td>
+                <td>1.080</td>
+                <td>1.140</td>
+                <td>1.000</td>
+                <td>11,402,318</td>
+                <td>0.826</td>
+            </tr>
+            
+            <tr>
+                <td>7</td>
+                <td>2024-03-12</td>
+                <td>9,317,046</td>
+                <td>1.080</td>
+                <td>1.045</td>
+                <td>1.000</td>
+                <td>10,515,218</td>
+                <td>0.709</td>
+            </tr>
+            
+            <tr>
+                <td>8</td>
+                <td>2024-07-10</td>
+                <td>9,499,260</td>
+                <td>1.080</td>
+                <td>1.045</td>
+                <td>1.000</td>
+                <td>10,720,864</td>
+                <td>0.690</td>
+            </tr>
+            
+            <tr>
+                <td>9</td>
+                <td>2025-08-06</td>
+                <td>9,367,327</td>
+                <td>1.020</td>
+                <td>1.140</td>
+                <td>1.000</td>
+                <td>10,892,327</td>
+                <td>0.637</td>
+            </tr>
+            
+            <tr>
+                <td>10</td>
+                <td>2025-11-09</td>
+                <td>8,519,445</td>
+                <td>1.000</td>
+                <td>0.950</td>
+                <td>1.000</td>
+                <td>8,093,472</td>
+                <td>0.581</td>
+            </tr>
+            
+            <tr>
+                <td>11</td>
+                <td>2025-07-18</td>
+                <td>8,808,245</td>
+                <td>1.020</td>
+                <td>1.140</td>
+                <td>1.000</td>
+                <td>10,242,227</td>
+                <td>0.559</td>
+            </tr>
+            
+            <tr>
+                <td>12</td>
+                <td>2025-08-03</td>
+                <td>8,271,905</td>
+                <td>1.020</td>
+                <td>1.140</td>
+                <td>1.000</td>
+                <td>9,618,571</td>
+                <td>0.541</td>
+            </tr>
+            
+                </tbody>
+            </table>
+            
+            <h3 class="subsection-title">최종 평가액 산정</h3>
+            <div class="calculation-box">
+                <p><strong>가중평균 단가:</strong> 10,720,023 원/㎡</p>
+                <p><strong>대상 토지면적:</strong> 660.00 ㎡</p>
+                <p><strong>거래사례비교법 평가액:</strong> <span class="highlight-value">70.75 억원</span></p>
+            </div>
+            
+            <div class="data-source-box">
+                <strong>근거자료:</strong><br>
+                • 국토교통부 실거래가 공개시스템 (MOLIT Open API)<br>
+                • 카카오 맵 API (좌표 변환 및 거리 계산)<br>
+                • 시점보정: 연 4% 상승률 적용 (지역 시장 분석 기준)<br>
+                • 가중치: 거리 역수 방식 (1 / (거리 + 0.1))
+            </div>
+        </div>
+        
+
+
+        <div class="page">
+            <h1 class="section-title">원가법 상세</h1>
+            
+            <h3 class="subsection-title">평가 방법 설명</h3>
+            <p>
+            원가법은 대상 부동산을 재조달하는 데 필요한 비용을 산정하여 가치를 평가하는 방법입니다.<br>
+            <strong>토지만 평가하는 경우</strong>, 개별공시지가를 기준으로 토지가액을 산정합니다.
+            </p>
+            
+            <div class="formula-box">
+                <strong>계산식 (토지만 평가):</strong><br>
+                토지가액 = 개별공시지가(원/㎡) × 토지면적(㎡)
+            </div>
+            
+            <h3 class="subsection-title">원가법 평가액 산정</h3>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 40%;">항목</th>
+                    <th style="width: 60%;">금액</th>
+                </tr>
+                <tr>
+                    <td>개별공시지가</td>
+                    <td>7,000,000 원/㎡<br>
+                    <span class="data-source">출처: 국토교통부 개별공시지가</span></td>
+                </tr>
+                <tr>
+                    <td>토지면적</td>
+                    <td>660.00 ㎡</td>
+                </tr>
+                <tr class="highlight-row">
+                    <td><strong>토지가액 (원가법)</strong></td>
+                    <td><strong>46.20 억원</strong></td>
+                </tr>
+                <tr>
+                    <td>건물가액</td>
+                    <td>건물 없음 (토지만 평가)</td>
+                </tr>
+                <tr class="highlight-row">
+                    <td><strong>원가법 총액</strong></td>
+                    <td><strong>46.20 억원</strong></td>
+                </tr>
+            </table>
+            
+            <h3 class="subsection-title">상세 계산</h3>
+            <div class="calculation-box">
+                <p><strong>Step 1:</strong> 개별공시지가 확인</p>
+                <p style="margin-left: 20px;">
+                    - 국토교통부 공시지가 정보시스템에서 서울시 마포구 월드컵북로 120의 
+                    개별공시지가를 조회<br>
+                    - 2024년 기준 개별공시지가: 7,000,000 원/㎡
+                </p>
+                
+                <p><strong>Step 2:</strong> 토지가액 산정</p>
+                <p style="margin-left: 20px;">
+                    토지가액 = 7,000,000 원/㎡ × 660.00 ㎡<br>
+                    = 4,620,000,000 원<br>
+                    = <strong>46.20 억원</strong>
+                </p>
+                
+                <p><strong>Step 3:</strong> 건물가액</p>
+                <p style="margin-left: 20px;">
+                    대상 부동산은 <strong>토지만 평가</strong>하므로 건물가액은 0원입니다.
+                </p>
+            </div>
+            
+            <div class="data-source-box">
+                <strong>근거자료:</strong><br>
+                • 개별공시지가: 국토교통부 공시지가 정보시스템 (2024년 기준)<br>
+                • 토지면적: 등기부등본 또는 토지대장 기준<br>
+                • 평가 기준: 감정평가에 관한 규칙 제14조 (원가법)
+            </div>
+        </div>
+        
+
+
+        <div class="page">
+            <h1 class="section-title">수익환원법 상세</h1>
+            
+            <h3 class="subsection-title">평가 방법 설명</h3>
+            <p>
+            수익환원법은 대상 부동산이 장래에 산출할 것으로 기대되는 순수익을 환원하여 가치를 평가하는 방법입니다.<br>
+            <strong>토지 개발의 경우</strong>, 개발 후 예상 분양수익에서 개발비용을 차감한 순이익을 환원합니다.
+            </p>
+            
+            <div class="formula-box">
+                <strong>계산식 (토지 개발):</strong><br>
+                수익환원가액 = (GDV - 개발비용) / 환원율<br>
+                <small>※ GDV (Gross Development Value) = 개발 가능 연면적 × 예상 분양단가</small>
+            </div>
+            
+            <h3 class="subsection-title">개발 수익 추정</h3>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 40%;">항목</th>
+                    <th style="width: 60%;">내용</th>
+                </tr>
+                <tr>
+                    <td>토지면적</td>
+                    <td>660.00 ㎡</td>
+                </tr>
+                <tr>
+                    <td>용도지역</td>
+                    <td>제3종일반주거지역</td>
+                </tr>
+                <tr>
+                    <td>용적률 (FAR)</td>
+                    <td>250% (2.5배)</td>
+                </tr>
+                <tr class="highlight-row">
+                    <td><strong>개발 가능 연면적</strong></td>
+                    <td><strong>1,650.00 ㎡</strong></td>
+                </tr>
+                <tr>
+                    <td>예상 분양단가</td>
+                    <td>7,562,466 원/㎡ (평당 25,000,000 원)<br>
+                    <span class="data-source">출처: 마포구 지역 평균 분양가 추정</span></td>
+                </tr>
+                <tr class="highlight-row">
+                    <td><strong>GDV (총 개발 가치)</strong></td>
+                    <td><strong>124.78 억원</strong></td>
+                </tr>
+            </table>
+            
+            <h3 class="subsection-title">개발 비용 추정</h3>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 40%;">항목</th>
+                    <th style="width: 60%;">금액</th>
+                </tr>
+                <tr>
+                    <td>건축비</td>
+                    <td>3,500,000 원/㎡<br>
+                    <span class="data-source">출처: 한국건설기술연구원 표준건축비</span></td>
+                </tr>
+                <tr>
+                    <td>총 건축비</td>
+                    <td>57.75 억원</td>
+                </tr>
+                <tr>
+                    <td>설계비 + 인허가</td>
+                    <td>건축비에 포함 (약 10%)</td>
+                </tr>
+                <tr class="highlight-row">
+                    <td><strong>총 개발비용</strong></td>
+                    <td><strong>57.75 억원</strong></td>
+                </tr>
+            </table>
+            
+            <h3 class="subsection-title">순 개발 수익 및 환원</h3>
+            <div class="calculation-box">
+                <p><strong>Step 1:</strong> 순 개발 수익 계산</p>
+                <p style="margin-left: 20px;">
+                    순 개발 수익 = GDV - 개발비용<br>
+                    = 124.78 억원 - 57.75 억원<br>
+                    = <strong>67.03 억원</strong>
+                </p>
+                
+                <p><strong>Step 2:</strong> 환원율 적용</p>
+                <p style="margin-left: 20px;">
+                    환원율 (Cap Rate): <strong>4.5%</strong><br>
+                    <span class="data-source">출처: 한국감정평가협회 기준 수익환원율</span>
+                </p>
+                
+                <p><strong>Step 3:</strong> 수익환원가액 산정</p>
+                <p style="margin-left: 20px;">
+                    수익환원가액 = 순 개발 수익 / 환원율<br>
+                    = 67.03 억원 / 0.045<br>
+                    = <strong>1489.57 억원</strong>
+                </p>
+            </div>
+            
+            <div class="warning-box">
+                <h4>⚠️ 유의사항</h4>
+                <p>수익환원법의 개발 수익 추정은 다음 가정을 전제로 합니다:</p>
+                <ul>
+                    <li>용적률 250% 전체 개발 가능 (인허가 승인 가정)</li>
+                    <li>예상 분양가는 마포구 지역 평균 기준</li>
+                    <li>건축비는 표준건축비 기준 (실제 변동 가능)</li>
+                    <li>개발 기간 및 금융비용은 고려하지 않음</li>
+                </ul>
+            </div>
+            
+            <div class="data-source-box">
+                <strong>근거자료:</strong><br>
+                • 용적률: 국토의 계획 및 이용에 관한 법률 시행령 별표1<br>
+                • 분양단가: 한국감정원 부동산 통계정보시스템 (지역 평균)<br>
+                • 건축비: 한국건설기술연구원 표준건축비 (2024년 기준)<br>
+                • 환원율: 한국감정평가협회 수익환원율 가이드라인 (4.5%)
+            </div>
+        </div>
+        
+
+
+        <div class="page">
+            <h1 class="section-title">최종 평가액 결정</h1>
+            
+            <h3 class="subsection-title">3방식 가중평균</h3>
+            <p>
+            감정평가에 관한 규칙 제15조에 따라 3가지 평가방식의 결과를 가중평균하여 최종 평가액을 결정합니다.
+            </p>
+            
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>평가방식</th>
+                        <th>평가액 (억원)</th>
+                        <th>가중치</th>
+                        <th>기여액 (억원)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>원가법 (Cost Approach)</td>
+                        <td>46.20</td>
+                        <td>40%</td>
+                        <td>18.48</td>
+                    </tr>
+                    <tr>
+                        <td>거래사례비교법 (Sales Comparison)</td>
+                        <td>60.06</td>
+                        <td>40%</td>
+                        <td>24.02</td>
+                    </tr>
+                    <tr>
+                        <td>수익환원법 (Income Approach)</td>
+                        <td>67.50</td>
+                        <td>20%</td>
+                        <td>13.50</td>
+                    </tr>
+                    <tr class="highlight-row">
+                        <td><strong>가중평균 합계</strong></td>
+                        <td colspan="2"><strong>최종 평가액</strong></td>
+                        <td><strong>57.63</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3 class="subsection-title">최종 평가 결과</h3>
+            <div class="final-result-box">
+                <div class="result-row">
+                    <span class="result-label">최종 평가액</span>
+                    <span class="result-value">57.63 억원</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">㎡당 평가액</span>
+                    <span class="result-value">8,731,818 원</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">평당 평가액</span>
+                    <span class="result-value">28,865,644 원</span>
+                </div>
+            </div>
+            
+            <h3 class="subsection-title">가중치 적용 근거</h3>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 25%;">평가방식</th>
+                    <th style="width: 75%;">가중치 적용 사유</th>
+                </tr>
+                <tr>
+                    <td>원가법</td>
+                    <td>40% - 개별공시지가 기반으로 객관성이 높으나, 시장 반영도가 낮음</td>
+                </tr>
+                <tr>
+                    <td>거래사례비교법</td>
+                    <td>40% - 실제 시장 거래 반영으로 신뢰도 가장 높음</td>
+                </tr>
+                <tr>
+                    <td>수익환원법</td>
+                    <td>20% - 개발 수익 추정으로 참고용 (불확실성 존재)</td>
+                </tr>
+            </table>
+            
+            <div class="data-source-box">
+                <strong>법적 근거:</strong><br>
+                • 감정평가에 관한 규칙 제15조 (시산가액의 조정 및 결정)<br>
+                • 감정평가 실무기준 제3장 (평가방법의 적용 및 가중치)<br>
+                • 한국감정평가협회 감정평가 가이드라인
+            </div>
+        </div>
+        
+
+
+        <div class="page">
+            <h1 class="section-title">신뢰도 분석</h1>
+            
+            <div class="confidence-summary">
+                <div class="confidence-badge-large" style="background: #f77f00;">
+                    신뢰도: <strong>MEDIUM</strong>
+                </div>
+            </div>
+            
+            <h3 class="subsection-title">신뢰도 평가 요인</h3>
+            <ul class="key-findings">
+                <li>✅ 거래사례 충분 (10개 이상)</li><li>✓ 평균 거리 1.5km 이내 (근접성 양호)</li><li>✅ 국토교통부 MOLIT API 실거래 데이터 사용</li><li>✅ 카카오 맵 API 좌표 검증</li>
+            </ul>
+            
+            <h3 class="subsection-title">거래사례 통계</h3>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 40%;">항목</th>
+                    <th style="width: 60%;">값</th>
+                </tr>
+                <tr>
+                    <td>총 거래사례 수</td>
+                    <td><strong>12건</strong></td>
+                </tr>
+                <tr>
+                    <td>평균 거리</td>
+                    <td><strong>1.12 km</strong></td>
+                </tr>
+                <tr>
+                    <td>최근 거래일</td>
+                    <td>2025-08-21</td>
+                </tr>
+                <tr>
+                    <td>평균 거래단가</td>
+                    <td><strong>9,240,193 원/㎡</strong></td>
+                </tr>
+            </table>
+            
+            <h3 class="subsection-title">신뢰도 등급 기준</h3>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 20%;">등급</th>
+                    <th style="width: 80%;">기준</th>
+                </tr>
+                <tr>
+                    <td><span class="badge-high">HIGH</span></td>
+                    <td>거래사례 10개 이상, 평균 거리 1km 이내, MOLIT 실거래 데이터</td>
+                </tr>
+                <tr>
+                    <td><span class="badge-medium">MEDIUM</span></td>
+                    <td>거래사례 5-9개, 평균 거리 1.5km 이내</td>
+                </tr>
+                <tr>
+                    <td><span class="badge-low">LOW</span></td>
+                    <td>거래사례 5개 미만 또는 평균 거리 1.5km 초과</td>
+                </tr>
+            </table>
+            
+            <div class="note-box">
+                <h4>신뢰도 향상 방안</h4>
+                <p>본 보고서의 신뢰도를 더욱 높이기 위해서는 다음 조치가 권장됩니다:</p>
+                <ul>
+                    <li>감정평가사 현장 실사를 통한 개별요인 정밀 평가</li>
+                    <li>추가 거래사례 수집 (6개월 후 업데이트)</li>
+                    <li>개발계획 확정 시 수익환원법 재평가</li>
+                </ul>
+            </div>
+        </div>
+        
+
+
+        <div class="page">
+            <h1 class="section-title">입지 분석</h1>
+            
+            <h3 class="subsection-title">위치 개요</h3>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 30%;">항목</th>
+                    <th style="width: 70%;">내용</th>
+                </tr>
+                <tr>
+                    <td>소재지</td>
+                    <td>서울시 마포구 월드컵북로 120</td>
+                </tr>
+                <tr>
+                    <td>행정구역</td>
+                    <td>마포구</td>
+                </tr>
+                <tr>
+                    <td>용도지역</td>
+                    <td>제3종일반주거지역</td>
+                </tr>
+                <tr>
+                    <td>좌표</td>
+                    <td>(37.5639445701284, 126.913343852391)</td>
+                </tr>
+            </table>
+            
+            <h3 class="subsection-title">지역 특성</h3>
+            <p>
+            <strong>마포구</strong> 지역은 서울시 내에서 홍대 등 문화 상업 지역으로 평가됩니다.
+            </p>
+            
+            <h3 class="subsection-title">교통 접근성</h3>
+            <ul class="key-findings">
+                <li>대중교통: 지하철역 및 버스 노선 접근 가능 (추정)</li>
+                <li>도로 접근: 일반도로 접면 (추정)</li>
+                <li>주변 인프라: 상업시설 및 공공시설 접근 양호 (추정)</li>
+            </ul>
+            
+            <h3 class="subsection-title">개발 가능성</h3>
+            <p>
+            용도지역 <strong>제3종일반주거지역</strong>로 지정되어 있어, 
+            주거 및 상업 용도 개발이 가능합니다.
+            </p>
+            
+            <div class="note-box">
+                <h4>📍 좌표 정보</h4>
+                <p>본 보고서의 거리 계산은 카카오 맵 API를 통해 정확한 좌표를 확인하여 
+                Haversine Formula로 계산되었습니다.</p>
+            </div>
+        </div>
+        
+
+
+        <div class="page">
+            <h1 class="section-title">법적 고지 및 유의사항</h1>
+            
+            <h3 class="subsection-title">⚠️ 중요 고지사항</h3>
+            <div class="warning-box">
+                <p>
+                본 감정평가 보고서는 <strong>참고용 자동 생성 보고서</strong>로, 
+                <strong>공식 감정평가서가 아닙니다</strong>.
+                </p>
+                <p>
+                실제 부동산 거래, 담보 설정, 법적 분쟁 등의 목적으로 사용하기 위해서는 
+                <strong>감정평가사법에 따른 공인 감정평가사가 작성한 정식 감정평가서가 필요</strong>합니다.
+                </p>
+            </div>
+            
+            <h3 class="subsection-title">법적 근거</h3>
+            <ul class="legal-list">
+                <li><strong>감정평가 및 감정평가사에 관한 법률</strong> (감정평가사법)</li>
+                <li><strong>감정평가에 관한 규칙</strong> (국토교통부령)</li>
+                <li><strong>감정평가 실무기준</strong> (한국감정평가협회)</li>
+                <li><strong>국토의 계획 및 이용에 관한 법률</strong> (용도지역 및 용적률)</li>
+                <li><strong>부동산 가격공시에 관한 법률</strong> (개별공시지가)</li>
+            </ul>
+            
+            <h3 class="subsection-title">데이터 출처 및 책임</h3>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 30%;">데이터 항목</th>
+                    <th style="width: 70%;">출처 및 책임</th>
+                </tr>
+                <tr>
+                    <td>실거래 정보</td>
+                    <td>국토교통부 실거래가 공개시스템 (MOLIT Open API)<br>
+                    <small>※ API 응답 데이터에 대한 정확성은 국토교통부에 있음</small></td>
+                </tr>
+                <tr>
+                    <td>개별공시지가</td>
+                    <td>국토교통부 공시지가 정보시스템<br>
+                    <small>※ 2024년 기준 공시지가</small></td>
+                </tr>
+                <tr>
+                    <td>좌표 정보</td>
+                    <td>카카오 맵 API (Kakao REST API)<br>
+                    <small>※ 카카오 서비스 약관 적용</small></td>
+                </tr>
+                <tr>
+                    <td>건축비 정보</td>
+                    <td>한국건설기술연구원 표준건축비<br>
+                    <small>※ 실제 건축비는 변동 가능</small></td>
+                </tr>
+            </table>
+            
+            <h3 class="subsection-title">면책 조항</h3>
+            <ol class="legal-list">
+                <li>본 보고서는 AI 기반 자동 생성 시스템으로 작성되었으며, 참고용으로만 사용 가능합니다.</li>
+                <li>본 보고서의 평가액은 실제 거래가격과 차이가 있을 수 있습니다.</li>
+                <li>안테나홀딩스 주식회사는 본 보고서 내용의 정확성에 대해 법적 책임을 지지 않습니다.</li>
+                <li>실제 감정평가가 필요한 경우, 공인 감정평가사에게 의뢰하시기 바랍니다.</li>
+                <li>본 보고서의 데이터는 생성 시점 기준이며, 시간 경과에 따라 변동될 수 있습니다.</li>
+            </ol>
+            
+            <h3 class="subsection-title">문의 및 정식 평가 의뢰</h3>
+            <div class="contact-box">
+                <p><strong>안테나홀딩스 주식회사</strong></p>
+                <p>서울특별시 강남구 테헤란로 427 위워크타워</p>
+                <p>Tel: 02-6952-7000</p>
+                <p>Email: appraisal@antennaholdings.com</p>
+                <p><small>※ 정식 감정평가가 필요하신 경우 문의 바랍니다.</small></p>
+            </div>
+        </div>
+        
+
+
+        <div class="page">
+            <h1 class="section-title">부록 (Appendix)</h1>
+            
+            <h3 class="subsection-title">A. API 및 데이터 출처</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>API/시스템</th>
+                        <th>용도</th>
+                        <th>제공기관</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>MOLIT Open API</td>
+                        <td>실거래가 정보</td>
+                        <td>국토교통부</td>
+                    </tr>
+                    <tr>
+                        <td>Kakao Map API</td>
+                        <td>주소 → 좌표 변환</td>
+                        <td>카카오</td>
+                    </tr>
+                    <tr>
+                        <td>공시지가 정보시스템</td>
+                        <td>개별공시지가</td>
+                        <td>국토교통부</td>
+                    </tr>
+                    <tr>
+                        <td>표준건축비</td>
+                        <td>건축비 추정</td>
+                        <td>한국건설기술연구원</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3 class="subsection-title">B. 보고서 생성 정보</h3>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 30%;">항목</th>
+                    <th style="width: 70%;">내용</th>
+                </tr>
+                <tr>
+                    <td>생성 시스템</td>
+                    <td>Antenna Holdings Land Appraisal System v1.0</td>
+                </tr>
+                <tr>
+                    <td>생성 일시</td>
+                    <td>2025년 12월 13일 02시 09분</td>
+                </tr>
+                <tr>
+                    <td>거래사례 수집</td>
+                    <td>12건 (2km 반경, 최근 2년)</td>
+                </tr>
+                <tr>
+                    <td>평가 방식</td>
+                    <td>원가법, 거래사례비교법, 수익환원법 (3방식)</td>
+                </tr>
+            </table>
+            
+            <h3 class="subsection-title">C. 거래사례 원본 데이터</h3>
+            <p><small>본 보고서에 사용된 거래사례의 원본 데이터는 다음과 같습니다:</small></p>
+            <table class="data-table small-text">
+                <thead>
+                    <tr>
+                        <th>번호</th>
+                        <th>거래일</th>
+                        <th>위치</th>
+                        <th>면적(㎡)</th>
+                        <th>단가(원/㎡)</th>
+                        <th>거리(km)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>1</td><td>2025-08-21</td><td>서울 마포구 합정동 965번지...</td><td>763</td><td>8,310,626</td><td>0.32</td></tr><tr><td>2</td><td>2025-02-13</td><td>서울 마포구 상암동 931번지...</td><td>678</td><td>10,634,743</td><td>0.35</td></tr><tr><td>3</td><td>2024-09-04</td><td>서울 마포구 서교동 852번지...</td><td>578</td><td>9,265,722</td><td>0.54</td></tr><tr><td>4</td><td>2025-10-22</td><td>서울 마포구 서교동 437번지...</td><td>652</td><td>10,449,676</td><td>0.89</td></tr><tr><td>5</td><td>2024-06-01</td><td>서울 마포구 연남동 712번지...</td><td>716</td><td>9,177,176</td><td>1.04</td></tr><tr><td>6</td><td>2024-10-17</td><td>서울 마포구 상암동 973번지...</td><td>707</td><td>9,261,142</td><td>1.11</td></tr><tr><td>7</td><td>2024-03-12</td><td>서울 마포구 공덕동 268번지...</td><td>605</td><td>9,317,046</td><td>1.31</td></tr><tr><td>8</td><td>2024-07-10</td><td>서울 마포구 연남동 248번지...</td><td>594</td><td>9,499,260</td><td>1.35</td></tr><tr><td>9</td><td>2025-08-06</td><td>서울 마포구 서교동 876번지...</td><td>651</td><td>9,367,327</td><td>1.47</td></tr><tr><td>10</td><td>2025-11-09</td><td>서울 마포구 망원동 441번지...</td><td>680</td><td>8,519,445</td><td>1.62</td></tr><tr><td>11</td><td>2025-07-18</td><td>서울 마포구 합정동 275번지...</td><td>642</td><td>8,808,245</td><td>1.69</td></tr><tr><td>12</td><td>2025-08-03</td><td>서울 마포구 서교동 498번지...</td><td>740</td><td>8,271,905</td><td>1.75</td></tr>
+                </tbody>
+            </table>
+            
+            <h3 class="subsection-title">D. 용어 해설</h3>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 25%;">용어</th>
+                    <th style="width: 75%;">설명</th>
+                </tr>
+                <tr>
+                    <td>원가법</td>
+                    <td>대상 부동산을 재조달하는 데 필요한 비용을 산정하여 가치를 평가</td>
+                </tr>
+                <tr>
+                    <td>거래사례비교법</td>
+                    <td>유사 거래사례를 수집하여 보정 후 가중평균으로 평가</td>
+                </tr>
+                <tr>
+                    <td>수익환원법</td>
+                    <td>부동산이 산출할 미래 수익을 환원율로 나누어 현재가치 평가</td>
+                </tr>
+                <tr>
+                    <td>개별공시지가</td>
+                    <td>국토교통부가 매년 공시하는 개별 토지의 단위면적당 가격</td>
+                </tr>
+                <tr>
+                    <td>환원율 (Cap Rate)</td>
+                    <td>순수익을 현재가치로 환원하는 비율 (일반적으로 4-5%)</td>
+                </tr>
+                <tr>
+                    <td>용적률 (FAR)</td>
+                    <td>대지면적에 대한 건축물 연면적의 비율</td>
+                </tr>
+            </table>
+            
+            <div class="footer-box">
+                <p style="text-align: center; margin-top: 40px;">
+                    <strong>안테나홀딩스 주식회사</strong><br>
+                    서울특별시 강남구 테헤란로 427 위워크타워<br>
+                    Tel: 02-6952-7000 | Email: appraisal@antennaholdings.com
+                </p>
+                <p style="text-align: center; font-size: 11px; color: #888; margin-top: 10px;">
+                    본 보고서는 참고용 자동 생성 보고서이며 공식 감정평가서가 아닙니다.
+                </p>
+            </div>
+        </div>
+        
+</body>
+</html>
+        
