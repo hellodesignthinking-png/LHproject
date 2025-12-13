@@ -819,10 +819,10 @@ async def generate_appraisal_pdf(request: AppraisalRequest):
         appraisal_result['weight_sales'] = appraisal_result.get('weights', {}).get('sales', 0.4)
         appraisal_result['weight_income'] = appraisal_result.get('weights', {}).get('income', 0.2)
         
-        # Step 2: Generate PDF using v35.0 ULTIMATE (거래사례 100% 정확 + 프리미엄 디자인)
-        from app.services.ultimate_pdf_v35 import UltimatePDFv35
+        # Step 2: Generate PDF using v38.0 ULTIMATE (36-page Premium Production Grade)
+        from app.services.premium_pdf_v38_ultimate import PremiumPDFv38Ultimate
         
-        pdf_generator = UltimatePDFv35()
+        pdf_generator = PremiumPDFv38Ultimate()
         html_content = pdf_generator.generate_html(appraisal_result)
         pdf_bytes = pdf_generator.generate_pdf_bytes(html_content)
         
@@ -1032,10 +1032,10 @@ async def generate_and_store_appraisal_pdf(request: AppraisalRequest):
         appraisal_result['zone_type'] = request.zone_type
         appraisal_result['individual_land_price_per_sqm'] = request.individual_land_price_per_sqm or 7000000
         
-        # Step 2: Generate PDF using v35.0 ULTIMATE (거래사례 100% 정확 + 프리미엄 디자인)
-        from app.services.ultimate_pdf_v35 import UltimatePDFv35
+        # Step 2: Generate PDF using v38.0 ULTIMATE (36-page Premium Production Grade)
+        from app.services.premium_pdf_v38_ultimate import PremiumPDFv38Ultimate
         
-        pdf_generator = UltimatePDFv35()
+        pdf_generator = PremiumPDFv38Ultimate()
         html_content = pdf_generator.generate_html(appraisal_result)
         pdf_bytes = pdf_generator.generate_pdf_bytes(html_content)
         
