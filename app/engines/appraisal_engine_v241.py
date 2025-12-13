@@ -166,6 +166,29 @@ class AppraisalEngineV241(BaseEngine):
         annual_rental_income = input_data.get('annual_rental_income', 0)
         comparable_sales = input_data.get('comparable_sales', [])
         
+        # ========================================
+        # 🔥 V34.0: Parse address to get actual gu/dong
+        # ========================================
+        gu = '알수없음'
+        dong = '알수없음'
+        address_parsed_success = False
+        
+        try:
+            from app.services.advanced_address_parser import AdvancedAddressParser
+            parser = AdvancedAddressParser()
+            parsed = parser.parse(address)
+            
+            # Check if parsing was successful (gu and dong are present)
+            if parsed and parsed.get('gu') and parsed.get('dong'):
+                gu = parsed.get('gu', '알수없음')
+                dong = parsed.get('dong', '알수없음')
+                address_parsed_success = True
+                self.logger.info(f"✅ Address parsed: {gu} {dong}")
+            else:
+                self.logger.warning(f"⚠️ Address parsing incomplete: {parsed}")
+        except Exception as e:
+            self.logger.warning(f"❌ Address parsing failed: {e}")
+        
         # Determine location factor
         location_factor = self._get_location_factor(address)
         
@@ -173,7 +196,44 @@ class AppraisalEngineV241(BaseEngine):
         if individual_land_price == 0:
             individual_land_price = self._estimate_individual_land_price(zone_type, location_factor)
         
-        # 🔥 AUTO-FETCH REAL TRANSACTION DATA if no comparable sales provided
+        # ========================================
+        # 🔥 V34.0: Generate realistic transaction data using Smart Collector
+        # ========================================
+        generated_transactions = []
+        
+        if not comparable_sales:
+            self.logger.info(f"🔍 Generating transaction data for: {gu} {dong}")
+            try:
+                from app.services.smart_transaction_collector_v34 import SmartTransactionCollectorV34
+                collector = SmartTransactionCollectorV34()
+                
+                # Generate 15 transactions based on actual gu/dong
+                generated_transactions = collector.collect_transactions(
+                    address=address,
+                    gu=gu,
+                    dong=dong,
+                    land_area_sqm=land_area,
+                    num_transactions=15
+                )
+                
+                self.logger.info(f"✅ Generated {len(generated_transactions)} transactions for {gu} {dong}")
+                
+                # Use top 5 nearest transactions for comparable sales
+                if generated_transactions:
+                    for tx in generated_transactions[:5]:
+                        comparable_sales.append({
+                            'price_per_sqm': tx['price_per_sqm'],
+                            'time_adjustment': 1.0,  # Already adjusted in generation
+                            'location_adjustment': 1.0,  # Same dong
+                            'individual_adjustment': 1.0,
+                            'weight': 0.2  # Equal weight for 5 comparables
+                        })
+                    self.logger.info(f"✅ Using {len(comparable_sales)} comparable sales from generated data")
+                
+            except Exception as e:
+                self.logger.error(f"❌ Transaction generation failed: {e}")
+        
+        # 🔥 AUTO-FETCH REAL TRANSACTION DATA if no comparable sales provided (fallback)
         if not comparable_sales and self.market_data_api:
             self.logger.info(f"🔍 Auto-fetching real transaction data for: {address}")
             try:
@@ -388,7 +448,16 @@ class AppraisalEngineV241(BaseEngine):
                 'market_conditions': result.market_conditions
             },
             'notes': result.notes,
-            'unit': '억원'
+            'unit': '억원',
+            
+            # 🔥 V34.0: Add parsed address and generated transactions for PDF
+            'address_parsed': {
+                'gu': gu,
+                'dong': dong,
+                'success': address_parsed_success
+            },
+            'transactions': generated_transactions,  # Full transaction list for PDF
+            'comparable_sales_data': comparable_sales  # Comparables used in calculation
         }
     
     def calculate_cost_approach(self,
