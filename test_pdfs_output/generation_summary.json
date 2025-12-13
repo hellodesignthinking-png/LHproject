@@ -1,0 +1,53 @@
+{
+  "timestamp": "2025-12-12T16:36:13.024577",
+  "total_reports": 5,
+  "successful": 5,
+  "failed": 0,
+  "results": [
+    {
+      "type": "brief",
+      "name": "Report 1 - Landowner Brief",
+      "korean_name": "토지주용 간편보고서",
+      "html_file": "test_pdfs_output/brief_test_20251212_163613.html",
+      "html_size_kb": 74,
+      "estimated_pages": 19,
+      "status": "✅ Success"
+    },
+    {
+      "type": "lh_official",
+      "name": "Report 2 - LH Official",
+      "korean_name": "LH공식양식보고서",
+      "html_file": "test_pdfs_output/lh_official_test_20251212_163613.html",
+      "html_size_kb": 74,
+      "estimated_pages": 19,
+      "status": "✅ Success"
+    },
+    {
+      "type": "extended",
+      "name": "Report 3 - Extended Professional",
+      "korean_name": "전문가용 심화보고서",
+      "html_file": "test_pdfs_output/extended_test_20251212_163613.html",
+      "html_size_kb": 82,
+      "estimated_pages": 21,
+      "status": "✅ Success"
+    },
+    {
+      "type": "policy",
+      "name": "Report 4 - Policy Impact Analysis",
+      "korean_name": "정책효과분석보고서",
+      "html_file": "test_pdfs_output/policy_test_20251212_163613.html",
+      "html_size_kb": 3,
+      "estimated_pages": 3,
+      "status": "✅ Success"
+    },
+    {
+      "type": "developer",
+      "name": "Report 5 - Developer Feasibility",
+      "korean_name": "사업타당성보고서",
+      "html_file": "test_pdfs_output/developer_test_20251212_163613.html",
+      "html_size_kb": 77,
+      "estimated_pages": 19,
+      "status": "✅ Success"
+    }
+  ]
+}

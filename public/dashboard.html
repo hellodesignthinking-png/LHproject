@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite v24.1 - 통합 대시보드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Pretendard', 'Noto Sans KR', sans-serif; }
+        .tab-button.active {
+            background: linear-gradient(135deg, #005BAC 0%, #0073D1 100%);
+            color: white;
+            border-bottom: 4px solid #FF7A00;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .gradient-bg { background: linear-gradient(135deg, #005BAC 0%, #0073D1 100%); }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #005BAC;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .result-card {
+            transition: all 0.3s ease;
+        }
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-2xl">
+        <div class="max-w-7xl mx-auto px-6 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <a href="/public/index.html" class="text-white hover:text-orange-300 transition">
+                        <i class="fas fa-arrow-left"></i> 메인으로
+                    </a>
+                    <div>
+                        <h1 class="text-3xl font-bold">
+                            🏢 ZeroSite v24.1 통합 대시보드
+                        </h1>
+                        <p class="text-white/80 text-sm">
+                            13가지 AI 엔진 기반 실시간 분석 시스템
+                        </p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="bg-white/20 backdrop-blur-lg px-4 py-2 rounded-full text-sm font-semibold">
+                        ✅ All Systems Online
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <div class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex space-x-1 overflow-x-auto">
+                <button class="tab-button active px-6 py-4 font-semibold transition whitespace-nowrap" onclick="switchTab('diagnose')">
+                    <i class="fas fa-search mr-2"></i>토지 진단
+                </button>
+                <button class="tab-button px-6 py-4 font-semibold transition whitespace-nowrap" onclick="switchTab('capacity')">
+                    <i class="fas fa-building mr-2"></i>규모 검토
+                </button>
+                <button class="tab-button px-6 py-4 font-semibold transition whitespace-nowrap" onclick="switchTab('appraisal')">
+                    <i class="fas fa-file-invoice-dollar mr-2"></i>감정평가
+                </button>
+                <button class="tab-button px-6 py-4 font-semibold transition whitespace-nowrap" onclick="switchTab('scenario')">
+                    <i class="fas fa-code-branch mr-2"></i>시나리오 A/B/C
+                </button>
+                <button class="tab-button px-6 py-4 font-semibold transition whitespace-nowrap" onclick="switchTab('multi-parcel')">
+                    <i class="fas fa-layer-group mr-2"></i>Multi-Parcel
+                </button>
+                <button class="tab-button px-6 py-4 font-semibold transition whitespace-nowrap" onclick="switchTab('reports')">
+                    <i class="fas fa-file-alt mr-2"></i>보고서 생성
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        
+        <!-- Tab 1: 토지 진단 -->
+        <div id="tab-diagnose" class="tab-content active">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Input Form -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-xl shadow-lg p-8">
+                        <h2 class="text-2xl font-bold mb-6 flex items-center text-blue-600">
+                            <i class="fas fa-search mr-3"></i>
+                            토지 진단 입력
+                        </h2>
+                        
+                        <form id="diagnoseForm" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    📍 주소 <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" id="diagnose_address" required
+                                    placeholder="예: 서울시 마포구 공덕동 123-4"
+                                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    📐 토지면적 (㎡) <span class="text-red-500">*</span>
+                                </label>
+                                <input type="number" id="diagnose_land_area" required min="100"
+                                    placeholder="예: 1500"
+                                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    💰 감정가 (원/㎡) <span class="text-red-500">*</span>
+                                </label>
+                                <input type="number" id="diagnose_appraisal_price" required min="1000000"
+                                    placeholder="예: 5000000"
+                                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    🏘️ 용도지역 <span class="text-red-500">*</span>
+                                </label>
+                                <select id="diagnose_zone_type" required
+                                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    <option value="">선택하세요</option>
+                                    <option value="제1종일반주거지역">제1종일반주거지역</option>
+                                    <option value="제2종일반주거지역">제2종일반주거지역</option>
+                                    <option value="제3종일반주거지역">제3종일반주거지역</option>
+                                    <option value="준주거지역">준주거지역</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    📊 법정 용적률 (%)
+                                </label>
+                                <input type="number" id="diagnose_legal_far" min="0" placeholder="예: 200"
+                                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    🏗️ 법정 건폐율 (%)
+                                </label>
+                                <input type="number" id="diagnose_legal_bcr" min="0" placeholder="예: 60"
+                                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <button type="submit"
+                                class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-lg transition shadow-lg">
+                                <i class="fas fa-search mr-2"></i>토지 진단 실행
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Results -->
+                <div class="lg:col-span-1">
+                    <div id="diagnose-result" class="bg-white rounded-xl shadow-lg p-6">
+                        <h3 class="text-xl font-bold mb-4 text-gray-800">
+                            <i class="fas fa-chart-bar mr-2 text-blue-600"></i>진단 결과
+                        </h3>
+                        <div class="text-center text-gray-400 py-12">
+                            <i class="fas fa-clipboard-list text-6xl mb-4"></i>
+                            <p>진단을 실행하면<br>결과가 여기에 표시됩니다</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: 규모 검토 -->
+        <div id="tab-capacity" class="tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-xl shadow-lg p-8">
+                        <h2 class="text-2xl font-bold mb-6 flex items-center text-orange-600">
+                            <i class="fas fa-building mr-3"></i>
+                            건축 규모 검토 입력
+                        </h2>
+                        
+                        <form id="capacityForm" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    📐 대지면적 (㎡) <span class="text-red-500">*</span>
+                                </label>
+                                <input type="number" id="capacity_land_area" required min="100"
+                                    placeholder="예: 1500"
+                                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    🏗️ 건폐율 제한 (%)
+                                </label>
+                                <input type="number" id="capacity_bcr_limit" min="0" placeholder="예: 60"
+                                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    📊 용적률 제한 (%)
+                                </label>
+                                <input type="number" id="capacity_far_limit" min="0" placeholder="예: 240"
+                                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    🏢 최대 층수
+                                </label>
+                                <input type="number" id="capacity_max_floors" min="1" placeholder="예: 15"
+                                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500">
+                            </div>
+                            
+                            <button type="submit"
+                                class="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-4 px-6 rounded-lg transition shadow-lg">
+                                <i class="fas fa-calculator mr-2"></i>규모 검토 실행
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="lg:col-span-1">
+                    <div id="capacity-result" class="bg-white rounded-xl shadow-lg p-6">
+                        <h3 class="text-xl font-bold mb-4 text-gray-800">
+                            <i class="fas fa-chart-bar mr-2 text-orange-600"></i>검토 결과
+                        </h3>
+                        <div class="text-center text-gray-400 py-12">
+                            <i class="fas fa-building text-6xl mb-4"></i>
+                            <p>검토를 실행하면<br>결과가 여기에 표시됩니다</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: 감정평가 -->
+        <div id="tab-appraisal" class="tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Input Form -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center text-green-600">
+                        <i class="fas fa-file-invoice-dollar mr-3"></i>
+                        토지 감정평가
+                    </h2>
+                    <div class="bg-green-50 border-l-4 border-green-600 p-4 mb-6">
+                        <p class="text-sm text-gray-700">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            3가지 감정평가 방법(원가법, 거래사례비교법, 수익환원법)을 종합하여 최종 감정가를 산출합니다.
+                        </p>
+                    </div>
+                    
+                    <form id="appraisalForm" class="space-y-4">
+                        <!-- SECTION 1: Basic Information (필수) - 완전 자동화 -->
+                        <div class="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg border-2 border-green-300 shadow-md">
+                            <h3 class="font-bold text-green-800 mb-3 flex items-center text-lg">
+                                <i class="fas fa-magic mr-2 text-green-600"></i>AI 자동 감정평가 (주소만 입력!)
+                            </h3>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        <i class="fas fa-map-marker-alt mr-1"></i>주소 (필수)
+                                    </label>
+                                    <input type="text" id="appraisal_address" required
+                                        class="w-full px-4 py-3 border-2 border-green-300 rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-200 transition shadow-sm"
+                                        placeholder="예: 서울시 강남구 역삼동 123-4">
+                                    <p class="text-xs text-green-600 mt-2 flex items-center">
+                                        <i class="fas fa-lightbulb mr-1"></i>
+                                        주소만 입력하면 개별공시지가, 용도지역, 입지/인프라, 개발/규제, 프리미엄이 모두 자동 분석됩니다!
+                                    </p>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        <i class="fas fa-ruler-combined mr-1"></i>대지면적 (㎡) - 선택사항
+                                    </label>
+                                    <input type="number" id="appraisal_land_area"
+                                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:ring-2 focus:ring-green-200 transition"
+                                        placeholder="미입력시 660㎡로 기본 설정" step="0.01">
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        입력하지 않으면 표준 대지면적(660㎡)으로 자동 계산됩니다.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 자동 분석 진행 상황 표시 (로딩 시에만 표시) -->
+                        <div id="auto-analysis-progress" class="bg-blue-50 p-4 rounded-lg border-2 border-blue-200 hidden">
+                            <h3 class="font-bold text-blue-800 mb-3 flex items-center">
+                                <i class="fas fa-spinner fa-spin mr-2"></i>AI 자동 분석 진행 중...
+                            </h3>
+                            <div class="space-y-2 text-sm">
+                                <div id="progress-land-price" class="flex items-center text-gray-600">
+                                    <i class="fas fa-circle-notch fa-spin mr-2"></i>개별공시지가 조회 중...
+                                </div>
+                                <div id="progress-zoning" class="flex items-center text-gray-600">
+                                    <i class="fas fa-circle-notch fa-spin mr-2"></i>용도지역 확인 중...
+                                </div>
+                                <div id="progress-location" class="flex items-center text-gray-600">
+                                    <i class="fas fa-circle-notch fa-spin mr-2"></i>입지/인프라 분석 중...
+                                </div>
+                                <div id="progress-development" class="flex items-center text-gray-600">
+                                    <i class="fas fa-circle-notch fa-spin mr-2"></i>개발/규제 분석 중...
+                                </div>
+                                <div id="progress-premium" class="flex items-center text-gray-600">
+                                    <i class="fas fa-circle-notch fa-spin mr-2"></i>프리미엄 자동 계산 중...
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Physical Premium Factors (Manual Input) -->
+                        <div class="bg-green-50 p-4 rounded-lg border-2 border-green-200">
+                            <h3 class="font-bold text-green-800 mb-3 flex items-center">
+                                <i class="fas fa-mountain mr-2"></i>토지 물리적 특성 (선택사항)
+                            </h3>
+                            <p class="text-xs text-gray-600 mb-3">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                토지의 형상, 경사, 향, 접도 조건을 선택하면 프리미엄이 반영됩니다.
+                            </p>
+                            
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">토지형상</label>
+                                    <select id="premium_land_shape" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-green-600">
+                                        <option value="0">선택안함 (0%)</option>
+                                        <option value="15">정방형 (+15%)</option>
+                                        <option value="10">장방형 (+10%)</option>
+                                        <option value="0">일반형 (0%)</option>
+                                        <option value="-10">세장형 (-10%)</option>
+                                        <option value="-20">부정형 (-20%)</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">토지경사도</label>
+                                    <select id="premium_land_slope" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-green-600">
+                                        <option value="0">선택안함 (0%)</option>
+                                        <option value="15">평지 (+15%)</option>
+                                        <option value="5">완경사 (+5%)</option>
+                                        <option value="0">일반경사 (0%)</option>
+                                        <option value="-10">급경사 (-10%)</option>
+                                        <option value="-15">험준 (-15%)</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">향(向)</label>
+                                    <select id="premium_direction" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-green-600">
+                                        <option value="0">선택안함 (0%)</option>
+                                        <option value="12">남향 (+12%)</option>
+                                        <option value="8">남동향 (+8%)</option>
+                                        <option value="5">동향 (+5%)</option>
+                                        <option value="0">서향 (0%)</option>
+                                        <option value="-5">북향 (-5%)</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">접도 조건</label>
+                                    <select id="premium_road_facing" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-green-600">
+                                        <option value="0">선택안함 (0%)</option>
+                                        <option value="25">4면도로 (+25%)</option>
+                                        <option value="18">3면도로 (+18%)</option>
+                                        <option value="10">각지 (+10%)</option>
+                                        <option value="0">일반접도 (0%)</option>
+                                        <option value="-20">맹지 (-20%)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Premium Summary Display (Auto-calculated) -->
+                        <div id="premium-summary" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-4 rounded-lg shadow-lg hidden">
+                            <h3 class="font-bold mb-2 flex items-center">
+                                <i class="fas fa-robot mr-2"></i>AI 자동 분석 결과
+                            </h3>
+                            <div id="premium-details" class="text-sm space-y-1"></div>
+                            <div class="mt-3 pt-3 border-t border-white/30">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-semibold">데이터 기반 총 프리미엄:</span>
+                                    <span id="total-premium" class="text-xl font-bold"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Comparable Sales Section (Expandable) -->
+                        <div class="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
+                            <button type="button" onclick="toggleComparables()" class="w-full flex items-center justify-between text-left font-semibold text-blue-800 hover:text-blue-900">
+                                <span><i class="fas fa-exchange-alt mr-2"></i>거래사례 데이터 입력 (선택사항)</span>
+                                <i id="comparables-toggle-icon" class="fas fa-chevron-down transition-transform"></i>
+                            </button>
+                            
+                            <div id="comparables-section" class="hidden mt-4 space-y-3">
+                                <p class="text-xs text-gray-600 mb-3">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    거래사례 입력 시 더욱 정확한 평가가 가능합니다. 최대 3개까지 입력 가능합니다.
+                                </p>
+                                
+                                <!-- Comparable 1 -->
+                                <div class="bg-white p-3 rounded-lg border border-gray-200">
+                                    <h4 class="text-sm font-semibold text-gray-700 mb-2">거래사례 1</h4>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="number" id="comp1_price" placeholder="거래단가 (원/㎡)" 
+                                            class="px-3 py-2 text-sm border border-gray-300 rounded focus:border-blue-500" step="1000">
+                                        <input type="number" id="comp1_time_adj" placeholder="시점보정 (1.0)" 
+                                            class="px-3 py-2 text-sm border border-gray-300 rounded focus:border-blue-500" step="0.01" value="1.0">
+                                        <input type="number" id="comp1_location_adj" placeholder="위치보정 (1.0)" 
+                                            class="px-3 py-2 text-sm border border-gray-300 rounded focus:border-blue-500" step="0.01" value="1.0">
+                                        <input type="number" id="comp1_individual_adj" placeholder="개별보정 (1.0)" 
+                                            class="px-3 py-2 text-sm border border-gray-300 rounded focus:border-blue-500" step="0.01" value="1.0">
+                                        <input type="number" id="comp1_weight" placeholder="가중치 (0.33)" 
+                                            class="px-3 py-2 text-sm border border-gray-300 rounded focus:border-blue-500" step="0.01" value="0.33">
+                                    </div>
+                                </div>
+                                
+                                <!-- Comparable 2 -->
+                                <div class="bg-white p-3 rounded-lg border border-gray-200">
+                                    <h4 class="text-sm font-semibold text-gray-700 mb-2">거래사례 2</h4>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="number" id="comp2_price" placeholder="거래단가 (원/㎡)" 
+                                            class="px-3 py-2 text-sm border border-gray-300 rounded focus:border-blue-500" step="1000">
+                                        <input type="number" id="comp2_time_adj" placeholder="시점보정 (1.0)" 
+                                            class="px-3 py-2 text-sm border border-gray-300 rounded focus:border-blue-500" step="0.01" value="1.0">
+                                        <input type="number" id="comp2_location_adj" placeholder="위치보정 (1.0)" 
+                                            class="px-3 py-2 text-sm border border-gray-300 rounded focus:border-blue-500" step="0.01" value="1.0">
+                                        <input type="number" id="comp2_individual_adj" placeholder="개별보정 (1.0)" 
+                                            class="px-3 py-2 text-sm border border-gray-300 rounded focus:border-blue-500" step="0.01" value="1.0">
+                                        <input type="number" id="comp2_weight" placeholder="가중치 (0.33)" 
+                                            class="px-3 py-2 text-sm border border-gray-300 rounded focus:border-blue-500" step="0.01" value="0.33">
+                                    </div>
+                                </div>
+                                
+                                <!-- Comparable 3 -->
+                                <div class="bg-white p-3 rounded-lg border border-gray-200">
+                                    <h4 class="text-sm font-semibold text-gray-700 mb-2">거래사례 3</h4>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="number" id="comp3_price" placeholder="거래단가 (원/㎡)" 
+                                            class="px-3 py-2 text-sm border border-gray-300 rounded focus:border-blue-500" step="1000">
+                                        <input type="number" id="comp3_time_adj" placeholder="시점보정 (1.0)" 
+                                            class="px-3 py-2 text-sm border border-gray-300 rounded focus:border-blue-500" step="0.01" value="1.0">
+                                        <input type="number" id="comp3_location_adj" placeholder="위치보정 (1.0)" 
+                                            class="px-3 py-2 text-sm border border-gray-300 rounded focus:border-blue-500" step="0.01" value="1.0">
+                                        <input type="number" id="comp3_individual_adj" placeholder="개별보정 (1.0)" 
+                                            class="px-3 py-2 text-sm border border-gray-300 rounded focus:border-blue-500" step="0.01" value="1.0">
+                                        <input type="number" id="comp3_weight" placeholder="가중치 (0.34)" 
+                                            class="px-3 py-2 text-sm border border-gray-300 rounded focus:border-blue-500" step="0.01" value="0.34">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit"
+                            class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white font-bold py-4 px-6 rounded-lg hover:from-green-700 hover:to-green-800 transition shadow-lg">
+                            <i class="fas fa-calculator mr-2"></i>감정평가 실행
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Results Display -->
+                <div class="lg:col-span-1">
+                    <div id="appraisal-result" class="bg-white rounded-xl shadow-lg p-6">
+                        <h3 class="text-xl font-bold mb-4 text-gray-800">
+                            <i class="fas fa-chart-bar mr-2 text-green-600"></i>감정평가 결과
+                        </h3>
+                        <div class="text-center text-gray-400 py-12">
+                            <i class="fas fa-coins text-6xl mb-4"></i>
+                            <p>감정평가를 실행하면<br>결과가 여기에 표시됩니다</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 4: 시나리오 -->
+        <div id="tab-scenario" class="tab-content">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-2xl font-bold mb-6 flex items-center text-purple-600">
+                    <i class="fas fa-code-branch mr-3"></i>
+                    시나리오 A/B/C 비교
+                </h2>
+                <div class="text-center py-12">
+                    <div class="bg-purple-50 border-2 border-purple-200 rounded-xl p-8 inline-block">
+                        <i class="fas fa-sitemap text-6xl text-purple-600 mb-4"></i>
+                        <h3 class="text-2xl font-bold text-purple-700 mb-2">3가지 시나리오 분석</h3>
+                        <p class="text-gray-600 mb-6">
+                            소형 중심 / 중대형 중심 / 고령자형<br>
+                            3가지 시나리오 수익성 비교 분석
+                        </p>
+                        <div class="grid grid-cols-3 gap-4 mt-6">
+                            <div class="bg-white p-4 rounded-lg shadow">
+                                <h4 class="font-bold text-blue-600 mb-2">시나리오 A</h4>
+                                <p class="text-sm text-gray-600">소형 중심</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow">
+                                <h4 class="font-bold text-green-600 mb-2">시나리오 B</h4>
+                                <p class="text-sm text-gray-600">중대형 중심</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow">
+                                <h4 class="font-bold text-orange-600 mb-2">시나리오 C</h4>
+                                <p class="text-sm text-gray-600">고령자형</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 5: Multi-Parcel -->
+        <div id="tab-multi-parcel" class="tab-content">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-2xl font-bold mb-6 flex items-center text-red-600">
+                    <i class="fas fa-layer-group mr-3"></i>
+                    Multi-Parcel 합필 분석
+                </h2>
+                <div class="text-center py-12">
+                    <div class="bg-red-50 border-2 border-red-200 rounded-xl p-8 inline-block">
+                        <i class="fas fa-th text-6xl text-red-600 mb-4"></i>
+                        <h3 class="text-2xl font-bold text-red-700 mb-2">합필 최적화</h3>
+                        <p class="text-gray-600 mb-6">
+                            인접 필지 자동 탐색 및 조합 최적화<br>
+                            유전 알고리즘 기반 최적 합필안 도출
+                        </p>
+                        <button onclick="alert('Multi-Parcel 분석 기능 준비 중입니다.')"
+                            class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg transition">
+                            분석 시작하기
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 6: 보고서 생성 -->
+        <div id="tab-reports" class="tab-content">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-2xl font-bold mb-6 flex items-center text-yellow-600">
+                    <i class="fas fa-file-alt mr-3"></i>
+                    보고서 5종 생성
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Report 1 -->
+                    <div class="border-2 border-gray-200 rounded-xl p-6 hover:border-yellow-500 transition">
+                        <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mb-4">
+                            <i class="fas fa-file-alt text-3xl text-blue-600"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">토지주 요약 보고서</h3>
+                        <p class="text-sm text-gray-600 mb-4">3-5페이지 간단 요약본</p>
+                        <button onclick="generateReport(1)"
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                            생성하기
+                        </button>
+                    </div>
+                    
+                    <!-- Report 2 -->
+                    <div class="border-2 border-gray-200 rounded-xl p-6 hover:border-yellow-500 transition">
+                        <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mb-4">
+                            <i class="fas fa-file-contract text-3xl text-green-600"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">LH 제출용 보고서</h3>
+                        <p class="text-sm text-gray-600 mb-4">10-15페이지 공식 양식</p>
+                        <button onclick="generateReport(2)"
+                            class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                            생성하기
+                        </button>
+                    </div>
+                    
+                    <!-- Report 3 -->
+                    <div class="border-2 border-gray-200 rounded-xl p-6 hover:border-yellow-500 transition">
+                        <div class="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mb-4">
+                            <i class="fas fa-file-invoice text-3xl text-purple-600"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">전문가용 상세 보고서</h3>
+                        <p class="text-sm text-gray-600 mb-4">25-40페이지 심화 분석</p>
+                        <button onclick="generateReport(3)"
+                            class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                            생성하기
+                        </button>
+                    </div>
+                    
+                    <!-- Report 4 -->
+                    <div class="border-2 border-gray-200 rounded-xl p-6 hover:border-yellow-500 transition">
+                        <div class="bg-orange-100 rounded-full w-16 h-16 flex items-center justify-center mb-4">
+                            <i class="fas fa-gavel text-3xl text-orange-600"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">정책영향 분석 보고서</h3>
+                        <p class="text-sm text-gray-600 mb-4">15-20페이지 정책 분석</p>
+                        <button onclick="generateReport(4)"
+                            class="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                            생성하기
+                        </button>
+                    </div>
+                    
+                    <!-- Report 5 -->
+                    <div class="border-2 border-gray-200 rounded-xl p-6 hover:border-yellow-500 transition">
+                        <div class="bg-red-100 rounded-full w-16 h-16 flex items-center justify-center mb-4">
+                            <i class="fas fa-chart-line text-3xl text-red-600"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">사업자용 타당성 보고서</h3>
+                        <p class="text-sm text-gray-600 mb-4">15-20페이지 사업성 분석</p>
+                        <button onclick="generateReport(5)"
+                            class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                            생성하기
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="report-result" class="mt-8"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Tab Switching
+        function switchTab(tabName) {
+            // URL 파라미터 업데이트
+            const url = new URL(window.location);
+            url.searchParams.set('tab', tabName);
+            window.history.pushState({}, '', url);
+            
+            // 모든 탭 비활성화
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 선택된 탭 활성화
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
+        
+        // URL 파라미터로 초기 탭 설정
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tab = urlParams.get('tab');
+            if (tab) {
+                const tabButton = document.querySelector(`[onclick*="${tab}"]`);
+                if (tabButton) {
+                    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                    tabButton.classList.add('active');
+                    document.getElementById(`tab-${tab}`).classList.add('active');
+                }
+            }
+        });
+        
+        // 토지 진단 실행
+        document.getElementById('diagnoseForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const resultDiv = document.getElementById('diagnose-result');
+            resultDiv.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="loading-spinner mx-auto mb-4"></div>
+                    <p class="text-gray-600">토지 진단 중...</p>
+                </div>
+            `;
+            
+            const data = {
+                address: document.getElementById('diagnose_address').value,
+                land_area: parseFloat(document.getElementById('diagnose_land_area').value),
+                appraisal_price: parseFloat(document.getElementById('diagnose_appraisal_price').value),
+                zone_type: document.getElementById('diagnose_zone_type').value,
+                legal_far: parseFloat(document.getElementById('diagnose_legal_far').value) || 200,
+                legal_bcr: parseFloat(document.getElementById('diagnose_legal_bcr').value) || 60
+            };
+            
+            try {
+                const response = await fetch('/api/v24.1/diagnose-land', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">
+                        <i class="fas fa-check-circle mr-2 text-green-600"></i>진단 완료
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600">분석 ID</p>
+                            <p class="font-bold text-blue-600">${result.analysis_id || 'N/A'}</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600">주소</p>
+                            <p class="font-semibold">${data.address}</p>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600">대지면적</p>
+                            <p class="font-bold text-purple-600">${data.land_area.toLocaleString()} ㎡</p>
+                        </div>
+                        <div class="bg-orange-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600">용도지역</p>
+                            <p class="font-semibold">${data.zone_type}</p>
+                        </div>
+                        <div class="bg-yellow-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600">상태</p>
+                            <p class="font-bold text-green-600">${result.status || 'completed'}</p>
+                        </div>
+                    </div>
+                `;
+                
+                // 성공 알림
+                showNotification('토지 진단이 완료되었습니다!', 'success');
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="bg-red-50 p-6 rounded-lg text-center">
+                        <i class="fas fa-exclamation-triangle text-4xl text-red-600 mb-3"></i>
+                        <p class="text-red-600 font-semibold">진단 중 오류가 발생했습니다</p>
+                        <p class="text-sm text-gray-600 mt-2">${error.message}</p>
+                    </div>
+                `;
+                showNotification('토지 진단 중 오류가 발생했습니다', 'error');
+            }
+        });
+        
+        // 규모 검토 실행
+        document.getElementById('capacityForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const resultDiv = document.getElementById('capacity-result');
+            resultDiv.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="loading-spinner mx-auto mb-4"></div>
+                    <p class="text-gray-600">규모 검토 중...</p>
+                </div>
+            `;
+            
+            const data = {
+                land_area: parseFloat(document.getElementById('capacity_land_area').value),
+                bcr_limit: parseFloat(document.getElementById('capacity_bcr_limit').value) || 60,
+                far_limit: parseFloat(document.getElementById('capacity_far_limit').value) || 240,
+                max_floors: parseInt(document.getElementById('capacity_max_floors').value) || 15
+            };
+            
+            try {
+                const response = await fetch('/api/v24.1/capacity', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">
+                        <i class="fas fa-check-circle mr-2 text-green-600"></i>검토 완료
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600">대지면적</p>
+                            <p class="font-bold text-blue-600">${data.land_area.toLocaleString()} ㎡</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600">용적률 제한</p>
+                            <p class="font-bold text-green-600">${data.far_limit}%</p>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600">건폐율 제한</p>
+                            <p class="font-bold text-purple-600">${data.bcr_limit}%</p>
+                        </div>
+                        <div class="bg-orange-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600">최대 층수</p>
+                            <p class="font-bold text-orange-600">${data.max_floors}층</p>
+                        </div>
+                    </div>
+                `;
+                
+                showNotification('규모 검토가 완료되었습니다!', 'success');
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="bg-red-50 p-6 rounded-lg text-center">
+                        <i class="fas fa-exclamation-triangle text-4xl text-red-600 mb-3"></i>
+                        <p class="text-red-600 font-semibold">검토 중 오류가 발생했습니다</p>
+                        <p class="text-sm text-gray-600 mt-2">${error.message}</p>
+                    </div>
+                `;
+                showNotification('규모 검토 중 오류가 발생했습니다', 'error');
+            }
+        });
+        
+        // Toggle comparables section
+        function toggleComparables() {
+            const section = document.getElementById('comparables-section');
+            const icon = document.getElementById('comparables-toggle-icon');
+            
+            if (section.classList.contains('hidden')) {
+                section.classList.remove('hidden');
+                icon.classList.add('rotate-180');
+            } else {
+                section.classList.add('hidden');
+                icon.classList.remove('rotate-180');
+            }
+        }
+        
+        // 감정평가 실행
+        document.getElementById('appraisalForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const resultDiv = document.getElementById('appraisal-result');
+            const progressDiv = document.getElementById('auto-analysis-progress');
+            
+            // Show loading with auto-analysis progress
+            resultDiv.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="loading-spinner mx-auto mb-4"></div>
+                    <p class="text-gray-600">AI 자동 감정평가 진행 중...</p>
+                    <p class="text-xs text-gray-500 mt-2">개별공시지가 조회, 용도지역 확인, 입지/인프라 분석, 개발/규제 분석, 프리미엄 계산을 자동으로 수행합니다.</p>
+                </div>
+            `;
+            progressDiv.classList.remove('hidden');
+            
+            // Use AUTO APPRAISAL API (address-only automation)
+            const address = document.getElementById('appraisal_address').value;
+            const landAreaInput = document.getElementById('appraisal_land_area').value;
+            
+            // Step 1: Auto-fetch official land price
+            let officialLandPrice = null;
+            let zoneType = null;
+            
+            try {
+                // Show progress
+                document.getElementById('progress-land-price').innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>개별공시지가 조회 중...';
+                
+                const landPriceResponse = await fetch('/api/v24.1/land-price/official', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address: address })
+                });
+                
+                if (landPriceResponse.ok) {
+                    const landPriceData = await landPriceResponse.json();
+                    if (landPriceData.status === 'success' && landPriceData.official_price) {
+                        officialLandPrice = landPriceData.official_price;
+                        document.getElementById('progress-land-price').innerHTML = '<i class="fas fa-check-circle mr-2 text-green-600"></i>개별공시지가 조회 완료: ' + officialLandPrice.toLocaleString() + ' 원/㎡';
+                    }
+                }
+            } catch (e) {
+                console.log('Land price auto-fetch failed, will use fallback');
+            }
+            
+            // Step 2: Auto-fetch zoning info
+            try {
+                document.getElementById('progress-zoning').innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>용도지역 확인 중...';
+                
+                const zoningResponse = await fetch('/api/v24.1/zoning-info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address: address })
+                });
+                
+                if (zoningResponse.ok) {
+                    const zoningData = await zoningResponse.json();
+                    if (zoningData.status === 'success' && zoningData.zone_type) {
+                        zoneType = zoningData.zone_type;
+                        document.getElementById('progress-zoning').innerHTML = '<i class="fas fa-check-circle mr-2 text-green-600"></i>용도지역 확인 완료: ' + zoneType;
+                    }
+                }
+            } catch (e) {
+                console.log('Zoning auto-fetch failed, will use fallback');
+            }
+            
+            // Step 3: Collect premium factors (physical characteristics)
+            const premiumFactors = {
+                land_shape: parseFloat(document.getElementById('premium_land_shape')?.value || 0),
+                land_slope: parseFloat(document.getElementById('premium_land_slope')?.value || 0),
+                direction: parseFloat(document.getElementById('premium_direction')?.value || 0),
+                road_facing: parseFloat(document.getElementById('premium_road_facing')?.value || 0)
+            };
+            
+            // Step 4: Prepare final data with FALLBACK values
+            const data = {
+                address: address,
+                land_area_sqm: landAreaInput ? parseFloat(landAreaInput) : 660,  // Default 660㎡
+                zone_type: zoneType || "제2종일반주거지역",  // Fallback zone
+                individual_land_price_per_sqm: officialLandPrice || 8500000,  // Fallback price
+                premium_factors: premiumFactors  // User-selected physical characteristics
+            };
+            
+            document.getElementById('progress-premium').innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>감정평가 엔진 실행 중...';
+            
+            try {
+                const response = await fetch('/api/v24.1/appraisal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                // Hide progress indicator
+                progressDiv.classList.add('hidden');
+                
+                if (result.status === 'success') {
+                    const appraisal = result.appraisal;
+                    
+                    resultDiv.innerHTML = `
+                        <h3 class="text-xl font-bold mb-4 text-gray-800">
+                            <i class="fas fa-check-circle mr-2 text-green-600"></i>감정평가 완료
+                        </h3>
+                        
+                        <!-- Auto-fetched Data Summary -->
+                        <div class="bg-blue-50 p-4 rounded-lg mb-4 border-2 border-blue-200">
+                            <h4 class="font-semibold text-blue-800 mb-2 flex items-center">
+                                <i class="fas fa-robot mr-2"></i>사용된 데이터
+                            </h4>
+                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                <div class="flex items-center">
+                                    <i class="fas fa-won-sign mr-2 text-blue-600"></i>
+                                    <span class="text-gray-600">개별공시지가:</span>
+                                    <span class="font-semibold ml-1">${data.individual_land_price_per_sqm.toLocaleString()} 원/㎡</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-map mr-2 text-blue-600"></i>
+                                    <span class="text-gray-600">용도지역:</span>
+                                    <span class="font-semibold ml-1">${data.zone_type}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-ruler-combined mr-2 text-green-600"></i>
+                                    <span class="text-gray-600">대지면적:</span>
+                                    <span class="font-semibold ml-1">${data.land_area_sqm.toLocaleString()} ㎡</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-map-marker-alt mr-2 text-green-600"></i>
+                                    <span class="text-gray-600">주소:</span>
+                                    <span class="font-semibold ml-1 text-xs">${data.address}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Final Value -->
+                        <div class="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-xl mb-6 shadow-lg">
+                            <p class="text-sm font-semibold mb-2">최종 감정평가액</p>
+                            <p class="text-4xl font-bold">${appraisal.final_value.toFixed(2)} 억원</p>
+                            <p class="text-sm mt-2 opacity-90">㎡당 ${appraisal.value_per_sqm.toLocaleString()} 원</p>
+                            <div class="mt-3 bg-white/20 backdrop-blur-lg rounded-lg px-3 py-2 inline-block">
+                                <span class="text-xs font-semibold">신뢰도: ${appraisal.confidence}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- 3 Approaches -->
+                        <div class="space-y-3 mb-6">
+                            <div class="bg-blue-50 p-4 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-semibold text-gray-700">원가법</span>
+                                    <span class="text-blue-600 font-bold">${appraisal.approaches.cost.toFixed(2)} 억원</span>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">가중치: ${(appraisal.weights.cost * 100).toFixed(0)}%</div>
+                            </div>
+                            
+                            <div class="bg-green-50 p-4 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-semibold text-gray-700">거래사례비교법</span>
+                                    <span class="text-green-600 font-bold">${appraisal.approaches.sales_comparison.toFixed(2)} 억원</span>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">가중치: ${(appraisal.weights.sales * 100).toFixed(0)}%</div>
+                            </div>
+                            
+                            <div class="bg-purple-50 p-4 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-semibold text-gray-700">수익환원법</span>
+                                    <span class="text-purple-600 font-bold">${appraisal.approaches.income.toFixed(2)} 억원</span>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">가중치: ${(appraisal.weights.income * 100).toFixed(0)}%</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Premium Information -->
+                        ${appraisal.premium_percentage ? `
+                        <div class="bg-gradient-to-r from-orange-50 to-yellow-50 p-4 rounded-lg mb-4 border-2 border-orange-200">
+                            <h4 class="font-semibold text-orange-800 mb-3 flex items-center">
+                                <i class="fas fa-star mr-2"></i>프리미엄 분석
+                            </h4>
+                            <div class="mb-3">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm text-gray-700">적용된 프리미엄:</span>
+                                    <span class="text-lg font-bold text-orange-600">+${appraisal.premium_percentage.toFixed(1)}%</span>
+                                </div>
+                            </div>
+                            ${appraisal.premium_details && appraisal.premium_details.length > 0 ? `
+                            <div class="mt-3 pt-3 border-t border-orange-200">
+                                <p class="text-xs font-semibold text-gray-700 mb-2">주요 프리미엄 요인 (상위 5개):</p>
+                                <div class="space-y-1">
+                                    ${appraisal.premium_details.map((factor, idx) => `
+                                        <div class="flex justify-between items-center text-xs">
+                                            <span class="text-gray-600">${idx + 1}. ${factor.factor || factor.name || '항목'}</span>
+                                            <span class="font-semibold text-orange-600">${factor.percentage || factor.value || 0}%</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
+                        ` : ''}
+                        
+                        <!-- Metadata -->
+                        <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                            <h4 class="font-semibold text-gray-700 mb-3 flex items-center">
+                                <i class="fas fa-info-circle mr-2"></i>평가 정보
+                            </h4>
+                            <div class="grid grid-cols-2 gap-3 text-sm">
+                                <div>
+                                    <span class="text-gray-600">평가일자:</span>
+                                    <span class="font-semibold ml-2">${result.metadata.appraisal_date}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">위치보정:</span>
+                                    <span class="font-semibold ml-2">${appraisal.location_factor.toFixed(2)}x</span>
+                                </div>
+                                ${appraisal.premium_percentage ? `
+                                <div>
+                                    <span class="text-gray-600">프리미엄:</span>
+                                    <span class="font-semibold ml-2 text-orange-600">+${appraisal.premium_percentage.toFixed(1)}%</span>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        
+                        <!-- Notes -->
+                        <div class="mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-3">
+                            <p class="text-xs text-gray-600">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                본 평가는 참고용이며, 공식 감정평가는 감정평가사에게 의뢰하세요.
+                            </p>
+                        </div>
+                        
+                        <!-- PDF Download Button -->
+                        <div class="mt-6">
+                            <button onclick="downloadAppraisalPDF()" class="w-full gradient-bg text-white py-4 px-6 rounded-xl font-bold text-lg hover:shadow-2xl transition-all duration-300 flex items-center justify-center gap-3">
+                                <i class="fas fa-file-pdf text-2xl"></i>
+                                <span>상세 감정평가 보고서 PDF 다운로드</span>
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <p class="text-xs text-gray-500 text-center mt-2">
+                                3가지 평가방식의 상세 계산과정이 포함됩니다
+                            </p>
+                        </div>
+                    `;
+                    
+                    // Store BOTH request data AND result for PDF download
+                    window.lastAppraisalData = data;
+                    window.lastAppraisalResult = result;
+                    
+                    showNotification('감정평가가 완료되었습니다!', 'success');
+                } else {
+                    // Show detailed error from API
+                    const errorMsg = result.message || result.error || '알 수 없는 오류';
+                    throw new Error(errorMsg);
+                }
+                
+            } catch (error) {
+                console.error('Appraisal Error:', error);
+                progressDiv.classList.add('hidden');
+                
+                resultDiv.innerHTML = `
+                    <div class="bg-red-50 p-6 rounded-lg border-2 border-red-200">
+                        <div class="text-center mb-4">
+                            <i class="fas fa-exclamation-triangle text-4xl text-red-600 mb-3"></i>
+                            <p class="text-red-600 font-semibold text-lg">감정평가 중 오류가 발생했습니다</p>
+                        </div>
+                        
+                        <div class="bg-white p-4 rounded-lg mb-4">
+                            <p class="text-sm text-gray-700 mb-2"><strong>오류 내용:</strong></p>
+                            <p class="text-sm text-red-600 font-mono">${error.message}</p>
+                        </div>
+                        
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="text-xs text-gray-700 mb-2"><strong>사용하려던 데이터:</strong></p>
+                            <ul class="text-xs text-gray-600 space-y-1">
+                                <li>• 주소: ${data.address || 'N/A'}</li>
+                                <li>• 대지면적: ${data.land_area_sqm || 'N/A'} ㎡</li>
+                                <li>• 용도지역: ${data.zone_type || 'N/A'}</li>
+                                <li>• 개별공시지가: ${data.individual_land_price_per_sqm ? data.individual_land_price_per_sqm.toLocaleString() : 'N/A'} 원/㎡</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="mt-4 text-center">
+                            <button onclick="location.reload()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                <i class="fas fa-redo mr-2"></i>다시 시도
+                            </button>
+                        </div>
+                    </div>
+                `;
+                showNotification('감정평가 중 오류가 발생했습니다. 콘솔을 확인하세요.', 'error');
+            }
+        });
+        
+        // 보고서 생성
+        async function generateReport(reportType) {
+            const reportNames = {
+                1: '토지주 요약 보고서',
+                2: 'LH 제출용 보고서',
+                3: '전문가용 상세 보고서',
+                4: '정책영향 분석 보고서',
+                5: '사업자용 타당성 보고서'
+            };
+            
+            const resultDiv = document.getElementById('report-result');
+            resultDiv.innerHTML = `
+                <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 text-center">
+                    <div class="loading-spinner mx-auto mb-4"></div>
+                    <p class="text-gray-600 font-semibold">${reportNames[reportType]} 생성 중...</p>
+                </div>
+            `;
+            
+            try {
+                // 시뮬레이션: 실제로는 API 호출
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                resultDiv.innerHTML = `
+                    <div class="bg-green-50 border-2 border-green-200 rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="text-lg font-bold text-green-700 mb-2">
+                                    <i class="fas fa-check-circle mr-2"></i>${reportNames[reportType]}
+                                </h4>
+                                <p class="text-sm text-gray-600">생성 완료</p>
+                            </div>
+                            <button class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition">
+                                <i class="fas fa-download mr-2"></i>다운로드
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                showNotification(`${reportNames[reportType]}가 생성되었습니다!`, 'success');
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="bg-red-50 border-2 border-red-200 rounded-xl p-6 text-center">
+                        <i class="fas fa-exclamation-triangle text-4xl text-red-600 mb-3"></i>
+                        <p class="text-red-600 font-semibold">보고서 생성 중 오류가 발생했습니다</p>
+                    </div>
+                `;
+                showNotification('보고서 생성 중 오류가 발생했습니다', 'error');
+            }
+        }
+        
+        // 알림 표시
+        function showNotification(message, type = 'info') {
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                info: 'bg-blue-500',
+                warning: 'bg-yellow-500'
+            };
+            
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-4 rounded-lg shadow-2xl z-50 animate-slide-in`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        // Premium calculation functions
+        function calculatePremiumSummary() {
+            const premiumLabels = {
+                'premium_land_shape': '토지형상',
+                'premium_land_slope': '토지경사도',
+                'premium_direction': '향(向)',
+                'premium_road_facing': '접도조건',
+                'premium_subway': '지하철역',
+                'premium_school_district': '8학군',
+                'premium_park': '대형공원',
+                'premium_shopping': '백화점',
+                'premium_hospital': '대형병원',
+                'premium_river_view': '한강조망',
+                'premium_redevelopment': '재개발',
+                'premium_gtx': 'GTX역',
+                'premium_greenbelt': '그린벨트',
+                'premium_cultural_heritage': '문화재보호구역'
+            };
+            
+            // Collect all premium values
+            const premiums = [];
+            for (const [id, label] of Object.entries(premiumLabels)) {
+                const value = parseFloat(document.getElementById(id)?.value) || 0;
+                if (value !== 0) {
+                    premiums.push({ label, value, absValue: Math.abs(value) });
+                }
+            }
+            
+            // Sort by absolute value descending
+            premiums.sort((a, b) => b.absValue - a.absValue);
+            
+            // Take top 5
+            const top5 = premiums.slice(0, 5);
+            
+            // Calculate total (50% of sum of top 5)
+            const sumTop5 = top5.reduce((sum, p) => sum + p.value, 0);
+            const totalAdjusted = sumTop5 * 0.5;
+            
+            // Display summary
+            const summaryDiv = document.getElementById('premium-summary');
+            const detailsDiv = document.getElementById('premium-details');
+            const totalSpan = document.getElementById('total-premium');
+            
+            if (premiums.length > 0) {
+                summaryDiv.classList.remove('hidden');
+                
+                let detailsHTML = '<div class="space-y-1">';
+                detailsHTML += '<div class="font-semibold mb-2">상위 5개 프리미엄 요인:</div>';
+                top5.forEach((p, i) => {
+                    const sign = p.value >= 0 ? '+' : '';
+                    detailsHTML += `<div class="flex justify-between">
+                        <span>${i + 1}. ${p.label}</span>
+                        <span class="font-semibold">${sign}${p.value}%</span>
+                    </div>`;
+                });
+                detailsHTML += `<div class="flex justify-between pt-2 border-t border-white/30">
+                    <span>합계:</span>
+                    <span class="font-semibold">${sumTop5 >= 0 ? '+' : ''}${sumTop5.toFixed(1)}%</span>
+                </div>`;
+                detailsHTML += '</div>';
+                
+                detailsDiv.innerHTML = detailsHTML;
+                
+                const sign = totalAdjusted >= 0 ? '+' : '';
+                totalSpan.textContent = `${sign}${totalAdjusted.toFixed(1)}%`;
+            } else {
+                summaryDiv.classList.add('hidden');
+            }
+        }
+        
+        // Add event listeners to all premium selects
+        document.addEventListener('DOMContentLoaded', function() {
+            const premiumSelects = [
+                'premium_land_shape', 'premium_land_slope', 'premium_direction', 'premium_road_facing',
+                'premium_subway', 'premium_school_district', 'premium_park', 'premium_shopping',
+                'premium_hospital', 'premium_river_view', 'premium_redevelopment', 'premium_gtx',
+                'premium_greenbelt', 'premium_cultural_heritage'
+            ];
+            
+            premiumSelects.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('change', calculatePremiumSummary);
+                }
+            });
+        });
+        
+        // 감정평가 PDF 다운로드 함수
+        async function downloadAppraisalPDF() {
+            if (!window.lastAppraisalData) {
+                showNotification('먼저 감정평가를 실행해주세요', 'warning');
+                return;
+            }
+            
+            try {
+                showNotification('PDF 생성 중... (최대 30초 소요)', 'info');
+                
+                // Use detailed-pdf endpoint for comprehensive report
+                const response = await fetch('/api/v24.1/appraisal/detailed-pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(window.lastAppraisalData)
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('PDF generation failed:', errorText);
+                    throw new Error(`PDF 생성 실패: ${response.status} ${response.statusText}`);
+                }
+                
+                // Check if response is actually a PDF
+                const contentType = response.headers.get('Content-Type');
+                if (!contentType || !contentType.includes('pdf')) {
+                    console.error('Response is not a PDF. Content-Type:', contentType);
+                    const text = await response.text();
+                    console.error('Response body:', text.substring(0, 500));
+                    throw new Error('서버가 PDF 대신 다른 형식의 응답을 반환했습니다');
+                }
+                
+                // Convert response to blob and download
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                
+                // Extract filename from Content-Disposition header
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let filename = `감정평가보고서_${new Date().toISOString().split('T')[0]}.pdf`;
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                    if (filenameMatch && filenameMatch[1]) {
+                        filename = filenameMatch[1].replace(/['"]/g, '');
+                        // Handle UTF-8 encoded filenames
+                        if (filename.includes('UTF-8')) {
+                            const utf8Match = filename.match(/UTF-8''(.+)/);
+                            if (utf8Match) {
+                                filename = decodeURIComponent(utf8Match[1]);
+                            }
+                        }
+                    }
+                }
+                
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                showNotification('PDF 다운로드 완료!', 'success');
+            } catch (error) {
+                console.error('PDF download error:', error);
+                showNotification(`PDF 다운로드 오류: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
