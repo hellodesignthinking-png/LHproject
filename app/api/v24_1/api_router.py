@@ -104,13 +104,13 @@ class PremiumFactors(BaseModel):
 
 
 class AppraisalRequest(BaseModel):
-    """Request model for appraisal - All fields except address have safe defaults"""
+    """Request model for appraisal - All fields except address are dynamically fetched from real APIs"""
     address: str = Field(..., description="Property address", example="서울시 마포구 공덕동 123-4")
     land_area_sqm: Optional[float] = Field(660.0, gt=0, description="Land area in ㎡ (default 660㎡)", example=660.0)
-    zone_type: Optional[str] = Field("제2종일반주거지역", description="Zoning type (auto-detected if not provided)", example="제3종일반주거지역")
-    individual_land_price_per_sqm: Optional[float] = Field(None, gt=0, description="Individual land price KRW/㎡ (auto-detected if not provided)", example=7000000)
-    premium_factors: Optional[PremiumFactors] = Field(None, description="Premium adjustment factors (auto-detected based on address)")
-    comparable_sales: Optional[List[ComparableSale]] = Field(None, description="List of comparable sales (auto-fetched from MOLIT if not provided)")
+    zone_type: Optional[str] = Field(None, description="Zoning type (auto-detected from vworld API if not provided)", example="제3종일반주거지역")
+    individual_land_price_per_sqm: Optional[float] = Field(None, gt=0, description="Individual land price KRW/㎡ (auto-detected from NLIS API if not provided)", example=7000000)
+    premium_factors: Optional[PremiumFactors] = Field(None, description="Premium adjustment factors (auto-detected based on address using PremiumAutoDetector)")
+    comparable_sales: Optional[List[ComparableSale]] = Field(None, description="List of comparable sales (auto-fetched from MOLIT API if not provided)")
 
 
 class ReportGenerationRequest(BaseModel):
@@ -1491,3 +1491,162 @@ async def generate_detailed_appraisal_pdf(request: AppraisalRequest):
     except Exception as e:
         logger.error(f"❌ Detailed PDF generation failed: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"상세 PDF 생성 실패: {str(e)}")
+
+
+@router.post("/appraisal/html")
+async def generate_detailed_appraisal_html(request: AppraisalRequest):
+    """
+    **상세 감정평가 보고서 HTML 미리보기**
+    
+    🆕 v29.0 FEATURE: PDF와 동일한 내용을 HTML로 미리보기
+    
+    상세한 계산 과정, 입지/인프라 분석, 개발/규제 분석, 프리미엄 요인 분석이 포함된
+    전문가급 감정평가 보고서를 HTML로 미리볼 수 있습니다.
+    
+    Returns: HTML content (text/html)
+    """
+    try:
+        logger.info(f"🌐 Generating DETAILED appraisal HTML for: {request.address}")
+        
+        # ========================================
+        # Step 1: Execute appraisal with all engines
+        # ========================================
+        engine = AppraisalEngineV241()
+        
+        # Auto-load land price if not provided
+        individual_land_price = request.individual_land_price_per_sqm
+        if not individual_land_price:
+            try:
+                from app.services.individual_land_price_api import IndividualLandPriceAPI
+                price_api = IndividualLandPriceAPI()
+                individual_land_price = price_api.get_individual_land_price(request.address)
+                logger.info(f"🏘️ Auto-loaded land price: {individual_land_price:,} 원/㎡")
+            except Exception as e:
+                logger.warning(f"Land price auto-load failed: {e}")
+                individual_land_price = 8000000
+        
+        # ========================================
+        # Step 1.5: Auto-detect premium factors
+        # ========================================
+        premium_factors_data = {}
+        
+        # First, try auto-detection based on address
+        try:
+            from app.services.premium_auto_detector import PremiumAutoDetector
+            auto_detector = PremiumAutoDetector()
+            auto_detected = auto_detector.auto_detect_premium_factors(request.address)
+            if auto_detected:
+                premium_factors_data.update(auto_detected)
+                logger.info(f"🤖 Auto-detected {len(auto_detected)} premium factors for HTML")
+                logger.info(f"   Auto-detected: {auto_detected}")
+            else:
+                logger.warning(f"⚠️ No premium factors auto-detected for address: {request.address}")
+        except Exception as e:
+            logger.error(f"❌ Premium auto-detection failed: {e}", exc_info=True)
+        
+        # Then merge with user-provided values (user values override auto-detected)
+        # Only override if user value is non-zero
+        if request.premium_factors:
+            user_factors = request.premium_factors.model_dump()
+            non_zero_user_factors = {k: v for k, v in user_factors.items() if v != 0}
+            premium_factors_data.update(non_zero_user_factors)
+            logger.info(f"✏️ Merged {len(non_zero_user_factors)} non-zero user-provided premium factors")
+            logger.info(f"   User factors: {list(non_zero_user_factors.keys())}")
+        
+        logger.info(f"📋 Total premium factors for HTML: {len(premium_factors_data)} factors")
+        
+        # Prepare input data
+        input_data = {
+            'address': request.address,
+            'land_area_sqm': request.land_area_sqm,
+            'zone_type': request.zone_type,
+            'individual_land_price_per_sqm': individual_land_price,
+            'premium_factors': premium_factors_data,
+            'comparable_sales': [cs.model_dump() for cs in request.comparable_sales] if request.comparable_sales else []
+        }
+        
+        # Execute appraisal
+        appraisal_result = engine.process(input_data)
+        logger.info(f"✅ Appraisal complete: {appraisal_result.get('final_appraisal_value', 0)}억원")
+        
+        # Log premium info for debugging
+        premium_info = appraisal_result.get('premium_info', {})
+        logger.info(f"📊 Premium info: has_premium={premium_info.get('has_premium')}, percentage={premium_info.get('premium_percentage', 0):.1f}%")
+        
+        # ========================================
+        # Step 2: Run location/infra analysis
+        # ========================================
+        from app.engines.location_infra_engine import get_location_engine
+        location_engine = get_location_engine()
+        location_analysis = location_engine.analyze(request.address)
+        
+        # ========================================
+        # Step 3: Run development/regulation analysis
+        # ========================================
+        from app.engines.development_regulation_engine import get_development_engine
+        dev_engine = get_development_engine()
+        dev_analysis = dev_engine.analyze(
+            zone_type=request.zone_type,
+            bcr_legal=50.0,  # Default, should be from zoning API
+            far_legal=200.0,  # Default, should be from zoning API
+            address=request.address
+        )
+        
+        # ========================================
+        # Step 4: Merge all analysis into appraisal_result
+        # ========================================
+        appraisal_result['location_analysis'] = {
+            'overall_score': location_analysis.overall_score,
+            'transport_score': location_analysis.transport_score,
+            'education_score': location_analysis.education_score,
+            'convenience_score': location_analysis.convenience_score,
+            'medical_score': location_analysis.medical_score,
+            'narrative': location_analysis.narrative,
+            'details': location_analysis.details
+        }
+        
+        appraisal_result['development_analysis'] = {
+            'regulation_score': dev_analysis.regulation_score,
+            'opportunity_factors': dev_analysis.opportunity_factors,
+            'constraint_factors': dev_analysis.constraint_factors,
+            'narrative': dev_analysis.narrative,
+            'details': dev_analysis.details
+        }
+        
+        # ========================================
+        # Step 5: Generate HTML using COMPLETE generator (v25.0)
+        # ========================================
+        from app.services.complete_appraisal_pdf_generator import get_pdf_generator
+        
+        pdf_generator = get_pdf_generator()
+        
+        # Add address info
+        appraisal_result['address'] = request.address
+        appraisal_result['land_area_sqm'] = request.land_area_sqm
+        appraisal_result['zone_type'] = request.zone_type
+        appraisal_result['individual_land_price'] = individual_land_price
+        
+        logger.info("🎯 Using CompleteAppraisalPDFGenerator v25.0 for HTML preview")
+        
+        # Generate HTML content (same template as PDF)
+        html_content = pdf_generator.generate_pdf_html(
+            appraisal_data=appraisal_result
+        )
+        
+        logger.info(f"✅ Detailed HTML generated: {len(html_content)} chars")
+        
+        # ========================================
+        # Step 6: Return HTML directly for browser preview
+        # ========================================
+        from fastapi.responses import HTMLResponse
+        
+        return HTMLResponse(
+            content=html_content,
+            headers={
+                "Cache-Control": "no-cache"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Detailed HTML generation failed: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"상세 HTML 생성 실패: {str(e)}")

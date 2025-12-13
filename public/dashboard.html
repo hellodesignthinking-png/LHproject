@@ -469,10 +469,16 @@
                             </div>
                         </div>
                         
-                        <button type="submit"
-                            class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white font-bold py-4 px-6 rounded-lg hover:from-green-700 hover:to-green-800 transition shadow-lg">
-                            <i class="fas fa-calculator mr-2"></i>감정평가 실행
-                        </button>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button type="submit"
+                                class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white font-bold py-4 px-6 rounded-lg hover:from-green-700 hover:to-green-800 transition shadow-lg">
+                                <i class="fas fa-file-pdf mr-2"></i>PDF 다운로드
+                            </button>
+                            <button type="button" id="previewHtmlBtn"
+                                class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold py-4 px-6 rounded-lg hover:from-blue-700 hover:to-blue-800 transition shadow-lg">
+                                <i class="fas fa-eye mr-2"></i>HTML 미리보기
+                            </button>
+                        </div>
                     </form>
                 </div>
                 
@@ -1109,6 +1115,69 @@
                     </div>
                 `;
                 showNotification('감정평가 중 오류가 발생했습니다. 콘솔을 확인하세요.', 'error');
+            }
+        });
+        
+        // 🆕 v29.0 - HTML 미리보기 버튼 이벤트 리스너
+        document.getElementById('previewHtmlBtn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            const address = document.getElementById('appraisal_address').value;
+            const landAreaInput = document.getElementById('appraisal_land_area').value;
+            
+            if (!address) {
+                showNotification('주소를 입력해주세요', 'error');
+                return;
+            }
+            
+            // Show loading notification
+            showNotification('HTML 미리보기 생성 중...', 'info');
+            
+            try {
+                // Collect premium factors (physical characteristics)
+                const premiumFactors = {
+                    land_shape: parseFloat(document.getElementById('premium_land_shape')?.value || 0),
+                    land_slope: parseFloat(document.getElementById('premium_land_slope')?.value || 0),
+                    direction: parseFloat(document.getElementById('premium_direction')?.value || 0),
+                    road_facing: parseFloat(document.getElementById('premium_road_facing')?.value || 0)
+                };
+                
+                // Prepare request data
+                const data = {
+                    address: address,
+                    land_area_sqm: landAreaInput ? parseFloat(landAreaInput) : 660,
+                    premium_factors: premiumFactors
+                };
+                
+                // Call HTML preview API endpoint
+                const response = await fetch('/api/v24.1/appraisal/html', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    // Get HTML content
+                    const htmlContent = await response.text();
+                    
+                    // Open in new window
+                    const previewWindow = window.open('', '_blank', 'width=1200,height=900,menubar=yes,toolbar=yes,location=yes,status=yes,scrollbars=yes,resizable=yes');
+                    
+                    if (previewWindow) {
+                        previewWindow.document.write(htmlContent);
+                        previewWindow.document.close();
+                        showNotification('HTML 미리보기가 새 창에서 열렸습니다', 'success');
+                    } else {
+                        showNotification('팝업이 차단되었습니다. 팝업 허용 후 다시 시도하세요', 'error');
+                    }
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'HTML 생성 실패');
+                }
+                
+            } catch (error) {
+                console.error('HTML preview error:', error);
+                showNotification(`HTML 미리보기 실패: ${error.message}`, 'error');
             }
         });
         
