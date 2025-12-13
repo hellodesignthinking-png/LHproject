@@ -338,38 +338,44 @@ async def calculate_appraisal(request: AppraisalRequest):
             logger.info(f"📡 Comparable sales will be auto-fetched by engine")
         
         # ========================================
-        # 3. Auto-detect premium factors
+        # 3. Validate required fields (NO FALLBACKS!)
+        # ========================================
+        if not request.zone_type:
+            raise HTTPException(
+                status_code=400,
+                detail="zone_type is required. Frontend must fetch from zoning API first."
+            )
+        
+        if not individual_land_price:
+            raise HTTPException(
+                status_code=400,
+                detail="individual_land_price_per_sqm is required. Frontend must fetch from land price API first."
+            )
+        
+        # ========================================
+        # 4. Prepare premium factors (user input only, no auto-detection)
         # ========================================
         premium_factors_data = {}
         
-        # First, try auto-detection based on address
-        try:
-            from app.services.premium_auto_detector import PremiumAutoDetector
-            auto_detector = PremiumAutoDetector()
-            auto_detected = auto_detector.auto_detect_premium_factors(request.address)
-            if auto_detected:
-                premium_factors_data.update(auto_detected)
-                logger.info(f"🤖 Auto-detected {len(auto_detected)} premium factors")
-        except Exception as e:
-            logger.warning(f"Premium auto-detection failed: {e}")
-        
-        # Then merge with user-provided values (user values override auto-detected)
-        # Only override if user value is non-zero
         if request.premium_factors:
             user_factors = request.premium_factors.model_dump()
+            # Only include non-zero values
             non_zero_user_factors = {k: v for k, v in user_factors.items() if v != 0}
             premium_factors_data.update(non_zero_user_factors)
-            logger.info(f"✏️ Merged {len(non_zero_user_factors)} non-zero user-provided premium factors")
-            logger.info(f"   User factors: {list(non_zero_user_factors.keys())}")
+            logger.info(f"✏️ User-provided {len(non_zero_user_factors)} non-zero premium factors")
+            if non_zero_user_factors:
+                logger.info(f"   Factors: {list(non_zero_user_factors.keys())}")
+        else:
+            logger.info(f"📋 No premium factors provided (all defaults to 0)")
         
         # ========================================
-        # 4. Prepare input data with SAFE FALLBACKS
+        # 5. Prepare input data (all from frontend, NO FALLBACKS)
         # ========================================
         input_data = {
             'address': request.address,
-            'land_area_sqm': request.land_area_sqm or 660.0,  # Fallback to 660㎡
-            'zone_type': request.zone_type or "제2종일반주거지역",  # Fallback to common zone
-            'individual_land_price_per_sqm': individual_land_price,  # Use auto-loaded or user-provided
+            'land_area_sqm': request.land_area_sqm if request.land_area_sqm else 660.0,
+            'zone_type': request.zone_type,  # Required from frontend
+            'individual_land_price_per_sqm': individual_land_price,  # Required from frontend
             'premium_factors': premium_factors_data,
             'comparable_sales': comparable_sales_data
         }
@@ -1383,52 +1389,44 @@ async def generate_detailed_appraisal_pdf(request: AppraisalRequest):
         # ========================================
         engine = AppraisalEngineV241()
         
-        # Auto-load land price if not provided
+        # ========================================
+        # Validate required fields (NO FALLBACKS!)
+        # ========================================
+        if not request.zone_type:
+            raise HTTPException(
+                status_code=400,
+                detail="zone_type is required. Frontend must fetch from zoning API first."
+            )
+        
+        if not request.individual_land_price_per_sqm:
+            raise HTTPException(
+                status_code=400,
+                detail="individual_land_price_per_sqm is required. Frontend must fetch from land price API first."
+            )
+        
         individual_land_price = request.individual_land_price_per_sqm
-        if not individual_land_price:
-            try:
-                from app.services.individual_land_price_api import IndividualLandPriceAPI
-                price_api = IndividualLandPriceAPI()
-                individual_land_price = price_api.get_individual_land_price(request.address)
-                logger.info(f"🏘️ Auto-loaded land price: {individual_land_price:,} 원/㎡")
-            except Exception as e:
-                logger.warning(f"Land price auto-load failed: {e}")
-                individual_land_price = 8000000
+        logger.info(f"✅ Using provided land price for PDF: {individual_land_price:,} 원/㎡")
+        logger.info(f"✅ Using provided zone type for PDF: {request.zone_type}")
         
         # ========================================
-        # Step 1.5: Auto-detect premium factors
+        # Prepare premium factors (user input only, no auto-detection)
         # ========================================
         premium_factors_data = {}
         
-        # First, try auto-detection based on address
-        try:
-            from app.services.premium_auto_detector import PremiumAutoDetector
-            auto_detector = PremiumAutoDetector()
-            auto_detected = auto_detector.auto_detect_premium_factors(request.address)
-            if auto_detected:
-                premium_factors_data.update(auto_detected)
-                logger.info(f"🤖 Auto-detected {len(auto_detected)} premium factors for PDF")
-                logger.info(f"   Auto-detected: {auto_detected}")
-            else:
-                logger.warning(f"⚠️ No premium factors auto-detected for address: {request.address}")
-        except Exception as e:
-            logger.error(f"❌ Premium auto-detection failed: {e}", exc_info=True)
-        
-        # Then merge with user-provided values (user values override auto-detected)
-        # Only override if user value is non-zero
         if request.premium_factors:
             user_factors = request.premium_factors.model_dump()
             non_zero_user_factors = {k: v for k, v in user_factors.items() if v != 0}
             premium_factors_data.update(non_zero_user_factors)
-            logger.info(f"✏️ Merged {len(non_zero_user_factors)} non-zero user-provided premium factors")
-            logger.info(f"   User factors: {list(non_zero_user_factors.keys())}")
-        
-        logger.info(f"📋 Total premium factors for PDF: {len(premium_factors_data)} factors")
+            logger.info(f"✏️ User-provided {len(non_zero_user_factors)} non-zero premium factors for PDF")
+            if non_zero_user_factors:
+                logger.info(f"   Factors: {list(non_zero_user_factors.keys())}")
+        else:
+            logger.info(f"📋 No premium factors provided for PDF")
         
         # Prepare input data
         input_data = {
             'address': request.address,
-            'land_area_sqm': request.land_area_sqm,
+            'land_area_sqm': request.land_area_sqm if request.land_area_sqm else 660.0,
             'zone_type': request.zone_type,
             'individual_land_price_per_sqm': individual_land_price,
             'premium_factors': premium_factors_data,
@@ -1557,52 +1555,44 @@ async def generate_detailed_appraisal_html(request: AppraisalRequest):
         # ========================================
         engine = AppraisalEngineV241()
         
-        # Auto-load land price if not provided
+        # ========================================
+        # Validate required fields (NO FALLBACKS!)
+        # ========================================
+        if not request.zone_type:
+            raise HTTPException(
+                status_code=400,
+                detail="zone_type is required. Frontend must fetch from zoning API first."
+            )
+        
+        if not request.individual_land_price_per_sqm:
+            raise HTTPException(
+                status_code=400,
+                detail="individual_land_price_per_sqm is required. Frontend must fetch from land price API first."
+            )
+        
         individual_land_price = request.individual_land_price_per_sqm
-        if not individual_land_price:
-            try:
-                from app.services.individual_land_price_api import IndividualLandPriceAPI
-                price_api = IndividualLandPriceAPI()
-                individual_land_price = price_api.get_individual_land_price(request.address)
-                logger.info(f"🏘️ Auto-loaded land price: {individual_land_price:,} 원/㎡")
-            except Exception as e:
-                logger.warning(f"Land price auto-load failed: {e}")
-                individual_land_price = 8000000
+        logger.info(f"✅ Using provided land price: {individual_land_price:,} 원/㎡")
+        logger.info(f"✅ Using provided zone type: {request.zone_type}")
         
         # ========================================
-        # Step 1.5: Auto-detect premium factors
+        # Prepare premium factors (user input only, no auto-detection)
         # ========================================
         premium_factors_data = {}
         
-        # First, try auto-detection based on address
-        try:
-            from app.services.premium_auto_detector import PremiumAutoDetector
-            auto_detector = PremiumAutoDetector()
-            auto_detected = auto_detector.auto_detect_premium_factors(request.address)
-            if auto_detected:
-                premium_factors_data.update(auto_detected)
-                logger.info(f"🤖 Auto-detected {len(auto_detected)} premium factors for HTML")
-                logger.info(f"   Auto-detected: {auto_detected}")
-            else:
-                logger.warning(f"⚠️ No premium factors auto-detected for address: {request.address}")
-        except Exception as e:
-            logger.error(f"❌ Premium auto-detection failed: {e}", exc_info=True)
-        
-        # Then merge with user-provided values (user values override auto-detected)
-        # Only override if user value is non-zero
         if request.premium_factors:
             user_factors = request.premium_factors.model_dump()
             non_zero_user_factors = {k: v for k, v in user_factors.items() if v != 0}
             premium_factors_data.update(non_zero_user_factors)
-            logger.info(f"✏️ Merged {len(non_zero_user_factors)} non-zero user-provided premium factors")
-            logger.info(f"   User factors: {list(non_zero_user_factors.keys())}")
-        
-        logger.info(f"📋 Total premium factors for HTML: {len(premium_factors_data)} factors")
+            logger.info(f"✏️ User-provided {len(non_zero_user_factors)} non-zero premium factors for HTML")
+            if non_zero_user_factors:
+                logger.info(f"   Factors: {list(non_zero_user_factors.keys())}")
+        else:
+            logger.info(f"📋 No premium factors provided for HTML")
         
         # Prepare input data
         input_data = {
             'address': request.address,
-            'land_area_sqm': request.land_area_sqm,
+            'land_area_sqm': request.land_area_sqm if request.land_area_sqm else 660.0,
             'zone_type': request.zone_type,
             'individual_land_price_per_sqm': individual_land_price,
             'premium_factors': premium_factors_data,
