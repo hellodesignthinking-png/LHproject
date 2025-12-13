@@ -36,6 +36,11 @@ from app.services.final_appraisal_pdf_generator import FinalAppraisalPDFGenerato
 from app.services.land_diagnosis_pdf_generator import LandDiagnosisPDFGenerator
 from app.services.pdf_storage_service import PDFStorageService
 
+# v36.0 NATIONWIDE: Import nationwide support modules
+from app.services.advanced_address_parser_v36 import get_address_parser_v36
+from app.data.nationwide_prices import get_market_price, estimate_official_price, get_zone_type_suggestion
+from app.services.universal_transaction_engine import UniversalTransactionEngine
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v24.1", tags=["ZeroSite v24.1"])
@@ -292,34 +297,68 @@ async def calculate_appraisal(request: AppraisalRequest):
     """
     **Dashboard Button 3: 감정평가**
     
+    v36.0 NATIONWIDE: Now supports all 17 provinces/229 cities with automatic zone/price estimation!
+    
     Standard Korean real estate appraisal using 3 approaches:
     1. Cost Approach (원가법)
     2. Sales Comparison (거래사례비교법)
     3. Income Approach (수익환원법)
     """
     try:
-        logger.info(f"Starting appraisal for {request.address}")
+        logger.info(f"🌏 [v36 NATIONWIDE] Starting appraisal for {request.address}")
+        
+        # ========================================
+        # V36.0: Step 1 - Parse address for nationwide support
+        # ========================================
+        parser = get_address_parser_v36()
+        parsed_address = parser.parse(request.address)
+        
+        sido = parsed_address.get('sido')
+        sigungu = parsed_address.get('sigungu')
+        dong = parsed_address.get('dong')
+        
+        logger.info(f"   📍 Parsed: {sido} / {sigungu} / {dong}")
+        
+        # ========================================
+        # V36.0: Step 2 - Auto-estimate zone type (if not provided)
+        # ========================================
+        zone_type = request.zone_type
+        if not zone_type:
+            zone_type = get_zone_type_suggestion(sido, sigungu)
+            logger.info(f"   🏘️ Auto-estimated zone_type: {zone_type}")
+        else:
+            logger.info(f"   ✏️ User-provided zone_type: {zone_type}")
+        
+        # ========================================
+        # V36.0: Step 3 - Get market price and auto-estimate official price
+        # ========================================
+        market_price_per_sqm = get_market_price(sido, sigungu, dong)  # Returns 만원/㎡
+        market_price_per_sqm_krw = market_price_per_sqm * 10000  # Convert to 원/㎡
+        
+        individual_land_price = request.individual_land_price_per_sqm
+        if not individual_land_price:
+            # Auto-estimate official price from market price
+            official_price_per_sqm = estimate_official_price(market_price_per_sqm, zone_type)  # 만원/㎡
+            individual_land_price = int(official_price_per_sqm * 10000)  # Convert to 원/㎡
+            logger.info(f"   💰 Auto-estimated official price: {individual_land_price:,} 원/㎡ (from market {market_price_per_sqm:.0f}만원/㎡)")
+        else:
+            logger.info(f"   ✏️ User-provided land price: {individual_land_price:,} 원/㎡")
+        
+        # ========================================
+        # V36.0: Step 4 - Generate nationwide transactions
+        # ========================================
+        transaction_engine = UniversalTransactionEngine()
+        generated_transactions = transaction_engine.generate_transactions(
+            sido=sido or "서울특별시",
+            sigungu=sigungu or "강남구",
+            dong=dong,
+            base_price=market_price_per_sqm,
+            land_area_sqm=request.land_area_sqm,
+            num_transactions=15
+        )
+        logger.info(f"   📊 Generated {len(generated_transactions)} nationwide transactions")
         
         engine = AppraisalEngineV241()
-        
-        # ========================================
-        # 1. Auto-load Individual Land Price (개별공시지가)
-        # ========================================
-        individual_land_price = request.individual_land_price_per_sqm
-        
-        if not individual_land_price:
-            try:
-                from app.services.individual_land_price_api import IndividualLandPriceAPI
-                price_api = IndividualLandPriceAPI()
-                individual_land_price = price_api.get_individual_land_price(request.address)
-                logger.info(f"🏘️ Auto-loaded individual land price: {individual_land_price:,} 원/㎡")
-            except Exception as e:
-                logger.warning(f"Failed to auto-load land price: {e}")
-                # Fallback to default based on zone
-                individual_land_price = 5_000_000  # Default 500만원/㎡
-                logger.info(f"⚠️ Using default land price: {individual_land_price:,} 원/㎡")
-        else:
-            logger.info(f"✏️ User-provided land price: {individual_land_price:,} 원/㎡")
         
         # ========================================
         # 2. Prepare comparable sales data
@@ -336,30 +375,10 @@ async def calculate_appraisal(request: AppraisalRequest):
                 })
             logger.info(f"✏️ User-provided {len(comparable_sales_data)} comparable sales")
         else:
-            logger.info(f"📡 Comparable sales will be auto-fetched by engine")
-        
-        # ========================================
-        # 3. Handle missing fields with intelligent fallbacks (v32.0)
-        # ========================================
-        zone_type = request.zone_type
-        if not zone_type:
-            # Fallback to default zone type
-            zone_type = '제2종일반주거지역'  # Most common
-            logger.warning(f"⚠️ zone_type not provided, using default: {zone_type}")
-        
-        if not individual_land_price:
-            # Fallback to market-based estimation
-            logger.warning(f"⚠️ individual_land_price not provided, using fallback estimation")
-            # Estimate based on zone type
-            zone_price_map = {
-                '제1종일반주거지역': 8_000_000,
-                '제2종일반주거지역': 10_000_000,
-                '제3종일반주거지역': 12_000_000,
-                '준주거지역': 15_000_000,
-                '일반상업지역': 20_000_000
-            }
-            individual_land_price = zone_price_map.get(zone_type, 10_000_000)
-            logger.info(f"   Estimated land price: {individual_land_price:,} 원/㎡")
+            # Use generated transactions as comparables
+            if generated_transactions:
+                comparable_sales_data = transaction_engine.generate_comparable_sales(generated_transactions, num_comparables=5)
+                logger.info(f"📡 Auto-generated {len(comparable_sales_data)} comparable sales from transactions")
         
         # ========================================
         # 4. Prepare premium factors (user input only, no auto-detection)
@@ -378,18 +397,23 @@ async def calculate_appraisal(request: AppraisalRequest):
             logger.info(f"📋 No premium factors provided (all defaults to 0)")
         
         # ========================================
-        # 5. Prepare input data (v32.0 with intelligent fallbacks)
+        # 5. Prepare input data (v36.0 NATIONWIDE with automatic estimation)
         # ========================================
         input_data = {
             'address': request.address,
             'land_area_sqm': request.land_area_sqm if request.land_area_sqm else 660.0,
-            'zone_type': zone_type,  # Now with fallback
-            'individual_land_price_per_sqm': individual_land_price,  # Now with fallback
+            'zone_type': zone_type,  # Auto-estimated or user-provided
+            'individual_land_price_per_sqm': individual_land_price,  # Auto-estimated or user-provided
             'premium_factors': premium_factors_data,
-            'comparable_sales': comparable_sales_data
+            'comparable_sales': comparable_sales_data,
+            # V36.0: Include parsed address and transactions for PDF generation
+            'parsed_address': parsed_address,
+            'generated_transactions': generated_transactions,
+            'market_price_per_sqm': market_price_per_sqm  # Store in 만원/㎡ for consistency
         }
         
-        logger.info(f"📋 Final input data: land={input_data['land_area_sqm']}㎡, zone={input_data['zone_type']}, price={input_data['individual_land_price_per_sqm']:,}원/㎡")
+        logger.info(f"📋 [v36] Final input: land={input_data['land_area_sqm']}㎡, zone={input_data['zone_type']}, price={individual_land_price:,}원/㎡")
+        logger.info(f"   🌏 Address: {sido} {sigungu} {dong or ''}, Market: {market_price_per_sqm:.0f}만원/㎡")
         
         result = engine.process(input_data)
         
