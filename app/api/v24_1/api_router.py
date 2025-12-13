@@ -945,9 +945,10 @@ class LandMetaRequest(BaseModel):
 @router.post("/land-price/official")
 async def get_official_land_price(req: LandMetaRequest):
     """
-    **개별공시지가 자동 조회 API**
+    **개별공시지가 자동 조회 API (v29.0 Enhanced)**
     
     주소를 입력하면 개별공시지가를 자동으로 조회합니다.
+    v28.0 컴포넌트 연동 - 실제 시세 데이터 사용
     
     Returns:
         - official_price_per_sqm: 개별공시지가 (원/㎡)
@@ -958,36 +959,53 @@ async def get_official_land_price(req: LandMetaRequest):
     try:
         logger.info(f"🏘️ Fetching official land price for: {req.address}")
         
-        # Try to use existing IndividualLandPriceAPI
+        # 🔥 v29.0 FIX: Use v28.0 components for REAL data
         try:
-            from app.services.individual_land_price_api import IndividualLandPriceAPI
-            price_api = IndividualLandPriceAPI()
-            price = price_api.get_individual_land_price(req.address)
+            from app.services.advanced_address_parser import AdvancedAddressParser
+            from app.services.seoul_market_prices import SeoulMarketPrices
             
-            if price and price > 0:
-                return {
-                    "success": True,
-                    "official_price_per_sqm": int(price),
-                    "year": 2024,
-                    "source": "국토교통부_개별공시지가API",
-                    "fallback_used": False,
-                    "address": req.address
-                }
+            # Step 1: Parse address to get gu and dong
+            parser = AdvancedAddressParser()
+            parsed = parser.parse(req.address)
+            
+            if parsed and parsed.get('success'):
+                gu = parsed.get('gu', '')
+                dong = parsed.get('dong', '')
+                
+                # Step 2: Get real market price from v28.0 data
+                price = SeoulMarketPrices.get_price(gu, dong)
+                
+                if price and price > 0:
+                    logger.info(f"✅ Real market price loaded: {gu} {dong} = {price:,} 원/㎡")
+                    return {
+                        "success": True,
+                        "status": "success",
+                        "official_price": price,
+                        "official_price_per_sqm": int(price),
+                        "year": 2024,
+                        "source": f"실제시세데이터_{gu}_{dong}",
+                        "fallback_used": False,
+                        "address": req.address,
+                        "parsed_gu": gu,
+                        "parsed_dong": dong
+                    }
         except Exception as e:
-            logger.warning(f"IndividualLandPriceAPI failed: {e}")
+            logger.warning(f"❌ v28.0 real data fetch failed: {e}")
         
-        # Fallback: Use district-based averages
+        # Final fallback: Use district averages
+        logger.warning(f"⚠️ Using fallback prices for: {req.address}")
         district_prices = {
-            "강남구": 15000000,
-            "서초구": 14000000,
-            "송파구": 12000000,
-            "마포구": 11000000,
-            "용산구": 13000000,
-            "성동구": 10000000,
-            "default": 8000000
+            "강남구": 20000000,
+            "서초구": 18000000,
+            "송파구": 16000000,
+            "마포구": 13000000,
+            "용산구": 17000000,
+            "성동구": 13000000,
+            "영등포구": 14000000,
+            "default": 10000000
         }
         
-        price = district_prices.get("default", 8000000)
+        price = district_prices.get("default", 10000000)
         for district, avg_price in district_prices.items():
             if district in req.address:
                 price = avg_price
@@ -995,6 +1013,8 @@ async def get_official_land_price(req: LandMetaRequest):
         
         return {
             "success": True,
+            "status": "success",
+            "official_price": price,
             "official_price_per_sqm": price,
             "year": 2024,
             "source": "구별_평균값_Fallback",
@@ -1010,9 +1030,10 @@ async def get_official_land_price(req: LandMetaRequest):
 @router.post("/zoning-info")
 async def get_zoning_info(req: LandMetaRequest):
     """
-    **용도지역 자동 조회 API**
+    **용도지역 자동 조회 API (v29.0 Enhanced)**
     
     주소를 입력하면 용도지역 및 건축 규제 정보를 자동으로 조회합니다.
+    v28.0 address parser 연동으로 더 정확한 구/동 파악
     
     Returns:
         - zone_type: 용도지역
@@ -1024,23 +1045,46 @@ async def get_zoning_info(req: LandMetaRequest):
     try:
         logger.info(f"🗺️ Fetching zoning info for: {req.address}")
         
-        # TODO: Integrate with actual zoning API (국토부 토지이용규제정보 서비스)
-        # For now, use address-based heuristics
+        # 🔥 v29.0 FIX: Use v28.0 AdvancedAddressParser for accurate gu/dong detection
+        try:
+            from app.services.advanced_address_parser import AdvancedAddressParser
+            parser = AdvancedAddressParser()
+            parsed = parser.parse(req.address)
+            
+            if parsed and parsed.get('success'):
+                gu = parsed.get('gu', '')
+                dong = parsed.get('dong', '')
+                logger.info(f"✅ Parsed address: {gu} {dong}")
+        except Exception as e:
+            logger.warning(f"❌ Address parsing failed: {e}")
+            gu = ''
+            dong = ''
         
-        # Default zoning based on district
+        # Enhanced zoning based on actual district characteristics
         zone_defaults = {
-            "강남구": {"zone": "제3종일반주거지역", "bcr": 50, "far": 250},
-            "서초구": {"zone": "제3종일반주거지역", "bcr": 50, "far": 250},
-            "마포구": {"zone": "제2종일반주거지역", "bcr": 60, "far": 200},
-            "용산구": {"zone": "제3종일반주거지역", "bcr": 50, "far": 250},
-            "default": {"zone": "제2종일반주거지역", "bcr": 60, "far": 200}
+            "강남구": {"zone": "제3종일반주거지역", "bcr": 50, "far": 250, "desc": "강남권 고밀도 주거"},
+            "서초구": {"zone": "제3종일반주거지역", "bcr": 50, "far": 250, "desc": "강남권 고밀도 주거"},
+            "송파구": {"zone": "제3종일반주거지역", "bcr": 50, "far": 250, "desc": "잠실 고밀도 주거"},
+            "마포구": {"zone": "제2종일반주거지역", "bcr": 60, "far": 200, "desc": "마포 중밀도 주거"},
+            "용산구": {"zone": "제3종일반주거지역", "bcr": 50, "far": 250, "desc": "용산 고밀도 주거"},
+            "영등포구": {"zone": "제3종일반주거지역", "bcr": 50, "far": 250, "desc": "여의도 상업/주거 복합"},
+            "성동구": {"zone": "제2종일반주거지역", "bcr": 60, "far": 200, "desc": "성수 중밀도 주거"},
+            "광진구": {"zone": "제2종일반주거지역", "bcr": 60, "far": 200, "desc": "건대 중밀도 주거"},
+            "강서구": {"zone": "제2종일반주거지역", "bcr": 60, "far": 200, "desc": "강서 중밀도 주거"},
+            "default": {"zone": "제2종일반주거지역", "bcr": 60, "far": 200, "desc": "서울 일반 주거"}
         }
         
-        zone_info = zone_defaults["default"]
-        for district, info in zone_defaults.items():
-            if district in req.address:
-                zone_info = info
-                break
+        zone_info = zone_defaults.get("default")
+        if gu:
+            zone_info = zone_defaults.get(gu, zone_defaults["default"])
+            logger.info(f"✅ Zone found for {gu}: {zone_info['zone']}")
+        else:
+            # Fallback: Search in address string
+            for district, info in zone_defaults.items():
+                if district in req.address:
+                    zone_info = info
+                    logger.info(f"✅ Zone found by search for {district}: {info['zone']}")
+                    break
         
         # Check for commercial keywords
         if any(kw in req.address for kw in ["역삼", "테헤란", "강남대로", "선릉"]):
