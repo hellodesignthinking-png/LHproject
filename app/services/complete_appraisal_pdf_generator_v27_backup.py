@@ -1,22 +1,16 @@
 """
-Complete Appraisal PDF Generator v30.0
+Complete Appraisal PDF Generator v27.0
 완전히 작동하는 상세 감정평가 보고서 생성기
 
-✨ v30.0 새로운 기능:
-1. 🎨 프로페셔널 디자인 (블루 컬러 스킴, 세련된 타이포그래피)
-2. 📊 향상된 시각적 요소 (그래디언트, 섀도우, 아이콘)
-3. 📈 가독성 향상 (폰트 크기 증가, 여백 최적화)
-4. 🎯 섹션별 색상 코딩 (원가법-그린, 거래사례-블루, 수익환원-오렌지)
-5. ✅ 최종 평가액 강조 박스 (48pt, 블루 그래디언트)
-
-기존 기능 유지:
-- ✅ MOLIT API 통합 (실거래가 + 지능형 Fallback)
-- ✅ 구별 실제 시세 반영
-- ✅ 정확한 법정동 주소 표시
-- ✅ 최근 거래일자 우선 정렬
-- ✅ 거리 계산 & 표시
-- ✅ 프리미엄 계산 근거 + 텍스트 설명
-- ✅ 3-법 요약표 추가
+핵심 기능:
+1. ✅ MOLIT API 통합 (실거래가 + 지능형 Fallback)
+2. ✅ 구별 실제 시세 반영 (강남 18M, 서초 15M, 송파 13M)
+3. ✅ 정확한 법정동 주소 표시
+4. ✅ 최근 거래일자 우선 정렬
+5. ✅ 거리 계산 & 표시
+6. ✅ 프리미엄 계산 근거 + 텍스트 설명
+7. ✅ 3-법 요약표 추가
+8. ✅ 깔끔한 PDF 디자인
 """
 
 from typing import Dict, List, Any
@@ -32,7 +26,7 @@ class CompleteAppraisalPDFGenerator:
     def __init__(self):
         """초기화"""
         self.PYEONG_CONVERSION = 3.3058
-        logger.info("✨ CompleteAppraisalPDFGenerator v30.0 initialized (Enhanced Design + Professional Layout)")
+        logger.info("✅ CompleteAppraisalPDFGenerator v27.0 initialized (MOLIT API + Intelligent Fallback)")
     
     
     def generate_pdf_html(self, appraisal_data: Dict) -> str:
@@ -580,10 +574,10 @@ class CompleteAppraisalPDFGenerator:
         }}
         
         body {{
-            font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
-            font-size: 11pt;
-            line-height: 1.7;
-            color: #2c3e50;
+            font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+            font-size: 10pt;
+            line-height: 1.6;
+            color: #333;
         }}
         
         .section-page {{
@@ -592,12 +586,12 @@ class CompleteAppraisalPDFGenerator:
         }}
         
         .section-title {{
-            font-size: 24pt;
+            font-size: 20pt;
             font-weight: 700;
-            color: #0066CC;
-            border-bottom: 4px solid #0066CC;
-            padding-bottom: 12px;
-            margin-bottom: 30px;
+            color: #1a1a2e;
+            border-bottom: 3px solid #e94560;
+            padding-bottom: 10px;
+            margin-bottom: 25px;
         }}
         
         /* Cover Page */
@@ -612,19 +606,17 @@ class CompleteAppraisalPDFGenerator:
         }}
         
         .cover-title h1 {{
-            font-size: 42pt;
+            font-size: 36pt;
             font-weight: 800;
-            color: #0066CC;
-            margin-bottom: 15px;
-            letter-spacing: 2px;
+            color: #1a1a2e;
+            margin-bottom: 10px;
         }}
         
         .cover-title h2 {{
-            font-size: 20pt;
-            font-weight: 300;
-            color: #546e7a;
-            margin-bottom: 60px;
-            letter-spacing: 1px;
+            font-size: 18pt;
+            font-weight: 400;
+            color: #666;
+            margin-bottom: 50px;
         }}
         
         .cover-info {{
@@ -638,29 +630,24 @@ class CompleteAppraisalPDFGenerator:
         
         /* Summary Card */
         .summary-card {{
-            background: linear-gradient(135deg, #0066CC 0%, #004C99 100%);
+            background: #1a1a2e;
             color: white;
-            padding: 40px;
-            border-radius: 16px;
+            padding: 30px;
+            border-radius: 8px;
             text-align: center;
-            margin: 30px 0;
-            box-shadow: 0 8px 30px rgba(0, 102, 204, 0.2);
+            margin: 25px 0;
         }}
         
         .summary-card h2 {{
-            font-size: 16pt;
-            margin-bottom: 20px;
-            opacity: 0.95;
-            font-weight: 600;
-            letter-spacing: 1px;
+            font-size: 14pt;
+            margin-bottom: 15px;
+            opacity: 0.9;
         }}
         
         .final-value {{
-            font-size: 48pt;
+            font-size: 36pt;
             font-weight: 800;
-            margin: 25px 0;
-            font-family: 'Roboto', 'Noto Sans KR', sans-serif;
-            letter-spacing: -1px;
+            margin: 20px 0;
         }}
         
         .value-details {{
@@ -684,28 +671,21 @@ class CompleteAppraisalPDFGenerator:
         }}
         
         table th {{
-            background: linear-gradient(135deg, #0066CC 0%, #004C99 100%);
+            background: #1a1a2e;
             color: white;
-            padding: 14px 12px;
+            padding: 10px 8px;
             text-align: center;
             font-weight: 600;
-            border: 1px solid #0066CC;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-size: 10.5pt;
+            border: 1px solid #ddd;
         }}
         
         table td {{
-            padding: 12px 10px;
-            border: 1px solid #e0e0e0;
+            padding: 10px 8px;
+            border: 1px solid #ddd;
         }}
         
         table tbody tr:nth-child(even) {{
-            background: #f5f7fa;
-        }}
-        
-        table tbody tr:hover {{
-            background: #e3f2fd;
+            background: #f8f9fa;
         }}
         
         .center {{ text-align: center; }}
@@ -714,7 +694,7 @@ class CompleteAppraisalPDFGenerator:
         
         .price-highlight {{
             font-weight: 700;
-            color: #0066CC;
+            color: #e94560;
         }}
         
         .road-info {{
@@ -731,17 +711,16 @@ class CompleteAppraisalPDFGenerator:
             color: white;
         }}
         
-        .badge-major {{ background: #0066CC; }}
-        .badge-medium {{ background: #2196F3; }}
-        .badge-minor {{ background: #90CAF9; }}
+        .badge-major {{ background: #e94560; }}
+        .badge-medium {{ background: #f77f00; }}
+        .badge-minor {{ background: #999; }}
         
         /* Data Note */
         .data-note {{
-            background: #e3f2fd;
-            padding: 20px;
-            border-left: 4px solid #0066CC;
-            margin-top: 25px;
-            border-radius: 8px;
+            background: #f0f8ff;
+            padding: 15px;
+            border-left: 4px solid #1a1a2e;
+            margin-top: 20px;
         }}
         
         .data-note ul {{
@@ -763,30 +742,26 @@ class CompleteAppraisalPDFGenerator:
         }}
         
         .method-summary-table thead th {{
-            background: linear-gradient(135deg, #0066CC 0%, #004C99 100%);
+            background: #1a1a2e;
             color: white;
             font-weight: 600;
         }}
         
         .method-summary-table .total-row {{
-            background: linear-gradient(to right, #E3F2FD 0%, #BBDEFB 100%);
+            background: #fff3cd;
             font-weight: 700;
-            border-left: 4px solid #0066CC;
         }}
         
         .method-note {{
-            background: #f5f7fa;
-            padding: 25px;
-            border-radius: 12px;
-            margin-top: 30px;
-            border: 1px solid #e0e0e0;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 25px;
         }}
         
         .method-note h4 {{
-            color: #0066CC;
-            margin-bottom: 18px;
-            font-size: 14pt;
-            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 15px;
         }}
         
         .method-note ul {{
@@ -808,19 +783,16 @@ class CompleteAppraisalPDFGenerator:
         }}
         
         .premium-explanation {{
-            background: #e3f2fd;
-            padding: 25px;
-            border-radius: 12px;
-            margin: 30px 0;
-            border-left: 4px solid #0066CC;
-            box-shadow: 0 4px 15px rgba(0, 102, 204, 0.08);
+            background: #f0f8ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+            border-left: 4px solid #1a1a2e;
         }}
         
         .premium-explanation h3 {{
-            color: #0066CC;
-            margin-bottom: 20px;
-            font-size: 16pt;
-            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 15px;
         }}
         
         .premium-explanation p {{
@@ -854,21 +826,18 @@ class CompleteAppraisalPDFGenerator:
         
         /* Final Valuation */
         .final-valuation-card {{
-            background: linear-gradient(135deg, #0066CC 0%, #004C99 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 50px;
-            border-radius: 16px;
+            padding: 40px;
+            border-radius: 12px;
             text-align: center;
-            margin: 40px 0;
-            box-shadow: 0 8px 40px rgba(0, 102, 204, 0.25);
+            margin: 30px 0;
         }}
         
         .final-amount {{
-            font-size: 48pt;
+            font-size: 42pt;
             font-weight: 800;
-            margin: 25px 0;
-            font-family: 'Roboto', 'Noto Sans KR', sans-serif;
-            letter-spacing: -1px;
+            margin: 20px 0;
         }}
         
         .valuation-note {{
@@ -879,18 +848,15 @@ class CompleteAppraisalPDFGenerator:
         }}
         
         .disclaimer {{
-            background: #f5f7fa;
-            padding: 25px;
-            border-radius: 12px;
-            margin-top: 30px;
-            border: 1px solid #e0e0e0;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 25px;
         }}
         
         .disclaimer h3 {{
-            margin-bottom: 18px;
-            color: #0066CC;
-            font-size: 14pt;
-            font-weight: 600;
+            margin-bottom: 15px;
+            color: #1a1a2e;
         }}
         
         .disclaimer ul {{
