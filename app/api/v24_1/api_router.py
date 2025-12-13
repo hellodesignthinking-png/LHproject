@@ -41,6 +41,10 @@ from app.services.advanced_address_parser_v36 import get_address_parser_v36
 from app.data.nationwide_prices import get_market_price, estimate_official_price, get_zone_type_suggestion
 from app.services.universal_transaction_engine import UniversalTransactionEngine
 
+# v37.0 ULTIMATE: Complete API integration
+from app.api_keys_config import APIKeys
+from app.services.complete_land_info_service_v37 import CompleteLandInfoServiceV37
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v24.1", tags=["ZeroSite v24.1"])
@@ -446,6 +450,143 @@ async def calculate_appraisal(request: AppraisalRequest):
     except Exception as e:
         logger.error(f"Error in appraisal calculation: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Appraisal failed: {str(e)}")
+
+
+@router.post("/appraisal/v37")
+async def calculate_appraisal_v37(request: AppraisalRequest):
+    """
+    **v37.0 ULTIMATE - Complete API Integration**
+    
+    Uses ALL real APIs:
+    - Kakao: Address parsing & coordinates
+    - V-World: PNU code generation
+    - MOLIT: Zone type, official land price, REAL TRANSACTIONS
+    
+    Returns complete appraisal with 100% real data where available.
+    """
+    try:
+        logger.info("="*80)
+        logger.info("🚀 [v37 ULTIMATE] Starting Complete API Integration")
+        logger.info(f"   Address: {request.address}")
+        logger.info(f"   Land Area: {request.land_area_sqm}㎡")
+        logger.info("="*80)
+        
+        # ========================================
+        # v37.0: Complete Land Info Service
+        # ========================================
+        
+        land_service = CompleteLandInfoServiceV37(
+            kakao_key=APIKeys.KAKAO_REST_API_KEY,
+            vworld_key=APIKeys.VWORLD_API_KEY,
+            molit_key=APIKeys.MOLIT_API_KEY
+        )
+        
+        land_info = land_service.get_complete_info(
+            address=request.address,
+            land_area_sqm=request.land_area_sqm
+        )
+        
+        if not land_info['success']:
+            raise HTTPException(400, "Failed to retrieve land information")
+        
+        # ========================================
+        # Use retrieved data for appraisal
+        # ========================================
+        
+        zone_type = land_info['zone_type']
+        individual_land_price = land_info['land_price']['value']
+        transactions = land_info['transactions']
+        
+        logger.info(f"   ✅ Zone Type: {zone_type}")
+        logger.info(f"   ✅ Land Price: {individual_land_price:,}원/㎡")
+        logger.info(f"   ✅ Transactions: {len(transactions)}건")
+        
+        # Prepare comparable sales from transactions
+        comparable_sales_data = []
+        if transactions:
+            for tx in transactions[:5]:  # Use top 5
+                comparable_sales_data.append({
+                    'price_per_sqm': tx.get('price_per_sqm', individual_land_price),
+                    'time_adjustment': 1.0,
+                    'location_adjustment': 1.0,
+                    'individual_adjustment': 1.0,
+                    'weight': 0.2
+                })
+        
+        # Prepare premium factors
+        premium_factors_data = {}
+        if request.premium_factors:
+            user_factors = request.premium_factors.model_dump()
+            non_zero_user_factors = {k: v for k, v in user_factors.items() if v != 0}
+            premium_factors_data.update(non_zero_user_factors)
+        
+        # Prepare input for engine
+        input_data = {
+            'address': request.address,
+            'land_area_sqm': request.land_area_sqm,
+            'zone_type': zone_type,
+            'individual_land_price_per_sqm': individual_land_price,
+            'premium_factors': premium_factors_data,
+            'comparable_sales': comparable_sales_data,
+            'parsed_address': land_info['address'],
+            'generated_transactions': transactions,
+            'pnu': land_info.get('pnu', '')
+        }
+        
+        # Run appraisal engine
+        engine = AppraisalEngineV241()
+        result = engine.process(input_data)
+        
+        # Extract premium information
+        premium_info = result.get('premium_info', {})
+        
+        logger.info("="*80)
+        logger.info("✅ [v37 ULTIMATE] Appraisal Complete!")
+        logger.info(f"   Final Value: {result['final_appraisal_value']:.2f}억원")
+        logger.info(f"   API Usage:")
+        for key, value in land_info['api_usage'].items():
+            logger.info(f"      {key}: {value}")
+        logger.info("="*80)
+        
+        return {
+            "status": "success",
+            "version": "v37.0 ULTIMATE",
+            "timestamp": datetime.now().isoformat(),
+            "appraisal": {
+                "final_value": result['final_appraisal_value'],
+                "value_per_sqm": result['final_value_per_sqm'],
+                "confidence": result['confidence_level'],
+                "approaches": {
+                    "cost": result['cost_approach'],
+                    "sales_comparison": result['sales_comparison'],
+                    "income": result['income_approach']
+                },
+                "weights": result['weights'],
+                "location_factor": result['location_factor'],
+                "premium_percentage": premium_info.get('premium_percentage', 0),
+                "premium_details": premium_info.get('top_5_factors', [])
+            },
+            "land_info": {
+                "address_parsed": land_info['address'],
+                "pnu": land_info.get('pnu', ''),
+                "zone_type": zone_type,
+                "individual_land_price_per_sqm": individual_land_price,
+                "land_price_info": land_info['land_price'],
+                "transactions_count": len(transactions),
+                "api_usage": land_info['api_usage']
+            },
+            "breakdown": result['breakdown'],
+            "metadata": result['metadata'],
+            "notes": result['notes'],
+            "premium_info": premium_info,
+            "transactions": transactions[:5]  # Include first 5 transactions
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in v37 appraisal: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"v37 Appraisal failed: {str(e)}")
 
 
 @router.post("/scenario/compare")
