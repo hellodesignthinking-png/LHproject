@@ -899,7 +899,7 @@
             const data = {
                 address: address,
                 land_area_sqm: landAreaInput ? parseFloat(landAreaInput) : 660,  // Default 660㎡
-                zone_type: zoneType || "제2종일반주거지역",  // Fallback zone
+                zone_type: zoneType || "제3종일반주거지역",  // Fallback zone (제3종이 더 일반적)
                 individual_land_price_per_sqm: officialLandPrice || 8500000,  // Fallback price
                 premium_factors: premiumFactors  // User-selected physical characteristics
             };

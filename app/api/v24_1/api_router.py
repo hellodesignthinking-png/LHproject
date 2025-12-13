@@ -354,10 +354,13 @@ async def calculate_appraisal(request: AppraisalRequest):
             logger.warning(f"Premium auto-detection failed: {e}")
         
         # Then merge with user-provided values (user values override auto-detected)
+        # Only override if user value is non-zero
         if request.premium_factors:
             user_factors = request.premium_factors.model_dump()
-            premium_factors_data.update(user_factors)
-            logger.info(f"✏️ Merged with user-provided premium factors")
+            non_zero_user_factors = {k: v for k, v in user_factors.items() if v != 0}
+            premium_factors_data.update(non_zero_user_factors)
+            logger.info(f"✏️ Merged {len(non_zero_user_factors)} non-zero user-provided premium factors")
+            logger.info(f"   User factors: {list(non_zero_user_factors.keys())}")
         
         # ========================================
         # 4. Prepare input data with SAFE FALLBACKS
@@ -594,8 +597,11 @@ async def generate_appraisal_pdf(request: AppraisalRequest):
             if auto_detected:
                 premium_factors_data.update(auto_detected)
                 logger.info(f"🤖 Auto-detected {len(auto_detected)} premium factors for PDF")
+                logger.info(f"   Auto-detected: {auto_detected}")
+            else:
+                logger.warning(f"⚠️ No premium factors auto-detected for address: {request.address}")
         except Exception as e:
-            logger.warning(f"Premium auto-detection failed: {e}")
+            logger.error(f"❌ Premium auto-detection failed: {e}", exc_info=True)
         
         # Then merge with user-provided values (user values override auto-detected)
         if request.premium_factors:
@@ -1358,14 +1364,20 @@ async def generate_detailed_appraisal_pdf(request: AppraisalRequest):
             if auto_detected:
                 premium_factors_data.update(auto_detected)
                 logger.info(f"🤖 Auto-detected {len(auto_detected)} premium factors for PDF")
+                logger.info(f"   Auto-detected: {auto_detected}")
+            else:
+                logger.warning(f"⚠️ No premium factors auto-detected for address: {request.address}")
         except Exception as e:
-            logger.warning(f"Premium auto-detection failed: {e}")
+            logger.error(f"❌ Premium auto-detection failed: {e}", exc_info=True)
         
         # Then merge with user-provided values (user values override auto-detected)
+        # Only override if user value is non-zero
         if request.premium_factors:
             user_factors = request.premium_factors.model_dump()
-            premium_factors_data.update(user_factors)
-            logger.info(f"✏️ Merged with user-provided premium factors")
+            non_zero_user_factors = {k: v for k, v in user_factors.items() if v != 0}
+            premium_factors_data.update(non_zero_user_factors)
+            logger.info(f"✏️ Merged {len(non_zero_user_factors)} non-zero user-provided premium factors")
+            logger.info(f"   User factors: {list(non_zero_user_factors.keys())}")
         
         logger.info(f"📋 Total premium factors for PDF: {len(premium_factors_data)} factors")
         
