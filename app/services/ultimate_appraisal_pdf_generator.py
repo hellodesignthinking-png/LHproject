@@ -188,6 +188,12 @@ class UltimateAppraisalPDFGenerator:
         # 구 이름 추출
         gu_name = self._extract_gu_name(raw_address)
         
+        # 🔥 FIX: Handle "미상" case explicitly
+        if gu_name == '미상':
+            logger.warning(f"⚠️ Could not extract district from address: {raw_address}")
+            # Return a generic Seoul address instead of "미상 미상"
+            return f"서울특별시 {raw_address if len(raw_address) < 50 else '주소미상'}"
+        
         # 구별 대표 동·번지 (Fallback)
         dong_mapping = {
             '강남구': ['역삼동', '청담동', '삼성동', '대치동', '도곡동'],
