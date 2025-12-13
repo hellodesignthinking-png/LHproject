@@ -567,23 +567,20 @@ class AppraisalEngineV241(BaseEngine):
                                   zone_type: str = None,
                                   land_area_sqm: float = 0) -> Dict:
         """
-        Income Approach (수익환원법)
+        Income Approach (수익환원법) - FIXED v31.0
         
-        🔥 개선: 나대지·개발용지 특수 처리
-        - 건물이 없는 경우: 개발수익환원법 적용
-        - 완성도 보정: 0.25 (개발 완성까지 보정)
-        - 위험도 보정: 0.30 (개발 리스크 반영)
+        🔥 수정된 계산 로직:
+        나대지/개발용지의 경우:
+        1. 개발 후 총개발가치(GDV) 계산: 토지면적 × 법정용적률 × 분양가
+        2. 개발비용 계산: 토지면적 × 법정용적률 × 건축비
+        3. 순개발이익(NOI) = GDV - 개발비용
+        4. 수익가액 = NOI / 환원율(6%)
         
-        한국 감정평가 기준:
+        기존 건물의 경우:
         1. 순영업소득(NOI) = 임대수익 - 운영경비 - 공실손실
-        2. 환원율(Cap Rate) = 무위험수익률 + 위험프리미엄
-        3. 수익가액 = NOI / 환원율
+        2. 수익가액 = NOI / 환원율(4.5%)
         
-        나대지·개발용지:
-        1. 개발 후 예상수익 추정
-        2. 완성도 보정 적용 (0.25)
-        3. 위험도 보정 적용 (0.30)
-        4. 최종 수익가액 = 예상수익 × 완성도 × (1 - 위험도) / 환원율
+        중요: 완성도 보정, 위험도 보정 제거 (과도한 페널티 제거)
         """
         calculation_steps = []
         
@@ -621,60 +618,61 @@ class AppraisalEngineV241(BaseEngine):
             method = "실제 임대수익 기준 (NOI 환원법)"
             
         elif not has_building and land_area_sqm > 0:
-            # 🏗️ Case 2: 나대지/개발용지 - 개발수익환원법 적용
+            # 🏗️ Case 2: 나대지/개발용지 - 개발수익환원법 적용 (FIXED v31.0)
             
-            # Step 1: 개발 후 예상 수익 추정
-            # - 용도지역별 평균 임대수익률 적용
-            zone_rental_rate = {
-                '제1종일반주거지역': 0.035,  # 3.5%
-                '제2종일반주거지역': 0.040,  # 4.0%
-                '제3종일반주거지역': 0.045,  # 4.5%
-                '준주거지역': 0.050,  # 5.0%
-                '상업지역': 0.055,  # 5.5%
-                '준공업지역': 0.042   # 4.2%
-            }.get(zone_type, 0.040)
+            # Step 1: 용도지역별 법정 용적률 및 시장가격 설정
+            zone_config = {
+                '제1종일반주거지역': {'far': 1.5, 'price_per_sqm': 4_500_000},
+                '제2종일반주거지역': {'far': 2.0, 'price_per_sqm': 5_000_000},
+                '제3종일반주거지역': {'far': 2.5, 'price_per_sqm': 6_000_000},
+                '준주거지역': {'far': 4.0, 'price_per_sqm': 7_500_000},
+                '상업지역': {'far': 8.0, 'price_per_sqm': 10_000_000},
+                '준공업지역': {'far': 3.5, 'price_per_sqm': 5_500_000}
+            }.get(zone_type, {'far': 2.0, 'price_per_sqm': 5_000_000})
             
-            # 개발 후 예상 건물가액 (토지가액의 2.5배 가정)
-            estimated_building_value = building_value * 2.5 if building_value > 0 else land_area_sqm * 3_500_000 / 100_000_000
+            far_ratio = zone_config['far']
+            sale_price_per_sqm = zone_config['price_per_sqm']
             
-            # 예상 연간 임대수익
-            estimated_gross_income = estimated_building_value * zone_rental_rate
+            # Step 2: 총개발가치(GDV) 계산
+            # GDV = 토지면적 × 용적률 × 분양가
+            developable_gfa = land_area_sqm * far_ratio  # 연면적
+            gdv_krw = developable_gfa * sale_price_per_sqm
+            gdv_billion = gdv_krw / 100_000_000
             
-            # 공실·운영비 공제
-            vacancy_rate = 0.10  # 개발용지는 공실률 높게 10%
-            operating_expenses_rate = 0.20  # 운영비도 높게 20%
+            # Step 3: 개발비용 계산
+            # 개발비용 = 토지면적 × 용적률 × 건축비
+            construction_cost_per_sqm = 3_500_000  # 표준 건축비
+            development_cost_krw = developable_gfa * construction_cost_per_sqm
+            development_cost_billion = development_cost_krw / 100_000_000
             
-            effective_gross_income = estimated_gross_income * (1 - vacancy_rate)
-            operating_expenses = effective_gross_income * operating_expenses_rate
-            noi = effective_gross_income - operating_expenses
+            # Step 4: 순개발이익(NOI) 계산
+            # NOI = GDV - 개발비용
+            noi = gdv_billion - development_cost_billion
             
-            # Step 2: 완성도 보정 (개발용지는 0.25)
-            completion_factor = 0.25
-            adjusted_noi = noi * completion_factor
-            
-            # Step 3: 위험도 보정 (개발 리스크 30%)
-            risk_adjustment = 0.30
-            risk_adjusted_noi = adjusted_noi * (1 - risk_adjustment)
-            
-            # Step 4: 환원율 적용 (개발용지는 높은 환원율 6.0% 적용)
+            # Step 5: 환원율 적용 (6.0%)
             development_cap_rate = 0.060
-            
-            capitalized_value_billion = risk_adjusted_noi / development_cap_rate
+            capitalized_value_billion = noi / development_cap_rate
             
             # 계산 과정 설명
-            calculation_steps.append(f"🏗️ 나대지/개발용지 - 개발수익환원법 적용")
-            calculation_steps.append(f"1. 개발 후 예상 건물가액: {estimated_building_value:.2f}억원")
-            calculation_steps.append(f"2. 용도지역별 임대수익률: {zone_rental_rate*100:.1f}%")
-            calculation_steps.append(f"3. 예상 연간 임대수익: {estimated_gross_income:.2f}억원")
-            calculation_steps.append(f"4. 공실손실 (10%): -{estimated_gross_income * vacancy_rate:.2f}억원")
-            calculation_steps.append(f"5. 운영경비 (20%): -{operating_expenses:.2f}억원")
-            calculation_steps.append(f"6. 순영업소득(NOI): {noi:.2f}억원")
-            calculation_steps.append(f"7. ⚠️ 완성도 보정 (25%): {noi:.2f}억원 × 0.25 = {adjusted_noi:.2f}억원")
-            calculation_steps.append(f"8. ⚠️ 위험도 보정 (30%): {adjusted_noi:.2f}억원 × 0.70 = {risk_adjusted_noi:.2f}억원")
-            calculation_steps.append(f"9. 개발용지 환원율: {development_cap_rate*100:.1f}% (리스크 반영)")
-            calculation_steps.append(f"10. 최종 수익가액: {risk_adjusted_noi:.2f}억원 ÷ {development_cap_rate} = {capitalized_value_billion:.2f}억원")
+            calculation_steps.append(f"🏗️ 나대지/개발용지 - 개발수익환원법 (FIXED v31.0)")
+            calculation_steps.append(f"1. 토지면적: {land_area_sqm:,.1f}㎡")
+            calculation_steps.append(f"2. 용도지역: {zone_type} (법정 용적률: {far_ratio*100:.0f}%)")
+            calculation_steps.append(f"3. 개발가능 연면적: {land_area_sqm:,.1f}㎡ × {far_ratio} = {developable_gfa:,.1f}㎡")
+            calculation_steps.append(f"4. 분양가(시장가): {sale_price_per_sqm:,.0f}원/㎡")
+            calculation_steps.append(f"5. 총개발가치(GDV): {developable_gfa:,.1f}㎡ × {sale_price_per_sqm:,.0f}원 = {gdv_billion:.2f}억원")
+            calculation_steps.append(f"6. 건축비: {developable_gfa:,.1f}㎡ × {construction_cost_per_sqm:,.0f}원 = {development_cost_billion:.2f}억원")
+            calculation_steps.append(f"7. 순개발이익(NOI): {gdv_billion:.2f}억원 - {development_cost_billion:.2f}억원 = {noi:.2f}억원")
+            calculation_steps.append(f"8. 환원율: {development_cap_rate*100:.1f}% (개발용지 표준)")
+            calculation_steps.append(f"9. 최종 수익가액: {noi:.2f}억원 ÷ {development_cap_rate} = {capitalized_value_billion:.2f}억원")
             
-            method = "개발수익환원법 (나대지/개발용지 - 완성도 25%, 위험도 30% 적용)"
+            method = "개발수익환원법 (GDV - 개발비용 방식, v31.0)"
+            
+            # Store development details for later use
+            vacancy_rate = 0
+            operating_expenses_rate = 0
+            completion_factor = None
+            risk_adjustment = None
+            estimated_building_value = gdv_billion
             
         else:
             # 🏢 Case 3: 건물 가액 기반 추정
@@ -719,12 +717,14 @@ class AppraisalEngineV241(BaseEngine):
             'risk_adjustment': risk_adjustment if not has_building and land_area_sqm > 0 else None
         }
         
-        # 🔥 GENSPARK V3.0: Add development land details for PDF display
-        if not has_building and land_area_sqm > 0:
-            result['gdv'] = round(estimated_building_value, 2) if 'estimated_building_value' in locals() else 0
-            result['development_cost'] = round(estimated_building_value * 0.4, 2) if 'estimated_building_value' in locals() else 0  # Estimate 40% of GDV
-            result['net_development_profit'] = round(noi, 2) if 'noi' in locals() else 0
-            result['development_adjustment_factor'] = completion_factor if 'completion_factor' in locals() else 0.5
+        # 🔥 GENSPARK V31.0: Add development land details for PDF display (FIXED)
+        if not has_building and land_area_sqm > 0 and 'gdv_billion' in locals():
+            result['gdv'] = round(gdv_billion, 2)
+            result['development_cost'] = round(development_cost_billion, 2)
+            result['net_development_profit'] = round(noi, 2)
+            result['developable_gfa'] = round(developable_gfa, 2) if 'developable_gfa' in locals() else 0
+            result['far_ratio'] = far_ratio if 'far_ratio' in locals() else 0
+            result['sale_price_per_sqm'] = sale_price_per_sqm if 'sale_price_per_sqm' in locals() else 0
             result['income_value'] = round(capitalized_value_billion, 2)
         
         return result
