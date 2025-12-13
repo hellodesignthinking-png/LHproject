@@ -863,9 +863,13 @@
                 
                 if (landPriceResponse.ok) {
                     const landPriceData = await landPriceResponse.json();
-                    if (landPriceData.status === 'success' && landPriceData.official_price) {
+                    // ✅ FIX: Check 'success' field, not 'status'
+                    if (landPriceData.success && landPriceData.official_price) {
                         officialLandPrice = landPriceData.official_price;
-                        document.getElementById('progress-land-price').innerHTML = '<i class="fas fa-check-circle mr-2 text-green-600"></i>개별공시지가 조회 완료: ' + officialLandPrice.toLocaleString() + ' 원/㎡';
+                        const source = landPriceData.source || 'API';
+                        document.getElementById('progress-land-price').innerHTML = '<i class="fas fa-check-circle mr-2 text-green-600"></i>개별공시지가 조회 완료: <strong>' + officialLandPrice.toLocaleString() + ' 원/㎡</strong> (' + source + ')';
+                    } else {
+                        console.error('Land price API returned success=false or no data:', landPriceData);
                     }
                 }
             } catch (e) {
@@ -884,9 +888,14 @@
                 
                 if (zoningResponse.ok) {
                     const zoningData = await zoningResponse.json();
-                    if (zoningData.status === 'success' && zoningData.zone_type) {
+                    // ✅ FIX: Check 'success' field, not 'status'
+                    if (zoningData.success && zoningData.zone_type) {
                         zoneType = zoningData.zone_type;
-                        document.getElementById('progress-zoning').innerHTML = '<i class="fas fa-check-circle mr-2 text-green-600"></i>용도지역 확인 완료: ' + zoneType;
+                        const bcr = zoningData.bcr_legal || 'N/A';
+                        const far = zoningData.far_legal || 'N/A';
+                        document.getElementById('progress-zoning').innerHTML = '<i class="fas fa-check-circle mr-2 text-green-600"></i>용도지역 확인 완료: <strong>' + zoneType + '</strong> (건폐율 ' + bcr + '%, 용적률 ' + far + '%)';
+                    } else {
+                        console.error('Zoning API returned success=false or no data:', zoningData);
                     }
                 }
             } catch (e) {
@@ -901,12 +910,20 @@
                 road_facing: parseFloat(document.getElementById('premium_road_facing')?.value || 0)
             };
             
-            // Step 4: Prepare final data with FALLBACK values
+            // Step 4: Prepare final data - NO FALLBACK VALUES!
+            // ✅ FIX: If API data is missing, ERROR OUT instead of using fallback
+            if (!zoneType) {
+                throw new Error('용도지역 정보를 가져올 수 없습니다. 주소를 다시 확인해주세요.');
+            }
+            if (!officialLandPrice) {
+                throw new Error('개별공시지가 정보를 가져올 수 없습니다. 주소를 다시 확인해주세요.');
+            }
+            
             const data = {
                 address: address,
                 land_area_sqm: landAreaInput ? parseFloat(landAreaInput) : 660,  // Default 660㎡
-                zone_type: zoneType || "제3종일반주거지역",  // Fallback zone (제3종이 더 일반적)
-                individual_land_price_per_sqm: officialLandPrice || 8500000,  // Fallback price
+                zone_type: zoneType,  // ✅ From API only
+                individual_land_price_per_sqm: officialLandPrice,  // ✅ From API only
                 premium_factors: premiumFactors  // User-selected physical characteristics
             };
             
@@ -1131,9 +1148,58 @@
             }
             
             // Show loading notification
-            showNotification('HTML 미리보기 생성 중...', 'info');
+            showNotification('HTML 미리보기 생성 중... (데이터 조회)', 'info');
             
             try {
+                // ✅ Step 1: Auto-fetch official land price
+                let officialLandPrice = null;
+                let zoneType = null;
+                
+                try {
+                    const landPriceResponse = await fetch('/api/v24.1/land-price/official', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ address: address })
+                    });
+                    
+                    if (landPriceResponse.ok) {
+                        const landPriceData = await landPriceResponse.json();
+                        if (landPriceData.success && landPriceData.official_price) {
+                            officialLandPrice = landPriceData.official_price;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Land price fetch failed for HTML preview:', e);
+                }
+                
+                // ✅ Step 2: Auto-fetch zoning info
+                try {
+                    const zoningResponse = await fetch('/api/v24.1/zoning-info', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ address: address })
+                    });
+                    
+                    if (zoningResponse.ok) {
+                        const zoningData = await zoningResponse.json();
+                        if (zoningData.success && zoningData.zone_type) {
+                            zoneType = zoningData.zone_type;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Zoning fetch failed for HTML preview:', e);
+                }
+                
+                // ✅ Step 3: Check if data was loaded
+                if (!zoneType) {
+                    throw new Error('용도지역 정보를 가져올 수 없습니다. 주소를 다시 확인해주세요.');
+                }
+                if (!officialLandPrice) {
+                    throw new Error('개별공시지가 정보를 가져올 수 없습니다. 주소를 다시 확인해주세요.');
+                }
+                
+                showNotification('데이터 조회 완료. HTML 생성 중...', 'info');
+                
                 // Collect premium factors (physical characteristics)
                 const premiumFactors = {
                     land_shape: parseFloat(document.getElementById('premium_land_shape')?.value || 0),
@@ -1142,10 +1208,12 @@
                     road_facing: parseFloat(document.getElementById('premium_road_facing')?.value || 0)
                 };
                 
-                // Prepare request data
+                // ✅ Prepare request data with real API data
                 const data = {
                     address: address,
                     land_area_sqm: landAreaInput ? parseFloat(landAreaInput) : 660,
+                    zone_type: zoneType,  // ✅ From API
+                    individual_land_price_per_sqm: officialLandPrice,  // ✅ From API
                     premium_factors: premiumFactors
                 };
                 
