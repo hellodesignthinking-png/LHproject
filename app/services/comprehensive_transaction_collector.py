@@ -277,7 +277,7 @@ class ComprehensiveTransactionCollector:
                 road_grade = '소로'
             
             # 주소
-            address_str = f"서울 {gu} {dong} {jibun}"
+            address_str = f"서울시 {gu} {dong} {jibun}"
             
             transactions.append({
                 'transaction_date': tx_date.strftime('%Y-%m-%d'),
@@ -387,7 +387,7 @@ class ComprehensiveTransactionCollector:
             jibun = f"{random.randint(100, 999)}-{random.randint(1, 50)}"
             
             # 주소 (실제 형식!)
-            full_address = f"서울 {gu} {selected_dong} {jibun}"
+            full_address = f"서울시 {gu} {selected_dong} {jibun}"
             
             # 도로명 생성
             if road_name and road_name != '알수없음':

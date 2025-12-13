@@ -198,7 +198,7 @@ class UltimateAppraisalPDFGenerator:
         dong = random.choice(dongs) if dongs else f'{gu_name} 일대'
         jibun = random.randint(100, 999)
         
-        return f"서울 {gu_name} {dong} {jibun}번지"
+        return f"서울시 {gu_name} {dong} {jibun}번지"
     
     
     def _get_road_classification(self, address: str) -> Dict:
@@ -346,7 +346,7 @@ class UltimateAppraisalPDFGenerator:
                 'price_per_sqm': price_per_sqm,
                 'land_area_sqm': tx_area,
                 'total_price': price_per_sqm * tx_area,
-                'location': f"서울 {gu_name} {dong} {jibun}번지",  # ✅ 실제 주소!
+                'location': f"서울시 {gu_name} {dong} {jibun}번지",  # ✅ 실제 주소!
                 'road_name': road_name,
                 'road_class': road['class'],
                 'distance_km': distance,

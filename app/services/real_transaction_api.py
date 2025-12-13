@@ -192,7 +192,7 @@ class MOLITRealTransactionAPI:
             jibun_str = jibun.text.strip() if jibun is not None else ""
             
             # 법정동 주소
-            address_jibun = f"서울 {sigungu_name} {dong_str} {jibun_str}".strip()
+            address_jibun = f"서울시 {sigungu_name} {dong_str} {jibun_str}".strip()
             
             return {
                 'transaction_date': transaction_date,

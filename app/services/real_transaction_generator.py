@@ -123,9 +123,9 @@ class RealTransactionGenerator:
             
             # 번지 형식: "123-4" 또는 "123"
             if random.random() > 0.3:
-                full_address = f"서울 {gu_name} {dong} {jibun}-{bunji_sub}"
+                full_address = f"서울시 {gu_name} {dong} {jibun}-{bunji_sub}"
             else:
-                full_address = f"서울 {gu_name} {dong} {jibun}번지"
+                full_address = f"서울시 {gu_name} {dong} {jibun}번지"
             
             # 3. 거리 생성 (0.2km ~ 2.0km, 가까운 거리에 높은 확률)
             # 70% 확률로 1km 이내
