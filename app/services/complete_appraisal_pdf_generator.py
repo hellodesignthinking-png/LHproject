@@ -1,15 +1,16 @@
 """
-Complete Appraisal PDF Generator v26.0
+Complete Appraisal PDF Generator v27.0
 완전히 작동하는 상세 감정평가 보고서 생성기
 
 핵심 기능:
-1. ✅ TransactionDataService 통합 (RTMS API + Fallback)
-2. ✅ 정확한 법정동 주소 표시
-3. ✅ 최근 거래일자 우선 정렬
-4. ✅ 거리 계산 & 표시
-5. ✅ 프리미엄 41% 계산 근거 + 텍스트 설명
-6. ✅ 3-법 요약표 추가
-7. ✅ 깔끔한 PDF 디자인
+1. ✅ MOLIT API 통합 (실거래가 + 지능형 Fallback)
+2. ✅ 구별 실제 시세 반영 (강남 18M, 서초 15M, 송파 13M)
+3. ✅ 정확한 법정동 주소 표시
+4. ✅ 최근 거래일자 우선 정렬
+5. ✅ 거리 계산 & 표시
+6. ✅ 프리미엄 계산 근거 + 텍스트 설명
+7. ✅ 3-법 요약표 추가
+8. ✅ 깔끔한 PDF 디자인
 """
 
 from typing import Dict, List, Any
@@ -25,7 +26,7 @@ class CompleteAppraisalPDFGenerator:
     def __init__(self):
         """초기화"""
         self.PYEONG_CONVERSION = 3.3058
-        logger.info("✅ CompleteAppraisalPDFGenerator v26.0 initialized")
+        logger.info("✅ CompleteAppraisalPDFGenerator v27.0 initialized (MOLIT API + Intelligent Fallback)")
     
     
     def generate_pdf_html(self, appraisal_data: Dict) -> str:
@@ -88,46 +89,48 @@ class CompleteAppraisalPDFGenerator:
     
     def _generate_transactions(self, address: str, land_area_sqm: float) -> List[Dict]:
         """
-        거래사례 생성 (TransactionDataService 사용)
+        거래사례 생성 (Comprehensive Transaction Collector 사용)
         
         우선순위:
-        1. RTMS API (실제 토지 거래 데이터)
-        2. RealTransactionGenerator (강화된 fallback)
-        3. Minimal fallback (최후의 수단)
+        1. MOLIT API (실제 토지 거래 데이터)
+        2. Intelligent Fallback (구별 실제 시세 반영)
         """
         try:
-            from app.services.transaction_data_service import get_transaction_service
+            from app.services.comprehensive_transaction_collector import get_transaction_collector
             
-            service = get_transaction_service()
-            transactions = service.get_nearby_transactions(
+            collector = get_transaction_collector()
+            transactions = collector.collect_nearby_transactions(
                 address=address,
-                radius_km=2.0,
-                months_back=24,
-                max_results=15
+                land_area_sqm=land_area_sqm,
+                max_distance_km=2.0,
+                num_months=24,
+                min_count=10,
+                max_count=15
             )
             
-            logger.info(f"🏠 TransactionDataService: {len(transactions)} transactions retrieved")
+            logger.info(f"🏠 ComprehensiveCollector: {len(transactions)} transactions retrieved")
             
-            # TransactionDataService 형식 -> PDF 형식 변환
+            # 형식 변환 (이미 PDF 호환 형식)
             converted = []
             for tx in transactions:
                 converted.append({
-                    'transaction_date': tx.get('deal_date', 'N/A'),
-                    'location': tx.get('address_jibun', 'N/A'),
+                    'transaction_date': tx.get('transaction_date', 'N/A'),
+                    'location': tx.get('address', 'N/A'),
                     'distance_km': tx.get('distance_km', 0),
-                    'land_area_sqm': tx.get('area_sqm', 0),
+                    'land_area_sqm': tx.get('land_area_sqm', 0),
                     'price_per_sqm': tx.get('price_per_sqm', 0),
-                    'total_price': tx.get('price_total', 0),
+                    'unit_price_sqm': tx.get('price_per_sqm', 0),
+                    'total_price': tx.get('total_price', 0),
                     'road_name': tx.get('road_name', 'N/A'),
-                    'road_class': tx.get('road_grade', 'minor_road'),
-                    'unit_price_sqm': tx.get('price_per_sqm', 0)
+                    'road_class': tx.get('road_class', 'minor_road'),
+                    'source': tx.get('source', 'UNKNOWN')
                 })
             
-            return converted if converted else self._generate_fallback_transactions(address, land_area_sqm)
+            return converted
             
         except Exception as e:
             logger.error(f"❌ Failed to fetch transactions: {e}", exc_info=True)
-            # Fallback to RealTransactionGenerator
+            # 최후의 Fallback
             return self._generate_fallback_transactions(address, land_area_sqm)
     
     
@@ -278,12 +281,13 @@ class CompleteAppraisalPDFGenerator:
             </table>
             
             <div class="data-note">
-                <p><strong>✓ 데이터 특징:</strong></p>
+                <p><strong>✓ 데이터 출처 및 특징:</strong></p>
                 <ul>
+                    <li>{'국토교통부 실거래가 API (MOLIT) 연동' if any(tx.get('source') == 'MOLIT_API' for tx in transactions) else '지능형 시세 데이터 (구별 실제 시세 반영)'}</li>
                     <li>실제 법정동 주소 표시</li>
                     <li>최근 거래일자 우선 정렬 ({transactions[0].get('transaction_date')} ~ {transactions[-1].get('transaction_date') if len(transactions) > 1 else 'N/A'})</li>
-                    <li>대상지로부터의 정확한 거리 계산</li>
-                    <li>도로 등급별 가중치 반영</li>
+                    <li>대상지로부터의 정확한 거리 계산 (Haversine Formula)</li>
+                    <li>도로 등급별 가중치 반영 (대로/중로/소로)</li>
                 </ul>
             </div>
         </div>
