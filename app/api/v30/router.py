@@ -157,9 +157,9 @@ async def generate_pdf(request: AppraisalRequestV30):
         # Get appraisal data
         appraisal_data = await run_appraisal(request)
         
-        # Generate PDF (simplified for now - full implementation below)
-        from app.services.v30.pdf_generator import PDFGeneratorV30
-        pdf_generator = PDFGeneratorV30()
+        # Generate PDF with enhanced 20-page generator
+        from app.services.v30.pdf_generator_enhanced import EnhancedPDFGenerator
+        pdf_generator = EnhancedPDFGenerator()
         pdf_bytes = pdf_generator.generate(appraisal_data)
         
         # Return PDF
