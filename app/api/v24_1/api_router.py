@@ -355,8 +355,6 @@ async def calculate_appraisal(request: AppraisalRequest):
         # ========================================
         # V36.0 ENHANCED: Step 4 - Generate nationwide transactions (Problem 2 해결)
         # ========================================
-        from app.services.transaction_generator import TransactionGenerator
-        
         transaction_gen = TransactionGenerator()
         generated_transactions = transaction_gen.generate_realistic_transactions(
             sido=sido or "서울특별시",
