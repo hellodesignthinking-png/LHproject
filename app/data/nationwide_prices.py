@@ -44,9 +44,9 @@ NATIONWIDE_MARKET_PRICES = {
         },
         "강동구": {"base_price": 1800, "dongs": {"천호동": 1900, "강일동": 1600, "둔촌동": 1850}},
         "용산구": {"base_price": 2400, "dongs": {"이태원동": 2600, "한남동": 3500, "이촌동": 2500, "용산동": 2300}},
-        "마포구": {"base_price": 2000, "dongs": {"공덕동": 2200, "서교동": 2300, "연남동": 2100, "상암동": 1900}},
+        "마포구": {"base_price": 2000, "dongs": {"공덕동": 2200, "서교동": 2300, "연남동": 2100, "상암동": 1900, "성산동": 800}},  # 성산동은 주택가
         "영등포구": {"base_price": 1900, "dongs": {"여의도동": 2500, "영등포동": 1800, "당산동": 2000}},
-        "관악구": {"base_price": 1500, "dongs": {"신림동": 1500, "봉천동": 1400}},
+        "관악구": {"base_price": 1500, "dongs": {"신림동": 1200, "봉천동": 1400}},  # 신림동 준주거 1200만원/㎡
         "동작구": {"base_price": 1700, "dongs": {"노량진동": 1800, "사당동": 1700, "흑석동": 1600}},
         "광진구": {"base_price": 1800, "dongs": {"자양동": 1900, "구의동": 1750, "광장동": 1700}},
         "성동구": {"base_price": 2000, "dongs": {"성수동": 2200, "왕십리": 1900, "행당동": 1850}},
@@ -94,7 +94,7 @@ NATIONWIDE_MARKET_PRICES = {
     # 인천광역시 (10개 구·군)
     "인천광역시": {
         "남동구": {"base_price": 900, "dongs": {"구월동": 950, "간석동": 900, "만수동": 850}},
-        "연수구": {"base_price": 950, "dongs": {"송도동": 1100, "옥련동": 900}},
+        "연수구": {"base_price": 950, "dongs": {"송도동": 1400, "옥련동": 900}},  # 송도 신도시
         "부평구": {"base_price": 850, "dongs": {}},
         "계양구": {"base_price": 800, "dongs": {}},
         "서구": {"base_price": 750, "dongs": {}},
@@ -107,7 +107,7 @@ NATIONWIDE_MARKET_PRICES = {
     
     # 대구광역시 (8개 구·군)
     "대구광역시": {
-        "수성구": {"base_price": 900, "dongs": {"범어동": 1000, "만촌동": 950, "수성동": 900}},
+        "수성구": {"base_price": 900, "dongs": {"범어동": 1150, "만촌동": 950, "수성동": 900}},  # 수성구 범어동 고급주택지
         "중구": {"base_price": 700, "dongs": {}},
         "동구": {"base_price": 650, "dongs": {}},
         "서구": {"base_price": 700, "dongs": {}},
@@ -119,7 +119,7 @@ NATIONWIDE_MARKET_PRICES = {
     
     # 광주광역시 (5개 구)
     "광주광역시": {
-        "서구": {"base_price": 650, "dongs": {"치평동": 700, "화정동": 650}},
+        "서구": {"base_price": 650, "dongs": {"치평동": 850, "화정동": 650}},  # 치평동 주거지역
         "동구": {"base_price": 600, "dongs": {}},
         "남구": {"base_price": 650, "dongs": {}},
         "북구": {"base_price": 600, "dongs": {}},
@@ -128,7 +128,7 @@ NATIONWIDE_MARKET_PRICES = {
     
     # 대전광역시 (5개 구)
     "대전광역시": {
-        "유성구": {"base_price": 700, "dongs": {"봉명동": 750, "도안동": 800}},
+        "유성구": {"base_price": 700, "dongs": {"봉명동": 850, "도안동": 800}},  # 유성구 봉명동 주거지역
         "서구": {"base_price": 650, "dongs": {"둔산동": 700, "탄방동": 650}},
         "중구": {"base_price": 600, "dongs": {}},
         "동구": {"base_price": 550, "dongs": {}},
@@ -153,7 +153,11 @@ NATIONWIDE_MARKET_PRICES = {
     "경기도": {
         "성남시": {
             "base_price": 1100,
-            "dongs": {"분당구": 1400, "수정구": 900, "중원구": 950}
+            "dongs": {"분당구": 2500, "수정구": 900, "중원구": 950, "정자동": 2500}  # 분당 신도시 고급주택지
+        },
+        "성남시 분당구": {
+            "base_price": 2500,
+            "dongs": {"정자동": 2500}  # 분당 정자동 고급주택지
         },
         "용인시": {"base_price": 900, "dongs": {"수지구": 1100, "기흥구": 950, "처인구": 700}},
         "수원시": {"base_price": 950, "dongs": {"영통구": 1050, "장안구": 900, "팔달구": 850, "권선구": 900}},
@@ -492,16 +496,16 @@ def get_market_price(
 def estimate_official_price(
     market_price: float,
     zone_type: str
-) -> float:
+) -> int:
     """
-    시장가격 기반 공시지가 추정 (개선 버전 - 60-70% 보장)
+    시장가격 기반 공시지가 추정 (개선 버전 - 60-90% 보장)
     
     Args:
         market_price: 시장가격 (만원/㎡)
         zone_type: 용도지역
     
     Returns:
-        추정 공시지가 (만원/㎡) - 시세의 60-70% 범위 보장
+        추정 공시지가 (원/㎡) - 시세의 60-90% 범위, 단위는 원/㎡
     """
     
     # 시장가 유효성 검증
@@ -509,23 +513,26 @@ def estimate_official_price(
         logger.warning(f"⚠️ Invalid market price: {market_price}, using default 800")
         market_price = 800.0
     
-    # 용도지역별 비율 조회 (기본값: 0.65)
-    ratio = ZONE_TO_OFFICIAL_RATIO.get(zone_type, 0.65)
+    # 용도지역별 비율 조회 (기본값: 0.70)
+    ratio = ZONE_TO_OFFICIAL_RATIO.get(zone_type, 0.70)
     
-    # 60-70% 범위 강제 (너무 높거나 낮은 비율 방지)
+    # 60-90% 범위 보장
     if ratio < 0.60:
         ratio = 0.60
-    elif ratio > 0.90:  # 상업지역 예외 허용
-        ratio = min(ratio, 0.90)
+    elif ratio > 0.90:
+        ratio = 0.90
     
-    official_price = market_price * ratio
+    # 공시지가 계산 (만원/㎡ → 원/㎡ 변환)
+    official_price_man = market_price * ratio  # 만원/㎡ 단위
+    official_price_won = official_price_man * 10000  # 원/㎡ 단위로 변환
     
-    # 최소값 보장 (250만원/㎡ * 0.60 = 150만원/㎡)
-    official_price = max(official_price, 150.0)
+    # 최소값 보장 (300만원/㎡)
+    if official_price_won < 3000000:
+        official_price_won = 3000000
     
-    logger.info(f"💰 Market: {market_price:.0f}만원/㎡ → Official: {official_price:.0f}만원/㎡ (ratio: {ratio:.0%})")
+    logger.info(f"💰 Market: {market_price:.0f}만원/㎡ ({int(market_price*10000):,}원/㎡) → Official: {int(official_price_won):,}원/㎡ (ratio: {ratio:.0%})")
     
-    return official_price
+    return int(official_price_won)
 
 
 def get_zone_type_suggestion(

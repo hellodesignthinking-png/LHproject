@@ -1,22 +1,50 @@
 """
-Official Data Scraper Engine
-Scrapes authoritative data from official government websites
+Official Data Scraper Engine v37.0
+Integrates PNU-based parcel data + nationwide market prices
 """
 import requests
 from bs4 import BeautifulSoup
 import re
 from typing import Dict, Optional, Tuple
 import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class OfficialDataScraper:
-    """Scrapes official land data from government websites"""
+    """Scrapes official land data from government websites + fallback to structured databases"""
     
     def __init__(self):
         self.session = requests.Session()
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         })
+        
+        # Import parcel-specific data and nationwide prices
+        try:
+            from app.data.parcel_specific_data import (
+                get_parcel_data, 
+                get_zone_by_region,
+                convert_address_to_pnu
+            )
+            from app.data.nationwide_prices import (
+                get_market_price,
+                estimate_official_price,
+                get_zone_type_suggestion
+            )
+            
+            self.get_parcel_data = get_parcel_data
+            self.get_zone_by_region = get_zone_by_region
+            self.convert_address_to_pnu = convert_address_to_pnu
+            self.get_market_price = get_market_price
+            self.estimate_official_price = estimate_official_price
+            self.get_zone_type_suggestion = get_zone_type_suggestion
+            self.integrated_data_available = True
+            logger.info("✅ Integrated parcel data & nationwide prices loaded")
+        except Exception as e:
+            logger.warning(f"⚠️ Could not load integrated data modules: {e}")
+            self.integrated_data_available = False
     
     def get_land_price_and_zoning(
         self,
@@ -46,6 +74,42 @@ class OfficialDataScraper:
         }
         
         try:
+            # Method 0: NEW! Try integrated PNU-based parcel data (HIGHEST ACCURACY)
+            if self.integrated_data_available and jibun:
+                pnu = self.convert_address_to_pnu(si, gu, dong, jibun)
+                if pnu:
+                    parcel_data = self.get_parcel_data(pnu)
+                    if parcel_data:
+                        logger.info(f"✅ PNU match found: {parcel_data['address']}")
+                        return {
+                            'official_land_price_per_sqm': parcel_data['official_land_price_per_sqm'],
+                            'zone_type': parcel_data['zone_type'],
+                            'data_year': '2024',
+                            'source': 'pnu_database',
+                            'confidence': 'very_high',
+                            'note': parcel_data.get('note', '')
+                        }
+            
+            # Method 0.5: Try integrated nationwide prices (HIGH ACCURACY)
+            if self.integrated_data_available:
+                # Get zone type from integrated data
+                zone_type = self.get_zone_by_region(si, gu, dong)
+                
+                # Get market price
+                market_price = self.get_market_price(si, gu, dong)
+                
+                # Estimate official price (will be in won/sqm)
+                official_price = self.estimate_official_price(market_price, zone_type)
+                
+                logger.info(f"✅ Nationwide data: {si} {gu} {dong} → {official_price:,}원/㎡, {zone_type}")
+                return {
+                    'official_land_price_per_sqm': official_price,
+                    'zone_type': zone_type,
+                    'data_year': '2024',
+                    'source': 'nationwide_database',
+                    'confidence': 'high'
+                }
+            
             # Method 1: Try 부동산공시가격알리미 (realty.kores.go.kr)
             price_data = self._scrape_kores(si, gu, dong, jibun)
             if price_data:
@@ -60,7 +124,7 @@ class OfficialDataScraper:
                 result['confidence'] = 'medium'
                 return result
             
-            # Method 3: Regional estimates based on district averages
+            # Method 3: Regional estimates based on district averages (OLD FALLBACK)
             regional_data = self._get_regional_estimates(si, gu, dong, jibun)
             if regional_data:
                 result.update(regional_data)
@@ -68,6 +132,7 @@ class OfficialDataScraper:
                 return result
                 
         except Exception as e:
+            logger.error(f"Scraping error: {e}")
             print(f"Scraping error: {e}")
         
         return result
