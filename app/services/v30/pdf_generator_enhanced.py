@@ -8,8 +8,11 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.units import mm
 from reportlab.lib import colors
 from reportlab.platypus import Table, TableStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 import io
 from datetime import datetime
+import os
 
 
 class EnhancedPDFGenerator:
@@ -20,6 +23,36 @@ class EnhancedPDFGenerator:
         self.margin = 20*mm
         self.y_position = 0
         
+        # Register Korean fonts
+        self._register_korean_fonts()
+        
+    def _register_korean_fonts(self):
+        """Register Korean fonts for PDF generation"""
+        try:
+            # Try to register Nanum Gothic font (common in Linux)
+            font_paths = [
+                '/usr/share/fonts/truetype/nanum/NanumGothic.ttf',
+                '/usr/share/fonts/truetype/nanum/NanumBarunGothic.ttf',
+                '/System/Library/Fonts/AppleGothic.ttf',  # macOS
+                'C:\\Windows\\Fonts\\malgun.ttf',  # Windows
+            ]
+            
+            for font_path in font_paths:
+                if os.path.exists(font_path):
+                    pdfmetrics.registerFont(TTFont('Korean', font_path))
+                    pdfmetrics.registerFont(TTFont('Korean-Bold', font_path))
+                    self.korean_font = 'Korean'
+                    print(f"✅ Korean font registered: {font_path}")
+                    return
+            
+            # Fallback: use Helvetica (will show ??? for Korean)
+            print("⚠️  Korean font not found, using Helvetica")
+            self.korean_font = 'Helvetica'
+            
+        except Exception as e:
+            print(f"⚠️  Font registration error: {e}")
+            self.korean_font = 'Helvetica'
+    
     def generate(self, appraisal_data: Dict) -> bytes:
         """Generate comprehensive 20-page PDF report"""
         buffer = io.BytesIO()
@@ -89,6 +122,11 @@ class EnhancedPDFGenerator:
         buffer.seek(0)
         return buffer.getvalue()
     
+    def _set_font(self, font_name: str, size: int):
+        """Wrapper to use Korean font"""
+        # Always use Korean font for proper Korean character rendering
+        self.pdf.setFont(self.korean_font, size)
+    
     def _draw_header(self, title: str, page_num: int):
         """Draw page header"""
         # Header line
@@ -98,18 +136,18 @@ class EnhancedPDFGenerator:
         
         # Title
         self.pdf.setFillColorRGB(0, 0, 0)
-        self.pdf.setFont("Helvetica-Bold", 18)
+        self._set_font("Helvetica-Bold", 18)
         self.pdf.drawString(self.margin, self.height - 20*mm, title)
         
         # Page number
-        self.pdf.setFont("Helvetica", 10)
+        self._set_font("Helvetica", 10)
         self.pdf.drawRightString(self.width - self.margin, self.height - 20*mm, f"Page {page_num}")
         
         self.y_position = self.height - 35*mm
     
     def _draw_footer(self):
         """Draw page footer"""
-        self.pdf.setFont("Helvetica", 8)
+        self._set_font("Helvetica", 8)
         self.pdf.setFillColorRGB(0.5, 0.5, 0.5)
         self.pdf.drawCentredString(self.width/2, 15*mm, "ZeroSite v30.0 Professional Appraisal Report")
         self.pdf.drawCentredString(self.width/2, 10*mm, f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
@@ -122,28 +160,28 @@ class EnhancedPDFGenerator:
         
         # Main title
         self.pdf.setFillColorRGB(1, 1, 1)
-        self.pdf.setFont("Helvetica-Bold", 36)
+        self._set_font("Helvetica-Bold", 36)
         self.pdf.drawCentredString(self.width/2, self.height - 60*mm, "토지 감정평가 보고서")
         
-        self.pdf.setFont("Helvetica", 16)
+        self._set_font("Helvetica", 16)
         self.pdf.drawCentredString(self.width/2, self.height - 75*mm, "Land Appraisal Report")
         
-        self.pdf.setFont("Helvetica-Bold", 14)
+        self._set_font("Helvetica-Bold", 14)
         self.pdf.drawCentredString(self.width/2, self.height - 95*mm, "v30.0 ULTIMATE - Real National API")
         
         # Property address
         self.pdf.setFillColorRGB(0, 0, 0)
-        self.pdf.setFont("Helvetica-Bold", 20)
+        self._set_font("Helvetica-Bold", 20)
         address = data['land_info'].get('address', 'N/A')
         self.pdf.drawCentredString(self.width/2, self.height - 140*mm, address)
         
         # Report details box
         y = self.height - 170*mm
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin + 10*mm, y, "보고서 정보 / Report Information")
         
         y -= 10*mm
-        self.pdf.setFont("Helvetica", 10)
+        self._set_font("Helvetica", 10)
         report_date = data.get('timestamp', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         
         info_lines = [
@@ -158,7 +196,7 @@ class EnhancedPDFGenerator:
             y -= 6*mm
         
         # Footer
-        self.pdf.setFont("Helvetica", 10)
+        self._set_font("Helvetica", 10)
         self.pdf.drawCentredString(self.width/2, 30*mm, "본 보고서는 ZeroSite v30.0 시스템을 통해 생성되었습니다.")
         self.pdf.drawCentredString(self.width/2, 25*mm, "This report was generated by ZeroSite v30.0 system")
         
@@ -190,7 +228,7 @@ class EnhancedPDFGenerator:
         ]
         
         y = self.y_position
-        self.pdf.setFont("Helvetica", 11)
+        self._set_font("Helvetica", 11)
         
         for page_num, title in toc_items:
             self.pdf.drawString(self.margin + 5*mm, y, f"{page_num}.")
@@ -219,10 +257,10 @@ class EnhancedPDFGenerator:
         self.pdf.rect(self.margin, y - 25*mm, self.width - 2*self.margin, 25*mm, fill=True, stroke=True)
         
         self.pdf.setFillColorRGB(0, 0, 0)
-        self.pdf.setFont("Helvetica-Bold", 14)
+        self._set_font("Helvetica-Bold", 14)
         self.pdf.drawString(self.margin + 5*mm, y - 8*mm, "최종 감정가액 / Final Appraised Value")
         
-        self.pdf.setFont("Helvetica-Bold", 24)
+        self._set_font("Helvetica-Bold", 24)
         self.pdf.setFillColorRGB(0.0, 0.36, 0.67)
         final_value = data['appraisal']['final_value']
         self.pdf.drawString(self.margin + 5*mm, y - 20*mm, f"₩ {final_value:,}")
@@ -231,11 +269,11 @@ class EnhancedPDFGenerator:
         
         # Key Findings
         self.pdf.setFillColorRGB(0, 0, 0)
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, "주요 발견사항 / Key Findings")
         y -= 8*mm
         
-        self.pdf.setFont("Helvetica", 10)
+        self._set_font("Helvetica", 10)
         land = data['land_info']
         appr = data['appraisal']
         
@@ -256,7 +294,7 @@ class EnhancedPDFGenerator:
         y -= 5*mm
         
         # Appraisal Methods Summary
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, "평가방법 요약 / Appraisal Methods Summary")
         y -= 8*mm
         
@@ -269,7 +307,7 @@ class EnhancedPDFGenerator:
             ("수익환원법 / Income Approach", approaches['income']['value'], weights['income'])
         ]
         
-        self.pdf.setFont("Helvetica", 10)
+        self._set_font("Helvetica", 10)
         for method_name, value, weight in methods:
             self.pdf.drawString(self.margin + 5*mm, y, f"• {method_name}")
             y -= 5*mm
@@ -295,11 +333,11 @@ class EnhancedPDFGenerator:
         land = data['land_info']
         
         # Location Information
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, "위치 정보 / Location Information")
         y -= 10*mm
         
-        self.pdf.setFont("Helvetica", 10)
+        self._set_font("Helvetica", 10)
         location_info = [
             ("소재지 / Address", land.get('address', 'N/A')),
             ("좌표 / Coordinates", f"Lat {land.get('coordinates', {}).get('lat', 0):.6f}, Lng {land.get('coordinates', {}).get('lng', 0):.6f}"),
@@ -307,20 +345,20 @@ class EnhancedPDFGenerator:
         ]
         
         for label, value in location_info:
-            self.pdf.setFont("Helvetica-Bold", 10)
+            self._set_font("Helvetica-Bold", 10)
             self.pdf.drawString(self.margin + 5*mm, y, label + ":")
-            self.pdf.setFont("Helvetica", 10)
+            self._set_font("Helvetica", 10)
             self.pdf.drawString(self.margin + 55*mm, y, value)
             y -= 7*mm
         
         y -= 5*mm
         
         # Physical Characteristics
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, "물리적 특성 / Physical Characteristics")
         y -= 10*mm
         
-        self.pdf.setFont("Helvetica", 10)
+        self._set_font("Helvetica", 10)
         physical_chars = [
             ("대지면적 / Land Area", f"{land.get('land_area_sqm', 0):,.2f} ㎡"),
             ("용도지역 / Zone Type", land.get('zone_type', 'N/A')),
@@ -330,20 +368,20 @@ class EnhancedPDFGenerator:
         ]
         
         for label, value in physical_chars:
-            self.pdf.setFont("Helvetica-Bold", 10)
+            self._set_font("Helvetica-Bold", 10)
             self.pdf.drawString(self.margin + 5*mm, y, label + ":")
-            self.pdf.setFont("Helvetica", 10)
+            self._set_font("Helvetica", 10)
             self.pdf.drawString(self.margin + 55*mm, y, value)
             y -= 7*mm
         
         y -= 5*mm
         
         # Legal Status
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, "법적 현황 / Legal Status")
         y -= 10*mm
         
-        self.pdf.setFont("Helvetica", 10)
+        self._set_font("Helvetica", 10)
         legal_status = [
             ("개별공시지가 / Official Land Price", f"₩{land.get('official_land_price_per_sqm', 0):,}/㎡"),
             ("기준년도 / Base Year", str(land.get('official_price_year', 2024))),
@@ -353,9 +391,9 @@ class EnhancedPDFGenerator:
         ]
         
         for label, value in legal_status:
-            self.pdf.setFont("Helvetica-Bold", 10)
+            self._set_font("Helvetica-Bold", 10)
             self.pdf.drawString(self.margin + 5*mm, y, label + ":")
-            self.pdf.setFont("Helvetica", 10)
+            self._set_font("Helvetica", 10)
             self.pdf.drawString(self.margin + 55*mm, y, value)
             y -= 7*mm
         
@@ -370,7 +408,7 @@ class EnhancedPDFGenerator:
         land = data['land_info']
         
         # Land Value Analysis
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, "토지 가치 분석 / Land Value Analysis")
         y -= 10*mm
         
@@ -378,7 +416,7 @@ class EnhancedPDFGenerator:
         land_area = land.get('land_area_sqm', 0)
         total_official = official_price * land_area
         
-        self.pdf.setFont("Helvetica", 10)
+        self._set_font("Helvetica", 10)
         value_items = [
             ("개별공시지가 단가 / Official Price per ㎡", f"₩{official_price:,}"),
             ("대지면적 / Land Area", f"{land_area:,.2f} ㎡"),
@@ -388,20 +426,20 @@ class EnhancedPDFGenerator:
         ]
         
         for label, value in value_items:
-            self.pdf.setFont("Helvetica-Bold", 10)
+            self._set_font("Helvetica-Bold", 10)
             self.pdf.drawString(self.margin + 5*mm, y, label + ":")
-            self.pdf.setFont("Helvetica", 10)
+            self._set_font("Helvetica", 10)
             self.pdf.drawRightString(self.width - self.margin - 5*mm, y, value)
             y -= 7*mm
         
         y -= 8*mm
         
         # Accessibility
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, "접근성 / Accessibility")
         y -= 10*mm
         
-        self.pdf.setFont("Helvetica", 10)
+        self._set_font("Helvetica", 10)
         accessibility = [
             "• 대중교통: 지하철역 도보 5-10분 거리",
             "• 도로: 주요 간선도로 인접",
@@ -418,11 +456,11 @@ class EnhancedPDFGenerator:
         y -= 8*mm
         
         # Development Potential
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, "개발 가능성 / Development Potential")
         y -= 10*mm
         
-        self.pdf.setFont("Helvetica", 10)
+        self._set_font("Helvetica", 10)
         zone_type = land.get('zone_type', '')
         
         if '준주거' in zone_type:
@@ -465,16 +503,16 @@ class EnhancedPDFGenerator:
         zone_type = data['land_info'].get('zone_type', '')
         
         # Zone Type Overview
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, f"현재 용도지역: {zone_type}")
         y -= 10*mm
         
         # Zone Description
-        self.pdf.setFont("Helvetica-Bold", 11)
+        self._set_font("Helvetica-Bold", 11)
         self.pdf.drawString(self.margin, y, "용도지역 설명 / Zone Description")
         y -= 8*mm
         
-        self.pdf.setFont("Helvetica", 9)
+        self._set_font("Helvetica", 9)
         
         if '준주거' in zone_type:
             description = [
@@ -507,11 +545,11 @@ class EnhancedPDFGenerator:
         y -= 8*mm
         
         # Permitted Uses
-        self.pdf.setFont("Helvetica-Bold", 11)
+        self._set_font("Helvetica-Bold", 11)
         self.pdf.drawString(self.margin, y, "허용 용도 / Permitted Uses")
         y -= 8*mm
         
-        self.pdf.setFont("Helvetica", 9)
+        self._set_font("Helvetica", 9)
         
         if '준주거' in zone_type:
             permitted = [
@@ -559,7 +597,7 @@ class EnhancedPDFGenerator:
         zone_type = data['land_info'].get('zone_type', '')
         
         # Building Coverage & FAR
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, "건축 규모 제한 / Building Scale Limits")
         y -= 10*mm
         
@@ -581,7 +619,7 @@ class EnhancedPDFGenerator:
             height = "확인 필요"
         
         # Create table
-        self.pdf.setFont("Helvetica-Bold", 10)
+        self._set_font("Helvetica-Bold", 10)
         regulations = [
             ["구분 / Category", "기준 / Standard", "비고 / Remarks"],
             ["건폐율 / Building Coverage Ratio", bcr, "대지면적 대비 건축면적"],
@@ -595,20 +633,20 @@ class EnhancedPDFGenerator:
             for j, cell in enumerate(row):
                 x_pos = self.margin + 5*mm + j * 55*mm
                 if i == 0:
-                    self.pdf.setFont("Helvetica-Bold", 9)
+                    self._set_font("Helvetica-Bold", 9)
                 else:
-                    self.pdf.setFont("Helvetica", 9)
+                    self._set_font("Helvetica", 9)
                 self.pdf.drawString(x_pos, y, cell[:25])  # Truncate if too long
             y -= 7*mm
         
         y -= 8*mm
         
         # Parking Requirements
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, "주차장 설치 기준 / Parking Requirements")
         y -= 10*mm
         
-        self.pdf.setFont("Helvetica", 9)
+        self._set_font("Helvetica", 9)
         parking = [
             "• 주택: 세대당 1대 이상 (지역별 상이)",
             "• 오피스텔: 전용면적 150㎡당 1대",
@@ -624,11 +662,11 @@ class EnhancedPDFGenerator:
         y -= 8*mm
         
         # Environmental Regulations
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, "환경 규제 / Environmental Regulations")
         y -= 10*mm
         
-        self.pdf.setFont("Helvetica", 9)
+        self._set_font("Helvetica", 9)
         env_regs = [
             "• 소음진동규제법: 생활소음 기준 준수",
             "• 대기환경보전법: 배출시설 설치 제한",
@@ -644,11 +682,11 @@ class EnhancedPDFGenerator:
         y -= 8*mm
         
         # Additional Restrictions
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, "기타 제한사항 / Additional Restrictions")
         y -= 10*mm
         
-        self.pdf.setFont("Helvetica", 9)
+        self._set_font("Helvetica", 9)
         additional = [
             "• 문화재보호구역: 해당 없음 (확인 필요)",
             "• 학교보건구역: 200m 이내 확인 필요",
@@ -672,11 +710,11 @@ class EnhancedPDFGenerator:
         self._draw_header("시장 분석 / Market Analysis", 8)
         y = self.y_position
         
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, "지역 부동산 시장 현황")
         y -= 10*mm
         
-        self.pdf.setFont("Helvetica", 9)
+        self._set_font("Helvetica", 9)
         market_info = [
             f"• 평가 기준일: {datetime.now().strftime('%Y년 %m월 %d일')}",
             f"• 해당 지역: {data['land_info'].get('si', '')} {data['land_info'].get('gu', '')} {data['land_info'].get('dong', '')}",
@@ -698,13 +736,13 @@ class EnhancedPDFGenerator:
         self._draw_header("지역 시세 동향 / Regional Price Trends", 9)
         y = self.y_position
         
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, "최근 3개년 공시지가 추이")
         y -= 10*mm
         
         official_price = data['land_info'].get('official_land_price_per_sqm', 0)
         
-        self.pdf.setFont("Helvetica", 9)
+        self._set_font("Helvetica", 9)
         trends = [
             f"• 2024년: ₩{official_price:,}/㎡ (기준)",
             f"• 2023년 (추정): ₩{int(official_price * 0.95):,}/㎡ (+5.3%)",
@@ -732,18 +770,18 @@ class EnhancedPDFGenerator:
         else:
             transactions = comp_sales
         
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, f"비교가능 거래사례: 총 {len(transactions)}건")
         y -= 10*mm
         
         if transactions:
-            self.pdf.setFont("Helvetica", 9)
+            self._set_font("Helvetica", 9)
             for i, trans in enumerate(transactions[:5], 1):
-                self.pdf.setFont("Helvetica-Bold", 9)
+                self._set_font("Helvetica-Bold", 9)
                 self.pdf.drawString(self.margin + 5*mm, y, f"사례 {i}: {trans.get('address', 'N/A')}")
                 y -= 6*mm
                 
-                self.pdf.setFont("Helvetica", 9)
+                self._set_font("Helvetica", 9)
                 self.pdf.drawString(self.margin + 10*mm, y, f"거래가: ₩{trans.get('transaction_price', 0):,}")
                 y -= 5*mm
                 self.pdf.drawString(self.margin + 10*mm, y, f"거래일: {trans.get('transaction_date', 'N/A')}")
@@ -751,7 +789,7 @@ class EnhancedPDFGenerator:
                 self.pdf.drawString(self.margin + 10*mm, y, f"면적: {trans.get('land_area', 0):,.1f}㎡")
                 y -= 8*mm
         else:
-            self.pdf.setFont("Helvetica", 9)
+            self._set_font("Helvetica", 9)
             self.pdf.drawString(self.margin + 5*mm, y, "거래사례 데이터가 충분하지 않습니다.")
         
         self._draw_footer()
@@ -774,11 +812,11 @@ class EnhancedPDFGenerator:
         
         cost = data['appraisal']['approaches']['cost']
         
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, "원가방식 산정")
         y -= 10*mm
         
-        self.pdf.setFont("Helvetica", 10)
+        self._set_font("Helvetica", 10)
         official_price = data['land_info'].get('official_land_price_per_sqm', 0)
         land_area = data['land_info'].get('land_area_sqm', 0)
         
@@ -794,9 +832,9 @@ class EnhancedPDFGenerator:
         
         for label, value in calc_items:
             if label:
-                self.pdf.setFont("Helvetica-Bold", 10)
+                self._set_font("Helvetica-Bold", 10)
                 self.pdf.drawString(self.margin + 5*mm, y, label + ":")
-                self.pdf.setFont("Helvetica", 10)
+                self._set_font("Helvetica", 10)
                 self.pdf.drawRightString(self.width - self.margin - 5*mm, y, value)
             y -= 7*mm
         
@@ -809,11 +847,11 @@ class EnhancedPDFGenerator:
         
         sales = data['appraisal']['approaches']['sales_comparison']
         
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, "거래사례비교법 산정")
         y -= 10*mm
         
-        self.pdf.setFont("Helvetica", 10)
+        self._set_font("Helvetica", 10)
         self.pdf.drawString(self.margin + 5*mm, y, f"거래사례 평균 단가 기준 산정")
         y -= 7*mm
         self.pdf.drawString(self.margin + 5*mm, y, f"평가액: ₩{sales['value']:,}")
@@ -827,11 +865,11 @@ class EnhancedPDFGenerator:
         
         income = data['appraisal']['approaches']['income']
         
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, "수익환원법 산정")
         y -= 10*mm
         
-        self.pdf.setFont("Helvetica", 10)
+        self._set_font("Helvetica", 10)
         self.pdf.drawString(self.margin + 5*mm, y, f"예상 임대수익 기반 자산가치 산정")
         y -= 7*mm
         self.pdf.drawString(self.margin + 5*mm, y, f"평가액: ₩{income['value']:,}")
@@ -845,7 +883,7 @@ class EnhancedPDFGenerator:
         
         appr = data['appraisal']
         
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, "3가지 접근법 조정")
         y -= 10*mm
         
@@ -855,14 +893,14 @@ class EnhancedPDFGenerator:
             ("수익환원법", appr['approaches']['income']['value'], appr['weights']['income'])
         ]
         
-        self.pdf.setFont("Helvetica", 10)
+        self._set_font("Helvetica", 10)
         for name, value, weight in approaches:
             weighted = value * weight
             self.pdf.drawString(self.margin + 5*mm, y, f"{name}: ₩{value:,} × {weight*100:.0f}% = ₩{weighted:,}")
             y -= 7*mm
         
         y -= 5*mm
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin + 5*mm, y, f"최종 평가액: ₩{appr['final_value']:,}")
         
         self._draw_footer()
@@ -874,11 +912,11 @@ class EnhancedPDFGenerator:
         
         premium = data['appraisal'].get('premium', {})
         
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, f"입지 프리미엄: +{premium.get('percentage', 0)}%")
         y -= 10*mm
         
-        self.pdf.setFont("Helvetica", 9)
+        self._set_font("Helvetica", 9)
         factors = [
             "• 교통 접근성: 우수",
             "• 생활 편의시설: 풍부",
@@ -898,11 +936,11 @@ class EnhancedPDFGenerator:
         self._draw_header("위험 평가 / Risk Assessment", 18)
         y = self.y_position
         
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, "투자 위험 요소")
         y -= 10*mm
         
-        self.pdf.setFont("Helvetica", 9)
+        self._set_font("Helvetica", 9)
         risks = [
             "시장 위험 / Market Risk:",
             "  • 금리 상승 시 부동산 가격 하락 가능성",
@@ -928,11 +966,11 @@ class EnhancedPDFGenerator:
         self._draw_header("투자 권고사항 / Investment Recommendations", 19)
         y = self.y_position
         
-        self.pdf.setFont("Helvetica-Bold", 12)
+        self._set_font("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, "종합 의견")
         y -= 10*mm
         
-        self.pdf.setFont("Helvetica", 9)
+        self._set_font("Helvetica", 9)
         recommendations = [
             f"평가액: ₩{data['appraisal']['final_value']:,}",
             f"신뢰도: {data['appraisal'].get('confidence_level', 'N/A')}",
@@ -964,10 +1002,10 @@ class EnhancedPDFGenerator:
         self.pdf.rect(self.margin, y - 40*mm, self.width - 2*self.margin, 40*mm, fill=True, stroke=True)
         
         self.pdf.setFillColorRGB(0, 0, 0)
-        self.pdf.setFont("Helvetica-Bold", 14)
+        self._set_font("Helvetica-Bold", 14)
         self.pdf.drawString(self.margin + 5*mm, y - 8*mm, "최종 감정평가액 / Final Appraised Value")
         
-        self.pdf.setFont("Helvetica-Bold", 28)
+        self._set_font("Helvetica-Bold", 28)
         self.pdf.setFillColorRGB(0.0, 0.36, 0.67)
         final_value = data['appraisal']['final_value']
         self.pdf.drawCentredString(self.width/2, y - 25*mm, f"₩ {final_value:,}")
@@ -976,11 +1014,11 @@ class EnhancedPDFGenerator:
         
         # Disclaimer
         self.pdf.setFillColorRGB(0, 0, 0)
-        self.pdf.setFont("Helvetica-Bold", 11)
+        self._set_font("Helvetica-Bold", 11)
         self.pdf.drawString(self.margin, y, "면책 조항 / Disclaimer")
         y -= 8*mm
         
-        self.pdf.setFont("Helvetica", 8)
+        self._set_font("Helvetica", 8)
         disclaimer = [
             "본 감정평가 보고서는 ZeroSite v30.0 시스템을 통해 자동 생성된 참고자료이며,",
             "법적 효력을 갖는 공식 감정평가서가 아닙니다. 실제 거래 또는 법적 목적으로",
@@ -999,7 +1037,7 @@ class EnhancedPDFGenerator:
         y -= 10*mm
         
         # Report Info
-        self.pdf.setFont("Helvetica", 9)
+        self._set_font("Helvetica", 9)
         self.pdf.drawString(self.margin, y, f"Report Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         y -= 5*mm
         self.pdf.drawString(self.margin, y, f"System Version: ZeroSite v30.0 ULTIMATE")
