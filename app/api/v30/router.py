@@ -152,14 +152,14 @@ async def run_appraisal(request: AppraisalRequestV30):
 
 @router_v30.post("/appraisal/pdf")
 async def generate_pdf(request: AppraisalRequestV30):
-    """Generate 20-page PDF report"""
+    """Generate 25-30 page PDF report with v39.0 FINAL enhancements"""
     try:
         # Get appraisal data
         appraisal_data = await run_appraisal(request)
         
-        # Generate PDF with enhanced 20-page generator
-        from app.services.v30.pdf_generator_enhanced import EnhancedPDFGenerator
-        pdf_generator = EnhancedPDFGenerator()
+        # Generate PDF with v39.0 FINAL comprehensive generator
+        from app.services.v30.pdf_generator_v39 import PDFGeneratorV39
+        pdf_generator = PDFGeneratorV39()
         pdf_bytes = pdf_generator.generate(appraisal_data)
         
         # Return PDF

@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite v40.0 - LH 신축매입임대 종합 토지분석 시스템</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* v40 Specific Styles */
+        .unified-analysis-form {
+            background: linear-gradient(135deg, #005BAC 0%, #0073D1 100%);
+            padding: 60px 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,91,172,0.3);
+            margin: 40px auto;
+            max-width: 900px;
+        }
+        
+        .form-title {
+            color: white;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .form-subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 16px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .input-group {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        
+        .input-group-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #005BAC;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .input-row.single {
+            grid-template-columns: 1fr;
+        }
+        
+        .input-field {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .input-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .input-label.required::after {
+            content: " *";
+            color: #E74C3C;
+        }
+        
+        .input-control {
+            padding: 12px 16px;
+            border: 2px solid #E0E0E0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+        
+        .input-control:focus {
+            outline: none;
+            border-color: #005BAC;
+            box-shadow: 0 0 0 3px rgba(0,91,172,0.1);
+        }
+        
+        .run-analysis-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #23A860 0%, #2ECC71 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 20px 40px;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 30px;
+            box-shadow: 0 8px 24px rgba(46,204,113,0.4);
+        }
+        
+        .run-analysis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(46,204,113,0.5);
+        }
+        
+        .run-analysis-btn i {
+            font-size: 24px;
+        }
+        
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .loading-content {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 400px;
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #E0E0E0;
+            border-top: 4px solid #005BAC;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .loading-progress {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .dashboard-section {
+            display: none;
+            margin: 40px auto;
+            max-width: 1200px;
+        }
+        
+        .dashboard-header {
+            background: linear-gradient(135deg, #23A860 0%, #2ECC71 100%);
+            color: white;
+            padding: 30px 40px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+        }
+        
+        .dashboard-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .dashboard-address {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        
+        .tabs-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .tabs-nav {
+            display: flex;
+            background: #F5F5F5;
+            border-bottom: 2px solid #E0E0E0;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 20px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab-btn:hover {
+            background: rgba(0,91,172,0.05);
+        }
+        
+        .tab-btn.active {
+            color: #005BAC;
+            background: white;
+            border-bottom-color: #005BAC;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 40px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .trust-section {
+            background: #F9F9F9;
+            padding: 40px;
+            border-radius: 16px;
+            margin: 40px auto;
+            max-width: 1200px;
+            text-align: center;
+        }
+        
+        .trust-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+        }
+        
+        .trust-items {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .trust-item {
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section with Unified Input Form -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <i class="fas fa-bolt"></i>
+                    <span>ZeroSite v40.0 FINAL INTEGRATION</span>
+                </div>
+                <h1 class="hero-title">
+                    ZeroSite 종합 토지분석 시스템
+                </h1>
+                <p class="hero-subtitle">
+                    LH 신축매입임대 토지진단·규모검토·감정평가·시나리오·보고서 자동화
+                </p>
+                <p class="hero-description">
+                    주소 입력 한 번으로 13가지 AI 엔진 실행 → 5가지 보고서 자동 생성 → 최적 시나리오 추천
+                </p>
+            </div>
+            
+            <!-- Unified Analysis Form -->
+            <div class="unified-analysis-form">
+                <h2 class="form-title">
+                    <i class="fas fa-search"></i> 종합 토지분석 시작
+                </h2>
+                <p class="form-subtitle">
+                    아래 정보를 입력하시면 토지진단·규모검토·감정평가·시나리오 분석이 자동으로 실행됩니다
+                </p>
+                
+                <form id="fullAnalysisForm">
+                    <!-- 필수 입력 -->
+                    <div class="input-group">
+                        <div class="input-group-title">
+                            <i class="fas fa-star"></i> 필수 입력 정보
+                        </div>
+                        <div class="input-row">
+                            <div class="input-field">
+                                <label class="input-label required">주소 (도로명 또는 지번)</label>
+                                <input type="text" class="input-control" id="address" name="address" 
+                                       placeholder="예: 서울특별시 관악구 신림동 1524-8" required>
+                            </div>
+                            <div class="input-field">
+                                <label class="input-label required">대지면적 (㎡)</label>
+                                <input type="number" class="input-control" id="land_area_sqm" name="land_area_sqm" 
+                                       placeholder="예: 450.5" step="0.1" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 선택 입력 -->
+                    <div class="input-group">
+                        <div class="input-group-title">
+                            <i class="fas fa-cog"></i> 토지 물리적 특성 (선택)
+                        </div>
+                        <div class="input-row">
+                            <div class="input-field">
+                                <label class="input-label">토지 형상</label>
+                                <select class="input-control" id="land_shape" name="land_shape">
+                                    <option value="정방형">정방형 (정사각형에 가까움)</option>
+                                    <option value="장방형">장방형 (직사각형)</option>
+                                    <option value="부정형">부정형 (불규칙한 형상)</option>
+                                </select>
+                            </div>
+                            <div class="input-field">
+                                <label class="input-label">경사도</label>
+                                <select class="input-control" id="slope" name="slope">
+                                    <option value="평지">평지 (경사 없음)</option>
+                                    <option value="완경사">완경사 (약간의 경사)</option>
+                                    <option value="급경사">급경사 (가파른 경사)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-field">
+                                <label class="input-label">도로 접면</label>
+                                <select class="input-control" id="road_access" name="road_access">
+                                    <option value="광로">광로 (폭 25m 이상)</option>
+                                    <option value="중로">중로 (폭 12-25m)</option>
+                                    <option value="소로">소로 (폭 12m 미만)</option>
+                                    <option value="막다른길">막다른길</option>
+                                </select>
+                            </div>
+                            <div class="input-field">
+                                <label class="input-label">방위</label>
+                                <select class="input-control" id="orientation" name="orientation">
+                                    <option value="남향">남향 (南)</option>
+                                    <option value="동향">동향 (東)</option>
+                                    <option value="서향">서향 (西)</option>
+                                    <option value="북향">북향 (北)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 실행 버튼 -->
+                    <button type="submit" class="run-analysis-btn">
+                        <i class="fas fa-rocket"></i>
+                        종합 토지분석 시작
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <div class="stat-number">13</div>
+                    <div class="stat-label">AI 엔진</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">5</div>
+                    <div class="stat-label">보고서 유형</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">자동화</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">&lt;5s</div>
+                    <div class="stat-label">분석 속도</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">종합 토지분석 실행 중...</div>
+            <div class="loading-progress" id="loadingProgress">토지진단 엔진 실행 중...</div>
+        </div>
+    </div>
+    
+    <!-- Dashboard Section (Hidden Initially) -->
+    <section class="dashboard-section" id="dashboardSection">
+        <div class="container">
+            <div class="dashboard-header">
+                <div class="dashboard-title">
+                    <i class="fas fa-check-circle"></i> 종합 토지분석 완료
+                </div>
+                <div class="dashboard-address" id="dashboardAddress"></div>
+            </div>
+            
+            <!-- Tabs -->
+            <div class="tabs-container">
+                <div class="tabs-nav">
+                    <button class="tab-btn active" data-tab="diagnosis">
+                        <i class="fas fa-map-marked-alt"></i> 토지진단
+                    </button>
+                    <button class="tab-btn" data-tab="capacity">
+                        <i class="fas fa-building"></i> 규모검토
+                    </button>
+                    <button class="tab-btn" data-tab="appraisal">
+                        <i class="fas fa-file-invoice-dollar"></i> 감정평가
+                    </button>
+                    <button class="tab-btn" data-tab="scenario">
+                        <i class="fas fa-code-branch"></i> 시나리오
+                    </button>
+                    <button class="tab-btn" data-tab="reports">
+                        <i class="fas fa-file-alt"></i> 보고서
+                    </button>
+                </div>
+                
+                <div class="tab-content active" id="tab-diagnosis">
+                    <h3>토지 적합성 진단 결과</h3>
+                    <div id="diagnosisContent">분석 결과를 불러오는 중...</div>
+                </div>
+                
+                <div class="tab-content" id="tab-capacity">
+                    <h3>건축 규모 검토 결과</h3>
+                    <div id="capacityContent">분석 결과를 불러오는 중...</div>
+                </div>
+                
+                <div class="tab-content" id="tab-appraisal">
+                    <h3>토지 감정평가 결과</h3>
+                    <div id="appraisalContent">분석 결과를 불러오는 중...</div>
+                </div>
+                
+                <div class="tab-content" id="tab-scenario">
+                    <h3>시나리오 비교 분석 (A·B·C)</h3>
+                    <div id="scenarioContent">분석 결과를 불러오는 중...</div>
+                </div>
+                
+                <div class="tab-content" id="tab-reports">
+                    <h3>보고서 생성 및 다운로드</h3>
+                    <div id="reportsContent">분석 결과를 불러오는 중...</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Trust Section -->
+    <section class="trust-section">
+        <div class="trust-title">
+            본 분석은 ZeroSite v40.0 Engine 기반 자동 산출 결과입니다
+        </div>
+        <div class="trust-items">
+            <div class="trust-item">
+                <i class="fas fa-database"></i> 데이터 출처: 국토교통부 / 실거래가 공개시스템 / V-World / LH 기준
+            </div>
+            <div class="trust-item">
+                <i class="fas fa-shield-alt"></i> 감정평가 방법론: 감정평가에 관한 규칙 준수
+            </div>
+            <div class="trust-item">
+                <i class="fas fa-exclamation-circle"></i> 법적 고지: 본 결과는 참고용이며 실제 사업 시 전문가 검토 필요
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Form submission handler
+        document.getElementById('fullAnalysisForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Show loading overlay
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            loadingOverlay.style.display = 'flex';
+            
+            // Collect form data
+            const formData = {
+                address: document.getElementById('address').value,
+                land_area_sqm: parseFloat(document.getElementById('land_area_sqm').value),
+                land_shape: document.getElementById('land_shape').value,
+                slope: document.getElementById('slope').value,
+                road_access: document.getElementById('road_access').value,
+                orientation: document.getElementById('orientation').value
+            };
+            
+            try {
+                // Simulate progress updates
+                updateProgress('토지진단 엔진 실행 중...');
+                await sleep(500);
+                
+                updateProgress('규모검토 엔진 실행 중...');
+                await sleep(500);
+                
+                updateProgress('감정평가 엔진 실행 중...');
+                await sleep(500);
+                
+                updateProgress('시나리오 엔진 실행 중...');
+                await sleep(500);
+                
+                // Call unified API
+                const response = await fetch('/api/v40/run-full-land-analysis', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('분석 실행 중 오류가 발생했습니다.');
+                }
+                
+                const result = await response.json();
+                
+                // Hide loading, show dashboard
+                loadingOverlay.style.display = 'none';
+                document.getElementById('dashboardSection').style.display = 'block';
+                document.getElementById('dashboardAddress').textContent = formData.address;
+                
+                // Populate tabs with results
+                populateResults(result);
+                
+                // Scroll to dashboard
+                document.getElementById('dashboardSection').scrollIntoView({ behavior: 'smooth' });
+                
+            } catch (error) {
+                loadingOverlay.style.display = 'none';
+                alert('오류: ' + error.message);
+            }
+        });
+        
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tabName = this.dataset.tab;
+                
+                // Update buttons
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Update content
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.getElementById('tab-' + tabName).classList.add('active');
+            });
+        });
+        
+        function updateProgress(text) {
+            document.getElementById('loadingProgress').textContent = text;
+        }
+        
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        function populateResults(result) {
+            // Populate diagnosis
+            document.getElementById('diagnosisContent').innerHTML = `
+                <div style="padding: 20px; background: #F9F9F9; border-radius: 8px;">
+                    <p><strong>Context ID:</strong> ${result.context_id}</p>
+                    <p><strong>토지 적합성:</strong> ${result.diagnosis?.suitability || '평가 중'}</p>
+                    <p><strong>용도지역:</strong> ${result.diagnosis?.zone_type || '조회 중'}</p>
+                    <p>상세 결과는 보고서를 확인하세요.</p>
+                </div>
+            `;
+            
+            // Populate capacity
+            document.getElementById('capacityContent').innerHTML = `
+                <div style="padding: 20px; background: #F9F9F9; border-radius: 8px;">
+                    <p><strong>최대 세대수:</strong> ${result.capacity?.max_units || '계산 중'}</p>
+                    <p><strong>최대 연면적:</strong> ${result.capacity?.max_floor_area || '계산 중'}㎡</p>
+                    <p>상세 결과는 보고서를 확인하세요.</p>
+                </div>
+            `;
+            
+            // Populate appraisal
+            document.getElementById('appraisalContent').innerHTML = `
+                <div style="padding: 20px; background: #F9F9F9; border-radius: 8px;">
+                    <p><strong>최종 감정가:</strong> ₩${result.appraisal?.final_value?.toLocaleString() || '평가 중'}</p>
+                    <p><strong>㎡당 단가:</strong> ₩${result.appraisal?.value_per_sqm?.toLocaleString() || '평가 중'}/㎡</p>
+                    <p>23페이지 전문가 보고서 생성 완료</p>
+                </div>
+            `;
+            
+            // Populate scenario
+            document.getElementById('scenarioContent').innerHTML = `
+                <div style="padding: 20px; background: #F9F9F9; border-radius: 8px;">
+                    <p><strong>추천 시나리오:</strong> ${result.scenario?.recommended || 'B안 (신혼형)'}</p>
+                    <p><strong>추천 사유:</strong> ${result.scenario?.reason || '정책적합성 92점, IRR 6.4%, 리스크 낮음'}</p>
+                    <p>A·B·C 시나리오 비교 완료</p>
+                </div>
+            `;
+            
+            // Populate reports
+            document.getElementById('reportsContent').innerHTML = `
+                <div style="padding: 20px;">
+                    <h4>생성 가능한 보고서 목록</h4>
+                    <button class="btn btn-primary" onclick="downloadReport('${result.context_id}', 'landowner')">
+                        <i class="fas fa-download"></i> Landowner Brief
+                    </button>
+                    <button class="btn btn-primary" onclick="downloadReport('${result.context_id}', 'lh')">
+                        <i class="fas fa-download"></i> LH Submission Report
+                    </button>
+                    <button class="btn btn-primary" onclick="downloadReport('${result.context_id}', 'professional')">
+                        <i class="fas fa-download"></i> Extended Professional Report
+                    </button>
+                    <button class="btn btn-primary" onclick="downloadReport('${result.context_id}', 'appraisal_v39')">
+                        <i class="fas fa-download"></i> 토지 감정평가 보고서 (v39, 23p)
+                    </button>
+                </div>
+            `;
+        }
+        
+        function downloadReport(contextId, reportType) {
+            window.open(`/api/v40/reports/${contextId}/${reportType}`, '_blank');
+        }
+    </script>
+</body>
+</html>

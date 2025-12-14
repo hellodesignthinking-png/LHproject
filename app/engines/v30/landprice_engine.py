@@ -14,7 +14,8 @@ class LandPriceEngineV30:
     """Individual official land price with real V-World API"""
     
     def __init__(self):
-        self.api_key = config_v30.VWORLD_API_KEY
+        self.api_keys = getattr(config_v30, 'VWORLD_API_KEYS', [config_v30.VWORLD_API_KEY])
+        self.current_key_index = 0
         self.use_real_api = config_v30.USE_REAL_API
         
     def get_land_price(self, lat: float, lng: float, pnu: str = '', 
@@ -36,7 +37,7 @@ class LandPriceEngineV30:
                 'method': str
             }
         """
-        if self.use_real_api and self.api_key:
+        if self.use_real_api and self.api_keys:
             result = self._get_price_from_vworld(lat, lng, pnu)
             if result['success']:
                 return result
