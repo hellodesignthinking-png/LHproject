@@ -16,7 +16,7 @@ class ZoningEngineV30:
         self.api_key = config_v30.VWORLD_API_KEY
         self.use_real_api = config_v30.USE_REAL_API
         
-    def get_zone_type(self, lat: float, lng: float, si: str = '', gu: str = '', dong: str = '') -> Dict[str, any]:
+    def get_zone_type(self, lat: float, lng: float, si: str = '', gu: str = '', dong: str = '', jibun: str = '') -> Dict[str, any]:
         """
         Get land use zone type for coordinates
         
@@ -39,7 +39,7 @@ class ZoningEngineV30:
                 return result
         
         # Fallback
-        return self._get_zone_fallback(si, gu, dong)
+        return self._get_zone_fallback(si, gu, dong, jibun)
     
     def _get_zone_from_vworld(self, lat: float, lng: float) -> Dict[str, any]:
         """Real V-World API call"""
@@ -83,13 +83,13 @@ class ZoningEngineV30:
         
         return {'success': False}
     
-    def _get_zone_fallback(self, si: str, gu: str, dong: str) -> Dict[str, any]:
+    def _get_zone_fallback(self, si: str, gu: str, dong: str, jibun: str = '') -> Dict[str, any]:
         """Fallback zoning using official data scraper"""
         # Import scraper
         try:
             from app.engines.v30.official_data_scraper import OfficialDataScraper
             scraper = OfficialDataScraper()
-            result = scraper.get_land_price_and_zoning(si, gu, dong)
+            result = scraper.get_land_price_and_zoning(si, gu, dong, jibun)
             
             if result.get('zone_type'):
                 return {

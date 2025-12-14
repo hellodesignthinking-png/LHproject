@@ -77,11 +77,11 @@ async def run_appraisal(request: AppraisalRequestV30):
         jibun = geo_result['jibun']
         
         # Step 2: Zoning
-        zone_result = zoning_engine.get_zone_type(lat, lng, si, gu, dong)
+        zone_result = zoning_engine.get_zone_type(lat, lng, si, gu, dong, jibun)
         zone_type = zone_result['zone_type']
         
         # Step 3: Land Price
-        price_result = landprice_engine.get_land_price(lat, lng, '', si, gu, dong)
+        price_result = landprice_engine.get_land_price(lat, lng, '', si, gu, dong, jibun)
         official_price = price_result['official_price']
         price_year = price_result['year']
         

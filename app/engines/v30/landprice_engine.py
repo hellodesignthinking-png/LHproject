@@ -18,7 +18,7 @@ class LandPriceEngineV30:
         self.use_real_api = config_v30.USE_REAL_API
         
     def get_land_price(self, lat: float, lng: float, pnu: str = '', 
-                       si: str = '', gu: str = '', dong: str = '') -> Dict[str, any]:
+                       si: str = '', gu: str = '', dong: str = '', jibun: str = '') -> Dict[str, any]:
         """
         Get official individual land price
         
@@ -42,7 +42,7 @@ class LandPriceEngineV30:
                 return result
         
         # Fallback
-        return self._get_price_fallback(si, gu, dong)
+        return self._get_price_fallback(si, gu, dong, jibun)
     
     def _get_price_from_vworld(self, lat: float, lng: float, pnu: str = '') -> Dict[str, any]:
         """Real V-World API call"""
@@ -86,13 +86,13 @@ class LandPriceEngineV30:
         
         return {'success': False}
     
-    def _get_price_fallback(self, si: str, gu: str, dong: str) -> Dict[str, any]:
+    def _get_price_fallback(self, si: str, gu: str, dong: str, jibun: str = '') -> Dict[str, any]:
         """Fallback land prices using official data scraper"""
         # Try scraper first
         try:
             from app.engines.v30.official_data_scraper import OfficialDataScraper
             scraper = OfficialDataScraper()
-            result = scraper.get_land_price_and_zoning(si, gu, dong)
+            result = scraper.get_land_price_and_zoning(si, gu, dong, jibun)
             
             if result.get('official_land_price_per_sqm'):
                 return {
