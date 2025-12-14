@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZeroSite v30.0 - 통합 대시보드 (Real National API)</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>ZeroSite v30.0 - 통합 대시보드 (Real National API) - Build 16</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -638,6 +641,11 @@
 
     <!-- JavaScript -->
     <script>
+        // ✨ v30.0 Version Check
+        console.log('%c🚀 ZeroSite v30.0 Loaded - Build 16', 'background: #005BAC; color: white; padding: 5px 10px; font-weight: bold; font-size: 14px;');
+        console.log('API Endpoints: /api/v30/appraisal');
+        console.log('Expected: 공시지가 varies by region (NOT fixed 10,000,000)');
+        
         // Tab Switching
         function switchTab(tabName) {
             // URL 파라미터 업데이트
