@@ -342,7 +342,24 @@ class PremiumPDFv38Ultimate:
         price_per_pyeong = price_per_sqm * 3.3058
         
         zone_type = data.get('zone_type', '제2종일반주거지역')
-        confidence = float(data.get('confidence_level', 0.94) or 0.94) * 100
+        
+        # Handle confidence_level (can be float, int, or string like "MEDIUM")
+        confidence_raw = data.get('confidence_level') or data.get('confidence', 0.94)
+        if isinstance(confidence_raw, str):
+            # Map string confidence to numeric value
+            confidence_map = {
+                'HIGH': 0.95,
+                'MEDIUM': 0.85,
+                'LOW': 0.75,
+                'VERY_HIGH': 0.98,
+                'VERY_LOW': 0.65
+            }
+            confidence = confidence_map.get(confidence_raw.upper(), 0.85) * 100
+        else:
+            try:
+                confidence = float(confidence_raw) * 100
+            except (ValueError, TypeError):
+                confidence = 85.0  # Default to 85%
         
         # Calculate method values
         cost_value = final_value * 0.97
