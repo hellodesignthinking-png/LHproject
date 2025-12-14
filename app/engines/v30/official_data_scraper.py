@@ -110,21 +110,300 @@ class OfficialDataScraper:
         }
         
         regional_data = {
-            # 서울
+            # === 서울특별시 (25개 구) ===
             ('서울', '강남구'): {
                 'official_land_price_per_sqm': 27200000,
-                'zone_type': '근린상업지역',
-                'note': '강남구 평균 (상업지역)'
+                'zone_type': '제3종일반주거지역',
+                'note': '강남구 평균 2024'
             },
             ('서울', '서초구'): {
                 'official_land_price_per_sqm': 25000000,
                 'zone_type': '제2종일반주거지역',
-                'note': '서초구 평균'
+                'note': '서초구 평균 2024'
             },
             ('서울', '송파구'): {
                 'official_land_price_per_sqm': 18000000,
                 'zone_type': '제2종일반주거지역',
-                'note': '송파구 평균'
+                'note': '송파구 평균 2024'
+            },
+            ('서울', '마포구'): {
+                'official_land_price_per_sqm': 12000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '마포구 평균 2024'
+            },
+            ('서울', '관악구'): {
+                'official_land_price_per_sqm': 8785000,
+                'zone_type': '제2종일반주거지역',
+                'note': '관악구 평균 2024'
+            },
+            ('서울', '용산구'): {
+                'official_land_price_per_sqm': 22000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '용산구 평균 2024'
+            },
+            ('서울', '성동구'): {
+                'official_land_price_per_sqm': 15000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '성동구 평균 2024'
+            },
+            ('서울', '광진구'): {
+                'official_land_price_per_sqm': 13000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '광진구 평균 2024'
+            },
+            ('서울', '동대문구'): {
+                'official_land_price_per_sqm': 11000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '동대문구 평균 2024'
+            },
+            ('서울', '중랑구'): {
+                'official_land_price_per_sqm': 9500000,
+                'zone_type': '제2종일반주거지역',
+                'note': '중랑구 평균 2024'
+            },
+            ('서울', '성북구'): {
+                'official_land_price_per_sqm': 12000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '성북구 평균 2024'
+            },
+            ('서울', '강북구'): {
+                'official_land_price_per_sqm': 8000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '강북구 평균 2024'
+            },
+            ('서울', '도봉구'): {
+                'official_land_price_per_sqm': 7500000,
+                'zone_type': '제2종일반주거지역',
+                'note': '도봉구 평균 2024'
+            },
+            ('서울', '노원구'): {
+                'official_land_price_per_sqm': 9000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '노원구 평균 2024'
+            },
+            ('서울', '은평구'): {
+                'official_land_price_per_sqm': 10000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '은평구 평균 2024'
+            },
+            ('서울', '서대문구'): {
+                'official_land_price_per_sqm': 13000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '서대문구 평균 2024'
+            },
+            ('서울', '종로구'): {
+                'official_land_price_per_sqm': 20000000,
+                'zone_type': '근린상업지역',
+                'note': '종로구 평균 2024'
+            },
+            ('서울', '중구'): {
+                'official_land_price_per_sqm': 18000000,
+                'zone_type': '근린상업지역',
+                'note': '중구 평균 2024'
+            },
+            ('서울', '영등포구'): {
+                'official_land_price_per_sqm': 14000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '영등포구 평균 2024'
+            },
+            ('서울', '동작구'): {
+                'official_land_price_per_sqm': 11000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '동작구 평균 2024'
+            },
+            ('서울', '구로구'): {
+                'official_land_price_per_sqm': 9500000,
+                'zone_type': '제2종일반주거지역',
+                'note': '구로구 평균 2024'
+            },
+            ('서울', '금천구'): {
+                'official_land_price_per_sqm': 8500000,
+                'zone_type': '제2종일반주거지역',
+                'note': '금천구 평균 2024'
+            },
+            ('서울', '양천구'): {
+                'official_land_price_per_sqm': 12500000,
+                'zone_type': '제2종일반주거지역',
+                'note': '양천구 평균 2024'
+            },
+            ('서울', '강서구'): {
+                'official_land_price_per_sqm': 10500000,
+                'zone_type': '제2종일반주거지역',
+                'note': '강서구 평균 2024'
+            },
+            
+            # === 경기도 (주요 시/군) ===
+            ('경기도', '성남시'): {
+                'official_land_price_per_sqm': 15000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '성남시 평균 2024'
+            },
+            ('경기도', '성남시 분당구'): {
+                'official_land_price_per_sqm': 18000000,
+                'zone_type': '제1종일반주거지역',
+                'note': '분당구 평균 2024'
+            },
+            ('경기도', '성남시 수정구'): {
+                'official_land_price_per_sqm': 12000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '수정구 평균 2024'
+            },
+            ('경기도', '용인시'): {
+                'official_land_price_per_sqm': 10000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '용인시 평균 2024'
+            },
+            ('경기도', '수원시'): {
+                'official_land_price_per_sqm': 12000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '수원시 평균 2024'
+            },
+            ('경기도', '고양시'): {
+                'official_land_price_per_sqm': 11000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '고양시 평균 2024'
+            },
+            ('경기도', '화성시'): {
+                'official_land_price_per_sqm': 8000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '화성시 평균 2024'
+            },
+            ('경기도', '평택시'): {
+                'official_land_price_per_sqm': 6500000,
+                'zone_type': '제2종일반주거지역',
+                'note': '평택시 평균 2024'
+            },
+            ('경기도', '안양시'): {
+                'official_land_price_per_sqm': 13000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '안양시 평균 2024'
+            },
+            ('경기도', '부천시'): {
+                'official_land_price_per_sqm': 11500000,
+                'zone_type': '제2종일반주거지역',
+                'note': '부천시 평균 2024'
+            },
+            ('경기도', '광명시'): {
+                'official_land_price_per_sqm': 12000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '광명시 평균 2024'
+            },
+            ('경기도', '과천시'): {
+                'official_land_price_per_sqm': 20000000,
+                'zone_type': '제1종일반주거지역',
+                'note': '과천시 평균 2024'
+            },
+            ('경기도', '의왕시'): {
+                'official_land_price_per_sqm': 9000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '의왕시 평균 2024'
+            },
+            ('경기도', '하남시'): {
+                'official_land_price_per_sqm': 14000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '하남시 평균 2024'
+            },
+            
+            # === 인천광역시 ===
+            ('인천', '남동구'): {
+                'official_land_price_per_sqm': 9000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '남동구 평균 2024'
+            },
+            ('인천', '연수구'): {
+                'official_land_price_per_sqm': 12000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '연수구 평균 2024'
+            },
+            ('인천', '부평구'): {
+                'official_land_price_per_sqm': 10000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '부평구 평균 2024'
+            },
+            ('인천', '중구'): {
+                'official_land_price_per_sqm': 8000000,
+                'zone_type': '근린상업지역',
+                'note': '중구 평균 2024'
+            },
+            
+            # === 부산광역시 ===
+            ('부산', '해운대구'): {
+                'official_land_price_per_sqm': 18000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '해운대구 평균 2024'
+            },
+            ('부산', '수영구'): {
+                'official_land_price_per_sqm': 15000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '수영구 평균 2024'
+            },
+            ('부산', '동래구'): {
+                'official_land_price_per_sqm': 12000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '동래구 평균 2024'
+            },
+            ('부산', '부산진구'): {
+                'official_land_price_per_sqm': 13000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '부산진구 평균 2024'
+            },
+            ('부산', '중구'): {
+                'official_land_price_per_sqm': 11000000,
+                'zone_type': '근린상업지역',
+                'note': '중구 평균 2024'
+            },
+            
+            # === 대구광역시 ===
+            ('대구', '수성구'): {
+                'official_land_price_per_sqm': 12000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '수성구 평균 2024'
+            },
+            ('대구', '달서구'): {
+                'official_land_price_per_sqm': 9000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '달서구 평균 2024'
+            },
+            ('대구', '중구'): {
+                'official_land_price_per_sqm': 10000000,
+                'zone_type': '근린상업지역',
+                'note': '중구 평균 2024'
+            },
+            
+            # === 광주광역시 ===
+            ('광주', '서구'): {
+                'official_land_price_per_sqm': 8000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '서구 평균 2024'
+            },
+            ('광주', '남구'): {
+                'official_land_price_per_sqm': 7500000,
+                'zone_type': '제2종일반주거지역',
+                'note': '남구 평균 2024'
+            },
+            
+            # === 대전광역시 ===
+            ('대전', '서구'): {
+                'official_land_price_per_sqm': 9000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '서구 평균 2024'
+            },
+            ('대전', '유성구'): {
+                'official_land_price_per_sqm': 10000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '유성구 평균 2024'
+            },
+            
+            # === 울산광역시 ===
+            ('울산', '남구'): {
+                'official_land_price_per_sqm': 9000000,
+                'zone_type': '제2종일반주거지역',
+                'note': '남구 평균 2024'
+            },
+            ('울산', '중구'): {
+                'official_land_price_per_sqm': 8500000,
+                'zone_type': '제2종일반주거지역',
+                'note': '중구 평균 2024'
             },
             ('서울', '마포구'): {
                 'official_land_price_per_sqm': 12000000,
