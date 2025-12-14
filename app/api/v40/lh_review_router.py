@@ -1,6 +1,11 @@
 """
-ZeroSite v40.2 - LH 심사예측 API Router
+ZeroSite v40.3 - LH 심사예측 API Router (Pipeline Lock Release)
 LH 공공주택 사전심사 AI 예측 API
+
+v40.3 업데이트:
+- Context Protection 적용 (Appraisal READ-ONLY 강제)
+- Pipeline 의존성 체크 강화
+- 데이터 일관성 검증 추가
 
 Features:
 - POST /api/v40/lh-review/predict - LH 심사 예측 실행
@@ -9,7 +14,7 @@ Features:
 
 Author: ZeroSite AI Development Team
 Date: 2025-12-14
-Version: 1.0.0
+Version: 1.0.1 (v40.3)
 """
 
 from fastapi import APIRouter, HTTPException, status
@@ -25,6 +30,13 @@ from app.services.lh_review_engine import lh_review_engine
 
 # v40.2 Context Storage에서 데이터 가져오기
 from app.api.v40.router_v40_2 import CONTEXT_STORAGE
+
+# v40.3 Context Protection 추가
+from app.core.context_protector import (
+    ContextProtector,
+    ensure_appraisal_first,
+    check_pipeline_dependency
+)
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +110,23 @@ async def predict_lh_review(request: LHReviewRequest) -> LHReviewResponse:
         
         logger.info(f"✅ Context 조회 성공 - {len(context_data)} 항목")
         
+        # Step 1.5: v40.3 Pipeline Lock 검증
+        # 감정평가 완료 상태 확인
+        ensure_appraisal_first(context_data)
+        
+        # LH 심사예측을 위한 파이프라인 의존성 체크
+        check_pipeline_dependency(context_data, "lh_review")
+        
+        # 데이터 일관성 검증
+        consistency_result = ContextProtector.check_data_consistency(context_data)
+        if consistency_result["status"] != "✅ ALL CONSISTENT":
+            logger.warning(f"⚠️ 데이터 일관성 경고: {consistency_result}")
+            # 경고만 출력, 실행은 계속
+        
+        logger.info("✅ v40.3 Pipeline Lock 검증 통과")
+        
         # Step 2: 필수 데이터 검증 (appraisal, capacity, scenario 존재 여부)
+        # (이미 check_pipeline_dependency에서 검증되었지만 추가 확인)
         required_keys = ["appraisal", "capacity", "scenario"]
         missing_keys = [key for key in required_keys if key not in context_data]
         if missing_keys:

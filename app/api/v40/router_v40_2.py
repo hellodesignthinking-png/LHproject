@@ -1,7 +1,15 @@
 """
-ZeroSite v40.2 - APPRAISAL-FIRST ARCHITECTURE
-Complete refactoring: 감정평가 엔진을 Single Source of Truth로 승격
-감정평가 → 진단 → 규모 → 시나리오 → 보고서 (정석 순서)
+ZeroSite v40.3 - PIPELINE LOCK RELEASE
+감정평가 기준 파이프라인 고정 (Appraisal-First Architecture + Protection)
+
+v40.3 핵심 업데이트:
+- Context Protection: Appraisal 데이터 Immutable 보장
+- Pipeline Lock: 감정평가 → 진단 → 규모 → 시나리오 순서 강제
+- Data Consistency: 모든 모듈이 동일한 기준 데이터 사용 검증
+- Protection Status: Context 보호 상태 추적
+
+Release Date: 2025-12-14
+Version: 40.3
 """
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse
@@ -22,7 +30,7 @@ from app.engines.v30.appraisal_engine import AppraisalEngineV30
 # Import v39 PDF Generator
 from app.services.v30.pdf_generator_v39 import PDFGeneratorV39
 
-router_v40_2 = APIRouter(prefix="/api/v40.2", tags=["v40.2-appraisal-first"])
+router_v40_2 = APIRouter(prefix="/api/v40.2", tags=["v40.3-pipeline-lock"])
 
 # In-memory context storage (use Redis in production)
 CONTEXT_STORAGE = {}
@@ -212,8 +220,14 @@ async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "version": "40.2",
-        "name": "ZeroSite v40.2 - APPRAISAL-FIRST ARCHITECTURE"
+        "version": "40.3",
+        "name": "ZeroSite v40.3 - Pipeline Lock Release (감정평가 기준 고정)",
+        "features": [
+            "Appraisal-First Architecture",
+            "Context Protection (Immutable Appraisal)",
+            "Pipeline Dependency Check",
+            "Data Consistency Validation"
+        ]
     }
 
 
@@ -311,12 +325,12 @@ async def run_full_land_analysis(request: FullLandAnalysisRequest):
         scenario = calculate_scenario_view(appraisal_result, request.land_area_sqm)
         
         # =======================================
-        # STEP 4: STORE CONTEXT
+        # STEP 4: STORE CONTEXT (v40.3 Protection)
         # =======================================
         complete_context = {
             "context_id": context_id,
             "timestamp": timestamp,
-            "version": "40.2",
+            "version": "40.3",  # ← v40.3 Pipeline Lock Release
             "input": {
                 "address": request.address,
                 "land_area_sqm": request.land_area_sqm,
@@ -327,17 +341,27 @@ async def run_full_land_analysis(request: FullLandAnalysisRequest):
                     "orientation": request.orientation
                 }
             },
-            "appraisal": appraisal_result,  # ← Single Source of Truth
-            "diagnosis": diagnosis,  # ← appraisal 기반 뷰
-            "capacity": capacity,  # ← appraisal 기반 뷰
-            "scenario": scenario,  # ← appraisal 기반 뷰
+            "appraisal": appraisal_result,  # ← Single Source of Truth (IMMUTABLE)
+            "diagnosis": diagnosis,  # ← appraisal 기반 뷰 (READ-ONLY)
+            "capacity": capacity,  # ← appraisal 기반 뷰 (READ-ONLY)
+            "scenario": scenario,  # ← appraisal 기반 뷰 (READ-ONLY)
             "raw_data": {
                 "geo_result": geo_result,
                 "zone_result": zone_result,
                 "price_result": price_result,
                 "premium_result": premium_result
+            },
+            "_metadata": {
+                "pipeline_version": "40.3",
+                "protection_enabled": True,
+                "appraisal_locked": True,
+                "created_at": timestamp
             }
         }
+        
+        # v40.3: Appraisal 데이터 보호 플래그 추가
+        complete_context["appraisal"]["_protected"] = True
+        complete_context["appraisal"]["_lock_timestamp"] = timestamp
         
         CONTEXT_STORAGE[context_id] = complete_context
         
@@ -367,11 +391,95 @@ async def run_full_land_analysis(request: FullLandAnalysisRequest):
 
 @router_v40_2.get("/context/{context_id}")
 async def get_context(context_id: str):
-    """전체 Context 조회"""
+    """
+    전체 Context 조회 (READ-ONLY)
+    
+    v40.3: Context Protection 적용
+    """
     if context_id not in CONTEXT_STORAGE:
         raise HTTPException(status_code=404, detail="Context를 찾을 수 없습니다.")
     
-    return CONTEXT_STORAGE[context_id]
+    context = CONTEXT_STORAGE[context_id]
+    
+    # v40.3: Protection 상태 추가
+    from app.core.context_protector import ContextProtector
+    protection_status = ContextProtector.get_protection_status(context)
+    
+    return {
+        **context,
+        "_protection_status": protection_status
+    }
+
+
+@router_v40_2.get("/context/{context_id}/pipeline-status")
+async def get_pipeline_status(context_id: str):
+    """
+    v40.3 Pipeline 상태 조회
+    
+    Returns:
+        - Pipeline 실행 순서 및 완료 상태
+        - 데이터 일관성 검증 결과
+        - Context 보호 상태
+    """
+    if context_id not in CONTEXT_STORAGE:
+        raise HTTPException(status_code=404, detail="Context를 찾을 수 없습니다.")
+    
+    context = CONTEXT_STORAGE[context_id]
+    
+    from app.core.context_protector import ContextProtector
+    
+    # Pipeline 완료 상태
+    pipeline_status = {
+        "1_appraisal": {
+            "completed": "appraisal" in context,
+            "required_by": ["diagnosis", "capacity", "scenario", "lh_review"],
+            "status": "✅ Complete" if "appraisal" in context else "❌ Missing"
+        },
+        "2_diagnosis": {
+            "completed": "diagnosis" in context,
+            "required_by": ["scenario", "lh_review"],
+            "status": "✅ Complete" if "diagnosis" in context else "❌ Missing"
+        },
+        "3_capacity": {
+            "completed": "capacity" in context,
+            "required_by": ["scenario", "lh_review"],
+            "status": "✅ Complete" if "capacity" in context else "❌ Missing"
+        },
+        "4_scenario": {
+            "completed": "scenario" in context,
+            "required_by": ["lh_review"],
+            "status": "✅ Complete" if "scenario" in context else "❌ Missing"
+        },
+        "5_lh_review": {
+            "completed": "lh_review" in context,
+            "required_by": [],
+            "status": "✅ Complete" if "lh_review" in context else "⏳ Pending"
+        }
+    }
+    
+    # 데이터 일관성 검증
+    consistency_check = ContextProtector.check_data_consistency(context)
+    
+    # Context 보호 상태
+    protection_status = ContextProtector.get_protection_status(context)
+    
+    # 전체 상태 판정
+    all_core_modules_complete = all([
+        context.get("appraisal"),
+        context.get("diagnosis"),
+        context.get("capacity"),
+        context.get("scenario")
+    ])
+    
+    return {
+        "context_id": context_id,
+        "version": "40.3",
+        "overall_status": "✅ Pipeline Complete" if all_core_modules_complete else "⏳ Pipeline In Progress",
+        "pipeline": pipeline_status,
+        "consistency": consistency_check,
+        "protection": protection_status,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
 
 
 @router_v40_2.get("/context/{context_id}/{tab}")
