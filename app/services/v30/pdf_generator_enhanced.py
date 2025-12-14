@@ -246,8 +246,16 @@ class EnhancedPDFGenerator:
             f"• ㎡당 감정가: ₩{appr.get('value_per_sqm', 0):,}",
             f"• 신뢰도: {appr.get('confidence_level', 'N/A')}",
             f"• 입지 프리미엄: +{appr.get('premium', {}).get('percentage', 0)}%",
-            f"• 비교가능 거래사례: {len(data.get('comparable_sales', []))}건"
+            f"• 비교가능 거래사례: {self._get_transaction_count(data)}건"
         ]
+        
+    def _get_transaction_count(self, data: Dict) -> int:
+        """Get transaction count from comparable_sales"""
+        comp_sales = data.get('comparable_sales', [])
+        if isinstance(comp_sales, dict):
+            return comp_sales.get('total_count', 0)
+        else:
+            return len(comp_sales)
         
         for finding in findings:
             self.pdf.drawString(self.margin + 5*mm, y, finding)
@@ -717,7 +725,12 @@ class EnhancedPDFGenerator:
         self._draw_header("거래사례 개요 / Comparable Sales Overview", 10)
         y = self.y_position
         
-        transactions = data.get('comparable_sales', [])
+        # Handle both dict and list formats
+        comp_sales = data.get('comparable_sales', [])
+        if isinstance(comp_sales, dict):
+            transactions = comp_sales.get('transactions', [])
+        else:
+            transactions = comp_sales
         
         self.pdf.setFont("Helvetica-Bold", 12)
         self.pdf.drawString(self.margin, y, f"비교가능 거래사례: 총 {len(transactions)}건")
