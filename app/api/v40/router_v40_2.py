@@ -622,12 +622,89 @@ async def generate_report(context_id: str, report_type: str):
                 detail=f"PDF 생성 중 오류: {str(e)}"
             )
     
-    # 3. LH Submission, Policy Impact, Developer Feasibility (향후 지원)
-    elif report_type in ["lh_submission", "policy_impact", "developer_feasibility", "extended_professional"]:
-        raise HTTPException(
-            status_code=501,  # Not Implemented
-            detail=f"{report_type} 보고서는 v40.5에서 지원 예정입니다."
-        )
+    # 3. LH Submission (v40.5 신규)
+    elif report_type == "lh_submission":
+        try:
+            from app.services.reports.lh_submission_generator import LHSubmissionGenerator
+            
+            generator = LHSubmissionGenerator()
+            pdf_bytes = generator.generate(context)
+            
+            return StreamingResponse(
+                io.BytesIO(pdf_bytes),
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": f"attachment; filename=LH_Submission_{context_id[:8]}.pdf"
+                }
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"LH Submission 생성 중 오류: {str(e)}"
+            )
+    
+    # 4. Policy Impact (v40.5 신규 - 템플릿)
+    elif report_type == "policy_impact":
+        try:
+            from app.services.reports.template_generators import PolicyImpactGenerator
+            
+            generator = PolicyImpactGenerator()
+            pdf_bytes = generator.generate(context)
+            
+            return StreamingResponse(
+                io.BytesIO(pdf_bytes),
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": f"attachment; filename=Policy_Impact_{context_id[:8]}.pdf"
+                }
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Policy Impact 생성 중 오류: {str(e)}"
+            )
+    
+    # 5. Developer Feasibility (v40.5 신규 - 템플릿)
+    elif report_type == "developer_feasibility":
+        try:
+            from app.services.reports.template_generators import DeveloperFeasibilityGenerator
+            
+            generator = DeveloperFeasibilityGenerator()
+            pdf_bytes = generator.generate(context)
+            
+            return StreamingResponse(
+                io.BytesIO(pdf_bytes),
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": f"attachment; filename=Developer_Feasibility_{context_id[:8]}.pdf"
+                }
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Developer Feasibility 생성 중 오류: {str(e)}"
+            )
+    
+    # 6. Extended Professional (v40.5 신규 - 템플릿)
+    elif report_type == "extended_professional":
+        try:
+            from app.services.reports.template_generators import ExtendedProfessionalGenerator
+            
+            generator = ExtendedProfessionalGenerator()
+            pdf_bytes = generator.generate(context)
+            
+            return StreamingResponse(
+                io.BytesIO(pdf_bytes),
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": f"attachment; filename=Extended_Professional_{context_id[:8]}.pdf"
+                }
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Extended Professional 생성 중 오류: {str(e)}"
+            )
     
     else:
         raise HTTPException(

@@ -188,36 +188,47 @@ def test_4_invalid_report_type(context_id: str):
         return passed, None
 
 
-def test_5_future_report_types(context_id: str):
-    """Test 5: Test future report types (not yet implemented)"""
-    print_test_header("Test 5: 향후 지원 예정 보고서 타입")
+def test_5_all_report_types(context_id: str):
+    """Test 5: Test all 5 report types (v40.5)"""
+    print_test_header("Test 5: 전체 5종 보고서 생성 테스트 (v40.5)")
     
-    future_types = ["lh_submission", "policy_impact", "developer_feasibility"]
+    report_types = [
+        ("lh_submission", "LH Submission"),
+        ("policy_impact", "Policy Impact"),
+        ("developer_feasibility", "Developer Feasibility"),
+        ("extended_professional", "Extended Professional"),
+    ]
     results = []
     
-    for report_type in future_types:
+    for report_type, name in report_types:
         try:
             response = requests.get(
                 f"{BASE_URL}/api/v40.2/reports/{context_id}/{report_type}"
             )
             
-            # Should return 501 (Not Implemented)
-            passed = response.status_code == 501
+            # Should return 200 with PDF
+            content_type = response.headers.get('Content-Type')
+            content_length = len(response.content)
+            
+            passed = (
+                response.status_code == 200 and
+                content_type == 'application/pdf' and
+                content_length > 5000  # At least 5KB
+            )
             results.append(passed)
             
-            status_text = "✅ Correct (501)" if passed else f"❌ Wrong ({response.status_code})"
-            print(f"  • {report_type}: {status_text}")
+            status_text = f"✅ {content_length/1024:.1f}KB" if passed else f"❌ {response.status_code}"
+            print(f"  • {name}: {status_text}")
             
         except Exception as e:
-            passed = "501" in str(e) or "지원 예정" in str(e)
-            results.append(passed)
-            print(f"  • {report_type}: {'✅' if passed else '❌'}")
+            results.append(False)
+            print(f"  • {name}: ❌ {str(e)[:50]}")
     
     all_passed = all(results)
     print_result(
-        "Future Report Types",
+        "All Report Types",
         all_passed,
-        f"{sum(results)}/{len(results)} types correctly handled"
+        f"{sum(results)}/{len(results)} reports generated successfully"
     )
     
     return all_passed, None

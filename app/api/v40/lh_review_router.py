@@ -157,6 +157,11 @@ async def predict_lh_review(request: LHReviewRequest) -> LHReviewResponse:
         # Step 4: 결과 캐싱 (재조회 가능하도록)
         LH_PREDICTION_CACHE[request.context_id] = prediction_result
         
+        # Step 5: 결과를 Context에 저장 (보고서 생성용)
+        if request.context_id in CONTEXT_STORAGE:
+            CONTEXT_STORAGE[request.context_id]["lh_review"] = prediction_result.model_dump()
+            logger.info(f"✅ LH Review 결과를 Context에 저장 완료")
+        
         logger.info(
             f"✅ LH 예측 완료 - 점수: {prediction_result.predicted_score}/100, "
             f"확률: {prediction_result.pass_probability}%, 리스크: {prediction_result.risk_level}"
