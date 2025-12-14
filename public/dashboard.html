@@ -933,7 +933,7 @@
                 // ✨ v30.0 UPGRADE: Use new simplified API (address + area only)
                 const v30Data = {
                     address: address,
-                    land_area_sqm: landArea
+                    land_area_sqm: parseFloat(landAreaInput) || 660
                 };
                 
                 const response = await fetch('/api/v30/appraisal', {
@@ -1345,7 +1345,8 @@
                     `;
                     
                     // Store BOTH request data AND result for PDF download
-                    window.lastAppraisalData = data;
+                    // ✨ v30.0: Store simplified data format
+                    window.lastAppraisalData = v30Data;
                     window.lastAppraisalResult = result;
                     
                     showNotification('감정평가가 완료되었습니다!', 'success');
