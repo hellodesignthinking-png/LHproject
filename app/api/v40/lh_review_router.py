@@ -27,6 +27,8 @@ from app.schemas_lh import (
     LHReviewHealthResponse
 )
 from app.services.lh_review_engine import lh_review_engine
+# v42 Engine (Weight Optimized)
+from app.services.lh_review_engine_v42 import LHReviewEngineV42
 
 # v40.2 Context Storage에서 데이터 가져오기
 from app.api.v40.router_v40_2 import CONTEXT_STORAGE
@@ -47,6 +49,9 @@ router = APIRouter(
 
 # LH 예측 결과 저장소 (Context ID별 캐싱)
 LH_PREDICTION_CACHE: Dict[str, LHReviewResponse] = {}
+
+# v42 Engine instance
+lh_review_engine_v42 = LHReviewEngineV42()
 
 
 @router.get(
@@ -176,6 +181,101 @@ async def predict_lh_review(request: LHReviewRequest) -> LHReviewResponse:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"LH 심사예측 처리 중 오류 발생: {str(e)}"
+        )
+
+
+@router.post(
+    "/predict/v42",
+    response_model=LHReviewResponse,
+    summary="LH 심사 예측 실행 (v42 Weight Optimized)",
+    description="""
+    **v42 NEW FEATURES:**
+    - Weight Optimization: price_rationality 25% → 35% (↑10%)
+    - Calibration: Score distribution 40~95 (wider variance)
+    - LH Benchmark Prices: Region-specific pricing
+    
+    **Expected Improvements:**
+    - Accuracy: 70% → 85%+
+    - Score Distribution: 8x wider variance
+    - Pass Probability: More realistic range
+    
+    기존 분석 Context 기반으로 LH 공공주택 사전심사 합격 가능성 예측 (v42 엔진 사용)
+    """
+)
+async def predict_lh_review_v42(request: LHReviewRequest) -> LHReviewResponse:
+    """
+    LH 심사 예측 실행 (v42 Weight Optimized Engine)
+    """
+    logger.info(f"🔍 LH 심사예측 v42 요청 - Context: {request.context_id}, 유형: {request.housing_type}")
+    
+    try:
+        # Step 1: Context 데이터 조회 (v40.2 Storage에서)
+        context_data = CONTEXT_STORAGE.get(request.context_id)
+        if not context_data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Context ID '{request.context_id}' not found. 먼저 /api/v40.2/run-analysis를 실행하세요."
+            )
+        
+        logger.info(f"✅ Context 조회 성공 - {len(context_data)} 항목")
+        
+        # Step 1.5: v40.3 Pipeline Lock 검증
+        ensure_appraisal_first(context_data)
+        check_pipeline_dependency(context_data, "lh_review")
+        consistency_result = ContextProtector.check_data_consistency(context_data)
+        if consistency_result["status"] != "✅ ALL CONSISTENT":
+            logger.warning(f"⚠️ 데이터 일관성 경고: {consistency_result}")
+        
+        logger.info("✅ v40.3 Pipeline Lock 검증 통과")
+        
+        # Step 2: 필수 데이터 검증
+        required_keys = ["appraisal", "capacity", "scenario"]
+        missing_keys = [key for key in required_keys if key not in context_data]
+        if missing_keys:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Context에 필수 데이터 누락: {', '.join(missing_keys)}"
+            )
+        
+        # Step 2.5: Context 구조 변환
+        if "zoning" in context_data.get("appraisal", {}):
+            context_data["zoning"] = context_data["appraisal"]["zoning"]
+        
+        if "risk" not in context_data:
+            context_data["risk"] = {
+                "overall_risk_level": "MEDIUM",
+                "risk_factors": []
+            }
+        
+        # Step 3: v42 Engine 실행
+        prediction_result = lh_review_engine_v42.predict(
+            context_data=context_data,
+            housing_type=request.housing_type,
+            target_units=request.target_units
+        )
+        
+        # Step 4: 결과 캐싱
+        LH_PREDICTION_CACHE[f"{request.context_id}_v42"] = prediction_result
+        
+        # Step 5: 결과를 Context에 저장
+        if request.context_id in CONTEXT_STORAGE:
+            CONTEXT_STORAGE[request.context_id]["lh_review_v42"] = prediction_result.model_dump()
+            logger.info(f"✅ LH Review v42 결과를 Context에 저장 완료")
+        
+        logger.info(
+            f"✅ LH 예측 v42 완료 - 점수: {prediction_result.predicted_score}/100, "
+            f"확률: {prediction_result.pass_probability}%, 리스크: {prediction_result.risk_level}"
+        )
+        
+        return prediction_result
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ LH 심사예측 v42 실패: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"LH 심사예측 v42 처리 중 오류 발생: {str(e)}"
         )
 
 
