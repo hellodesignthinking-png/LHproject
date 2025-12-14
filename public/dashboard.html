@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZeroSite v24.1 - 통합 대시보드</title>
+    <title>ZeroSite v30.0 - 통합 대시보드 (Real National API)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -49,10 +49,10 @@
                     </a>
                     <div>
                         <h1 class="text-3xl font-bold">
-                            🏢 ZeroSite v24.1 통합 대시보드
+                            🏢 ZeroSite v30.0 통합 대시보드
                         </h1>
                         <p class="text-white/80 text-sm">
-                            13가지 AI 엔진 기반 실시간 분석 시스템
+                            ✨ Real National API + 5 Engines + 3 Approaches
                         </p>
                     </div>
                 </div>
@@ -930,10 +930,16 @@
             document.getElementById('progress-premium').innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>감정평가 엔진 실행 중...';
             
             try {
-                const response = await fetch('/api/v24.1/appraisal', {
+                // ✨ v30.0 UPGRADE: Use new simplified API (address + area only)
+                const v30Data = {
+                    address: address,
+                    land_area_sqm: landArea
+                };
+                
+                const response = await fetch('/api/v30/appraisal', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(v30Data)
                 });
                 
                 const result = await response.json();
@@ -1459,17 +1465,14 @@
                     road_facing: parseFloat(document.getElementById('premium_road_facing')?.value || 0)
                 };
                 
-                // ✅ Prepare request data with real API data
+                // ✨ v30.0 UPGRADE: Simplified API (address + area only)
                 const data = {
                     address: address,
-                    land_area_sqm: landAreaInput ? parseFloat(landAreaInput) : 660,
-                    zone_type: zoneType,  // ✅ From API
-                    individual_land_price_per_sqm: officialLandPrice,  // ✅ From API
-                    premium_factors: premiumFactors
+                    land_area_sqm: landAreaInput ? parseFloat(landAreaInput) : 660
                 };
                 
-                // Call HTML preview API endpoint
-                const response = await fetch('/api/v24.1/appraisal/html', {
+                // Call v30.0 HTML preview API endpoint
+                const response = await fetch('/api/v30/appraisal/html', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
@@ -1667,11 +1670,16 @@
             try {
                 showNotification('PDF 생성 중... (최대 30초 소요)', 'info');
                 
-                // Use detailed-pdf endpoint for comprehensive report
-                const response = await fetch('/api/v24.1/appraisal/detailed-pdf', {
+                // ✨ v30.0 UPGRADE: Use new simplified PDF endpoint
+                const v30Data = {
+                    address: window.lastAppraisalData.address,
+                    land_area_sqm: window.lastAppraisalData.land_area_sqm
+                };
+                
+                const response = await fetch('/api/v30/appraisal/pdf', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(window.lastAppraisalData)
+                    body: JSON.stringify(v30Data)
                 });
                 
                 if (!response.ok) {
