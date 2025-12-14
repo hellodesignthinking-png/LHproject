@@ -70,6 +70,9 @@ from app.api.v40.router import router_v40
 # ✨ v40.2: Import ZeroSite v40.2 - APPRAISAL-FIRST ARCHITECTURE
 from app.api.v40.router_v40_2 import router_v40_2
 
+# ✨ v40.2 LH: Import LH 심사예측 (AI Judge) Router
+from app.api.v40.lh_review_router import router as lh_review_router
+
 # ✨ v11.0 ENHANCEMENTS: Import middleware and utilities
 from app.middleware.rate_limiter import RateLimiter, RateLimitConfig
 from app.middleware.cache_manager import cache_manager, start_cache_cleanup_task
@@ -181,6 +184,10 @@ app.include_router(router_v30)
 # ✨ v40.2: Include ZeroSite v40.2 - APPRAISAL-FIRST ARCHITECTURE
 app.include_router(router_v40_2)
 print("✅ v40.2 Appraisal-First Architecture loaded")
+
+# ✨ v40.2 LH: Include LH 심사예측 (AI Judge) Router
+app.include_router(lh_review_router)
+print("✅ v40.2 LH 심사예측 (AI Judge) loaded")
 
 # ✨ v40.0: Include ZeroSite v40.0 - Unified Land Analysis System
 app.include_router(router_v40)
