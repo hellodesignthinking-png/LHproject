@@ -948,7 +948,32 @@
                 progressDiv.classList.add('hidden');
                 
                 if (result.status === 'success') {
-                    const appraisal = result.appraisal;
+                    // ✨ v30.0 → v24.1 데이터 변환 (억원 단위)
+                    const land_info = result.land_info;
+                    const appraisal_v30 = result.appraisal;
+                    
+                    // v24.1 호환 형식으로 변환
+                    const appraisal = {
+                        final_value: appraisal_v30.final_value / 100000000, // 원 → 억원
+                        value_per_sqm: appraisal_v30.value_per_sqm,
+                        confidence: appraisal_v30.confidence_level,
+                        approaches: {
+                            cost: appraisal_v30.approaches.cost.value / 100000000, // 객체.value → 숫자(억원)
+                            sales_comparison: appraisal_v30.approaches.sales_comparison.value / 100000000,
+                            income: appraisal_v30.approaches.income.value / 100000000
+                        },
+                        weights: appraisal_v30.weights,
+                        location_factor: appraisal_v30.approaches.cost.details.location_factor,
+                        premium: appraisal_v30.premium
+                    };
+                    
+                    // data 객체도 v24.1 형식으로
+                    const data = {
+                        address: land_info.address,
+                        land_area_sqm: land_info.land_area_sqm,
+                        zone_type: land_info.zone_type,
+                        individual_land_price_per_sqm: land_info.official_land_price_per_sqm
+                    };
                     
                     resultDiv.innerHTML = `
                         <h3 class="text-xl font-bold mb-4 text-gray-800">
