@@ -61,6 +61,9 @@ from app.routers.report_v13 import router as report_v13_router
 # ✨ v24.1: Import ZeroSite v24.1 Complete API Router
 from app.api.v24_1.api_router import router as api_v241_router
 
+# ✨ v30.0: Import ZeroSite v30.0 - Real National API + Full PDF Engine
+from app.api.v30.router import router_v30
+
 # ✨ v11.0 ENHANCEMENTS: Import middleware and utilities
 from app.middleware.rate_limiter import RateLimiter, RateLimitConfig
 from app.middleware.cache_manager import cache_manager, start_cache_cleanup_task
@@ -165,6 +168,9 @@ app.include_router(report_v13_router)
 
 # ✨ v24.1: Include ZeroSite v24.1 Complete API
 app.include_router(api_v241_router)
+
+# ✨ v30.0: Include ZeroSite v30.0 - Real National API + Full PDF Engine
+app.include_router(router_v30)
 
 # 정적 파일 서빙
 static_path = Path(__file__).parent.parent / "static"
