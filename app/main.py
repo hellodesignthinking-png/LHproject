@@ -67,6 +67,9 @@ from app.api.v30.router import router_v30
 # ✨ v40.0: Import ZeroSite v40.0 - Unified Land Analysis System
 from app.api.v40.router import router_v40
 
+# ✨ v40.2: Import ZeroSite v40.2 - APPRAISAL-FIRST ARCHITECTURE
+from app.api.v40.router_v40_2 import router_v40_2
+
 # ✨ v11.0 ENHANCEMENTS: Import middleware and utilities
 from app.middleware.rate_limiter import RateLimiter, RateLimitConfig
 from app.middleware.cache_manager import cache_manager, start_cache_cleanup_task
@@ -174,6 +177,10 @@ app.include_router(api_v241_router)
 
 # ✨ v30.0: Include ZeroSite v30.0 - Real National API + Full PDF Engine
 app.include_router(router_v30)
+
+# ✨ v40.2: Include ZeroSite v40.2 - APPRAISAL-FIRST ARCHITECTURE
+app.include_router(router_v40_2)
+print("✅ v40.2 Appraisal-First Architecture loaded")
 
 # ✨ v40.0: Include ZeroSite v40.0 - Unified Land Analysis System
 app.include_router(router_v40)
