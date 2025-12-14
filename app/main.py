@@ -178,6 +178,12 @@ app.include_router(router_v30)
 # ✨ v40.0: Include ZeroSite v40.0 - Unified Land Analysis System
 app.include_router(router_v40)
 
+# ✨ v40.0: Redirect root to v40 unified interface
+@app.get("/")
+async def root():
+    """Redirect to ZeroSite v40.0 unified interface"""
+    return RedirectResponse(url="/index_v40_FINAL.html")
+
 # ✨ v38.0: Include ZeroSite v38.0 - HTML Preview API
 try:
     from app.api.v38.html_preview import router as v38_preview_router
@@ -200,13 +206,10 @@ if frontend_v9_path.exists():
 public_path = Path(__file__).parent.parent / "public"
 if public_path.exists():
     app.mount("/public", StaticFiles(directory=str(public_path), html=True), name="public")
-
-
-@app.get("/")
-async def root():
-    """메인 페이지 - ZeroSite v24.1 Entry OS Screen"""
-    # v24.1 Entry OS Screen으로 리다이렉트
-    return RedirectResponse(url="/public/index.html", status_code=302)
+    # Also mount js directory
+    js_path = public_path / "js"
+    if js_path.exists():
+        app.mount("/js", StaticFiles(directory=str(js_path)), name="js")
 
 
 @app.get("/v11")

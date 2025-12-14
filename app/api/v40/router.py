@@ -228,17 +228,48 @@ async def get_context(context_id: str):
 
 @router_v40.get("/context/{context_id}/{tab}")
 async def get_context_tab(context_id: str, tab: str):
-    """Retrieve specific tab data from context"""
+    """
+    Retrieve specific tab data from context
+    
+    Valid tabs:
+    - diagnosis: 토지진단 결과
+    - capacity: 규모검토 결과
+    - appraisal: 감정평가 결과
+    - scenario: 시나리오 비교 결과
+    """
     if context_id not in CONTEXT_STORAGE:
         raise HTTPException(status_code=404, detail="Context를 찾을 수 없습니다.")
     
     context = CONTEXT_STORAGE[context_id]
     
-    valid_tabs = ['diagnosis', 'capacity', 'appraisal', 'scenario']
+    valid_tabs = ['diagnosis', 'capacity', 'appraisal', 'scenario', 'reports']
     if tab not in valid_tabs:
-        raise HTTPException(status_code=400, detail="유효하지 않은 탭입니다.")
+        raise HTTPException(status_code=400, detail=f"유효하지 않은 탭입니다. 사용 가능한 탭: {', '.join(valid_tabs)}")
     
-    return context.get(tab, {})
+    # 탭별 데이터 반환
+    if tab == 'diagnosis':
+        return context.get('diagnosis', {})
+    elif tab == 'capacity':
+        return context.get('capacity', {})
+    elif tab == 'appraisal':
+        return context.get('appraisal', {})
+    elif tab == 'scenario':
+        return context.get('scenario', {})
+    elif tab == 'reports':
+        # 보고서 탭은 Context ID만 필요 (프론트엔드에서 다운로드 처리)
+        return {
+            "context_id": context_id,
+            "available_reports": [
+                "landowner",
+                "lh",
+                "professional",
+                "appraisal_v39",
+                "policy",
+                "feasibility"
+            ]
+        }
+    
+    return {}
 
 
 @router_v40.get("/reports/{context_id}/{report_type}")
