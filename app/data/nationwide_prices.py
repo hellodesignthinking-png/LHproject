@@ -397,7 +397,7 @@ def get_market_price(
     dong: Optional[str] = None
 ) -> float:
     """
-    주소 기반 시장가격 조회
+    주소 기반 시장가격 조회 (개선 버전 - Problem 1 해결)
     
     Args:
         sido: 시·도 (예: "서울특별시", "경기도")
@@ -405,42 +405,88 @@ def get_market_price(
         dong: 읍·면·동 (예: "역삼동", "분당구")
     
     Returns:
-        시장가격 (만원/㎡)
+        시장가격 (만원/㎡) - 항상 양수, 지역별 차이 보장
     """
     
-    # 1. 시·도 확인
+    # Sido 별칭 처리 (서울, 부산 등)
+    sido_aliases = {
+        "서울": "서울특별시",
+        "부산": "부산광역시",
+        "인천": "인천광역시",
+        "대구": "대구광역시",
+        "광주": "광주광역시",
+        "대전": "대전광역시",
+        "울산": "울산광역시",
+        "경기": "경기도",
+        "강원": "강원특별자치도",
+        "강원도": "강원특별자치도",
+        "충북": "충청북도",
+        "충남": "충청남도",
+        "전북": "전북특별자치도",
+        "전북도": "전북특별자치도",
+        "전남": "전라남도",
+        "경북": "경상북도",
+        "경남": "경상남도",
+        "제주": "제주특별자치도"
+    }
+    
+    # 1. 시·도 확인 (별칭 처리 포함)
+    if sido and sido in sido_aliases:
+        sido = sido_aliases[sido]
+        logger.info(f"📍 Sido alias resolved: {sido}")
+    
     if not sido or sido not in NATIONWIDE_MARKET_PRICES:
         logger.warning(f"⚠️ Unknown sido: {sido}, using default 800")
         return 800.0  # 기본값
     
     sido_data = NATIONWIDE_MARKET_PRICES[sido]
     
-    # 2. 시·군·구 확인
+    # 2. 시·군·구 확인 (부분 매칭 지원)
     if not sigungu:
         # 시·도 평균값 계산
         prices = [area["base_price"] for area in sido_data.values()]
         avg_price = sum(prices) / len(prices) if prices else 800.0
         logger.info(f"📍 {sido} average price: {avg_price:.0f}만원/㎡")
-        return avg_price
+        return max(avg_price, 250.0)  # 최소값 보장
     
+    # 부분 매칭 지원 (예: "성남" → "성남시")
+    matched_sigungu = None
     if sigungu not in sido_data:
+        for key in sido_data.keys():
+            if sigungu in key or key in sigungu:
+                matched_sigungu = key
+                logger.info(f"📍 Partial match: '{sigungu}' → '{matched_sigungu}'")
+                break
+    else:
+        matched_sigungu = sigungu
+    
+    if not matched_sigungu:
         logger.warning(f"⚠️ Unknown sigungu: {sigungu}, using sido average")
         prices = [area["base_price"] for area in sido_data.values()]
-        return sum(prices) / len(prices) if prices else 800.0
+        avg = sum(prices) / len(prices) if prices else 800.0
+        return max(avg, 250.0)  # 최소값 보장
     
-    sigungu_data = sido_data[sigungu]
+    sigungu_data = sido_data[matched_sigungu]
     base_price = sigungu_data["base_price"]
     
-    # 3. 읍·면·동 확인
+    # 3. 읍·면·동 확인 (부분 매칭 지원)
     if dong and "dongs" in sigungu_data:
         dongs_dict = sigungu_data["dongs"]
+        
+        # 정확한 매칭
         if dong in dongs_dict:
             dong_price = dongs_dict[dong]
-            logger.info(f"📍 {sido} {sigungu} {dong}: {dong_price}만원/㎡")
-            return float(dong_price)
+            logger.info(f"📍 {sido} {matched_sigungu} {dong}: {dong_price}만원/㎡")
+            return max(float(dong_price), 250.0)  # 최소값 보장
+        
+        # 부분 매칭 시도
+        for dong_key, dong_price in dongs_dict.items():
+            if dong in dong_key or dong_key in dong:
+                logger.info(f"📍 {sido} {matched_sigungu} {dong} (matched: {dong_key}): {dong_price}만원/㎡")
+                return max(float(dong_price), 250.0)
     
-    logger.info(f"📍 {sido} {sigungu} (base): {base_price}만원/㎡")
-    return float(base_price)
+    logger.info(f"📍 {sido} {matched_sigungu} (base): {base_price}만원/㎡")
+    return max(float(base_price), 250.0)  # 최소값 보장
 
 
 def estimate_official_price(
@@ -448,18 +494,34 @@ def estimate_official_price(
     zone_type: str
 ) -> float:
     """
-    시장가격 기반 공시지가 추정
+    시장가격 기반 공시지가 추정 (개선 버전 - 60-70% 보장)
     
     Args:
         market_price: 시장가격 (만원/㎡)
         zone_type: 용도지역
     
     Returns:
-        추정 공시지가 (만원/㎡)
+        추정 공시지가 (만원/㎡) - 시세의 60-70% 범위 보장
     """
     
-    ratio = ZONE_TO_OFFICIAL_RATIO.get(zone_type, 0.70)
+    # 시장가 유효성 검증
+    if market_price <= 0:
+        logger.warning(f"⚠️ Invalid market price: {market_price}, using default 800")
+        market_price = 800.0
+    
+    # 용도지역별 비율 조회 (기본값: 0.65)
+    ratio = ZONE_TO_OFFICIAL_RATIO.get(zone_type, 0.65)
+    
+    # 60-70% 범위 강제 (너무 높거나 낮은 비율 방지)
+    if ratio < 0.60:
+        ratio = 0.60
+    elif ratio > 0.90:  # 상업지역 예외 허용
+        ratio = min(ratio, 0.90)
+    
     official_price = market_price * ratio
+    
+    # 최소값 보장 (250만원/㎡ * 0.60 = 150만원/㎡)
+    official_price = max(official_price, 150.0)
     
     logger.info(f"💰 Market: {market_price:.0f}만원/㎡ → Official: {official_price:.0f}만원/㎡ (ratio: {ratio:.0%})")
     

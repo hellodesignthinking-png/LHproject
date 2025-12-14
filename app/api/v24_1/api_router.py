@@ -41,6 +41,10 @@ from app.services.advanced_address_parser_v36 import get_address_parser_v36
 from app.data.nationwide_prices import get_market_price, estimate_official_price, get_zone_type_suggestion
 from app.services.universal_transaction_engine import UniversalTransactionEngine
 
+# v36.0 ENHANCED (Problems 1-4 해결): Import new modules
+from app.services.zone_estimator import estimate_zone_type
+from app.services.transaction_generator import TransactionGenerator
+
 # v37.0 ULTIMATE: Complete API integration
 from app.api_keys_config import APIKeys
 from app.services.complete_land_info_service_v37 import CompleteLandInfoServiceV37
@@ -349,18 +353,20 @@ async def calculate_appraisal(request: AppraisalRequest):
             logger.info(f"   ✏️ User-provided land price: {individual_land_price:,} 원/㎡")
         
         # ========================================
-        # V36.0: Step 4 - Generate nationwide transactions
+        # V36.0 ENHANCED: Step 4 - Generate nationwide transactions (Problem 2 해결)
         # ========================================
-        transaction_engine = UniversalTransactionEngine()
-        generated_transactions = transaction_engine.generate_transactions(
+        from app.services.transaction_generator import TransactionGenerator
+        
+        transaction_gen = TransactionGenerator()
+        generated_transactions = transaction_gen.generate_realistic_transactions(
             sido=sido or "서울특별시",
             sigungu=sigungu or "강남구",
-            dong=dong,
-            base_price=market_price_per_sqm,
-            land_area_sqm=request.land_area_sqm,
-            num_transactions=15
+            dong=dong or "역삼동",
+            target_size_sqm=request.land_area_sqm,
+            base_price_per_sqm=market_price_per_sqm,  # 만원/㎡
+            zone_type=zone_type
         )
-        logger.info(f"   📊 Generated {len(generated_transactions)} nationwide transactions")
+        logger.info(f"   📊 Generated {len(generated_transactions)} nationwide transactions (accurate addresses)")
         
         engine = AppraisalEngineV241()
         
@@ -381,7 +387,16 @@ async def calculate_appraisal(request: AppraisalRequest):
         else:
             # Use generated transactions as comparables
             if generated_transactions:
-                comparable_sales_data = transaction_engine.generate_comparable_sales(generated_transactions, num_comparables=5)
+                # Convert transactions to comparable sales format
+                comparable_sales_data = []
+                for tx in generated_transactions[:5]:  # Top 5
+                    comparable_sales_data.append({
+                        'price_per_sqm': tx['price_per_sqm'],
+                        'time_adjustment': 1.0,
+                        'location_adjustment': 1.0,
+                        'individual_adjustment': 1.0,
+                        'weight': 0.2
+                    })
                 logger.info(f"📡 Auto-generated {len(comparable_sales_data)} comparable sales from transactions")
         
         # ========================================
@@ -424,9 +439,15 @@ async def calculate_appraisal(request: AppraisalRequest):
         # Extract premium information if available
         premium_info = result.get('premium_info', {})
         
+        # ========================================
+        # Problem 4 해결: Complete Response with ALL Data
+        # ========================================
         return {
             "status": "success",
             "timestamp": datetime.now().isoformat(),
+            "version": "v36.0 ENHANCED (Problems 1-4 해결)",
+            
+            # 감정평가 결과
             "appraisal": {
                 "final_value": result['final_appraisal_value'],
                 "value_per_sqm": result['final_value_per_sqm'],
@@ -441,10 +462,37 @@ async def calculate_appraisal(request: AppraisalRequest):
                 "premium_percentage": premium_info.get('premium_percentage', 0),
                 "premium_details": premium_info.get('top_5_factors', [])
             },
+            
+            # 토지 정보 (주소, 공시지가, 용도지역)
+            "land_info": {
+                "address_parsed": {
+                    "sido": sido,
+                    "sigungu": sigungu,
+                    "dong": dong,
+                    "full": request.address
+                },
+                "zone_type": zone_type,  # 용도지역 (명시적 반환)
+                "individual_land_price_per_sqm": individual_land_price,  # 공시지가 (원/㎡)
+                "individual_land_price_per_pyeong": int(individual_land_price * 3.3058),  # 공시지가 (원/평)
+                "market_price_per_sqm_krw": int(market_price_per_sqm_krw),  # 시세 (원/㎡)
+                "market_price_per_sqm_man": market_price_per_sqm,  # 시세 (만원/㎡)
+                "official_to_market_ratio": (individual_land_price / market_price_per_sqm_krw) if market_price_per_sqm_krw > 0 else 0.7
+            },
+            
+            # 거래사례 (명시적 반환)
+            "transactions": generated_transactions,  # 전체 15건
+            "transactions_summary": {
+                "count": len(generated_transactions),
+                "avg_price_per_sqm": int(sum([t['price_per_sqm'] for t in generated_transactions]) / len(generated_transactions)) if generated_transactions else 0,
+                "min_distance_km": min([t['distance_km'] for t in generated_transactions]) if generated_transactions else 0,
+                "max_distance_km": max([t['distance_km'] for t in generated_transactions]) if generated_transactions else 0
+            },
+            
+            # 기타 상세 정보
             "breakdown": result['breakdown'],
             "metadata": result['metadata'],
             "notes": result['notes'],
-            "premium_info": premium_info  # Include full premium info
+            "premium_info": premium_info
         }
         
     except Exception as e:
