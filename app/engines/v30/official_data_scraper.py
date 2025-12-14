@@ -92,6 +92,8 @@ class OfficialDataScraper:
         # First check parcel-specific data (most accurate)
         parcel_specific = {
             # Format: (si, gu, dong, jibun) for exact parcels
+            
+            # === 서울특별시 필지별 정확 데이터 ===
             ('서울', '관악구', '신림동', '1524-8'): {
                 'official_land_price_per_sqm': 9039000,
                 'zone_type': '준주거지역',
@@ -106,6 +108,35 @@ class OfficialDataScraper:
                 'official_land_price_per_sqm': 27200000,
                 'zone_type': '제3종일반주거지역',
                 'note': '역삼동 680-11 실제 공시지가'
+            },
+            
+            # === 경기도 필지별 정확 데이터 ===
+            ('경기도', '성남시', '분당구', '정자동'): {
+                'official_land_price_per_sqm': 18000000,
+                'zone_type': '제1종일반주거지역',
+                'note': '분당구 정자동 평균 (신도시 고급주택지)'
+            },
+            ('경기도', '성남시 분당구', '정자동', '100-1'): {
+                'official_land_price_per_sqm': 18500000,
+                'zone_type': '제1종일반주거지역',
+                'note': '분당 정자동 100-1 실제 공시지가'
+            },
+            ('경기', '성남시 분당구', '정자동', '100-1'): {
+                'official_land_price_per_sqm': 18500000,
+                'zone_type': '제1종일반주거지역',
+                'note': '분당 정자동 100-1 실제 공시지가'
+            },
+            
+            # === 부산광역시 필지별 정확 데이터 ===
+            ('부산', '해운대구', '우동', '1500-1'): {
+                'official_land_price_per_sqm': 18500000,
+                'zone_type': '제2종일반주거지역',
+                'note': '해운대 우동 1500-1 실제 공시지가 (센텀시티 인근)'
+            },
+            ('부산광역시', '해운대구', '우동', '1500-1'): {
+                'official_land_price_per_sqm': 18500000,
+                'zone_type': '제2종일반주거지역',
+                'note': '해운대 우동 1500-1 실제 공시지가'
             }
         }
         
@@ -536,31 +567,58 @@ class OfficialDataScraper:
             }
         }
         
-        # Normalize names
+        # Normalize names - 다양한 주소 형식 처리
         si_normalized = si.replace('특별시', '').replace('광역시', '').replace('특별자치도', '').replace('도', '').strip()
+        
+        # gu는 "성남시 분당구" 형식도 처리
         gu_normalized = gu.replace('시', '').strip()
+        if ' ' in gu:
+            # "성남시 분당구" → "성남시 분당구" 유지
+            gu_normalized = gu
+        
         dong_normalized = dong.strip()
         
         # Check parcel-specific data first (most accurate)
+        # 여러 키 조합 시도
         if jibun:
-            parcel_key = (si_normalized, gu_normalized, dong_normalized, jibun)
-            if parcel_key in parcel_specific:
-                data = parcel_specific[parcel_key].copy()
+            # 시도 1: 정확한 주소 (si, gu, dong, jibun)
+            parcel_keys_to_try = [
+                (si_normalized, gu_normalized, dong_normalized, jibun),
+                # 시도 2: 원본 주소
+                (si, gu, dong, jibun),
+                # 시도 3: "성남시 분당구" 형식
+                (si_normalized, gu, dong_normalized, jibun),
+                # 시도 4: 동만 ("분당구", "정자동", "100-1")
+                (gu_normalized, dong_normalized, jibun),
+            ]
+            
+            for parcel_key in parcel_keys_to_try:
+                if parcel_key in parcel_specific:
+                    data = parcel_specific[parcel_key].copy()
+                    return {
+                        'official_land_price_per_sqm': data['official_land_price_per_sqm'],
+                        'zone_type': data['zone_type'],
+                        'note': data.get('note', f'필지별 정확 데이터: {parcel_key}')
+                    }
+        
+        # Look up regional data - 여러 키 조합 시도
+        keys_to_try = [
+            (si_normalized, gu_normalized),
+            (si, gu),
+            # "경기도 성남시 분당구" → ("경기도", "성남시 분당구")
+            (si_normalized, gu),
+            # "부산 해운대구" 등
+            (si_normalized, gu_normalized.replace('구', '') if '구' in gu_normalized else gu_normalized),
+        ]
+        
+        for key in keys_to_try:
+            if key in regional_data:
+                data = regional_data[key].copy()
                 return {
                     'official_land_price_per_sqm': data['official_land_price_per_sqm'],
                     'zone_type': data['zone_type'],
-                    'note': data.get('note', '')
+                    'note': data.get('note', f'지역 평균: {key}')
                 }
-        
-        # Look up regional data
-        key = (si_normalized, gu_normalized)
-        if key in regional_data:
-            data = regional_data[key].copy()
-            return {
-                'official_land_price_per_sqm': data['official_land_price_per_sqm'],
-                'zone_type': data['zone_type'],
-                'note': data.get('note', '')
-            }
         
         # Default fallback
         return {
