@@ -249,14 +249,6 @@ class EnhancedPDFGenerator:
             f"• 비교가능 거래사례: {self._get_transaction_count(data)}건"
         ]
         
-    def _get_transaction_count(self, data: Dict) -> int:
-        """Get transaction count from comparable_sales"""
-        comp_sales = data.get('comparable_sales', [])
-        if isinstance(comp_sales, dict):
-            return comp_sales.get('total_count', 0)
-        else:
-            return len(comp_sales)
-        
         for finding in findings:
             self.pdf.drawString(self.margin + 5*mm, y, finding)
             y -= 6*mm
@@ -286,6 +278,14 @@ class EnhancedPDFGenerator:
         
         self._draw_footer()
         self.pdf.showPage()
+    
+    def _get_transaction_count(self, data: Dict) -> int:
+        """Get transaction count from comparable_sales"""
+        comp_sales = data.get('comparable_sales', [])
+        if isinstance(comp_sales, dict):
+            return comp_sales.get('total_count', 0)
+        else:
+            return len(comp_sales)
     
     def _page_4_property_overview(self, data: Dict):
         """Page 4: Property Overview"""
