@@ -101,6 +101,11 @@ class OfficialDataScraper:
                 'official_land_price_per_sqm': 5893000,
                 'zone_type': '제2종일반주거지역',
                 'note': '성산동 250-40 실제 공시지가'
+            },
+            ('서울', '강남구', '역삼동', '680-11'): {
+                'official_land_price_per_sqm': 27200000,
+                'zone_type': '제3종일반주거지역',
+                'note': '역삼동 680-11 실제 공시지가'
             }
         }
         
