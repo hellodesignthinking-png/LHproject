@@ -120,6 +120,18 @@ PARCEL_DATABASE = {
 }
 
 # ============================================================================
+# Expanded Parcel Database (추가 47개 필지 - v38+)
+# ============================================================================
+
+# Import expanded data
+try:
+    from app.data.parcel_database_expanded import EXPANDED_PARCEL_DATABASE
+    PARCEL_DATABASE.update(EXPANDED_PARCEL_DATABASE)
+    logger.info(f"✅ Expanded parcel database: {len(PARCEL_DATABASE)} total parcels")
+except ImportError:
+    logger.warning("⚠️ Expanded parcel database not available")
+
+# ============================================================================
 # Zone Type Map (지역별 용도지역 매핑)
 # 특정 주소의 PNU를 모를 때 사용하는 폴백 데이터
 # ============================================================================

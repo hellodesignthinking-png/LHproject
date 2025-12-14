@@ -172,6 +172,14 @@ app.include_router(api_v241_router)
 # ✨ v30.0: Include ZeroSite v30.0 - Real National API + Full PDF Engine
 app.include_router(router_v30)
 
+# ✨ v38.0: Include ZeroSite v38.0 - HTML Preview API
+try:
+    from app.api.v38.html_preview import router as v38_preview_router
+    app.include_router(v38_preview_router)
+    print("✅ v38 HTML Preview API loaded")
+except ImportError as e:
+    print(f"⚠️ v38 preview router not available: {e}")
+
 # 정적 파일 서빙
 static_path = Path(__file__).parent.parent / "static"
 if static_path.exists():
