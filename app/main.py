@@ -178,11 +178,46 @@ app.include_router(router_v30)
 # ✨ v40.0: Include ZeroSite v40.0 - Unified Land Analysis System
 app.include_router(router_v40)
 
-# ✨ v40.0: Redirect root to v40 unified interface
+# ✨ v40.0: Serve v40 unified interface directly at root
 @app.get("/")
 async def root():
-    """Redirect to ZeroSite v40.0 unified interface"""
-    return RedirectResponse(url="/index_v40_FINAL.html")
+    """Serve ZeroSite v40.0 unified interface with cache busting"""
+    public_path = Path(__file__).parent.parent / "public" / "index_v40_FINAL.html"
+    if public_path.exists():
+        # Add cache-busting headers
+        from fastapi import Response
+        with open(public_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return Response(
+            content=content,
+            media_type="text/html",
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0"
+            }
+        )
+    return RedirectResponse(url="/public/index_v40_FINAL.html")
+
+# Also serve at /index_v40_FINAL.html for direct access
+@app.get("/index_v40_FINAL.html")
+async def serve_v40_final():
+    """Direct access to v40 FINAL with cache busting"""
+    public_path = Path(__file__).parent.parent / "public" / "index_v40_FINAL.html"
+    if public_path.exists():
+        from fastapi import Response
+        with open(public_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return Response(
+            content=content,
+            media_type="text/html",
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0"
+            }
+        )
+    return {"error": "File not found"}
 
 # ✨ v38.0: Include ZeroSite v38.0 - HTML Preview API
 try:
