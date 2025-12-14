@@ -1,0 +1,338 @@
+/**
+ * ZeroSite v40.4 - Pipeline Status Card Styles
+ */
+
+.pipeline-status-card {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Header */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #1A5CB6;
+}
+
+.card-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #1A5CB6;
+}
+
+.version-badge {
+  background: #1A5CB6;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Overall Status */
+.overall-status {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 16px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.overall-status.success {
+  background-color: #E8F5E9;
+  color: #2E7D32;
+  border: 1px solid #4CAF50;
+}
+
+.overall-status.warning {
+  background-color: #FFF3E0;
+  color: #E65100;
+  border: 1px solid #FF9800;
+}
+
+.overall-status.danger {
+  background-color: #FFEBEE;
+  color: #C62828;
+  border: 1px solid #F44336;
+}
+
+/* Pipeline Stages */
+.pipeline-stages {
+  margin-bottom: 24px;
+}
+
+.pipeline-stage {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.pipeline-stage:hover {
+  background-color: #f5f5f5;
+  transform: translateX(4px);
+}
+
+.pipeline-stage.completed {
+  background-color: #F1F8F4;
+  border-left: 4px solid #4CAF50;
+}
+
+.pipeline-stage.pending {
+  background-color: #FAFAFA;
+  border-left: 4px solid #BDBDBD;
+}
+
+.stage-icon {
+  font-size: 24px;
+  margin-right: 12px;
+  min-width: 32px;
+  text-align: center;
+}
+
+.stage-info {
+  flex: 1;
+}
+
+.stage-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.stage-status {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Data Consistency */
+.consistency-section {
+  margin-bottom: 20px;
+  padding: 16px;
+  background-color: #F9F9F9;
+  border-radius: 8px;
+}
+
+.consistency-section h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.consistency-status {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.consistency-status.pass {
+  background-color: #E8F5E9;
+  color: #2E7D32;
+}
+
+.consistency-status.fail {
+  background-color: #FFEBEE;
+  color: #C62828;
+}
+
+.consistency-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.check-item {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  background-color: white;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.check-status {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.check-name {
+  color: #555;
+}
+
+/* Context Protection */
+.protection-section {
+  margin-bottom: 20px;
+  padding: 16px;
+  background-color: #F3F6F9;
+  border-radius: 8px;
+  border: 1px solid #CFD8DC;
+}
+
+.protection-section h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.protection-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.protection-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 13px;
+}
+
+.protection-row span:first-child {
+  color: #666;
+}
+
+.protected {
+  color: #2E7D32;
+  font-weight: bold;
+}
+
+.unprotected {
+  color: #C62828;
+  font-weight: bold;
+}
+
+.timestamp {
+  color: #555;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+}
+
+/* Footer */
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.refresh-button {
+  background-color: #1A5CB6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.refresh-button:hover {
+  background-color: #154A8F;
+}
+
+.refresh-button:active {
+  transform: scale(0.98);
+}
+
+.context-id {
+  font-size: 12px;
+  color: #999;
+  font-family: 'Courier New', monospace;
+}
+
+/* Loading State */
+.pipeline-status-card.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #1A5CB6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error State */
+.pipeline-status-card.error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  background-color: #FFEBEE;
+  border-color: #F44336;
+}
+
+.pipeline-status-card.error h3 {
+  color: #C62828;
+  margin-bottom: 8px;
+}
+
+.pipeline-status-card.error p {
+  color: #666;
+  margin-bottom: 16px;
+}
+
+.pipeline-status-card.error button {
+  background-color: #F44336;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.pipeline-status-card.error button:hover {
+  background-color: #D32F2F;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .pipeline-status-card {
+    padding: 16px;
+  }
+
+  .card-header h2 {
+    font-size: 18px;
+  }
+
+  .pipeline-stage {
+    padding: 10px;
+  }
+
+  .stage-name {
+    font-size: 13px;
+  }
+
+  .card-footer {
+    flex-direction: column;
+    gap: 12px;
+  }
+}

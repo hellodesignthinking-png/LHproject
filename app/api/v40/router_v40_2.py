@@ -517,18 +517,49 @@ async def get_context_tab(context_id: str, tab: str):
 @router_v40_2.get("/reports/{context_id}/{report_type}")
 async def generate_report(context_id: str, report_type: str):
     """
-    보고서 생성 (감정평가 필수)
+    v40.4 보고서 생성 (5종 체계 지원)
     
     Report Types:
-    - appraisal_v39: 23페이지 전문 감정평가서
-    - lh_submission: LH 제출용 보고서
-    - professional: 전문가용 보고서
+    - landowner_brief: 토지주용 간략 보고서 (3p)
+    - lh_submission: LH 제출용 보고서 (10~15p) [향후 지원]
+    - policy_impact: 정책 영향 분석 (15p) [향후 지원]
+    - developer_feasibility: 개발사업자용 타당성 (15~20p) [향후 지원]
+    - extended_professional: 전문가용 상세 보고서 (25~40p) [향후 지원]
+    - appraisal_v39: 기존 감정평가서 (23~30p, 하위 호환)
     """
     # Context 조회
     if context_id not in CONTEXT_STORAGE:
         raise HTTPException(status_code=404, detail="Context를 찾을 수 없습니다.")
     
     context = CONTEXT_STORAGE[context_id]
+    
+    # ===================================
+    # v40.4: Report Type Validation
+    # ===================================
+    from app.core.report_types import ReportType, validate_report_request
+    
+    try:
+        report_type_enum = ReportType(report_type)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail=f"지원하지 않는 보고서 타입: {report_type}. 사용 가능: landowner_brief, appraisal_v39"
+        )
+    
+    # Validate request
+    validation_result = validate_report_request(report_type_enum, context)
+    
+    if not validation_result["valid"]:
+        errors = validation_result.get("errors", [])
+        raise HTTPException(
+            status_code=400,
+            detail=f"보고서 생성 불가: {', '.join(errors)}"
+        )
+    
+    # Log warnings
+    warnings = validation_result.get("warnings", [])
+    if warnings:
+        print(f"⚠️ Report warnings: {', '.join(warnings)}")
     
     # ===================================
     # 검증: 감정평가 결과 필수
@@ -549,10 +580,32 @@ async def generate_report(context_id: str, report_type: str):
         )
     
     # ===================================
-    # 보고서 생성 (100% 감정평가 데이터 사용)
+    # v40.4: 보고서 생성 (5종 체계)
     # ===================================
-    if report_type == "appraisal_v39":
-        # v39 PDF Generator 사용
+    
+    # 1. Landowner Brief (v40.4 신규)
+    if report_type == "landowner_brief":
+        try:
+            from app.services.reports.landowner_brief_generator import LandownerBriefGenerator
+            
+            generator = LandownerBriefGenerator()
+            pdf_bytes = generator.generate(context)
+            
+            return StreamingResponse(
+                io.BytesIO(pdf_bytes),
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": f"attachment; filename=Landowner_Brief_{context_id[:8]}.pdf"
+                }
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Landowner Brief 생성 중 오류: {str(e)}"
+            )
+    
+    # 2. Appraisal v39 (하위 호환)
+    elif report_type == "appraisal_v39":
         try:
             pdf_bytes = pdf_generator.generate(context["appraisal"])
             
@@ -568,6 +621,13 @@ async def generate_report(context_id: str, report_type: str):
                 status_code=500,
                 detail=f"PDF 생성 중 오류: {str(e)}"
             )
+    
+    # 3. LH Submission, Policy Impact, Developer Feasibility (향후 지원)
+    elif report_type in ["lh_submission", "policy_impact", "developer_feasibility", "extended_professional"]:
+        raise HTTPException(
+            status_code=501,  # Not Implemented
+            detail=f"{report_type} 보고서는 v40.5에서 지원 예정입니다."
+        )
     
     else:
         raise HTTPException(
