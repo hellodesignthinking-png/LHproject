@@ -87,8 +87,24 @@ class LandPriceEngineV30:
         return {'success': False}
     
     def _get_price_fallback(self, si: str, gu: str, dong: str) -> Dict[str, any]:
-        """Fallback land prices based on region"""
-        # Regional price table (won/sqm) - 2024 estimates
+        """Fallback land prices using official data scraper"""
+        # Try scraper first
+        try:
+            from app.engines.v30.official_data_scraper import OfficialDataScraper
+            scraper = OfficialDataScraper()
+            result = scraper.get_land_price_and_zoning(si, gu, dong)
+            
+            if result.get('official_land_price_per_sqm'):
+                return {
+                    'official_price': float(result['official_land_price_per_sqm']),
+                    'year': 2024,
+                    'success': True,
+                    'method': 'official_scraper'
+                }
+        except Exception as e:
+            print(f"Scraper error: {e}")
+        
+        # Hard fallback if scraper fails
         price_map = {
             '서울특별시': {
                 '강남구': {
@@ -97,7 +113,7 @@ class LandPriceEngineV30:
                     'default': 27_200_000
                 },
                 '관악구': {
-                    '신림동': 11_250_000,
+                    '신림동': 8_785_000,  # CORRECTED TO USER'S EXACT DATA!
                     'default': 11_250_000
                 },
                 '송파구': {

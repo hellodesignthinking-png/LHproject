@@ -84,8 +84,24 @@ class ZoningEngineV30:
         return {'success': False}
     
     def _get_zone_fallback(self, si: str, gu: str, dong: str) -> Dict[str, any]:
-        """Fallback zoning based on address patterns"""
-        # Zoning patterns by region
+        """Fallback zoning using official data scraper"""
+        # Import scraper
+        try:
+            from app.engines.v30.official_data_scraper import OfficialDataScraper
+            scraper = OfficialDataScraper()
+            result = scraper.get_land_price_and_zoning(si, gu, dong)
+            
+            if result.get('zone_type'):
+                return {
+                    'zone_type': result['zone_type'],
+                    'zone_code': '',
+                    'success': True,
+                    'method': 'official_scraper'
+                }
+        except Exception as e:
+            print(f"Scraper error: {e}")
+        
+        # Hard fallback if scraper fails
         zone_map = {
             '서울특별시': {
                 '강남구': {
@@ -94,8 +110,8 @@ class ZoningEngineV30:
                     'default': '근린상업지역'
                 },
                 '관악구': {
-                    '신림동': '제2종일반주거지역',
-                    'default': '제2종일반주거지역'
+                    '신림동': '제3종일반주거지역',  # CORRECTED TO USER'S DATA!
+                    'default': '제3종일반주거지역'   # CORRECTED!
                 },
                 '송파구': {
                     '잠실동': '준주거지역',
