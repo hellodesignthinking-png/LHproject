@@ -82,7 +82,20 @@ class GeocodingEngineV30:
         # Parse address components
         parts = address.replace(',', ' ').split()
         
-        si = parts[0] if len(parts) > 0 else ''
+        # 도로명 주소 처리 (예: "월드컵북로 120")
+        if len(parts) == 2 and ('로' in parts[0] or '길' in parts[0]):
+            # Known road address mappings
+            road_map = {
+                '월드컵북로': ('서울특별시', '마포구', '성산동'),
+                '테헤란로': ('서울특별시', '강남구', '역삼동'),
+                '강남대로': ('서울특별시', '강남구', '역삼동'),
+            }
+            road_name = parts[0]
+            for road_key, (si, gu, dong) in road_map.items():
+                if road_key in road_name:
+                    return self._geocode_fallback(f"{si} {gu} {dong}")
+        
+        si = parts[0] if len(parts) > 0 else '서울특별시'
         gu = parts[1] if len(parts) > 1 else ''
         dong = parts[2] if len(parts) > 2 else ''
         jibun = parts[3] if len(parts) > 3 else ''
