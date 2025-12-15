@@ -389,6 +389,7 @@ let premiumOverrideData = null;
 
 /**
  * Lookup address and fetch appraisal data (v3.4)
+ * Now uses the Real Land Data API (/api/v3/land/fetch)
  */
 async function lookupAddress() {
     const addressInput = document.getElementById('land-address');
@@ -407,22 +408,67 @@ async function lookupAddress() {
         // Show loading state
         btn.disabled = true;
         const originalHTML = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 조회중...';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 실제 데이터 조회중...';
         
-        // Call lookup API
-        console.log('Calling lookup API for:', address);
-        const response = await fetch(`${API_BASE_URL}/api/v3/reports/lookup?address=${encodeURIComponent(address)}`);
+        // Call REAL Land Data API (v3.4)
+        console.log('🚀 Calling REAL Land Data API for:', address);
+        const response = await fetch(`${API_BASE_URL}/api/v3/land/fetch`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ address: address })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || `API Error: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log('✅ Real Land Data Response:', data);
         
-        console.log('Lookup response:', data);
-        
-        if (data.success) {
-            // Store lookup data
-            lookupData = data;
+        if (data.success && data.land_data) {
+            // Store lookup data (convert to old format for compatibility)
+            const landData = data.land_data;
+            const appraisalData = data.appraisal_context;
+            
+            lookupData = {
+                success: true,
+                address: landData.basic_info.address,
+                land_area_sqm: landData.basic_info.land_area_sqm,
+                land_area_pyeong: landData.basic_info.land_area_pyeong,
+                public_price_per_sqm: landData.price_info.official_price_per_sqm,
+                public_price_total: landData.price_info.total_official_price,
+                public_price_year: landData.price_info.price_year,
+                zoning_type: landData.regulation_info.land_use_zone,
+                far: landData.regulation_info.floor_area_ratio,
+                bcr: landData.regulation_info.building_coverage_ratio,
+                max_floors: 5, // Default value
+                parcel_id: landData.basic_info.pnu_code,
+                // Include appraisal context
+                appraisal_context: appraisalData,
+                // Include transaction samples if available
+                samples: (landData.transactions || []).map(t => ({
+                    distance_m: 250, // Default
+                    price_per_sqm: Math.round(t.transaction_amount / t.land_area_sqm),
+                    transaction_date: t.transaction_date
+                })),
+                // Premium data (default if not available)
+                premium: {
+                    road_score: 7,
+                    topography_score: 7,
+                    overall_premium: 30,
+                    road_description: "도로 조건 양호",
+                    topography_description: "지형 조건 평지",
+                    premium_description: "일반적인 할증률 적용"
+                }
+            };
+            
             premiumOverrideData = null; // Reset overrides
             
             // Display results
-            displayLookupResult(data);
+            displayLookupResult(lookupData);
             
             // Show premium override section
             document.getElementById('premium-override').style.display = 'block';
@@ -447,7 +493,7 @@ async function lookupAddress() {
         btn.innerHTML = originalHTML;
         
     } catch (error) {
-        console.error('Lookup failed:', error);
+        console.error('❌ Land Data API failed:', error);
         alert('조회 중 오류가 발생했습니다: ' + error.message);
         
         // Reset button
@@ -600,6 +646,7 @@ function applyPremiumOverride() {
 
 /**
  * Generate selected reports (v3.4)
+ * Now uses REAL appraisal_context from land data API
  */
 async function generateSelectedReports() {
     if (!lookupData) {
@@ -629,109 +676,27 @@ async function generateSelectedReports() {
         return;
     }
     
-    console.log('Generating reports:', selectedReports);
+    console.log('🎯 Generating reports:', selectedReports);
     
-    // Build appraisal context from lookup data
-    const premium = premiumOverrideData || lookupData.premium || {};
-    const premiumMultiplier = 1 + ((premium.overall_premium || 30) / 100);
+    // Use REAL appraisal context from land data API
+    // The /api/v3/land/fetch already returns a complete appraisal_context
+    let appraisalContext = lookupData.appraisal_context;
     
-    const appraisalContext = {
-        calculation: {
-            land_area_sqm: lookupData.land_area_sqm,
-            land_area_pyeong: lookupData.land_area_pyeong,
-            final_appraised_total: Math.round(lookupData.public_price_total * premiumMultiplier),
-            final_appraised_per_sqm: Math.round(lookupData.public_price_per_sqm * premiumMultiplier),
-            final_appraised_per_pyeong: Math.round(lookupData.public_price_per_sqm * premiumMultiplier * 3.3058),
-            confidence_level: "MEDIUM"
-        },
-        zoning: {
-            confirmed_type: lookupData.zoning_type,
-            far: lookupData.far,
-            bcr: lookupData.bcr,
-            max_floors: lookupData.max_floors || 5,
-            building_restrictions: []
-        },
-        confidence: {
-            overall: "MEDIUM",
-            calculation: "HIGH",
-            zoning: "HIGH",
-            market: "MEDIUM"
-        },
-        metadata: {
-            appraisal_engine: "v3.4",
-            appraisal_date: new Date().toISOString(),
-            address: lookupData.address,
-            parcel_id: lookupData.parcel_id
-        },
-        development: {
-            buildable_area_sqm: lookupData.land_area_sqm * (lookupData.far / 100),
-            buildable_area_pyeong: lookupData.land_area_pyeong * (lookupData.far / 100),
-            estimated_units: Math.floor(lookupData.land_area_sqm * (lookupData.far / 100) / 60),
-            estimated_floors: lookupData.max_floors || 5,
-            required_parking: Math.floor(lookupData.land_area_sqm * (lookupData.far / 100) / 60)
-        },
-        lh_analysis: {
-            possibility: "HIGH",
-            possibility_score: 85.0,
-            pass_probability: 0.85,
-            recommended_supply_type: "행복주택",
-            estimated_purchase_price: Math.round(lookupData.public_price_total * 0.85)
-        },
-        financial: {
-            irr: 0.2744,
-            roi: 0.2744,
-            npv: 850000000,
-            payback_period: 4.2,
-            total_cost: Math.round(lookupData.public_price_total * 1.3),
-            total_revenue: Math.round(lookupData.public_price_total * 1.5),
-            profit: Math.round(lookupData.public_price_total * 0.2)
-        },
-        official_land_price: {
-            standard_price_per_sqm: lookupData.public_price_per_sqm,
-            standard_price_per_pyeong: Math.round(lookupData.public_price_per_sqm * 3.3058),
-            reference_year: lookupData.public_price_year || 2024,
-            reference_parcel: lookupData.parcel_id || "인근 표준지",
-            distance_to_standard: 250,
-            total_value: lookupData.public_price_total
-        },
-        price_comparison: {
-            official_land_price_total: lookupData.public_price_total,
-            official_land_price_per_sqm: lookupData.public_price_per_sqm,
-            appraised_value_total: Math.round(lookupData.public_price_total * premiumMultiplier),
-            appraised_value_per_sqm: Math.round(lookupData.public_price_per_sqm * premiumMultiplier),
-            asking_price_total: Math.round(lookupData.public_price_total * premiumMultiplier * 1.05),
-            asking_price_per_sqm: Math.round(lookupData.public_price_per_sqm * premiumMultiplier * 1.05),
-            market_price_total: Math.round(lookupData.public_price_total * premiumMultiplier * 0.95),
-            market_price_per_sqm: Math.round(lookupData.public_price_per_sqm * premiumMultiplier * 0.95)
-        },
-        risk: {
-            total_score: 25,
-            level: "LOW",
-            regulatory_score: 5,
-            financial_score: 8,
-            market_score: 7,
-            execution_score: 5
-        },
-        investment: {
-            grade: "A",
-            grade_score: 88,
-            recommendation: "STRONG_BUY"
-        },
-        internal: {
-            decision: "GO",
-            overall_score: 88,
-            confidence_level: "HIGH"
-        },
-        supply_types: {
-            "행복주택": {"score": 15.2, "percentage": 76.0},
-            "청년": {"score": 14.8, "percentage": 74.0},
-            "신혼부부": {"score": 14.2, "percentage": 71.0},
-            "일반": {"score": 13.5, "percentage": 67.5},
-            "공공임대": {"score": 12.8, "percentage": 64.0}
-        }
-    };
+    // Apply premium overrides if provided
+    if (premiumOverrideData && appraisalContext) {
+        const premium = premiumOverrideData.overall_premium || 30;
+        const premiumMultiplier = 1 + (premium / 100);
+        
+        // Update calculation with overrides
+        const basePrice = lookupData.public_price_total / (1 + (lookupData.premium?.overall_premium || 30) / 100);
+        appraisalContext.calculation.final_appraised_total = Math.round(basePrice * premiumMultiplier);
+        appraisalContext.calculation.final_appraised_per_sqm = Math.round(basePrice * premiumMultiplier / lookupData.land_area_sqm);
+        appraisalContext.calculation.final_appraised_per_pyeong = Math.round(appraisalContext.calculation.final_appraised_per_sqm * 3.3058);
+        
+        console.log('✨ Applied premium overrides:', premiumOverrideData);
+    }
     
-    console.log('Built appraisal context:', appraisalContext);
+    console.log('📋 Using REAL appraisal context from API:', appraisalContext);
     
     // Show generation modal
     showGenerationModal(selectedReports);
@@ -749,7 +714,7 @@ async function generateSelectedReports() {
             });
             
             const result = await response.json();
-            console.log(`${reportType} result:`, result);
+            console.log(`✅ ${reportType} result:`, result);
             
             results.push({ 
                 type: reportType, 
@@ -757,7 +722,7 @@ async function generateSelectedReports() {
                 success: response.ok 
             });
         } catch (error) {
-            console.error(`Failed to generate ${reportType}:`, error);
+            console.error(`❌ Failed to generate ${reportType}:`, error);
             results.push({ 
                 type: reportType, 
                 error: error.message, 

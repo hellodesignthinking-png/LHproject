@@ -317,14 +317,21 @@ class PDFGenerator:
         # 2. HTML 렌더링
         html_content = self._render_template(template_name, composer_result, metadata or {})
         
-        # 3. PDF 변환
+        # 3. PDF 변환 with enhanced error handling
         try:
             pdf_bytes = self._convert_to_pdf(html_content)
-            logger.info(f"PDF generated successfully for {report_type}")
+            logger.info(f"✅ PDF generated successfully for {report_type}")
             return pdf_bytes
         except Exception as e:
-            logger.error(f"PDF generation failed: {e}")
-            raise
+            logger.error(f"❌ PDF generation failed: {e}")
+            # Generate error PDF as fallback
+            try:
+                error_html = self._create_error_pdf(report_type, composer_result, metadata or {}, str(e))
+                return self._convert_to_pdf(error_html)
+            except Exception as fallback_error:
+                logger.error(f"❌ Fallback PDF generation also failed: {fallback_error}")
+                # Last resort: simple text PDF
+                return self._create_minimal_pdf(report_type, str(e))
     
     def _render_template(
         self, 
@@ -386,6 +393,53 @@ class PDFGenerator:
         </body>
         </html>
         """
+    
+    def _create_error_pdf(self, report_type: str, data: Dict[str, Any], metadata: Dict[str, Any], error_msg: str) -> str:
+        """PDF 생성 실패 시 에러 리포트 HTML 생성"""
+        return f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>ZeroSite Report - Generation Error</title>
+            <style>
+                body {{ font-family: 'Malgun Gothic', sans-serif; padding: 20px; }}
+                .error-box {{ background: #fee; border: 2px solid #c33; padding: 15px; margin: 20px 0; }}
+                .data-section {{ background: #f5f5f5; padding: 15px; margin: 10px 0; }}
+                h1 {{ color: #c33; }}
+                h2 {{ color: #666; }}
+                pre {{ white-space: pre-wrap; word-wrap: break-word; font-size: 9pt; }}
+            </style>
+        </head>
+        <body>
+            <h1>⚠️ ZeroSite Report Generation Error</h1>
+            <div class="error-box">
+                <h2>Error Details</h2>
+                <p><strong>Report Type:</strong> {report_type}</p>
+                <p><strong>Report ID:</strong> {metadata.get('report_id', 'N/A')}</p>
+                <p><strong>Generated:</strong> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
+                <p><strong>Error Message:</strong></p>
+                <pre>{error_msg}</pre>
+            </div>
+            <div class="data-section">
+                <h2>Report Data (Raw)</h2>
+                <pre>{str(data)[:2000]}</pre>
+            </div>
+            <p style="color: #666; font-size: 9pt; margin-top: 30px;">
+                This is an automatically generated error report. Please contact support with the Report ID.
+            </p>
+        </body>
+        </html>
+        """
+    
+    def _create_minimal_pdf(self, report_type: str, error_msg: str) -> bytes:
+        """최소한의 에러 PDF (마지막 수단)"""
+        minimal_html = f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Error</title></head>
+<body><h1>PDF Generation Error</h1><p>Report Type: {report_type}</p><p>Error: {error_msg}</p></body>
+</html>"""
+        html = HTML(string=minimal_html)
+        return html.write_pdf()
     
     def generate_to_file(
         self, 

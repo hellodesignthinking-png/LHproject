@@ -65,10 +65,10 @@ class LandDataResponse(BaseModel):
     error: Optional[str] = None
 
 
-@router.post("/fetch", response_model=LandDataResponse)
+@router.post("/fetch")
 async def fetch_land_data(request: AddressRequest):
     """
-    토지 주소로 모든 정보 자동 조회
+    토지 주소로 모든 정보 자동 조회 (v3.4 - Frontend Integration)
     
     **입력**: 토지 지번 주소
     
@@ -77,53 +77,81 @@ async def fetch_land_data(request: AddressRequest):
     - "경기도 성남시 분당구 정자동 100"
     
     **출력**: 
-    - 토지 기본정보 (면적, 지목, 용도지역, 도로접면 등)
-    - 개별공시지가
-    - 토지이용규제 (용적률, 건폐율)
-    - 최근 거래사례
-    - 건축물대장 (건물이 있는 경우)
+    - land_data: 완전한 토지 정보 객체 (basic_info, price_info, regulation_info, transactions, building_info)
+    - appraisal_context: 보고서 생성용 감정평가 컨텍스트
+    - success: 성공 여부
     """
     try:
         # 토지 데이터 조회
         data = land_service.fetch_all_by_address(request.address)
         
         if not data["success"]:
-            return LandDataResponse(
-                success=False,
-                address=request.address,
-                error=data.get("error", "데이터 조회에 실패했습니다.")
-            )
+            return {
+                "success": False,
+                "address": request.address,
+                "land_data": None,
+                "appraisal_context": None,
+                "error": data.get("error", "데이터 조회에 실패했습니다.")
+            }
+        
+        # 원본 land_data 구조로 변환
+        basic_info = data.get("basic_info")
+        price_info = data.get("price_info")
+        regulation_info = data.get("regulation_info")
+        
+        land_area_sqm = basic_info.area if basic_info else 0
+        land_area_pyeong = round(land_area_sqm / 3.3058, 1) if land_area_sqm > 0 else 0
+        
+        land_data = {
+            "basic_info": {
+                "address": request.address,
+                "pnu_code": basic_info.pnu if basic_info else None,
+                "land_area_sqm": land_area_sqm,
+                "land_area_pyeong": land_area_pyeong,
+                "land_category": basic_info.land_category if basic_info else None,
+                "land_use": basic_info.land_use_situation if basic_info else None,
+                "ownership_type": basic_info.ownership_type if basic_info else None,
+                "road_side": basic_info.road_side if basic_info else None,
+                "terrain_shape": basic_info.terrain_shape if basic_info else None,
+                "terrain_height": basic_info.terrain_height if basic_info else None
+            },
+            "price_info": {
+                "official_price_per_sqm": price_info.official_price if price_info else 0,
+                "total_official_price": price_info.total_price if price_info else 0,
+                "price_year": price_info.base_year if price_info else "2024",
+                "reference_parcel": "인근 표준지"
+            },
+            "regulation_info": {
+                "land_use_zone": regulation_info.use_zone if regulation_info else None,
+                "floor_area_ratio": regulation_info.floor_area_ratio if regulation_info else 0,
+                "building_coverage_ratio": regulation_info.building_coverage_ratio if regulation_info else 0,
+                "max_building_height": regulation_info.max_height if regulation_info else 0,
+                "parking_required": False
+            },
+            "transactions": data.get("transactions", []),
+            "building_info": data.get("building_info", [])
+        }
         
         # AppraisalContext 형식으로 변환
-        ctx = land_service.to_appraisal_context(data)
+        appraisal_context = land_service.to_appraisal_context(data)
         
-        return LandDataResponse(
-            success=True,
-            address=request.address,
-            pnu=ctx.get("parcel_id"),
-            area=ctx.get("land_area"),
-            land_category=ctx.get("land_category"),
-            land_use_zone=ctx.get("zoning_code"),
-            land_use_situation=ctx.get("land_use_situation"),
-            ownership_type=ctx.get("ownership_type"),
-            road_side=ctx.get("road_side"),
-            terrain_height=ctx.get("terrain_height"),
-            terrain_shape=ctx.get("terrain_shape"),
-            change_date=ctx.get("change_date"),
-            official_price=ctx.get("public_price"),
-            official_price_year=ctx.get("public_price_year"),
-            total_price=ctx.get("total_public_price"),
-            floor_area_ratio=ctx.get("regulations", {}).get("floor_area_ratio"),
-            building_coverage_ratio=ctx.get("regulations", {}).get("building_coverage_ratio"),
-            max_height=ctx.get("regulations", {}).get("max_height"),
-            regulations=ctx.get("regulations", {}).get("regulation_list"),
-            transactions=ctx.get("recent_transactions"),
-            building_info=ctx.get("building_info")
-        )
+        return {
+            "success": True,
+            "address": request.address,
+            "land_data": land_data,
+            "appraisal_context": appraisal_context,
+            "error": None
+        }
         
     except Exception as e:
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        return {
+            "success": False,
+            "address": request.address,
+            "land_data": None,
+            "appraisal_context": None,
+            "error": f"서버 오류: {str(e)}"
+        }
 
 
 @router.get("/health")
@@ -132,10 +160,14 @@ async def check_api_health():
     API 키 설정 상태 확인
     """
     import os
+    from dotenv import load_dotenv
+    
+    # Ensure .env is loaded
+    load_dotenv()
     
     kakao_key = os.getenv("KAKAO_REST_API_KEY")
-    data_key = os.getenv("DATA_GO_KR_API_KEY")
-    vworld_key = os.getenv("VWORLD_API_KEY")
+    data_key = os.getenv("DATA_GO_KR_API_KEY") or os.getenv("MOIS_API_KEY")
+    vworld_key = os.getenv("VWORLD_API_KEY") or os.getenv("LAND_REGULATION_API_KEY")
     
     return {
         "kakao_api": "✅ 설정됨" if kakao_key else "❌ 미설정",

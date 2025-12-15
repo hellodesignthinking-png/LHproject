@@ -27,15 +27,15 @@
                     <span class="version">v3.3</span>
                 </div>
                 <nav class="nav">
-                    <a href="#home">Home</a>
-                    <a href="#features">Features</a>
-                    <a href="#reports">Reports</a>
-                    <a href="/docs" target="_blank">API Docs</a>
+                    <a href="#home">홈</a>
+                    <a href="#features">기능</a>
+                    <a href="#reports">보고서</a>
+                    <a href="/docs" target="_blank">API 문서</a>
                     <a href="https://github.com/hellodesignthinking-png/LHproject" target="_blank">
                         <i class="fab fa-github"></i> GitHub
                     </a>
                     <a href="/api/v3/reports/health" target="_blank" class="health-link">
-                        <i class="fas fa-heartbeat"></i> Health Check
+                        <i class="fas fa-heartbeat"></i> 상태 확인
                     </a>
                 </nav>
             </div>
@@ -52,7 +52,7 @@
             <div class="hero-content">
                 <div class="hero-badge">
                     <i class="fas fa-bolt"></i>
-                    <span>Production Ready</span>
+                    <span>프로덕션 준비완료</span>
                 </div>
                 <h1 class="hero-title">
                     ZeroSite OS
@@ -66,15 +66,15 @@
                 <div class="hero-stats">
                     <div class="stat">
                         <div class="stat-value">6</div>
-                        <div class="stat-label">Report Types</div>
+                        <div class="stat-label">보고서 종류</div>
                     </div>
                     <div class="stat">
                         <div class="stat-value">12</div>
-                        <div class="stat-label">API Endpoints</div>
+                        <div class="stat-label">API 엔드포인트</div>
                     </div>
                     <div class="stat">
                         <div class="stat-value">100%</div>
-                        <div class="stat-label">Test Coverage</div>
+                        <div class="stat-label">테스트 커버리지</div>
                     </div>
                 </div>
                 <div class="hero-cta">
@@ -586,27 +586,27 @@
     <div id="reportModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
-            <h2 id="modal-title">Generating Report...</h2>
+            <h2 id="modal-title">보고서 생성중...</h2>
             <div class="modal-body">
                 <div class="loading-spinner">
                     <i class="fas fa-circle-notch fa-spin"></i>
                 </div>
-                <p id="modal-message">Please wait while we generate your report...</p>
+                <p id="modal-message">보고서를 생성하고 있습니다. 잠시만 기다려주세요...</p>
                 <div id="modal-result" style="display: none;">
                     <div class="result-success">
                         <i class="fas fa-check-circle"></i>
-                        <h3>Report Generated Successfully!</h3>
+                        <h3>보고서 생성 성공!</h3>
                         <div class="result-info">
-                            <p><strong>Report ID:</strong> <span id="result-id"></span></p>
+                            <p><strong>보고서 ID:</strong> <span id="result-id"></span></p>
                             <p><strong>Type:</strong> <span id="result-type"></span></p>
-                            <p><strong>Generation Time:</strong> <span id="result-time"></span></p>
+                            <p><strong>생성 시간:</strong> <span id="result-time"></span></p>
                         </div>
                         <div class="result-actions">
                             <button class="btn btn-primary" onclick="downloadReport('json')">
-                                <i class="fas fa-download"></i> Download JSON
+                                <i class="fas fa-download"></i> JSON 다운로드
                             </button>
                             <button class="btn btn-secondary" onclick="downloadReport('pdf')">
-                                <i class="fas fa-file-pdf"></i> Download PDF
+                                <i class="fas fa-file-pdf"></i> PDF 다운로드
                             </button>
                         </div>
                     </div>
