@@ -428,6 +428,19 @@ async function lookupAddress() {
         const data = await response.json();
         console.log('✅ Real Land Data Response:', data);
         
+        // 데이터 검증
+        if (!data.success) {
+            throw new Error(data.error || '데이터 조회에 실패했습니다');
+        }
+        
+        if (!data.land_data) {
+            throw new Error('토지 데이터가 반환되지 않았습니다');
+        }
+        
+        if (!data.appraisal_context) {
+            console.warn('⚠️ appraisal_context가 없습니다. 기본값을 사용합니다.');
+        }
+        
         if (data.success && data.land_data) {
             // Store lookup data (convert to old format for compatibility)
             const landData = data.land_data;
@@ -494,7 +507,21 @@ async function lookupAddress() {
         
     } catch (error) {
         console.error('❌ Land Data API failed:', error);
-        alert('조회 중 오류가 발생했습니다: ' + error.message);
+        
+        // 에러 유형별 메시지
+        let errorMessage = '조회 중 오류가 발생했습니다';
+        
+        if (error.message.includes('fetch') || error.message.includes('network')) {
+            errorMessage = '서버에 연결할 수 없습니다. 네트워크를 확인해주세요.';
+        } else if (error.message.includes('주소')) {
+            errorMessage = '정확한 지번 주소를 입력해주세요. (예: 서울특별시 강남구 역삼동 858)';
+        } else if (error.message.includes('API')) {
+            errorMessage = 'API 호출에 실패했습니다. 잠시 후 다시 시도해주세요.';
+        } else {
+            errorMessage = error.message;
+        }
+        
+        alert('❌ ' + errorMessage);
         
         // Reset button
         const buttons = document.querySelectorAll('.input-form button');
