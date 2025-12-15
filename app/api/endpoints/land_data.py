@@ -113,6 +113,7 @@ async def fetch_land_data(request: AddressRequest):
                 "land_use_zone": getattr(basic_info, 'land_use_zone', None) if basic_info else None,
                 "land_use_situation": getattr(basic_info, 'land_use_situation', None) if basic_info else None,
                 "ownership_type": getattr(basic_info, 'ownership_type', None) if basic_info else None,
+                "change_date": getattr(basic_info, 'change_date', None) if basic_info else None,
                 "road_side": getattr(basic_info, 'road_side', None) if basic_info else None,
                 "terrain_shape": getattr(basic_info, 'terrain_shape', None) if basic_info else None,
                 "terrain_height": getattr(basic_info, 'terrain_height', None) if basic_info else None

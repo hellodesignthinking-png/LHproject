@@ -441,6 +441,19 @@ async function lookupAddress() {
             console.warn('⚠️ appraisal_context가 없습니다. 기본값을 사용합니다.');
         }
         
+        // 필수 필드 검증 (critical fields)
+        const basicInfo = data.land_data.basic_info;
+        const missingFields = [];
+        
+        if (!basicInfo.land_area_sqm || basicInfo.land_area_sqm === 0) missingFields.push('면적');
+        if (!basicInfo.land_category) missingFields.push('지목');
+        if (!basicInfo.land_use_zone) missingFields.push('용도지역');
+        
+        if (missingFields.length > 0) {
+            console.warn('⚠️ 누락된 필수 필드:', missingFields.join(', '));
+            console.warn('⚠️ 서버 응답 스키마:', data);
+        }
+        
         if (data.success && data.land_data) {
             // Store lookup data (convert to old format for compatibility)
             const landData = data.land_data;
@@ -579,6 +592,12 @@ function displayLandData(data) {
     setFieldValue('display-land-use-zone', basicInfo.land_use_zone || regulationInfo.land_use_zone || data.zoning_type || '미확인');
     setFieldValue('display-land-use-situation', basicInfo.land_use_situation || '미확인');
     setFieldValue('display-ownership-type', basicInfo.ownership_type || '미확인');
+    
+    // Critical missing fields (변동일자, 도로접면, 지형높이, 지형형상)
+    setFieldValue('display-change-date', basicInfo.change_date || '미확인');
+    setFieldValue('display-road-side', basicInfo.road_side || '미확인');
+    setFieldValue('display-terrain-height', basicInfo.terrain_height || '미확인');
+    setFieldValue('display-terrain-shape', basicInfo.terrain_shape || '미확인');
     
     // Price Information
     setFieldValue('display-official-price', `${(priceInfo.official_price_per_sqm || data.public_price_per_sqm || 0).toLocaleString()} 원/㎡`);
