@@ -627,7 +627,7 @@ class LandDataService:
             
             # Zoning
             "zoning": {
-                "confirmed_type": regulation.land_use_zone or "제2종일반주거지역",
+                "confirmed_type": regulation.use_zone or "제2종일반주거지역",
                 "far": floor_area_ratio,
                 "bcr": building_coverage_ratio,
                 "max_floors": estimated_floors,

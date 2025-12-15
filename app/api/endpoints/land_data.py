@@ -99,33 +99,33 @@ async def fetch_land_data(request: AddressRequest):
         price_info = data.get("price_info")
         regulation_info = data.get("regulation_info")
         
-        land_area_sqm = basic_info.area if basic_info else 0
+        land_area_sqm = getattr(basic_info, 'area', 0) if basic_info else 0
         land_area_pyeong = round(land_area_sqm / 3.3058, 1) if land_area_sqm > 0 else 0
         
         land_data = {
             "basic_info": {
                 "address": request.address,
-                "pnu_code": basic_info.pnu if basic_info else None,
+                "pnu_code": getattr(basic_info, 'pnu', None) if basic_info else None,
                 "land_area_sqm": land_area_sqm,
                 "land_area_pyeong": land_area_pyeong,
-                "land_category": basic_info.land_category if basic_info else None,
-                "land_use": basic_info.land_use_situation if basic_info else None,
-                "ownership_type": basic_info.ownership_type if basic_info else None,
-                "road_side": basic_info.road_side if basic_info else None,
-                "terrain_shape": basic_info.terrain_shape if basic_info else None,
-                "terrain_height": basic_info.terrain_height if basic_info else None
+                "land_category": getattr(basic_info, 'land_category', None) if basic_info else None,
+                "land_use": getattr(basic_info, 'land_use_situation', None) if basic_info else None,
+                "ownership_type": getattr(basic_info, 'ownership_type', None) if basic_info else None,
+                "road_side": getattr(basic_info, 'road_side', None) if basic_info else None,
+                "terrain_shape": getattr(basic_info, 'terrain_shape', None) if basic_info else None,
+                "terrain_height": getattr(basic_info, 'terrain_height', None) if basic_info else None
             },
             "price_info": {
-                "official_price_per_sqm": price_info.official_price if price_info else 0,
-                "total_official_price": price_info.total_price if price_info else 0,
-                "price_year": price_info.base_year if price_info else "2024",
+                "official_price_per_sqm": getattr(price_info, 'official_price', 0) if price_info else 0,
+                "total_official_price": getattr(price_info, 'total_price', 0) if price_info else 0,
+                "price_year": getattr(price_info, 'base_year', "2024") if price_info else "2024",
                 "reference_parcel": "인근 표준지"
             },
             "regulation_info": {
-                "land_use_zone": regulation_info.use_zone if regulation_info else None,
-                "floor_area_ratio": regulation_info.floor_area_ratio if regulation_info else 0,
-                "building_coverage_ratio": regulation_info.building_coverage_ratio if regulation_info else 0,
-                "max_building_height": regulation_info.max_height if regulation_info else 0,
+                "land_use_zone": getattr(regulation_info, 'use_zone', None) if regulation_info else None,
+                "floor_area_ratio": getattr(regulation_info, 'floor_area_ratio', 0) if regulation_info else 0,
+                "building_coverage_ratio": getattr(regulation_info, 'building_coverage_ratio', 0) if regulation_info else 0,
+                "max_building_height": getattr(regulation_info, 'max_height', 0) if regulation_info else 0,
                 "parking_required": False
             },
             "transactions": data.get("transactions", []),
