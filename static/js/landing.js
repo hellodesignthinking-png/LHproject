@@ -533,103 +533,133 @@ async function lookupAddress() {
 
 /**
  * Display lookup result in preview card (v3.4)
+ * Now displays detailed land data using the new HTML structure
  */
 function displayLookupResult(data) {
-    const resultDiv = document.getElementById('lookup-result');
+    console.log('📊 Displaying land data:', data);
     
-    // Calculate average sample price
-    let avgSamplePrice = 0;
-    if (data.samples && data.samples.length > 0) {
-        const sum = data.samples.reduce((acc, s) => acc + s.price_per_sqm, 0);
-        avgSamplePrice = Math.round(sum / data.samples.length);
+    // The new structure is already in HTML, just populate the fields
+    displayLandData(data);
+    
+    // Show the lookup result section
+    const resultDiv = document.getElementById('lookup-result');
+    resultDiv.style.display = 'block';
+}
+
+/**
+ * Helper function to set field value safely
+ */
+function setFieldValue(id, value, defaultValue = '-') {
+    const element = document.getElementById(id);
+    if (element) {
+        element.value = value || defaultValue;
+    }
+}
+
+/**
+ * Display land data in the detailed view (v3.4 NEW)
+ */
+function displayLandData(data) {
+    console.log('🏗️ Populating land data fields:', data);
+    
+    // Check if we have the nested structure from API or the flat lookupData format
+    const landData = data.land_data || data;
+    const basicInfo = landData.basic_info || landData;
+    const priceInfo = landData.price_info || landData;
+    const regulationInfo = landData.regulation_info || landData;
+    const transactions = landData.transactions || data.samples || [];
+    const buildingInfo = landData.building_info;
+    
+    // Basic Information
+    setFieldValue('display-address', basicInfo.address || data.address);
+    setFieldValue('display-pnu', basicInfo.pnu_code || basicInfo.pnu || data.parcel_id);
+    setFieldValue('display-area', `${(basicInfo.land_area_sqm || data.land_area_sqm || 0).toLocaleString()} ㎡`);
+    setFieldValue('display-area-pyeong', `${(basicInfo.land_area_pyeong || data.land_area_pyeong || 0).toFixed(1)} 평`);
+    setFieldValue('display-land-category', basicInfo.land_category || '미확인');
+    setFieldValue('display-land-use-zone', basicInfo.land_use_zone || regulationInfo.land_use_zone || data.zoning_type || '미확인');
+    setFieldValue('display-land-use-situation', basicInfo.land_use_situation || '미확인');
+    setFieldValue('display-ownership-type', basicInfo.ownership_type || '미확인');
+    
+    // Price Information
+    setFieldValue('display-official-price', `${(priceInfo.official_price_per_sqm || data.public_price_per_sqm || 0).toLocaleString()} 원/㎡`);
+    setFieldValue('display-price-year', priceInfo.price_year || data.public_price_year || new Date().getFullYear());
+    setFieldValue('display-total-price', `${((priceInfo.total_official_price || data.public_price_total || 0) / 100000000).toFixed(2)} 억원`);
+    
+    // Regulation Information
+    setFieldValue('display-far', `${regulationInfo.floor_area_ratio || data.far || 0}%`);
+    setFieldValue('display-bcr', `${regulationInfo.building_coverage_ratio || data.bcr || 0}%`);
+    setFieldValue('display-max-height', regulationInfo.max_height_m ? `${regulationInfo.max_height_m} m` : '제한없음');
+    
+    // Regulations list
+    const regulationsList = regulationInfo.regulations || [];
+    const regulationsText = regulationsList.length > 0 
+        ? regulationsList.join('\n') 
+        : '특별한 규제사항 없음';
+    setFieldValue('display-regulations', regulationsText);
+    
+    // Display transactions
+    displayTransactions(transactions);
+    
+    // Building Information (if available)
+    if (buildingInfo && buildingInfo.building_name) {
+        document.getElementById('building-info-section').style.display = 'block';
+        setFieldValue('display-building-name', buildingInfo.building_name);
+        setFieldValue('display-building-purpose', buildingInfo.main_purpose_name || buildingInfo.main_purpose || '미확인');
+        setFieldValue('display-building-area', `${(buildingInfo.total_floor_area_sqm || buildingInfo.total_floor_area || 0).toLocaleString()} ㎡`);
+        setFieldValue('display-floor-count', `${buildingInfo.floor_count || 0} 층`);
+    } else {
+        document.getElementById('building-info-section').style.display = 'none';
     }
     
-    resultDiv.innerHTML = `
-        <div class="input-step">
-            <span class="step-number">✓</span>
-            <h3>자동조회 결과</h3>
-        </div>
-        <div class="result-grid">
-            <div class="result-item">
-                <div class="result-label">주소</div>
-                <div class="result-value" style="font-size: 1rem;">${data.address}</div>
-            </div>
-            <div class="result-item">
-                <div class="result-label">면적</div>
-                <div class="result-value">${data.land_area_sqm?.toLocaleString()} ㎡ <span style="font-size: 0.8rem; color: var(--text-secondary);">(${data.land_area_pyeong?.toFixed(1)}평)</span></div>
-            </div>
-            <div class="result-item">
-                <div class="result-label">공시지가 (㎡)</div>
-                <div class="result-value">${data.public_price_per_sqm?.toLocaleString()}원</div>
-            </div>
-            <div class="result-item">
-                <div class="result-label">공시지가 (총액)</div>
-                <div class="result-value" style="font-size: 1rem;">${(data.public_price_total / 100000000)?.toFixed(2)}억원</div>
-            </div>
-            <div class="result-item">
-                <div class="result-label">용도지역</div>
-                <div class="result-value" style="font-size: 0.9rem;">${data.zoning_type}</div>
-            </div>
-            <div class="result-item">
-                <div class="result-label">용적률 / 건폐율</div>
-                <div class="result-value">${data.far}% / ${data.bcr}%</div>
-            </div>
-        </div>
-        
-        ${data.samples && data.samples.length > 0 ? `
-        <div style="margin-top: 2rem;">
-            <h4 style="margin-bottom: 1rem; color: var(--text-primary);">
-                <i class="fas fa-map-marker-alt"></i> 거리사례 (${data.samples.length}건)
-            </h4>
-            <div class="result-grid">
-                ${data.samples.map((sample, idx) => `
-                    <div class="result-item">
-                        <div class="result-label">사례 ${idx + 1} (${sample.distance_m}m)</div>
-                        <div class="result-value" style="font-size: 1rem;">
-                            ${(sample.price_per_sqm / 10000)?.toLocaleString()}만원/㎡
-                        </div>
-                        <div class="result-label" style="margin-top: 0.25rem;">
-                            ${sample.transaction_date}
-                        </div>
-                    </div>
-                `).join('')}
-                <div class="result-item" style="border-left: 2px solid var(--accent-mint); padding-left: 1rem;">
-                    <div class="result-label">평균 거래가</div>
-                    <div class="result-value" style="color: var(--accent-mint);">
-                        ${(avgSamplePrice / 10000)?.toLocaleString()}만원/㎡
-                    </div>
-                </div>
-            </div>
-        </div>
-        ` : ''}
-        
-        ${data.premium ? `
-        <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(35, 230, 166, 0.1); border-radius: 0.75rem; border: 1px solid var(--accent-mint);">
-            <h4 style="margin-bottom: 1rem; color: var(--accent-mint); display: flex; align-items: center; gap: 0.5rem;">
-                <i class="fas fa-star"></i> Premium 분석
-            </h4>
-            <div class="result-grid">
-                <div class="result-item">
-                    <div class="result-label">도로 점수</div>
-                    <div class="result-value">${data.premium.road_score}/10</div>
-                    <div class="result-label" style="margin-top: 0.25rem;">${data.premium.road_description}</div>
-                </div>
-                <div class="result-item">
-                    <div class="result-label">지형 점수</div>
-                    <div class="result-value">${data.premium.topography_score}/10</div>
-                    <div class="result-label" style="margin-top: 0.25rem;">${data.premium.topography_description}</div>
-                </div>
-                <div class="result-item">
-                    <div class="result-label">전체 할증률</div>
-                    <div class="result-value" style="color: var(--accent-mint);">+${data.premium.overall_premium}%</div>
-                    <div class="result-label" style="margin-top: 0.25rem;">${data.premium.premium_description}</div>
-                </div>
-            </div>
-        </div>
-        ` : ''}
-    `;
+    // Data source indicator
+    const dataSourceText = document.getElementById('data-source-text');
+    if (dataSourceText) {
+        const source = data.data_source || landData.data_source || 'api';
+        if (source === 'mock') {
+            dataSourceText.innerHTML = '<i class="fas fa-flask"></i> 데이터 출처: 테스트 목업 데이터 (실제 API 연결 실패)';
+            dataSourceText.style.color = 'var(--warning)';
+        } else {
+            dataSourceText.innerHTML = '<i class="fas fa-database"></i> 데이터 출처: 정부 공공데이터 API';
+            dataSourceText.style.color = 'var(--text-secondary)';
+        }
+    }
+}
+
+/**
+ * Display transactions in table (v3.4 NEW)
+ */
+function displayTransactions(transactions) {
+    const tbody = document.getElementById('transactions-tbody');
+    if (!tbody) return;
     
-    resultDiv.style.display = 'block';
+    if (!transactions || transactions.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+                    최근 1년간 실거래 내역이 없습니다
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = transactions.map(t => {
+        const date = t.transaction_date || t.dealDate || '-';
+        const amount = t.transaction_amount || t.dealAmount || 0;
+        const area = t.land_area_sqm || t.area || 0;
+        const pricePerSqm = t.price_per_sqm || (amount && area ? Math.round(amount / area) : 0);
+        const category = t.land_category || t.landType || '-';
+        
+        return `
+            <tr>
+                <td>${date}</td>
+                <td>${(amount / 10000).toLocaleString()}</td>
+                <td>${area.toLocaleString()}</td>
+                <td>${pricePerSqm.toLocaleString()}</td>
+                <td>${category}</td>
+            </tr>
+        `;
+    }).join('');
 }
 
 /**
@@ -855,6 +885,9 @@ function displayGenerationResults(results) {
 // Export v3.4 functions for global access
 window.lookupAddress = lookupAddress;
 window.displayLookupResult = displayLookupResult;
+window.displayLandData = displayLandData;
+window.setFieldValue = setFieldValue;
+window.displayTransactions = displayTransactions;
 window.togglePremiumOverride = togglePremiumOverride;
 window.applyPremiumOverride = applyPremiumOverride;
 window.generateSelectedReports = generateSelectedReports;

@@ -1181,6 +1181,135 @@ body {
     color: var(--error);
 }
 
+/* Land Data Display Sections (v3.4) */
+.result-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+    color: var(--accent-mint);
+}
+
+.result-header i {
+    font-size: var(--font-size-2xl);
+}
+
+.result-header h3 {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.land-data-section {
+    background: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+}
+
+.section-subtitle {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+}
+
+.section-subtitle i {
+    color: var(--accent-mint);
+}
+
+.data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.data-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.data-field.full-width {
+    grid-column: 1 / -1;
+}
+
+.data-field label {
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.data-field input[readonly],
+.data-field textarea[readonly] {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: var(--spacing-sm);
+    color: var(--text-primary);
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    cursor: default;
+}
+
+.data-field textarea[readonly] {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Transactions Table */
+.transactions-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: var(--spacing-sm);
+}
+
+.transactions-table thead {
+    background: var(--card-bg);
+}
+
+.transactions-table th {
+    padding: var(--spacing-sm);
+    text-align: left;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.transactions-table td {
+    padding: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.transactions-table tbody tr:hover {
+    background: var(--card-bg);
+}
+
+/* Data Source Indicator */
+.data-source-indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-sm);
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.data-source-indicator i {
+    color: var(--accent-mint);
+}
+
 /* Responsive adjustments for v3.4 */
 @media (max-width: 768px) {
     .input-form {
@@ -1197,5 +1326,18 @@ body {
     
     .override-grid {
         grid-template-columns: 1fr;
+    }
+    
+    .data-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .transactions-table {
+        font-size: var(--font-size-xs);
+    }
+    
+    .transactions-table th,
+    .transactions-table td {
+        padding: var(--spacing-xs);
     }
 }

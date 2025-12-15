@@ -103,13 +103,15 @@ async def fetch_land_data(request: AddressRequest):
         land_area_pyeong = round(land_area_sqm / 3.3058, 1) if land_area_sqm > 0 else 0
         
         land_data = {
+            "data_source": data.get("data_source", "api"),  # Indicate data source
             "basic_info": {
                 "address": request.address,
                 "pnu_code": getattr(basic_info, 'pnu', None) if basic_info else None,
                 "land_area_sqm": land_area_sqm,
                 "land_area_pyeong": land_area_pyeong,
                 "land_category": getattr(basic_info, 'land_category', None) if basic_info else None,
-                "land_use": getattr(basic_info, 'land_use_situation', None) if basic_info else None,
+                "land_use_zone": getattr(basic_info, 'land_use_zone', None) if basic_info else None,
+                "land_use_situation": getattr(basic_info, 'land_use_situation', None) if basic_info else None,
                 "ownership_type": getattr(basic_info, 'ownership_type', None) if basic_info else None,
                 "road_side": getattr(basic_info, 'road_side', None) if basic_info else None,
                 "terrain_shape": getattr(basic_info, 'terrain_shape', None) if basic_info else None,
@@ -138,6 +140,7 @@ async def fetch_land_data(request: AddressRequest):
         return {
             "success": True,
             "address": request.address,
+            "data_source": data.get("data_source", "api"),  # Pass through data source
             "land_data": land_data,
             "appraisal_context": appraisal_context,
             "error": None

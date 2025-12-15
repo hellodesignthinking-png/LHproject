@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZeroSite OS v3.3 - 부동산 의사결정 엔진</title>
+    <title>ZeroSite OS v3.4 - 부동산 의사결정 엔진</title>
     <meta name="description" content="토지 진단 · LH 판단 · 투자 검증까지 — 10초면 끝나는 부동산 엔진">
     
     <!-- Google Fonts -->
@@ -24,7 +24,7 @@
                 <div class="logo">
                     <i class="fas fa-cube"></i>
                     <span>ZeroSite OS</span>
-                    <span class="version">v3.3</span>
+                    <span class="version">v3.4</span>
                 </div>
                 <nav class="nav">
                     <a href="#home">홈</a>
@@ -123,7 +123,141 @@
             
             <!-- Lookup Result Preview (Hidden initially) -->
             <div id="lookup-result" class="lookup-result" style="display: none;">
-                <!-- Will be populated by JavaScript -->
+                <div class="result-header">
+                    <i class="fas fa-check-circle"></i>
+                    <h3>토지 정보 조회 완료</h3>
+                </div>
+                
+                <!-- Basic Land Information -->
+                <div class="land-data-section">
+                    <h4 class="section-subtitle"><i class="fas fa-info-circle"></i> 기본 정보</h4>
+                    <div class="data-grid">
+                        <div class="data-field">
+                            <label>주소</label>
+                            <input type="text" id="display-address" readonly />
+                        </div>
+                        <div class="data-field">
+                            <label>필지고유번호 (PNU)</label>
+                            <input type="text" id="display-pnu" readonly />
+                        </div>
+                        <div class="data-field">
+                            <label>면적 (㎡)</label>
+                            <input type="text" id="display-area" readonly />
+                        </div>
+                        <div class="data-field">
+                            <label>면적 (평)</label>
+                            <input type="text" id="display-area-pyeong" readonly />
+                        </div>
+                        <div class="data-field">
+                            <label>지목</label>
+                            <input type="text" id="display-land-category" readonly />
+                        </div>
+                        <div class="data-field">
+                            <label>용도지역</label>
+                            <input type="text" id="display-land-use-zone" readonly />
+                        </div>
+                        <div class="data-field">
+                            <label>이용상황</label>
+                            <input type="text" id="display-land-use-situation" readonly />
+                        </div>
+                        <div class="data-field">
+                            <label>소유구분</label>
+                            <input type="text" id="display-ownership-type" readonly />
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Price Information -->
+                <div class="land-data-section">
+                    <h4 class="section-subtitle"><i class="fas fa-won-sign"></i> 가격 정보</h4>
+                    <div class="data-grid">
+                        <div class="data-field">
+                            <label>개별공시지가 (원/㎡)</label>
+                            <input type="text" id="display-official-price" readonly />
+                        </div>
+                        <div class="data-field">
+                            <label>기준연도</label>
+                            <input type="text" id="display-price-year" readonly />
+                        </div>
+                        <div class="data-field">
+                            <label>총 공시지가 (원)</label>
+                            <input type="text" id="display-total-price" readonly />
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Regulation Information -->
+                <div class="land-data-section">
+                    <h4 class="section-subtitle"><i class="fas fa-gavel"></i> 규제 정보</h4>
+                    <div class="data-grid">
+                        <div class="data-field">
+                            <label>용적률 (%)</label>
+                            <input type="text" id="display-far" readonly />
+                        </div>
+                        <div class="data-field">
+                            <label>건폐율 (%)</label>
+                            <input type="text" id="display-bcr" readonly />
+                        </div>
+                        <div class="data-field">
+                            <label>최대 높이 (m)</label>
+                            <input type="text" id="display-max-height" readonly />
+                        </div>
+                    </div>
+                    <div class="data-field full-width">
+                        <label>규제 사항</label>
+                        <textarea id="display-regulations" readonly rows="3"></textarea>
+                    </div>
+                </div>
+                
+                <!-- Transaction Information -->
+                <div class="land-data-section">
+                    <h4 class="section-subtitle"><i class="fas fa-exchange-alt"></i> 실거래 정보</h4>
+                    <div id="transactions-container">
+                        <table class="transactions-table">
+                            <thead>
+                                <tr>
+                                    <th>거래일자</th>
+                                    <th>거래금액 (만원)</th>
+                                    <th>면적 (㎡)</th>
+                                    <th>단가 (원/㎡)</th>
+                                    <th>지목</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactions-tbody">
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Building Information (if available) -->
+                <div id="building-info-section" class="land-data-section" style="display: none;">
+                    <h4 class="section-subtitle"><i class="fas fa-building"></i> 건축물 정보</h4>
+                    <div class="data-grid">
+                        <div class="data-field">
+                            <label>건물명</label>
+                            <input type="text" id="display-building-name" readonly />
+                        </div>
+                        <div class="data-field">
+                            <label>주용도</label>
+                            <input type="text" id="display-building-purpose" readonly />
+                        </div>
+                        <div class="data-field">
+                            <label>연면적 (㎡)</label>
+                            <input type="text" id="display-building-area" readonly />
+                        </div>
+                        <div class="data-field">
+                            <label>층수</label>
+                            <input type="text" id="display-floor-count" readonly />
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Data Source Indicator -->
+                <div class="data-source-indicator">
+                    <i class="fas fa-database"></i>
+                    <span id="data-source-text">데이터 출처: 정부 공공데이터 API</span>
+                </div>
             </div>
             
             <!-- Premium Override (Collapsible) -->

@@ -197,6 +197,7 @@ class LandDataService:
             result["building_info"] = building_info
             
             result["success"] = True
+            result["data_source"] = "api"  # Indicate this is from real APIs
             print(f"✅ 모든 데이터 조회 완료")
             
         except Exception as e:
@@ -833,6 +834,7 @@ class LandDataService:
         
         return {
             "success": True,
+            "data_source": "mock",  # Indicate this is mock data
             "basic_info": basic_info,
             "price_info": price_info,
             "regulation_info": regulation_info,
