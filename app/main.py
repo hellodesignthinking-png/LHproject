@@ -58,6 +58,9 @@ from app.api.endpoints.mvp_analyze import router as mvp_router
 # ✨ v13.0: Import Report Engine v13 router with v15 Phase 1 enhancements
 from app.routers.report_v13 import router as report_v13_router
 
+# ✨ v3.3: Import ZeroSite v3.3 Report API (Phase 2 - All 6 Composers)
+from app.api.endpoints.reports_v3 import router as reports_v3_router
+
 # ✨ v11.0 ENHANCEMENTS: Import middleware and utilities
 from app.middleware.rate_limiter import RateLimiter, RateLimitConfig
 from app.middleware.cache_manager import cache_manager, start_cache_cleanup_task
@@ -159,6 +162,9 @@ app.include_router(mvp_router)
 
 # ✨ v13.0: Include Report Engine v13 with v15 Phase 1 Decision Engine
 app.include_router(report_v13_router)
+
+# ✨ v3.3: Include ZeroSite v3.3 Report API (Phase 2 Complete - All 6 Composers)
+app.include_router(reports_v3_router)
 
 # 정적 파일 서빙
 static_path = Path(__file__).parent.parent / "static"

@@ -1,0 +1,315 @@
+{
+  "name": "ZeroSite_Canonical_Flow_Implementation",
+  "description": "감정평가를 Single Source of Truth로 확립하는 구조 전환",
+  "version": "v8.7+",
+  "priority": "CRITICAL",
+  "core_principles": [
+    "감정평가 로직은 절대 수정 금지",
+    "토지 입력 → 감정평가 → 토지진단 → LH/시나리오 순서 고정",
+    "이후 모든 판단은 '감정평가 결과를 참조'만 한다"
+  ],
+  
+  "implementation_phases": {
+    "phase_1_appraisal_lock": {
+      "title": "감정평가 Context Lock 구현",
+      "priority": "CRITICAL",
+      "tasks": [
+        {
+          "task": "Create AppraisalContextLock class",
+          "file": "app/services/appraisal_context.py (NEW)",
+          "description": "감정평가 결과를 잠그고 읽기 전용으로 만드는 클래스",
+          "methods": [
+            "lock(appraisal_result) - 감정평가 결과 잠금",
+            "get(key_path) - 잠긴 데이터 읽기",
+            "is_locked() - 잠금 상태 확인",
+            "get_full_context() - 전체 컨텍스트 반환 (복사본)"
+          ],
+          "validation": [
+            "한 번 잠기면 수정 불가",
+            "잠금 전 읽기 시도 시 에러",
+            "잠금 후 수정 시도 시 에러"
+          ]
+        },
+        {
+          "task": "Define Canonical Appraisal Schema",
+          "file": "app/schemas/appraisal_schema.py (NEW)",
+          "schema": {
+            "version": "string",
+            "locked": "boolean",
+            "timestamp": "datetime",
+            "zoning": {
+              "confirmed_type": "string",
+              "building_coverage_ratio": "float",
+              "floor_area_ratio": "float",
+              "source": "string",
+              "verified_at": "date"
+            },
+            "official_land_price": {
+              "standard_price_per_sqm": "int",
+              "reference_year": "int",
+              "reference_parcel": "string",
+              "distance_to_standard": "int",
+              "source": "string"
+            },
+            "transaction_cases": [
+              {
+                "price_per_sqm": "int",
+                "transaction_date": "date",
+                "distance_m": "int",
+                "area_sqm": "float",
+                "similarity_score": "float",
+                "adjusted_for_time": "boolean",
+                "adjusted_for_location": "boolean"
+              }
+            ],
+            "premium": {
+              "development_potential": {"rate": "float", "rationale": "string"},
+              "location_premium": {"rate": "float", "rationale": "string"},
+              "policy_benefit": {"rate": "float", "rationale": "string"},
+              "total_premium_rate": "float"
+            },
+            "calculation": {
+              "base_price_per_sqm": "int",
+              "premium_adjusted_per_sqm": "int",
+              "land_area_sqm": "float",
+              "final_appraised_total": "int"
+            },
+            "confidence": {
+              "score": "float",
+              "factors": {
+                "data_completeness": "float",
+                "case_similarity": "float",
+                "time_relevance": "float"
+              }
+            },
+            "metadata": {
+              "appraisal_engine": "string",
+              "calculation_method": "string",
+              "appraiser_note": "string"
+            }
+          }
+        }
+      ]
+    },
+    
+    "phase_2_land_diagnosis_refactor": {
+      "title": "토지진단 엔진 리팩토링",
+      "priority": "CRITICAL",
+      "forbidden_actions": [
+        "용도지역 API 재호출",
+        "공시지가 API 재호출",
+        "거래사례 API 재호출",
+        "프리미엄 재계산",
+        "독립적인 감정평가 시도"
+      ],
+      "allowed_actions": [
+        "감정평가 컨텍스트 읽기",
+        "개발적합성 점수화",
+        "리스크 플래그 식별",
+        "진단 요약 생성"
+      ],
+      "tasks": [
+        {
+          "task": "Remove duplicate API calls",
+          "file": "app/services/land_diagnosis.py",
+          "changes": [
+            {
+              "remove": "zoning = fetch_zoning_from_api(parcel)",
+              "replace_with": "zoning = appraisal_ctx.get('zoning.confirmed_type')"
+            },
+            {
+              "remove": "price = fetch_official_price(parcel)",
+              "replace_with": "price = appraisal_ctx.get('official_land_price.standard_price_per_sqm')"
+            },
+            {
+              "remove": "cases = fetch_transactions(parcel)",
+              "replace_with": "cases = appraisal_ctx.get('transaction_cases')"
+            },
+            {
+              "remove": "premium = 0 or calculate_premium()",
+              "replace_with": "premium = appraisal_ctx.get('premium.total_premium_rate')"
+            }
+          ]
+        },
+        {
+          "task": "Update function signature",
+          "file": "app/services/land_diagnosis.py",
+          "before": "def analyze_land_diagnosis(parcel: Dict) -> Dict",
+          "after": "def analyze_land_diagnosis(appraisal_ctx: AppraisalContextLock) -> Dict"
+        },
+        {
+          "task": "Add appraisal reference in output",
+          "file": "app/services/land_diagnosis.py",
+          "output_fields": [
+            "buildability_score",
+            "risk_flags",
+            "diagnosis_summary",
+            "based_on_appraisal: True",
+            "appraisal_reference: {zoning, appraised_value, premium_rate}"
+          ]
+        }
+      ]
+    },
+    
+    "phase_3_lh_analysis_refactor": {
+      "title": "LH 분석 엔진 리팩토링",
+      "priority": "CRITICAL",
+      "key_principle": "감정평가액을 토지가액 입력으로 사용 (재계산 금지)",
+      "forbidden_actions": [
+        "토지가액 자체 계산",
+        "LH 기준 토지가 별도 산정",
+        "감정평가액 무시 또는 조정",
+        "NO-GO 시 감정평가 탓하기"
+      ],
+      "allowed_actions": [
+        "감정평가액을 토지가액으로 사용",
+        "건축비 계산",
+        "LH 매입가 = 감정평가액 + 건축비",
+        "ROI 계산",
+        "사업성 의사결정"
+      ],
+      "tasks": [
+        {
+          "task": "Extract land value from appraisal",
+          "file": "app/services/lh_analysis.py",
+          "code": "land_value = appraisal_ctx.get('calculation.final_appraised_total')",
+          "note": "이것이 유일한 토지가액 기준!"
+        },
+        {
+          "task": "Calculate LH purchase price",
+          "file": "app/services/lh_analysis.py",
+          "formula": "lh_purchase_price = land_appraised_value + construction_cost",
+          "note": "감정평가액 + 건축비"
+        },
+        {
+          "task": "Make decision with clear messaging",
+          "file": "app/services/lh_analysis.py",
+          "decision_logic": {
+            "GO": "roi >= 10% AND units >= 50",
+            "CONDITIONAL": "roi >= 5% AND units >= 50",
+            "NO-GO": "otherwise"
+          },
+          "important_note": "NO-GO가 나와도 감정평가가 틀린 것이 아님. 사업성 판단 결과일 뿐."
+        },
+        {
+          "task": "Add appraisal reference in output",
+          "file": "app/services/lh_analysis.py",
+          "output_fields": [
+            "land_appraised_value",
+            "construction_cost",
+            "lh_purchase_price",
+            "total_project_cost",
+            "roi",
+            "decision",
+            "based_on_appraisal: True",
+            "appraisal_reference: {appraised_value, appraisal_version}"
+          ]
+        }
+      ]
+    },
+    
+    "phase_4_report_structure": {
+      "title": "보고서 구조 업데이트",
+      "priority": "HIGH",
+      "structure": {
+        "section_1_appraisal": {
+          "title": "[SECTION 1] 감정평가 결과 (FACT)",
+          "content": [
+            "기준 엔진: ZeroSite v39",
+            "계산 방식: 비교방식",
+            "최종 감정가: XX억원",
+            "산정 근거: 공시지가, 거래사례, 프리미엄",
+            "신뢰도: XX%"
+          ]
+        },
+        "section_2_diagnosis": {
+          "title": "[SECTION 2] 토지진단 결과 (INTERPRETATION)",
+          "content": [
+            "기준 데이터: 감정평가 결과 참조",
+            "개발적합성 점수: XX/100",
+            "용도지역: XX (감정평가 확정)",
+            "리스크 요인: [list]",
+            "종합 진단: 감정평가 기준상 개발 적합/부적합"
+          ]
+        },
+        "section_3_lh_decision": {
+          "title": "[SECTION 3] LH 사업성 판단 (DECISION)",
+          "content": [
+            "기준 토지가액: 감정평가액 XX억원",
+            "재무 분석: 토지+건축+금융",
+            "ROI: XX%",
+            "최종 의사결정: GO/CONDITIONAL/NO-GO",
+            "중요: NO-GO는 사업성 판단이며 감정평가의 부정확성을 의미하지 않음"
+          ]
+        }
+      },
+      "disclaimer": {
+        "required": true,
+        "text": "본 보고서의 토지가액은 ZeroSite 감정평가 엔진 v39 기준으로 산출되었습니다. 감정평가(FACT), 토지진단(INTERPRETATION), LH 판단(DECISION)은 각각 독립적이며, NO-GO 판단이 감정평가의 부정확성을 의미하지 않습니다."
+      }
+    }
+  },
+  
+  "validation_checklist": {
+    "appraisal_engine": [
+      "v39 로직 수정하지 않았는가?",
+      "프리미엄 계산식 그대로인가?",
+      "Context lock 적용했는가?",
+      "Canonical schema 따르는가?"
+    ],
+    "land_diagnosis": [
+      "API 재호출 제거했는가?",
+      "appraisal_ctx만 사용하는가?",
+      "독립적인 감정평가 시도하지 않는가?",
+      "based_on_appraisal 플래그 있는가?"
+    ],
+    "lh_analysis": [
+      "감정평가액을 토지가액으로 사용하는가?",
+      "LH 기준 토지가 같은 별도 계산 없는가?",
+      "NO-GO 시 감정평가 탓하지 않는가?",
+      "appraisal_reference 필드 있는가?"
+    ],
+    "report": [
+      "3단 구조 (감정/진단/판단) 명확한가?",
+      "감정평가 v39 명시했는가?",
+      "면책사항 추가했는가?",
+      "각 단계의 독립성 설명했는가?"
+    ]
+  },
+  
+  "testing_requirements": {
+    "unit_tests": [
+      "AppraisalContextLock.lock() - 잠금 메커니즘",
+      "AppraisalContextLock.get() - 읽기 전용 확인",
+      "land_diagnosis without API calls - 재호출 없음 확인",
+      "lh_analysis with appraisal value - 감정평가액 사용 확인"
+    ],
+    "integration_tests": [
+      "Full flow: Parcel → Appraisal → Diagnosis → LH",
+      "Context lock persistence across engines",
+      "Report generation with 3-section structure"
+    ],
+    "regression_tests": [
+      "Compare with previous appraisal results",
+      "Verify premium not disappearing",
+      "Verify zoning/price consistency"
+    ]
+  },
+  
+  "expected_benefits": [
+    "예전 감정평가 결과와 현재 결과 일치",
+    "프리미엄 로직 증발 문제 해결",
+    "용도지역/공시지가/사례 데이터 불일치 제거",
+    "왜 이 결과가 나왔는지 설명 가능",
+    "LH·감정평가사·디벨로퍼 모두 납득 가능"
+  ],
+  
+  "deployment_notes": {
+    "breaking_changes": true,
+    "reason": "Analysis flow 구조 변경",
+    "backward_compatibility": false,
+    "migration_required": true,
+    "estimated_effort": "2-3 weeks",
+    "rollback_plan": "Keep v8.6 branch for emergency rollback"
+  }
+}
