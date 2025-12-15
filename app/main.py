@@ -58,6 +58,21 @@ from app.api.endpoints.mvp_analyze import router as mvp_router
 # ✨ v13.0: Import Report Engine v13 router with v15 Phase 1 enhancements
 from app.routers.report_v13 import router as report_v13_router
 
+# ✨ v24.1: Import ZeroSite v24.1 Complete API Router
+from app.api.v24_1.api_router import router as api_v241_router
+
+# ✨ v30.0: Import ZeroSite v30.0 - Real National API + Full PDF Engine
+from app.api.v30.router import router_v30
+
+# ✨ v40.0: Import ZeroSite v40.0 - Unified Land Analysis System
+from app.api.v40.router import router_v40
+
+# ✨ v40.2: Import ZeroSite v40.2 - APPRAISAL-FIRST ARCHITECTURE
+from app.api.v40.router_v40_2 import router_v40_2
+
+# ✨ v40.2 LH: Import LH 심사예측 (AI Judge) Router
+from app.api.v40.lh_review_router import router as lh_review_router
+
 # ✨ v11.0 ENHANCEMENTS: Import middleware and utilities
 from app.middleware.rate_limiter import RateLimiter, RateLimitConfig
 from app.middleware.cache_manager import cache_manager, start_cache_cleanup_task
@@ -160,6 +175,72 @@ app.include_router(mvp_router)
 # ✨ v13.0: Include Report Engine v13 with v15 Phase 1 Decision Engine
 app.include_router(report_v13_router)
 
+# ✨ v24.1: Include ZeroSite v24.1 Complete API
+app.include_router(api_v241_router)
+
+# ✨ v30.0: Include ZeroSite v30.0 - Real National API + Full PDF Engine
+app.include_router(router_v30)
+
+# ✨ v40.2: Include ZeroSite v40.2 - APPRAISAL-FIRST ARCHITECTURE
+app.include_router(router_v40_2)
+print("✅ v40.2 Appraisal-First Architecture loaded")
+
+# ✨ v40.2 LH: Include LH 심사예측 (AI Judge) Router
+app.include_router(lh_review_router)
+print("✅ v40.2 LH 심사예측 (AI Judge) loaded")
+
+# ✨ v40.0: Include ZeroSite v40.0 - Unified Land Analysis System
+app.include_router(router_v40)
+
+# ✨ v40.0: Serve v40 unified interface directly at root
+@app.get("/")
+async def root():
+    """Serve ZeroSite v40.0 unified interface with cache busting"""
+    public_path = Path(__file__).parent.parent / "public" / "index_v40_FINAL.html"
+    if public_path.exists():
+        # Add cache-busting headers
+        from fastapi import Response
+        with open(public_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return Response(
+            content=content,
+            media_type="text/html",
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0"
+            }
+        )
+    return RedirectResponse(url="/public/index_v40_FINAL.html")
+
+# Also serve at /index_v40_FINAL.html for direct access
+@app.get("/index_v40_FINAL.html")
+async def serve_v40_final():
+    """Direct access to v40 FINAL with cache busting"""
+    public_path = Path(__file__).parent.parent / "public" / "index_v40_FINAL.html"
+    if public_path.exists():
+        from fastapi import Response
+        with open(public_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return Response(
+            content=content,
+            media_type="text/html",
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0"
+            }
+        )
+    return {"error": "File not found"}
+
+# ✨ v38.0: Include ZeroSite v38.0 - HTML Preview API
+try:
+    from app.api.v38.html_preview import router as v38_preview_router
+    app.include_router(v38_preview_router)
+    print("✅ v38 HTML Preview API loaded")
+except ImportError as e:
+    print(f"⚠️ v38 preview router not available: {e}")
+
 # 정적 파일 서빙
 static_path = Path(__file__).parent.parent / "static"
 if static_path.exists():
@@ -170,12 +251,14 @@ frontend_v9_path = Path(__file__).parent.parent / "frontend_v9"
 if frontend_v9_path.exists():
     app.mount("/v9", StaticFiles(directory=str(frontend_v9_path), html=True), name="frontend_v9")
 
-
-@app.get("/")
-async def root():
-    """메인 페이지 - Admin Dashboard로 리다이렉트 (v11.0 HYBRID v2)"""
-    # v11.0 HYBRID v2 Admin Dashboard로 리다이렉트
-    return RedirectResponse(url="/static/admin_dashboard.html", status_code=302)
+# ✨ v24.1: Mount public directory for Entry OS screen
+public_path = Path(__file__).parent.parent / "public"
+if public_path.exists():
+    app.mount("/public", StaticFiles(directory=str(public_path), html=True), name="public")
+    # Also mount js directory
+    js_path = public_path / "js"
+    if js_path.exists():
+        app.mount("/js", StaticFiles(directory=str(js_path)), name="js")
 
 
 @app.get("/v11")

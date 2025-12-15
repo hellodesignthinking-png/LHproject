@@ -1,0 +1,805 @@
+{
+  "test_suite": "ZeroSite v41 Real-World Testing",
+  "version": "v41.0",
+  "timestamp": "2025-12-14T16:04:48.741419",
+  "summary": {
+    "total_tests": 12,
+    "success": 12,
+    "failed": 0,
+    "error": 0
+  },
+  "results": [
+    {
+      "test_case_id": "TC001",
+      "name": "서울 강남구 역삼동 (상업·업무 밀집지)",
+      "address": "서울특별시 강남구 역삼동 123-45",
+      "land_area_sqm": 991.74,
+      "zoning": "제3종일반주거지역",
+      "timestamp": "2025-12-14T16:03:06.118547",
+      "status": "SUCCESS",
+      "error": null,
+      "context_id": "52a779e7-12b0-4a53-a7a2-75b5fefd0dc6",
+      "appraisal": {
+        "final_value": 0,
+        "value_per_sqm": 0,
+        "confidence_level": "unknown"
+      },
+      "lh_review": {
+        "predicted_score": 82.5,
+        "pass_probability": 82.5,
+        "risk_level": "MEDIUM",
+        "factors": [
+          {
+            "factor_name": "입지 점수",
+            "score": 100.0,
+            "impact": "매우 긍정적",
+            "reason": "교통 및 도심 접근성 우수",
+            "weight": 0.25
+          },
+          {
+            "factor_name": "용도지역 적합성",
+            "score": 85.0,
+            "impact": "매우 긍정적",
+            "reason": "제3종일반주거지역, 규제 최소",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "토지가격 합리성",
+            "score": 40.0,
+            "impact": "부정적",
+            "reason": "공시지가 대비 175.6% (과도한 가격)",
+            "weight": 0.15
+          },
+          {
+            "factor_name": "용적률/건폐율 실현가능성",
+            "score": 100.0,
+            "impact": "매우 긍정적",
+            "reason": "용적률 200% (최적 범위)",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "리스크 수준",
+            "score": 80.0,
+            "impact": "긍정적",
+            "reason": "리스크 낮음 (관리 가능)",
+            "weight": 0.1
+          },
+          {
+            "factor_name": "시나리오 안정성",
+            "score": 65.0,
+            "impact": "보통",
+            "reason": "목표 달성 132%, 사업성 보통",
+            "weight": 0.1
+          }
+        ]
+      },
+      "prediction_accuracy": "WITHIN_RANGE"
+    },
+    {
+      "test_case_id": "TC002",
+      "name": "서울 관악구 봉천동 (주거지역)",
+      "address": "서울특별시 관악구 봉천동 234-56",
+      "land_area_sqm": 826.45,
+      "zoning": "제2종일반주거지역",
+      "timestamp": "2025-12-14T16:03:15.515588",
+      "status": "SUCCESS",
+      "error": null,
+      "context_id": "040688ac-cb4e-43f5-9261-196cdb7076b3",
+      "appraisal": {
+        "final_value": 0,
+        "value_per_sqm": 0,
+        "confidence_level": "unknown"
+      },
+      "lh_review": {
+        "predicted_score": 84.5,
+        "pass_probability": 84.5,
+        "risk_level": "MEDIUM",
+        "factors": [
+          {
+            "factor_name": "입지 점수",
+            "score": 100.0,
+            "impact": "매우 긍정적",
+            "reason": "교통 및 도심 접근성 우수",
+            "weight": 0.25
+          },
+          {
+            "factor_name": "용도지역 적합성",
+            "score": 95.0,
+            "impact": "매우 긍정적",
+            "reason": "제2종일반주거지역, 규제 최소",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "토지가격 합리성",
+            "score": 40.0,
+            "impact": "부정적",
+            "reason": "공시지가 대비 150.9% (과도한 가격)",
+            "weight": 0.15
+          },
+          {
+            "factor_name": "용적률/건폐율 실현가능성",
+            "score": 100.0,
+            "impact": "매우 긍정적",
+            "reason": "용적률 200% (최적 범위)",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "리스크 수준",
+            "score": 80.0,
+            "impact": "긍정적",
+            "reason": "리스크 낮음 (관리 가능)",
+            "weight": 0.1
+          },
+          {
+            "factor_name": "시나리오 안정성",
+            "score": 65.0,
+            "impact": "보통",
+            "reason": "목표 달성 110%, 사업성 보통",
+            "weight": 0.1
+          }
+        ]
+      },
+      "prediction_accuracy": "OUT_OF_RANGE"
+    },
+    {
+      "test_case_id": "TC003",
+      "name": "서울 송파구 잠실동 (대규모 주거단지)",
+      "address": "서울특별시 송파구 잠실동 345-67",
+      "land_area_sqm": 1322.32,
+      "zoning": "제3종일반주거지역",
+      "timestamp": "2025-12-14T16:03:24.258506",
+      "status": "SUCCESS",
+      "error": null,
+      "context_id": "0b5c938e-5fde-4779-afc7-9494c5164311",
+      "appraisal": {
+        "final_value": 0,
+        "value_per_sqm": 0,
+        "confidence_level": "unknown"
+      },
+      "lh_review": {
+        "predicted_score": 84.5,
+        "pass_probability": 84.5,
+        "risk_level": "MEDIUM",
+        "factors": [
+          {
+            "factor_name": "입지 점수",
+            "score": 100.0,
+            "impact": "매우 긍정적",
+            "reason": "교통 및 도심 접근성 우수",
+            "weight": 0.25
+          },
+          {
+            "factor_name": "용도지역 적합성",
+            "score": 95.0,
+            "impact": "매우 긍정적",
+            "reason": "제2종일반주거지역, 규제 최소",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "토지가격 합리성",
+            "score": 40.0,
+            "impact": "부정적",
+            "reason": "공시지가 대비 160.1% (과도한 가격)",
+            "weight": 0.15
+          },
+          {
+            "factor_name": "용적률/건폐율 실현가능성",
+            "score": 100.0,
+            "impact": "매우 긍정적",
+            "reason": "용적률 200% (최적 범위)",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "리스크 수준",
+            "score": 80.0,
+            "impact": "긍정적",
+            "reason": "리스크 낮음 (관리 가능)",
+            "weight": 0.1
+          },
+          {
+            "factor_name": "시나리오 안정성",
+            "score": 65.0,
+            "impact": "보통",
+            "reason": "목표 달성 176%, 사업성 보통",
+            "weight": 0.1
+          }
+        ]
+      },
+      "prediction_accuracy": "WITHIN_RANGE"
+    },
+    {
+      "test_case_id": "TC004",
+      "name": "경기 성남시 분당구 정자동 (신도시)",
+      "address": "경기도 성남시 분당구 정자동 456-78",
+      "land_area_sqm": 1157.03,
+      "zoning": "제2종일반주거지역",
+      "timestamp": "2025-12-14T16:03:33.155268",
+      "status": "SUCCESS",
+      "error": null,
+      "context_id": "b2602dfa-c28c-4ae8-bb92-5a2abec94764",
+      "appraisal": {
+        "final_value": 0,
+        "value_per_sqm": 0,
+        "confidence_level": "unknown"
+      },
+      "lh_review": {
+        "predicted_score": 89.0,
+        "pass_probability": 94.0,
+        "risk_level": "LOW",
+        "factors": [
+          {
+            "factor_name": "입지 점수",
+            "score": 100.0,
+            "impact": "매우 긍정적",
+            "reason": "교통 및 도심 접근성 우수",
+            "weight": 0.25
+          },
+          {
+            "factor_name": "용도지역 적합성",
+            "score": 95.0,
+            "impact": "매우 긍정적",
+            "reason": "제2종일반주거지역, 규제 최소",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "토지가격 합리성",
+            "score": 70.0,
+            "impact": "보통",
+            "reason": "공시지가 대비 146.5% (약간 고평가)",
+            "weight": 0.15
+          },
+          {
+            "factor_name": "용적률/건폐율 실현가능성",
+            "score": 100.0,
+            "impact": "매우 긍정적",
+            "reason": "용적률 200% (최적 범위)",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "리스크 수준",
+            "score": 80.0,
+            "impact": "긍정적",
+            "reason": "리스크 낮음 (관리 가능)",
+            "weight": 0.1
+          },
+          {
+            "factor_name": "시나리오 안정성",
+            "score": 65.0,
+            "impact": "보통",
+            "reason": "목표 달성 154%, 사업성 보통",
+            "weight": 0.1
+          }
+        ]
+      },
+      "prediction_accuracy": "OUT_OF_RANGE"
+    },
+    {
+      "test_case_id": "TC005",
+      "name": "경기 수원시 장안구 조원동 (일반 주거)",
+      "address": "경기도 수원시 장안구 조원동 567-89",
+      "land_area_sqm": 925.62,
+      "zoning": "제2종일반주거지역",
+      "timestamp": "2025-12-14T16:03:41.228352",
+      "status": "SUCCESS",
+      "error": null,
+      "context_id": "393c0571-fd72-4896-88a2-b4761f80da02",
+      "appraisal": {
+        "final_value": 0,
+        "value_per_sqm": 0,
+        "confidence_level": "unknown"
+      },
+      "lh_review": {
+        "predicted_score": 82.0,
+        "pass_probability": 82.0,
+        "risk_level": "LOW",
+        "factors": [
+          {
+            "factor_name": "입지 점수",
+            "score": 72.0,
+            "impact": "긍정적",
+            "reason": "평균 이상 입지 조건",
+            "weight": 0.25
+          },
+          {
+            "factor_name": "용도지역 적합성",
+            "score": 95.0,
+            "impact": "매우 긍정적",
+            "reason": "제2종일반주거지역, 규제 최소",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "토지가격 합리성",
+            "score": 70.0,
+            "impact": "보통",
+            "reason": "공시지가 대비 121.3% (약간 고평가)",
+            "weight": 0.15
+          },
+          {
+            "factor_name": "용적률/건폐율 실현가능성",
+            "score": 100.0,
+            "impact": "매우 긍정적",
+            "reason": "용적률 200% (최적 범위)",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "리스크 수준",
+            "score": 80.0,
+            "impact": "긍정적",
+            "reason": "리스크 낮음 (관리 가능)",
+            "weight": 0.1
+          },
+          {
+            "factor_name": "시나리오 안정성",
+            "score": 65.0,
+            "impact": "보통",
+            "reason": "목표 달성 122%, 사업성 보통",
+            "weight": 0.1
+          }
+        ]
+      },
+      "prediction_accuracy": "OUT_OF_RANGE"
+    },
+    {
+      "test_case_id": "TC006",
+      "name": "서울 마포구 상암동 (DMC 단지)",
+      "address": "서울특별시 마포구 상암동 678-90",
+      "land_area_sqm": 1057.9,
+      "zoning": "준주거지역",
+      "timestamp": "2025-12-14T16:03:49.534545",
+      "status": "SUCCESS",
+      "error": null,
+      "context_id": "ee3a183a-49cc-4d7b-a068-c01fae3991f8",
+      "appraisal": {
+        "final_value": 0,
+        "value_per_sqm": 0,
+        "confidence_level": "unknown"
+      },
+      "lh_review": {
+        "predicted_score": 84.5,
+        "pass_probability": 84.5,
+        "risk_level": "MEDIUM",
+        "factors": [
+          {
+            "factor_name": "입지 점수",
+            "score": 100.0,
+            "impact": "매우 긍정적",
+            "reason": "교통 및 도심 접근성 우수",
+            "weight": 0.25
+          },
+          {
+            "factor_name": "용도지역 적합성",
+            "score": 95.0,
+            "impact": "매우 긍정적",
+            "reason": "제2종일반주거지역, 규제 최소",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "토지가격 합리성",
+            "score": 40.0,
+            "impact": "부정적",
+            "reason": "공시지가 대비 173.4% (과도한 가격)",
+            "weight": 0.15
+          },
+          {
+            "factor_name": "용적률/건폐율 실현가능성",
+            "score": 100.0,
+            "impact": "매우 긍정적",
+            "reason": "용적률 200% (최적 범위)",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "리스크 수준",
+            "score": 80.0,
+            "impact": "긍정적",
+            "reason": "리스크 낮음 (관리 가능)",
+            "weight": 0.1
+          },
+          {
+            "factor_name": "시나리오 안정성",
+            "score": 65.0,
+            "impact": "보통",
+            "reason": "목표 달성 140%, 사업성 보통",
+            "weight": 0.1
+          }
+        ]
+      },
+      "prediction_accuracy": "WITHIN_RANGE"
+    },
+    {
+      "test_case_id": "TC007",
+      "name": "서울 영등포구 당산동 (주상복합 가능)",
+      "address": "서울특별시 영등포구 당산동 789-01",
+      "land_area_sqm": 1256.2,
+      "zoning": "준주거지역",
+      "timestamp": "2025-12-14T16:03:57.823149",
+      "status": "SUCCESS",
+      "error": null,
+      "context_id": "cffa93f2-464c-48f0-ba0d-5f98848dc8c9",
+      "appraisal": {
+        "final_value": 0,
+        "value_per_sqm": 0,
+        "confidence_level": "unknown"
+      },
+      "lh_review": {
+        "predicted_score": 85.5,
+        "pass_probability": 90.5,
+        "risk_level": "LOW",
+        "factors": [
+          {
+            "factor_name": "입지 점수",
+            "score": 86.0,
+            "impact": "매우 긍정적",
+            "reason": "교통 및 도심 접근성 우수",
+            "weight": 0.25
+          },
+          {
+            "factor_name": "용도지역 적합성",
+            "score": 95.0,
+            "impact": "매우 긍정적",
+            "reason": "제2종일반주거지역, 규제 최소",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "토지가격 합리성",
+            "score": 70.0,
+            "impact": "보통",
+            "reason": "공시지가 대비 131.8% (약간 고평가)",
+            "weight": 0.15
+          },
+          {
+            "factor_name": "용적률/건폐율 실현가능성",
+            "score": 100.0,
+            "impact": "매우 긍정적",
+            "reason": "용적률 200% (최적 범위)",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "리스크 수준",
+            "score": 80.0,
+            "impact": "긍정적",
+            "reason": "리스크 낮음 (관리 가능)",
+            "weight": 0.1
+          },
+          {
+            "factor_name": "시나리오 안정성",
+            "score": 65.0,
+            "impact": "보통",
+            "reason": "목표 달성 166%, 사업성 보통",
+            "weight": 0.1
+          }
+        ]
+      },
+      "prediction_accuracy": "OUT_OF_RANGE"
+    },
+    {
+      "test_case_id": "TC008",
+      "name": "경기 고양시 일산동구 백석동 (신도시)",
+      "address": "경기도 고양시 일산동구 백석동 890-12",
+      "land_area_sqm": 991.74,
+      "zoning": "제2종일반주거지역",
+      "timestamp": "2025-12-14T16:04:06.121013",
+      "status": "SUCCESS",
+      "error": null,
+      "context_id": "668e9274-439e-48c3-a837-c862fea3aced",
+      "appraisal": {
+        "final_value": 0,
+        "value_per_sqm": 0,
+        "confidence_level": "unknown"
+      },
+      "lh_review": {
+        "predicted_score": 82.0,
+        "pass_probability": 82.0,
+        "risk_level": "LOW",
+        "factors": [
+          {
+            "factor_name": "입지 점수",
+            "score": 72.0,
+            "impact": "긍정적",
+            "reason": "평균 이상 입지 조건",
+            "weight": 0.25
+          },
+          {
+            "factor_name": "용도지역 적합성",
+            "score": 95.0,
+            "impact": "매우 긍정적",
+            "reason": "제2종일반주거지역, 규제 최소",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "토지가격 합리성",
+            "score": 70.0,
+            "impact": "보통",
+            "reason": "공시지가 대비 121.3% (약간 고평가)",
+            "weight": 0.15
+          },
+          {
+            "factor_name": "용적률/건폐율 실현가능성",
+            "score": 100.0,
+            "impact": "매우 긍정적",
+            "reason": "용적률 200% (최적 범위)",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "리스크 수준",
+            "score": 80.0,
+            "impact": "긍정적",
+            "reason": "리스크 낮음 (관리 가능)",
+            "weight": 0.1
+          },
+          {
+            "factor_name": "시나리오 안정성",
+            "score": 65.0,
+            "impact": "보통",
+            "reason": "목표 달성 132%, 사업성 보통",
+            "weight": 0.1
+          }
+        ]
+      },
+      "prediction_accuracy": "OUT_OF_RANGE"
+    },
+    {
+      "test_case_id": "TC009",
+      "name": "서울 노원구 상계동 (대단지 주거)",
+      "address": "서울특별시 노원구 상계동 901-23",
+      "land_area_sqm": 859.5,
+      "zoning": "제2종일반주거지역",
+      "timestamp": "2025-12-14T16:04:17.985902",
+      "status": "SUCCESS",
+      "error": null,
+      "context_id": "ad20d92e-a192-418c-8a3e-7c2fc14f7e87",
+      "appraisal": {
+        "final_value": 0,
+        "value_per_sqm": 0,
+        "confidence_level": "unknown"
+      },
+      "lh_review": {
+        "predicted_score": 85.5,
+        "pass_probability": 90.5,
+        "risk_level": "LOW",
+        "factors": [
+          {
+            "factor_name": "입지 점수",
+            "score": 86.0,
+            "impact": "매우 긍정적",
+            "reason": "교통 및 도심 접근성 우수",
+            "weight": 0.25
+          },
+          {
+            "factor_name": "용도지역 적합성",
+            "score": 95.0,
+            "impact": "매우 긍정적",
+            "reason": "제2종일반주거지역, 규제 최소",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "토지가격 합리성",
+            "score": 70.0,
+            "impact": "보통",
+            "reason": "공시지가 대비 132.8% (약간 고평가)",
+            "weight": 0.15
+          },
+          {
+            "factor_name": "용적률/건폐율 실현가능성",
+            "score": 100.0,
+            "impact": "매우 긍정적",
+            "reason": "용적률 200% (최적 범위)",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "리스크 수준",
+            "score": 80.0,
+            "impact": "긍정적",
+            "reason": "리스크 낮음 (관리 가능)",
+            "weight": 0.1
+          },
+          {
+            "factor_name": "시나리오 안정성",
+            "score": 65.0,
+            "impact": "보통",
+            "reason": "목표 달성 114%, 사업성 보통",
+            "weight": 0.1
+          }
+        ]
+      },
+      "prediction_accuracy": "OUT_OF_RANGE"
+    },
+    {
+      "test_case_id": "TC010",
+      "name": "경기 화성시 동탄동 (신도시)",
+      "address": "경기도 화성시 동탄2동 012-34",
+      "land_area_sqm": 1157.03,
+      "zoning": "제2종일반주거지역",
+      "timestamp": "2025-12-14T16:04:26.314127",
+      "status": "SUCCESS",
+      "error": null,
+      "context_id": "56c22bf3-0953-4aaa-b7ec-9ab879fa6679",
+      "appraisal": {
+        "final_value": 0,
+        "value_per_sqm": 0,
+        "confidence_level": "unknown"
+      },
+      "lh_review": {
+        "predicted_score": 82.0,
+        "pass_probability": 82.0,
+        "risk_level": "LOW",
+        "factors": [
+          {
+            "factor_name": "입지 점수",
+            "score": 72.0,
+            "impact": "긍정적",
+            "reason": "평균 이상 입지 조건",
+            "weight": 0.25
+          },
+          {
+            "factor_name": "용도지역 적합성",
+            "score": 95.0,
+            "impact": "매우 긍정적",
+            "reason": "제2종일반주거지역, 규제 최소",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "토지가격 합리성",
+            "score": 70.0,
+            "impact": "보통",
+            "reason": "공시지가 대비 120.7% (약간 고평가)",
+            "weight": 0.15
+          },
+          {
+            "factor_name": "용적률/건폐율 실현가능성",
+            "score": 100.0,
+            "impact": "매우 긍정적",
+            "reason": "용적률 200% (최적 범위)",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "리스크 수준",
+            "score": 80.0,
+            "impact": "긍정적",
+            "reason": "리스크 낮음 (관리 가능)",
+            "weight": 0.1
+          },
+          {
+            "factor_name": "시나리오 안정성",
+            "score": 65.0,
+            "impact": "보통",
+            "reason": "목표 달성 154%, 사업성 보통",
+            "weight": 0.1
+          }
+        ]
+      },
+      "prediction_accuracy": "OUT_OF_RANGE"
+    },
+    {
+      "test_case_id": "TC011",
+      "name": "서울 강서구 화곡동 (서울 서부)",
+      "address": "서울특별시 강서구 화곡동 123-45",
+      "land_area_sqm": 925.62,
+      "zoning": "제2종일반주거지역",
+      "timestamp": "2025-12-14T16:04:33.861146",
+      "status": "SUCCESS",
+      "error": null,
+      "context_id": "a72deab7-2f65-49a4-91c3-5ec0638ce64f",
+      "appraisal": {
+        "final_value": 0,
+        "value_per_sqm": 0,
+        "confidence_level": "unknown"
+      },
+      "lh_review": {
+        "predicted_score": 85.5,
+        "pass_probability": 90.5,
+        "risk_level": "LOW",
+        "factors": [
+          {
+            "factor_name": "입지 점수",
+            "score": 86.0,
+            "impact": "매우 긍정적",
+            "reason": "교통 및 도심 접근성 우수",
+            "weight": 0.25
+          },
+          {
+            "factor_name": "용도지역 적합성",
+            "score": 95.0,
+            "impact": "매우 긍정적",
+            "reason": "제2종일반주거지역, 규제 최소",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "토지가격 합리성",
+            "score": 70.0,
+            "impact": "보통",
+            "reason": "공시지가 대비 125.1% (약간 고평가)",
+            "weight": 0.15
+          },
+          {
+            "factor_name": "용적률/건폐율 실현가능성",
+            "score": 100.0,
+            "impact": "매우 긍정적",
+            "reason": "용적률 200% (최적 범위)",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "리스크 수준",
+            "score": 80.0,
+            "impact": "긍정적",
+            "reason": "리스크 낮음 (관리 가능)",
+            "weight": 0.1
+          },
+          {
+            "factor_name": "시나리오 안정성",
+            "score": 65.0,
+            "impact": "보통",
+            "reason": "목표 달성 122%, 사업성 보통",
+            "weight": 0.1
+          }
+        ]
+      },
+      "prediction_accuracy": "OUT_OF_RANGE"
+    },
+    {
+      "test_case_id": "TC012",
+      "name": "경기 용인시 수지구 동천동 (신도시)",
+      "address": "경기도 용인시 수지구 동천동 234-56",
+      "land_area_sqm": 1057.9,
+      "zoning": "제2종일반주거지역",
+      "timestamp": "2025-12-14T16:04:42.241191",
+      "status": "SUCCESS",
+      "error": null,
+      "context_id": "bd9756fb-d8be-4e05-a7c6-e4ce57d6de40",
+      "appraisal": {
+        "final_value": 0,
+        "value_per_sqm": 0,
+        "confidence_level": "unknown"
+      },
+      "lh_review": {
+        "predicted_score": 82.0,
+        "pass_probability": 82.0,
+        "risk_level": "LOW",
+        "factors": [
+          {
+            "factor_name": "입지 점수",
+            "score": 72.0,
+            "impact": "긍정적",
+            "reason": "평균 이상 입지 조건",
+            "weight": 0.25
+          },
+          {
+            "factor_name": "용도지역 적합성",
+            "score": 95.0,
+            "impact": "매우 긍정적",
+            "reason": "제2종일반주거지역, 규제 최소",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "토지가격 합리성",
+            "score": 70.0,
+            "impact": "보통",
+            "reason": "공시지가 대비 123.4% (약간 고평가)",
+            "weight": 0.15
+          },
+          {
+            "factor_name": "용적률/건폐율 실현가능성",
+            "score": 100.0,
+            "impact": "매우 긍정적",
+            "reason": "용적률 200% (최적 범위)",
+            "weight": 0.2
+          },
+          {
+            "factor_name": "리스크 수준",
+            "score": 80.0,
+            "impact": "긍정적",
+            "reason": "리스크 낮음 (관리 가능)",
+            "weight": 0.1
+          },
+          {
+            "factor_name": "시나리오 안정성",
+            "score": 65.0,
+            "impact": "보통",
+            "reason": "목표 달성 140%, 사업성 보통",
+            "weight": 0.1
+          }
+        ]
+      },
+      "prediction_accuracy": "OUT_OF_RANGE"
+    }
+  ]
+}

@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite 도시개발 OS - LH 신축매입임대 토지진단·규모검토·감정평가 자동화</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
+</head>
+<body>
+    <!-- Hero Area -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <i class="fas fa-bolt"></i>
+                    <span>ZeroSite v24.1 Production Ready</span>
+                </div>
+                <h1 class="hero-title">
+                    ZeroSite 도시개발 OS
+                </h1>
+                <p class="hero-subtitle">
+                    LH 신축매입임대 토지진단·규모검토·감정평가 자동화
+                </p>
+                <p class="hero-description">
+                    13가지 AI 엔진 기반 / 5가지 보고서 자동 생성 / 실시간 시나리오 분석 / Multi-Parcel 합필 최적화
+                </p>
+                
+                <!-- 3 Main CTA Buttons -->
+                <div class="hero-cta">
+                    <button class="btn btn-primary" onclick="navigateTo('diagnose')">
+                        <i class="fas fa-search"></i>
+                        토지진단 시작
+                    </button>
+                    <button class="btn btn-secondary" onclick="navigateTo('capacity')">
+                        <i class="fas fa-building"></i>
+                        규모 검토
+                    </button>
+                    <button class="btn btn-accent" onclick="navigateTo('appraisal')">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        감정평가
+                    </button>
+                </div>
+                
+                <!-- Quick Stats -->
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">13</div>
+                        <div class="stat-label">AI 엔진</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">5</div>
+                        <div class="stat-label">보고서 유형</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">자동화</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">&lt;3s</div>
+                        <div class="stat-label">분석 속도</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6-Card UI Section -->
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">6대 핵심 기능</h2>
+            <p class="section-subtitle">ZeroSite가 제공하는 완전한 토지개발 의사결정 프로세스</p>
+            
+            <div class="cards-grid">
+                <!-- Card 1: 토지 진단 -->
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="0">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #005BAC 0%, #0073D1 100%);">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </div>
+                    <h3 class="card-title">토지 진단</h3>
+                    <p class="card-description">
+                        용도지역·용적률·건폐율 자동 판별<br>
+                        완화규정 적용 및 법규 준수성 검토
+                    </p>
+                    <div class="card-tags">
+                        <span class="tag">Zoning Engine</span>
+                        <span class="tag">FAR Engine</span>
+                        <span class="tag">Relaxation Engine</span>
+                    </div>
+                    <button class="btn-card" onclick="navigateTo('diagnose')">
+                        진단 시작
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Card 2: 건축 규모 검토 -->
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #FF7A00 0%, #FFA500 100%);">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <h3 class="card-title">건축 규모 검토</h3>
+                    <p class="card-description">
+                        최대 세대수·층수·유닛타입 자동 산출<br>
+                        Mass Simulation 3D 배치 시뮬레이션
+                    </p>
+                    <div class="card-tags">
+                        <span class="tag">Capacity Engine</span>
+                        <span class="tag">Unit Type Engine</span>
+                        <span class="tag">Mass Sketch</span>
+                    </div>
+                    <button class="btn-card" onclick="navigateTo('capacity')">
+                        규모 검토
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Card 3: 토지 감정평가 -->
+                <div class="feature-card card-highlight" data-aos="fade-up" data-aos-delay="200">
+                    <div class="card-badge">NEW</div>
+                    <div class="card-icon" style="background: linear-gradient(135deg, #23A860 0%, #2ECC71 100%);">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                    </div>
+                    <h3 class="card-title">토지 감정평가</h3>
+                    <p class="card-description">
+                        인근 거래 사례 기반 시장가 산정<br>
+                        교통·편의시설 접근성 스코어링
+                    </p>
+                    <div class="card-tags">
+                        <span class="tag">Market Engine</span>
+                        <span class="tag">Appraisal Engine</span>
+                        <span class="tag">Transport Score</span>
+                    </div>
+                    <button class="btn-card btn-card-highlight" onclick="navigateTo('appraisal')">
+                        감정평가 실행
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Card 4: 시나리오 A/B/C -->
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #9B59B6 0%, #8E44AD 100%);">
+                        <i class="fas fa-code-branch"></i>
+                    </div>
+                    <h3 class="card-title">시나리오 A/B/C</h3>
+                    <p class="card-description">
+                        소형 중심 / 중대형 중심 / 고령자형<br>
+                        3가지 시나리오 수익성 비교 분석
+                    </p>
+                    <div class="card-tags">
+                        <span class="tag">Scenario Engine</span>
+                        <span class="tag">Financial Engine</span>
+                        <span class="tag">Risk Engine</span>
+                    </div>
+                    <button class="btn-card" onclick="navigateTo('scenario')">
+                        시나리오 비교
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Card 5: Multi-Parcel 합필 분석 -->
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #E74C3C 0%, #C0392B 100%);">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <h3 class="card-title">Multi-Parcel 합필 분석</h3>
+                    <p class="card-description">
+                        인접 필지 자동 탐색 및 조합 최적화<br>
+                        유전 알고리즘 기반 최적 합필안 도출
+                    </p>
+                    <div class="card-tags">
+                        <span class="tag">Multi-Parcel Engine</span>
+                        <span class="tag">Genetic Algorithm</span>
+                        <span class="tag">Synergy Score</span>
+                    </div>
+                    <button class="btn-card" onclick="navigateTo('multi-parcel')">
+                        합필 분석
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Card 6: 보고서 5종 생성 -->
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="500">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #FFCC00 0%, #FFD700 100%);">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <h3 class="card-title">보고서 5종 생성</h3>
+                    <p class="card-description">
+                        토지주 요약 / LH 제출용 / 전문가용<br>
+                        정책영향 / 사업자용 PDF 자동 생성
+                    </p>
+                    <div class="card-tags">
+                        <span class="tag">Report Engine</span>
+                        <span class="tag">Visualization</span>
+                        <span class="tag">PDF Export</span>
+                    </div>
+                    <button class="btn-card" onclick="navigateTo('reports')">
+                        보고서 생성
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Process Flow Section -->
+    <section class="process">
+        <div class="container">
+            <h2 class="section-title">ZeroSite 분석 프로세스</h2>
+            <p class="section-subtitle">입력부터 보고서 생성까지 완전 자동화</p>
+            
+            <div class="process-flow">
+                <div class="process-step">
+                    <div class="step-number">1</div>
+                    <div class="step-icon"><i class="fas fa-upload"></i></div>
+                    <h4>토지 정보 입력</h4>
+                    <p>주소, 면적, 용도지역, 감정가</p>
+                </div>
+                <div class="process-arrow"><i class="fas fa-arrow-right"></i></div>
+                
+                <div class="process-step">
+                    <div class="step-number">2</div>
+                    <div class="step-icon"><i class="fas fa-cogs"></i></div>
+                    <h4>13가지 AI 엔진 분석</h4>
+                    <p>동시 병렬 처리 &lt;3초</p>
+                </div>
+                <div class="process-arrow"><i class="fas fa-arrow-right"></i></div>
+                
+                <div class="process-step">
+                    <div class="step-number">3</div>
+                    <div class="step-icon"><i class="fas fa-chart-bar"></i></div>
+                    <h4>6가지 시각화 생성</h4>
+                    <p>차트·그래프·3D 배치도</p>
+                </div>
+                <div class="process-arrow"><i class="fas fa-arrow-right"></i></div>
+                
+                <div class="process-step">
+                    <div class="step-number">4</div>
+                    <div class="step-icon"><i class="fas fa-balance-scale"></i></div>
+                    <h4>사업성 판단</h4>
+                    <p>ROI·IRR·리스크 평가</p>
+                </div>
+                <div class="process-arrow"><i class="fas fa-arrow-right"></i></div>
+                
+                <div class="process-step">
+                    <div class="step-number">5</div>
+                    <div class="step-icon"><i class="fas fa-file-pdf"></i></div>
+                    <h4>5가지 보고서 생성</h4>
+                    <p>PDF 자동 출력</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer: 13 Engines -->
+    <footer class="engines">
+        <div class="container">
+            <h2 class="section-title">13가지 AI 엔진 아키텍처</h2>
+            <p class="section-subtitle">ZeroSite v24.1 Core Technology Stack</p>
+            
+            <div class="engine-diagram">
+                <div class="engine-layer">
+                    <h3 class="layer-title">Input Layer</h3>
+                    <div class="layer-content">
+                        <div class="engine-item">
+                            <i class="fas fa-database"></i>
+                            <span>토지 정보</span>
+                        </div>
+                        <div class="engine-item">
+                            <i class="fas fa-map"></i>
+                            <span>법규 정보</span>
+                        </div>
+                        <div class="engine-item">
+                            <i class="fas fa-chart-line"></i>
+                            <span>시장 데이터</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="engine-arrow-down"><i class="fas fa-arrow-down"></i></div>
+                
+                <div class="engine-layer layer-main">
+                    <h3 class="layer-title">13 Core Engines</h3>
+                    <div class="engines-grid">
+                        <div class="engine-box">
+                            <div class="engine-number">1</div>
+                            <div class="engine-name">Zoning Engine</div>
+                            <div class="engine-desc">용도지역 분석</div>
+                        </div>
+                        <div class="engine-box">
+                            <div class="engine-number">2</div>
+                            <div class="engine-name">FAR Engine</div>
+                            <div class="engine-desc">용적률 계산</div>
+                        </div>
+                        <div class="engine-box">
+                            <div class="engine-number">3</div>
+                            <div class="engine-name">Relaxation Engine</div>
+                            <div class="engine-desc">완화규정 적용</div>
+                        </div>
+                        <div class="engine-box">
+                            <div class="engine-number">4</div>
+                            <div class="engine-name">Capacity Engine</div>
+                            <div class="engine-desc">건축 규모 산출</div>
+                        </div>
+                        <div class="engine-box">
+                            <div class="engine-number">5</div>
+                            <div class="engine-name">Unit Type Engine</div>
+                            <div class="engine-desc">유닛 수요 분석</div>
+                        </div>
+                        <div class="engine-box">
+                            <div class="engine-number">6</div>
+                            <div class="engine-name">Transport Score</div>
+                            <div class="engine-desc">교통 접근성</div>
+                        </div>
+                        <div class="engine-box">
+                            <div class="engine-number">7</div>
+                            <div class="engine-name">Market Engine</div>
+                            <div class="engine-desc">시장 가격 분석</div>
+                        </div>
+                        <div class="engine-box">
+                            <div class="engine-number">8</div>
+                            <div class="engine-name">Appraisal Engine</div>
+                            <div class="engine-desc">감정 평가</div>
+                        </div>
+                        <div class="engine-box">
+                            <div class="engine-number">9</div>
+                            <div class="engine-name">Verified Cost</div>
+                            <div class="engine-desc">공사비 산정</div>
+                        </div>
+                        <div class="engine-box">
+                            <div class="engine-number">10</div>
+                            <div class="engine-name">Financial Engine</div>
+                            <div class="engine-desc">재무 분석</div>
+                        </div>
+                        <div class="engine-box">
+                            <div class="engine-number">11</div>
+                            <div class="engine-name">Risk Engine</div>
+                            <div class="engine-desc">리스크 평가</div>
+                        </div>
+                        <div class="engine-box">
+                            <div class="engine-number">12</div>
+                            <div class="engine-name">Scenario Engine</div>
+                            <div class="engine-desc">A/B/C 비교</div>
+                        </div>
+                        <div class="engine-box">
+                            <div class="engine-number">13</div>
+                            <div class="engine-name">Multi-Parcel</div>
+                            <div class="engine-desc">합필 최적화</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="engine-arrow-down"><i class="fas fa-arrow-down"></i></div>
+                
+                <div class="engine-layer">
+                    <h3 class="layer-title">Visualization Layer</h3>
+                    <div class="layer-content">
+                        <div class="engine-item">
+                            <i class="fas fa-chart-waterfall"></i>
+                            <span>Financial Waterfall</span>
+                        </div>
+                        <div class="engine-item">
+                            <i class="fas fa-chart-area"></i>
+                            <span>Market Histogram</span>
+                        </div>
+                        <div class="engine-item">
+                            <i class="fas fa-fire"></i>
+                            <span>Risk Heatmap</span>
+                        </div>
+                        <div class="engine-item">
+                            <i class="fas fa-cube"></i>
+                            <span>Mass Simulation 3D</span>
+                        </div>
+                        <div class="engine-item">
+                            <i class="fas fa-chart-pie"></i>
+                            <span>Type Distribution</span>
+                        </div>
+                        <div class="engine-item">
+                            <i class="fas fa-chart-line"></i>
+                            <span>FAR Change Chart</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="engine-arrow-down"><i class="fas fa-arrow-down"></i></div>
+                
+                <div class="engine-layer">
+                    <h3 class="layer-title">Output Layer</h3>
+                    <div class="layer-content">
+                        <div class="engine-item">
+                            <i class="fas fa-file-pdf"></i>
+                            <span>5가지 보고서</span>
+                        </div>
+                        <div class="engine-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span>GO/NO-GO 판단</span>
+                        </div>
+                        <div class="engine-item">
+                            <i class="fas fa-download"></i>
+                            <span>데이터 내보내기</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer Info -->
+            <div class="footer-info">
+                <div class="footer-logo">
+                    <i class="fas fa-city"></i>
+                    <span>ZeroSite v24.1</span>
+                </div>
+                <div class="footer-links">
+                    <a href="/docs" target="_blank">API 문서</a>
+                    <a href="/api/v24.1" target="_blank">엔드포인트</a>
+                    <a href="https://github.com/hellodesignthinking-png/LHproject" target="_blank">GitHub</a>
+                </div>
+                <div class="footer-copyright">
+                    © 2025 ZeroSite Development Team. All rights reserved.<br>
+                    Powered by FastAPI + Python + 13 AI Engines
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true
+        });
+    </script>
+</body>
+</html>

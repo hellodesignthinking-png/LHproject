@@ -1,14 +1,11 @@
 """
-ZeroSite v24 - Visualization Engines Package
-===========================================
-
-This package contains 6 visualization engines for generating
-interactive charts, maps, and 3D visualizations.
-
-Author: ZeroSite Development Team
-Version: 24.0.0
+ZeroSite v24.1 - Visualization Module
 """
 
-from .far_chart_engine import FARChartEngine
+from .waterfall_chart_v241 import WaterfallChartGenerator
+from .mass_sketch_v241 import MassSketchGenerator
 
-__all__ = ['FARChartEngine']
+__all__ = [
+    "WaterfallChartGenerator",
+    "MassSketchGenerator"
+]
