@@ -161,23 +161,49 @@ async def fetch_land_data(request: AddressRequest):
 @router.get("/health")
 async def check_api_health():
     """
-    API 키 설정 상태 확인
+    API 키 설정 상태 확인 (상세 정보 포함)
+
+    실제 API 키가 설정되어 있는지, 아니면 예제 키를 사용중인지 확인합니다.
     """
     import os
     from dotenv import load_dotenv
-    
+
     # Ensure .env is loaded
     load_dotenv()
-    
+
     kakao_key = os.getenv("KAKAO_REST_API_KEY")
     data_key = os.getenv("DATA_GO_KR_API_KEY") or os.getenv("MOIS_API_KEY")
     vworld_key = os.getenv("VWORLD_API_KEY") or os.getenv("LAND_REGULATION_API_KEY")
-    
+
+    # Check if using example/placeholder keys
+    kakao_is_example = kakao_key and ("your_" in kakao_key or "example" in kakao_key)
+    data_is_example = data_key and ("your_" in data_key or "example" in data_key)
+    vworld_is_example = vworld_key and ("your_" in vworld_key or "example" in vworld_key)
+
+    kakao_status = "✅ 설정됨" if kakao_key and not kakao_is_example else ("⚠️ 예제 키 사용중" if kakao_is_example else "❌ 미설정")
+    data_status = "✅ 설정됨" if data_key and not data_is_example else ("⚠️ 예제 키 사용중" if data_is_example else "❌ 미설정")
+    vworld_status = "✅ 설정됨" if vworld_key and not vworld_is_example else ("⚠️ 예제 키 사용중" if vworld_is_example else "❌ 미설정")
+
+    all_ready = all([
+        kakao_key and not kakao_is_example,
+        data_key and not data_is_example,
+        vworld_key and not vworld_is_example
+    ])
+
     return {
-        "kakao_api": "✅ 설정됨" if kakao_key else "❌ 미설정",
-        "data_go_kr_api": "✅ 설정됨" if data_key else "❌ 미설정",
-        "vworld_api": "✅ 설정됨" if vworld_key else "❌ 미설정",
-        "status": "ready" if all([kakao_key, data_key, vworld_key]) else "api_keys_missing"
+        "service": "Land Data API v3.4",
+        "status": "ready" if all_ready else ("partial" if any([kakao_key, data_key, vworld_key]) else "not_configured"),
+        "api_keys": {
+            "kakao_rest_api": kakao_status,
+            "data_go_kr_api": data_status,
+            "vworld_api": vworld_status
+        },
+        "message": (
+            "✅ 모든 API 키가 올바르게 설정되었습니다." if all_ready else
+            "⚠️ 일부 API 키가 설정되지 않았거나 예제 키를 사용중입니다. Mock 데이터로 테스트할 수 있습니다." if any([kakao_key, data_key, vworld_key]) else
+            "❌ API 키가 설정되지 않았습니다. .env 파일을 생성하고 API 키를 설정해주세요."
+        ),
+        "setup_guide": "https://github.com/hellodesignthinking-png/LHproject#-설치-및-실행"
     }
 
 

@@ -454,6 +454,25 @@ async function lookupAddress() {
             console.warn('⚠️ 서버 응답 스키마:', data);
         }
         
+        // ⚠️ Check for warnings (Mock data usage)
+        if (data.warning) {
+            const useAnyway = confirm(
+                `${data.warning}\n\n` +
+                `API 키 상태:\n` +
+                `- 카카오: ${data.api_key_status?.kakao || '미확인'}\n` +
+                `- 공공데이터: ${data.api_key_status?.data_go_kr || '미확인'}\n` +
+                `- VWorld: ${data.api_key_status?.vworld || '미확인'}\n\n` +
+                `계속하시겠습니까? (Mock 데이터로 진행)`
+            );
+
+            if (!useAnyway) {
+                // Reset button
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+                return;
+            }
+        }
+
         if (data.success && data.land_data) {
             // Store lookup data (convert to old format for compatibility)
             const landData = data.land_data;
@@ -635,11 +654,27 @@ function displayLandData(data) {
     if (dataSourceText) {
         const source = data.data_source || landData.data_source || 'api';
         if (source === 'mock') {
-            dataSourceText.innerHTML = '<i class="fas fa-flask"></i> 데이터 출처: 테스트 목업 데이터 (실제 API 연결 실패)';
-            dataSourceText.style.color = 'var(--warning)';
+            dataSourceText.innerHTML = `
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>경고:</strong> 테스트용 Mock 데이터 사용중 (실제 API 연결 실패)
+                <br>
+                <small style="margin-left: 1.5rem;">
+                    실제 데이터를 조회하려면 .env 파일에 API 키를 설정해주세요.
+                    <a href="https://github.com/hellodesignthinking-png/LHproject#-설치-및-실행" target="_blank">설정 가이드 →</a>
+                </small>
+            `;
+            dataSourceText.style.color = '#ff9800';
+            dataSourceText.style.backgroundColor = '#fff3e0';
+            dataSourceText.style.padding = '1rem';
+            dataSourceText.style.borderRadius = '8px';
+            dataSourceText.style.border = '2px solid #ff9800';
         } else {
-            dataSourceText.innerHTML = '<i class="fas fa-database"></i> 데이터 출처: 정부 공공데이터 API';
-            dataSourceText.style.color = 'var(--text-secondary)';
+            dataSourceText.innerHTML = '<i class="fas fa-database"></i> 데이터 출처: 정부 공공데이터 API (실제 데이터)';
+            dataSourceText.style.color = '#4caf50';
+            dataSourceText.style.backgroundColor = '#e8f5e9';
+            dataSourceText.style.padding = '0.5rem';
+            dataSourceText.style.borderRadius = '4px';
+            dataSourceText.style.border = '1px solid #4caf50';
         }
     }
 }

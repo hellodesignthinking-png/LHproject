@@ -154,9 +154,17 @@ class LandDataService:
             # 1. 주소 → 좌표 및 PNU 변환 (카카오 API)
             location_info = self._get_location_from_address(address)
             if not location_info:
-                # 네트워크 문제로 카카오 API 실패 시 Mock 데이터 사용 (개발/테스트용)
-                print("⚠️ Kakao API failed. Using mock data for testing...")
-                return self._get_mock_data_for_testing(address)
+                # ⚠️ API 키 확인 필요 - 실제 데이터를 가져올 수 없음
+                print("⚠️ Kakao API failed. Returning Mock data with warning...")
+                mock_result = self._get_mock_data_for_testing(address)
+                # 사용자에게 Mock 데이터임을 명확히 알림
+                mock_result["warning"] = "⚠️ 카카오 API 연결 실패: API 키를 확인해주세요. 현재 테스트용 Mock 데이터를 표시중입니다."
+                mock_result["api_key_status"] = {
+                    "kakao": "설정필요" if not self.kakao_api_key or "your_" in self.kakao_api_key else "설정됨",
+                    "data_go_kr": "설정필요" if not self.data_go_kr_key or "your_" in self.data_go_kr_key else "설정됨",
+                    "vworld": "설정필요" if not self.vworld_api_key or "your_" in self.vworld_api_key else "설정됨"
+                }
+                return mock_result
             
             pnu = location_info.get("pnu", "")
             sido_code = pnu[:2] if pnu else ""
