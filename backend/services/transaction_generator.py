@@ -96,7 +96,8 @@ class EnhancedTransactionGenerator:
         target_zone: str,
         target_size_sqm: float,
         radius_km: float = 1.5,
-        count: int = 10
+        count: int = 10,
+        seed: int = None  # 🔧 NEW: Seed for deterministic generation
     ) -> List[Transaction]:
         """
         Generate N comparable transactions dynamically
@@ -120,6 +121,10 @@ class EnhancedTransactionGenerator:
         Returns:
             List of Transaction objects sorted by distance
         """
+        # 🔧 Set random seed for deterministic generation
+        if seed is not None:
+            random.seed(seed)
+        
         base_price = self._get_base_price(region, district)
         transactions = []
         

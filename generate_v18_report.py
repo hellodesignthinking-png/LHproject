@@ -69,7 +69,7 @@ def generate_v18_report(address: str, land_area_m2: float, output_filename: str 
             'generated_date': datetime.now().strftime('%Y년 %m월 %d일'),
             'version': 'ZeroSite v18.0',
             'submitter': 'ZeroSite / Antenna Holdings',
-            'author': '나태흠 (Na Tae-heum)',
+            'author': '나태흠 (nataiheum)',
             'author_email': 'taina@ant3na.com',
             'copyright': '© 2025 Antenna Holdings. All rights reserved.',
         },

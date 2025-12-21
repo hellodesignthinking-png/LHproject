@@ -1,0 +1,1148 @@
+"""
+모듈별 PDF 보고서 생성기 (한글 완벽 지원)
+==========================================
+
+각 모듈(M2-M6)의 상세 데이터를 PDF 보고서로 변환
+
+Features:
+- 한글 폰트 완벽 지원 (나눔바른고딕)
+- 차트 및 시각화
+- 프로페셔널한 레이아웃
+- 모든 세부 데이터 포함
+
+Author: ZeroSite Team
+Date: 2025-12-18 (Updated)
+"""
+
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch, cm
+from reportlab.platypus import (
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, 
+    PageBreak, Image, KeepTogether
+)
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
+from datetime import datetime
+import io
+from typing import Dict, Any, List
+import logging
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')  # Non-interactive backend
+
+logger = logging.getLogger(__name__)
+
+
+class ModulePDFGenerator:
+    """모듈별 PDF 생성기 (한글 완벽 지원)"""
+    
+    def __init__(self):
+        """초기화 - 한글 폰트 등록"""
+        self.korean_font_available = False
+        self.font_name = 'NanumGothic'
+        self.font_name_bold = 'NanumGothicBold'
+        
+        try:
+            # 나눔바른고딕 폰트 등록 (한글 지원)
+            pdfmetrics.registerFont(TTFont('NanumGothic', '/usr/share/fonts/truetype/nanum/NanumBarunGothic.ttf'))
+            pdfmetrics.registerFont(TTFont('NanumGothicBold', '/usr/share/fonts/truetype/nanum/NanumBarunGothicBold.ttf'))
+            self.korean_font_available = True
+            logger.info("✅ Korean font (NanumBarunGothic) registered successfully")
+        except Exception as e:
+            logger.error(f"❌ Korean font registration failed: {e}")
+            # Fallback to Helvetica (ASCII only)
+            self.font_name = 'Helvetica'
+            self.font_name_bold = 'Helvetica-Bold'
+            logger.warning("⚠️ Using Helvetica font (limited Korean support)")
+    
+    def _get_styles(self):
+        """한글 폰트가 적용된 스타일 반환"""
+        styles = getSampleStyleSheet()
+        
+        # 기본 스타일에 한글 폰트 적용
+        styles['Normal'].fontName = self.font_name
+        styles['Normal'].fontSize = 10
+        styles['Normal'].leading = 14
+        
+        styles['Heading1'].fontName = self.font_name_bold
+        styles['Heading1'].fontSize = 18
+        
+        styles['Heading2'].fontName = self.font_name_bold
+        styles['Heading2'].fontSize = 14
+        
+        styles['Italic'].fontName = self.font_name
+        styles['Italic'].fontSize = 9
+        
+        return styles
+    
+    def _create_table_style(self, header_color):
+        """공통 테이블 스타일 생성"""
+        return TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), header_color),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, -1), self.font_name),
+            ('FONTNAME', (0, 0), (-1, 0), self.font_name_bold),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+            ('TOPPADDING', (0, 1), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.Color(0.95, 0.95, 0.95)]),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ])
+    
+    def generate_m2_appraisal_pdf(self, data: Dict[str, Any]) -> bytes:
+        """M2 토지감정평가 PDF 생성 (전체 데이터 포함)"""
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            rightMargin=2*cm,
+            leftMargin=2*cm,
+            topMargin=2*cm,
+            bottomMargin=2*cm
+        )
+        
+        # 스타일 정의
+        styles = self._get_styles()
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontName=self.font_name_bold,
+            fontSize=20,
+            textColor=colors.HexColor('#1976D2'),
+            spaceAfter=20,
+            alignment=TA_CENTER
+        )
+        heading_style = ParagraphStyle(
+            'CustomHeading',
+            parent=styles['Heading2'],
+            fontName=self.font_name_bold,
+            fontSize=13,
+            textColor=colors.HexColor('#424242'),
+            spaceAfter=10,
+            spaceBefore=15
+        )
+        
+        story = []
+        
+        # 제목
+        story.append(Paragraph("M2: 토지감정평가 상세 보고서", title_style))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # 생성 일시
+        gen_date = datetime.now().strftime("%Y년 %m월 %d일 %H:%M:%S")
+        story.append(Paragraph(f"생성일시: {gen_date}", styles['Italic']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # ========== 1. 감정평가 결과 요약 ==========
+        story.append(Paragraph("1. 감정평가 결과 요약", heading_style))
+        
+        # CRITICAL: Backend API returns nested structure
+        # data = {appraisal: {...}, official_price: {...}, ...}
+        # So we extract appraisal directly
+        appraisal = data.get('appraisal', {})
+        land_value = appraisal.get('land_value', 0)
+        unit_price_sqm = appraisal.get('unit_price_sqm', 0)
+        unit_price_pyeong = appraisal.get('unit_price_pyeong', 0)
+        
+        logger.info(f"M2 PDF - Received data keys: {list(data.keys())}")
+        logger.info(f"M2 PDF - Land value: {land_value}")
+        
+        summary_data = [
+            ['항목', '금액'],
+            ['총 토지가치', f"{land_value:,.0f} 원"],
+            ['제곱미터당 가격', f"{unit_price_sqm:,.0f} 원/㎡"],
+            ['평당 가격', f"{unit_price_pyeong:,.0f} 원/평"],
+        ]
+        
+        summary_table = Table(summary_data, colWidths=[7*cm, 9*cm])
+        summary_table.setStyle(self._create_table_style(colors.HexColor('#1976D2')))
+        story.append(summary_table)
+        story.append(Spacer(1, 0.3*inch))
+        
+        # ========== 2. 공시지가 정보 ==========
+        story.append(Paragraph("2. 공시지가 정보", heading_style))
+        
+        official_price = data.get('official_price', {})
+        official_total = official_price.get('total', 0)
+        official_per_sqm = official_price.get('per_sqm', 0)
+        
+        official_data = [
+            ['항목', '금액'],
+            ['공시지가 총액', f"{official_total:,.0f} 원"],
+            ['제곱미터당 공시지가', f"{official_per_sqm:,.0f} 원/㎡"],
+            ['시세 대비 공시지가 비율', f"{(official_total / land_value * 100) if land_value > 0 else 0:.1f}%"],
+        ]
+        
+        official_table = Table(official_data, colWidths=[7*cm, 9*cm])
+        official_table.setStyle(self._create_table_style(colors.HexColor('#4CAF50')))
+        story.append(official_table)
+        story.append(Spacer(1, 0.3*inch))
+        
+        # ========== 3. 거래사례 분석 (전체 데이터) ==========
+        story.append(Paragraph("3. 거래사례 분석 (상세)", heading_style))
+        
+        transactions = data.get('transactions', {})
+        tx_count = transactions.get('count', 0)
+        avg_price_sqm = transactions.get('avg_price_sqm', 0)
+        
+        story.append(Paragraph(f"총 거래사례 수: <b>{tx_count}건</b>", styles['Normal']))
+        story.append(Paragraph(f"평균 제곱미터당 가격: <b>{avg_price_sqm:,.0f}원/㎡</b>", styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # 거래사례 상세 테이블 (최대 10건 - 전체 데이터 포함)
+        samples = transactions.get('samples', [])
+        if samples:
+            tx_data = [['번호', '주소', '거래일', '원 거래가(㎡)', '보정가(㎡)', '거리']]
+            for idx, tx in enumerate(samples[:10], 1):
+                tx_data.append([
+                    str(idx),
+                    tx.get('address', 'N/A')[:28],
+                    tx.get('date', 'N/A'),
+                    f"{tx.get('price_sqm', 0):,.0f}",
+                    f"{tx.get('adjusted_price_sqm', 0):,.0f}",
+                    f"{tx.get('distance_km', 0):.2f}km"
+                ])
+            
+            tx_table = Table(tx_data, colWidths=[0.8*cm, 5*cm, 2*cm, 2.5*cm, 2.5*cm, 1.8*cm])
+            tx_table.setStyle(self._create_table_style(colors.HexColor('#FF9800')))
+            story.append(tx_table)
+        else:
+            story.append(Paragraph("거래사례 데이터 없음", styles['Italic']))
+        
+        story.append(Spacer(1, 0.3*inch))
+        
+        # ========== 4. 입지 프리미엄 분석 (상세) ==========
+        story.append(Paragraph("4. 입지 프리미엄 분석", heading_style))
+        
+        premium = data.get('premium', {})
+        scores = premium.get('scores', {})
+        premiums = premium.get('premiums', {})
+        
+        premium_data = [
+            ['평가 항목', '점수', '프리미엄 비율', '설명'],
+            [
+                '도로 조건',
+                f"{scores.get('road', 0)}/10",
+                f"{premiums.get('distance', 0)*100:.1f}%",
+                '도로 접면 상태 및 폭'
+            ],
+            [
+                '지형 조건',
+                f"{scores.get('terrain', 0)}/10",
+                f"{premiums.get('time', 0)*100:.1f}%",
+                '평탄도 및 형상'
+            ],
+            [
+                '입지 조건',
+                f"{scores.get('location', 0)}/10",
+                f"{premiums.get('zone', 0)*100:.1f}%",
+                '주변 환경 및 편의시설'
+            ],
+            [
+                '접근성',
+                f"{scores.get('accessibility', 0)}/10",
+                f"{premiums.get('size', 0)*100:.1f}%",
+                '교통 편의성'
+            ],
+            [
+                '<b>합계</b>',
+                '-',
+                f"<b>{premiums.get('total_rate', 0):.1f}%</b>",
+                '<b>총 입지 프리미엄</b>'
+            ],
+        ]
+        
+        premium_table = Table(premium_data, colWidths=[3*cm, 2*cm, 3*cm, 8*cm])
+        premium_table.setStyle(self._create_table_style(colors.HexColor('#9C27B0')))
+        story.append(premium_table)
+        story.append(Spacer(1, 0.3*inch))
+        
+        # ========== 5. 평가 신뢰도 분석 ==========
+        story.append(Paragraph("5. 평가 신뢰도", heading_style))
+        
+        confidence = data.get('confidence', {})
+        # Nested structure: confidence.confidence.score
+        conf_inner = confidence.get('confidence', {}) if isinstance(confidence, dict) else {}
+        conf_scores = confidence.get('scores', {})
+        conf_score = conf_inner.get('score', 0) if conf_inner else confidence.get('score', 0)
+        conf_level = conf_inner.get('level', 'N/A') if conf_inner else confidence.get('level', 'N/A')
+        
+        conf_text = f"""
+<b>종합 신뢰도 점수:</b> {conf_score*100:.0f}%<br/>
+<b>신뢰도 등급:</b> {conf_level}<br/>
+<br/>
+<b>신뢰도 평가 근거:</b><br/>
+• 거래사례 수: {tx_count}건 (충분한 데이터)<br/>
+• 공시지가 활용: {'예' if official_total > 0 else '아니오'}<br/>
+• 샘플 품질: {conf_scores.get('sample_count', 0)*100:.0f}% (가중치)<br/>
+• 가격 일관성: {conf_scores.get('price_variance', 0)*100:.0f}% (가중치)<br/>
+• 거리 근접성: {conf_scores.get('distance', 0)*100:.0f}% (가중치)<br/>
+• 데이터 최신성: {conf_scores.get('recency', 0)*100:.0f}% (가중치)<br/>
+"""
+        story.append(Paragraph(conf_text, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # ========== 5-1. 가격 범위 분석 (추가) ==========
+        price_range = data.get('price_range', {})
+        if price_range:
+            story.append(Paragraph("5-1. 가격 범위 분석", heading_style))
+            
+            price_range_data = [
+                ['구분', '금액'],
+                ['최저 예상가', f"{price_range.get('low', 0):,.0f} 원"],
+                ['평균 예상가', f"{price_range.get('avg', land_value):,.0f} 원"],
+                ['최고 예상가', f"{price_range.get('high', 0):,.0f} 원"],
+            ]
+            
+            price_range_table = Table(price_range_data, colWidths=[7*cm, 9*cm])
+            price_range_table.setStyle(self._create_table_style(colors.HexColor('#00BCD4')))
+            story.append(price_range_table)
+            story.append(Spacer(1, 0.3*inch))
+        
+        # ========== 6. 감정평가 방법론 및 메타데이터 ==========
+        story.append(Paragraph("6. 감정평가 방법론 및 메타데이터", heading_style))
+        
+        metadata = data.get('metadata', {})
+        method = metadata.get('method', '거래사례비교법 (4-Factor Enhanced)')
+        appraiser = metadata.get('appraiser', 'ZeroSite AI Engine')
+        valuation_date = metadata.get('date', gen_date)
+        
+        methodology_text = f"""
+본 감정평가는 다음 3가지 방법을 종합적으로 활용하였습니다:<br/>
+<br/>
+<b>1) 거래사례비교법:</b> 인근 유사 토지의 실제 거래가격을 분석하여 시세를 추정<br/>
+<b>2) 공시지가 기준법:</b> 국토교통부 공시지가에 시세반영률을 적용하여 시세 산정<br/>
+<b>3) 입지프리미엄법:</b> 도로, 지형, 입지, 접근성 등 입지 특성을 점수화하여 프리미엄 반영<br/>
+<br/>
+<b>평가 방법:</b> {method}<br/>
+<b>평가 엔진:</b> {appraiser}<br/>
+<b>평가 기준일:</b> {valuation_date}<br/>
+<br/>
+<b>최종 토지가치 = (거래사례 평균 × 0.5) + (공시지가 × 시세반영률 × 0.3) + (입지프리미엄 × 0.2)</b>
+"""
+        story.append(Paragraph(methodology_text, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # ========== 7. 경고사항 (있는 경우) ==========
+        warnings = data.get('warnings', {})
+        if warnings and warnings.get('has_warnings'):
+            story.append(Paragraph("7. 주의사항", heading_style))
+            warning_items = warnings.get('items', [])
+            warning_text = "<br/>".join([f"• {item}" for item in warning_items])
+            if warning_text:
+                story.append(Paragraph(warning_text, styles['Normal']))
+                story.append(Spacer(1, 0.3*inch))
+        
+        # ========== 면책사항 ==========
+        story.append(Spacer(1, 0.2*inch))
+        story.append(Paragraph("면책사항", heading_style))
+        disclaimer = """
+본 감정평가 보고서는 AI 기반 자동화 시스템에 의해 생성되었으며, 참고용 정보로만 활용되어야 합니다. 
+법적 효력을 갖는 정식 감정평가는 「감정평가 및 감정평가사에 관한 법률」에 따라 
+자격을 갖춘 감정평가사에 의해 수행되어야 합니다. 본 보고서의 내용에 대해 ZeroSite는 법적 책임을 지지 않습니다.
+"""
+        story.append(Paragraph(disclaimer, styles['Italic']))
+        
+        # PDF 생성
+        doc.build(story)
+        buffer.seek(0)
+        return buffer.getvalue()
+    
+    def generate_m3_housing_type_pdf(self, data: Dict[str, Any]) -> bytes:
+        """M3 LH 선호유형 PDF 생성 (전체 데이터 포함)"""
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
+        
+        styles = self._get_styles()
+        title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontName=self.font_name_bold, fontSize=20, textColor=colors.HexColor('#4CAF50'), spaceAfter=20, alignment=TA_CENTER)
+        heading_style = ParagraphStyle('CustomHeading', parent=styles['Heading2'], fontName=self.font_name_bold, fontSize=13, textColor=colors.HexColor('#424242'), spaceAfter=10, spaceBefore=15)
+        
+        story = []
+        story.append(Paragraph("M3: LH 선호유형 상세 분석 보고서", title_style))
+        story.append(Spacer(1, 0.2*inch))
+        
+        gen_date = datetime.now().strftime("%Y년 %m월 %d일 %H:%M:%S")
+        story.append(Paragraph(f"생성일시: {gen_date}", styles['Italic']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 1. 추천 유형
+        story.append(Paragraph("1. 추천 LH 유형", heading_style))
+        selected = data.get('selected', {})
+        
+        selected_data = [
+            ['항목', '값'],
+            ['추천 유형', selected.get('name', 'N/A')],
+            ['영문 코드', selected.get('type', 'N/A')],
+            ['신뢰도', f"{selected.get('confidence', 0)*100:.0f}%"],
+            ['점수 차이', '단독 1위' if not selected.get('is_tie', False) else '공동 1위'],
+        ]
+        
+        selected_table = Table(selected_data, colWidths=[7*cm, 9*cm])
+        selected_table.setStyle(self._create_table_style(colors.HexColor('#4CAF50')))
+        story.append(selected_table)
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 2. 전체 유형 점수 비교 (전체 5개 유형)
+        story.append(Paragraph("2. 전체 유형 점수 비교 (5개 유형)", heading_style))
+        
+        scores = data.get('scores', {})
+        score_data = [['유형', '입지', '접근성', 'POI', '수요', '총점']]
+        
+        # Sort by total score descending
+        sorted_scores = sorted(scores.items(), key=lambda x: x[1].get('total', 0), reverse=True)
+        
+        for type_key, type_scores in sorted_scores:
+            type_name = type_scores.get('name', type_key)
+            score_data.append([
+                type_name,
+                str(type_scores.get('location', 0)),
+                str(type_scores.get('accessibility', 0)),
+                str(type_scores.get('poi', 0)),
+                str(type_scores.get('demand', 0)),
+                f"<b>{type_scores.get('total', 0)}</b>"
+            ])
+        
+        score_table = Table(score_data, colWidths=[4*cm, 2*cm, 2*cm, 2*cm, 2*cm, 2.5*cm])
+        score_table.setStyle(self._create_table_style(colors.HexColor('#FF9800')))
+        story.append(score_table)
+        
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 3. 입지 분석 상세 (POI 거리)
+        story.append(Paragraph("3. 입지 상세 분석", heading_style))
+        location = data.get('location', {})
+        
+        location_score = location.get('score', 0)
+        story.append(Paragraph(f"<b>입지 점수:</b> {location_score}점/35점", styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        poi = location.get('poi', {})
+        poi_names = {
+            'subway_distance': '지하철역',
+            'school_distance': '초등학교',
+            'hospital_distance': '병원',
+            'commercial_distance': '상업시설',
+            'total_count': '총 POI 개수'
+        }
+        
+        if poi:
+            poi_data = [['항목', '값', '평가']]
+            for key, value in poi.items():
+                name = poi_names.get(key, key)
+                if 'distance' in key:
+                    poi_data.append([
+                        name,
+                        f"{value}m",
+                        '우수' if value < 500 else ('양호' if value < 1000 else '보통')
+                    ])
+                elif key == 'total_count':
+                    poi_data.append([name, f"{value}개", '-'])
+            
+            poi_table = Table(poi_data, colWidths=[6*cm, 4*cm, 4*cm])
+            poi_table.setStyle(self._create_table_style(colors.HexColor('#9C27B0')))
+            story.append(poi_table)
+        
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 4. 수요 분석
+        story.append(Paragraph("4. 수요 분석", heading_style))
+        demand = data.get('demand', {})
+        
+        demand_data = [
+            ['항목', '값'],
+            ['수요 예측 점수', f"{demand.get('prediction', 0)}점"],
+            ['수요 트렌드', demand.get('trend', 'N/A')],
+            ['목표 인구', f"{demand.get('target_population', 0):,}명"],
+        ]
+        
+        demand_table = Table(demand_data, colWidths=[7*cm, 9*cm])
+        demand_table.setStyle(self._create_table_style(colors.HexColor('#2196F3')))
+        story.append(demand_table)
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 5. 경쟁 분석
+        story.append(Paragraph("5. 경쟁 단지 분석", heading_style))
+        competition = data.get('competition', {})
+        
+        comp_count = competition.get('count', 0)
+        comp_analysis = competition.get('analysis', 'N/A')
+        
+        comp_text = f"""
+<b>인근 경쟁 단지:</b> {comp_count}개<br/>
+<b>경쟁 강도:</b> {comp_analysis}<br/>
+<br/>
+<b>의미:</b><br/>
+"""
+        if comp_count == 0:
+            comp_text += "• 경쟁 단지 없음 - 유리한 시장 환경<br/>"
+        elif comp_count <= 2:
+            comp_text += "• 적정 수준의 경쟁 - 시장 입지 양호<br/>"
+        else:
+            comp_text += "• 다수의 경쟁 단지 존재 - 차별화 전략 필요<br/>"
+        
+        story.append(Paragraph(comp_text, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 6. 종합 의견 (Insights: strengths, weaknesses, recommendations)
+        story.append(Paragraph("6. 종합 의견 및 권고사항", heading_style))
+        insights = data.get('insights', {})
+        
+        strengths = insights.get('strengths', [])
+        weaknesses = insights.get('weaknesses', [])
+        recommendations = insights.get('recommendations', [])
+        
+        insights_text = "<b>■ 강점:</b><br/>"
+        for s in strengths:
+            insights_text += f"• {s}<br/>"
+        
+        insights_text += "<br/><b>■ 약점:</b><br/>"
+        for w in weaknesses:
+            insights_text += f"• {w}<br/>"
+        
+        insights_text += "<br/><b>■ 권고사항:</b><br/>"
+        for r in recommendations:
+            insights_text += f"• {r}<br/>"
+        
+        story.append(Paragraph(insights_text, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 7. 메타데이터
+        metadata = data.get('metadata', {})
+        if metadata:
+            story.append(Paragraph("7. 분석 메타데이터", heading_style))
+            
+            meta_text = f"""
+<b>분석 일자:</b> {metadata.get('date', 'N/A')}<br/>
+<b>데이터 출처:</b> {', '.join(metadata.get('sources', []))}<br/>
+"""
+            story.append(Paragraph(meta_text, styles['Italic']))
+        
+        doc.build(story)
+        buffer.seek(0)
+        return buffer.getvalue()
+    
+    def generate_m4_capacity_pdf(self, data: Dict[str, Any]) -> bytes:
+        """M4 건축규모 분석 PDF 생성 (전체 데이터 포함)"""
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
+        
+        styles = self._get_styles()
+        title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontName=self.font_name_bold, fontSize=20, textColor=colors.HexColor('#FF5722'), spaceAfter=20, alignment=TA_CENTER)
+        heading_style = ParagraphStyle('CustomHeading', parent=styles['Heading2'], fontName=self.font_name_bold, fontSize=13, textColor=colors.HexColor('#424242'), spaceAfter=10, spaceBefore=15)
+        
+        story = []
+        story.append(Paragraph("M4: 건축규모 상세 분석 보고서", title_style))
+        story.append(Spacer(1, 0.2*inch))
+        
+        gen_date = datetime.now().strftime("%Y년 %m월 %d일 %H:%M:%S")
+        story.append(Paragraph(f"생성일시: {gen_date}", styles['Italic']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 1. 법적 용적률 분석
+        story.append(Paragraph("1. 법적 용적률 분석", heading_style))
+        
+        legal_capacity = data.get('legal_capacity', {})
+        legal_data = [
+            ['항목', '값', '비고'],
+            ['법정 용적률', f"{legal_capacity.get('far_max', 0):.1f}%", '지역지구 기준'],
+            ['건폐율', f"{legal_capacity.get('bcr_max', 0):.1f}%", '건축선 후퇴 반영'],
+            ['법정 세대수', f"{legal_capacity.get('total_units', 0)}세대", '용적률 기준'],
+            ['연면적', f"{legal_capacity.get('gross_floor_area', 0):,.1f}㎡", '지하층 제외'],
+        ]
+        
+        legal_table = Table(legal_data, colWidths=[5*cm, 4*cm, 7*cm])
+        legal_table.setStyle(self._create_table_style(colors.HexColor('#FF5722')))
+        story.append(legal_table)
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 2. 인센티브 용적률 분석
+        story.append(Paragraph("2. 인센티브 용적률 분석", heading_style))
+        
+        incentive_capacity = data.get('incentive_capacity', {})
+        incentive_data = [
+            ['항목', '값', '비고'],
+            ['인센티브 후 용적률', f"{incentive_capacity.get('far_max', 0):.1f}%", '공공기여 포함'],
+            ['추가 용적률', f"{incentive_capacity.get('far_max', 0) - legal_capacity.get('far_max', 0):.1f}%", '법정 대비 증가'],
+            ['인센티브 세대수', f"{incentive_capacity.get('total_units', 0)}세대", '최대 규모'],
+            ['추가 세대수', f"{incentive_capacity.get('total_units', 0) - legal_capacity.get('total_units', 0)}세대", '법정 대비 증가'],
+        ]
+        
+        incentive_table = Table(incentive_data, colWidths=[5*cm, 4*cm, 7*cm])
+        incentive_table.setStyle(self._create_table_style(colors.HexColor('#2196F3')))
+        story.append(incentive_table)
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 1-1. GFA 상세 분해 (법정)
+        legal_gfa_breakdown = legal_capacity.get('gfa_breakdown', {})
+        if legal_gfa_breakdown:
+            gfa_data = [
+                ['구분', '면적(㎡)', '비율'],
+                ['전용면적', f"{legal_gfa_breakdown.get('nia_sqm', 0):,.1f}", f"{legal_gfa_breakdown.get('nia_sqm', 0) / max(legal_capacity.get('target_gfa_sqm', 1), 1) * 100:.1f}%"],
+                ['공용면적', f"{legal_gfa_breakdown.get('common_sqm', 0):,.1f}", f"{legal_gfa_breakdown.get('common_sqm', 0) / max(legal_capacity.get('target_gfa_sqm', 1), 1) * 100:.1f}%"],
+                ['기계실 손실', f"{legal_gfa_breakdown.get('mechanical_loss_sqm', 0):,.1f}", f"{legal_gfa_breakdown.get('mechanical_loss_sqm', 0) / max(legal_capacity.get('target_gfa_sqm', 1), 1) * 100:.1f}%"],
+                ['총 GFA', f"{legal_capacity.get('target_gfa_sqm', 0):,.1f}", '100.0%'],
+            ]
+            
+            gfa_table = Table(gfa_data, colWidths=[5*cm, 5*cm, 6*cm])
+            gfa_table.setStyle(self._create_table_style(colors.HexColor('#FF9800')))
+            story.append(gfa_table)
+            story.append(Spacer(1, 0.3*inch))
+        
+        # 2-1. GFA 상세 분해 (인센티브)
+        incentive_gfa_breakdown = incentive_capacity.get('gfa_breakdown', {})
+        if incentive_gfa_breakdown:
+            gfa_data_inc = [
+                ['구분', '면적(㎡)', '비율'],
+                ['전용면적', f"{incentive_gfa_breakdown.get('nia_sqm', 0):,.1f}", f"{incentive_gfa_breakdown.get('nia_sqm', 0) / max(incentive_capacity.get('target_gfa_sqm', 1), 1) * 100:.1f}%"],
+                ['공용면적', f"{incentive_gfa_breakdown.get('common_sqm', 0):,.1f}", f"{incentive_gfa_breakdown.get('common_sqm', 0) / max(incentive_capacity.get('target_gfa_sqm', 1), 1) * 100:.1f}%"],
+                ['기계실 손실', f"{incentive_gfa_breakdown.get('mechanical_loss_sqm', 0):,.1f}", f"{incentive_gfa_breakdown.get('mechanical_loss_sqm', 0) / max(incentive_capacity.get('target_gfa_sqm', 1), 1) * 100:.1f}%"],
+                ['총 GFA', f"{incentive_capacity.get('target_gfa_sqm', 0):,.1f}", '100.0%'],
+            ]
+            
+            gfa_table_inc = Table(gfa_data_inc, colWidths=[5*cm, 5*cm, 6*cm])
+            gfa_table_inc.setStyle(self._create_table_style(colors.HexColor('#FF9800')))
+            story.append(gfa_table_inc)
+            story.append(Spacer(1, 0.3*inch))
+        
+        # 3. 매싱 옵션 비교 (전체 3개 옵션)
+        story.append(Paragraph("3. 매싱 옵션 비교 (3개 안)", heading_style))
+        massing_options = data.get('massing_options', [])
+        
+        if massing_options:
+            massing_data = [['옵션', '동수', '층수', '달성 FAR', '건축성', '효율성']]
+            for opt in massing_options:
+                massing_data.append([
+                    opt.get('option_name', 'N/A'),
+                    f"{opt.get('building_count', 0)}개동",
+                    f"{opt.get('floors', 0)}층",
+                    f"{opt.get('achieved_far', 0):.1f}%",
+                    f"{opt.get('buildability_score', 0)}점",
+                    f"{opt.get('efficiency_score', 0)}점"
+                ])
+            
+            massing_table = Table(massing_data, colWidths=[3.5*cm, 2*cm, 2*cm, 2.5*cm, 2*cm, 2*cm])
+            massing_table.setStyle(self._create_table_style(colors.HexColor('#2196F3')))
+            story.append(massing_table)
+            story.append(Spacer(1, 0.3*inch))
+        
+        # 4. 주차 솔루션 (Alternative A & B)
+        story.append(Paragraph("4. 주차 솔루션 분석", heading_style))
+        
+        parking_solutions = data.get('parking_solutions', {})
+        alt_a = parking_solutions.get('alternative_A', {})
+        alt_b = parking_solutions.get('alternative_B', {})
+        
+        parking_data = [
+            ['구분', 'Alt A (FAR 우선)', 'Alt B (주차 우선)'],
+            ['주차대수', f"{alt_a.get('total_parking', 0)}대", f"{alt_b.get('total_parking', 0)}대"],
+            ['솔루션', alt_a.get('solution_type', 'N/A'), alt_b.get('solution_type', 'N/A')],
+            ['지하층수', f"{alt_a.get('basement_floors', 0)}층", '-'],
+            ['램프 가능성', alt_a.get('ramp_feasibility', 'N/A'), '-'],
+            ['세대수 조정', '-', f"{alt_b.get('adjusted_units', 0)}세대"],
+            ['FAR 희생', '-', f"{alt_b.get('far_sacrifice', 0):.1f}%"],
+            ['달성 점수', f"{alt_a.get('achievability_score', 0)}점", f"{alt_b.get('achievability_score', 0)}점"],
+        ]
+        
+        parking_table = Table(parking_data, colWidths=[4*cm, 5*cm, 5*cm])
+        parking_table.setStyle(self._create_table_style(colors.HexColor('#4CAF50')))
+        story.append(parking_table)
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 5. 단위세대 요약
+        unit_summary = data.get('unit_summary', {})
+        if unit_summary:
+            story.append(Paragraph("5. 단위세대 요약", heading_style))
+            
+            unit_text = f"""
+<b>총 세대수:</b> {unit_summary.get('total_units', 0)}세대<br/>
+<b>선호 유형:</b> {unit_summary.get('preferred_type', 'N/A')}<br/>
+<b>평균 면적:</b> {unit_summary.get('average_area_sqm', 0)}㎡<br/>
+<br/>
+<b>유형별 세대수:</b><br/>
+"""
+            unit_count_by_type = unit_summary.get('unit_count_by_type', {})
+            for unit_type, count in unit_count_by_type.items():
+                unit_text += f"• {unit_type}: {count}세대<br/>"
+            
+            story.append(Paragraph(unit_text, styles['Normal']))
+            story.append(Spacer(1, 0.3*inch))
+        
+        # 6. 메타데이터 및 제약조건
+        metadata = data.get('metadata', {})
+        if metadata:
+            story.append(Paragraph("6. 설계 가정 및 제약조건", heading_style))
+            
+            assumptions = metadata.get('assumptions', {})
+            constraints = metadata.get('constraints', [])
+            notes = metadata.get('notes', [])
+            
+            meta_text = "<b>■ 설계 가정:</b><br/>"
+            for key, value in assumptions.items():
+                meta_text += f"• {key}: {value}<br/>"
+            
+            meta_text += "<br/><b>■ 주요 제약조건:</b><br/>"
+            for constraint in constraints:
+                meta_text += f"• {constraint}<br/>"
+            
+            meta_text += "<br/><b>■ 참고사항:</b><br/>"
+            for note in notes:
+                meta_text += f"• {note}<br/>"
+            
+            story.append(Paragraph(meta_text, styles['Normal']))
+            story.append(Spacer(1, 0.3*inch))
+        
+        # 7. 용적률 비교 차트
+        story.append(Paragraph("7. 용적률 비교 차트", heading_style))
+        
+        try:
+            fig, ax = plt.subplots(figsize=(8, 5))
+            categories = ['법정 용적률', '인센티브 용적률']
+            legal_units = legal_capacity.get('total_units', 0)
+            incentive_units = incentive_capacity.get('total_units', 0)
+            values = [legal_units, incentive_units]
+            
+            bars = ax.bar(categories, values, color=['#FF5722', '#2196F3'], width=0.6)
+            ax.set_ylabel('총 세대수', fontsize=12, fontweight='bold')
+            ax.set_title('법정 vs 인센티브 용적률 비교', fontsize=14, fontweight='bold', pad=20)
+            ax.grid(axis='y', alpha=0.3, linestyle='--')
+            ax.set_ylim(0, max(values) * 1.2)
+            
+            for bar, v in zip(bars, values):
+                height = bar.get_height()
+                ax.text(bar.get_x() + bar.get_width()/2., height + max(values) * 0.02,
+                       f'{v}세대\n({v - legal_units:+d})',
+                       ha='center', va='bottom', fontsize=11, fontweight='bold')
+            
+            chart_buffer = io.BytesIO()
+            plt.tight_layout()
+            plt.savefig(chart_buffer, format='png', bbox_inches='tight', dpi=150)
+            plt.close(fig)
+            chart_buffer.seek(0)
+            
+            img = Image(chart_buffer, width=6*inch, height=3.75*inch)
+            story.append(img)
+        except Exception as e:
+            logger.warning(f"Chart generation failed: {e}")
+            story.append(Paragraph("차트 생성 실패", styles['Italic']))
+        
+        doc.build(story)
+        buffer.seek(0)
+        return buffer.getvalue()
+    
+    def generate_m5_feasibility_pdf(self, data: Dict[str, Any]) -> bytes:
+        """M5 사업성 분석 PDF 생성 (전체 데이터 포함)"""
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
+        
+        styles = self._get_styles()
+        title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontName=self.font_name_bold, fontSize=20, textColor=colors.HexColor('#9C27B0'), spaceAfter=20, alignment=TA_CENTER)
+        heading_style = ParagraphStyle('CustomHeading', parent=styles['Heading2'], fontName=self.font_name_bold, fontSize=13, textColor=colors.HexColor('#424242'), spaceAfter=10, spaceBefore=15)
+        
+        story = []
+        story.append(Paragraph("M5: 사업성 상세 분석 보고서", title_style))
+        story.append(Spacer(1, 0.2*inch))
+        
+        gen_date = datetime.now().strftime("%Y년 %m월 %d일 %H:%M:%S")
+        story.append(Paragraph(f"생성일시: {gen_date}", styles['Italic']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 1. 재무지표 요약 (전체 데이터)
+        story.append(Paragraph("1. 재무지표 종합", heading_style))
+        
+        financials = data.get('financials', {})
+        financial_data = [
+            ['지표', '값', '평가'],
+            ['NPV (Public)', f"{financials.get('npv_public', 0):,.0f}원", 'LH 매입 기준'],
+            ['NPV (Market)', f"{financials.get('npv_market', 0):,.0f}원", '시장 분양 기준'],
+            ['IRR (Public)', f"{financials.get('irr_public', 0):.2f}%", 'LH 매입 수익률'],
+            ['IRR (Market)', f"{financials.get('irr_market', 0):.2f}%", '시장 분양 수익률'],
+            ['ROI (투자수익률)', f"{financials.get('roi', 0):.2f}%", '총 투자 대비 수익'],
+            ['회수기간', f"{financials.get('payback_years', 0)}년", '투자 회수 기간'],
+        ]
+        
+        financial_table = Table(financial_data, colWidths=[5*cm, 5*cm, 6*cm])
+        financial_table.setStyle(self._create_table_style(colors.HexColor('#9C27B0')))
+        story.append(financial_table)
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 1-1. LH 매입 조건
+        lh_purchase = data.get('lh_purchase', {})
+        if lh_purchase:
+            story.append(Paragraph("1-1. LH 매입 조건", heading_style))
+            
+            lh_data = [
+                ['항목', '값'],
+                ['LH 매입가', f"{lh_purchase.get('price', 0):,.0f}원"],
+                ['제곱미터당 가격', f"{lh_purchase.get('unit_price', 0):,.0f}원/㎡"],
+                ['프리미엄율', f"{lh_purchase.get('premium_rate', 0):.1f}%"],
+                ['감정평가 대비', f"+{lh_purchase.get('price_gap_pct', 0):.1f}%"],
+            ]
+            
+            lh_table = Table(lh_data, colWidths=[7*cm, 9*cm])
+            lh_table.setStyle(self._create_table_style(colors.HexColor('#2196F3')))
+            story.append(lh_table)
+            story.append(Spacer(1, 0.3*inch))
+        
+        # 2. 비용 분석
+        story.append(Paragraph("2. 비용 분석 (상세)", heading_style))
+        
+        costs = data.get('costs', {})
+        costs_data = [
+            ['항목', '금액', '비율'],
+            ['토지비', f"{costs.get('land', 0):,.0f}원", f"{costs.get('land', 0) / max(costs.get('total', 1), 1) * 100:.1f}%"],
+            ['건축비', f"{costs.get('construction', 0):,.0f}원", f"{costs.get('construction', 0) / max(costs.get('total', 1), 1) * 100:.1f}%"],
+            ['기타비용', f"{costs.get('other', 0):,.0f}원", f"{costs.get('other', 0) / max(costs.get('total', 1), 1) * 100:.1f}%"],
+            ['총 비용', f"{costs.get('total', 0):,.0f}원", '100.0%'],
+        ]
+        
+        costs_table = Table(costs_data, colWidths=[5*cm, 5*cm, 6*cm])
+        costs_table.setStyle(self._create_table_style(colors.HexColor('#F44336')))
+        story.append(costs_table)
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 3. 수익 분석 (상세)
+        story.append(Paragraph("3. 수익 분석 (상세)", heading_style))
+        
+        revenue = data.get('revenue', {})
+        lh_purchase_revenue = revenue.get('lh_purchase', 0)
+        rental_annual = revenue.get('rental_annual', 0)
+        total_revenue = revenue.get('total', 0)
+        
+        revenues_data = [
+            ['항목', '금액', '비율'],
+            ['LH 매입 수익', f"{lh_purchase_revenue:,.0f}원", f"{lh_purchase_revenue / max(total_revenue, 1) * 100:.1f}%"],
+            ['연간 임대 수익', f"{rental_annual:,.0f}원/년", f"{rental_annual / max(total_revenue, 1) * 100:.1f}%"],
+            ['총 수익', f"{total_revenue:,.0f}원", '100.0%'],
+        ]
+        
+        revenues_table = Table(revenues_data, colWidths=[5*cm, 5*cm, 6*cm])
+        revenues_table.setStyle(self._create_table_style(colors.HexColor('#4CAF50')))
+        story.append(revenues_table)
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 4. 차트
+        story.append(Paragraph("4. 비용-수익 시각화", heading_style))
+        
+        try:
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))
+            
+            # Cost breakdown pie chart
+            cost_labels = ['토지비', '건축비', '기타비용']
+            cost_values = [
+                costs.get('land', 0),
+                costs.get('construction', 0),
+                costs.get('other', 0)
+            ]
+            if sum(cost_values) > 0:
+                ax1.pie(cost_values, labels=cost_labels, autopct='%1.1f%%', colors=['#F44336', '#FF9800', '#FFC107'], textprops={'fontsize': 9})
+                ax1.set_title('비용 구성', fontsize=12, fontweight='bold')
+            
+            # Revenue vs Cost bar chart
+            categories = ['총 비용', '총 수익']
+            values = [costs.get('total', 0), revenues.get('total', 0)]
+            colors_bar = ['#F44336', '#4CAF50']
+            bars = ax2.bar(categories, values, color=colors_bar, width=0.6)
+            ax2.set_ylabel('금액 (원)', fontsize=10)
+            ax2.set_title('비용 vs 수익', fontsize=12, fontweight='bold')
+            ax2.grid(axis='y', alpha=0.3)
+            
+            for bar, v in zip(bars, values):
+                if v > 0:
+                    height = bar.get_height()
+                    ax2.text(bar.get_x() + bar.get_width()/2., height + max(values) * 0.02,
+                            f'{v:,.0f}원', ha='center', fontsize=9)
+            
+            chart_buffer = io.BytesIO()
+            plt.tight_layout()
+            plt.savefig(chart_buffer, format='png', bbox_inches='tight', dpi=150)
+            plt.close(fig)
+            chart_buffer.seek(0)
+            
+            img = Image(chart_buffer, width=7*inch, height=2.8*inch)
+            story.append(img)
+        except Exception as e:
+            logger.warning(f"Chart generation failed: {e}")
+            story.append(Paragraph("차트 생성 실패", styles['Italic']))
+        
+        # 5. 수익성 평가
+        story.append(Spacer(1, 0.3*inch))
+        story.append(Paragraph("5. 수익성 평가", heading_style))
+        
+        profitability = data.get('profitability', {})
+        is_profitable = profitability.get('is_profitable', False)
+        grade = profitability.get('grade', 'N/A')
+        score = profitability.get('score', 0)
+        
+        profit_data = [
+            ['항목', '값'],
+            ['수익성 여부', '수익 가능' if is_profitable else '수익 불가'],
+            ['사업성 등급', grade],
+            ['사업성 점수', f"{score}점"],
+        ]
+        
+        profit_table = Table(profit_data, colWidths=[7*cm, 9*cm])
+        profit_table.setStyle(self._create_table_style(colors.HexColor('#FF9800')))
+        story.append(profit_table)
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 6. 리스크 및 완화 방안
+        story.append(Paragraph("6. 리스크 및 완화 방안", heading_style))
+        
+        risks = data.get('risks', {})
+        financial_risks = risks.get('financial', [])
+        mitigation = risks.get('mitigation', [])
+        
+        risk_text = "<b>■ 주요 리스크:</b><br/>"
+        for r in financial_risks:
+            risk_text += f"• {r}<br/>"
+        
+        risk_text += "<br/><b>■ 완화 방안:</b><br/>"
+        for m in mitigation:
+            risk_text += f"• {m}<br/>"
+        
+        story.append(Paragraph(risk_text, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 7. 메타데이터
+        meta = data.get('meta', {})
+        if meta:
+            story.append(Paragraph("7. 분석 메타데이터", heading_style))
+            
+            meta_text = f"""
+<b>분석 일자:</b> {meta.get('analysis_date', 'N/A')}<br/>
+<b>공사비 기준년도:</b> {meta.get('construction_cost_base_year', 'N/A')}<br/>
+<b>비고:</b> {meta.get('base_year_note', '')}<br/>
+"""
+            story.append(Paragraph(meta_text, styles['Italic']))
+        
+        doc.build(story)
+        buffer.seek(0)
+        return buffer.getvalue()
+    
+    def generate_m6_lh_review_pdf(self, data: Dict[str, Any]) -> bytes:
+        """M6 LH 심사예측 PDF 생성 (전체 데이터 포함)"""
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
+        
+        styles = self._get_styles()
+        title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontName=self.font_name_bold, fontSize=20, textColor=colors.HexColor('#3F51B5'), spaceAfter=20, alignment=TA_CENTER)
+        heading_style = ParagraphStyle('CustomHeading', parent=styles['Heading2'], fontName=self.font_name_bold, fontSize=13, textColor=colors.HexColor('#424242'), spaceAfter=10, spaceBefore=15)
+        
+        story = []
+        story.append(Paragraph("M6: LH 심사예측 상세 보고서", title_style))
+        story.append(Spacer(1, 0.2*inch))
+        
+        gen_date = datetime.now().strftime("%Y년 %m월 %d일 %H:%M:%S")
+        story.append(Paragraph(f"생성일시: {gen_date}", styles['Italic']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 1. 최종 판정
+        story.append(Paragraph("1. 최종 판정", heading_style))
+        
+        decision = data.get('decision', {})
+        decision_text = decision.get('type', 'N/A')
+        rationale = decision.get('rationale', 'N/A')
+        
+        decision_data = [
+            ['항목', '값', '설명'],
+            ['최종 결정', decision_text, 'GO/NO-GO/CONDITIONAL'],
+            ['심사 등급', data.get('grade', 'N/A'), 'A/B/C/D 등급'],
+            ['종합 점수', f"{data.get('total_score', 0):.1f}/110점", '만점 110점 기준'],
+            ['예상 승인율', f"{data.get('approval_probability', 0)*100:.0f}%", '과거 사례 기반'],
+        ]
+        
+        decision_table = Table(decision_data, colWidths=[4*cm, 4*cm, 8*cm])
+        decision_table.setStyle(self._create_table_style(colors.HexColor('#3F51B5')))
+        story.append(decision_table)
+        story.append(Spacer(1, 0.2*inch))
+        
+        story.append(Paragraph(f"<b>판정 근거:</b>", styles['Normal']))
+        story.append(Paragraph(rationale, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 2. 세부 점수 (전체 항목)
+        story.append(Paragraph("2. 세부 점수 분석 (110점 체계)", heading_style))
+        
+        scores = data.get('scores', {})
+        total_score = scores.get('total', 0)
+        
+        scores_data = [
+            ['평가 항목', '획득 점수', '배점', '비율'],
+            ['입지 (Location)', f"{scores.get('location', 0)}점", "35점", f"{scores.get('location', 0)/35*100:.1f}%"],
+            ['규모 (Scale)', f"{scores.get('scale', 0)}점", "15점", f"{scores.get('scale', 0)/15*100:.1f}%"],
+            ['사업성 (Feasibility)', f"{scores.get('feasibility', 0)}점", "40점", f"{scores.get('feasibility', 0)/40*100:.1f}%"],
+            ['준수성 (Compliance)', f"{scores.get('compliance', 0)}점", "20점", f"{scores.get('compliance', 0)/20*100:.1f}%"],
+            ['<b>총점</b>', f"<b>{total_score}점</b>", "<b>110점</b>", f"<b>{total_score/110*100:.1f}%</b>"],
+        ]
+        
+        scores_table = Table(scores_data, colWidths=[5*cm, 3*cm, 3*cm, 3*cm])
+        scores_table.setStyle(self._create_table_style(colors.HexColor('#673AB7')))
+        story.append(scores_table)
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 2-1. 승인 가능성 상세
+        approval = data.get('approval', {})
+        if approval:
+            story.append(Paragraph("2-1. 승인 가능성 상세", heading_style))
+            
+            probability = approval.get('probability', 0)
+            likelihood = approval.get('likelihood', 'N/A')
+            expected_conditions = approval.get('expected_conditions', [])
+            critical_factors = approval.get('critical_factors', [])
+            
+            approval_text = f"""
+<b>승인 가능성:</b> {probability*100:.1f}% ({likelihood})<br/>
+<br/>
+<b>예상 조건:</b><br/>
+"""
+            for cond in expected_conditions:
+                approval_text += f"• {cond}<br/>"
+            
+            approval_text += "<br/><b>결정적 요인:</b><br/>"
+            for factor in critical_factors:
+                approval_text += f"• {factor}<br/>"
+            
+            story.append(Paragraph(approval_text, styles['Normal']))
+            story.append(Spacer(1, 0.3*inch))
+        
+        # 3. 레이더 차트
+        story.append(Paragraph("3. 항목별 점수 시각화", heading_style))
+        
+        try:
+            fig, ax = plt.subplots(figsize=(7, 7), subplot_kw=dict(projection='polar'))
+            
+            categories = ['입지\n적정성', '사업\n타당성', '수요\n분석', '건축\n계획', '기타']
+            values = [
+                scores.get('location', 0),
+                scores.get('feasibility', 0),
+                scores.get('demand', 0),
+                scores.get('capacity', 0),
+                scores.get('other', 0)
+            ]
+            max_scores = [30, 25, 20, 20, 15]
+            
+            # Close the plot
+            values += values[:1]
+            max_scores += max_scores[:1]
+            angles = [n / float(len(categories)) * 2 * 3.14159 for n in range(len(categories))]
+            angles += angles[:1]
+            
+            ax.plot(angles, values, 'o-', linewidth=2, color='#3F51B5', label='실제 점수')
+            ax.fill(angles, values, alpha=0.25, color='#3F51B5')
+            ax.plot(angles, max_scores, 's--', linewidth=1, color='#FF5722', alpha=0.5, label='만점')
+            
+            ax.set_xticks(angles[:-1])
+            ax.set_xticklabels(categories, size=10)
+            ax.set_ylim(0, max(max_scores) * 1.1)
+            ax.legend(loc='upper right', bbox_to_anchor=(1.2, 1.0))
+            ax.set_title('항목별 점수 분포', size=14, fontweight='bold', pad=20)
+            ax.grid(True)
+            
+            chart_buffer = io.BytesIO()
+            plt.savefig(chart_buffer, format='png', bbox_inches='tight', dpi=150)
+            plt.close(fig)
+            chart_buffer.seek(0)
+            
+            img = Image(chart_buffer, width=5*inch, height=5*inch)
+            story.append(img)
+        except Exception as e:
+            logger.warning(f"Chart generation failed: {e}")
+            story.append(Paragraph("차트 생성 실패", styles['Italic']))
+        
+        # 4. SWOT 분석
+        story.append(Paragraph("4. SWOT 분석", heading_style))
+        
+        swot = data.get('swot', {})
+        strengths = swot.get('strengths', [])
+        weaknesses = swot.get('weaknesses', [])
+        opportunities = swot.get('opportunities', [])
+        threats = swot.get('threats', [])
+        
+        swot_text = "<b>■ Strengths (강점):</b><br/>"
+        for s in strengths:
+            swot_text += f"• {s}<br/>"
+        
+        swot_text += "<br/><b>■ Weaknesses (약점):</b><br/>"
+        for w in weaknesses:
+            swot_text += f"• {w}<br/>"
+        
+        swot_text += "<br/><b>■ Opportunities (기회):</b><br/>"
+        for o in opportunities:
+            swot_text += f"• {o}<br/>"
+        
+        swot_text += "<br/><b>■ Threats (위협):</b><br/>"
+        for t in threats:
+            swot_text += f"• {t}<br/>"
+        
+        story.append(Paragraph(swot_text, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 5. 권고사항 및 개선방안
+        story.append(Paragraph("5. 권고사항 및 개선방안", heading_style))
+        
+        recommendations = data.get('recommendations', {})
+        general = recommendations.get('general', [])
+        actions = recommendations.get('actions', [])
+        improvements = recommendations.get('improvements', {})
+        
+        rec_text = "<b>■ 일반 권고사항:</b><br/>"
+        for g in general:
+            rec_text += f"• {g}<br/>"
+        
+        rec_text += "<br/><b>■ 필요 조치:</b><br/>"
+        for a in actions:
+            rec_text += f"• {a}<br/>"
+        
+        rec_text += "<br/><b>■ 개선 영역별 제안:</b><br/>"
+        for key, value in improvements.items():
+            rec_text += f"• <b>{key}:</b> {value}<br/>"
+        
+        story.append(Paragraph(rec_text, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 6. 메타데이터
+        metadata = data.get('metadata', {})
+        if metadata:
+            story.append(Paragraph("6. 심사 메타데이터", heading_style))
+            
+            meta_text = f"""
+<b>심사 일자:</b> {metadata.get('date', 'N/A')}<br/>
+<b>심사자:</b> {metadata.get('reviewer', 'N/A')}<br/>
+<b>심사 기준:</b> {metadata.get('version', 'N/A')}<br/>
+"""
+            story.append(Paragraph(meta_text, styles['Italic']))
+        
+        # 이하 기존 종합 의견 자리에 대체됨
+        story.append(Spacer(1, 0.3*inch))
+        
+        # Keep existing summary for backwards compatibility
+        total_score = scores.get('total', 0)
+        grade = data.get('grade', 'N/A')
+        
+        summary_text = f"""
+<b>▶ 최종 요약:</b><br/>
+<b>총점:</b> {total_score}/110점<br/>
+<b>등급:</b> {grade}<br/>
+<b>심사 통과 가능성:</b> {approval.get('probability', 0)*100:.0f}%<br/>
+<b>판정:</b> {decision.get('type', 'N/A')}<br/>
+<br/>
+<b>▶ 결론:</b><br/>
+{decision.get('rationale', 'N/A')}
+"""
+        story.append(Paragraph(summary_text, styles['Normal']))
+        
+        doc.build(story)
+        buffer.seek(0)
+        return buffer.getvalue()
+    
+    def generate_comprehensive_pdf(self, data: Dict[str, Any]) -> bytes:
+        """종합 보고서 PDF 생성 (M2-M6 통합)"""
+        # TODO: 구현
+        return self.generate_m2_appraisal_pdf(data.get('m2', {}))

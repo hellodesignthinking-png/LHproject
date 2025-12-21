@@ -1,0 +1,36 @@
+.step2 .map-section {
+  margin: 20px 0;
+}
+
+.step2 .form-section {
+  background: #f9fafb;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.step2 .form-row {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+
+.step2 .form-row label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.step2 .form-row input {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.step2 .form-row input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}

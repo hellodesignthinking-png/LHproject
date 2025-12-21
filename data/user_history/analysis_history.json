@@ -1,0 +1,2602 @@
+[
+  {
+    "analysis_id": "7c228ddc",
+    "timestamp": "2025-11-09T02:48:15.837612",
+    "address": "구로구 디지털로 210",
+    "land_area": 1995,
+    "recommended_type": "신혼·신생아 II",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 92.6,
+      "신혼·신생아 I": 95.4,
+      "신혼·신생아 II": 100,
+      "다자녀": 100,
+      "고령자": 76.3,
+      "일반": 100,
+      "든든전세": 88.1
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 80,
+      "building_capacity": {
+        "units": 89,
+        "floors": 9
+      }
+    },
+    "notes": "추가 검토 필요"
+  },
+  {
+    "analysis_id": "a87a60ae",
+    "timestamp": "2025-11-17T02:48:15.837766",
+    "address": "강서구 공항대로 765",
+    "land_area": 1432,
+    "recommended_type": "신혼·신생아 II",
+    "demand_score": 86.7,
+    "all_types_scores": {
+      "청년": 64.4,
+      "신혼·신생아 I": 75.8,
+      "신혼·신생아 II": 86.7,
+      "다자녀": 63.4,
+      "고령자": 69.8,
+      "일반": 70.9,
+      "든든전세": 60.3
+    },
+    "analysis_data": {
+      "zone_type": "준주거지역",
+      "accessibility_score": 83,
+      "building_capacity": {
+        "units": 36,
+        "floors": 13
+      }
+    },
+    "notes": ""
+  },
+  {
+    "analysis_id": "f91ed032",
+    "timestamp": "2025-11-22T02:48:15.837831",
+    "address": "금천구 가산디지털1로 654",
+    "land_area": 1044,
+    "recommended_type": "신혼·신생아 I",
+    "demand_score": 98.1,
+    "all_types_scores": {
+      "청년": 90.9,
+      "신혼·신생아 I": 98.1,
+      "신혼·신생아 II": 77.4,
+      "다자녀": 94.6,
+      "고령자": 80.1,
+      "일반": 88.7,
+      "든든전세": 78.6
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 85,
+      "building_capacity": {
+        "units": 63,
+        "floors": 7
+      }
+    },
+    "notes": "교통 편리"
+  },
+  {
+    "analysis_id": "3f9fccb1",
+    "timestamp": "2025-11-24T02:48:15.837882",
+    "address": "강남구 역삼동 456",
+    "land_area": 1527,
+    "recommended_type": "다자녀",
+    "demand_score": 79.5,
+    "all_types_scores": {
+      "청년": 65.8,
+      "신혼·신생아 I": 56.2,
+      "신혼·신생아 II": 51.1,
+      "다자녀": 79.5,
+      "고령자": 67.3,
+      "일반": 77.5,
+      "든든전세": 62.0
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 94,
+      "building_capacity": {
+        "units": 65,
+        "floors": 11
+      }
+    },
+    "notes": ""
+  },
+  {
+    "analysis_id": "00b07fd9",
+    "timestamp": "2025-11-04T02:48:15.837926",
+    "address": "강동구 천호대로 432",
+    "land_area": 1705,
+    "recommended_type": "신혼·신생아 II",
+    "demand_score": 72.4,
+    "all_types_scores": {
+      "청년": 50.3,
+      "신혼·신생아 I": 56.7,
+      "신혼·신생아 II": 72.4,
+      "다자녀": 66.3,
+      "고령자": 68.3,
+      "일반": 62.3,
+      "든든전세": 50.6
+    },
+    "analysis_data": {
+      "zone_type": "준주거지역",
+      "accessibility_score": 82,
+      "building_capacity": {
+        "units": 42,
+        "floors": 9
+      }
+    },
+    "notes": "추가 검토 필요"
+  },
+  {
+    "analysis_id": "fa243948",
+    "timestamp": "2025-12-01T02:48:15.837970",
+    "address": "마포구 월드컵북로 120",
+    "land_area": 625,
+    "recommended_type": "신혼·신생아 II",
+    "demand_score": 97.8,
+    "all_types_scores": {
+      "청년": 91.6,
+      "신혼·신생아 I": 89.1,
+      "신혼·신생아 II": 97.8,
+      "다자녀": 77.2,
+      "고령자": 93.8,
+      "일반": 91.2,
+      "든든전세": 96.7
+    },
+    "analysis_data": {
+      "zone_type": "제1종일반주거지역",
+      "accessibility_score": 87,
+      "building_capacity": {
+        "units": 38,
+        "floors": 14
+      }
+    },
+    "notes": "교통 편리"
+  },
+  {
+    "analysis_id": "b03904cd",
+    "timestamp": "2025-11-19T02:48:15.838012",
+    "address": "동작구 사당로 543",
+    "land_area": 1967,
+    "recommended_type": "신혼·신생아 I",
+    "demand_score": 93.2,
+    "all_types_scores": {
+      "청년": 92.1,
+      "신혼·신생아 I": 93.2,
+      "신혼·신생아 II": 81.8,
+      "다자녀": 75.8,
+      "고령자": 76.4,
+      "일반": 93.0,
+      "든든전세": 85.6
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 80,
+      "building_capacity": {
+        "units": 70,
+        "floors": 10
+      }
+    },
+    "notes": "학군 우수"
+  },
+  {
+    "analysis_id": "a72bde4b",
+    "timestamp": "2025-11-25T02:48:15.838052",
+    "address": "광진구 능동로 890",
+    "land_area": 1445,
+    "recommended_type": "신혼·신생아 I",
+    "demand_score": 83.8,
+    "all_types_scores": {
+      "청년": 83.7,
+      "신혼·신생아 I": 83.8,
+      "신혼·신생아 II": 57.9,
+      "다자녀": 79.1,
+      "고령자": 83.7,
+      "일반": 61.8,
+      "든든전세": 66.3
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 84,
+      "building_capacity": {
+        "units": 88,
+        "floors": 9
+      }
+    },
+    "notes": "교통 편리"
+  },
+  {
+    "analysis_id": "f256533f",
+    "timestamp": "2025-11-11T02:48:15.838099",
+    "address": "영등포구 여의대로 198",
+    "land_area": 1019,
+    "recommended_type": "청년",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 100,
+      "신혼·신생아 I": 85.8,
+      "신혼·신생아 II": 97.2,
+      "다자녀": 96.7,
+      "고령자": 88.0,
+      "일반": 92.1,
+      "든든전세": 100
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 88,
+      "building_capacity": {
+        "units": 77,
+        "floors": 9
+      }
+    },
+    "notes": "학군 우수"
+  },
+  {
+    "analysis_id": "7837acc9",
+    "timestamp": "2025-11-30T02:48:15.838140",
+    "address": "광진구 능동로 890",
+    "land_area": 1895,
+    "recommended_type": "청년",
+    "demand_score": 78.9,
+    "all_types_scores": {
+      "청년": 78.9,
+      "신혼·신생아 I": 58.0,
+      "신혼·신생아 II": 62.7,
+      "다자녀": 67.6,
+      "고령자": 69.5,
+      "일반": 71.7,
+      "든든전세": 71.4
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 75,
+      "building_capacity": {
+        "units": 98,
+        "floors": 8
+      }
+    },
+    "notes": "개발 가능성 높음"
+  },
+  {
+    "analysis_id": "93ec7a0a",
+    "timestamp": "2025-11-05T02:48:15.838191",
+    "address": "강동구 천호대로 432",
+    "land_area": 1787,
+    "recommended_type": "다자녀",
+    "demand_score": 76.2,
+    "all_types_scores": {
+      "청년": 64.3,
+      "신혼·신생아 I": 72.5,
+      "신혼·신생아 II": 66.9,
+      "다자녀": 76.2,
+      "고령자": 73.2,
+      "일반": 72.8,
+      "든든전세": 65.9
+    },
+    "analysis_data": {
+      "zone_type": "제1종일반주거지역",
+      "accessibility_score": 70,
+      "building_capacity": {
+        "units": 64,
+        "floors": 8
+      }
+    },
+    "notes": "우수 입지"
+  },
+  {
+    "analysis_id": "eb017999",
+    "timestamp": "2025-11-17T02:48:15.838232",
+    "address": "마포구 월드컵북로 120",
+    "land_area": 1347,
+    "recommended_type": "고령자",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 91.0,
+      "신혼·신생아 I": 83.4,
+      "신혼·신생아 II": 82.3,
+      "다자녀": 92.4,
+      "고령자": 100,
+      "일반": 90.2,
+      "든든전세": 95.7
+    },
+    "analysis_data": {
+      "zone_type": "준주거지역",
+      "accessibility_score": 93,
+      "building_capacity": {
+        "units": 65,
+        "floors": 14
+      }
+    },
+    "notes": "개발 가능성 높음"
+  },
+  {
+    "analysis_id": "6b9fa0e8",
+    "timestamp": "2025-11-13T02:48:15.838273",
+    "address": "강서구 공항대로 765",
+    "land_area": 1818,
+    "recommended_type": "신혼·신생아 II",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 86.8,
+      "신혼·신생아 I": 93.7,
+      "신혼·신생아 II": 100,
+      "다자녀": 100,
+      "고령자": 92.6,
+      "일반": 79.1,
+      "든든전세": 86.6
+    },
+    "analysis_data": {
+      "zone_type": "준주거지역",
+      "accessibility_score": 90,
+      "building_capacity": {
+        "units": 62,
+        "floors": 14
+      }
+    },
+    "notes": ""
+  },
+  {
+    "analysis_id": "0c1c75d9",
+    "timestamp": "2025-11-04T02:48:15.838312",
+    "address": "강서구 공항대로 765",
+    "land_area": 1973,
+    "recommended_type": "일반",
+    "demand_score": 84.8,
+    "all_types_scores": {
+      "청년": 68.5,
+      "신혼·신생아 I": 75.2,
+      "신혼·신생아 II": 74.6,
+      "다자녀": 69.4,
+      "고령자": 84.3,
+      "일반": 84.8,
+      "든든전세": 76.8
+    },
+    "analysis_data": {
+      "zone_type": "제1종일반주거지역",
+      "accessibility_score": 89,
+      "building_capacity": {
+        "units": 64,
+        "floors": 14
+      }
+    },
+    "notes": "교통 편리"
+  },
+  {
+    "analysis_id": "25b0925b",
+    "timestamp": "2025-11-29T02:48:15.838357",
+    "address": "강남구 테헤란로 123",
+    "land_area": 1155,
+    "recommended_type": "신혼·신생아 I",
+    "demand_score": 76.3,
+    "all_types_scores": {
+      "청년": 67.2,
+      "신혼·신생아 I": 76.3,
+      "신혼·신생아 II": 55.7,
+      "다자녀": 66.2,
+      "고령자": 72.8,
+      "일반": 62.0,
+      "든든전세": 69.1
+    },
+    "analysis_data": {
+      "zone_type": "제1종일반주거지역",
+      "accessibility_score": 82,
+      "building_capacity": {
+        "units": 89,
+        "floors": 6
+      }
+    },
+    "notes": "학군 우수"
+  },
+  {
+    "analysis_id": "b16ae79b",
+    "timestamp": "2025-11-26T02:48:15.838396",
+    "address": "구로구 디지털로 210",
+    "land_area": 1735,
+    "recommended_type": "신혼·신생아 II",
+    "demand_score": 97.0,
+    "all_types_scores": {
+      "청년": 76.2,
+      "신혼·신생아 I": 86.5,
+      "신혼·신생아 II": 97.0,
+      "다자녀": 94.7,
+      "고령자": 93.8,
+      "일반": 84.2,
+      "든든전세": 92.8
+    },
+    "analysis_data": {
+      "zone_type": "준주거지역",
+      "accessibility_score": 82,
+      "building_capacity": {
+        "units": 67,
+        "floors": 4
+      }
+    },
+    "notes": "학군 우수"
+  },
+  {
+    "analysis_id": "33555572",
+    "timestamp": "2025-12-02T02:48:15.838435",
+    "address": "서초구 서초대로 789",
+    "land_area": 906,
+    "recommended_type": "신혼·신생아 I",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 99.6,
+      "신혼·신생아 I": 100,
+      "신혼·신생아 II": 82.5,
+      "다자녀": 94.4,
+      "고령자": 95.4,
+      "일반": 92.9,
+      "든든전세": 89.0
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 86,
+      "building_capacity": {
+        "units": 33,
+        "floors": 15
+      }
+    },
+    "notes": "개발 가능성 높음"
+  },
+  {
+    "analysis_id": "7ab4d272",
+    "timestamp": "2025-11-07T02:48:15.838474",
+    "address": "강동구 천호대로 432",
+    "land_area": 913,
+    "recommended_type": "고령자",
+    "demand_score": 80.5,
+    "all_types_scores": {
+      "청년": 63.5,
+      "신혼·신생아 I": 61.6,
+      "신혼·신생아 II": 67.1,
+      "다자녀": 61.8,
+      "고령자": 80.5,
+      "일반": 75.0,
+      "든든전세": 57.9
+    },
+    "analysis_data": {
+      "zone_type": "준주거지역",
+      "accessibility_score": 85,
+      "building_capacity": {
+        "units": 80,
+        "floors": 6
+      }
+    },
+    "notes": ""
+  },
+  {
+    "analysis_id": "a4912bf4",
+    "timestamp": "2025-11-26T02:48:15.838518",
+    "address": "강남구 역삼동 456",
+    "land_area": 1731,
+    "recommended_type": "고령자",
+    "demand_score": 77.6,
+    "all_types_scores": {
+      "청년": 61.6,
+      "신혼·신생아 I": 59.7,
+      "신혼·신생아 II": 63.0,
+      "다자녀": 66.4,
+      "고령자": 77.6,
+      "일반": 52.1,
+      "든든전세": 54.0
+    },
+    "analysis_data": {
+      "zone_type": "제1종일반주거지역",
+      "accessibility_score": 74,
+      "building_capacity": {
+        "units": 95,
+        "floors": 13
+      }
+    },
+    "notes": "개발 가능성 높음"
+  },
+  {
+    "analysis_id": "7a5b1a51",
+    "timestamp": "2025-11-16T02:48:15.838557",
+    "address": "영등포구 여의대로 198",
+    "land_area": 900,
+    "recommended_type": "고령자",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 86.5,
+      "신혼·신생아 I": 94.3,
+      "신혼·신생아 II": 85.4,
+      "다자녀": 86.0,
+      "고령자": 100,
+      "일반": 100,
+      "든든전세": 87.9
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 92,
+      "building_capacity": {
+        "units": 64,
+        "floors": 7
+      }
+    },
+    "notes": "교통 편리"
+  },
+  {
+    "analysis_id": "be758bac",
+    "timestamp": "2025-11-17T02:48:15.838599",
+    "address": "성동구 왕십리로 567",
+    "land_area": 1961,
+    "recommended_type": "청년",
+    "demand_score": 92.1,
+    "all_types_scores": {
+      "청년": 92.1,
+      "신혼·신생아 I": 69.2,
+      "신혼·신생아 II": 68.1,
+      "다자녀": 73.2,
+      "고령자": 68.4,
+      "일반": 66.6,
+      "든든전세": 88.3
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 70,
+      "building_capacity": {
+        "units": 95,
+        "floors": 14
+      }
+    },
+    "notes": "우수 입지"
+  },
+  {
+    "analysis_id": "1461f0b1",
+    "timestamp": "2025-11-24T02:48:15.838642",
+    "address": "관악구 신림로 876",
+    "land_area": 759,
+    "recommended_type": "든든전세",
+    "demand_score": 90.2,
+    "all_types_scores": {
+      "청년": 62.6,
+      "신혼·신생아 I": 65.8,
+      "신혼·신생아 II": 80.1,
+      "다자녀": 82.6,
+      "고령자": 77.8,
+      "일반": 76.9,
+      "든든전세": 90.2
+    },
+    "analysis_data": {
+      "zone_type": "준주거지역",
+      "accessibility_score": 78,
+      "building_capacity": {
+        "units": 83,
+        "floors": 5
+      }
+    },
+    "notes": "개발 가능성 높음"
+  },
+  {
+    "analysis_id": "816d0208",
+    "timestamp": "2025-11-15T02:48:15.838682",
+    "address": "금천구 가산디지털1로 654",
+    "land_area": 716,
+    "recommended_type": "청년",
+    "demand_score": 95.7,
+    "all_types_scores": {
+      "청년": 95.7,
+      "신혼·신생아 I": 72.4,
+      "신혼·신생아 II": 91.0,
+      "다자녀": 70.0,
+      "고령자": 73.7,
+      "일반": 94.7,
+      "든든전세": 69.4
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 88,
+      "building_capacity": {
+        "units": 87,
+        "floors": 14
+      }
+    },
+    "notes": "우수 입지"
+  },
+  {
+    "analysis_id": "b52b03d5",
+    "timestamp": "2025-11-04T02:48:15.838731",
+    "address": "동작구 사당로 543",
+    "land_area": 550,
+    "recommended_type": "청년",
+    "demand_score": 96.5,
+    "all_types_scores": {
+      "청년": 96.5,
+      "신혼·신생아 I": 92.8,
+      "신혼·신생아 II": 93.5,
+      "다자녀": 96.3,
+      "고령자": 84.7,
+      "일반": 93.8,
+      "든든전세": 82.2
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 75,
+      "building_capacity": {
+        "units": 67,
+        "floors": 13
+      }
+    },
+    "notes": ""
+  },
+  {
+    "analysis_id": "0c8966f3",
+    "timestamp": "2025-11-25T02:48:15.838770",
+    "address": "동작구 사당로 543",
+    "land_area": 1293,
+    "recommended_type": "청년",
+    "demand_score": 80.9,
+    "all_types_scores": {
+      "청년": 80.9,
+      "신혼·신생아 I": 72.2,
+      "신혼·신생아 II": 70.8,
+      "다자녀": 63.6,
+      "고령자": 70.7,
+      "일반": 69.0,
+      "든든전세": 67.5
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 90,
+      "building_capacity": {
+        "units": 39,
+        "floors": 14
+      }
+    },
+    "notes": ""
+  },
+  {
+    "analysis_id": "df5d9804",
+    "timestamp": "2025-11-27T02:48:15.838809",
+    "address": "송파구 올림픽로 321",
+    "land_area": 1798,
+    "recommended_type": "청년",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 100,
+      "신혼·신생아 I": 90.6,
+      "신혼·신생아 II": 77.0,
+      "다자녀": 85.2,
+      "고령자": 92.4,
+      "일반": 93.0,
+      "든든전세": 93.8
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 84,
+      "building_capacity": {
+        "units": 35,
+        "floors": 7
+      }
+    },
+    "notes": "개발 가능성 높음"
+  },
+  {
+    "analysis_id": "8edbae92",
+    "timestamp": "2025-11-13T02:48:15.838853",
+    "address": "강남구 역삼동 456",
+    "land_area": 1301,
+    "recommended_type": "고령자",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 86.0,
+      "신혼·신생아 I": 97.9,
+      "신혼·신생아 II": 95.6,
+      "다자녀": 88.0,
+      "고령자": 100,
+      "일반": 80.4,
+      "든든전세": 95.3
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 85,
+      "building_capacity": {
+        "units": 50,
+        "floors": 4
+      }
+    },
+    "notes": "우수 입지"
+  },
+  {
+    "analysis_id": "cae99a80",
+    "timestamp": "2025-11-07T02:48:15.838899",
+    "address": "관악구 신림로 876",
+    "land_area": 1823,
+    "recommended_type": "고령자",
+    "demand_score": 72.6,
+    "all_types_scores": {
+      "청년": 72.4,
+      "신혼·신생아 I": 68.3,
+      "신혼·신생아 II": 50.2,
+      "다자녀": 50.2,
+      "고령자": 72.6,
+      "일반": 65.2,
+      "든든전세": 71.5
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 80,
+      "building_capacity": {
+        "units": 75,
+        "floors": 5
+      }
+    },
+    "notes": "개발 가능성 높음"
+  },
+  {
+    "analysis_id": "f531a790",
+    "timestamp": "2025-11-08T02:48:15.838939",
+    "address": "동작구 사당로 543",
+    "land_area": 1718,
+    "recommended_type": "신혼·신생아 II",
+    "demand_score": 71.9,
+    "all_types_scores": {
+      "청년": 60.8,
+      "신혼·신생아 I": 70.4,
+      "신혼·신생아 II": 71.9,
+      "다자녀": 66.5,
+      "고령자": 68.6,
+      "일반": 57.2,
+      "든든전세": 60.5
+    },
+    "analysis_data": {
+      "zone_type": "준주거지역",
+      "accessibility_score": 72,
+      "building_capacity": {
+        "units": 69,
+        "floors": 5
+      }
+    },
+    "notes": "추가 검토 필요"
+  },
+  {
+    "analysis_id": "bd22cca0",
+    "timestamp": "2025-11-14T02:48:15.838977",
+    "address": "관악구 신림로 876",
+    "land_area": 1062,
+    "recommended_type": "신혼·신생아 I",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 92.6,
+      "신혼·신생아 I": 100,
+      "신혼·신생아 II": 100,
+      "다자녀": 82.2,
+      "고령자": 100,
+      "일반": 96.9,
+      "든든전세": 88.3
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 94,
+      "building_capacity": {
+        "units": 38,
+        "floors": 15
+      }
+    },
+    "notes": ""
+  },
+  {
+    "analysis_id": "824581ef",
+    "timestamp": "2025-11-11T02:48:15.839018",
+    "address": "강동구 천호대로 432",
+    "land_area": 1009,
+    "recommended_type": "일반",
+    "demand_score": 78.9,
+    "all_types_scores": {
+      "청년": 52.7,
+      "신혼·신생아 I": 77.1,
+      "신혼·신생아 II": 61.2,
+      "다자녀": 52.6,
+      "고령자": 64.8,
+      "일반": 78.9,
+      "든든전세": 73.6
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 73,
+      "building_capacity": {
+        "units": 42,
+        "floors": 10
+      }
+    },
+    "notes": "우수 입지"
+  },
+  {
+    "analysis_id": "029831ac",
+    "timestamp": "2025-11-14T02:48:15.839057",
+    "address": "광진구 능동로 890",
+    "land_area": 1666,
+    "recommended_type": "일반",
+    "demand_score": 95.2,
+    "all_types_scores": {
+      "청년": 68.5,
+      "신혼·신생아 I": 71.5,
+      "신혼·신생아 II": 78.0,
+      "다자녀": 71.6,
+      "고령자": 92.1,
+      "일반": 95.2,
+      "든든전세": 75.8
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 89,
+      "building_capacity": {
+        "units": 99,
+        "floors": 14
+      }
+    },
+    "notes": ""
+  },
+  {
+    "analysis_id": "ba19dd0c",
+    "timestamp": "2025-11-08T02:48:15.839097",
+    "address": "강남구 테헤란로 123",
+    "land_area": 1504,
+    "recommended_type": "고령자",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 88.7,
+      "신혼·신생아 I": 82.5,
+      "신혼·신생아 II": 88.6,
+      "다자녀": 84.3,
+      "고령자": 100,
+      "일반": 95.2,
+      "든든전세": 90.8
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 78,
+      "building_capacity": {
+        "units": 98,
+        "floors": 13
+      }
+    },
+    "notes": "개발 가능성 높음"
+  },
+  {
+    "analysis_id": "62dc085a",
+    "timestamp": "2025-11-18T02:48:15.839135",
+    "address": "강동구 천호대로 432",
+    "land_area": 1834,
+    "recommended_type": "청년",
+    "demand_score": 90.9,
+    "all_types_scores": {
+      "청년": 90.9,
+      "신혼·신생아 I": 70.3,
+      "신혼·신생아 II": 70.9,
+      "다자녀": 72.3,
+      "고령자": 72.8,
+      "일반": 76.8,
+      "든든전세": 70.7
+    },
+    "analysis_data": {
+      "zone_type": "제1종일반주거지역",
+      "accessibility_score": 81,
+      "building_capacity": {
+        "units": 37,
+        "floors": 10
+      }
+    },
+    "notes": "우수 입지"
+  },
+  {
+    "analysis_id": "56e61fc9",
+    "timestamp": "2025-11-18T02:48:15.839198",
+    "address": "강동구 천호대로 432",
+    "land_area": 931,
+    "recommended_type": "다자녀",
+    "demand_score": 92.5,
+    "all_types_scores": {
+      "청년": 86.3,
+      "신혼·신생아 I": 77.7,
+      "신혼·신생아 II": 77.8,
+      "다자녀": 92.5,
+      "고령자": 80.6,
+      "일반": 75.1,
+      "든든전세": 85.0
+    },
+    "analysis_data": {
+      "zone_type": "준주거지역",
+      "accessibility_score": 76,
+      "building_capacity": {
+        "units": 58,
+        "floors": 5
+      }
+    },
+    "notes": "추가 검토 필요"
+  },
+  {
+    "analysis_id": "2ee9491e",
+    "timestamp": "2025-11-25T02:48:15.839265",
+    "address": "광진구 능동로 890",
+    "land_area": 1559,
+    "recommended_type": "청년",
+    "demand_score": 79.7,
+    "all_types_scores": {
+      "청년": 79.7,
+      "신혼·신생아 I": 68.0,
+      "신혼·신생아 II": 57.2,
+      "다자녀": 70.0,
+      "고령자": 76.9,
+      "일반": 57.3,
+      "든든전세": 67.3
+    },
+    "analysis_data": {
+      "zone_type": "제1종일반주거지역",
+      "accessibility_score": 75,
+      "building_capacity": {
+        "units": 37,
+        "floors": 15
+      }
+    },
+    "notes": "우수 입지"
+  },
+  {
+    "analysis_id": "294f6b4c",
+    "timestamp": "2025-11-13T02:48:15.839329",
+    "address": "영등포구 여의대로 198",
+    "land_area": 1658,
+    "recommended_type": "든든전세",
+    "demand_score": 95.4,
+    "all_types_scores": {
+      "청년": 95.1,
+      "신혼·신생아 I": 93.0,
+      "신혼·신생아 II": 84.7,
+      "다자녀": 82.0,
+      "고령자": 95.2,
+      "일반": 82.9,
+      "든든전세": 95.4
+    },
+    "analysis_data": {
+      "zone_type": "준주거지역",
+      "accessibility_score": 91,
+      "building_capacity": {
+        "units": 96,
+        "floors": 12
+      }
+    },
+    "notes": "교통 편리"
+  },
+  {
+    "analysis_id": "4b214f94",
+    "timestamp": "2025-11-17T02:48:15.839407",
+    "address": "관악구 신림로 876",
+    "land_area": 1072,
+    "recommended_type": "일반",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 89.6,
+      "신혼·신생아 I": 86.0,
+      "신혼·신생아 II": 93.7,
+      "다자녀": 87.9,
+      "고령자": 91.2,
+      "일반": 100,
+      "든든전세": 88.4
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 92,
+      "building_capacity": {
+        "units": 74,
+        "floors": 11
+      }
+    },
+    "notes": "추가 검토 필요"
+  },
+  {
+    "analysis_id": "8024ef56",
+    "timestamp": "2025-12-03T02:48:15.839472",
+    "address": "강서구 공항대로 765",
+    "land_area": 1143,
+    "recommended_type": "신혼·신생아 I",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 93.1,
+      "신혼·신생아 I": 100,
+      "신혼·신생아 II": 98.8,
+      "다자녀": 80.5,
+      "고령자": 87.0,
+      "일반": 95.4,
+      "든든전세": 83.1
+    },
+    "analysis_data": {
+      "zone_type": "준주거지역",
+      "accessibility_score": 81,
+      "building_capacity": {
+        "units": 97,
+        "floors": 14
+      }
+    },
+    "notes": ""
+  },
+  {
+    "analysis_id": "324763c2",
+    "timestamp": "2025-11-23T02:48:15.839546",
+    "address": "성동구 왕십리로 567",
+    "land_area": 949,
+    "recommended_type": "신혼·신생아 II",
+    "demand_score": 96.7,
+    "all_types_scores": {
+      "청년": 70.4,
+      "신혼·신생아 I": 82.0,
+      "신혼·신생아 II": 96.7,
+      "다자녀": 77.4,
+      "고령자": 84.2,
+      "일반": 67.9,
+      "든든전세": 96.2
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 75,
+      "building_capacity": {
+        "units": 94,
+        "floors": 11
+      }
+    },
+    "notes": "우수 입지"
+  },
+  {
+    "analysis_id": "09f3d988",
+    "timestamp": "2025-11-29T02:48:15.839625",
+    "address": "광진구 능동로 890",
+    "land_area": 1904,
+    "recommended_type": "청년",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 100,
+      "신혼·신생아 I": 84.0,
+      "신혼·신생아 II": 100,
+      "다자녀": 87.4,
+      "고령자": 86.4,
+      "일반": 100,
+      "든든전세": 97.9
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 75,
+      "building_capacity": {
+        "units": 36,
+        "floors": 6
+      }
+    },
+    "notes": "개발 가능성 높음"
+  },
+  {
+    "analysis_id": "ce5ba3b7",
+    "timestamp": "2025-11-10T02:48:15.839702",
+    "address": "용산구 이태원로 234",
+    "land_area": 1586,
+    "recommended_type": "일반",
+    "demand_score": 92.5,
+    "all_types_scores": {
+      "청년": 88.2,
+      "신혼·신생아 I": 65.0,
+      "신혼·신생아 II": 64.9,
+      "다자녀": 87.2,
+      "고령자": 87.8,
+      "일반": 92.5,
+      "든든전세": 73.7
+    },
+    "analysis_data": {
+      "zone_type": "제1종일반주거지역",
+      "accessibility_score": 87,
+      "building_capacity": {
+        "units": 61,
+        "floors": 7
+      }
+    },
+    "notes": "우수 입지"
+  },
+  {
+    "analysis_id": "c89b2cd2",
+    "timestamp": "2025-11-13T02:48:15.839790",
+    "address": "성동구 왕십리로 567",
+    "land_area": 601,
+    "recommended_type": "다자녀",
+    "demand_score": 96.5,
+    "all_types_scores": {
+      "청년": 84.5,
+      "신혼·신생아 I": 93.8,
+      "신혼·신생아 II": 87.3,
+      "다자녀": 96.5,
+      "고령자": 83.6,
+      "일반": 85.5,
+      "든든전세": 96.0
+    },
+    "analysis_data": {
+      "zone_type": "제1종일반주거지역",
+      "accessibility_score": 83,
+      "building_capacity": {
+        "units": 70,
+        "floors": 6
+      }
+    },
+    "notes": ""
+  },
+  {
+    "analysis_id": "1d66a1d2",
+    "timestamp": "2025-11-10T02:48:15.839868",
+    "address": "송파구 올림픽로 321",
+    "land_area": 1902,
+    "recommended_type": "청년",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 100,
+      "신혼·신생아 I": 83.8,
+      "신혼·신생아 II": 100,
+      "다자녀": 92.3,
+      "고령자": 94.6,
+      "일반": 90.9,
+      "든든전세": 97.8
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 73,
+      "building_capacity": {
+        "units": 52,
+        "floors": 7
+      }
+    },
+    "notes": "우수 입지"
+  },
+  {
+    "analysis_id": "99b762c4",
+    "timestamp": "2025-11-21T02:48:15.839952",
+    "address": "용산구 이태원로 234",
+    "land_area": 1483,
+    "recommended_type": "고령자",
+    "demand_score": 78.6,
+    "all_types_scores": {
+      "청년": 62.0,
+      "신혼·신생아 I": 52.1,
+      "신혼·신생아 II": 72.3,
+      "다자녀": 70.5,
+      "고령자": 78.6,
+      "일반": 74.2,
+      "든든전세": 51.4
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 77,
+      "building_capacity": {
+        "units": 54,
+        "floors": 7
+      }
+    },
+    "notes": "추가 검토 필요"
+  },
+  {
+    "analysis_id": "7d6fb9d3",
+    "timestamp": "2025-12-01T02:48:15.840022",
+    "address": "서초구 서초대로 789",
+    "land_area": 1632,
+    "recommended_type": "신혼·신생아 I",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 98.2,
+      "신혼·신생아 I": 100,
+      "신혼·신생아 II": 100,
+      "다자녀": 100,
+      "고령자": 100,
+      "일반": 100,
+      "든든전세": 86.7
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 83,
+      "building_capacity": {
+        "units": 94,
+        "floors": 4
+      }
+    },
+    "notes": "우수 입지"
+  },
+  {
+    "analysis_id": "a647b218",
+    "timestamp": "2025-11-06T02:48:15.840092",
+    "address": "강남구 역삼동 456",
+    "land_area": 851,
+    "recommended_type": "다자녀",
+    "demand_score": 96.1,
+    "all_types_scores": {
+      "청년": 86.4,
+      "신혼·신생아 I": 89.4,
+      "신혼·신생아 II": 86.0,
+      "다자녀": 96.1,
+      "고령자": 84.3,
+      "일반": 90.5,
+      "든든전세": 70.0
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 77,
+      "building_capacity": {
+        "units": 43,
+        "floors": 8
+      }
+    },
+    "notes": "학군 우수"
+  },
+  {
+    "analysis_id": "c8a7a4b5",
+    "timestamp": "2025-12-02T02:48:15.840183",
+    "address": "성동구 왕십리로 567",
+    "land_area": 1241,
+    "recommended_type": "신혼·신생아 I",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 85.8,
+      "신혼·신생아 I": 100,
+      "신혼·신생아 II": 84.7,
+      "다자녀": 82.2,
+      "고령자": 83.7,
+      "일반": 100,
+      "든든전세": 100
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 73,
+      "building_capacity": {
+        "units": 86,
+        "floors": 6
+      }
+    },
+    "notes": "추가 검토 필요"
+  },
+  {
+    "analysis_id": "857131d2",
+    "timestamp": "2025-11-08T02:48:15.840251",
+    "address": "서초구 서초대로 789",
+    "land_area": 909,
+    "recommended_type": "고령자",
+    "demand_score": 76.1,
+    "all_types_scores": {
+      "청년": 58.9,
+      "신혼·신생아 I": 69.2,
+      "신혼·신생아 II": 66.6,
+      "다자녀": 74.3,
+      "고령자": 76.1,
+      "일반": 63.8,
+      "든든전세": 60.8
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 71,
+      "building_capacity": {
+        "units": 52,
+        "floors": 5
+      }
+    },
+    "notes": ""
+  },
+  {
+    "analysis_id": "da3e262b",
+    "timestamp": "2025-11-07T02:48:15.840320",
+    "address": "관악구 신림로 876",
+    "land_area": 1078,
+    "recommended_type": "신혼·신생아 II",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 92.9,
+      "신혼·신생아 I": 97.5,
+      "신혼·신생아 II": 100,
+      "다자녀": 77.5,
+      "고령자": 87.1,
+      "일반": 86.0,
+      "든든전세": 90.1
+    },
+    "analysis_data": {
+      "zone_type": "제1종일반주거지역",
+      "accessibility_score": 79,
+      "building_capacity": {
+        "units": 64,
+        "floors": 12
+      }
+    },
+    "notes": "우수 입지"
+  },
+  {
+    "analysis_id": "f0572d44",
+    "timestamp": "2025-11-16T02:48:15.840398",
+    "address": "마포구 월드컵북로 120",
+    "land_area": 1782,
+    "recommended_type": "신혼·신생아 I",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 98.0,
+      "신혼·신생아 I": 100,
+      "신혼·신생아 II": 95.8,
+      "다자녀": 85.3,
+      "고령자": 100,
+      "일반": 100,
+      "든든전세": 97.3
+    },
+    "analysis_data": {
+      "zone_type": "준주거지역",
+      "accessibility_score": 86,
+      "building_capacity": {
+        "units": 44,
+        "floors": 6
+      }
+    },
+    "notes": "교통 편리"
+  },
+  {
+    "analysis_id": "ddd0e5f8",
+    "timestamp": "2025-11-28T02:48:15.840468",
+    "address": "마포구 월드컵북로 120",
+    "land_area": 640,
+    "recommended_type": "신혼·신생아 II",
+    "demand_score": 83.0,
+    "all_types_scores": {
+      "청년": 63.1,
+      "신혼·신생아 I": 68.3,
+      "신혼·신생아 II": 83.0,
+      "다자녀": 64.4,
+      "고령자": 81.8,
+      "일반": 67.3,
+      "든든전세": 75.6
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 91,
+      "building_capacity": {
+        "units": 73,
+        "floors": 14
+      }
+    },
+    "notes": "개발 가능성 높음"
+  },
+  {
+    "analysis_id": "d4cfcc0b",
+    "timestamp": "2025-11-12T02:48:15.840543",
+    "address": "강동구 천호대로 432",
+    "land_area": 1614,
+    "recommended_type": "신혼·신생아 II",
+    "demand_score": 89.4,
+    "all_types_scores": {
+      "청년": 65.8,
+      "신혼·신생아 I": 67.9,
+      "신혼·신생아 II": 89.4,
+      "다자녀": 74.4,
+      "고령자": 83.5,
+      "일반": 73.1,
+      "든든전세": 72.2
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 88,
+      "building_capacity": {
+        "units": 45,
+        "floors": 11
+      }
+    },
+    "notes": "학군 우수"
+  },
+  {
+    "analysis_id": "0a7500bb",
+    "timestamp": "2025-11-10T02:48:15.840611",
+    "address": "강동구 천호대로 432",
+    "land_area": 1584,
+    "recommended_type": "신혼·신생아 II",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 92.8,
+      "신혼·신생아 I": 78.7,
+      "신혼·신생아 II": 100,
+      "다자녀": 89.7,
+      "고령자": 92.1,
+      "일반": 92.4,
+      "든든전세": 99.3
+    },
+    "analysis_data": {
+      "zone_type": "제1종일반주거지역",
+      "accessibility_score": 82,
+      "building_capacity": {
+        "units": 53,
+        "floors": 5
+      }
+    },
+    "notes": "추가 검토 필요"
+  },
+  {
+    "analysis_id": "af2d83ef",
+    "timestamp": "2025-11-10T02:48:15.840682",
+    "address": "성동구 왕십리로 567",
+    "land_area": 1474,
+    "recommended_type": "일반",
+    "demand_score": 97.9,
+    "all_types_scores": {
+      "청년": 89.4,
+      "신혼·신생아 I": 87.0,
+      "신혼·신생아 II": 87.1,
+      "다자녀": 91.2,
+      "고령자": 74.2,
+      "일반": 97.9,
+      "든든전세": 93.8
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 81,
+      "building_capacity": {
+        "units": 37,
+        "floors": 8
+      }
+    },
+    "notes": "우수 입지"
+  },
+  {
+    "analysis_id": "ab5ff7d6",
+    "timestamp": "2025-11-03T02:48:15.840776",
+    "address": "구로구 디지털로 210",
+    "land_area": 641,
+    "recommended_type": "든든전세",
+    "demand_score": 81.1,
+    "all_types_scores": {
+      "청년": 58.9,
+      "신혼·신생아 I": 68.4,
+      "신혼·신생아 II": 79.2,
+      "다자녀": 52.6,
+      "고령자": 55.0,
+      "일반": 59.6,
+      "든든전세": 81.1
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 81,
+      "building_capacity": {
+        "units": 55,
+        "floors": 11
+      }
+    },
+    "notes": "우수 입지"
+  },
+  {
+    "analysis_id": "5ca89c2d",
+    "timestamp": "2025-11-17T02:48:15.840850",
+    "address": "동작구 사당로 543",
+    "land_area": 924,
+    "recommended_type": "신혼·신생아 II",
+    "demand_score": 95.0,
+    "all_types_scores": {
+      "청년": 93.0,
+      "신혼·신생아 I": 74.7,
+      "신혼·신생아 II": 95.0,
+      "다자녀": 75.5,
+      "고령자": 77.4,
+      "일반": 89.2,
+      "든든전세": 94.6
+    },
+    "analysis_data": {
+      "zone_type": "준주거지역",
+      "accessibility_score": 94,
+      "building_capacity": {
+        "units": 32,
+        "floors": 15
+      }
+    },
+    "notes": "교통 편리"
+  },
+  {
+    "analysis_id": "b4a27959",
+    "timestamp": "2025-11-22T02:48:15.840929",
+    "address": "서초구 서초대로 789",
+    "land_area": 1674,
+    "recommended_type": "일반",
+    "demand_score": 92.8,
+    "all_types_scores": {
+      "청년": 84.4,
+      "신혼·신생아 I": 89.8,
+      "신혼·신생아 II": 86.2,
+      "다자녀": 68.9,
+      "고령자": 69.2,
+      "일반": 92.8,
+      "든든전세": 80.9
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 86,
+      "building_capacity": {
+        "units": 91,
+        "floors": 7
+      }
+    },
+    "notes": "추가 검토 필요"
+  },
+  {
+    "analysis_id": "6165bf82",
+    "timestamp": "2025-11-26T02:48:15.841005",
+    "address": "마포구 월드컵북로 120",
+    "land_area": 1033,
+    "recommended_type": "든든전세",
+    "demand_score": 88.0,
+    "all_types_scores": {
+      "청년": 63.2,
+      "신혼·신생아 I": 81.5,
+      "신혼·신생아 II": 67.6,
+      "다자녀": 73.8,
+      "고령자": 65.6,
+      "일반": 59.3,
+      "든든전세": 88.0
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 86,
+      "building_capacity": {
+        "units": 52,
+        "floors": 8
+      }
+    },
+    "notes": "교통 편리"
+  },
+  {
+    "analysis_id": "168f5727",
+    "timestamp": "2025-11-25T02:48:15.841078",
+    "address": "구로구 디지털로 210",
+    "land_area": 1094,
+    "recommended_type": "청년",
+    "demand_score": 86.4,
+    "all_types_scores": {
+      "청년": 86.4,
+      "신혼·신생아 I": 69.1,
+      "신혼·신생아 II": 82.6,
+      "다자녀": 75.6,
+      "고령자": 67.5,
+      "일반": 68.2,
+      "든든전세": 80.8
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 74,
+      "building_capacity": {
+        "units": 67,
+        "floors": 11
+      }
+    },
+    "notes": "우수 입지"
+  },
+  {
+    "analysis_id": "833794e9",
+    "timestamp": "2025-11-15T02:48:15.841154",
+    "address": "광진구 능동로 890",
+    "land_area": 572,
+    "recommended_type": "고령자",
+    "demand_score": 86.1,
+    "all_types_scores": {
+      "청년": 66.4,
+      "신혼·신생아 I": 70.0,
+      "신혼·신생아 II": 72.1,
+      "다자녀": 84.9,
+      "고령자": 86.1,
+      "일반": 67.3,
+      "든든전세": 59.5
+    },
+    "analysis_data": {
+      "zone_type": "제1종일반주거지역",
+      "accessibility_score": 86,
+      "building_capacity": {
+        "units": 86,
+        "floors": 14
+      }
+    },
+    "notes": "추가 검토 필요"
+  },
+  {
+    "analysis_id": "fa2fff60",
+    "timestamp": "2025-11-14T02:48:15.841230",
+    "address": "강동구 천호대로 432",
+    "land_area": 1334,
+    "recommended_type": "청년",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 100,
+      "신혼·신생아 I": 96.6,
+      "신혼·신생아 II": 100,
+      "다자녀": 100,
+      "고령자": 97.3,
+      "일반": 100,
+      "든든전세": 100
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 79,
+      "building_capacity": {
+        "units": 75,
+        "floors": 11
+      }
+    },
+    "notes": "교통 편리"
+  },
+  {
+    "analysis_id": "b260ad96",
+    "timestamp": "2025-11-25T02:48:15.841309",
+    "address": "마포구 월드컵북로 120",
+    "land_area": 1374,
+    "recommended_type": "고령자",
+    "demand_score": 72.4,
+    "all_types_scores": {
+      "청년": 50,
+      "신혼·신생아 I": 65.6,
+      "신혼·신생아 II": 71.4,
+      "다자녀": 50.1,
+      "고령자": 72.4,
+      "일반": 50,
+      "든든전세": 70.4
+    },
+    "analysis_data": {
+      "zone_type": "제1종일반주거지역",
+      "accessibility_score": 87,
+      "building_capacity": {
+        "units": 65,
+        "floors": 6
+      }
+    },
+    "notes": ""
+  },
+  {
+    "analysis_id": "f1e55cec",
+    "timestamp": "2025-11-03T02:48:15.841385",
+    "address": "관악구 신림로 876",
+    "land_area": 1984,
+    "recommended_type": "신혼·신생아 I",
+    "demand_score": 86.8,
+    "all_types_scores": {
+      "청년": 82.9,
+      "신혼·신생아 I": 86.8,
+      "신혼·신생아 II": 59.4,
+      "다자녀": 61.1,
+      "고령자": 72.7,
+      "일반": 85.9,
+      "든든전세": 73.8
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 81,
+      "building_capacity": {
+        "units": 60,
+        "floors": 15
+      }
+    },
+    "notes": ""
+  },
+  {
+    "analysis_id": "b9900e4a",
+    "timestamp": "2025-11-14T02:48:15.841470",
+    "address": "마포구 월드컵북로 120",
+    "land_area": 609,
+    "recommended_type": "신혼·신생아 II",
+    "demand_score": 93.2,
+    "all_types_scores": {
+      "청년": 93.1,
+      "신혼·신생아 I": 85.1,
+      "신혼·신생아 II": 93.2,
+      "다자녀": 77.9,
+      "고령자": 71.8,
+      "일반": 71.5,
+      "든든전세": 91.3
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 83,
+      "building_capacity": {
+        "units": 54,
+        "floors": 6
+      }
+    },
+    "notes": "개발 가능성 높음"
+  },
+  {
+    "analysis_id": "ec3be4ab",
+    "timestamp": "2025-11-17T02:48:15.841540",
+    "address": "관악구 신림로 876",
+    "land_area": 1184,
+    "recommended_type": "신혼·신생아 II",
+    "demand_score": 99.7,
+    "all_types_scores": {
+      "청년": 94.8,
+      "신혼·신생아 I": 86.0,
+      "신혼·신생아 II": 99.7,
+      "다자녀": 79.4,
+      "고령자": 99.6,
+      "일반": 81.7,
+      "든든전세": 96.1
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 86,
+      "building_capacity": {
+        "units": 63,
+        "floors": 12
+      }
+    },
+    "notes": "우수 입지"
+  },
+  {
+    "analysis_id": "35b5215a",
+    "timestamp": "2025-12-01T02:48:15.841592",
+    "address": "동작구 사당로 543",
+    "land_area": 1639,
+    "recommended_type": "청년",
+    "demand_score": 74.3,
+    "all_types_scores": {
+      "청년": 74.3,
+      "신혼·신생아 I": 63.9,
+      "신혼·신생아 II": 60.1,
+      "다자녀": 54.0,
+      "고령자": 65.2,
+      "일반": 61.2,
+      "든든전세": 73.9
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 84,
+      "building_capacity": {
+        "units": 89,
+        "floors": 10
+      }
+    },
+    "notes": ""
+  },
+  {
+    "analysis_id": "d0fa0d64",
+    "timestamp": "2025-12-03T02:48:15.841694",
+    "address": "강동구 천호대로 432",
+    "land_area": 1468,
+    "recommended_type": "일반",
+    "demand_score": 88.4,
+    "all_types_scores": {
+      "청년": 64.4,
+      "신혼·신생아 I": 66.6,
+      "신혼·신생아 II": 85.4,
+      "다자녀": 84.1,
+      "고령자": 77.1,
+      "일반": 88.4,
+      "든든전세": 76.7
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 78,
+      "building_capacity": {
+        "units": 41,
+        "floors": 5
+      }
+    },
+    "notes": "개발 가능성 높음"
+  },
+  {
+    "analysis_id": "963a2d57",
+    "timestamp": "2025-11-06T02:48:15.841783",
+    "address": "용산구 이태원로 234",
+    "land_area": 1890,
+    "recommended_type": "든든전세",
+    "demand_score": 89.7,
+    "all_types_scores": {
+      "청년": 68.1,
+      "신혼·신생아 I": 71.8,
+      "신혼·신생아 II": 62.0,
+      "다자녀": 63.3,
+      "고령자": 63.0,
+      "일반": 78.2,
+      "든든전세": 89.7
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 85,
+      "building_capacity": {
+        "units": 55,
+        "floors": 5
+      }
+    },
+    "notes": "개발 가능성 높음"
+  },
+  {
+    "analysis_id": "eb03043a",
+    "timestamp": "2025-11-14T02:48:15.841855",
+    "address": "강남구 역삼동 456",
+    "land_area": 907,
+    "recommended_type": "신혼·신생아 I",
+    "demand_score": 94.6,
+    "all_types_scores": {
+      "청년": 67.9,
+      "신혼·신생아 I": 94.6,
+      "신혼·신생아 II": 74.2,
+      "다자녀": 92.3,
+      "고령자": 82.1,
+      "일반": 93.6,
+      "든든전세": 91.2
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 73,
+      "building_capacity": {
+        "units": 36,
+        "floors": 9
+      }
+    },
+    "notes": "우수 입지"
+  },
+  {
+    "analysis_id": "21f9cbf3",
+    "timestamp": "2025-11-14T02:48:15.841932",
+    "address": "구로구 디지털로 210",
+    "land_area": 1538,
+    "recommended_type": "일반",
+    "demand_score": 85.2,
+    "all_types_scores": {
+      "청년": 59.3,
+      "신혼·신생아 I": 75.8,
+      "신혼·신생아 II": 68.8,
+      "다자녀": 72.9,
+      "고령자": 78.9,
+      "일반": 85.2,
+      "든든전세": 65.8
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 75,
+      "building_capacity": {
+        "units": 54,
+        "floors": 8
+      }
+    },
+    "notes": "추가 검토 필요"
+  },
+  {
+    "analysis_id": "613816f1",
+    "timestamp": "2025-11-11T02:48:15.842011",
+    "address": "송파구 올림픽로 321",
+    "land_area": 541,
+    "recommended_type": "신혼·신생아 II",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 90.0,
+      "신혼·신생아 I": 88.5,
+      "신혼·신생아 II": 100,
+      "다자녀": 98.7,
+      "고령자": 82.8,
+      "일반": 99.7,
+      "든든전세": 80.0
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 73,
+      "building_capacity": {
+        "units": 88,
+        "floors": 12
+      }
+    },
+    "notes": "학군 우수"
+  },
+  {
+    "analysis_id": "c13b8cf1",
+    "timestamp": "2025-12-01T02:48:15.842087",
+    "address": "광진구 능동로 890",
+    "land_area": 985,
+    "recommended_type": "청년",
+    "demand_score": 89.5,
+    "all_types_scores": {
+      "청년": 89.5,
+      "신혼·신생아 I": 74.5,
+      "신혼·신생아 II": 80.7,
+      "다자녀": 78.0,
+      "고령자": 73.3,
+      "일반": 85.7,
+      "든든전세": 77.5
+    },
+    "analysis_data": {
+      "zone_type": "제1종일반주거지역",
+      "accessibility_score": 88,
+      "building_capacity": {
+        "units": 84,
+        "floors": 12
+      }
+    },
+    "notes": "교통 편리"
+  },
+  {
+    "analysis_id": "994df995",
+    "timestamp": "2025-11-26T02:48:15.842163",
+    "address": "강서구 공항대로 765",
+    "land_area": 1817,
+    "recommended_type": "고령자",
+    "demand_score": 85.4,
+    "all_types_scores": {
+      "청년": 67.4,
+      "신혼·신생아 I": 76.1,
+      "신혼·신생아 II": 85.2,
+      "다자녀": 83.6,
+      "고령자": 85.4,
+      "일반": 73.8,
+      "든든전세": 60.0
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 73,
+      "building_capacity": {
+        "units": 41,
+        "floors": 6
+      }
+    },
+    "notes": "학군 우수"
+  },
+  {
+    "analysis_id": "7eb88857",
+    "timestamp": "2025-11-04T02:48:15.842238",
+    "address": "광진구 능동로 890",
+    "land_area": 594,
+    "recommended_type": "신혼·신생아 I",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 93.2,
+      "신혼·신생아 I": 100,
+      "신혼·신생아 II": 100,
+      "다자녀": 77.1,
+      "고령자": 75.3,
+      "일반": 96.7,
+      "든든전세": 94.4
+    },
+    "analysis_data": {
+      "zone_type": "준주거지역",
+      "accessibility_score": 85,
+      "building_capacity": {
+        "units": 39,
+        "floors": 12
+      }
+    },
+    "notes": "개발 가능성 높음"
+  },
+  {
+    "analysis_id": "d2c36b4f",
+    "timestamp": "2025-11-04T02:48:15.842311",
+    "address": "영등포구 여의대로 198",
+    "land_area": 1157,
+    "recommended_type": "고령자",
+    "demand_score": 76.5,
+    "all_types_scores": {
+      "청년": 71.6,
+      "신혼·신생아 I": 57.9,
+      "신혼·신생아 II": 76.0,
+      "다자녀": 67.5,
+      "고령자": 76.5,
+      "일반": 58.2,
+      "든든전세": 74.3
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 90,
+      "building_capacity": {
+        "units": 57,
+        "floors": 5
+      }
+    },
+    "notes": ""
+  },
+  {
+    "analysis_id": "e1c898ec",
+    "timestamp": "2025-12-01T02:48:15.842394",
+    "address": "강서구 공항대로 765",
+    "land_area": 1482,
+    "recommended_type": "신혼·신생아 II",
+    "demand_score": 93.0,
+    "all_types_scores": {
+      "청년": 91.2,
+      "신혼·신생아 I": 70.2,
+      "신혼·신생아 II": 93.0,
+      "다자녀": 69.1,
+      "고령자": 82.6,
+      "일반": 76.4,
+      "든든전세": 84.9
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 86,
+      "building_capacity": {
+        "units": 75,
+        "floors": 11
+      }
+    },
+    "notes": "학군 우수"
+  },
+  {
+    "analysis_id": "f70b7ca3",
+    "timestamp": "2025-11-17T02:48:15.842474",
+    "address": "광진구 능동로 890",
+    "land_area": 1183,
+    "recommended_type": "신혼·신생아 I",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 96.2,
+      "신혼·신생아 I": 100,
+      "신혼·신생아 II": 92.0,
+      "다자녀": 95.3,
+      "고령자": 100,
+      "일반": 81.7,
+      "든든전세": 100
+    },
+    "analysis_data": {
+      "zone_type": "준주거지역",
+      "accessibility_score": 88,
+      "building_capacity": {
+        "units": 72,
+        "floors": 4
+      }
+    },
+    "notes": "추가 검토 필요"
+  },
+  {
+    "analysis_id": "583929fe",
+    "timestamp": "2025-11-03T02:48:15.842547",
+    "address": "관악구 신림로 876",
+    "land_area": 1646,
+    "recommended_type": "일반",
+    "demand_score": 96.7,
+    "all_types_scores": {
+      "청년": 73.4,
+      "신혼·신생아 I": 94.9,
+      "신혼·신생아 II": 84.2,
+      "다자녀": 75.8,
+      "고령자": 90.5,
+      "일반": 96.7,
+      "든든전세": 84.0
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 85,
+      "building_capacity": {
+        "units": 80,
+        "floors": 11
+      }
+    },
+    "notes": "우수 입지"
+  },
+  {
+    "analysis_id": "05b487b3",
+    "timestamp": "2025-11-15T02:48:15.842602",
+    "address": "서초구 서초대로 789",
+    "land_area": 966,
+    "recommended_type": "든든전세",
+    "demand_score": 82.3,
+    "all_types_scores": {
+      "청년": 74.4,
+      "신혼·신생아 I": 56.2,
+      "신혼·신생아 II": 60.0,
+      "다자녀": 56.6,
+      "고령자": 54.7,
+      "일반": 74.7,
+      "든든전세": 82.3
+    },
+    "analysis_data": {
+      "zone_type": "제1종일반주거지역",
+      "accessibility_score": 93,
+      "building_capacity": {
+        "units": 48,
+        "floors": 14
+      }
+    },
+    "notes": ""
+  },
+  {
+    "analysis_id": "e479aafc",
+    "timestamp": "2025-11-30T02:48:15.842668",
+    "address": "동작구 사당로 543",
+    "land_area": 1960,
+    "recommended_type": "다자녀",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 81.4,
+      "신혼·신생아 I": 90.2,
+      "신혼·신생아 II": 99.4,
+      "다자녀": 100,
+      "고령자": 91.6,
+      "일반": 82.3,
+      "든든전세": 96.5
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 85,
+      "building_capacity": {
+        "units": 61,
+        "floors": 14
+      }
+    },
+    "notes": "교통 편리"
+  },
+  {
+    "analysis_id": "c2e7172a",
+    "timestamp": "2025-11-09T02:48:15.842729",
+    "address": "영등포구 여의대로 198",
+    "land_area": 886,
+    "recommended_type": "다자녀",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 89.1,
+      "신혼·신생아 I": 83.0,
+      "신혼·신생아 II": 87.4,
+      "다자녀": 100,
+      "고령자": 92.4,
+      "일반": 98.0,
+      "든든전세": 79.5
+    },
+    "analysis_data": {
+      "zone_type": "준주거지역",
+      "accessibility_score": 80,
+      "building_capacity": {
+        "units": 84,
+        "floors": 13
+      }
+    },
+    "notes": "개발 가능성 높음"
+  },
+  {
+    "analysis_id": "3e8e7db1",
+    "timestamp": "2025-11-19T02:48:15.842771",
+    "address": "영등포구 여의대로 198",
+    "land_area": 1347,
+    "recommended_type": "다자녀",
+    "demand_score": 83.6,
+    "all_types_scores": {
+      "청년": 73.3,
+      "신혼·신생아 I": 76.8,
+      "신혼·신생아 II": 73.2,
+      "다자녀": 83.6,
+      "고령자": 77.7,
+      "일반": 78.5,
+      "든든전세": 61.7
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 85,
+      "building_capacity": {
+        "units": 49,
+        "floors": 5
+      }
+    },
+    "notes": "개발 가능성 높음"
+  },
+  {
+    "analysis_id": "00a459ce",
+    "timestamp": "2025-11-29T02:48:15.842811",
+    "address": "관악구 신림로 876",
+    "land_area": 1669,
+    "recommended_type": "든든전세",
+    "demand_score": 88.4,
+    "all_types_scores": {
+      "청년": 81.5,
+      "신혼·신생아 I": 74.2,
+      "신혼·신생아 II": 80.1,
+      "다자녀": 84.9,
+      "고령자": 85.1,
+      "일반": 81.2,
+      "든든전세": 88.4
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 86,
+      "building_capacity": {
+        "units": 82,
+        "floors": 7
+      }
+    },
+    "notes": ""
+  },
+  {
+    "analysis_id": "daf9fd86",
+    "timestamp": "2025-11-14T02:48:15.842851",
+    "address": "영등포구 여의대로 198",
+    "land_area": 713,
+    "recommended_type": "청년",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 100,
+      "신혼·신생아 I": 80.8,
+      "신혼·신생아 II": 78.0,
+      "다자녀": 90.5,
+      "고령자": 77.0,
+      "일반": 90.7,
+      "든든전세": 99.6
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 72,
+      "building_capacity": {
+        "units": 90,
+        "floors": 8
+      }
+    },
+    "notes": "우수 입지"
+  },
+  {
+    "analysis_id": "e8548d1d",
+    "timestamp": "2025-11-26T02:48:15.842896",
+    "address": "서초구 서초대로 789",
+    "land_area": 1631,
+    "recommended_type": "신혼·신생아 I",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 86.7,
+      "신혼·신생아 I": 100,
+      "신혼·신생아 II": 93.8,
+      "다자녀": 84.6,
+      "고령자": 82.8,
+      "일반": 100,
+      "든든전세": 93.4
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 76,
+      "building_capacity": {
+        "units": 53,
+        "floors": 11
+      }
+    },
+    "notes": "교통 편리"
+  },
+  {
+    "analysis_id": "b5546442",
+    "timestamp": "2025-11-26T02:48:15.842947",
+    "address": "강서구 공항대로 765",
+    "land_area": 1907,
+    "recommended_type": "신혼·신생아 II",
+    "demand_score": 98.3,
+    "all_types_scores": {
+      "청년": 91.0,
+      "신혼·신생아 I": 91.5,
+      "신혼·신생아 II": 98.3,
+      "다자녀": 88.8,
+      "고령자": 83.1,
+      "일반": 88.7,
+      "든든전세": 90.6
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 86,
+      "building_capacity": {
+        "units": 59,
+        "floors": 5
+      }
+    },
+    "notes": "교통 편리"
+  },
+  {
+    "analysis_id": "91aed1a2",
+    "timestamp": "2025-11-07T02:48:15.842982",
+    "address": "강동구 천호대로 432",
+    "land_area": 621,
+    "recommended_type": "일반",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 84.4,
+      "신혼·신생아 I": 95.9,
+      "신혼·신생아 II": 88.7,
+      "다자녀": 89.2,
+      "고령자": 98.3,
+      "일반": 100,
+      "든든전세": 87.7
+    },
+    "analysis_data": {
+      "zone_type": "제1종일반주거지역",
+      "accessibility_score": 86,
+      "building_capacity": {
+        "units": 77,
+        "floors": 8
+      }
+    },
+    "notes": ""
+  },
+  {
+    "analysis_id": "369a6b09",
+    "timestamp": "2025-11-29T02:48:15.843017",
+    "address": "강남구 역삼동 456",
+    "land_area": 1345,
+    "recommended_type": "청년",
+    "demand_score": 83.0,
+    "all_types_scores": {
+      "청년": 83.0,
+      "신혼·신생아 I": 79.9,
+      "신혼·신생아 II": 63.3,
+      "다자녀": 61.6,
+      "고령자": 61.8,
+      "일반": 73.7,
+      "든든전세": 69.9
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 76,
+      "building_capacity": {
+        "units": 61,
+        "floors": 7
+      }
+    },
+    "notes": "우수 입지"
+  },
+  {
+    "analysis_id": "3ac575f9",
+    "timestamp": "2025-11-03T02:48:15.843055",
+    "address": "강동구 천호대로 432",
+    "land_area": 1156,
+    "recommended_type": "고령자",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 86.5,
+      "신혼·신생아 I": 86.9,
+      "신혼·신생아 II": 97.8,
+      "다자녀": 88.0,
+      "고령자": 100,
+      "일반": 88.4,
+      "든든전세": 81.4
+    },
+    "analysis_data": {
+      "zone_type": "제1종일반주거지역",
+      "accessibility_score": 77,
+      "building_capacity": {
+        "units": 62,
+        "floors": 10
+      }
+    },
+    "notes": "학군 우수"
+  },
+  {
+    "analysis_id": "ede3d741",
+    "timestamp": "2025-11-21T02:48:15.843093",
+    "address": "용산구 이태원로 234",
+    "land_area": 1781,
+    "recommended_type": "신혼·신생아 I",
+    "demand_score": 92.7,
+    "all_types_scores": {
+      "청년": 75.1,
+      "신혼·신생아 I": 92.7,
+      "신혼·신생아 II": 73.7,
+      "다자녀": 92.4,
+      "고령자": 79.2,
+      "일반": 76.4,
+      "든든전세": 88.8
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 95,
+      "building_capacity": {
+        "units": 84,
+        "floors": 11
+      }
+    },
+    "notes": "우수 입지"
+  },
+  {
+    "analysis_id": "22a39160",
+    "timestamp": "2025-11-26T02:48:15.843129",
+    "address": "영등포구 여의대로 198",
+    "land_area": 685,
+    "recommended_type": "신혼·신생아 II",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 76.4,
+      "신혼·신생아 I": 87.7,
+      "신혼·신생아 II": 100,
+      "다자녀": 79.4,
+      "고령자": 84.3,
+      "일반": 98.4,
+      "든든전세": 100
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 80,
+      "building_capacity": {
+        "units": 38,
+        "floors": 11
+      }
+    },
+    "notes": "우수 입지"
+  },
+  {
+    "analysis_id": "0495482a",
+    "timestamp": "2025-11-11T02:48:15.843163",
+    "address": "서초구 서초대로 789",
+    "land_area": 531,
+    "recommended_type": "청년",
+    "demand_score": 94.7,
+    "all_types_scores": {
+      "청년": 94.7,
+      "신혼·신생아 I": 90.0,
+      "신혼·신생아 II": 69.9,
+      "다자녀": 68.2,
+      "고령자": 79.7,
+      "일반": 77.7,
+      "든든전세": 81.1
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 87,
+      "building_capacity": {
+        "units": 95,
+        "floors": 12
+      }
+    },
+    "notes": "우수 입지"
+  },
+  {
+    "analysis_id": "2f01baf9",
+    "timestamp": "2025-11-29T02:48:15.843200",
+    "address": "서초구 서초대로 789",
+    "land_area": 518,
+    "recommended_type": "든든전세",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 87.8,
+      "신혼·신생아 I": 98.1,
+      "신혼·신생아 II": 94.7,
+      "다자녀": 96.7,
+      "고령자": 97.4,
+      "일반": 83.1,
+      "든든전세": 100
+    },
+    "analysis_data": {
+      "zone_type": "제1종일반주거지역",
+      "accessibility_score": 86,
+      "building_capacity": {
+        "units": 36,
+        "floors": 7
+      }
+    },
+    "notes": "추가 검토 필요"
+  },
+  {
+    "analysis_id": "b075e6a2",
+    "timestamp": "2025-11-22T02:48:15.843235",
+    "address": "송파구 올림픽로 321",
+    "land_area": 668,
+    "recommended_type": "신혼·신생아 II",
+    "demand_score": 85.5,
+    "all_types_scores": {
+      "청년": 67.1,
+      "신혼·신생아 I": 60.7,
+      "신혼·신생아 II": 85.5,
+      "다자녀": 58.5,
+      "고령자": 77.0,
+      "일반": 60.3,
+      "든든전세": 56.9
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 87,
+      "building_capacity": {
+        "units": 45,
+        "floors": 9
+      }
+    },
+    "notes": "추가 검토 필요"
+  },
+  {
+    "analysis_id": "8cb5ab86",
+    "timestamp": "2025-11-13T02:48:15.843270",
+    "address": "구로구 디지털로 210",
+    "land_area": 1495,
+    "recommended_type": "일반",
+    "demand_score": 73.0,
+    "all_types_scores": {
+      "청년": 65.6,
+      "신혼·신생아 I": 50.7,
+      "신혼·신생아 II": 65.9,
+      "다자녀": 71.9,
+      "고령자": 72.8,
+      "일반": 73.0,
+      "든든전세": 58.7
+    },
+    "analysis_data": {
+      "zone_type": "제3종일반주거지역",
+      "accessibility_score": 83,
+      "building_capacity": {
+        "units": 84,
+        "floors": 8
+      }
+    },
+    "notes": "학군 우수"
+  },
+  {
+    "analysis_id": "ed8ff3cb",
+    "timestamp": "2025-11-30T02:48:15.843312",
+    "address": "용산구 이태원로 234",
+    "land_area": 798,
+    "recommended_type": "청년",
+    "demand_score": 84.6,
+    "all_types_scores": {
+      "청년": 84.6,
+      "신혼·신생아 I": 57.8,
+      "신혼·신생아 II": 57.7,
+      "다자녀": 65.1,
+      "고령자": 80.2,
+      "일반": 76.6,
+      "든든전세": 62.3
+    },
+    "analysis_data": {
+      "zone_type": "준주거지역",
+      "accessibility_score": 72,
+      "building_capacity": {
+        "units": 31,
+        "floors": 12
+      }
+    },
+    "notes": "개발 가능성 높음"
+  },
+  {
+    "analysis_id": "3f2576fa",
+    "timestamp": "2025-11-18T02:48:15.843346",
+    "address": "용산구 이태원로 234",
+    "land_area": 1720,
+    "recommended_type": "일반",
+    "demand_score": 97.9,
+    "all_types_scores": {
+      "청년": 86.4,
+      "신혼·신생아 I": 78.5,
+      "신혼·신생아 II": 94.7,
+      "다자녀": 88.1,
+      "고령자": 89.8,
+      "일반": 97.9,
+      "든든전세": 80.7
+    },
+    "analysis_data": {
+      "zone_type": "제2종일반주거지역",
+      "accessibility_score": 94,
+      "building_capacity": {
+        "units": 40,
+        "floors": 4
+      }
+    },
+    "notes": "개발 가능성 높음"
+  },
+  {
+    "analysis_id": "55ee4e83",
+    "timestamp": "2025-11-07T02:48:15.843381",
+    "address": "구로구 디지털로 210",
+    "land_area": 975,
+    "recommended_type": "청년",
+    "demand_score": 100,
+    "all_types_scores": {
+      "청년": 100,
+      "신혼·신생아 I": 100,
+      "신혼·신생아 II": 100,
+      "다자녀": 95.5,
+      "고령자": 91.9,
+      "일반": 100,
+      "든든전세": 100
+    },
+    "analysis_data": {
+      "zone_type": "준주거지역",
+      "accessibility_score": 91,
+      "building_capacity": {
+        "units": 47,
+        "floors": 4
+      }
+    },
+    "notes": "학군 우수"
+  },
+  {
+    "analysis_id": "4f21ef24",
+    "timestamp": "2025-11-15T02:48:15.843413",
+    "address": "구로구 디지털로 210",
+    "land_area": 1669,
+    "recommended_type": "신혼·신생아 I",
+    "demand_score": 75.7,
+    "all_types_scores": {
+      "청년": 56.2,
+      "신혼·신생아 I": 75.7,
+      "신혼·신생아 II": 73.3,
+      "다자녀": 58.7,
+      "고령자": 70.9,
+      "일반": 57.7,
+      "든든전세": 57.5
+    },
+    "analysis_data": {
+      "zone_type": "제1종일반주거지역",
+      "accessibility_score": 90,
+      "building_capacity": {
+        "units": 99,
+        "floors": 11
+      }
+    },
+    "notes": "교통 편리"
+  }
+]

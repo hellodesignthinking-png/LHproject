@@ -1,0 +1,155 @@
+/* Data Section Component Styles */
+
+.data-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.data-section:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  border-color: #9333ea;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-icon {
+  font-size: 24px;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-success {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #059669;
+}
+
+.status-fallback {
+  background: #fef3c7;
+  color: #92400e;
+  cursor: help;
+  border: 1px solid #f59e0b;
+}
+
+.status-manual {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #3b82f6;
+  cursor: help;
+}
+
+.status-pdf {
+  background: #e0e7ff;
+  color: #4338ca;
+  border: 1px solid #6366f1;
+  cursor: help;
+}
+
+.section-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+/* Data Field Styles */
+
+.data-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.edit-indicator {
+  color: #9333ea;
+  font-size: 14px;
+}
+
+.field-value {
+  font-size: 16px;
+  font-weight: 500;
+  color: #111827;
+  padding: 8px 0;
+}
+
+.field-input {
+  font-size: 16px;
+  font-weight: 500;
+  color: #111827;
+  padding: 10px 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+  transition: all 0.2s ease;
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: #9333ea;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+}
+
+.field-unit {
+  margin-left: 4px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.data-field.editable {
+  background: #faf5ff;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px dashed #d8b4fe;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .section-content {
+    grid-template-columns: 1fr;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}

@@ -47,6 +47,13 @@ class Settings(BaseSettings):
     naver_client_secret: Optional[str] = Field(default=None, description="Naver API Client Secret (optional)")
     
     # ============================================
+    # Redis Configuration
+    # ============================================
+    redis_host: str = Field(default="localhost", description="Redis host")
+    redis_port: int = Field(default=6379, description="Redis port")
+    redis_db: int = Field(default=0, description="Redis database number")
+    
+    # ============================================
     # Database Configuration
     # ============================================
     
