@@ -349,8 +349,8 @@
                 <div class="report-title">토지주 제출용 요약보고서</div>
                 <div class="report-subtitle">쉽고 명확한 분석 요약</div>
                 <div class="report-meta">
-                    생성일: 2025-12-21T13:57:21.567548<br>
-                    Context ID: test-mock-20251221-135703
+                    생성일: 2025-12-21T14:23:41.552777<br>
+                    Context ID: test-mock-20251221-142315
                 </div>
             </div>
             
@@ -359,6 +359,16 @@
                 <div class="section">
                     <div class="decision-card">
                         <div class="decision-title">LH 공공임대 개발이 가능한 토지입니다</div>
+                    </div>
+                </div>
+                
+                <!-- 이 땅으로 무엇을 할 수 있는가 -->
+                <div class="section">
+                    <div class="section-title">🎯 이 땅으로 무엇을 할 수 있나요?</div>
+                    <div style="padding: 20px; background: #F0F9FF; border-radius: 8px; border-left: 4px solid #3B82F6;">
+                        <div style="font-size: 16px; font-weight: 600; color: #1E40AF; line-height: 1.8;">
+                            이 토지는 LH 공공임대주택 사업이 가능합니다. 약 26세대 규모의 공공임대주택을 건설할 수 있습니다.
+                        </div>
                     </div>
                 </div>
                 
@@ -411,19 +421,27 @@
             
     <div class="report-footer">
         <div class="qa-status-title">📊 보고서 품질 상태 (QA Status)</div>
-        <div class="qa-status-grid">
+        <div class="qa-status-grid" style="grid-template-columns: repeat(2, 1fr);">
             <div class="qa-status-item">
                 <div class="qa-status-label">Data Binding</div>
-                <div class="qa-status-value">✅ 완료</div>
+                <div class="qa-status-value">✅ PASS</div>
             </div>
             <div class="qa-status-item">
                 <div class="qa-status-label">Content Completeness</div>
-                <div class="qa-status-value">✅ 완료</div>
+                <div class="qa-status-value">✅ PASS</div>
             </div>
             <div class="qa-status-item">
-                <div class="qa-status-label">Ready for Submission</div>
-                <div class="qa-status-value">✅ 제출 가능</div>
+                <div class="qa-status-label">Narrative Consistency</div>
+                <div class="qa-status-value">✅ PASS</div>
             </div>
+            <div class="qa-status-item">
+                <div class="qa-status-label">HTML-PDF Parity</div>
+                <div class="qa-status-value">✅ PASS (HTML 완료)</div>
+            </div>
+        </div>
+        <div style="margin-top: 16px; padding: 12px; background: #F3F4F6; border-radius: 6px; text-align: center;">
+            <div style="font-size: 13px; font-weight: 600; color: #6B7280; margin-bottom: 4px;">최종 제출 가능 여부</div>
+            <div style="font-size: 15px; font-weight: 700;">✅ 제출 가능</div>
         </div>
     </div>
     

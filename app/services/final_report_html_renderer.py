@@ -568,11 +568,16 @@ def render_all_in_one_report(data: Dict[str, Any]) -> str:
                     </div>
                 </div>
                 
-                <!-- 3. 토지 가치 평가 및 입지 분석 -->
+                <!-- 3. 토지 가치 평가 및 입지 분석 (10페이지 분량 확장) -->
                 <div class="section">
                     <div class="section-title">3. 토지 가치 평가 및 입지 분석</div>
                     
-                    <div class="section-subtitle">3.1 종합 평가</div>
+                    <div class="section-subtitle">3.1 감정평가 방법론 및 적용 기준</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        {data.get('land_value_factors', {}).get('appraisal_methodology', '감정평가 방법론을 적용하여 토지 가치를 산정하고 있습니다.')}
+                    </div>
+                    
+                    <div class="section-subtitle">3.2 토지 가치 종합 평가</div>
                     <div style="margin-bottom: 16px; padding: 12px; background: #EFF6FF; border-left: 4px solid #3B82F6; border-radius: 4px;">
                         <div style="font-size: 14px; color: #1E40AF; line-height: 1.6;">
                             {data.get('land_value_interpretation', '토지 가치 평가를 진행 중입니다.')}
@@ -590,6 +595,28 @@ def render_all_in_one_report(data: Dict[str, Any]) -> str:
                         <div class="data-row">
                             <span class="data-label">평가 신뢰도</span>
                             {format_percentage(data.get('land_confidence_pct'))}
+                        </div>
+                    </div>
+                    
+                    <div class="section-subtitle">3.3 입지적 강점 및 접근성 분석</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        {data.get('land_value_factors', {}).get('location_advantage', '입지 분석을 진행 중입니다.')}
+                    </div>
+                    
+                    <div class="section-subtitle">3.4 용도지역 특성이 토지가치에 미치는 영향</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        {data.get('land_value_factors', {}).get('zoning_impact', '용도지역 분석을 진행 중입니다.')}
+                    </div>
+                    
+                    <div class="section-subtitle">3.5 시장 거래 사례 기반 비교 분석</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        {data.get('land_value_factors', {}).get('market_comparison', '시장 거래 사례를 분석 중입니다.')}
+                    </div>
+                    
+                    <div class="section-subtitle">3.6 평가 신뢰도의 의미와 검증 근거</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #EFF6FF; border-left: 4px solid #3B82F6; border-radius: 4px;">
+                        <div style="font-size: 14px; color: #1E40AF; line-height: 1.6;">
+                            {data.get('land_value_factors', {}).get('confidence_factor', '평가 신뢰도를 분석 중입니다.')}
                         </div>
                     </div>
                 </div>
@@ -628,9 +655,16 @@ def render_all_in_one_report(data: Dict[str, Any]) -> str:
                     </div>
                 </div>
                 
-                <!-- 5. 사업성 지표 -->
+                <!-- 5. 사업성 및 재무 구조 분석 (10페이지 분량 확장) -->
                 <div class="section">
-                    <div class="section-title">5. 사업성 지표</div>
+                    <div class="section-title">5. 사업성 및 재무 구조 분석</div>
+                    
+                    <div class="section-subtitle">5.1 LH 신축매입임대 사업의 수익 구조</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        {data.get('financial_structure', {}).get('business_model', 'LH 매입 방식에 따른 수익 구조를 분석 중입니다.')}
+                    </div>
+                    
+                    <div class="section-subtitle">5.2 종합 사업성 평가</div>
                     <div style="margin-bottom: 16px; padding: 12px; background: #ECFDF5; border-left: 4px solid #10B981; border-radius: 4px;">
                         <div style="font-size: 14px; color: #065F46; line-height: 1.6;">
                             {data.get('financial_interpretation', '사업성 분석을 진행 중입니다.')}
@@ -652,6 +686,49 @@ def render_all_in_one_report(data: Dict[str, Any]) -> str:
                         <div class="data-row">
                             <span class="data-label">사업성 등급</span>
                             {format_generic(data.get('financial_grade'))}
+                        </div>
+                    </div>
+                    
+                    <div class="section-subtitle">5.3 사업성 분석의 전제와 시나리오</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        {data.get('financial_structure', {}).get('financial_feasibility_deep_dive', '시나리오 분석을 진행 중입니다.')}
+                    </div>
+                    
+                    <div class="section-subtitle">5.4 공공 사업과 민간 사업의 수익성 비교</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        {data.get('financial_structure', {}).get('public_vs_private', '공공·민간 사업 비교 분석을 진행 중입니다.')}
+                    </div>
+                    
+                    <div class="section-subtitle">5.5 수익성을 결정하는 핵심 요인</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #EFF6FF; border-left: 4px solid #3B82F6; border-radius: 4px;">
+                        <div style="font-size: 14px; color: #1E40AF; line-height: 1.6;">
+                            {data.get('financial_structure', {}).get('profitability_drivers', '수익성 핵심 요인을 분석 중입니다.')}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 6. 리스크 요인 및 대응 전략 (4페이지 분량) -->
+                <div class="section">
+                    <div class="section-title">6. 리스크 요인 및 대응 전략</div>
+                    
+                    <div class="section-subtitle">6.1 구조적 리스크 요인</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 4px;">
+                        <div style="font-size: 14px; color: #991B1B; line-height: 1.6;">
+                            {data.get('risk_analysis', {}).get('structural_risks', '구조적 리스크를 분석 중입니다.')}
+                        </div>
+                    </div>
+                    
+                    <div class="section-subtitle">6.2 정책 변동 리스크</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 4px;">
+                        <div style="font-size: 14px; color: #991B1B; line-height: 1.6;">
+                            {data.get('risk_analysis', {}).get('policy_risks', '정책 리스크를 분석 중입니다.')}
+                        </div>
+                    </div>
+                    
+                    <div class="section-subtitle">6.3 종합 리스크 대응 전략</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #ECFDF5; border-left: 4px solid #10B981; border-radius: 4px;">
+                        <div style="font-size: 14px; color: #065F46; line-height: 1.6;">
+                            {data.get('risk_analysis', {}).get('mitigation_strategy', '리스크 대응 전략을 수립 중입니다.')}
                         </div>
                     </div>
                 </div>
