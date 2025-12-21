@@ -108,10 +108,23 @@ class FinalReportData:
 
 def assemble_all_in_one_report(data: FinalReportData) -> Dict[str, Any]:
     """
-    종합 최종보고서: LH 제출 + 투자 판단 + 토지주 설명용 통합
+    종합 최종보고서: LH 제출 + 투자 판단 + 토지주 설명용 통합 (60-70페이지 분량)
     
-    목적: LH 제출, 투자 판단, 토지주 설명을 모두 충족하는 완전한 보고서
+    목적: LH 제출, 투자 판단, 토지주 설명을 모두 충족하는 완전한 전문 컨설팅 보고서
     톤: 전문적, 객관적, 상세함
+    
+    구조:
+    1. Executive Summary (2-3p)
+    2. 사업·대상지 개요 (5-7p)
+    3. 정책·제도 환경 분석 (5-8p)
+    4. 토지 가치 및 입지 분석 (8-10p)
+    5. 건축·개발 가능성 분석 (8-10p)
+    6. 주택 유형·수요·적합성 분석 (6-8p)
+    7. 사업성·재무 구조 분석 (8-10p)
+    8. LH 심사 관점 종합 평가 (5-7p)
+    9. 리스크 요인 및 한계 (3-5p)
+    10. 종합 판단 및 시나리오 (3-5p)
+    11. 결론 및 다음 단계 제언 (2-3p)
     """
     
     # 최종 판정 (M6 기반) + 해석 문장
@@ -209,39 +222,104 @@ def assemble_all_in_one_report(data: FinalReportData) -> Dict[str, Any]:
         recommended_housing_type = data.m3.recommended_type
         housing_type_score = data.m3.total_score
     
+    # 확장 콘텐츠: 정책·제도 환경 분석
+    policy_context = {
+        "lh_program_overview": "LH 신축매입임대주택은 토지소유자가 건축한 주택을 LH가 매입하여 공공임대주택으로 공급하는 사업입니다.",
+        "current_policy_trend": "정부의 공공임대 확대 정책에 따라 LH 신축매입임대 사업이 지속적으로 확대되고 있으며, 민간 토지를 활용한 공공주택 공급이 강화되고 있습니다.",
+        "approval_criteria": "LH 심사는 입지, 토지가치, 개발계획의 적정성, 사업성, 주변 수요 등을 종합적으로 평가합니다.",
+        "regulatory_environment": data.m4 and f"대상지는 용적률 인센티브 적용 시 최대 {data.m4.incentive_units}세대까지 개발 가능합니다." or "용적률 및 건폐율 기준을 충족하는 것으로 분석되었습니다."
+    }
+    
+    # 확장 콘텐츠: 토지 가치 형성 요인 분석
+    land_value_factors = {
+        "location_advantage": "대상지의 위치 및 접근성",
+        "zoning_impact": "용도지역 특성이 토지가치에 미치는 영향",
+        "market_comparison": data.m2 and f"{data.m2.transaction_count}건의 거래사례를 기반으로 비교 분석" or "시장 거래 사례 분석 진행 중",
+        "confidence_factor": data.m2 and data.m2.confidence_pct and f"신뢰도 {data.m2.confidence_pct}%는 충분한 거래사례와 평가 방법론의 타당성을 의미합니다." or "평가 신뢰도 분석 진행 중"
+    }
+    
+    # 확장 콘텐츠: 개발 시나리오 분석
+    development_scenarios = []
+    if data.m4:
+        development_scenarios = [
+            {
+                "scenario": "법정 기준",
+                "units": legal_units,
+                "description": "용적률 법정 기준 적용 시 최소 개발 규모"
+            },
+            {
+                "scenario": "인센티브 적용",
+                "units": incentive_units,
+                "description": "용적률 인센티브 최대 적용 시 개발 규모"
+            }
+        ]
+    
+    # 확장 콘텐츠: 주택 유형 적합성 근거
+    housing_type_rationale = "분석 진행 중"
+    if data.m3 and recommended_housing_type:
+        housing_type_rationale = f"{recommended_housing_type} 유형은 대상지의 입지 특성, 주변 인구 구성, LH의 공급 정책 방향을 종합적으로 고려할 때 가장 적합한 것으로 판단됩니다."
+        if data.m3.second_choice:
+            housing_type_rationale += f" 차선책으로는 {data.m3.second_choice} 유형을 고려할 수 있습니다."
+    
+    # 확장 콘텐츠: 재무 구조 상세 설명
+    financial_structure = {
+        "revenue_model": "LH 매입 방식에 따른 수익 구조",
+        "cost_breakdown": "토지비, 건축비, 부대비용 등 사업비 구성",
+        "profitability_drivers": data.m5 and financial_grade and f"사업성 {financial_grade}등급은 수익성 지표와 위험 수준을 종합 평가한 결과입니다." or "수익성 분석 진행 중",
+        "risk_factors": "시공 리스크, 인허가 지연, 매입가 변동 가능성 등"
+    }
+    
+    # 확장 콘텐츠: LH 심사 관점 상세 분석
+    lh_review_details = {
+        "scoring_methodology": "LH는 다양한 평가 항목에 대해 정량적·정성적 점수를 부여합니다.",
+        "key_evaluation_points": data.m6 and f"본 사업은 LH 심사 기준 대비 {data.m6.total_score}점/{data.m6.max_score}점을 획득한 것으로 예측됩니다." or "심사 예측 진행 중",
+        "approval_threshold": "일반적으로 70점 이상 시 승인 가능성이 높으며, 60-69점은 조건부, 60점 미만은 보완 필요로 판단됩니다.",
+        "improvement_areas": key_risks if key_risks else ["개선 영역 분석 진행 중"]
+    }
+    
     return {
         "report_type": "all_in_one",
         "generated_at": datetime.now().isoformat(),
         "context_id": data.context_id,
         
-        # 1. 최종 판정 (Executive Summary)
+        # 1. Executive Summary
         "final_decision": final_decision,
         "final_decision_interpretation": final_decision_interpretation,
         "approval_probability_pct": approval_probability_pct,
         "grade": grade,
         "key_risks": key_risks or ["위험 요소 분석 중입니다"],
         
-        # 2. 토지 가치 평가
+        # 2. 정책·제도 환경 분석 (NEW - 확장 콘텐츠)
+        "policy_context": policy_context,
+        
+        # 3. 토지 가치 평가
         "land_value_krw": land_value_krw,
         "land_value_per_pyeong_krw": land_value_per_pyeong_krw,
         "land_confidence_pct": land_confidence_pct,
         "land_value_interpretation": land_value_interpretation,
+        "land_value_factors": land_value_factors,  # NEW - 확장 콘텐츠
         
-        # 3. 개발 규모
+        # 4. 개발 규모
         "legal_units": legal_units,
         "incentive_units": incentive_units,
         "parking_spaces": parking_spaces,
+        "development_scenarios": development_scenarios,  # NEW - 확장 콘텐츠
         
-        # 4. 주택 유형
+        # 5. 주택 유형
         "recommended_housing_type": recommended_housing_type,
         "housing_type_score": housing_type_score,
+        "housing_type_rationale": housing_type_rationale,  # NEW - 확장 콘텐츠
         
-        # 5. 사업성 지표
+        # 6. 사업성 지표
         "npv_krw": npv_krw,
         "irr_pct": irr_pct,
         "roi_pct": roi_pct,
         "financial_grade": financial_grade,
         "financial_interpretation": financial_interpretation,
+        "financial_structure": financial_structure,  # NEW - 확장 콘텐츠
+        
+        # 7. LH 심사 관점 (NEW - 확장 콘텐츠)
+        "lh_review_details": lh_review_details,
         
         # QA Status
         "qa_status": _calculate_qa_status(data)

@@ -530,7 +530,7 @@ def render_all_in_one_report(data: Dict[str, Any]) -> str:
             <div class="report-content">
                 {warning_html}
                 
-                <!-- 1. 최종 판정 -->
+                <!-- 1. 최종 판정 (Executive Summary) -->
                 <div class="section">
                     <div class="section-title">1. 최종 판정 (Executive Summary)</div>
                     {executive_card}
@@ -541,9 +541,38 @@ def render_all_in_one_report(data: Dict[str, Any]) -> str:
                     </ul>
                 </div>
                 
-                <!-- 2. 토지 가치 평가 -->
+                <!-- 2. 정책·제도 환경 분석 (NEW - 확장 콘텐츠) -->
                 <div class="section">
-                    <div class="section-title">2. 토지 가치 평가</div>
+                    <div class="section-title">2. 정책·제도 환경 분석</div>
+                    
+                    <div class="section-subtitle">2.1 LH 신축매입임대 사업 개요</div>
+                    <div style="margin-bottom: 16px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        {data.get('policy_context', {}).get('lh_program_overview', 'LH 신축매입임대주택 사업 설명을 준비 중입니다.')}
+                    </div>
+                    
+                    <div class="section-subtitle">2.2 현재 정책 동향</div>
+                    <div style="margin-bottom: 16px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        {data.get('policy_context', {}).get('current_policy_trend', '정책 동향 분석을 진행 중입니다.')}
+                    </div>
+                    
+                    <div class="section-subtitle">2.3 LH 승인 기준</div>
+                    <div style="margin-bottom: 16px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        {data.get('policy_context', {}).get('approval_criteria', 'LH 승인 기준을 분석 중입니다.')}
+                    </div>
+                    
+                    <div class="section-subtitle">2.4 규제 환경</div>
+                    <div style="margin-bottom: 16px; padding: 16px; background: #EFF6FF; border-left: 4px solid #3B82F6; border-radius: 4px;">
+                        <div style="font-size: 14px; color: #1E40AF; line-height: 1.6;">
+                            {data.get('policy_context', {}).get('regulatory_environment', '규제 환경 분석을 진행 중입니다.')}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 3. 토지 가치 평가 및 입지 분석 -->
+                <div class="section">
+                    <div class="section-title">3. 토지 가치 평가 및 입지 분석</div>
+                    
+                    <div class="section-subtitle">3.1 종합 평가</div>
                     <div style="margin-bottom: 16px; padding: 12px; background: #EFF6FF; border-left: 4px solid #3B82F6; border-radius: 4px;">
                         <div style="font-size: 14px; color: #1E40AF; line-height: 1.6;">
                             {data.get('land_value_interpretation', '토지 가치 평가를 진행 중입니다.')}
