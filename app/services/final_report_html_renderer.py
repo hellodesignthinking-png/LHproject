@@ -779,22 +779,45 @@ def render_landowner_summary(data: Dict[str, Any]) -> str:
                     </div>
                 </div>
                 
-                <!-- 이 땅으로 무엇을 할 수 있는가 -->
+                <!-- 이 땅으로 무엇을 할 수 있는가 (확장) -->
                 <div class="section">
                     <div class="section-title">🎯 이 땅으로 무엇을 할 수 있나요?</div>
-                    <div style="padding: 20px; background: #F0F9FF; border-radius: 8px; border-left: 4px solid #3B82F6;">
+                    
+                    <div style="padding: 20px; background: #F0F9FF; border-radius: 8px; border-left: 4px solid #3B82F6; margin-bottom: 20px;">
                         <div style="font-size: 16px; font-weight: 600; color: #1E40AF; line-height: 1.8;">
                             {data.get('what_you_can_do', '분석 결과를 검토 중입니다.')}
                         </div>
                     </div>
+                    
+                    <div style="padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8; margin-bottom: 16px;">
+                        <strong style="color: #1F2937; font-size: 15px;">✨ 쉽게 설명하면</strong><br><br>
+                        이 땅은 <strong style="color: #3B82F6;">공공임대주택</strong>을 지을 수 있는 땅입니다. 
+                        한국토지주택공사(LH)라는 공공기관이 <strong>건물을 준공하면 바로 매입</strong>해 가는 방식이기 때문에, 
+                        일반 아파트처럼 분양 걱정을 하지 않아도 됩니다.<br><br>
+                        
+                        쉽게 말하면, <strong>"건물만 지으면 LH가 다 사가는 안정적인 사업"</strong>입니다. 
+                        리스크는 낮지만, 큰 돈을 벌기보다는 <strong>안정적인 수익</strong>을 기대할 수 있는 방식입니다.
+                    </div>
+                    
+                    <div style="padding: 16px; background: #FEF3C7; border-radius: 8px; line-height: 1.8; margin-bottom: 16px;">
+                        <strong style="color: #92400E; font-size: 15px;">🏠 구체적으로 어떤 건물을 지을 수 있나요?</strong><br><br>
+                        • <strong>주택 종류</strong>: 청년, 신혼부부, 또는 일반 가구를 위한 소형 임대주택<br>
+                        • <strong>세대 수</strong>: 약 {format_units(data.get('buildable_units'))} (법적 기준 기준)<br>
+                        • <strong>건물 규모</strong>: 중층 아파트 또는 빌라 형태 (보통 5~10층)<br>
+                        • <strong>평수</strong>: 세대당 전용면적 약 20~40평 (가구 구성에 따라 다름)<br><br>
+                        
+                        이 정도 규모면 <strong>작은 단지 하나</strong> 정도 되는 크기입니다. 
+                        너무 크지도, 작지도 않은 <strong>적당한 규모</strong>로 보시면 됩니다.
+                    </div>
                 </div>
                 
-                <!-- 토지 가치 -->
+                <!-- 토지 가치 (확장) -->
                 <div class="section">
-                    <div class="section-title">💰 토지 가치</div>
-                    <div class="data-card">
+                    <div class="section-title">💰 현재 이 땅의 가치는 얼마인가요?</div>
+                    
+                    <div class="data-card" style="margin-bottom: 16px;">
                         <div class="data-row">
-                            <span class="data-label">총 토지 가치</span>
+                            <span class="data-label">총 토지 가치 (현재 시세)</span>
                             {format_currency(data.get('land_value_krw'))}
                         </div>
                         <div class="data-row">
@@ -802,36 +825,171 @@ def render_landowner_summary(data: Dict[str, Any]) -> str:
                             {format_currency(data.get('land_value_per_pyeong_krw'))}
                         </div>
                     </div>
-                </div>
-                
-                <!-- 개발 가능 규모 -->
-                <div class="section">
-                    <div class="section-title">🏘️ 개발 가능 규모</div>
-                    <div class="data-card">
-                        <div class="data-row">
-                            <span class="data-label">건축 가능 세대수</span>
-                            {format_units(data.get('buildable_units'))}
-                        </div>
+                    
+                    <div style="padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8; margin-bottom: 16px;">
+                        <strong style="color: #1F2937; font-size: 15px;">📌 이 가격이 정확한가요?</strong><br><br>
+                        이 가격은 <strong>전문 감정평가 방식</strong>으로 산출한 것으로, 
+                        주변에서 최근 실제로 거래된 땅의 가격을 참고하여 계산했습니다.<br><br>
+                        
+                        {data.get('land_value_interpretation', '신뢰도는 보통 수준 이상으로, 실제 거래 시 이 가격에서 크게 벗어나지 않을 것으로 예상됩니다.')}<br><br>
+                        
+                        다만, 부동산 시장은 계속 변하기 때문에, 
+                        <strong>실제 거래 시점</strong>에는 약간 달라질 수 있습니다. 
+                        이 가격은 <strong>"지금 시점의 합리적인 추정값"</strong>으로 이해하시면 됩니다.
+                    </div>
+                    
+                    <div style="padding: 16px; background: #ECFDF5; border-left: 4px solid #10B981; border-radius: 4px; line-height: 1.8;">
+                        <strong style="color: #065F46; font-size: 15px;">💡 쉽게 이해하기</strong><br><br>
+                        평당 {format_currency(data.get('land_value_per_pyeong_krw'))}이라는 것은, 
+                        이 지역에서 <strong>평균적인 가격대</strong>에 해당합니다. 
+                        특별히 비싸지도, 싸지도 않은 <strong>적정 가격</strong>으로 보시면 됩니다.
                     </div>
                 </div>
                 
-                <!-- 예상 수익성 -->
+                <!-- 사업을 하면 얼마나 남을까요? (확장) -->
                 <div class="section">
-                    <div class="section-title">📊 예상 수익성</div>
-                    <div class="data-card">
+                    <div class="section-title">💸 사업을 하면 얼마나 남을까요?</div>
+                    
+                    <div class="data-card" style="margin-bottom: 16px;">
                         <div class="data-row">
-                            <span class="data-label">수익성 평가</span>
-                            {format_generic(data.get('expected_profit'))}
+                            <span class="data-label">예상 순이익 (NPV)</span>
+                            {format_currency(data.get('npv_krw'))}
                         </div>
+                        <div class="data-row">
+                            <span class="data-label">수익률 (연평균)</span>
+                            {format_percentage(data.get('irr_pct'))}
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">투자 대비 수익</span>
+                            {format_percentage(data.get('roi_pct'))}
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">종합 평가</span>
+                            <span class="data-value">{data.get('expected_profit', '분석 중')}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8; margin-bottom: 16px;">
+                        <strong style="color: #1F2937; font-size: 15px;">🤔 이 숫자들이 무슨 뜻인가요?</strong><br><br>
+                        
+                        <strong>1) 예상 순이익 ({format_currency(data.get('npv_krw'))})</strong><br>
+                        → 건물을 짓고, LH에 매각한 후 <strong>최종적으로 남는 돈</strong>입니다. 
+                        단, 이 금액에서 세금과 기타 비용을 빼야 합니다.<br><br>
+                        
+                        <strong>2) 수익률 ({format_percentage(data.get('irr_pct'))})</strong><br>
+                        → 1년에 평균 몇 %씩 돈이 불어나는지를 나타냅니다. 
+                        은행 예금 금리(약 3~4%)보다는 높지만, 
+                        일반 부동산 개발(15~20%)보다는 낮은 <strong>중간 수준</strong>입니다.<br><br>
+                        
+                        <strong>3) 투자 대비 수익 ({format_percentage(data.get('roi_pct'))})</strong><br>
+                        → 투입한 돈 대비 얼마나 수익이 생기는지를 보여줍니다. 
+                        예를 들어, 10억을 투입했다면 약 {round(data.get('roi_pct', 0) * 10 / 100, 1)}억 정도가 수익으로 남습니다.
+                    </div>
+                    
+                    <div style="padding: 16px; background: #FEF3C7; border-radius: 8px; line-height: 1.8; margin-bottom: 16px;">
+                        <strong style="color: #92400E; font-size: 15px;">⚠️ 주의사항</strong><br><br>
+                        이 수익은 <strong>"모든 것이 계획대로 진행될 때"</strong>의 예상치입니다. 
+                        실제로는 다음과 같은 변수가 있을 수 있습니다:<br><br>
+                        
+                        • <strong>건축비 상승</strong>: 자재비나 인건비가 오르면 수익이 줄어듭니다<br>
+                        • <strong>공사 지연</strong>: 인허가나 공사가 늦어지면 이자 비용이 늘어납니다<br>
+                        • <strong>LH 매입가 변동</strong>: LH가 제시하는 가격이 예상보다 낮을 수 있습니다<br><br>
+                        
+                        따라서 이 숫자는 <strong>"최선의 경우"</strong>로 보시고, 
+                        실제로는 약간 낮아질 수 있다고 생각하시는 것이 안전합니다.
+                    </div>
+                    
+                    <div style="padding: 16px; background: #ECFDF5; border-left: 4px solid #10B981; border-radius: 4px; line-height: 1.8;">
+                        <strong style="color: #065F46; font-size: 15px;">✅ 결론</strong><br><br>
+                        {data.get('financial_interpretation', '이 사업은 큰 돈을 벌기보다는, 안정적으로 적정한 수익을 낼 수 있는 사업으로 판단됩니다. 분양 리스크가 없다는 점이 가장 큰 장점입니다.')}
                     </div>
                 </div>
                 
-                <!-- 다음 단계 -->
+                <!-- 어떤 위험이 있나요? (NEW) -->
                 <div class="section">
-                    <div class="section-title">✅ 다음 단계</div>
-                    <ul class="report-list">
-                        {next_steps_html}
-                    </ul>
+                    <div class="section-title">⚠️ 어떤 위험이 있나요?</div>
+                    
+                    <div style="padding: 16px; background: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 4px; line-height: 1.8; margin-bottom: 16px;">
+                        <strong style="color: #991B1B; font-size: 15px;">🚨 반드시 알아두셔야 할 위험</strong><br><br>
+                        
+                        <strong>1) LH 승인이 안 날 수 있습니다</strong><br>
+                        → LH는 "아무 땅이나 다 사주는 것"이 아닙니다. 
+                        입지, 가격, 설계 등을 심사해서 <strong>부적합하면 승인을 안 해줍니다</strong>. 
+                        따라서 <strong>반드시 사전에 LH와 협의</strong>를 해야 합니다.<br><br>
+                        
+                        <strong>2) 건축비가 예상보다 많이 들 수 있습니다</strong><br>
+                        → 최근 몇 년간 건축 자재값과 인건비가 많이 올랐습니다. 
+                        예상보다 건축비가 10~20% 더 들면 <strong>수익이 크게 줄어들 수 있습니다</strong>.<br><br>
+                        
+                        <strong>3) 인허가가 늦어질 수 있습니다</strong><br>
+                        → 건축허가 받는 데 시간이 오래 걸리면, 
+                        그 사이에 <strong>대출 이자가 계속 나갑니다</strong>. 
+                        6개월 지연되면 이자만 수천만 원이 추가될 수 있습니다.<br><br>
+                        
+                        <strong>4) LH 매입가가 생각보다 낮을 수 있습니다</strong><br>
+                        → LH는 "표준 매입가"라는 기준을 적용하는데, 
+                        실제 협의 과정에서 <strong>예상보다 낮은 가격</strong>을 제시할 수 있습니다.
+                    </div>
+                    
+                    <div style="padding: 16px; background: #ECFDF5; border-left: 4px solid #10B981; border-radius: 4px; line-height: 1.8;">
+                        <strong style="color: #065F46; font-size: 15px;">💡 위험을 줄이는 방법</strong><br><br>
+                        • <strong>LH 사전 협의</strong>: 본격적으로 시작하기 전에 LH와 충분히 상담하세요<br>
+                        • <strong>건축비 정밀 견적</strong>: 여러 건설사에서 견적을 받아 비교하세요<br>
+                        • <strong>전문가 자문</strong>: 이런 사업을 해본 전문가나 컨설팅 회사의 도움을 받으세요<br>
+                        • <strong>여유 자금 확보</strong>: 예상 비용보다 10~15% 정도 여유 자금을 준비하세요
+                    </div>
+                </div>
+                
+                <!-- 다음 단계 (확장) -->
+                <div class="section">
+                    <div class="section-title">✅ 다음에 무엇을 해야 하나요?</div>
+                    
+                    <div style="padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8; margin-bottom: 16px;">
+                        <strong style="color: #1F2937; font-size: 15px; display: block; margin-bottom: 12px;">📋 단계별 진행 순서</strong>
+                        
+                        <div style="padding: 12px; background: white; border-radius: 6px; margin-bottom: 10px; border-left: 3px solid #3B82F6;">
+                            <strong style="color: #3B82F6;">1단계: LH 사전 협의 (1~2주)</strong><br>
+                            → LH 지역본부에 연락해서 "신축매입임대 사업 가능 여부"를 문의하세요. 
+                            이 때 대상 토지의 위치, 면적, 용도지역 등을 알려주시면 됩니다.
+                        </div>
+                        
+                        <div style="padding: 12px; background: white; border-radius: 6px; margin-bottom: 10px; border-left: 3px solid #10B981;">
+                            <strong style="color: #10B981;">2단계: 건축비 견적 받기 (2~3주)</strong><br>
+                            → 최소 3개 이상의 건설사에서 견적을 받으세요. 
+                            "LH 신축매입임대 공사"라고 말하면 건설사들이 알아듭니다.
+                        </div>
+                        
+                        <div style="padding: 12px; background: white; border-radius: 6px; margin-bottom: 10px; border-left: 3px solid #F59E0B;">
+                            <strong style="color: #F59E0B;">3단계: 수익성 재검토 (1주)</strong><br>
+                            → LH 예상 매입가와 건축비 견적을 바탕으로 
+                            <strong>실제로 수익이 나는지 다시 계산</strong>해 보세요. 
+                            이 단계에서 전문가(회계사, 건축사, 컨설턴트)의 도움을 받는 것을 권장합니다.
+                        </div>
+                        
+                        <div style="padding: 12px; background: white; border-radius: 6px; margin-bottom: 10px; border-left: 3px solid #8B5CF6;">
+                            <strong style="color: #8B5CF6;">4단계: LH 정식 승인 신청 (1~2개월)</strong><br>
+                            → 수익성이 확인되면, LH에 정식으로 사업 승인을 신청합니다. 
+                            이 때 토지 관련 서류, 설계 도면(초안), 사업 계획서 등이 필요합니다.
+                        </div>
+                        
+                        <div style="padding: 12px; background: white; border-radius: 6px; border-left: 3px solid #EF4444;">
+                            <strong style="color: #EF4444;">5단계: 인허가 및 착공 (6~12개월)</strong><br>
+                            → LH 승인이 나면, 지자체에 건축허가를 신청하고 
+                            허가가 나는 대로 공사를 시작합니다. 
+                            공사 기간은 보통 18~24개월 정도 걸립니다.
+                        </div>
+                    </div>
+                    
+                    <div style="padding: 16px; background: #EFF6FF; border-left: 4px solid #3B82F6; border-radius: 4px; line-height: 1.8;">
+                        <strong style="color: #1E40AF; font-size: 15px;">🎯 가장 중요한 것</strong><br><br>
+                        <strong>"서두르지 마세요."</strong><br><br>
+                        이 사업은 최소 2~3년이 걸리는 장기 프로젝트입니다. 
+                        각 단계를 충분히 검토하고, 전문가의 조언을 받으면서 
+                        <strong>신중하게 진행</strong>하는 것이 가장 중요합니다.<br><br>
+                        
+                        특히 <strong>1단계(LH 사전 협의)</strong>와 <strong>3단계(수익성 재검토)</strong>에서 
+                        확실한 확인을 받지 못하면, 나중에 큰 손해를 볼 수 있으니 주의하세요.
+                    </div>
                 </div>
             </div>
             
