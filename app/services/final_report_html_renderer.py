@@ -420,11 +420,11 @@ def render_data_shortage_warning(missing_modules: list) -> str:
 
 
 def render_qa_status_footer(qa_status: Dict[str, str]) -> str:
-    """QA Status 푸터"""
+    """QA Status 푸터 (4가지 체크)"""
     return f"""
     <div class="report-footer">
         <div class="qa-status-title">📊 보고서 품질 상태 (QA Status)</div>
-        <div class="qa-status-grid">
+        <div class="qa-status-grid" style="grid-template-columns: repeat(2, 1fr);">
             <div class="qa-status-item">
                 <div class="qa-status-label">Data Binding</div>
                 <div class="qa-status-value">{qa_status.get('data_binding', 'N/A')}</div>
@@ -434,9 +434,17 @@ def render_qa_status_footer(qa_status: Dict[str, str]) -> str:
                 <div class="qa-status-value">{qa_status.get('content_completeness', 'N/A')}</div>
             </div>
             <div class="qa-status-item">
-                <div class="qa-status-label">Ready for Submission</div>
-                <div class="qa-status-value">{qa_status.get('ready_for_submission', 'N/A')}</div>
+                <div class="qa-status-label">Narrative Consistency</div>
+                <div class="qa-status-value">{qa_status.get('narrative_consistency', 'N/A')}</div>
             </div>
+            <div class="qa-status-item">
+                <div class="qa-status-label">HTML-PDF Parity</div>
+                <div class="qa-status-value">{qa_status.get('html_pdf_parity', 'N/A')}</div>
+            </div>
+        </div>
+        <div style="margin-top: 16px; padding: 12px; background: #F3F4F6; border-radius: 6px; text-align: center;">
+            <div style="font-size: 13px; font-weight: 600; color: #6B7280; margin-bottom: 4px;">최종 제출 가능 여부</div>
+            <div style="font-size: 15px; font-weight: 700;">{qa_status.get('ready_for_submission', 'N/A')}</div>
         </div>
     </div>
     """
@@ -476,6 +484,9 @@ def render_all_in_one_report(data: Dict[str, Any]) -> str:
     executive_card = f"""
     <div class="decision-card {decision_class}">
         <div class="decision-title">{data.get('final_decision', '검토 필요')}</div>
+        <div style="margin: 16px 0; font-size: 14px; line-height: 1.6; opacity: 0.95;">
+            {data.get('final_decision_interpretation', '분석 결과를 검토 중입니다.')}
+        </div>
         <div class="decision-details">
             <div class="decision-metric">
                 <div class="decision-metric-label">승인 가능성</div>
@@ -533,6 +544,11 @@ def render_all_in_one_report(data: Dict[str, Any]) -> str:
                 <!-- 2. 토지 가치 평가 -->
                 <div class="section">
                     <div class="section-title">2. 토지 가치 평가</div>
+                    <div style="margin-bottom: 16px; padding: 12px; background: #EFF6FF; border-left: 4px solid #3B82F6; border-radius: 4px;">
+                        <div style="font-size: 14px; color: #1E40AF; line-height: 1.6;">
+                            {data.get('land_value_interpretation', '토지 가치 평가를 진행 중입니다.')}
+                        </div>
+                    </div>
                     <div class="data-card">
                         <div class="data-row">
                             <span class="data-label">총 토지 가치</span>
@@ -586,6 +602,11 @@ def render_all_in_one_report(data: Dict[str, Any]) -> str:
                 <!-- 5. 사업성 지표 -->
                 <div class="section">
                     <div class="section-title">5. 사업성 지표</div>
+                    <div style="margin-bottom: 16px; padding: 12px; background: #ECFDF5; border-left: 4px solid #10B981; border-radius: 4px;">
+                        <div style="font-size: 14px; color: #065F46; line-height: 1.6;">
+                            {data.get('financial_interpretation', '사업성 분석을 진행 중입니다.')}
+                        </div>
+                    </div>
                     <div class="data-card">
                         <div class="data-row">
                             <span class="data-label">순현재가치 (NPV)</span>
@@ -649,6 +670,16 @@ def render_landowner_summary(data: Dict[str, Any]) -> str:
                 <div class="section">
                     <div class="decision-card">
                         <div class="decision-title">{data.get('summary_sentence', '분석 중입니다')}</div>
+                    </div>
+                </div>
+                
+                <!-- 이 땅으로 무엇을 할 수 있는가 -->
+                <div class="section">
+                    <div class="section-title">🎯 이 땅으로 무엇을 할 수 있나요?</div>
+                    <div style="padding: 20px; background: #F0F9FF; border-radius: 8px; border-left: 4px solid #3B82F6;">
+                        <div style="font-size: 16px; font-weight: 600; color: #1E40AF; line-height: 1.8;">
+                            {data.get('what_you_can_do', '분석 결과를 검토 중입니다.')}
+                        </div>
                     </div>
                 </div>
                 

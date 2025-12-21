@@ -639,6 +639,19 @@ export const PipelineOrchestrator: React.FC = () => {
                   <p style={{ fontSize: '14px', color: '#666', marginTop: '8px' }}>
                     분석 결과를 용도별로 확인하세요 (새 탭에서 열림)
                   </p>
+                  {!state.contextId && (
+                    <div style={{ 
+                      marginTop: '12px', 
+                      padding: '10px', 
+                      background: '#fff3cd', 
+                      border: '1px solid #ffc107',
+                      borderRadius: '6px',
+                      fontSize: '13px',
+                      color: '#856404'
+                    }}>
+                      ⚠️ 최종보고서를 생성하려면 먼저 M1 분석을 완료하세요.
+                    </div>
+                  )}
                 </div>
                 
                 <div style={{ 
@@ -649,17 +662,23 @@ export const PipelineOrchestrator: React.FC = () => {
                   {/* 1. 종합 최종보고서 */}
                   <button
                     onClick={() => {
+                      if (!state.contextId) {
+                        alert('⚠️ M1 분석을 먼저 완료해주세요.');
+                        return;
+                      }
                       const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/all_in_one/html?context_id=${state.contextId}`;
                       window.open(url, '_blank');
                     }}
+                    disabled={!state.contextId}
                     style={{
                       padding: '20px',
-                      background: 'white',
-                      border: '2px solid #2563eb',
+                      background: state.contextId ? 'white' : '#f0f0f0',
+                      border: `2px solid ${state.contextId ? '#2563eb' : '#d0d0d0'}`,
                       borderRadius: '8px',
-                      cursor: 'pointer',
+                      cursor: state.contextId ? 'pointer' : 'not-allowed',
                       transition: 'all 0.2s',
-                      textAlign: 'left'
+                      textAlign: 'left',
+                      opacity: state.contextId ? 1 : 0.6
                     }}
                     onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
                     onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
@@ -676,17 +695,23 @@ export const PipelineOrchestrator: React.FC = () => {
                   {/* 2. 토지주 제출용 요약보고서 */}
                   <button
                     onClick={() => {
+                      if (!state.contextId) {
+                        alert('⚠️ M1 분석을 먼저 완료해주세요.');
+                        return;
+                      }
                       const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/landowner_summary/html?context_id=${state.contextId}`;
                       window.open(url, '_blank');
                     }}
+                    disabled={!state.contextId}
                     style={{
                       padding: '20px',
-                      background: 'white',
-                      border: '2px solid #10b981',
+                      background: state.contextId ? 'white' : '#f0f0f0',
+                      border: `2px solid ${state.contextId ? '#10b981' : '#d0d0d0'}`,
                       borderRadius: '8px',
-                      cursor: 'pointer',
+                      cursor: state.contextId ? 'pointer' : 'not-allowed',
                       transition: 'all 0.2s',
-                      textAlign: 'left'
+                      textAlign: 'left',
+                      opacity: state.contextId ? 1 : 0.6
                     }}
                     onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
                     onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
@@ -703,17 +728,23 @@ export const PipelineOrchestrator: React.FC = () => {
                   {/* 3. LH 제출용 기술검증 보고서 */}
                   <button
                     onClick={() => {
+                      if (!state.contextId) {
+                        alert('⚠️ M1 분석을 먼저 완료해주세요.');
+                        return;
+                      }
                       const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/lh_technical/html?context_id=${state.contextId}`;
                       window.open(url, '_blank');
                     }}
+                    disabled={!state.contextId}
                     style={{
                       padding: '20px',
-                      background: 'white',
-                      border: '2px solid #8b5cf6',
+                      background: state.contextId ? 'white' : '#f0f0f0',
+                      border: `2px solid ${state.contextId ? '#8b5cf6' : '#d0d0d0'}`,
                       borderRadius: '8px',
-                      cursor: 'pointer',
+                      cursor: state.contextId ? 'pointer' : 'not-allowed',
                       transition: 'all 0.2s',
-                      textAlign: 'left'
+                      textAlign: 'left',
+                      opacity: state.contextId ? 1 : 0.6
                     }}
                     onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
                     onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
@@ -784,17 +815,23 @@ export const PipelineOrchestrator: React.FC = () => {
                   {/* 6. 설명용 프레젠테이션 보고서 */}
                   <button
                     onClick={() => {
+                      if (!state.contextId) {
+                        alert('⚠️ M1 분석을 먼저 완료해주세요.');
+                        return;
+                      }
                       const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/presentation/html?context_id=${state.contextId}`;
                       window.open(url, '_blank');
                     }}
+                    disabled={!state.contextId}
                     style={{
                       padding: '20px',
-                      background: 'white',
-                      border: '2px solid #ec4899',
+                      background: state.contextId ? 'white' : '#f0f0f0',
+                      border: `2px solid ${state.contextId ? '#ec4899' : '#d0d0d0'}`,
                       borderRadius: '8px',
-                      cursor: 'pointer',
+                      cursor: state.contextId ? 'pointer' : 'not-allowed',
                       transition: 'all 0.2s',
-                      textAlign: 'left'
+                      textAlign: 'left',
+                      opacity: state.contextId ? 1 : 0.6
                     }}
                     onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
                     onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
