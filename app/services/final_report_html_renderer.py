@@ -1821,28 +1821,449 @@ def render_lh_technical(data: Dict[str, Any]) -> str:
                     </div>
                 </div>
                 
-                <!-- 리스크 요인 (All-in-one 콘텐츠 재사용) -->
+                <!-- ===== v4.2 리스크 검토 섹션 시작 ===== -->
                 <div class="section">
-                    <div class="section-title">7. 리스크 요인 검토</div>
+                    <div class="section-title">7. 리스크 요인 종합 검토</div>
                     
-                    <div class="section-subtitle">7.1 구조적 리스크</div>
-                    <div style="margin-bottom: 16px; padding: 16px; background: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 4px;">
-                        <div style="font-size: 14px; color: #991B1B; line-height: 1.6;">
-                            {data.get('risk_analysis', {}).get('structural_risks', '구조적 리스크를 검토하였습니다.')}
+                    <div style="margin-bottom: 24px; padding: 20px; background: #F9FAFB; border-left: 4px solid #6B7280; border-radius: 8px; line-height: 1.8; font-size: 15px;">
+                        본 기술검증 보고서는 신축매입임대주택 사업 추진 시 검토되어야 할 6개 주요 리스크 영역을 체계적으로 분석하였습니다. 
+                        각 리스크는 현행 제도, 기준, 절차를 바탕으로 검토되었으며, 사업 실행 가능성 및 LH 승인 가능성 판단을 위한 기술적 근거를 제시합니다.
+                    </div>
+                    
+                    <!-- R1. 정책 및 제도 변동 검토 -->
+                    <div class="section-subtitle">7.1 정책 및 제도 변동 검토</div>
+                    
+                    <div style="margin-bottom: 12px; padding: 16px; background: #EFF6FF; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #1E40AF; margin-bottom: 8px;">검토 배경</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #374151;">
+                            본 사업은 「공공주택 특별법」 제50조의2 및 「한국토지주택공사 신축매입임대주택 매입 업무지침」에 따라 검토되는 신축매입임대주택 건설사업입니다. 
+                            공공임대주택 공급 정책은 국가 주택정책, 연간 예산 배정 규모, 지역별 공급 물량 계획에 따라 운영되며, 
+                            중앙정부 및 LH 본사의 정책 방향에 따라 매입 기준 및 우선순위가 조정될 가능성이 존재합니다.
                         </div>
                     </div>
                     
-                    <div class="section-subtitle">7.2 정책 리스크</div>
-                    <div style="margin-bottom: 16px; padding: 16px; background: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 4px;">
-                        <div style="font-size: 14px; color: #991B1B; line-height: 1.6;">
-                            {data.get('risk_analysis', {}).get('policy_risks', '정책 리스크를 검토하였습니다.')}
+                    <div style="margin-bottom: 12px; padding: 16px; background: #F9FAFB; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #374151; margin-bottom: 8px;">제도 운영 체계</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #374151;">
+                            신축매입임대주택 제도는 LH의 연간 사업계획, 지역본부별 매입 물량 배정, 예산 집행 가능 범위 내에서 운영됩니다. 
+                            매입 우선순위는 입지 여건, 주택 유형 적합성, 사업 시급성, 지역별 수요 등을 종합적으로 고려하여 결정되며, 
+                            예산 제약 또는 정책 조정 시 매입 대상 선정 기준이 변경될 수 있습니다.
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 12px; padding: 16px; background: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 4px;">
+                        <div style="font-weight: 600; color: #991B1B; margin-bottom: 8px;">정책 변동 유형 (과거 사례 기준)</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #7F1D1D;">
+                            <strong>① 예산 규모 조정:</strong> 연간 예산 규모 조정에 따라 매입 물량이 축소되거나 우선순위가 재조정될 수 있으며, 
+                            매입 조건 충족 시에도 심사 절차가 지연되거나 매입이 보류될 가능성이 있습니다.<br><br>
+                            
+                            <strong>② 지역별 공급 조정:</strong> 특정 지역의 공급 과잉 또는 수급 불균형 발생 시, 해당 지역에 대한 신규 매입이 일시 중단되거나 제한될 수 있습니다.<br><br>
+                            
+                            <strong>③ 매입 기준 변경:</strong> 전용면적 범위 조정, 입지 조건 강화 등 매입 기준 변경 시, 협의 진행 중인 사업도 변경된 기준을 적용받을 수 있습니다.<br><br>
+                            
+                            <strong>④ 지자체 협력 관계 변화:</strong> 지방자치단체와의 협력 관계 변화에 따라 인허가 소요 기간, 민원 대응 방식 등이 영향을 받을 수 있습니다.
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px; padding: 16px; background: #ECFDF5; border-left: 4px solid #10B981; border-radius: 4px;">
+                        <div style="font-weight: 600; color: #065F46; margin-bottom: 8px;">검토 방향</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #065F46;">
+                            사업 초기 단계에서 LH 지역본부와의 사전 협의를 통해 현행 매입 기준 충족 여부를 확인하고, 정책 변동 가능성을 모니터링할 필요가 있습니다. 
+                            인허가 절차 진행 시 일정 여유를 확보하고, LH 협의 과정에서 신속한 승인 경로를 확보하는 것이 유리합니다. 
+                            정책 변동 시나리오를 고려한 대안 개발 계획(주택 유형 조정, 규모 축소 방안 등)을 사전 검토하는 것이 검토됩니다.
+                        </div>
+                    </div>
+                    
+                    <!-- R2. LH 심사 기준 및 내부 판단 검토 -->
+                    <div class="section-subtitle">7.2 LH 심사 기준 및 내부 판단 검토</div>
+                    
+                    <div style="margin-bottom: 12px; padding: 16px; background: #EFF6FF; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #1E40AF; margin-bottom: 8px;">검토 배경</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #374151;">
+                            LH의 신축매입임대주택 사업 승인은 「한국토지주택공사 신축매입임대주택 매입 업무지침」에 따라 수행되며, 
+                            입지, 가격, 사업자 신뢰도 등 명시된 기준과 함께 공공 목적 적합성, 장기 운영 가능성 등 정성적 요소를 종합적으로 고려하여 결정됩니다.
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 12px; padding: 16px; background: #F9FAFB; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #374151; margin-bottom: 8px;">심사 구조 및 절차</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #374151;">
+                            LH 승인 절차는 다단계로 구성됩니다:<br><br>
+                            <strong>① 지역본부 초기 검토:</strong> 사업지 입지 조건, 개발 규모, 매입 예상 가격, 사업자 신용도 등을 종합 검토하며, 기본 기준 충족 여부를 1차 판단합니다.<br><br>
+                            <strong>② 지역본부 심의위원회 심사:</strong> 입지 적합성, 주택 유형 적합성, 주변 임대 수요, 사업자 이행 능력 등을 종합 평가하며, 사업 승인 여부를 결정합니다.<br><br>
+                            <strong>③ 본사 최종 승인:</strong> 대규모 사업 또는 특수 조건 사업의 경우, 지역본부 심사 결과를 재검토하고, 전사 차원의 정책 방향, 예산 가용성 등을 종합 고려하여 최종 승인 여부를 결정합니다.
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 12px; padding: 16px; background: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 4px;">
+                        <div style="font-weight: 600; color: #991B1B; margin-bottom: 8px;">정성적 판단 요소</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #7F1D1D;">
+                            심사 과정에서 검토되는 정성적 요소:<br><br>
+                            <strong>• 입지 여건:</strong> 주변 생활 인프라 접근성, 지역 주택 수요 수준, 장기 임대 운영 안정성 등이 검토됩니다.<br>
+                            <strong>• 주택 유형 적합성:</strong> 지역 임대 수요 특성, 지역 내 기존 공급 현황, 향후 공급 계획과의 정합성 등이 검토됩니다.<br>
+                            <strong>• 사업자 신뢰도:</strong> 과거 사업 이행 실적, 재무 건전성, 사업 수행 역량 등이 검토됩니다.<br>
+                            <strong>• 사업 실현 가능성:</strong> 인허가 취득 가능성, 공사 일정 준수 가능성, 완공 후 매입 조건 충족 가능성 등이 검토됩니다.
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px; padding: 16px; background: #ECFDF5; border-left: 4px solid #10B981; border-radius: 4px;">
+                        <div style="font-weight: 600; color: #065F46; margin-bottom: 8px;">검토 방향</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #065F46;">
+                            사업 초기 단계에서 LH 지역본부와의 긴밀한 사전 협의를 통해 승인 가능성을 사전 검증하고, 
+                            심사 과정에서 요구될 가능성이 있는 보완 사항을 미리 준비하는 것이 유리합니다. 
+                            사업지 입지, 주택 유형, 개발 규모 등이 지역 정책 방향 및 LH의 현행 매입 전략과 부합하는지 확인하고, 
+                            필요 시 사업 계획을 조정하여 승인 가능성을 높이는 것이 검토됩니다.
+                        </div>
+                    </div>
+                    
+                    <!-- R3. 토지 감정평가 가격 및 시장 변동 검토 -->
+                    <div class="section-subtitle">7.3 토지 감정평가 가격 및 시장 변동 검토</div>
+                    
+                    <div style="margin-bottom: 12px; padding: 16px; background: #EFF6FF; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #1E40AF; margin-bottom: 8px;">감정평가 방법론</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #374151;">
+                            LH는 토지 매입 가격 결정을 위해 「감정평가 및 감정평가사에 관한 법률」에 따라 2개 이상의 감정평가법인에 감정평가를 의뢰하며, 
+                            평가 결과의 산술평균값을 기준으로 매입 가격을 산정합니다. 감정평가는 인근 지역 실거래 사례, 공시지가, 개별 토지 특성 등을 종합적으로 고려하여 수행됩니다.
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 12px; padding: 16px; background: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 4px;">
+                        <div style="font-weight: 600; color: #991B1B; margin-bottom: 8px;">가격 변동 요인</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #7F1D1D;">
+                            <strong>① 거래사례 부족:</strong> 인근 지역 유사 토지 거래 사례 부족 시, 감정평가 기준 설정이 어려워지며, 평가 기관별 평가액 차이가 발생할 수 있습니다.<br><br>
+                            <strong>② 시장 가격 변동:</strong> 감정평가 의뢰 시점과 최종 매입 시점 사이 부동산 시장 가격 급변 시, 평가액과 실제 거래 희망 가격 간 괴리가 발생할 수 있습니다.<br><br>
+                            <strong>③ 토지 특성 해석 차이:</strong> 토지 형상, 접도 조건, 용도지역 경계 위치 등에 대한 해석 차이에 따라 평가액이 달라질 수 있습니다.
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px; padding: 16px; background: #ECFDF5; border-left: 4px solid #10B981; border-radius: 4px;">
+                        <div style="font-weight: 600; color: #065F46; margin-bottom: 8px;">검토 방향</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #065F46;">
+                            사업 초기 단계에서 인근 지역 거래 사례를 충분히 조사하여 시장 가격 수준을 파악하고, 
+                            사업비 산정 시 약간 보수적인 가정을 적용하는 것이 유리합니다. 
+                            지주와의 협상 과정에서 조건부 매입 계약(감정평가액 기준 ±10% 범위 내 협상 등)을 체결하여 가격 변동 리스크를 관리하고, 
+                            감정평가 기관 선정 시 지역 시장 전문성이 높은 기관을 선정하는 것이 검토됩니다.
+                        </div>
+                    </div>
+                    
+                    <!-- R4. 건축 규모 및 법규 해석 검토 -->
+                    <div class="section-subtitle">7.4 건축 규모 및 법규 해석 검토</div>
+                    
+                    <div style="margin-bottom: 12px; padding: 16px; background: #EFF6FF; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #1E40AF; margin-bottom: 8px;">주요 법규 기준</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #374151;">
+                            건축 개발 사업은 「건축법」, 「주택법」, 「주차장법」, 해당 지역의 「도시계획조례」 등을 준수해야 하며, 
+                            용적률, 건폐율, 층수 제한, 주차 대수 등 법적 기준을 충족해야 합니다. 
+                            법규 해석은 지방자치단체의 건축 허가 부서에서 수행하며, 담당자, 시점, 지역에 따라 해석이 다소 달라질 수 있습니다.
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 12px; padding: 16px; background: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 4px;">
+                        <div style="font-weight: 600; color: #991B1B; margin-bottom: 8px;">법규 해석 변수</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #7F1D1D;">
+                            <strong>① 인센티브 용적률 적용 여부:</strong> 공공기여 충족 시 인센티브 용적률 적용 가능하나, 지자체 심사 기준 및 판단에 따라 적용 여부가 결정됩니다.<br><br>
+                            <strong>② 주차 대수 산정 방식 차이:</strong> 세대당 기준, 면적당 기준, 공용 주차 포함 여부 등이 조례 및 담당자 해석에 따라 달라질 수 있습니다.<br><br>
+                            <strong>③ 설계 변경 요구:</strong> 인허가 과정에서 지자체, 인근 주민, 관계 기관 등의 의견 수렴 과정에서 설계 변경이 요구될 수 있으며, 
+                            이는 사업 규모 축소 또는 공사비 증가로 이어질 수 있습니다.
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px; padding: 16px; background: #ECFDF5; border-left: 4px solid #10B981; border-radius: 4px;">
+                        <div style="font-weight: 600; color: #065F46; margin-bottom: 8px;">검토 방향</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #065F46;">
+                            사업 초기 단계에서 건축사, 법무사 등 전문가 자문을 받아 법규 기준 충족 여부를 사전 검토하고, 
+                            지자체 건축 허가 부서와의 사전 협의를 통해 인허가 가능성을 확인하는 것이 유리합니다. 
+                            설계 계획 수립 시 법정 기준보다 약간 보수적인 기준을 적용하여(주차 대수 10% 여유 확보, 용적률 5% 하향 설계 등) 
+                            인허가 과정에서 발생할 수 있는 변수에 대비하고, 충분한 여유 기간을 확보하는 것이 검토됩니다.
+                        </div>
+                    </div>
+                    
+                    <!-- R5. 사업 타당성 및 재무 구조 검토 -->
+                    <div class="section-subtitle">7.5 사업 타당성 및 재무 구조 검토</div>
+                    
+                    <div style="margin-bottom: 12px; padding: 16px; background: #EFF6FF; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #1E40AF; margin-bottom: 8px;">주요 재무 변수</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #374151;">
+                            신축매입임대주택 사업의 재무 구조는 토지 취득비, 건축 공사비, 금융 비용, LH 매입 가격 등 주요 변수에 따라 결정되며, 
+                            사업 수익성은 이들 변수의 변동에 민감하게 반응합니다. 
+                            사업 타당성 검토 시에는 순현재가치(NPV), 내부수익률(IRR), 투자수익률(ROI) 등 재무 지표를 활용하여 사업 수익성을 평가합니다.
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 12px; padding: 16px; background: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 4px;">
+                        <div style="font-weight: 600; color: #991B1B; margin-bottom: 8px;">변동 시나리오</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #7F1D1D;">
+                            <strong>① 건축 공사비 10% 증가 시:</strong> 자재 가격 상승, 인건비 상승, 공사 난이도 증가 등으로 인해 NPV 및 IRR이 하락하며, 사업 수익성이 악화됩니다.<br><br>
+                            <strong>② 금리 1%p 상승 시:</strong> 대출 금리 상승 시 금융 비용이 증가하며, NPV 및 IRR이 하락합니다.<br><br>
+                            <strong>③ LH 매입 가격 5% 하락 시:</strong> LH의 매입 가격 산정 기준 변경, 감정평가액 하락 등으로 인해 사업 수익성이 크게 악화됩니다.<br><br>
+                            <strong>④ 사업 일정 6개월 지연 시:</strong> 인허가 지연, 공사 지연 등으로 인해 금융 비용이 증가하며, NPV 및 IRR이 하락합니다.
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px; padding: 16px; background: #ECFDF5; border-left: 4px solid #10B981; border-radius: 4px;">
+                        <div style="font-weight: 600; color: #065F46; margin-bottom: 8px;">검토 방향</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #065F46;">
+                            사업비 산정 시 주요 변수에 대해 보수적인 가정을 적용하고(건축 공사비 10% 예비비 포함, 금리 +1%p 가정 등), 
+                            주요 변수 변동 시나리오에 따른 수익성 변화를 사전 검토하는 것이 유리합니다. 
+                            건축 공사비 리스크 관리를 위해 총액 공사 계약 체결, 금융 비용 리스크 관리를 위해 고정 금리 대출 확보, 
+                            LH 매입 가격 리스크 관리를 위해 사업 초기 단계에서 LH와 매입 가격 산정 기준을 명확히 협의하는 것이 검토됩니다.
+                        </div>
+                    </div>
+                    
+                    <!-- R6. 사업 일정 및 협상 지연 검토 -->
+                    <div class="section-subtitle">7.6 사업 일정 및 협상 지연 검토</div>
+                    
+                    <div style="margin-bottom: 12px; padding: 16px; background: #EFF6FF; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #1E40AF; margin-bottom: 8px;">주요 일정 단계</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #374151;">
+                            신축매입임대주택 사업은 LH 사전 협의(1-2개월), 토지 매입 협상(2-4개월), 건축 설계 및 인허가(6-12개월), 
+                            건축 공사(12-24개월), LH 최종 매입(1-2개월) 등 다단계 절차로 진행되며, 
+                            각 단계에서 예상치 못한 지연이 발생할 수 있습니다.
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 12px; padding: 16px; background: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 4px;">
+                        <div style="font-weight: 600; color: #991B1B; margin-bottom: 8px;">지연 발생 요인</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #7F1D1D;">
+                            <strong>① LH 협의 지연:</strong> LH 내부 검토 절차 지연, 정책 변경에 따른 재검토, 예산 배정 지연 등으로 인해 LH 협의가 지연될 수 있습니다.<br><br>
+                            <strong>② 지주 협상 난항:</strong> 지주의 매도 가격 기대치와 감정평가액 간 괴리, 지주 간 의견 불일치, 추가 보상 요구 등으로 인해 협상이 난항을 겪을 수 있습니다.<br><br>
+                            <strong>③ 인허가 지연:</strong> 민원 발생, 관계 기관 협의 지연, 지자체 담당 부서 업무 지연 등으로 인해 인허가가 지연될 수 있습니다.<br><br>
+                            <strong>④ 공사 지연:</strong> 자재 수급 지연, 인력 수급 문제, 기상 악화, 공사 중 설계 변경 요구 등으로 인해 공사가 지연될 수 있습니다.
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px; padding: 16px; background: #ECFDF5; border-left: 4px solid #10B981; border-radius: 4px;">
+                        <div style="font-weight: 600; color: #065F46; margin-bottom: 8px;">검토 방향</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #065F46;">
+                            사업 초기 단계에서 충분한 일정 여유를 확보하고, 각 단계별 지연 발생 가능성을 고려하여 일정 계획을 수립하는 것이 유리합니다. 
+                            LH, 지주, 지자체 등 주요 이해관계자와의 긴밀한 소통을 통해 협의 과정을 신속히 진행하고, 
+                            인허가 과정에서 민원 발생 가능성을 사전 검토하여 대응 방안을 마련하는 것이 검토됩니다. 
+                            공사 일정 관리를 위해서는 시공사 선정 시 실적 및 신뢰도를 중시하고, 공사 계약 시 일정 준수 조항 및 지연 패널티 조항을 포함하는 것이 필요합니다.
+                        </div>
+                    </div>
+                    
+                    <!-- 종합 판단 -->
+                    <div style="margin-top: 24px; padding: 20px; background: #F3F4F6; border: 2px solid #9CA3AF; border-radius: 8px;">
+                        <div style="font-weight: 700; font-size: 16px; color: #1F2937; margin-bottom: 12px;">종합 판단</div>
+                        <div style="line-height: 1.9; font-size: 14px; color: #374151;">
+                            본 기술검증 보고서에서 검토된 6개 리스크 영역은 신축매입임대주택 사업의 주요 변수이며, 각 리스크는 독립적으로 발생할 수도 있지만 상호 연계되어 복합적인 영향을 미칠 수도 있습니다.
+                            <br><br>
+                            정책 및 제도 변동은 LH 심사 기준 및 매입 조건 변경으로 이어질 수 있으며, 토지 감정평가 가격 변동은 사업 타당성 악화로 이어질 수 있습니다. 
+                            건축 규모 및 법규 해석 변동은 사업 일정 지연 및 공사비 증가로 이어질 수 있으며, 이는 다시 재무 구조 악화로 이어질 수 있습니다.
+                            <br><br>
+                            <strong>따라서 본 사업의 실행 가능성 및 승인 가능성을 판단하기 위해서는 개별 리스크를 독립적으로 검토하는 것뿐만 아니라, 
+                            리스크 간 상호 연관성을 종합적으로 고려할 필요가 있습니다.</strong>
+                            <br><br>
+                            본 보고서는 현행 제도, 기준, 절차를 바탕으로 기술적 검토 결과를 제시한 것이며, 최종 승인 여부는 LH의 종합적 판단에 따라 결정됩니다.
                         </div>
                     </div>
                 </div>
+                <!-- ===== v4.2 리스크 검토 섹션 끝 ===== -->
+                
+                <!-- ===== v4.2 시나리오 분석 섹션 시작 ===== -->
+                <div class="section">
+                    <div class="section-title">8. 사업 조건별 시나리오 분석</div>
+                    
+                    <div style="margin-bottom: 24px; padding: 20px; background: #F9FAFB; border-left: 4px solid #6B7280; border-radius: 8px; line-height: 1.8; font-size: 15px;">
+                        사업 추진 과정에서 주요 변수가 변동할 경우, 사업 실행 가능성 및 LH 승인 가능성이 어떻게 변화하는지를 3개 시나리오(기준안, 보수안, 적극안)로 검토하였습니다. 
+                        각 시나리오는 토지 가격, 개발 규모, 공사비, 사업 일정 등 주요 변수의 변동을 가정하며, LH 승인 기준 충족 여부를 재검토합니다.
+                    </div>
+                    
+                    <!-- 시나리오 1: 기준안 -->
+                    <div class="section-subtitle">8.1 시나리오 1: 기준안 (Base Case)</div>
+                    
+                    <div style="margin-bottom: 16px; padding: 18px; background: #EFF6FF; border-left: 4px solid #3B82F6; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #1E40AF; margin-bottom: 10px; font-size: 15px;">조건 설정</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #374151;">
+                            • 토지 감정평가액: 현재 추정가 수준 유지<br>
+                            • 개발 규모: 법정 용적률 기준 개발 규모<br>
+                            • 건축 공사비: 현재 시장 가격 수준(평당 350만원 기준)<br>
+                            • LH 매입 가격: 감정평가액 기준 산정<br>
+                            • 사업 일정: 인허가 12개월 + 공사 18개월 = 총 30개월<br>
+                            • 금융 조건: 대출 금리 연 6.5%
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 16px; padding: 18px; background: #F9FAFB; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #374151; margin-bottom: 10px; font-size: 15px;">기술적 검토 결과</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #374151;">
+                            <strong>토지 적합성:</strong> 감정평가액 기준 토지 가격이 합리적 수준으로 검토되며, LH 매입 가격 산정 기준을 충족합니다.<br><br>
+                            <strong>개발 규모:</strong> 법정 용적률 기준 개발 시, 건축 허가 기준을 안정적으로 충족하며, 인센티브 용적률 미적용 시에도 사업 추진이 가능합니다.<br><br>
+                            <strong>사업 타당성:</strong> 건축 공사비가 시장 가격 수준을 유지할 경우, 적정 수익률(IRR 10-12% 수준) 확보가 가능하며, LH 매입 조건 충족이 가능합니다.<br><br>
+                            <strong>승인 가능성:</strong> 현행 LH 매입 기준 및 정책 방향과 부합하며, 특별한 장애 요인이 없을 경우 승인 가능성이 검토됩니다.
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 24px; padding: 18px; background: #ECFDF5; border-left: 4px solid #10B981; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #065F46; margin-bottom: 10px; font-size: 15px;">판정</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #065F46;">
+                            <strong>기술적 적합성: 충족</strong><br>
+                            기준안 조건에서는 토지 적합성, 개발 규모, 사업 타당성 등 LH 승인 기준을 전반적으로 충족하는 것으로 검토됩니다. 
+                            사업 추진 시 주요 변수가 기준안 수준을 유지할 경우, LH 승인 절차를 정상적으로 진행할 수 있을 것으로 예상됩니다.
+                        </div>
+                    </div>
+                    
+                    <!-- 시나리오 2: 보수안 -->
+                    <div class="section-subtitle">8.2 시나리오 2: 보수안 (Conservative Case)</div>
+                    
+                    <div style="margin-bottom: 16px; padding: 18px; background: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #991B1B; margin-bottom: 10px; font-size: 15px;">조건 설정 (불리한 변동 가정)</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #7F1D1D;">
+                            • 토지 감정평가액: 현재 추정가 대비 +10% 상승 (시장 가격 상승 반영)<br>
+                            • 개발 규모: 법정 용적률 기준 -10% 축소 (인허가 과정 민원 고려)<br>
+                            • 건축 공사비: 평당 350만원 → 385만원 (+10% 상승, 자재비 인상 반영)<br>
+                            • LH 매입 가격: 감정평가액 기준 유지 (토지 가격 상승 미반영 가능성)<br>
+                            • 사업 일정: 인허가 18개월 + 공사 20개월 = 총 38개월 (+8개월 지연)<br>
+                            • 금융 조건: 대출 금리 연 7.5% (+1%p 상승)
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 16px; padding: 18px; background: #F9FAFB; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #374151; margin-bottom: 10px; font-size: 15px;">기술적 검토 결과</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #374151;">
+                            <strong>토지 적합성:</strong> 토지 가격 10% 상승 시, 지주 협상 난항이 예상되며, LH 매입 가격이 토지 가격 상승을 충분히 반영하지 못할 경우 
+                            사업비 대비 수익성이 악화됩니다.<br><br>
+                            <strong>개발 규모:</strong> 개발 규모 10% 축소 시, 세대수 감소로 인해 LH 매입 총액이 감소하며, 사업 수익성이 악화됩니다. 
+                            법정 기준은 여전히 충족하나, 사업 효율성이 저하됩니다.<br><br>
+                            <strong>사업 타당성:</strong> 공사비 10% 상승 + 금리 1%p 상승 + 일정 8개월 지연 조건에서는 금융 비용이 증가하고, 
+                            IRR이 8-9% 수준으로 하락할 가능성이 있습니다. 이 경우 사업 추진 여부를 재검토할 필요가 있습니다.<br><br>
+                            <strong>승인 가능성:</strong> 토지 가격 상승, 개발 규모 축소, 사업 타당성 악화 등을 종합적으로 고려 시, 
+                            LH 심사 과정에서 추가 보완 사항이 요구되거나 승인이 유보될 가능성이 있습니다.
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 24px; padding: 18px; background: #FEF3C7; border-left: 4px solid #F59E0B; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #92400E; margin-bottom: 10px; font-size: 15px;">판정</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #78350F;">
+                            <strong>기술적 적합성: 조건부 충족</strong><br>
+                            보수안 조건에서는 토지 가격 상승, 개발 규모 축소, 공사비 증가 등 복합적 변수 발생 시 사업 수익성이 악화되며, 
+                            LH 승인 가능성이 저하될 수 있습니다. 이 경우 사업 계획을 재조정하거나(예: 토지 가격 협상 강화, 공사비 절감 방안 모색 등), 
+                            LH와 추가 협의를 통해 매입 조건을 재검토할 필요가 있습니다.
+                        </div>
+                    </div>
+                    
+                    <!-- 시나리오 3: 적극안 -->
+                    <div class="section-subtitle">8.3 시나리오 3: 적극안 (Aggressive Case)</div>
+                    
+                    <div style="margin-bottom: 16px; padding: 18px; background: #EFF6FF; border-left: 4px solid #3B82F6; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #1E40AF; margin-bottom: 10px; font-size: 15px;">조건 설정 (유리한 변동 가정)</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #1E3A8A;">
+                            • 토지 감정평가액: 현재 추정가 대비 -5% 하락 (협상 여력 확보)<br>
+                            • 개발 규모: 인센티브 용적률 적용 +20% 증가 (공공기여 조건 충족 가정)<br>
+                            • 건축 공사비: 평당 350만원 → 330만원 (-6% 절감, 공사비 효율화)<br>
+                            • LH 매입 가격: 감정평가액 기준 +우대 조건 (신속 매입 인센티브 적용 가정)<br>
+                            • 사업 일정: 인허가 9개월 + 공사 15개월 = 총 24개월 (-6개월 단축)<br>
+                            • 금융 조건: 대출 금리 연 5.5% (-1%p 하락, 정책 금융 활용)
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 16px; padding: 18px; background: #F9FAFB; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #374151; margin-bottom: 10px; font-size: 15px;">기술적 검토 결과</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #374151;">
+                            <strong>토지 적합성:</strong> 토지 가격 5% 절감 시, 지주와의 원만한 협상이 가능하며, 사업비 절감으로 인해 수익성이 개선됩니다.<br><br>
+                            <strong>개발 규모:</strong> 인센티브 용적률 적용 시, 세대수가 20% 증가하며, LH 매입 총액 증가로 인해 사업 수익성이 크게 개선됩니다. 
+                            단, 공공기여 조건(공공임대주택 비율 확대, 커뮤니티 시설 제공 등) 충족이 전제되어야 합니다.<br><br>
+                            <strong>사업 타당성:</strong> 공사비 6% 절감 + 금리 1%p 하락 + 일정 6개월 단축 조건에서는 금융 비용이 감소하고, 
+                            IRR이 14-16% 수준으로 상승할 가능성이 있습니다. 이 경우 사업 추진 적극 검토가 가능합니다.<br><br>
+                            <strong>승인 가능성:</strong> 토지 가격 절감, 개발 규모 확대, 사업 타당성 개선 등을 종합적으로 고려 시, 
+                            LH 심사 과정에서 우호적 평가를 받을 가능성이 높으며, 신속 승인 가능성이 검토됩니다.
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 24px; padding: 18px; background: #ECFDF5; border-left: 4px solid #10B981; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #065F46; margin-bottom: 10px; font-size: 15px;">판정</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #065F46;">
+                            <strong>기술적 적합성: 우수</strong><br>
+                            적극안 조건에서는 토지 가격 절감, 개발 규모 확대, 공사비 절감, 일정 단축 등 유리한 조건이 결합되어 
+                            사업 수익성이 크게 개선되며, LH 승인 가능성이 매우 높아집니다. 
+                            이 경우 사업 추진을 적극 검토하되, 인센티브 용적률 적용 조건, 공사비 절감 방안, 일정 단축 가능성 등을 구체적으로 확인할 필요가 있습니다.
+                        </div>
+                    </div>
+                    
+                    <!-- 시나리오 비교 종합 -->
+                    <div class="section-subtitle">8.4 시나리오 종합 비교</div>
+                    
+                    <div style="margin-bottom: 16px; padding: 20px; background: #FFFFFF; border: 2px solid #E5E7EB; border-radius: 8px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <thead>
+                                <tr style="background: #F3F4F6; border-bottom: 2px solid #D1D5DB;">
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">구분</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600; color: #374151;">기준안</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600; color: #991B1B;">보수안</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600; color: #065F46;">적극안</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid #E5E7EB;">
+                                    <td style="padding: 10px; color: #374151; font-weight: 500;">토지 가격</td>
+                                    <td style="padding: 10px; text-align: center; color: #6B7280;">기준</td>
+                                    <td style="padding: 10px; text-align: center; color: #991B1B;">+10%</td>
+                                    <td style="padding: 10px; text-align: center; color: #065F46;">-5%</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #E5E7EB; background: #F9FAFB;">
+                                    <td style="padding: 10px; color: #374151; font-weight: 500;">개발 규모</td>
+                                    <td style="padding: 10px; text-align: center; color: #6B7280;">법정 용적률</td>
+                                    <td style="padding: 10px; text-align: center; color: #991B1B;">-10%</td>
+                                    <td style="padding: 10px; text-align: center; color: #065F46;">+20%</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #E5E7EB;">
+                                    <td style="padding: 10px; color: #374151; font-weight: 500;">공사비</td>
+                                    <td style="padding: 10px; text-align: center; color: #6B7280;">350만원/평</td>
+                                    <td style="padding: 10px; text-align: center; color: #991B1B;">385만원/평</td>
+                                    <td style="padding: 10px; text-align: center; color: #065F46;">330만원/평</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #E5E7EB; background: #F9FAFB;">
+                                    <td style="padding: 10px; color: #374151; font-weight: 500;">사업 일정</td>
+                                    <td style="padding: 10px; text-align: center; color: #6B7280;">30개월</td>
+                                    <td style="padding: 10px; text-align: center; color: #991B1B;">38개월</td>
+                                    <td style="padding: 10px; text-align: center; color: #065F46;">24개월</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #E5E7EB;">
+                                    <td style="padding: 10px; color: #374151; font-weight: 500;">금리</td>
+                                    <td style="padding: 10px; text-align: center; color: #6B7280;">6.5%</td>
+                                    <td style="padding: 10px; text-align: center; color: #991B1B;">7.5%</td>
+                                    <td style="padding: 10px; text-align: center; color: #065F46;">5.5%</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #E5E7EB; background: #F9FAFB;">
+                                    <td style="padding: 10px; color: #374151; font-weight: 500;">예상 IRR</td>
+                                    <td style="padding: 10px; text-align: center; color: #6B7280; font-weight: 600;">10-12%</td>
+                                    <td style="padding: 10px; text-align: center; color: #991B1B; font-weight: 600;">8-9%</td>
+                                    <td style="padding: 10px; text-align: center; color: #065F46; font-weight: 600;">14-16%</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px; color: #374151; font-weight: 500;">LH 승인 가능성</td>
+                                    <td style="padding: 10px; text-align: center; color: #3B82F6; font-weight: 600;">충족</td>
+                                    <td style="padding: 10px; text-align: center; color: #F59E0B; font-weight: 600;">조건부</td>
+                                    <td style="padding: 10px; text-align: center; color: #10B981; font-weight: 600;">우수</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 20px; background: #F3F4F6; border: 2px solid #9CA3AF; border-radius: 8px;">
+                        <div style="font-weight: 700; font-size: 16px; color: #1F2937; margin-bottom: 12px;">종합 판단</div>
+                        <div style="line-height: 1.9; font-size: 14px; color: #374151;">
+                            시나리오 분석 결과, 본 사업의 기술적 적합성 및 LH 승인 가능성은 주요 변수(토지 가격, 개발 규모, 공사비, 사업 일정, 금리 등)의 변동에 따라 
+                            <strong>조건부 충족 ~ 우수</strong> 범위로 평가됩니다.
+                            <br><br>
+                            <strong>기준안 조건 유지 시:</strong> 현행 LH 매입 기준 및 정책 방향과 부합하며, 정상적인 승인 절차 진행이 가능할 것으로 검토됩니다.
+                            <br><br>
+                            <strong>보수안 조건 발생 시:</strong> 토지 가격 상승, 개발 규모 축소, 공사비 증가 등 불리한 조건이 결합될 경우, 
+                            사업 수익성 악화 및 LH 승인 가능성 저하가 예상되므로, 사업 계획 재조정 또는 추가 협의가 필요합니다.
+                            <br><br>
+                            <strong>적극안 조건 실현 시:</strong> 토지 가격 절감, 인센티브 용적률 적용, 공사비 절감 등 유리한 조건이 결합될 경우, 
+                            사업 수익성이 크게 개선되며, LH 승인 가능성이 매우 높아집니다.
+                            <br><br>
+                            따라서 사업 추진 시에는 기준안을 기본 전제로 하되, 보수안 조건 발생 가능성을 대비한 리스크 관리 방안을 마련하고, 
+                            적극안 조건 실현을 위한 구체적 실행 방안(인센티브 용적률 적용 조건 검토, 공사비 절감 방안 모색, 정책 금융 활용 등)을 검토할 필요가 있습니다.
+                        </div>
+                    </div>
+                </div>
+                <!-- ===== v4.2 시나리오 분석 섹션 끝 ===== -->
                 
                 <!-- 승인 장애 요인 -->
                 <div class="section">
-                    <div class="section-title">8. 승인 장애 요인</div>
+                    <div class="section-title">9. 승인 장애 요인</div>
                     <ul class="report-list">
                         {barriers_html if barriers_html else '<li>특이사항 없음</li>'}
                     </ul>
