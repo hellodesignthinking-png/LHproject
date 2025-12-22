@@ -18,7 +18,7 @@ from ..narrative_generator import NarrativeGeneratorFactory
 from ..report_type_configs import REPORT_TYPE_CONFIGS, get_mandatory_kpi
 
 # [Phase 3.10 Final Lock] KPI Extractor
-from ..kpi_extractor import KPIExtractor, validate_mandatory_kpi, log_kpi_pipeline, FinalReportAssemblyError
+from ..kpi_extractor import KPIExtractor, validate_mandatory_kpi, log_kpi_pipeline, FinalReportAssemblyError, validate_mandatory_kpi, log_kpi_pipeline, FinalReportAssemblyError
 
 # [Phase 3.10] Hard-Fail KPI Binding
 
@@ -51,27 +51,16 @@ class QuickCheckAssembler(BaseFinalReportAssembler):
         transition_m5_m6 = self.generate_module_transition("M5", "M6", self.report_type)
         
         # [Phase 3.10 Final Lock] Extract KPI using new pipeline
-        required_map = MANDATORY_KPI[self.report_type]
-        modules_data = {}
+        mandatory_kpi = get_mandatory_kpi(self.report_type)
+        modules_data = self._extract_module_data(
+            {"M5": m5_html, "M6": m6_html},
+            mandatory_kpi
+        )
         
-        for module_id in ["M5", "M6"]:
-            html = self.load_module_html(module_id)
-            required_keys = required_map.get(module_id, [])
-            modules_data[module_id] = KPIExtractor.extract_module_kpi(
-                html=html,
-                module_id=module_id,
-                required_keys=required_keys
-            )
-        
-        # [Phase 3.10 Final Lock] Hard-Fail validation
-        missing = []
-        for module_id, keys in required_map.items():
-            for k in keys:
-                if modules_data.get(module_id, {}).get(k) is None:
-                    missing.append(f"{module_id}.{k}")
-        
-        if missing:
-            error_msg = f"[BLOCKED] Missing required KPI: {', '.join(missing)}"
+        # [Phase 3.10 Final Lock] HARD-FAIL: Validate mandatory KPI
+        missing_kpi = validate_mandatory_kpi(self.report_type, modules_data, {self.report_type: mandatory_kpi})
+        if missing_kpi:
+            error_msg = f"[BLOCKED] Missing required KPI: {', '.join(missing_kpi)}"
             logger.error(f"[{self.report_type}] {error_msg}")
             return {
                 "html": f"<html><body><h1>❌ Report Generation Blocked</h1><pre>{error_msg}</pre></body></html>",
@@ -83,6 +72,47 @@ class QuickCheckAssembler(BaseFinalReportAssembler):
                     "reason": "Hard-Fail: Required KPI missing"
                 }
             }
+    
+    def _extract_module_data(self, module_htmls: Dict[str, str], mandatory_kpi: Dict[str, List[str]]) -> Dict:
+        """
+        [Phase 3.10 Final Lock] Extract module data using KPIExtractor
+        
+        Args:
+            module_htmls: Dict of module_id -> HTML string
+            mandatory_kpi: Dict of module_id -> required KPI keys
+            
+        Returns:
+            Dict of module_id -> extracted KPI data
+        """
+        modules_data = {}
+        
+        for module_id, html in module_htmls.items():
+            if not html or html.strip() == "":
+                logger.warning(f"[{module_id}] Empty HTML")
+                modules_data[module_id] = {"status": "empty", "_complete": False}
+                continue
+            
+            # Get required keys for this module
+            required_keys = mandatory_kpi.get(module_id, [])
+            
+            try:
+                # Extract KPI using new extractor (SINGLE ENTRY POINT)
+                kpi_data = KPIExtractor.extract_module_kpi(html, module_id, required_keys)
+                modules_data[module_id] = kpi_data
+                
+                # Log pipeline for audit trail
+                log_kpi_pipeline(self.report_type, self.context_id, module_id, kpi_data)
+                
+            except FinalReportAssemblyError as e:
+                logger.error(f"[{module_id}] KPI extraction failed: {e}")
+                modules_data[module_id] = {
+                    "status": "extraction_failed",
+                    "_complete": False,
+                    "error": str(e)
+                }
+        
+        return modules_data
+
         
         # Generate KPI summary from modules_data
         kpi_summary = self.generate_kpi_summary_box(modules_data, self.report_type)
