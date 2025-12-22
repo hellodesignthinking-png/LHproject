@@ -248,3 +248,58 @@ def get_section_order(report_type: str) -> List[str]:
         raise ValueError(f"No section order defined for report type: {report_type}")
     
     return SECTION_ORDER[report_type]
+
+
+# ================================================================
+# Phase 3.10 Final Lock: MANDATORY KPI Declaration
+# ================================================================
+
+MANDATORY_KPI = {
+    "landowner_summary": {
+        "M2": ["land_value_total"],
+        "M4": ["total_units"],
+        "M5": ["npv"],
+        "M6": ["decision"]
+    },
+    "quick_check": {
+        "M5": ["npv", "irr"],
+        "M6": ["decision"]
+    },
+    "executive_summary": {
+        "M2": ["land_value_total"],
+        "M5": ["npv"],
+        "M6": ["decision"]
+    },
+    "lh_technical": {
+        "M3": ["total_score"],
+        "M4": ["total_units"],
+        "M6": ["decision"]
+    },
+    "financial_feasibility": {
+        "M5": ["npv", "irr"],
+        "M2": ["land_value_total"]
+    },
+    "all_in_one": {
+        "M2": ["land_value_total"],
+        "M3": ["total_score"],
+        "M4": ["total_units"],
+        "M5": ["npv"],
+        "M6": ["decision"]
+    }
+}
+
+
+def get_mandatory_kpi(report_type: str) -> Dict[str, List[str]]:
+    """
+    Get mandatory KPI for a report type
+    
+    Args:
+        report_type: Report type ID
+        
+    Returns:
+        Dict mapping module_id to list of mandatory KPI keys
+    """
+    if report_type not in MANDATORY_KPI:
+        return {}
+    
+    return MANDATORY_KPI[report_type]

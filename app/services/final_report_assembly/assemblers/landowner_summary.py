@@ -15,11 +15,10 @@ import re
 
 from ..base_assembler import BaseFinalReportAssembler, get_report_brand_class
 from ..narrative_generator import NarrativeGeneratorFactory
-from ..report_type_configs import REPORT_TYPE_CONFIGS
+from ..report_type_configs import REPORT_TYPE_CONFIGS, get_mandatory_kpi
 
-# [Phase 3.10] Hard-Fail KPI Binding
-from ..kpi_hard_fail_enforcement import enforce_kpi_binding, KPIBindingError, FinalReportGenerationError
-from app.services.final_report_assembly.kpi_extraction_vlast import extract_module_kpis
+# [Phase 3.10 Final Lock] KPI Extractor
+from ..kpi_extractor import KPIExtractor, validate_mandatory_kpi, log_kpi_pipeline, FinalReportAssemblyError
 
 
 logger = logging.getLogger(__name__)
@@ -77,25 +76,31 @@ class LandownerSummaryAssembler(BaseFinalReportAssembler):
         m5_html = self.sanitize_module_html(m5_html_raw, "M5")
         m6_html = self.sanitize_module_html(m6_html_raw, "M6")
         
-        # Extract module data for narrative generation + KPI
-        modules_data = self._extract_module_data({"M2": m2_html, "M5": m5_html, "M6": m6_html})
+        # [Phase 3.10 Final Lock] Extract KPI using new extractor
+        mandatory_kpi = get_mandatory_kpi(self.report_type)
+        modules_data = self._extract_module_data(
+            {"M2": m2_html, "M5": m5_html, "M6": m6_html},
+            mandatory_kpi
+        )
         
-        # [Phase 3.10] HARD-FAIL: Normalize → Bind → Validate
-        try:
-            bound_kpis = enforce_kpi_binding(self.report_type, modules_data)
-            kpi_summary = self.generate_kpi_summary_box(bound_kpis, self.report_type)
-        except (KPIBindingError, FinalReportGenerationError) as e:
-            logger.error(f"[{self.report_type}] KPI binding FAILED: {e}")
+        # [Phase 3.10 Final Lock] HARD-FAIL: Validate mandatory KPI
+        missing_kpi = validate_mandatory_kpi(self.report_type, modules_data, {self.report_type: mandatory_kpi})
+        if missing_kpi:
+            error_msg = f"[BLOCKED] Missing required KPI: {', '.join(missing_kpi)}"
+            logger.error(f"[{self.report_type}] {error_msg}")
             return {
-                "html": f"<html><body><h1>❌ Report Generation Blocked</h1><pre>{str(e)}</pre></body></html>",
+                "html": f"<html><body><h1>❌ Report Generation Blocked</h1><pre>{error_msg}</pre></body></html>",
                 "qa_result": {
                     "status": "FAIL",
-                    "errors": [str(e)],
+                    "errors": [error_msg],
                     "warnings": [],
                     "blocking": True,
-                    "reason": "KPI binding hard-fail - missing mandatory data"
+                    "reason": "Hard-Fail: Required KPI missing"
                 }
             }
+        
+        # Generate KPI summary box from modules_data
+        kpi_summary = self.generate_kpi_summary_box(modules_data, self.report_type)
         
         # Generate narrative elements
         exec_summary = self.narrative.executive_summary(modules_data)
@@ -345,23 +350,43 @@ class LandownerSummaryAssembler(BaseFinalReportAssembler):
         
         return kpis
 
-    def _extract_module_data(self, module_htmls: Dict[str, str]) -> Dict:
+    def _extract_module_data(self, module_htmls: Dict[str, str], mandatory_kpi: Dict[str, List[str]]) -> Dict:
         """
-        [UPDATED] Extract module data using enhanced KPI extractor
+        [Phase 3.10 Final Lock] Extract module data using KPIExtractor
         
-        This method now calls _extract_kpi_from_module_html() for each module,
-        which provides robust multi-tier extraction instead of weak regex-only.
+        Args:
+            module_htmls: Dict of module_id -> HTML string
+            mandatory_kpi: Dict of module_id -> required KPI keys
+            
+        Returns:
+            Dict of module_id -> extracted KPI data
         """
         modules_data = {}
         
         for module_id, html in module_htmls.items():
             if not html or html.strip() == "":
+                logger.warning(f"[{module_id}] Empty HTML")
                 modules_data[module_id] = {"status": "empty", "_complete": False}
                 continue
             
-            # Use the enhanced extractor
-            kpis = extract_module_kpis(html, module_id)
-            modules_data[module_id] = kpis
+            # Get required keys for this module
+            required_keys = mandatory_kpi.get(module_id, [])
+            
+            try:
+                # Extract KPI using new extractor (SINGLE ENTRY POINT)
+                kpi_data = KPIExtractor.extract_module_kpi(html, module_id, required_keys)
+                modules_data[module_id] = kpi_data
+                
+                # Log pipeline for audit trail
+                log_kpi_pipeline(self.report_type, self.context_id, module_id, kpi_data)
+                
+            except FinalReportAssemblyError as e:
+                logger.error(f"[{module_id}] KPI extraction failed: {e}")
+                modules_data[module_id] = {
+                    "status": "extraction_failed",
+                    "_complete": False,
+                    "error": str(e)
+                }
         
         return modules_data
 

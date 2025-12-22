@@ -15,11 +15,12 @@ import re
 
 from ..base_assembler import BaseFinalReportAssembler, get_report_brand_class
 from ..narrative_generator import NarrativeGeneratorFactory
-from ..report_type_configs import REPORT_TYPE_CONFIGS
+from ..report_type_configs import REPORT_TYPE_CONFIGS, get_mandatory_kpi
+
+# [Phase 3.10 Final Lock] KPI Extractor
+from ..kpi_extractor import KPIExtractor, validate_mandatory_kpi, log_kpi_pipeline, FinalReportAssemblyError
 
 # [Phase 3.10] Hard-Fail KPI Binding
-from ..kpi_hard_fail_enforcement import enforce_kpi_binding, KPIBindingError, FinalReportGenerationError
-from app.services.final_report_assembly.kpi_extraction_vlast import extract_module_kpis
 
 
 logger = logging.getLogger(__name__)
