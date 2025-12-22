@@ -296,11 +296,23 @@ class LandownerSummaryAssembler(BaseFinalReportAssembler):
         """
     
     def _wrap_module_html(self, module_id: str, html: str) -> str:
-        """Wrap module HTML in section container"""
+        """Wrap module HTML in section container with source reference"""
+        # [FIX 6] 모듈 출처 참조 추가 (Module Source Traceability)
+        module_names = {
+            "M2": "토지 평가",
+            "M3": "LH 선호유형",
+            "M4": "건축규모",
+            "M5": "사업성 분석",
+            "M6": "LH 심사 대응"
+        }
+        module_name = module_names.get(module_id, "분석 결과")
+        source_ref = self.generate_source_reference(module_id, module_name)
+        
         return f"""
         <section class="module-section" data-module="{module_id}">
             {html}
-        </section>
+        {source_ref}
+            </section>
         """
     
     def _generate_footer(self) -> str:

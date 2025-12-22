@@ -255,6 +255,26 @@ class ExecutiveSummaryAssembler(BaseFinalReportAssembler):
     def _wrap_module(self, module_id: str, html: str) -> str:
         return f'<section class="module-section compact" data-module="{module_id}">{html}</section>'
     
+
+    def _wrap_module_html(self, module_id: str, html: str) -> str:
+        """[FIX 6] Wrap module HTML with source reference for traceability"""
+        module_names = {
+            "M2": "토지 평가",
+            "M3": "LH 선호유형",
+            "M4": "건축규모",
+            "M5": "사업성 분석",
+            "M6": "LH 심사 대응"
+        }
+        module_name = module_names.get(module_id, "분석 결과")
+        source_ref = self.generate_source_reference(module_id, module_name)
+        
+        return f"""
+        <section class="module-section" data-module="{module_id}">
+            {html}
+            {source_ref}
+        </section>
+        """
+
     def _generate_footer(self) -> str:
         """[PROMPT 3.5-2] ZEROSITE Copyright Footer"""
         return self.get_zerosite_copyright_footer(
