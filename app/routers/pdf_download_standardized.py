@@ -312,7 +312,7 @@ async def download_module_pdf(
         # Warn if snapshot is old (helps detect stale data issues)
         snapshot_created_at = frozen_context.get("created_at", "")
         if snapshot_created_at:
-            from datetime import datetime, timedelta
+            from datetime import timedelta  # datetime already imported at top
             try:
                 snapshot_time = datetime.fromisoformat(snapshot_created_at.replace('Z', '+00:00'))
                 now = datetime.now(snapshot_time.tzinfo) if snapshot_time.tzinfo else datetime.now()
