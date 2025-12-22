@@ -19,12 +19,14 @@ VERSION: 1.0 (PROMPT 7 Implementation)
 DATE: 2025-12-22
 """
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, BackgroundTasks
 from fastapi.responses import StreamingResponse, HTMLResponse
-from typing import Literal
+from typing import Literal, Optional
 import logging
 import io
+import json
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 # Phase 3 imports
 from app.services.final_report_assembly.assemblers import (
@@ -186,6 +188,56 @@ def _extract_modules_data_for_qa(html_content: str) -> dict:
     return modules_data
 
 
+# ========== PROMPT 3.5-4: ASYNC HISTORY LOGGING ==========
+
+async def _log_generation_history(
+    context_id: str,
+    report_type: str,
+    qa_status: Optional[str] = None,
+    pdf_generated: bool = False,
+    error: Optional[str] = None
+):
+    """
+    [PROMPT 3.5-4] Async log Final Report generation history
+    
+    Logs to JSON file for operational monitoring without blocking generation.
+    
+    Args:
+        context_id: Analysis context ID
+        report_type: Type of report generated
+        qa_status: QA validation status (PASS/WARNING/FAIL)
+        pdf_generated: Whether PDF was successfully generated
+        error: Error message if generation failed
+    """
+    try:
+        log_dir = Path("/home/user/webapp/logs/final_reports")
+        log_dir.mkdir(parents=True, exist_ok=True)
+        
+        log_file = log_dir / "generation_history.jsonl"
+        
+        log_entry = {
+            "timestamp": datetime.now().isoformat(),
+            "context_id": context_id,
+            "report_type": report_type,
+            "qa_status": qa_status,
+            "pdf_generated": pdf_generated,
+            "error": error
+        }
+        
+        # Append to JSONL file
+        with open(log_file, "a") as f:
+            f.write(json.dumps(log_entry) + "\n")
+        
+        logger.info(
+            f"[GenerationHistory] Logged: {report_type} for {context_id} "
+            f"(QA: {qa_status}, PDF: {pdf_generated})"
+        )
+    
+    except Exception as e:
+        # Never fail the main generation due to logging issues
+        logger.error(f"[GenerationHistory] Logging failed: {e}", exc_info=True)
+
+
 # ========== API ENDPOINTS ==========
 
 @router.get("/{report_type}/html")
@@ -269,7 +321,8 @@ async def get_final_report_html(
 @router.get("/{report_type}/pdf")
 async def get_final_report_pdf(
     report_type: str,
-    context_id: str = Query(..., description="Frozen context ID (required)")
+    context_id: str = Query(..., description="Frozen context ID (required)"),
+    background_tasks: BackgroundTasks = None
 ):
     """
     Generate Final Report PDF
@@ -299,6 +352,10 @@ async def get_final_report_pdf(
     # Step 1.5: [PROMPT 3.5-1] Validate snapshot freshness (HARD BLOCKING)
     _validate_snapshot_freshness(frozen_context, context_id)
     
+    qa_status = None  # Track for logging
+    pdf_generated = False
+    error_msg = None
+    
     try:
         # Step 2: Generate HTML (reuse HTML generation logic)
         assembler_class = ASSEMBLER_MAP[report_type]
@@ -318,9 +375,23 @@ async def get_final_report_pdf(
         )
         
         log_qa_result(qa_result)
+        qa_status = qa_result["status"]  # Store for logging
         
         # Step 4: BLOCKING check
         if should_block_pdf_generation(qa_result):
+            error_msg = f"QA BLOCKED: {qa_result['status']}"
+            
+            # [PROMPT 3.5-4] Log generation failure (non-blocking)
+            if background_tasks:
+                background_tasks.add_task(
+                    _log_generation_history,
+                    context_id=context_id,
+                    report_type=report_type,
+                    qa_status=qa_status,
+                    pdf_generated=False,
+                    error=error_msg
+                )
+            
             logger.error(
                 f"[FinalReportAPI] PDF BLOCKED due to QA failure. "
                 f"Status: {qa_result['status']}, "
@@ -339,8 +410,20 @@ async def get_final_report_pdf(
         from weasyprint import HTML
         
         pdf_bytes = HTML(string=html_content).write_pdf()
+        pdf_generated = True  # Mark success for logging
         
         logger.info(f"[FinalReportAPI] PDF generated ({len(pdf_bytes):,} bytes)")
+        
+        # [PROMPT 3.5-4] Log successful generation (non-blocking)
+        if background_tasks:
+            background_tasks.add_task(
+                _log_generation_history,
+                context_id=context_id,
+                report_type=report_type,
+                qa_status=qa_status,
+                pdf_generated=True,
+                error=None
+            )
         
         # Step 6: Generate filename
         timestamp = frozen_context.get("analyzed_at", datetime.now().isoformat())[:19].replace(":", "-")
@@ -358,12 +441,38 @@ async def get_final_report_pdf(
     except HTTPException:
         raise
     except ImportError as e:
+        error_msg = f"WeasyPrint not available: {str(e)}"
+        
+        # [PROMPT 3.5-4] Log import error (non-blocking)
+        if background_tasks:
+            background_tasks.add_task(
+                _log_generation_history,
+                context_id=context_id,
+                report_type=report_type,
+                qa_status=qa_status,
+                pdf_generated=False,
+                error=error_msg
+            )
+        
         logger.error(f"[FinalReportAPI] WeasyPrint not available: {e}")
         raise HTTPException(
             status_code=501,
             detail="PDF generation not available - WeasyPrint library required"
         )
     except Exception as e:
+        error_msg = f"Unexpected error: {str(e)}"
+        
+        # [PROMPT 3.5-4] Log unexpected error (non-blocking)
+        if background_tasks:
+            background_tasks.add_task(
+                _log_generation_history,
+                context_id=context_id,
+                report_type=report_type,
+                qa_status=qa_status,
+                pdf_generated=False,
+                error=error_msg
+            )
+        
         logger.error(f"[FinalReportAPI] PDF generation error: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500,
