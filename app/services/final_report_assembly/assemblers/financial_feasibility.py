@@ -3,7 +3,7 @@ Financial Feasibility Report Assembler (PROMPT 6)
 ==================================================
 
 Target Audience: 투자자 / 재무 담당자
-Goal: 재무적 타당성 검토 (ROI, NPV, IRR)
+Goal: 재무적 타당성 검토 (ROI, 순현재가치(NPV), IRR)
 Modules: M2 (토지가치), M4 (사업규모), M5 (사업성)
 
 ASSEMBLY ONLY - NO CALCULATION
@@ -48,7 +48,7 @@ class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
         kpis = {
             "총 토지 감정가": modules_data.get("M2", {}).get("land_value"),
             "순현재가치 (NPV)": modules_data.get("M5", {}).get("npv"),
-            "내부수익률 (IRR)": modules_data.get("M5", {}).get("irr")
+            "내부내부수익률(IRR)(IRR) (IRR)": modules_data.get("M5", {}).get("irr")
         }
         kpi_summary = self.generate_kpi_summary_box(kpis, self.report_type)
         
@@ -107,10 +107,10 @@ class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
         is_profitable = m5_data.get("is_profitable", False)
         lh_decision = m6_data.get("decision", "")
         
-        if is_profitable and "승인" in lh_decision:
+        if is_profitable and "추진 가능" in lh_decision:
             return "사업 추진 권장"
-        elif "조건부" in lh_decision:
-            return "조건부 사업 추진"
+        elif "조건부 가능" in lh_decision:
+            return "조건부 가능 사업 추진"
         elif not is_profitable:
             return "사업 재검토 필요"
         else:
@@ -124,20 +124,20 @@ class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
         m5_data = modules_data.get("M5", {})
         m6_data = modules_data.get("M6", {})
         
-        # [FIX D] Profitability with explicit NPV
+        # [FIX D] Profitability with explicit 순현재가치(NPV)
         npv = m5_data.get("npv")
         if npv and npv > 0:
-            basis.append(f"✅ 수익성 양호: NPV {self.format_number(npv, 'currency')}")
+            basis.append(f"✅ 수익성 양호: 순현재가치(NPV) {self.format_number(npv, 'currency')}")
         elif npv and npv <= 0:
-            basis.append(f"❌ 수익성 부정적: NPV {self.format_number(npv, 'currency')}")
+            basis.append(f"❌ 수익성 부정적: 순현재가치(NPV) {self.format_number(npv, 'currency')}")
         else:
             basis.append("⚠️ 수익성: 분석 데이터 부족")
         
         # [FIX D] LH Decision with explicit status
         lh_decision = m6_data.get("decision", "분석 미완료")
-        if "승인" in lh_decision:
+        if "추진 가능" in lh_decision:
             basis.append(f"✅ LH 심사: {lh_decision}")
-        elif "조건부" in lh_decision:
+        elif "조건부 가능" in lh_decision:
             basis.append(f"⚠️ LH 심사: {lh_decision}")
         else:
             basis.append(f"❌ LH 심사: {lh_decision}")
@@ -159,10 +159,10 @@ class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
         is_profitable = m5_data.get("is_profitable", False)
         lh_decision = m6_data.get("decision", "")
         
-        if is_profitable and "승인" in lh_decision:
+        if is_profitable and "추진 가능" in lh_decision:
             actions.append("LH 사전 협의 진행")
             actions.append("설계 용역 발주 준비")
-        elif "조건부" in lh_decision:
+        elif "조건부 가능" in lh_decision:
             actions.append("LH 지적 사항 보완")
             actions.append("재분석 후 재제출 검토")
         else:
@@ -185,6 +185,49 @@ class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
         """
         import re
         modules_data = {}
+        # [FIX 2] M3 필수 데이터 추출 (Mandatory M3 Core Data Extraction)
+        if "m3_" in html:
+            # 추천 유형
+            m3_type_match = re.search(r'추천\s*유형[:\s]*([^<]+)', html)
+            if m3_type_match:
+                data["m3_recommended_type"] = m3_type_match.group(1).strip()
+            
+            # 총점 & 등급
+            m3_score_match = re.search(r'총점[:\s]*(\d+\.?\d*)\s*점', html)
+            if m3_score_match:
+                data["m3_total_score"] = m3_score_match.group(1)
+                
+            m3_grade_match = re.search(r'등급[:\s]*([A-F등급]+)', html)
+            if m3_grade_match:
+                data["m3_grade"] = m3_grade_match.group(1).strip()
+            
+            # 적합도
+            m3_suit_match = re.search(r'적합도[:\s]*(\d+\.?\d*)%', html)
+            if m3_suit_match:
+                data["m3_suitability"] = m3_suit_match.group(1)
+
+        # [FIX 2] M4 필수 데이터 추출 (Mandatory M4 Core Data Extraction)
+        if "m4_" in html:
+            # 총 세대수
+            m4_total_match = re.search(r'총\s*세대수[:\s]*(\d[\d,]*)', html)
+            if m4_total_match:
+                data["m4_total_units"] = m4_total_match.group(1)
+            
+            # 기본 세대수
+            m4_basic_match = re.search(r'기본\s*세대수[:\s]*(\d[\d,]*)', html)
+            if m4_basic_match:
+                data["m4_basic_units"] = m4_basic_match.group(1)
+            
+            # 인센티브
+            m4_incentive_match = re.search(r'인센티브[:\s]*(\d[\d,]*)', html)
+            if m4_incentive_match:
+                data["m4_incentive_units"] = m4_incentive_match.group(1)
+            
+            # 법적 기준
+            m4_legal_match = re.search(r'법적\s*기준[:\s]*([^<]+)', html)
+            if m4_legal_match:
+                data["m4_legal_basis"] = m4_legal_match.group(1).strip()
+
         
         # M2: Land value
         m2_html = module_htmls.get("M2", "")
@@ -193,10 +236,10 @@ class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
             land_value_str = land_value_match.group(1).replace(",", "")
             modules_data["M2"] = {"land_value": int(land_value_str)}
         
-        # M5: NPV, IRR
+        # M5: 순현재가치(NPV), 내부내부수익률(IRR)(IRR)
         m5_html = module_htmls.get("M5", "")
-        npv_match = re.search(r'NPV[:\s]*([+-]?\d{1,3}(?:,\d{3})*)', m5_html, re.IGNORECASE)
-        irr_match = re.search(r'IRR[:\s]*([\d.]+)\s*%', m5_html, re.IGNORECASE)
+        npv_match = re.search(r'순현재가치(NPV)[:\s]*([+-]?\d{1,3}(?:,\d{3})*)', m5_html, re.IGNORECASE)
+        irr_match = re.search(r'내부내부수익률(IRR)(IRR)[:\s]*([\d.]+)\s*%', m5_html, re.IGNORECASE)
         
         if npv_match or irr_match:
             modules_data["M5"] = {}
