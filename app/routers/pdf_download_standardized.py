@@ -62,15 +62,119 @@ MODULE_NAMES = {
 }
 
 
-def _generate_pdf_filename(module: str) -> str:
+def _convert_normalized_to_pdf_format(module: str, normalized_data: dict, frozen_context: dict) -> dict:
+    """
+    Convert normalized JSON (from adapter) to PDF generator format
+    
+    This is a compatibility layer until PDF generators are fully updated
+    to use the same normalized format as HTML.
+    """
+    import hashlib
+    import json
+    
+    # Calculate data signature
+    canonical_summary = frozen_context.get("canonical_summary", {})
+    data_signature = hashlib.sha256(
+        json.dumps(canonical_summary, sort_keys=True).encode()
+    ).hexdigest()[:16]
+    
+    # Common metadata for all PDFs
+    pdf_data = {
+        "_metadata": {
+            "context_id": frozen_context.get("context_id", "unknown"),
+            "parcel_id": frozen_context.get("parcel_id", "unknown"),
+            "snapshot_created_at": frozen_context.get("created_at", "unknown"),
+            "generated_at": datetime.now().isoformat(),
+            "data_signature": data_signature,
+            "pipeline_version": frozen_context.get("pipeline_version", "v4.3")
+        }
+    }
+    
+    if module == "M2":
+        appraisal = normalized_data.get("appraisal_result", {})
+        basis = normalized_data.get("analysis_basis", {})
+        pdf_data.update({
+            "appraisal": {
+                "land_value": appraisal.get("total_value", 0),
+                "unit_price_pyeong": appraisal.get("pyeong_price", 0),
+                "confidence_pct": appraisal.get("confidence_pct", 0)
+            },
+            "transactions": {
+                "count": basis.get("transaction_count", 0)
+            },
+            "interpretation": normalized_data.get("interpretation", {}),
+            "lh_perspective": normalized_data.get("lh_perspective", {})
+        })
+    
+    elif module == "M3":
+        rec_type = normalized_data.get("recommended_type", {})
+        pdf_data.update({
+            "recommended_type": rec_type.get("name", "정보 없음"),
+            "total_score": rec_type.get("score", 0),
+            "confidence_pct": rec_type.get("confidence", "없음"),
+            "evaluation_summary": normalized_data.get("evaluation_summary", {}),
+            "score_breakdown": normalized_data.get("score_breakdown", []),
+            "lh_policy_interpretation": normalized_data.get("lh_policy_interpretation", {})
+        })
+    
+    elif module == "M4":
+        dev_summary = normalized_data.get("development_summary", {})
+        area_analysis = normalized_data.get("area_analysis", {})
+        pdf_data.update({
+            "total_units": dev_summary.get("total_units", 0),
+            "base_units": dev_summary.get("base_units", 0),
+            "incentive_units": dev_summary.get("incentive_units", 0),
+            "site_area": area_analysis.get("site_area", 0),
+            "floor_area_ratio": area_analysis.get("floor_area_ratio", 0),
+            "interpretation": normalized_data.get("interpretation", {}),
+            "lh_feasibility": normalized_data.get("lh_feasibility", {})
+        })
+    
+    elif module == "M5":
+        financial = normalized_data.get("financial_result", {})
+        pdf_data.update({
+            "npv": financial.get("npv", 0),
+            "irr": financial.get("irr", 0),
+            "roi": financial.get("roi", 0),
+            "grade": financial.get("grade", "N/A"),
+            "key_metrics": normalized_data.get("key_metrics", []),
+            "interpretation": normalized_data.get("interpretation", {}),
+            "lh_perspective": normalized_data.get("lh_perspective", {})
+        })
+    
+    elif module == "M6":
+        review = normalized_data.get("review_result", {})
+        score_details = normalized_data.get("score_details", {})
+        pdf_data.update({
+            "decision": review.get("decision", "분석 불가"),
+            "total_score": review.get("total_score", 0),
+            "max_score": review.get("max_score", 110),
+            "grade": review.get("grade", "N/A"),
+            "approval_probability": review.get("approval_probability", 0),
+            "interpretation": normalized_data.get("interpretation", {}),
+            "recommendation": normalized_data.get("recommendation", {})
+        })
+    
+    return pdf_data
+
+
+def _generate_pdf_filename(module: str, context_id: str = None, snapshot_created_at: str = None) -> str:
     """표준 PDF 파일명 생성
     
-    형식: M{N}_{모듈명}_보고서_YYYY-MM-DD.pdf
-    예: M4_건축규모결정_보고서_2025-12-19.pdf
+    형식: M{N}_{모듈명}_{context_id}_{timestamp}.pdf
+    예: M4_건축규모결정_abc123_2025-12-19T10-30-00.pdf
     """
     date_str = datetime.now().strftime("%Y-%m-%d")
     module_name = MODULE_NAMES.get(module, "보고서")
-    return f"{module}_{module_name}_보고서_{date_str}.pdf"
+    
+    if context_id and snapshot_created_at:
+        # Include context_id for tracking
+        # Convert ISO timestamp to filename-safe format
+        timestamp = snapshot_created_at.replace(":", "-").split(".")[0]
+        return f"{module}_{module_name}_{context_id[:8]}_{timestamp}.pdf"
+    else:
+        # Fallback to old format
+        return f"{module}_{module_name}_보고서_{date_str}.pdf"
 
 
 @router.get("/{module}/pdf", summary="모듈 PDF 다운로드 (표준화)")
@@ -97,31 +201,70 @@ async def download_module_pdf(
     """
     
     try:
-        logger.info(f"PDF 다운로드 요청: module={module}, context_id={context_id}")
+        logger.info(f"📄 PDF 다운로드 요청: module={module}, context_id={context_id}")
         
-        # TODO: context_id로 실제 데이터 조회
-        # 현재는 테스트 데이터 사용
-        test_data = _get_test_data_for_module(module, context_id)
+        # ✅ CRITICAL FIX: Load SAME data source as HTML preview
+        # Step 1: Load frozen context from DB
+        frozen_context = context_storage.get_frozen_context(context_id)
+        if not frozen_context:
+            logger.error(f"❌ Context not found: {context_id}")
+            raise FileNotFoundError(f"Context {context_id} not found")
         
-        # PDF 생성기 초기화
-        generator = ModulePDFGenerator()
+        # Step 2: Extract canonical_summary
+        canonical_summary = frozen_context.get("canonical_summary", {})
+        if not canonical_summary:
+            logger.error(f"❌ canonical_summary not found in context: {context_id}")
+            raise ValueError("canonical_summary missing in context")
         
-        # 모듈별 PDF 생성
+        # Step 3: Use SAME adapters as HTML preview
+        from app.services.module_html_adapter import (
+            adapt_m2_summary_for_html,
+            adapt_m3_summary_for_html,
+            adapt_m4_summary_for_html,
+            adapt_m5_summary_for_html,
+            adapt_m6_summary_for_html
+        )
+        
+        # Step 4: Get normalized data (SAME as HTML)
         if module == "M2":
-            pdf_bytes = generator.generate_m2_appraisal_pdf(test_data)
+            normalized_data = adapt_m2_summary_for_html(canonical_summary)
         elif module == "M3":
-            pdf_bytes = generator.generate_m3_housing_type_pdf(test_data)
+            normalized_data = adapt_m3_summary_for_html(canonical_summary)
         elif module == "M4":
-            pdf_bytes = generator.generate_m4_capacity_pdf(test_data)
+            normalized_data = adapt_m4_summary_for_html(canonical_summary)
         elif module == "M5":
-            pdf_bytes = generator.generate_m5_feasibility_pdf(test_data)
+            normalized_data = adapt_m5_summary_for_html(canonical_summary)
         elif module == "M6":
-            pdf_bytes = generator.generate_m6_lh_review_pdf(test_data)
+            normalized_data = adapt_m6_summary_for_html(canonical_summary)
         else:
             raise HTTPException(status_code=400, detail=f"지원하지 않는 모듈: {module}")
         
-        # 파일명 생성
-        filename = _generate_pdf_filename(module)
+        logger.info(f"✅ Normalized data prepared for {module} PDF")
+        
+        # Step 5: Convert adapter output to PDF generator format
+        # This is a compatibility layer until PDF generators are updated
+        pdf_data = _convert_normalized_to_pdf_format(module, normalized_data, frozen_context)
+        
+        # Step 6: PDF 생성기 초기화
+        generator = ModulePDFGenerator()
+        
+        # Step 7: 모듈별 PDF 생성
+        if module == "M2":
+            pdf_bytes = generator.generate_m2_appraisal_pdf(pdf_data)
+        elif module == "M3":
+            pdf_bytes = generator.generate_m3_housing_type_pdf(pdf_data)
+        elif module == "M4":
+            pdf_bytes = generator.generate_m4_capacity_pdf(pdf_data)
+        elif module == "M5":
+            pdf_bytes = generator.generate_m5_feasibility_pdf(pdf_data)
+        elif module == "M6":
+            pdf_bytes = generator.generate_m6_lh_review_pdf(pdf_data)
+        else:
+            raise HTTPException(status_code=400, detail=f"지원하지 않는 모듈: {module}")
+        
+        # 파일명 생성 (context_id + snapshot timestamp 포함)
+        snapshot_created_at = frozen_context.get("created_at", datetime.now().isoformat())
+        filename = _generate_pdf_filename(module, context_id, snapshot_created_at)
         
         # RFC 5987 인코딩 (한글 파일명 지원)
         # ASCII fallback filename + UTF-8 encoded filename*
