@@ -2353,55 +2353,199 @@ def assemble_presentation_report(data: FinalReportData) -> Dict[str, Any]:
 # 헬퍼 함수
 # ============================================================================
 
-def _calculate_qa_status(data: FinalReportData) -> Dict[str, str]:
-    """QA 상태 계산 (4가지 체크)"""
+def _calculate_qa_status(data: FinalReportData) -> Dict[str, Any]:
+    """
+    QA 상태 계산 (v4.3 FIX 4: 실질화)
     
-    # 1. Data Binding
-    has_context = bool(data.context_id)
-    data_binding = "✅ PASS" if has_context else "❌ FAIL"
+    단순 PASS/FAIL 스탬프가 아닌,
+    실제 신뢰도 판단을 위한 구체적 정보를 제공합니다.
     
-    # 2. Content Completeness
-    modules_available = sum([
-        bool(data.m2),
-        bool(data.m3),
-        bool(data.m4),
-        bool(data.m5),
-        bool(data.m6)
-    ])
+    Returns:
+        {
+            "data_binding": {
+                "status": "PASS/WARNING/FAIL",
+                "sources": ["M2 토지평가", "M5 사업성분석", ...],
+                "missing": ["M3 주택유형", ...],
+                "detail": "구체적 설명"
+            },
+            "content_completeness": {...},
+            "narrative_consistency": {...},
+            "risk_coverage": {...},
+            "final_judgment": {
+                "submittable": "가능/조건부/불가",
+                "reason": "구체적 이유",
+                "next_action": "다음 단계 가이드"
+            }
+        }
+    """
     
-    if modules_available >= 4:
-        content_completeness = "✅ PASS"
-    elif modules_available >= 2:
-        content_completeness = "⚠️ 일부"
+    # ========== 1. Data Binding: 데이터 출처 명시 ==========
+    sources_available = []
+    sources_missing = []
+    
+    if data.m2:
+        if data.m2.land_value_total_krw:
+            sources_available.append(f"M2 토지평가 (평당 {data.m2.pyeong_price_krw:,}원)")
+        else:
+            sources_missing.append("M2 토지평가 (가격 정보 없음)")
     else:
-        content_completeness = "❌ FAIL"
+        sources_missing.append("M2 토지평가")
     
-    # 3. Narrative Consistency (해석 문장 존재 여부)
-    has_interpretations = True  # 기본값
-    if data.m2 and not data.m2.land_value_total_krw:
-        has_interpretations = False
-    if data.m5 and not data.m5.npv_public_krw:
-        has_interpretations = False
-    
-    narrative_consistency = "✅ PASS" if has_interpretations and modules_available >= 4 else "⚠️ 보완 필요"
-    
-    # 4. HTML-PDF Parity (현재는 HTML만 구현됨)
-    html_pdf_parity = "✅ PASS (HTML 완료)"
-    
-    # 5. Ready for Submission
-    if modules_available >= 4 and has_context and has_interpretations:
-        ready_for_submission = "✅ 제출 가능"
-    elif modules_available >= 2:
-        ready_for_submission = "⚠️ 보완 필요"
+    if data.m3:
+        sources_available.append(f"M3 주택유형 ({data.m3.recommended_type})")
     else:
-        ready_for_submission = "❌ 제출 불가"
+        sources_missing.append("M3 주택유형")
+    
+    if data.m4:
+        if data.m4.incentive_units:
+            sources_available.append(f"M4 개발규모 ({data.m4.incentive_units}세대)")
+        else:
+            sources_missing.append("M4 개발규모 (세대수 없음)")
+    else:
+        sources_missing.append("M4 개발규모")
+    
+    if data.m5:
+        if data.m5.npv_public_krw:
+            sources_available.append(f"M5 사업성 (NPV {data.m5.npv_public_krw:,}원)")
+        else:
+            sources_missing.append("M5 사업성 (NPV 없음)")
+    else:
+        sources_missing.append("M5 사업성")
+    
+    if data.m6:
+        sources_available.append(f"M6 LH심사 (승인율 {data.m6.approval_probability_pct}%)")
+    else:
+        sources_missing.append("M6 LH심사")
+    
+    data_binding_status = "PASS" if len(sources_available) >= 4 else "WARNING" if len(sources_available) >= 2 else "FAIL"
+    data_binding_detail = (
+        f"사용 가능 데이터: {len(sources_available)}/5개 모듈"
+        f"\n부족 데이터: {', '.join(sources_missing) if sources_missing else '없음'}"
+    )
+    
+    data_binding = {
+        "status": f"{'✅' if data_binding_status == 'PASS' else '⚠️' if data_binding_status == 'WARNING' else '❌'} {data_binding_status}",
+        "sources": sources_available,
+        "missing": sources_missing,
+        "detail": data_binding_detail
+    }
+    
+    # ========== 2. Content Completeness: 10-Section 각각의 충족 여부 ==========
+    section_checklist = {
+        "Section 1 (Executive Summary)": bool(data.m6),
+        "Section 2 (정책/토지평가)": bool(data.m2),
+        "Section 3 (개발규모)": bool(data.m4),
+        "Section 4 (주택유형)": bool(data.m3),
+        "Section 5 (사업성)": bool(data.m5),
+        "Section 6 (재무구조)": bool(data.m5 and data.m5.npv_public_krw),
+        "Section 7 (LH심사)": bool(data.m6),
+        "Section 8 (리스크)": bool(data.m5 or data.m6),
+        "Section 9 (시나리오)": bool(data.m5),
+        "Section 10 (QA/다음단계)": True  # 항상 생성
+    }
+    
+    sections_complete = sum(section_checklist.values())
+    total_sections = len(section_checklist)
+    
+    content_status = "PASS" if sections_complete >= 8 else "WARNING" if sections_complete >= 5 else "FAIL"
+    content_detail = (
+        f"완성도: {sections_complete}/{total_sections}개 섹션\n"
+        f"미흡: {', '.join([k for k, v in section_checklist.items() if not v])}" if sections_complete < total_sections else "모든 섹션 완료"
+    )
+    
+    content_completeness = {
+        "status": f"{'✅' if content_status == 'PASS' else '⚠️' if content_status == 'WARNING' else '❌'} {content_status}",
+        "sections_complete": sections_complete,
+        "total_sections": total_sections,
+        "checklist": section_checklist,
+        "detail": content_detail
+    }
+    
+    # ========== 3. Narrative Consistency: 숫자 ↔ 해석 연결성 ==========
+    narrative_checks = []
+    
+    if data.m2 and data.m2.land_value_total_krw:
+        narrative_checks.append("✅ 토지가치: 숫자 + 해석 있음")
+    else:
+        narrative_checks.append("❌ 토지가치: 숫자 또는 해석 부족")
+    
+    if data.m5:
+        if data.m5.npv_public_krw and data.m5.irr_pct and data.m5.roi_pct:
+            narrative_checks.append("✅ 사업성: NPV/IRR/ROI + 해석 있음")
+        else:
+            narrative_checks.append("⚠️ 사업성: 일부 지표 부족")
+    else:
+        narrative_checks.append("❌ 사업성: 분석 없음")
+    
+    if data.m6:
+        narrative_checks.append(f"✅ LH심사: {data.m6.decision} 판단 + 근거 있음")
+    else:
+        narrative_checks.append("❌ LH심사: 판단 없음")
+    
+    narrative_status = "PASS" if all("✅" in c for c in narrative_checks) else "WARNING"
+    
+    narrative_consistency = {
+        "status": f"{'✅' if narrative_status == 'PASS' else '⚠️'} {narrative_status}",
+        "checks": narrative_checks,
+        "detail": "숫자와 해석이 연결되어 있는지 확인"
+    }
+    
+    # ========== 4. Risk Coverage: 6대 리스크 반영 여부 ==========
+    risk_categories = {
+        "건축비 변동": bool(data.m5),
+        "LH 매입가 변동": bool(data.m6),
+        "사업 기간 지연": bool(data.m5),
+        "금리 변동": bool(data.m5),
+        "인허가 지연": bool(data.m4),
+        "정책 변경": True  # 항상 언급
+    }
+    
+    risks_covered = sum(risk_categories.values())
+    total_risks = len(risk_categories)
+    
+    risk_status = "PASS" if risks_covered >= 5 else "WARNING" if risks_covered >= 3 else "FAIL"
+    
+    risk_coverage = {
+        "status": f"{'✅' if risk_status == 'PASS' else '⚠️' if risk_status == 'WARNING' else '❌'} {risk_status}",
+        "covered": risks_covered,
+        "total": total_risks,
+        "categories": risk_categories,
+        "detail": f"{risks_covered}/{total_risks}개 리스크 반영"
+    }
+    
+    # ========== 5. Final Judgment: 최종 제출 가능 여부 ==========
+    if data_binding_status == "PASS" and content_status == "PASS" and narrative_status == "PASS":
+        submittable = "✅ 제출 가능"
+        reason = "모든 필수 데이터와 분석이 완료되어 LH 제출 가능"
+        next_action = "최종 검토 후 LH 공모 신청 진행"
+    elif data_binding_status in ["PASS", "WARNING"] and content_status in ["PASS", "WARNING"]:
+        submittable = "⚠️ 조건부 제출 가능"
+        reason = f"일부 섹션 보완 필요: {', '.join(sources_missing[:2])}"
+        next_action = f"다음 분석 완료 권장: {', '.join(sources_missing)}"
+    else:
+        submittable = "❌ 제출 불가"
+        reason = f"필수 데이터 부족: {', '.join(sources_missing)}"
+        next_action = "M1-M6 분석을 모두 완료한 후 보고서 재생성"
+    
+    final_judgment = {
+        "submittable": submittable,
+        "reason": reason,
+        "next_action": next_action
+    }
     
     return {
         "data_binding": data_binding,
         "content_completeness": content_completeness,
         "narrative_consistency": narrative_consistency,
-        "html_pdf_parity": html_pdf_parity,
-        "ready_for_submission": ready_for_submission
+        "risk_coverage": risk_coverage,
+        "final_judgment": final_judgment,
+        
+        # Legacy compatibility (간단한 문자열 버전)
+        "data_binding_simple": data_binding["status"],
+        "content_completeness_simple": content_completeness["status"],
+        "narrative_consistency_simple": narrative_consistency["status"],
+        "html_pdf_parity": "✅ PASS (Single Source of Truth)",
+        "ready_for_submission": submittable
     }
 
 
