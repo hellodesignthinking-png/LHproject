@@ -202,16 +202,16 @@ class FinalReportQAValidator:
         Check if Executive Summary section exists
         
         Looks for:
-        - <section class="executive-summary">
+        - executive-summary in class attribute
         - <h2>Executive Summary</h2>
         - 요약, 개요, Summary keywords in headers
         """
         indicators = [
-            'class="executive-summary"',
-            'class="executive_summary"',
-            'id="executive-summary"',
+            'executive-summary',  # Matches both class="executive-summary" and class="narrative executive-summary"
+            'executive_summary',
             "<h2>Executive Summary</h2>",
             "<h2>종합 요약</h2>",
+            "<h2>종합 검토 요약",  # Added for PROMPT 5 narrative
             "<h2>요약</h2>",
             "<h2>개요</h2>",
             "executive-intro",

@@ -1,359 +1,735 @@
 """
-Narrative Layer for Final Reports
+ZeroSite Final Report - Narrative Generator (PROMPT 5)
+=======================================================
 
-Provides context, interpretation, and decision guidance WITHOUT calculating data.
-This layer transforms "module HTML" into "decision-ready documents".
+PURPOSE:
+    Transform "module HTML listing" → "decision-ready story document"
+    
+    Provides:
+    1. Executive Summary (CRITICAL for QA)
+    2. Module transitions (context between sections)
+    3. Final judgment (CRITICAL for QA - must include decision keywords)
+    
+CRITICAL RULES (PROMPT 5):
+    ❌ NO calculation / compute / analyze
+    ❌ NO canonical_summary access
+    ❌ NO number generation/transformation
+    ✅ ONLY HTML fragments
+    ✅ ONLY interpretation of pre-calculated module results
+    
+    Violation of these rules → RuntimeError
 
-CRITICAL PRINCIPLE:
-- NO calculation or data processing
-- ONLY interpretation and context
-- Uses module results AS-IS, adds decision framing
-
-Author: ZeroSite Backend Team
-Date: 2025-12-22
-Phase: 3 (PROMPT 5 - Narrative Layer)
+VERSION: 1.0 (PROMPT 5 Implementation)
+DATE: 2025-12-22
+PHASE: 3
 """
 
-from typing import Dict, Literal
-from dataclasses import dataclass
+from abc import ABC, abstractmethod
+from typing import Dict, Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 
-@dataclass
-class NarrativeSection:
-    """A narrative section to be inserted in final report"""
-    section_id: str
-    title_kr: str
-    content_html: str
-    position: Literal["before_modules", "after_modules", "between_modules"]
-    target_audience: str
+# ========== BASE NARRATIVE GENERATOR (ABSTRACT) ==========
 
-
-class ReportNarrativeGenerator:
+class BaseNarrativeGenerator(ABC):
     """
-    Generates narrative content for Final Reports
+    Base class for all Narrative Generators
     
-    This is NOT a calculator - it only provides context and interpretation
-    for pre-calculated module results.
+    Role:
+    - Explains module results (no calculation)
+    - Provides decision-making context
+    - Satisfies QA Validator requirements
+    
+    PROMPT 5 Requirements:
+    ----------------------
+    1. executive_summary() - BLOCKING if missing
+    2. transitions() - Connects modules narratively
+    3. final_judgment() - BLOCKING if missing judgment keywords
     """
     
-    @staticmethod
-    def generate_executive_intro(
-        report_type: str,
-        context_id: str,
-        parcel_address: str = "해당 토지"
-    ) -> NarrativeSection:
+    def __init__(self):
+        self.report_type = "unknown"
+        self._validate_no_forbidden_methods()
+    
+    def _validate_no_forbidden_methods(self):
         """
-        Generate executive introduction for report
+        Runtime check: Ensure no forbidden operations
+        """
+        forbidden = ["calculate", "compute", "analyze", "access_canonical_summary"]
+        
+        for method_name in dir(self):
+            if any(forbidden_word in method_name.lower() for forbidden_word in forbidden):
+                raise RuntimeError(
+                    f"FORBIDDEN: Narrative Generator has method '{method_name}' "
+                    f"which suggests calculation/analysis. "
+                    f"Narrative Generators MUST ONLY interpret pre-calculated data."
+                )
+    
+    @abstractmethod
+    def executive_summary(self, modules_data: Dict) -> str:
+        """
+        Generate Executive Summary section
+        
+        CRITICAL: QA Validator BLOCKS PDF if this is missing.
         
         Args:
-            report_type: Type of report being generated
-            context_id: Context ID for reference
-            parcel_address: Address of the parcel
-            
-        Returns:
-            NarrativeSection with executive intro
-        """
+            modules_data: Dict of module data (e.g., {"M2": {...}, "M5": {...}})
         
-        intros = {
-            "landowner_summary": f"""
-                <div class="executive-intro">
-                    <h2>Executive Summary (토지주용)</h2>
-                    <p class="intro-context">
-                        본 보고서는 <strong>{parcel_address}</strong>의 LH 영구임대주택 사업 타당성을 
-                        <strong>토지주 관점</strong>에서 분석한 요약본입니다.
-                    </p>
-                    <p class="intro-purpose">
-                        <strong>핵심 질문:</strong> 이 토지로 LH 사업을 진행할 경우, 
-                        투자 대비 수익이 확보되는가? LH 승인 가능성은 얼마나 되는가?
-                    </p>
-                    <p class="intro-scope">
-                        본 보고서는 토지 가치 평가(M2), 사업성 분석(M5), LH 심사 예측(M6)을 중심으로 
-                        의사결정에 필요한 핵심 정보를 제공합니다.
-                    </p>
-                </div>
-            """,
+        Returns:
+            HTML fragment with:
+            - <section class="narrative executive-summary">
+            - Multiple <p class="narrative"> paragraphs
+            - Clear context for decision-making
+        """
+        pass
+    
+    @abstractmethod
+    def transitions(self, from_module: str, to_module: str) -> str:
+        """
+        Generate narrative transition between modules
+        
+        Args:
+            from_module: Module ID (e.g., "M2")
+            to_module: Module ID (e.g., "M5")
+        
+        Returns:
+            HTML fragment: <p class="narrative transition">...</p>
+            or empty string if no transition needed
+        """
+        pass
+    
+    @abstractmethod
+    def final_judgment(self, modules_data: Dict) -> str:
+        """
+        Generate final judgment/recommendation section
+        
+        CRITICAL: QA Validator BLOCKS PDF if judgment keywords are missing.
+        
+        Required keywords (at least one):
+        - "추천합니다", "부적합", "조건부 승인", "추진 가능", "추진 곤란"
+        
+        Args:
+            modules_data: Dict of module data
+        
+        Returns:
+            HTML fragment with:
+            - <section class="narrative final-judgment">
+            - <p class="judgment"> with decision keyword
+        """
+        pass
+
+
+# ========== LANDOWNER NARRATIVE GENERATOR ==========
+
+class LandownerNarrativeGenerator(BaseNarrativeGenerator):
+    """
+    Narrative Generator for Landowner Summary Report
+    
+    Target Audience: 토지주 (일반인)
+    Focus: 사업 수익성 + LH 승인 가능성
+    
+    QA Requirements:
+    - Narrative paragraphs ≥ 3
+    - Judgment keywords present
+    - Executive summary exists
+    """
+    
+    def __init__(self):
+        super().__init__()
+        self.report_type = "landowner_summary"
+    
+    def executive_summary(self, modules_data: Dict) -> str:
+        """
+        Executive Summary for Landowner
+        
+        Explains:
+        - What this report is about
+        - Key findings (M2 land value, M5 profitability, M6 LH decision)
+        - Overall viability
+        """
+        m2_data = modules_data.get("M2", {})
+        m5_data = modules_data.get("M5", {})
+        m6_data = modules_data.get("M6", {})
+        
+        land_value = m2_data.get("land_value", 0)
+        npv = m5_data.get("npv", 0)
+        lh_decision = m6_data.get("decision", "검토 필요")
+        
+        return f"""
+        <section class="narrative executive-summary">
+            <h2>📌 종합 검토 요약 (Executive Summary)</h2>
             
-            "lh_technical": f"""
-                <div class="executive-intro">
-                    <h2>Technical Review Summary (LH 기술검토용)</h2>
-                    <p class="intro-context">
-                        본 보고서는 <strong>{parcel_address}</strong>의 LH 영구임대주택 사업을 
-                        <strong>LH 기술 검토 기준</strong>으로 분석한 상세 보고서입니다.
-                    </p>
-                    <p class="intro-purpose">
-                        <strong>검토 목적:</strong> LH 정책 부합성, 기술적 실현 가능성, 
-                        심사 통과 가능성을 종합적으로 판단합니다.
-                    </p>
-                    <p class="intro-scope">
-                        본 보고서는 선호 주택유형(M3), 건축 규모(M4), LH 내부 심사(M6)를 중심으로 
-                        기술적 타당성을 검증합니다.
-                    </p>
-                </div>
-            """,
+            <p class="narrative">
+                본 보고서는 귀하의 토지에 대한 <strong>LH 공공기여형 민간임대주택 사업</strong>의 
+                타당성을 검토한 결과입니다. 토지주 관점에서 가장 중요한 
+                <strong>수익성</strong>과 <strong>LH 승인 가능성</strong>을 중심으로 분석했습니다.
+            </p>
             
-            "quick_check": f"""
-                <div class="executive-intro">
-                    <h2>Quick Decision Check</h2>
-                    <p class="intro-context">
-                        <strong>{parcel_address}</strong> - LH 사업 GO/NO-GO 판단 (5분 검토용)
-                    </p>
-                    <p class="intro-purpose">
-                        <strong>핵심 결론만 확인하십시오:</strong> 
-                        사업성 평가 + LH 승인 가능성 = 최종 의사결정
-                    </p>
-                </div>
-            """,
+            <p class="narrative">
+                대상 토지의 감정가는 <strong>{land_value:,}원</strong> 수준으로 평가되었으며, 
+                이 토지를 활용한 LH 사업의 순현재가치(NPV)는 
+                <strong>{npv:,}원</strong>으로 산출되었습니다.
+            </p>
             
-            "financial_feasibility": f"""
-                <div class="executive-intro">
-                    <h2>Financial Feasibility Analysis (사업성 중심)</h2>
-                    <p class="intro-context">
-                        본 보고서는 <strong>{parcel_address}</strong>의 LH 사업을 
-                        <strong>재무적 관점</strong>에서 분석합니다.
-                    </p>
-                    <p class="intro-purpose">
-                        <strong>재무 평가 핵심:</strong> 투자금 회수 가능성, 수익률(IRR), 
-                        순현재가치(NPV), 리스크 요인을 종합 검토합니다.
-                    </p>
-                    <p class="intro-scope">
-                        토지 매입가(M2), 사업 규모(M4), 재무 분석(M5)을 통해 
-                        투자 의사결정을 지원합니다.
-                    </p>
-                </div>
+            <p class="narrative">
+                LH 사전 심사 기준에 따른 검토 결과, 본 사업은 <strong>"{lh_decision}"</strong> 
+                판정을 받았습니다. 이는 토지의 입지 조건, 건축 규모, 정책 부합도를 
+                종합적으로 고려한 결과입니다.
+            </p>
+        </section>
+        """
+    
+    def transitions(self, from_module: str, to_module: str) -> str:
+        """
+        Narrative transitions for Landowner Report
+        """
+        transition_map = {
+            ("M2", "M5"): """
+                <p class="narrative transition">
+                    토지 가치 평가를 바탕으로, 이제 이 토지로 실제 사업을 진행했을 때 
+                    얼마나 수익이 나는지 재무 분석 결과를 살펴보겠습니다.
+                </p>
             """,
-            
-            "all_in_one": f"""
-                <div class="executive-intro">
-                    <h2>Comprehensive Analysis Report (전체 통합)</h2>
-                    <p class="intro-context">
-                        본 보고서는 <strong>{parcel_address}</strong>의 LH 영구임대주택 사업에 대한 
-                        <strong>완전한 종합 분석</strong>입니다.
-                    </p>
-                    <p class="intro-purpose">
-                        <strong>분석 범위:</strong> 토지 가치, 선호 주택유형, 건축 규모, 사업성, 
-                        LH 심사 예측을 모두 포함한 전체 분석 결과를 제공합니다.
-                    </p>
-                    <p class="intro-scope">
-                        5개 모듈(M2~M6)의 분석 결과를 통해 사업의 모든 측면을 이해하고 
-                        의사결정할 수 있도록 구성되었습니다.
-                    </p>
-                </div>
-            """,
-            
-            "executive_summary": f"""
-                <div class="executive-intro">
-                    <h2>Executive Summary (경영진용)</h2>
-                    <p class="intro-context">
-                        <strong>{parcel_address}</strong> - LH 사업 투자 의사결정 보고서
-                    </p>
-                    <p class="intro-purpose">
-                        <strong>의사결정 포인트:</strong> 투자 가치, 수익성, 승인 가능성 
-                        3가지 핵심 지표를 중심으로 GO/NO-GO 판단을 지원합니다.
-                    </p>
-                    <p class="intro-scope">
-                        토지 평가, 재무 분석, LH 승인 예측을 통해 
-                        경영 의사결정에 필요한 핵심 정보를 제공합니다.
-                    </p>
-                </div>
+            ("M5", "M6"): """
+                <p class="narrative transition">
+                    사업성 분석 결과를 확인했으니, 이제 LH가 이 사업을 실제로 
+                    승인할 가능성이 얼마나 되는지 심사 예측 결과를 검토하겠습니다.
+                </p>
             """
         }
         
-        content = intros.get(report_type, intros["executive_summary"])
-        
-        return NarrativeSection(
-            section_id="executive_intro",
-            title_kr="요약",
-            content_html=content,
-            position="before_modules",
-            target_audience=report_type
-        )
+        text = transition_map.get((from_module, to_module))
+        return text if text else ""
     
-    @staticmethod
-    def generate_module_context(
-        report_type: str,
-        module_id: Literal["M2", "M3", "M4", "M5", "M6"]
-    ) -> NarrativeSection:
+    def final_judgment(self, modules_data: Dict) -> str:
         """
-        Generate context/framing for a specific module in the report
+        Final judgment for Landowner Report
         
-        Args:
-            report_type: Type of report
-            module_id: Module being contextualized
-            
-        Returns:
-            NarrativeSection with module context
+        Decision logic:
+        - If M5 profitable AND M6 not rejected → 추천합니다
+        - If M5 profitable BUT M6 conditional → 조건부 승인
+        - If M5 not profitable → 부적합
         """
+        m5_data = modules_data.get("M5", {})
+        m6_data = modules_data.get("M6", {})
         
-        # Context depends on report type and target audience
-        contexts = {
-            ("landowner_summary", "M2"): """
-                <div class="module-context">
-                    <p class="context-frame">
-                        <strong>토지주 관점:</strong> 이 평가액은 LH 매입가의 기준이 됩니다. 
-                        LH는 일반적으로 감정평가액의 110% 수준에서 매입하므로, 
-                        아래 금액을 기준으로 실제 매각 가능 금액을 판단하십시오.
-                    </p>
-                </div>
-            """,
+        npv = m5_data.get("npv", 0)
+        is_profitable = npv > 0
+        lh_decision = m6_data.get("decision", "")
+        
+        # Decision logic
+        if is_profitable and lh_decision not in ["부적합", "탈락"]:
+            judgment = """
+                ✅ 본 사업은 현재 조건에서 <strong>추진을 추천합니다</strong>.
+            """
+            reason = """
+                재무적으로 수익성이 확보되었으며, LH 심사 기준도 통과 가능한 
+                수준으로 평가되었습니다. 다만, 최종 투자 결정 전에 
+                LH와의 사전 협의를 권장합니다.
+            """
+        elif is_profitable:
+            judgment = """
+                ⚠️ 수익성은 확보되었으나, <strong>조건부 승인</strong>을 권장합니다.
+            """
+            reason = """
+                재무적으로는 수익이 발생하지만, LH 심사에서 일부 보완이 필요한 
+                사항이 있습니다. LH와 협의하여 보완 가능한 부분을 검토하신 후 
+                최종 결정하시기 바랍니다.
+            """
+        else:
+            judgment = """
+                ❌ 현 조건에서는 사업 추진이 <strong>부적합</strong>합니다.
+            """
+            reason = """
+                재무 분석 결과 투자 대비 수익성이 확보되지 않았습니다. 
+                사업 조건 변경(공사비 절감, 임대료 상승 등) 또는 
+                토지 용도 재검토를 권장합니다.
+            """
+        
+        return f"""
+        <section class="narrative final-judgment">
+            <h2>🧾 최종 의견 (Final Judgment)</h2>
             
-            ("landowner_summary", "M5"): """
-                <div class="module-context">
-                    <p class="context-frame">
-                        <strong>수익성 판단:</strong> 아래 수익률(IRR)과 순현재가치(NPV)가 
-                        투자 대비 실제 수익을 의미합니다. 
-                        Grade D 이상이면 사업 진행 가능, C 이하면 재검토가 필요합니다.
-                    </p>
-                </div>
-            """,
+            <div class="judgment-box">
+                <p class="judgment">{judgment}</p>
+                <p class="narrative reason">{reason}</p>
+            </div>
             
-            ("lh_technical", "M3"): """
-                <div class="module-context">
-                    <p class="context-frame">
-                        <strong>LH 정책 부합성:</strong> LH가 선호하는 주택유형과 
-                        본 토지의 특성이 얼마나 일치하는지 평가한 결과입니다. 
-                        85점 이상이면 정책 부합도가 높다고 판단됩니다.
-                    </p>
-                </div>
-            """,
+            <div class="disclaimer">
+                <p class="narrative">
+                    <strong>주의사항:</strong> 본 의견은 분석 시점의 데이터를 기반으로 한 
+                    참고 자료입니다. LH 정책, 시장 상황 변동에 따라 실제 결과는 
+                    달라질 수 있으므로, 최종 투자 결정은 전문가 자문 후 
+                    신중하게 내리시기 바랍니다.
+                </p>
+            </div>
+        </section>
+        """
+
+
+# ========== LH TECHNICAL NARRATIVE GENERATOR ==========
+
+class LHTechnicalNarrativeGenerator(BaseNarrativeGenerator):
+    """
+    Narrative Generator for LH Technical Review Report
+    
+    Target Audience: LH 심사역 (기술 검토자)
+    Focus: LH 정책 부합성 + 기술적 실현 가능성
+    """
+    
+    def __init__(self):
+        super().__init__()
+        self.report_type = "lh_technical"
+    
+    def executive_summary(self, modules_data: Dict) -> str:
+        m3_data = modules_data.get("M3", {})
+        m4_data = modules_data.get("M4", {})
+        m6_data = modules_data.get("M6", {})
+        
+        recommended_type = m3_data.get("recommended_type", "미확정")
+        household_count = m4_data.get("household_count", 0)
+        lh_decision = m6_data.get("decision", "검토 필요")
+        
+        return f"""
+        <section class="narrative executive-summary">
+            <h2>📋 기술 검토 요약 (Technical Review Summary)</h2>
             
-            ("lh_technical", "M4"): """
-                <div class="module-context">
-                    <p class="context-frame">
-                        <strong>기술적 실현 가능성:</strong> 법적 용적률과 인센티브를 반영한 
-                        최대 건축 규모입니다. LH 사업은 최소 20세대 이상이 필요하므로, 
-                        아래 세대수가 기준을 충족하는지 확인하십시오.
-                    </p>
-                </div>
-            """,
+            <p class="narrative">
+                본 보고서는 LH 공공기여형 민간임대주택 사업의 기술적 타당성을 
+                LH 내부 심사 기준에 따라 검토한 결과입니다.
+            </p>
             
-            ("financial_feasibility", "M5"): """
-                <div class="module-context">
-                    <p class="context-frame">
-                        <strong>재무 지표 해석:</strong>
-                        • NPV > 0: 투자 가치 있음<br>
-                        • IRR > 7%: 일반적인 LH 사업 기준 충족<br>
-                        • Grade B 이상: 재무적으로 안정적<br>
-                        아래 수치를 기준으로 투자 의사결정하십시오.
-                    </p>
-                </div>
+            <p class="narrative">
+                LH 선호 주택유형 분석 결과, 본 토지는 <strong>{recommended_type}</strong> 
+                유형이 가장 적합한 것으로 분석되었으며, 건축 규모는 
+                <strong>{household_count}세대</strong> 수준으로 계획 가능합니다.
+            </p>
+            
+            <p class="narrative">
+                종합적인 LH 심사 기준 검토 결과, 본 사업은 <strong>"{lh_decision}"</strong> 
+                수준으로 평가되었습니다.
+            </p>
+            
+            <p class="narrative">
+                아래 상세 분석에서는 주택유형 선정 근거, 건축 규모 산정 과정, 
+                LH 심사 항목별 평가 결과를 제시합니다.
+            </p>
+            
+            <p class="narrative">
+                기술 검토 목적은 사업의 정책 부합성과 실현 가능성을 
+                객관적으로 판단하는 것이며, 최종 심사 통과를 보장하지는 않습니다.
+            </p>
+        </section>
+        """
+    
+    def transitions(self, from_module: str, to_module: str) -> str:
+        transition_map = {
+            ("M3", "M4"): """
+                <p class="narrative transition">
+                    선호 주택유형이 결정되었으므로, 이제 실제 건축 가능한 
+                    규모를 법적 용적률과 인센티브를 고려하여 산정합니다.
+                </p>
             """,
+            ("M4", "M6"): """
+                <p class="narrative transition">
+                    건축 규모가 확정되었으니, LH 심사 기준에 따라 
+                    본 사업의 심사 통과 가능성을 종합적으로 평가합니다.
+                </p>
+            """
         }
         
-        context_key = (report_type, module_id)
-        content = contexts.get(context_key, "")
+        text = transition_map.get((from_module, to_module))
+        return text if text else ""
+    
+    def final_judgment(self, modules_data: Dict) -> str:
+        m6_data = modules_data.get("M6", {})
+        lh_decision = m6_data.get("decision", "")
+        total_score = m6_data.get("total_score", 0)
         
-        if not content:
-            return None
+        if lh_decision in ["승인", "적합"]:
+            judgment = "✅ 기술적으로 <strong>승인</strong> 가능하며, 사업 <strong>추진을 권장</strong>합니다."
+            reason = f"LH 심사 기준 총점 {total_score}점으로 승인 기준을 충족합니다."
+        elif lh_decision == "조건부 승인":
+            judgment = "⚠️ <strong>조건부 승인</strong>이 예상됩니다."
+            reason = "일부 항목에서 보완이 필요하나, 전체적으로 승인 가능한 수준입니다."
+        else:
+            judgment = "❌ 기술적으로 <strong>부적합</strong> 판정입니다."
+            reason = "LH 심사 기준에 미달하는 항목이 있어 재검토가 필요합니다."
         
-        return NarrativeSection(
-            section_id=f"context_{module_id}",
-            title_kr=f"{module_id} 해석",
-            content_html=content,
-            position="before_modules",
-            target_audience=report_type
-        )
+        return f"""
+        <section class="narrative final-judgment">
+            <h2>🔍 기술 검토 결론 (Technical Conclusion)</h2>
+            
+            <div class="judgment-box">
+                <p class="judgment">{judgment}</p>
+                <p class="narrative reason">{reason}</p>
+            </div>
+        </section>
+        """
+
+
+# ========== FINANCIAL FEASIBILITY NARRATIVE GENERATOR ==========
+
+class FinancialFeasibilityNarrativeGenerator(BaseNarrativeGenerator):
+    """
+    Narrative Generator for Financial Feasibility Report
+    
+    Target Audience: 투자자 / 재무 담당자
+    Focus: ROI, NPV, IRR, 수익성
+    """
+    
+    def __init__(self):
+        super().__init__()
+        self.report_type = "financial_feasibility"
+    
+    def executive_summary(self, modules_data: Dict) -> str:
+        m2_data = modules_data.get("M2", {})
+        m5_data = modules_data.get("M5", {})
+        
+        land_value = m2_data.get("land_value", 0)
+        npv = m5_data.get("npv", 0)
+        irr = m5_data.get("irr", 0)
+        roi = m5_data.get("roi", 0)
+        
+        return f"""
+        <section class="narrative executive-summary">
+            <h2>💰 재무 타당성 분석 요약 (Financial Feasibility Summary)</h2>
+            
+            <p class="narrative">
+                본 보고서는 LH 공공기여형 민간임대주택 사업의 재무적 타당성을 
+                투자자 관점에서 분석한 결과입니다.
+            </p>
+            
+            <p class="narrative">
+                토지 매입가는 <strong>{land_value:,}원</strong> 기준이며, 
+                이를 포함한 총 투자 대비 순현재가치(NPV)는 
+                <strong>{npv:,}원</strong>으로 산출되었습니다.
+            </p>
+            
+            <p class="narrative">
+                내부수익률(IRR)은 <strong>{irr:.2f}%</strong>, 
+                투자수익률(ROI)은 <strong>{roi:.2f}%</strong> 수준이며, 
+                이는 일반적인 LH 사업 기준과 비교하여 
+                {'양호한' if irr > 7 else '검토가 필요한'} 수준입니다.
+            </p>
+            
+            <p class="narrative">
+                아래 상세 분석에서는 투자금 구조, 수익 예측, 
+                리스크 요인을 포함한 종합적인 재무 평가를 제공합니다.
+            </p>
+        </section>
+        """
+    
+    def transitions(self, from_module: str, to_module: str) -> str:
+        transition_map = {
+            ("M2", "M4"): """
+                <p class="narrative transition">
+                    토지 매입가를 확인했으니, 건축 규모에 따른 총 사업비를 산정합니다.
+                </p>
+            """,
+            ("M4", "M5"): """
+                <p class="narrative transition">
+                    건축 규모가 정해졌으므로, 이제 총 투자금 대비 
+                    예상 수익을 재무 지표로 분석합니다.
+                </p>
+            """
+        }
+        
+        text = transition_map.get((from_module, to_module))
+        return text if text else ""
+    
+    def final_judgment(self, modules_data: Dict) -> str:
+        m5_data = modules_data.get("M5", {})
+        npv = m5_data.get("npv", 0)
+        irr = m5_data.get("irr", 0)
+        
+        if npv > 0 and irr > 7:
+            judgment = "✅ 재무적으로 투자를 <strong>추천합니다</strong>."
+            reason = f"NPV가 양수({npv:,}원)이고 IRR이 {irr:.2f}%로 기준을 충족합니다."
+        elif npv > 0:
+            judgment = "⚠️ <strong>조건부 승인</strong>을 권장합니다."
+            reason = "NPV는 양수이나 IRR이 낮아 추가 검토가 필요합니다."
+        else:
+            judgment = "❌ 재무적으로 <strong>부적합</strong>합니다."
+            reason = f"NPV가 음수({npv:,}원)로 투자 가치가 없습니다."
+        
+        return f"""
+        <section class="narrative final-judgment">
+            <h2>📊 재무 의견 (Financial Opinion)</h2>
+            
+            <div class="judgment-box">
+                <p class="judgment">{judgment}</p>
+                <p class="narrative reason">{reason}</p>
+            </div>
+        </section>
+        """
+
+
+# ========== QUICK CHECK NARRATIVE GENERATOR ==========
+
+class QuickCheckNarrativeGenerator(BaseNarrativeGenerator):
+    """
+    Narrative Generator for Quick Check Report
+    
+    Target Audience: 의사결정권자 (빠른 GO/NO-GO 판단)
+    Focus: 최소한의 narrative, 결론 중심
+    """
+    
+    def __init__(self):
+        super().__init__()
+        self.report_type = "quick_check"
+    
+    def executive_summary(self, modules_data: Dict) -> str:
+        m5_data = modules_data.get("M5", {})
+        m6_data = modules_data.get("M6", {})
+        
+        npv = m5_data.get("npv", 0)
+        lh_decision = m6_data.get("decision", "")
+        
+        return f"""
+        <section class="narrative executive-summary">
+            <h2>⚡ Quick Decision Check</h2>
+            
+            <p class="narrative">
+                <strong>핵심 결론:</strong> 
+                사업성 NPV {npv:,}원 / LH 심사 {lh_decision}
+            </p>
+            
+            <p class="narrative">
+                아래 2개 모듈 결과만 확인하시면 GO/NO-GO 의사결정이 가능합니다.
+            </p>
+        </section>
+        """
+    
+    def transitions(self, from_module: str, to_module: str) -> str:
+        # Quick check는 transition 최소화
+        return ""
+    
+    def final_judgment(self, modules_data: Dict) -> str:
+        m5_data = modules_data.get("M5", {})
+        m6_data = modules_data.get("M6", {})
+        
+        npv = m5_data.get("npv", 0)
+        lh_decision = m6_data.get("decision", "")
+        
+        if npv > 0 and lh_decision not in ["부적합", "탈락"]:
+            judgment = "✅ <strong>GO</strong> - 추진 가능"
+        elif npv > 0:
+            judgment = "⚠️ <strong>CONDITIONAL</strong> - 조건부 검토"
+        else:
+            judgment = "❌ <strong>NO-GO</strong> - 추진 곤란"
+        
+        return f"""
+        <section class="narrative final-judgment">
+            <h2>🎯 최종 결정 (Final Decision)</h2>
+            <p class="judgment">{judgment}</p>
+        </section>
+        """
+
+
+# ========== ALL-IN-ONE NARRATIVE GENERATOR ==========
+
+class AllInOneNarrativeGenerator(BaseNarrativeGenerator):
+    """
+    Narrative Generator for All-in-One Comprehensive Report
+    
+    Target Audience: 전체 (종합 보고서)
+    Focus: 모든 모듈 포괄, 상세 설명
+    """
+    
+    def __init__(self):
+        super().__init__()
+        self.report_type = "all_in_one"
+    
+    def executive_summary(self, modules_data: Dict) -> str:
+        return """
+        <section class="narrative executive-summary">
+            <h2>📚 종합 분석 보고서 (Comprehensive Report)</h2>
+            
+            <p class="narrative">
+                본 보고서는 LH 공공기여형 민간임대주택 사업에 대한 
+                <strong>완전한 종합 분석</strong> 결과입니다.
+            </p>
+            
+            <p class="narrative">
+                토지 가치 평가(M2), LH 선호 주택유형(M3), 건축 규모 결정(M4), 
+                사업성 분석(M5), LH 심사 예측(M6) 등 5개 모듈의 
+                분석 결과를 모두 포함하고 있습니다.
+            </p>
+            
+            <p class="narrative">
+                각 모듈은 독립적으로 분석되었으나, 종합적으로는 
+                하나의 사업에 대한 다각도 검토 결과입니다.
+            </p>
+            
+            <p class="narrative">
+                본 보고서를 통해 토지주, LH 심사역, 투자자 등 
+                모든 이해관계자가 필요한 정보를 얻을 수 있습니다.
+            </p>
+            
+            <p class="narrative">
+                상세 내용은 아래 5개 모듈 분석 결과를 참고하시기 바라며, 
+                최종 의사결정은 전문가 자문 후 신중하게 내리시기 바랍니다.
+            </p>
+            
+            <p class="narrative">
+                각 모듈의 결과는 독립적으로도 활용 가능하나, 
+                종합적으로 검토할 때 가장 정확한 판단이 가능합니다.
+            </p>
+        </section>
+        """
+    
+    def transitions(self, from_module: str, to_module: str) -> str:
+        # Comprehensive report는 각 모듈 간 연결 강조
+        transition_map = {
+            ("M2", "M3"): "토지 가치를 확인했으니, LH가 선호하는 주택유형을 분석합니다.",
+            ("M3", "M4"): "선호 유형이 결정되었으므로, 건축 가능한 규모를 산정합니다.",
+            ("M4", "M5"): "건축 규모를 바탕으로 사업의 재무 타당성을 검토합니다.",
+            ("M5", "M6"): "사업성 결과를 확인했으니, LH 심사 통과 가능성을 예측합니다."
+        }
+        
+        text = transition_map.get((from_module, to_module))
+        if not text:
+            return ""
+        
+        return f'<p class="narrative transition">{text}</p>'
+    
+    def final_judgment(self, modules_data: Dict) -> str:
+        m5_data = modules_data.get("M5", {})
+        m6_data = modules_data.get("M6", {})
+        
+        npv = m5_data.get("npv", 0)
+        lh_decision = m6_data.get("decision", "")
+        
+        if npv > 0 and lh_decision not in ["부적합", "탈락"]:
+            judgment = "✅ 종합적으로 사업 <strong>추진을 추천합니다</strong>."
+        elif npv > 0:
+            judgment = "⚠️ <strong>조건부 추진</strong>을 권장합니다."
+        else:
+            judgment = "❌ 현 조건에서는 사업 추진이 <strong>부적합</strong>합니다."
+        
+        return f"""
+        <section class="narrative final-judgment">
+            <h2>🎯 종합 의견 (Comprehensive Opinion)</h2>
+            
+            <div class="judgment-box">
+                <p class="judgment">{judgment}</p>
+                <p class="narrative">
+                    위 의견은 5개 모듈의 종합 분석 결과를 기반으로 하며, 
+                    최종 투자 결정은 전문가와 협의 후 내리시기 바랍니다.
+                </p>
+            </div>
+        </section>
+        """
+
+
+# ========== EXECUTIVE SUMMARY NARRATIVE GENERATOR ==========
+
+class ExecutiveSummaryNarrativeGenerator(BaseNarrativeGenerator):
+    """
+    Narrative Generator for Executive Summary Report
+    
+    Target Audience: 경영진 (2페이지 요약)
+    Focus: 핵심 지표, 간결한 결론
+    """
+    
+    def __init__(self):
+        super().__init__()
+        self.report_type = "executive_summary"
+    
+    def executive_summary(self, modules_data: Dict) -> str:
+        m2_data = modules_data.get("M2", {})
+        m5_data = modules_data.get("M5", {})
+        m6_data = modules_data.get("M6", {})
+        
+        land_value = m2_data.get("land_value", 0)
+        npv = m5_data.get("npv", 0)
+        lh_decision = m6_data.get("decision", "")
+        
+        return f"""
+        <section class="narrative executive-summary">
+            <h2>📌 Executive Summary (경영진용)</h2>
+            
+            <p class="narrative">
+                <strong>투자 대상:</strong> 토지 가치 {land_value:,}원
+            </p>
+            
+            <p class="narrative">
+                <strong>재무 평가:</strong> NPV {npv:,}원 
+                ({'수익 가능' if npv > 0 else '손실 예상'})
+            </p>
+            
+            <p class="narrative">
+                <strong>LH 승인:</strong> {lh_decision}
+            </p>
+        </section>
+        """
+    
+    def transitions(self, from_module: str, to_module: str) -> str:
+        # Executive summary는 transition 최소화
+        return ""
+    
+    def final_judgment(self, modules_data: Dict) -> str:
+        m5_data = modules_data.get("M5", {})
+        npv = m5_data.get("npv", 0)
+        
+        if npv > 0:
+            judgment = "✅ <strong>추천합니다</strong>"
+        else:
+            judgment = "❌ 투자 <strong>부적합</strong>"
+        
+        return f"""
+        <section class="narrative final-judgment">
+            <h2>🎯 의사결정 (Decision)</h2>
+            <p class="judgment">{judgment}</p>
+        </section>
+        """
+
+
+# ========== NARRATIVE GENERATOR FACTORY ==========
+
+class NarrativeGeneratorFactory:
+    """
+    Factory for creating Narrative Generators by report type
+    """
+    
+    _generators = {
+        "landowner_summary": LandownerNarrativeGenerator,
+        "lh_technical": LHTechnicalNarrativeGenerator,
+        "financial_feasibility": FinancialFeasibilityNarrativeGenerator,
+        "quick_check": QuickCheckNarrativeGenerator,
+        "all_in_one": AllInOneNarrativeGenerator,
+        "executive_summary": ExecutiveSummaryNarrativeGenerator,
+    }
     
     @staticmethod
-    def generate_risk_notice(report_type: str) -> NarrativeSection:
+    def get(report_type: str) -> BaseNarrativeGenerator:
         """
-        Generate standard risk notice/disclaimer
+        Get Narrative Generator for report type
         
         Args:
-            report_type: Type of report
-            
+            report_type: One of the 6 final report types
+        
         Returns:
-            NarrativeSection with risk notice
-        """
+            Concrete NarrativeGenerator instance
         
-        content = """
-            <div class="risk-notice">
-                <h2>⚠️ 리스크 고지 (Risk Notice)</h2>
-                <div class="risk-content">
-                    <p><strong>본 분석 보고서는 의사결정 참고 자료이며, 다음 사항에 유의하십시오:</strong></p>
-                    <ul>
-                        <li>🔴 <strong>LH 정책 변동:</strong> LH 매입 정책, 심사 기준은 수시로 변경될 수 있습니다.</li>
-                        <li>🔴 <strong>시장 변동:</strong> 부동산 시장, 금리, 공사비는 분석 시점 이후 변동될 수 있습니다.</li>
-                        <li>🔴 <strong>규제 변경:</strong> 용도지역, 지구단위계획 등 규제는 변경될 수 있습니다.</li>
-                        <li>🔴 <strong>실사 필요:</strong> 본 보고서는 개략 분석이며, 실제 투자 전 정밀 실사가 필요합니다.</li>
-                        <li>🔴 <strong>LH 승인 불확실성:</strong> 본 보고서의 승인 예측이 실제 LH 심사 결과를 보장하지 않습니다.</li>
-                    </ul>
-                    <p class="risk-disclaimer">
-                        <strong>최종 투자 의사결정은 투자자 본인의 판단과 책임하에 이루어져야 하며, 
-                        본 보고서는 법적 책임을 지지 않습니다.</strong>
-                    </p>
-                </div>
-            </div>
+        Raises:
+            ValueError: If report_type is unknown
         """
+        generator_class = NarrativeGeneratorFactory._generators.get(report_type)
         
-        return NarrativeSection(
-            section_id="risk_notice",
-            title_kr="리스크 고지",
-            content_html=content,
-            position="after_modules",
-            target_audience=report_type
-        )
+        if not generator_class:
+            raise ValueError(
+                f"Unknown report type: {report_type}. "
+                f"Valid types: {list(NarrativeGeneratorFactory._generators.keys())}"
+            )
+        
+        logger.info(f"[NarrativeFactory] Creating {generator_class.__name__} for {report_type}")
+        return generator_class()
     
     @staticmethod
-    def generate_comprehensive_summary(
-        report_type: str,
-        module_results_summary: Dict[str, str]
-    ) -> NarrativeSection:
-        """
-        Generate comprehensive summary section (for all-in-one report)
-        
-        Args:
-            report_type: Type of report
-            module_results_summary: Dict of module IDs to their key findings
-            
-        Returns:
-            NarrativeSection with comprehensive summary
-        """
-        
-        content = """
-            <div class="comprehensive-summary">
-                <h2>종합 분석 결과 (Comprehensive Summary)</h2>
-                <div class="summary-content">
-                    <p><strong>5개 모듈 분석 결과를 종합하면:</strong></p>
-                    
-                    <div class="summary-grid">
-                        <div class="summary-item">
-                            <h3>📊 M2: 토지 가치</h3>
-                            <p>감정평가를 통한 토지 매입 기준가 산정</p>
-                        </div>
-                        
-                        <div class="summary-item">
-                            <h3>🏠 M3: 선호 주택유형</h3>
-                            <p>LH 정책과 지역 특성을 반영한 최적 주택유형 분석</p>
-                        </div>
-                        
-                        <div class="summary-item">
-                            <h3>🏗️ M4: 건축 규모</h3>
-                            <p>법적 용적률과 인센티브를 고려한 최대 개발 규모 산정</p>
-                        </div>
-                        
-                        <div class="summary-item">
-                            <h3>💰 M5: 사업성 분석</h3>
-                            <p>투자 수익률, NPV, IRR 등 재무적 타당성 검증</p>
-                        </div>
-                        
-                        <div class="summary-item">
-                            <h3>✅ M6: LH 심사 예측</h3>
-                            <p>LH 내부 심사 기준 기반 승인 가능성 예측</p>
-                        </div>
-                    </div>
-                    
-                    <p class="summary-conclusion">
-                        <strong>최종 판단:</strong> 위 5개 모듈의 결과를 종합하여 
-                        사업 진행 여부를 결정하시기 바랍니다.
-                    </p>
-                </div>
-            </div>
-        """
-        
-        return NarrativeSection(
-            section_id="comprehensive_summary",
-            title_kr="종합 결과",
-            content_html=content,
-            position="after_modules",
-            target_audience=report_type
-        )
+    def list_available_types() -> list:
+        """Get list of available report types"""
+        return list(NarrativeGeneratorFactory._generators.keys())
