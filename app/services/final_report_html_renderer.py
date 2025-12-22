@@ -3920,33 +3920,110 @@ def render_quick_check(data: Dict[str, Any]) -> str:
                 
                 <!-- 9. CRITICAL RISK FACTORS -->
                 <div class="section" style="margin-top: 40px;">
-                    <div class="section-title">9. 치명적 리스크 요인 (Critical Risk Factors)</div>
+                    <div class="section-title">9. 치명적 리스크 요인 (Critical Risk Factors) v4.2</div>
                     
-                    <div style="background: #FEF2F2; padding: 20px; border-radius: 8px; border-left: 4px solid #EF4444;">
-                        <h4 style="margin-bottom: 16px; color: #991B1B;">⚠️ 주요 리스크 Top 3:</h4>
-                        <ul style="margin: 0; padding-left: 20px; line-height: 2.0; color: #991B1B;">
-                            <li><strong>LH 승인 지연:</strong> 공모 탈락 또는 조건부 승인 시 사업 기간 6개월+ 지연, 금융비용 증가</li>
-                            <li><strong>건축비 상승:</strong> 10% 상승 시 NPV 20% 감소, 수익성 악화</li>
-                            <li><strong>LH 매입가 하락:</strong> 감정가 100% → 95% 매입 시 NPV 30% 감소</li>
-                        </ul>
+                    <div style="background: #FEF2F2; padding: 20px; border-radius: 8px; border-left: 4px solid #DC2626; margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 16px; color: #991B1B; font-size: 17px;">⚠️ 투자 판단에 직접 영향을 미치는 3대 핵심 리스크:</h4>
+                        
+                        <div style="margin-bottom: 14px; padding: 14px; background: white; border-radius: 8px;">
+                            <div style="font-weight: 700; color: #DC2626; margin-bottom: 6px; font-size: 15px;">🔴 R3. 토지 가격 변동 (최우선 관리)</div>
+                            <div style="font-size: 13px; color: #7F1D1D; line-height: 1.7; margin-bottom: 8px;">
+                                <strong>시나리오:</strong> 감정평가 +10% 또는 협상 난항 +15% 시<br>
+                                <strong>영향:</strong> NPV -50% ~ -87.5%, IRR -2.3%p ~ -3.6%p<br>
+                                <strong>대응:</strong> ✅ 거래 사례 10건+ 조사, ✅ 조건부 계약(±5%), ✅ 예비비 10억+
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 14px; padding: 14px; background: white; border-radius: 8px;">
+                            <div style="font-weight: 700; color: #DC2626; margin-bottom: 6px; font-size: 15px;">🔴 R5. 금융 비용 증가 (핵심 관리)</div>
+                            <div style="font-size: 13px; color: #7F1D1D; line-height: 1.7; margin-bottom: 8px;">
+                                <strong>시나리오:</strong> 금리 +1%p 또는 일정 +6개월 지연 시<br>
+                                <strong>영향:</strong> NPV -37.5% ~ -56.3%, IRR -1.3%p ~ -2.0%p<br>
+                                <strong>대응:</strong> ✅ 고정금리 대출 확보, ✅ 조기 금융 확정, ✅ 일정 여유 3개월+
+                            </div>
+                        </div>
+                        
+                        <div style="padding: 14px; background: white; border-radius: 8px;">
+                            <div style="font-weight: 700; color: #DC2626; margin-bottom: 6px; font-size: 15px;">🔴 R6. 사업 일정 지연 (핵심 관리)</div>
+                            <div style="font-size: 13px; color: #7F1D1D; line-height: 1.7; margin-bottom: 8px;">
+                                <strong>최악 시나리오:</strong> 복합 지연 15개월 (LH 3개월 + 인허가 6개월 + 공사 6개월)<br>
+                                <strong>영향:</strong> <span style="color: #B91C1C; font-weight: 600;">NPV 적자 전환(-5억), IRR 6.8% (-5.7%p)</span><br>
+                                <strong>대응:</strong> ✅ 단계별 3개월 예비, ✅ 시공사 검증, ✅ 지연 패널티 명시
+                            </div>
+                        </div>
                     </div>
                     
-                    <div style="margin-top: 16px; background: white; padding: 20px; border-radius: 8px; border: 1px solid #E5E7EB;">
-                        <h4 style="margin-bottom: 12px; color: #1F2937;">✅ 리스크 완화 방안:</h4>
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <tr>
-                                <td style="padding: 12px; border: 1px solid #E5E7EB; width: 30%; font-weight: 600; background: #F9FAFB;">승인 리스크</td>
-                                <td style="padding: 12px; border: 1px solid #E5E7EB;">LH 사전 협의, 전문 컨설팅, 선호 유형 준수</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 12px; border: 1px solid #E5E7EB; font-weight: 600; background: #F9FAFB;">건축비 리스크</td>
-                                <td style="padding: 12px; border: 1px solid #E5E7EB;">시공사 실적 검증, 단가 계약, 예비비 10% 확보</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 12px; border: 1px solid #E5E7EB; font-weight: 600; background: #F9FAFB;">가격 리스크</td>
-                                <td style="padding: 12px; border: 1px solid #E5E7EB;">감정평가 2곳 이상 의뢰, 보수적 시나리오 검토</td>
-                            </tr>
+                    <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #E5E7EB;">
+                        <h4 style="margin-bottom: 14px; color: #1F2937; font-size: 16px;">📊 리스크 우선순위 매트릭스</h4>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                            <thead style="background: #F9FAFB;">
+                                <tr>
+                                    <th style="padding: 10px; border: 1px solid #E5E7EB; text-align: left;">리스크</th>
+                                    <th style="padding: 10px; border: 1px solid #E5E7EB; text-align: center;">발생 확률</th>
+                                    <th style="padding: 10px; border: 1px solid #E5E7EB; text-align: center;">영향도</th>
+                                    <th style="padding: 10px; border: 1px solid #E5E7EB; text-align: center;">우선순위</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="background: #FEF2F2;">
+                                    <td style="padding: 8px; border: 1px solid #E5E7EB;">토지 가격</td>
+                                    <td style="padding: 8px; border: 1px solid #E5E7EB; text-align: center; color: #DC2626; font-weight: 600;">높음 (60%)</td>
+                                    <td style="padding: 8px; border: 1px solid #E5E7EB; text-align: center; color: #DC2626; font-weight: 600;">매우 높음</td>
+                                    <td style="padding: 8px; border: 1px solid #E5E7EB; text-align: center; background: #DC2626; color: white; font-weight: 700;">최우선</td>
+                                </tr>
+                                <tr style="background: #FEF2F2;">
+                                    <td style="padding: 8px; border: 1px solid #E5E7EB;">금융 비용</td>
+                                    <td style="padding: 8px; border: 1px solid #E5E7EB; text-align: center; color: #F59E0B; font-weight: 600;">중간 (40%)</td>
+                                    <td style="padding: 8px; border: 1px solid #E5E7EB; text-align: center; color: #DC2626; font-weight: 600;">매우 높음</td>
+                                    <td style="padding: 8px; border: 1px solid #E5E7EB; text-align: center; background: #DC2626; color: white; font-weight: 700;">최우선</td>
+                                </tr>
+                                <tr style="background: #FEF2F2;">
+                                    <td style="padding: 8px; border: 1px solid #E5E7EB;">일정 지연</td>
+                                    <td style="padding: 8px; border: 1px solid #E5E7EB; text-align: center; color: #DC2626; font-weight: 600;">높음 (50%)</td>
+                                    <td style="padding: 8px; border: 1px solid #E5E7EB; text-align: center; color: #F59E0B; font-weight: 600;">높음</td>
+                                    <td style="padding: 8px; border: 1px solid #E5E7EB; text-align: center; background: #DC2626; color: white; font-weight: 700;">최우선</td>
+                                </tr>
+                                <tr style="background: #FFFBEB;">
+                                    <td style="padding: 8px; border: 1px solid #E5E7EB;">개발 규모/공사비</td>
+                                    <td style="padding: 8px; border: 1px solid #E5E7EB; text-align: center; color: #F59E0B;">중간 (40%)</td>
+                                    <td style="padding: 8px; border: 1px solid #E5E7EB; text-align: center; color: #F59E0B;">높음</td>
+                                    <td style="padding: 8px; border: 1px solid #E5E7EB; text-align: center; background: #F59E0B; color: white; font-weight: 600;">중요</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px; border: 1px solid #E5E7EB;">LH 심사/정책 변동</td>
+                                    <td style="padding: 8px; border: 1px solid #E5E7EB; text-align: center; color: #10B981;">낮음 (20%)</td>
+                                    <td style="padding: 8px; border: 1px solid #E5E7EB; text-align: center; color: #6B7280;">중간</td>
+                                    <td style="padding: 8px; border: 1px solid #E5E7EB; text-align: center; background: #9CA3AF; color: white;">모니터링</td>
+                                </tr>
+                            </tbody>
                         </table>
+                    </div>
+                    
+                    <div style="margin-top: 16px; background: #1F2937; color: white; padding: 18px; border-radius: 12px;">
+                        <h4 style="margin-bottom: 12px; font-size: 16px; color: #F3F4F6;">🎯 GO/NO-GO 필수 체크리스트 (4대 항목)</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+                            <div style="padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                                <div style="font-size: 13px; color: #D1FAE5; margin-bottom: 4px;">✅ 토지 예비비</div>
+                                <div style="font-size: 12px; color: #E5E7EB;">감정평가 10% (10-15억)</div>
+                            </div>
+                            <div style="padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                                <div style="font-size: 13px; color: #D1FAE5; margin-bottom: 4px;">✅ 금융 확정</div>
+                                <div style="font-size: 12px; color: #E5E7EB;">고정금리 대출 확보</div>
+                            </div>
+                            <div style="padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                                <div style="font-size: 13px; color: #D1FAE5; margin-bottom: 4px;">✅ 일정 여유</div>
+                                <div style="font-size: 12px; color: #E5E7EB;">단계별 3개월 예비</div>
+                            </div>
+                            <div style="padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                                <div style="font-size: 13px; color: #D1FAE5; margin-bottom: 4px;">✅ LH 사전 협의</div>
+                                <div style="font-size: 12px; color: #E5E7EB;">승인 가능성 70%+ 확인</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 14px; padding: 14px; background: #065F46; border-radius: 8px; text-align: center;">
+                            <div style="font-weight: 700; font-size: 14px; color: #D1FAE5;">
+                                4개 항목 충족 → GO / 2-3개 충족 → REVIEW / 1개 이하 → NO-GO
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
