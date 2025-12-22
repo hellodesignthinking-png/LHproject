@@ -393,38 +393,131 @@ def format_generic(value: Optional[Any], suffix: str = "") -> str:
 
 
 def render_section_error_placeholder(section_name: str, error: Exception, show_debug: bool = False) -> str:
-    """섹션 렌더링 실패 시 대체 HTML
+    """섹션 렌더링 실패 시 대체 HTML (사용자 친화적 + 개발자 디버그)
     
     Args:
         section_name: 섹션 이름 (예: "재무 분석", "리스크 평가")
         error: 발생한 예외
-        show_debug: 개발자용 디버그 정보 표시 여부
+        show_debug: 개발자용 디버그 정보 표시 여부 (기본값: False)
     
     Returns:
-        에러 placeholder HTML
+        사용자용 안내 HTML + 숨겨진 개발자 정보
     """
-    debug_info = f"""
-    <div style="margin-top: 12px; padding: 12px; background: #FEF2F2; border-left: 3px solid #EF4444; font-size: 12px; color: #991B1B; font-family: monospace;">
-        <strong>🔧 개발자 정보:</strong><br>
-        오류 타입: {type(error).__name__}<br>
-        오류 메시지: {str(error)[:200]}
-    </div>
+    # 개발자용 디버그 정보 (HTML 주석으로 숨김)
+    debug_comment = f"""
+    <!-- 
+    🔧 DEVELOPER DEBUG INFO:
+    Error Type: {type(error).__name__}
+    Error Message: {str(error)[:300]}
+    Section: {section_name}
+    -->
     """ if show_debug else ""
     
+    # 사용자용 표시 (기술적 내용 제외)
     return f"""
+    {debug_comment}
     <div style="padding: 24px; margin: 20px 0; background: #FFFBEB; border: 2px dashed #F59E0B; border-radius: 8px;">
         <div style="text-align: center; margin-bottom: 16px;">
             <span style="font-size: 48px;">⚠️</span>
         </div>
         <div style="text-align: center; margin-bottom: 12px;">
-            <strong style="font-size: 18px; color: #92400E;">이 섹션은 현재 생성되지 않았습니다</strong>
+            <strong style="font-size: 18px; color: #92400E;">본 항목은 현재 자동 생성 과정에서 제외되었습니다</strong>
         </div>
         <div style="text-align: center; color: #78350F; line-height: 1.6;">
-            <strong>섹션명:</strong> {section_name}<br>
-            <strong>원인:</strong> 데이터 부족 또는 처리 오류<br>
-            <strong>권장사항:</strong> 모든 M2-M6 분석을 완료한 후 다시 생성해주세요.
+            <strong>대상 섹션:</strong> {section_name}<br>
+            <strong>가능한 원인:</strong> 필수 데이터 부족 또는 분석 미완료<br>
+            <strong>권장 조치:</strong> M2~M6 모든 분석 단계를 완료한 후 보고서를 다시 생성해주세요.
         </div>
-        {debug_info}
+        <div style="margin-top: 16px; padding: 12px; background: white; border-radius: 4px; text-align: left; font-size: 13px; color: #6B7280;">
+            <strong>💡 참고:</strong> 이 메시지는 데이터가 준비되면 자동으로 사라지며, 
+            해당 섹션이 정상적인 분석 내용으로 채워집니다.
+        </div>
+    </div>
+    """
+
+
+def get_required_sections_by_report_type(report_type: str) -> list:
+    """보고서 타입별 필수 섹션 정의 (기획서 기준)
+    
+    Args:
+        report_type: 보고서 유형
+        
+    Returns:
+        필수 섹션 키워드 리스트
+    """
+    required_sections = {
+        "all_in_one": [
+            "요약", "결론", "정책", "리스크", "시나리오", "최종판단"
+        ],
+        "landowner_summary": [
+            "무엇을 할 수 있나요", "리스크", "예상 수익", "추진 가능성"
+        ],
+        "lh_technical": [
+            "법령", "기준", "검토 기준", "적합성", "승인 전망"
+        ],
+        "financial_feasibility": [
+            "재무 분석", "수익률", "투자 판단", "시나리오", "리스크"
+        ],
+        "quick_check": [
+            "결론", "GO", "CONDITIONAL", "NO-GO"
+        ],
+        "presentation": [
+            "요약", "핵심 지표", "결론", "추천"
+        ]
+    }
+    
+    return required_sections.get(report_type, [])
+
+
+def check_section_completeness(html_content: str, report_type: str) -> tuple:
+    """보고서 HTML에 필수 섹션이 포함되었는지 검증
+    
+    Args:
+        html_content: 생성된 HTML 문자열
+        report_type: 보고서 타입
+        
+    Returns:
+        (is_complete: bool, missing_sections: list)
+    """
+    required = get_required_sections_by_report_type(report_type)
+    missing = []
+    
+    for section_keyword in required:
+        # 대소문자 구분 없이 검색
+        if section_keyword.lower() not in html_content.lower():
+            missing.append(section_keyword)
+    
+    return (len(missing) == 0, missing)
+
+
+def render_section_completeness_warning(missing_sections: list) -> str:
+    """필수 섹션 누락 경고 박스
+    
+    Args:
+        missing_sections: 누락된 섹션 키워드 리스트
+        
+    Returns:
+        경고 HTML
+    """
+    if not missing_sections:
+        return ""
+    
+    missing_text = ", ".join([f"'{s}'" for s in missing_sections])
+    
+    return f"""
+    <div style="margin: 20px 0; padding: 20px; background: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 4px;">
+        <div style="margin-bottom: 12px;">
+            <span style="font-size: 24px;">🚨</span>
+            <strong style="font-size: 16px; color: #991B1B; margin-left: 8px;">기획 섹션 누락 감지</strong>
+        </div>
+        <div style="color: #7F1D1D; line-height: 1.6; margin-bottom: 12px;">
+            다음 필수 섹션이 보고서에 포함되지 않았습니다:<br>
+            <strong>{missing_text}</strong>
+        </div>
+        <div style="padding: 12px; background: white; border-radius: 4px; font-size: 13px; color: #6B7280;">
+            <strong>💡 권장 조치:</strong> 모든 M2~M6 분석을 완료하고 보고서를 재생성하거나, 
+            개발팀에 기획서 기준 섹션 구현 여부를 확인해주세요.
+        </div>
     </div>
     """
 
@@ -3779,6 +3872,7 @@ def render_final_report_html(report_type: str, data: Dict[str, Any]) -> str:
     최종보고서 HTML 렌더링 (메인 진입점)
     
     🔥 FAIL-SAFE: 섹션별 오류 발생 시에도 나머지 보고서는 정상 생성
+    ✅ QA CHECK: 필수 섹션 완전성 자동 검증
     
     Args:
         report_type: 보고서 유형
@@ -3804,7 +3898,25 @@ def render_final_report_html(report_type: str, data: Dict[str, Any]) -> str:
     
     try:
         # 정상 렌더링 시도
-        return renderer(data)
+        html = renderer(data)
+        
+        # ✅ QA CHECK: 필수 섹션 완전성 검증
+        is_complete, missing_sections = check_section_completeness(html, report_type)
+        
+        if not is_complete:
+            # 누락된 섹션이 있으면 경고 박스를 HTML 상단에 삽입
+            warning_html = render_section_completeness_warning(missing_sections)
+            # <body> 태그 바로 다음에 경고 삽입
+            html = html.replace('<div class="report-container">', 
+                               f'{warning_html}<div class="report-container">', 1)
+            
+            # QA Status 업데이트 (data에 반영)
+            if 'qa_status' not in data:
+                data['qa_status'] = {}
+            data['qa_status']['content_completeness'] = 'WARNING - 일부 섹션 누락'
+        
+        return html
+        
     except Exception as e:
         # 전체 렌더링 실패 시 - 최소한의 오류 페이지 반환
         report_names = {
