@@ -113,27 +113,35 @@ class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
             return "추가 분석 필요"
     
     def _generate_judgment_basis(self, modules_data: Dict) -> list:
-        """Generate judgment basis points"""
+        """[FIX D] Generate judgment basis with explicit numeric evidence"""
         basis = []
         
+        m2_data = modules_data.get("M2", {})
         m5_data = modules_data.get("M5", {})
         m6_data = modules_data.get("M6", {})
         
-        # Profitability
+        # [FIX D] Profitability with explicit NPV
         npv = m5_data.get("npv")
         if npv and npv > 0:
-            basis.append(f"수익성: NPV {self.format_number(npv, 'currency')} (양호)")
+            basis.append(f"✅ 수익성 양호: NPV {self.format_number(npv, 'currency')}")
         elif npv and npv <= 0:
-            basis.append(f"수익성: NPV {self.format_number(npv, 'currency')} (부정적)")
+            basis.append(f"❌ 수익성 부정적: NPV {self.format_number(npv, 'currency')}")
         else:
-            basis.append("수익성: 분석 데이터 부족")
+            basis.append("⚠️ 수익성: 분석 데이터 부족")
         
-        # LH Decision
+        # [FIX D] LH Decision with explicit status
         lh_decision = m6_data.get("decision", "분석 미완료")
-        basis.append(f"LH 승인 가능성: {lh_decision}")
+        if "승인" in lh_decision:
+            basis.append(f"✅ LH 심사: {lh_decision}")
+        elif "조건부" in lh_decision:
+            basis.append(f"⚠️ LH 심사: {lh_decision}")
+        else:
+            basis.append(f"❌ LH 심사: {lh_decision}")
         
-        # Risk assessment
-        basis.append("주요 리스크: 시장 변동성, 인허가 지연 가능성")
+        # [FIX D] Land value reference (if available)
+        land_value = m2_data.get("land_value")
+        if land_value and land_value > 0:
+            basis.append(f"📊 토지 기준가: {self.format_number(land_value, 'currency')}")
         
         return basis
     

@@ -514,7 +514,11 @@ class BaseFinalReportAssembler(ABC):
             elif '점수' in kpi_name or 'score' in kpi_name.lower():
                 formatted_value = BaseFinalReportAssembler.format_number(kpi_value, 'score')
             else:
-                formatted_value = str(kpi_value) if kpi_value is not None else "데이터 없음"
+                # [FIX B] Fallback guarantee - no empty values
+                if kpi_value is None or kpi_value == "" or (isinstance(kpi_value, (int, float)) and kpi_value == 0):
+                    formatted_value = '<span class="kpi-undefined" title="분석 결과는 존재하나 표시 불가">데이터 미확정</span>'
+                else:
+                    formatted_value = str(kpi_value)
             
             kpi_cards.append(f"""
             <div class="kpi-card">
@@ -524,13 +528,15 @@ class BaseFinalReportAssembler(ABC):
             """)
         
         return f"""
-        <section class="kpi-summary-box" style="
+        <section class="kpi-summary-box pdf-safe" style="
             background: linear-gradient(135deg, #e3f2fd 0%, #f5f7fa 100%);
             border-left: 6px solid #007bff;
             padding: 30px;
             margin: 30px 0;
             border-radius: 8px;
-            page-break-inside: avoid;
+            min-height: 200px;
+            page-break-inside: avoid !important;
+            page-break-before: auto;
         ">
             <h3 style="margin: 0 0 20px 0; color: #007bff; font-size: 20px;">핵심 지표 (Key Performance Indicators)</h3>
             <div class="kpi-cards" style="
@@ -574,13 +580,15 @@ class BaseFinalReportAssembler(ABC):
         actions_html = "\n".join([f"<li>{a}</li>" for a in actions])
         
         return f"""
-        <section class="decision-block" style="
+        <section class="decision-block pdf-safe" style="
             margin: 60px 0 40px 0;
             padding: 40px;
             background: {bg_color};
             border: 3px solid {color};
             border-radius: 12px;
-            page-break-inside: avoid;
+            min-height: 150px;
+            page-break-inside: avoid !important;
+            page-break-before: auto;
         ">
             <h2 style="
                 margin: 0 0 20px 0;
@@ -618,6 +626,49 @@ class BaseFinalReportAssembler(ABC):
         </section>
         """
     
+    @staticmethod
+    def ensure_numeric_anchor(narrative_text: str, modules_data: Dict) -> str:
+        """
+        [FIX C] Ensure narrative contains at least one numeric value
+        
+        If no numbers found, injects key metric from modules_data
+        """
+        import re
+        
+        # Check if narrative already has numbers
+        has_currency = re.search(r'[₩\$]\s*[\d,]+', narrative_text)
+        has_number = re.search(r'\d{1,3}(?:,\d{3})+', narrative_text)
+        has_percent = re.search(r'\d+\.?\d*\s*%', narrative_text)
+        
+        if has_currency or has_number or has_percent:
+            return narrative_text  # Already has numbers
+        
+        # Inject numeric anchor from modules_data
+        numeric_anchor = ""
+        
+        # Try NPV first
+        if "M5" in modules_data and "npv" in modules_data["M5"]:
+            npv = modules_data["M5"]["npv"]
+            formatted_npv = BaseFinalReportAssembler.format_number(npv, 'currency')
+            numeric_anchor = f"<p><strong>본 사업의 순현재가치(NPV)는 {formatted_npv}입니다.</strong></p>"
+        
+        # Try land value
+        elif "M2" in modules_data and "land_value" in modules_data["M2"]:
+            land_value = modules_data["M2"]["land_value"]
+            formatted_value = BaseFinalReportAssembler.format_number(land_value, 'currency')
+            numeric_anchor = f"<p><strong>토지 감정가는 {formatted_value}입니다.</strong></p>"
+        
+        # Try household count
+        elif "M4" in modules_data and "household_count" in modules_data["M4"]:
+            households = modules_data["M4"]["household_count"]
+            numeric_anchor = f"<p><strong>계획 세대수는 {households:,} 세대입니다.</strong></p>"
+        
+        if numeric_anchor:
+            # Insert at beginning of narrative
+            return numeric_anchor + "\n" + narrative_text
+        
+        return narrative_text
+
     @staticmethod
     def get_unified_design_css() -> str:
         """
@@ -729,6 +780,41 @@ class BaseFinalReportAssembler(ABC):
         /* Page Breaks */
         .executive-summary {
             page-break-after: always;
+        }
+        
+        /* [FIX E] Information Density Control */
+        .compact-report .module-section {
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .compact-report h3 {
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        
+        .dense-report .module-section {
+            padding: 30px;
+            margin: 40px 0;
+            border-top: 2px solid #e0e0e0;
+        }
+        
+        .dense-report .section-divider {
+            height: 2px;
+            background: linear-gradient(90deg, #007bff 0%, transparent 100%);
+            margin: 50px 0;
+        }
+        
+        .visual-break {
+            height: 40px;
+            margin: 30px 0;
+            background: repeating-linear-gradient(
+                90deg,
+                #f5f7fa 0px,
+                #f5f7fa 10px,
+                transparent 10px,
+                transparent 20px
+            );
         }
         
         @media print {
