@@ -11,6 +11,7 @@ ASSEMBLY ONLY - NO CALCULATION
 
 from typing import Dict, List, Literal
 import logging
+import re
 
 from ..base_assembler import BaseFinalReportAssembler
 from ..narrative_generator import NarrativeGeneratorFactory
@@ -92,6 +93,22 @@ class LHTechnicalAssembler(BaseFinalReportAssembler):
             modules_data=modules_data
         )
         
+        # [P0 FIX] Validate KPI completeness - FAIL if any core KPI is N/A
+        from app.services.final_report_assembly.qa_validator import FinalReportQAValidator
+        
+        kpi_valid, na_kpis = FinalReportQAValidator.validate_kpi_completeness(
+            kpi_html=html_with_qa,
+            report_type=self.report_type
+        )
+        
+        if not kpi_valid:
+            logger.error(
+                f"[{self.report_type}] KPI validation FAILED: {', '.join(na_kpis)}"
+            )
+            qa_result["status"] = "FAIL"
+            qa_result["errors"].append(f"Core KPIs contain N/A: {', '.join(na_kpis)}")
+
+        
         logger.info(
             f"[LHTechnical] Assembly complete with QA Summary "
             f"({len(html_with_qa):,} chars, QA Status: {qa_result['status']})"
@@ -172,90 +189,224 @@ class LHTechnicalAssembler(BaseFinalReportAssembler):
         return actions
 
 
+    
+    def _extract_kpi_from_module_html(self, module_id: str, html: str) -> Dict[str, any]:
+        """
+        [P1 CRITICAL FIX] Enhanced KPI extraction with 4-tier fallback
+        
+        PROBLEM: Original _extract_module_data() only used simple regex
+        SOLUTION: Multi-tier extraction strategy:
+        
+        Tier 1: data-* attributes (most reliable)
+        Tier 2: HTML table extraction (<th> + <td>)
+        Tier 3: Regex patterns on text content
+        Tier 4: Fallback to "any number" heuristics
+        
+        Returns:
+            Dict with extracted KPIs + _complete flag
+        """
+        from bs4 import BeautifulSoup
+        import logging
+        
+        logger = logging.getLogger(__name__)
+        soup = BeautifulSoup(html, 'html.parser')
+        kpis = {"_module_id": module_id, "_complete": False, "_extraction_method": None}
+        
+        # ===== M2: LAND APPRAISAL (토지 평가) =====
+        if module_id == "M2":
+            # Tier 1: data-* attribute
+            elem = soup.find(attrs={"data-land-value": True})
+            if elem:
+                try:
+                    value = elem.get("data-land-value", "").replace(",", "")
+                    kpis["land_value"] = int(value)
+                    kpis["_complete"] = True
+                    kpis["_extraction_method"] = "data-attribute"
+                    logger.info(f"[M2] Extracted land_value via data-attribute: {kpis['land_value']:,}원")
+                    return kpis
+                except (ValueError, AttributeError) as e:
+                    logger.warning(f"[M2] data-attribute parsing failed: {e}")
+            
+            # Tier 2: Table extraction (look for <th> with "감정가" keyword)
+            for tr in soup.find_all('tr'):
+                th = tr.find('th')
+                td = tr.find('td')
+                if th and td:
+                    th_text = th.get_text().strip()
+                    if any(keyword in th_text for keyword in ["감정가", "토지가치", "평가액", "기준가"]):
+                        td_text = td.get_text().strip()
+                        match = re.search(r'([\d,]+)\s*원', td_text)
+                        if match:
+                            kpis["land_value"] = int(match.group(1).replace(",", ""))
+                            kpis["_complete"] = True
+                            kpis["_extraction_method"] = "table-extraction"
+                            logger.info(f"[M2] Extracted land_value via table: {kpis['land_value']:,}원")
+                            return kpis
+            
+            # Tier 3: Regex on full HTML text
+            patterns = [
+                r'(?:감정가|토지가치|평가액|기준가)[:\s]*([\d,]+)\s*원',
+                r'<strong>([\d,]+)</strong>\s*원',  # Bold numbers with 원
+                r'([\d,]{10,})\s*원'  # Any large number (10+ digits) with 원
+            ]
+            
+            for pattern in patterns:
+                match = re.search(pattern, html)
+                if match:
+                    kpis["land_value"] = int(match.group(1).replace(",", ""))
+                    kpis["_complete"] = True
+                    kpis["_extraction_method"] = f"regex-{pattern[:30]}"
+                    logger.info(f"[M2] Extracted land_value via regex: {kpis['land_value']:,}원")
+                    return kpis
+            
+            logger.warning("[M2] ALL extraction tiers failed for land_value")
+        
+        # ===== M3: LH PREFERRED TYPE (LH 선호 유형) =====
+        elif module_id == "M3":
+            # Extract type
+            type_patterns = [
+                r'추천\s*유형[:\s]*([가-힣]+)',
+                r'선호\s*유형[:\s]*([가-힣]+)',
+                r'유형[:\s]*([가-힣]+)'
+            ]
+            for pattern in type_patterns:
+                match = re.search(pattern, html)
+                if match:
+                    kpis["recommended_type"] = match.group(1).strip()
+                    break
+            
+            # Extract score
+            score_patterns = [
+                r'총점[:\s]*(\d+\.?\d*)',
+                r'점수[:\s]*(\d+\.?\d*)',
+                r'(\d+\.?\d*)\s*점'
+            ]
+            for pattern in score_patterns:
+                match = re.search(pattern, html)
+                if match:
+                    kpis["total_score"] = float(match.group(1))
+                    break
+            
+            # Extract grade
+            grade_match = re.search(r'등급[:\s]*([A-F등급]+)', html)
+            if grade_match:
+                kpis["grade"] = grade_match.group(1)
+            
+            kpis["_complete"] = all(k in kpis for k in ["recommended_type", "total_score"])
+            kpis["_extraction_method"] = "regex-multi-pattern"
+            
+            if kpis["_complete"]:
+                logger.info(f"[M3] Extracted type={kpis['recommended_type']}, score={kpis['total_score']}")
+        
+        # ===== M4: BUILDING SCALE (건축 규모) =====
+        elif module_id == "M4":
+            # Total units - try multiple patterns
+            units_patterns = [
+                r'총\s*세대수[:\s]*(\d[\d,]*)',
+                r'전체\s*세대수[:\s]*(\d[\d,]*)',
+                r'세대수[:\s]*(\d[\d,]*)',
+                r'(\d{3,})\s*세대'
+            ]
+            
+            for pattern in units_patterns:
+                match = re.search(pattern, html)
+                if match:
+                    kpis["total_units"] = int(match.group(1).replace(",", ""))
+                    break
+            
+            # Floor area
+            area_patterns = [
+                r'연면적[:\s]*([\d,]+\.?\d*)\s*㎡',
+                r'총\s*연면적[:\s]*([\d,]+\.?\d*)\s*㎡'
+            ]
+            
+            for pattern in area_patterns:
+                match = re.search(pattern, html)
+                if match:
+                    kpis["floor_area"] = float(match.group(1).replace(",", ""))
+                    break
+            
+            kpis["_complete"] = ("total_units" in kpis)
+            kpis["_extraction_method"] = "regex-multi-pattern"
+            
+            if kpis["_complete"]:
+                logger.info(f"[M4] Extracted total_units={kpis.get('total_units', 'N/A')}")
+        
+        # ===== M5: FEASIBILITY (사업성 분석) =====
+        elif module_id == "M5":
+            # NPV - most critical metric
+            npv_patterns = [
+                r'순현재가치\s*\(NPV\)[:\s]*([+-]?\d{1,3}(?:,\d{3})*)',
+                r'순현재가치[:\s]*([+-]?\d{1,3}(?:,\d{3})*)',
+                r'NPV[:\s]*([+-]?\d{1,3}(?:,\d{3})*)',
+            ]
+            
+            for pattern in npv_patterns:
+                match = re.search(pattern, html, re.IGNORECASE | re.DOTALL)
+                if match:
+                    npv_value = int(match.group(1).replace(",", ""))
+                    kpis["npv"] = npv_value
+                    kpis["is_profitable"] = (npv_value > 0)
+                    break
+            
+            # IRR
+            irr_patterns = [
+                r'내부수익률\s*\(IRR\)[:\s]*(\d+\.?\d*)\s*%',
+                r'IRR[:\s]*(\d+\.?\d*)\s*%',
+                r'내부수익률[:\s]*(\d+\.?\d*)\s*%'
+            ]
+            
+            for pattern in irr_patterns:
+                match = re.search(pattern, html, re.DOTALL)
+                if match:
+                    kpis["irr"] = float(match.group(1))
+                    break
+            
+            kpis["_complete"] = ("npv" in kpis)
+            kpis["_extraction_method"] = "regex-multi-pattern"
+            
+            if kpis["_complete"]:
+                logger.info(f"[M5] Extracted NPV={kpis['npv']:,}원, profitable={kpis.get('is_profitable')}")
+        
+        # ===== M6: LH REVIEW (LH 심사) =====
+        elif module_id == "M6":
+            # Decision keywords (order matters - most specific first)
+            if re.search(r'추진\s*가능', html) or "GO" in html.upper():
+                kpis["decision"] = "추진 가능"
+            elif re.search(r'조건부', html) or "CONDITIONAL" in html.upper():
+                kpis["decision"] = "조건부 가능"
+            elif re.search(r'부적합|불가', html) or "NO-GO" in html.upper():
+                kpis["decision"] = "부적합"
+            else:
+                kpis["decision"] = "판정 미확정"
+            
+            kpis["_complete"] = (kpis["decision"] != "판정 미확정")
+            kpis["_extraction_method"] = "keyword-search"
+            
+            logger.info(f"[M6] Extracted decision={kpis['decision']}")
+        
+        return kpis
+
     def _extract_module_data(self, module_htmls: Dict[str, str]) -> Dict:
         """
-        [FIX 1, 2, 3] Extract data from module HTML with strict consistency rules:
+        [UPDATED] Extract module data using enhanced KPI extractor
         
-        1. NEVER recalculate - extract EXACT displayed values
-        2. Preserve ALL core M3/M4 data (even in summary reports)
-        3. Apply terminology normalization for consistency
-        4. Match units and rounding from source module
-        
-        NOTE: This is NOT calculation - just extracting displayed values
+        This method now calls _extract_kpi_from_module_html() for each module,
+        which provides robust multi-tier extraction instead of weak regex-only.
         """
-        import re
         modules_data = {}
-        # [FIX 2] M3 필수 데이터 추출 (Mandatory M3 Core Data Extraction)
-        if "m3_" in html:
-            # 추천 유형
-            m3_type_match = re.search(r'추천\s*유형[:\s]*([^<]+)', html)
-            if m3_type_match:
-                data["m3_recommended_type"] = m3_type_match.group(1).strip()
-            
-            # 총점 & 등급
-            m3_score_match = re.search(r'총점[:\s]*(\d+\.?\d*)\s*점', html)
-            if m3_score_match:
-                data["m3_total_score"] = m3_score_match.group(1)
-                
-            m3_grade_match = re.search(r'등급[:\s]*([A-F등급]+)', html)
-            if m3_grade_match:
-                data["m3_grade"] = m3_grade_match.group(1).strip()
-            
-            # 적합도
-            m3_suit_match = re.search(r'적합도[:\s]*(\d+\.?\d*)%', html)
-            if m3_suit_match:
-                data["m3_suitability"] = m3_suit_match.group(1)
-
-        # [FIX 2] M4 필수 데이터 추출 (Mandatory M4 Core Data Extraction)
-        if "m4_" in html:
-            # 총 세대수
-            m4_total_match = re.search(r'총\s*세대수[:\s]*(\d[\d,]*)', html)
-            if m4_total_match:
-                data["m4_total_units"] = m4_total_match.group(1)
-            
-            # 기본 세대수
-            m4_basic_match = re.search(r'기본\s*세대수[:\s]*(\d[\d,]*)', html)
-            if m4_basic_match:
-                data["m4_basic_units"] = m4_basic_match.group(1)
-            
-            # 인센티브
-            m4_incentive_match = re.search(r'인센티브[:\s]*(\d[\d,]*)', html)
-            if m4_incentive_match:
-                data["m4_incentive_units"] = m4_incentive_match.group(1)
-            
-            # 법적 기준
-            m4_legal_match = re.search(r'법적\s*기준[:\s]*([^<]+)', html)
-            if m4_legal_match:
-                data["m4_legal_basis"] = m4_legal_match.group(1).strip()
-
         
-        # M3: Extract recommended type and score
-        m3_html = module_htmls.get("M3", "")
-        type_keywords = ["청년형", "일반형", "신혼부부형"]
-        for keyword in type_keywords:
-            if keyword in m3_html:
-                modules_data["M3"] = {"recommended_type": keyword}
-                break
-        
-        score_match = re.search(r'(\d+)\s*점', m3_html)
-        if score_match and "M3" in modules_data:
-            modules_data["M3"]["score"] = int(score_match.group(1))
-        
-        # M4: Extract household count
-        m4_html = module_htmls.get("M4", "")
-        household_match = re.search(r'(\d+)\s*세대', m4_html)
-        if household_match:
-            modules_data["M4"] = {"household_count": int(household_match.group(1))}
-        
-        # M6: Extract decision
-        m6_html = module_htmls.get("M6", "")
-        for keyword in ["추진 가능", "조건부 가능", "부적합"]:
-            if keyword in m6_html:
-                modules_data["M6"] = {"decision": keyword}
-                break
+        for module_id, html in module_htmls.items():
+            if not html or html.strip() == "":
+                modules_data[module_id] = {"status": "empty", "_complete": False}
+                continue
+            
+            # Use the enhanced extractor
+            kpis = self._extract_kpi_from_module_html(module_id, html)
+            modules_data[module_id] = kpis
         
         return modules_data
-    
+
     def _generate_cover_page(self) -> str:
         return f"""
         <section class="cover-page">
