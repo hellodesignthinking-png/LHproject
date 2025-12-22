@@ -210,6 +210,327 @@ def _get_m3_fallback() -> Dict[str, Any]:
     }
 
 
+def adapt_m2_summary_for_html(canonical_summary: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    M2 (토지평가) HTML Adapter
+    
+    Input: canonical_summary["M2"]
+    Output: Normalized JSON for HTML rendering
+    """
+    try:
+        m2_data = canonical_summary.get("M2", {})
+        if not m2_data:
+            logger.warning("M2 data not found in canonical_summary")
+            return _get_m2_fallback()
+        
+        summary = m2_data.get("summary", {})
+        
+        # Extract core data
+        land_value_total_krw = summary.get("land_value_total_krw", 0)
+        pyeong_price_krw = summary.get("pyeong_price_krw", 0)
+        confidence_pct = summary.get("confidence_pct") or 75  # Default if None
+        transaction_count = summary.get("transaction_count", 0)
+        
+        # Validate that we have real data
+        if land_value_total_krw == 0 or pyeong_price_krw == 0:
+            logger.warning(f"M2 data incomplete: land_value={land_value_total_krw}, pyeong_price={pyeong_price_krw}")
+            return _get_m2_fallback()
+        
+        # Calculate ranges (±10%)
+        land_value_low = int(land_value_total_krw * 0.9)
+        land_value_high = int(land_value_total_krw * 1.1)
+        pyeong_price_low = int(pyeong_price_krw * 0.9)
+        pyeong_price_high = int(pyeong_price_krw * 1.1)
+        
+        confidence_level = "높음" if confidence_pct >= 70 else "보통" if confidence_pct >= 50 else "낮음"
+        
+        # Build normalized structure
+        adapted = {
+            "module": "M2",
+            "title": "토지 가치 평가 (M2)",
+            "appraisal_result": {
+                "total_value": land_value_total_krw,
+                "value_range": {
+                    "low": land_value_low,
+                    "high": land_value_high
+                },
+                "pyeong_price": pyeong_price_krw,
+                "pyeong_price_range": {
+                    "low": pyeong_price_low,
+                    "high": pyeong_price_high
+                },
+                "confidence": confidence_level,
+                "confidence_pct": confidence_pct
+            },
+            "analysis_basis": {
+                "transaction_count": transaction_count,
+                "method": "인근 거래 사례 기반 비교 평가",
+                "data_source": "국토교통부 실거래가 데이터"
+            },
+            "interpretation": {
+                "one_line": f"본 토지의 평가액은 약 {land_value_total_krw:,}원으로 산정되었습니다.",
+                "detailed": f"평당 {pyeong_price_krw:,}원 기준으로 산정되었으며, 분석 신뢰도는 {confidence_level}입니다."
+            },
+            "lh_perspective": {
+                "status": "평가 완료",
+                "commentary": f"총 {transaction_count}건의 인근 거래 사례를 기반으로 산정된 평가액입니다."
+            },
+            "fallback": False
+        }
+        
+        logger.info(f"✅ M2 HTML Adapter: 토지가액 {land_value_total_krw:,}원, 평당 {pyeong_price_krw:,}원")
+        return adapted
+        
+    except Exception as e:
+        logger.error(f"❌ M2 HTML Adapter failed: {e}")
+        return _get_m2_fallback()
+
+
+def adapt_m5_summary_for_html(canonical_summary: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    M5 (사업성) HTML Adapter
+    
+    Input: canonical_summary["M5"]
+    Output: Normalized JSON for HTML rendering
+    """
+    try:
+        m5_data = canonical_summary.get("M5", {})
+        if not m5_data:
+            logger.warning("M5 data not found in canonical_summary")
+            return _get_m5_fallback()
+        
+        summary = m5_data.get("summary", {})
+        
+        # Extract core data
+        npv_public_krw = summary.get("npv_public_krw", 0)
+        irr_pct = summary.get("irr_pct", 0)
+        roi_pct = summary.get("roi_pct", 0)
+        grade = summary.get("grade", "N/A")
+        
+        # Determine profitability status
+        is_profitable = npv_public_krw > 0 and irr_pct > 5.0
+        profitability_status = "수익성 양호" if is_profitable else "수익성 검토 필요"
+        
+        # Build normalized structure
+        adapted = {
+            "module": "M5",
+            "title": "사업성 분석 (M5)",
+            "financial_result": {
+                "npv": npv_public_krw,
+                "irr": irr_pct,
+                "roi": roi_pct,
+                "grade": grade,
+                "profitability_status": profitability_status,
+                "is_profitable": is_profitable
+            },
+            "key_metrics": [
+                {
+                    "name": "순현재가치 (NPV)",
+                    "value": f"{npv_public_krw:,}원",
+                    "interpretation": "공공 사업 수익성" if npv_public_krw > 0 else "수익성 개선 필요"
+                },
+                {
+                    "name": "내부수익률 (IRR)",
+                    "value": f"{irr_pct:.2f}%",
+                    "interpretation": "양호" if irr_pct >= 7.0 else "보통" if irr_pct >= 5.0 else "낮음"
+                },
+                {
+                    "name": "투자수익률 (ROI)",
+                    "value": f"{roi_pct:.2f}%",
+                    "interpretation": "양호" if roi_pct >= 7.0 else "보통" if roi_pct >= 5.0 else "낮음"
+                },
+                {
+                    "name": "사업성 등급",
+                    "value": grade,
+                    "interpretation": _grade_to_text(grade)
+                }
+            ],
+            "interpretation": {
+                "one_line": f"본 사업의 수익성 등급은 {grade}이며, IRR {irr_pct:.2f}%로 평가되었습니다.",
+                "detailed": f"순현재가치는 {npv_public_krw:,}원으로 {'양호한' if is_profitable else '개선이 필요한'} 수준입니다."
+            },
+            "lh_perspective": {
+                "status": "평가 완료",
+                "commentary": f"LH 매입임대 사업 기준상 {grade}등급에 해당하며, {'사업 추진 가능' if is_profitable else '추가 검토 필요'}합니다."
+            },
+            "fallback": False
+        }
+        
+        logger.info(f"✅ M5 HTML Adapter: NPV {npv_public_krw:,}, IRR {irr_pct:.2f}%, Grade {grade}")
+        return adapted
+        
+    except Exception as e:
+        logger.error(f"❌ M5 HTML Adapter failed: {e}")
+        return _get_m5_fallback()
+
+
+def adapt_m6_summary_for_html(canonical_summary: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    M6 (LH심사) HTML Adapter
+    
+    Input: canonical_summary["M6"]
+    Output: Normalized JSON for HTML rendering
+    """
+    try:
+        m6_data = canonical_summary.get("M6", {})
+        if not m6_data:
+            logger.warning("M6 data not found in canonical_summary")
+            return _get_m6_fallback()
+        
+        summary = m6_data.get("summary", {})
+        
+        # Extract core data
+        decision = summary.get("decision", "UNKNOWN")
+        total_score = summary.get("total_score", 0)
+        max_score = summary.get("max_score", 110)
+        grade = summary.get("grade", "N/A")
+        approval_probability_pct = summary.get("approval_probability_pct", 0)
+        
+        # Determine decision text and class
+        decision_mapping = {
+            "APPROVED": "승인",
+            "CONDITIONAL": "조건부 승인",
+            "REJECTED": "반려",
+            "REVIEW_REQUIRED": "추가 검토"
+        }
+        decision_text = decision_mapping.get(decision, decision)
+        decision_class = "success" if decision == "APPROVED" else "warning" if decision == "CONDITIONAL" else "error"
+        
+        # Build normalized structure
+        adapted = {
+            "module": "M6",
+            "title": "LH 내부 심사 예측 (M6)",
+            "review_result": {
+                "decision": decision_text,
+                "decision_class": decision_class,
+                "total_score": total_score,
+                "max_score": max_score,
+                "grade": grade,
+                "approval_probability": approval_probability_pct
+            },
+            "score_details": {
+                "score_ratio": f"{total_score}/{max_score}",
+                "percentage": f"{(total_score/max_score*100):.1f}%",
+                "grade_interpretation": _grade_to_text(grade)
+            },
+            "interpretation": {
+                "one_line": f"LH 내부 심사 결과 {decision_text}로 예측되며, 승인 확률은 {approval_probability_pct}%입니다.",
+                "detailed": f"총점 {total_score}점({max_score}점 만점)으로 {grade}등급에 해당하며, {'긍정적인' if approval_probability_pct >= 70 else '검토가 필요한'} 평가입니다."
+            },
+            "recommendation": {
+                "status": "검토 완료",
+                "next_step": "승인 조건 충족 확인" if decision == "CONDITIONAL" else "사업 추진" if decision == "APPROVED" else "보완 필요"
+            },
+            "fallback": False
+        }
+        
+        logger.info(f"✅ M6 HTML Adapter: {decision_text}, {total_score}점, {grade}등급, {approval_probability_pct}% 승인 확률")
+        return adapted
+        
+    except Exception as e:
+        logger.error(f"❌ M6 HTML Adapter failed: {e}")
+        return _get_m6_fallback()
+
+
+def _grade_to_text(grade: str) -> str:
+    """Convert grade to Korean text interpretation"""
+    grade_map = {
+        "A": "매우 우수",
+        "B": "우수",
+        "C": "보통",
+        "D": "미흡",
+        "F": "불량",
+        "N/A": "평가 불가"
+    }
+    return grade_map.get(grade, grade)
+
+
+def _get_m2_fallback() -> Dict[str, Any]:
+    """Fallback structure when M2 data is unavailable"""
+    return {
+        "module": "M2",
+        "title": "토지 가치 평가 (M2)",
+        "appraisal_result": {
+            "total_value": 0,
+            "value_range": {"low": 0, "high": 0},
+            "pyeong_price": 0,
+            "pyeong_price_range": {"low": 0, "high": 0},
+            "confidence": "없음",
+            "confidence_pct": 0
+        },
+        "analysis_basis": {
+            "transaction_count": 0,
+            "method": "분석 불가",
+            "data_source": "데이터 없음"
+        },
+        "interpretation": {
+            "one_line": "토지 평가를 위한 데이터가 부족합니다.",
+            "detailed": "거래 사례 데이터 확보 후 재분석이 필요합니다."
+        },
+        "lh_perspective": {
+            "status": "분석 불가",
+            "commentary": "데이터 부족으로 평가를 수행할 수 없습니다."
+        },
+        "fallback": True
+    }
+
+
+def _get_m5_fallback() -> Dict[str, Any]:
+    """Fallback structure when M5 data is unavailable"""
+    return {
+        "module": "M5",
+        "title": "사업성 분석 (M5)",
+        "financial_result": {
+            "npv": 0,
+            "irr": 0,
+            "roi": 0,
+            "grade": "N/A",
+            "profitability_status": "분석 불가",
+            "is_profitable": False
+        },
+        "key_metrics": [],
+        "interpretation": {
+            "one_line": "사업성 분석을 위한 데이터가 부족합니다.",
+            "detailed": "토지 평가 및 개발 규모 분석 완료 후 재분석이 필요합니다."
+        },
+        "lh_perspective": {
+            "status": "분석 불가",
+            "commentary": "데이터 부족으로 사업성을 평가할 수 없습니다."
+        },
+        "fallback": True
+    }
+
+
+def _get_m6_fallback() -> Dict[str, Any]:
+    """Fallback structure when M6 data is unavailable"""
+    return {
+        "module": "M6",
+        "title": "LH 내부 심사 예측 (M6)",
+        "review_result": {
+            "decision": "분석 불가",
+            "decision_class": "error",
+            "total_score": 0,
+            "max_score": 110,
+            "grade": "N/A",
+            "approval_probability": 0
+        },
+        "score_details": {
+            "score_ratio": "0/110",
+            "percentage": "0%",
+            "grade_interpretation": "평가 불가"
+        },
+        "interpretation": {
+            "one_line": "LH 심사 예측을 위한 데이터가 부족합니다.",
+            "detailed": "전체 분석 완료 후 심사 예측이 가능합니다."
+        },
+        "recommendation": {
+            "status": "분석 불가",
+            "next_step": "데이터 보완 필요"
+        },
+        "fallback": True
+    }
+
+
 def _get_m4_fallback() -> Dict[str, Any]:
     """Fallback structure when M4 data is unavailable"""
     return {

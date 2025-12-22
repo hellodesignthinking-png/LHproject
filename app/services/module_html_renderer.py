@@ -222,18 +222,308 @@ def _render_m4_html(data: Dict[str, Any]) -> str:
 
 
 def _render_m2_html(data: Dict[str, Any]) -> str:
-    """Render M2 (토지평가) HTML - Placeholder"""
-    return f"<html><body><h1>M2 Renderer (TODO)</h1><pre>{data}</pre></body></html>"
+    """Render M2 (토지평가) HTML"""
+    
+    if data.get("fallback", False):
+        return _render_fallback_html("M2", "토지 가치 평가", data)
+    
+    appraisal = data["appraisal_result"]
+    basis = data["analysis_basis"]
+    interpretation = data["interpretation"]
+    lh_perspective = data["lh_perspective"]
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{data['title']} - ZeroSite</title>
+        <style>
+            {_get_common_styles()}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header class="header">
+                <h1>{data['title']}</h1>
+                <p class="subtitle">Module {data['module']}</p>
+            </header>
+            
+            <section class="module-section">
+                <div class="key-result-card">
+                    <h2>토지 평가액: {appraisal['total_value']:,}원</h2>
+                    <p class="confidence">평가 신뢰도: {appraisal['confidence']} ({appraisal['confidence_pct']}%)</p>
+                    <div style="margin-top: 16px; font-size: 14px; color: #6B7280;">
+                        평가 범위: {appraisal['value_range']['low']:,}원 ~ {appraisal['value_range']['high']:,}원
+                    </div>
+                </div>
+                
+                <div class="key-metrics-grid" style="grid-template-columns: repeat(2, 1fr);">
+                    <div class="metric highlight">
+                        <span class="label">평당 단가</span>
+                        <span class="value">{appraisal['pyeong_price']:,}원/평</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">거래 사례</span>
+                        <span class="value">{basis['transaction_count']}건</span>
+                    </div>
+                </div>
+                
+                <div class="narrative">
+                    <h3>평가 요약</h3>
+                    <p>{interpretation['one_line']}</p>
+                    <p>{interpretation['detailed']}</p>
+                </div>
+                
+                <div class="ratio-section">
+                    <h3>평가 기준 정보</h3>
+                    <table class="ratio-table">
+                        <tr>
+                            <th>항목</th>
+                            <th>내용</th>
+                        </tr>
+                        <tr>
+                            <td>평가 방법</td>
+                            <td>{basis['method']}</td>
+                        </tr>
+                        <tr>
+                            <td>데이터 출처</td>
+                            <td>{basis['data_source']}</td>
+                        </tr>
+                        <tr>
+                            <td>거래 사례 수</td>
+                            <td>{basis['transaction_count']}건</td>
+                        </tr>
+                        <tr>
+                            <td>평가 신뢰도</td>
+                            <td>{appraisal['confidence']} ({appraisal['confidence_pct']}%)</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="policy-box success">
+                    <strong>LH 관점:</strong>
+                    {lh_perspective['commentary']}
+                </div>
+            </section>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return html
 
 
 def _render_m5_html(data: Dict[str, Any]) -> str:
-    """Render M5 (사업성) HTML - Placeholder"""
-    return f"<html><body><h1>M5 Renderer (TODO)</h1><pre>{data}</pre></body></html>"
+    """Render M5 (사업성) HTML"""
+    
+    if data.get("fallback", False):
+        return _render_fallback_html("M5", "사업성 분석", data)
+    
+    financial = data["financial_result"]
+    metrics = data["key_metrics"]
+    interpretation = data["interpretation"]
+    lh_perspective = data["lh_perspective"]
+    
+    # Build metrics rows
+    metrics_rows = ""
+    for metric in metrics:
+        metrics_rows += f"""
+        <tr>
+            <td>{metric['name']}</td>
+            <td style="font-weight: bold;">{metric['value']}</td>
+            <td>{metric['interpretation']}</td>
+        </tr>
+        """
+    
+    status_class = "success" if financial['is_profitable'] else "warning"
+    grade_class = f"grade-{financial['grade'].lower()}"
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{data['title']} - ZeroSite</title>
+        <style>
+            {_get_common_styles()}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header class="header">
+                <h1>{data['title']}</h1>
+                <p class="subtitle">Module {data['module']}</p>
+            </header>
+            
+            <section class="module-section">
+                <div class="key-result-card">
+                    <div class="badge {grade_class}">{financial['grade']}등급</div>
+                    <h2>사업성 평가: {financial['profitability_status']}</h2>
+                    <p class="confidence">순현재가치: {financial['npv']:,}원</p>
+                </div>
+                
+                <div class="key-metrics-grid">
+                    <div class="metric">
+                        <span class="label">순현재가치 (NPV)</span>
+                        <span class="value">{financial['npv']:,}원</span>
+                    </div>
+                    <div class="metric highlight">
+                        <span class="label">내부수익률 (IRR)</span>
+                        <span class="value">{financial['irr']:.2f}%</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">투자수익률 (ROI)</span>
+                        <span class="value">{financial['roi']:.2f}%</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">사업성 등급</span>
+                        <span class="value">{financial['grade']}</span>
+                    </div>
+                </div>
+                
+                <div class="narrative">
+                    <h3>사업성 분석 요약</h3>
+                    <p>{interpretation['one_line']}</p>
+                    <p>{interpretation['detailed']}</p>
+                </div>
+                
+                <div class="score-section">
+                    <h3>주요 재무 지표</h3>
+                    <table class="score-table">
+                        <thead>
+                            <tr>
+                                <th>지표명</th>
+                                <th>값</th>
+                                <th>평가</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {metrics_rows}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="policy-box {status_class}">
+                    <strong>LH 관점:</strong>
+                    {lh_perspective['commentary']}
+                </div>
+            </section>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return html
 
 
 def _render_m6_html(data: Dict[str, Any]) -> str:
-    """Render M6 (LH심사) HTML - Placeholder"""
-    return f"<html><body><h1>M6 Renderer (TODO)</h1><pre>{data}</pre></body></html>"
+    """Render M6 (LH심사) HTML"""
+    
+    if data.get("fallback", False):
+        return _render_fallback_html("M6", "LH 내부 심사 예측", data)
+    
+    review = data["review_result"]
+    score_details = data["score_details"]
+    interpretation = data["interpretation"]
+    recommendation = data["recommendation"]
+    
+    decision_class = review['decision_class']
+    grade_class = f"grade-{review['grade'].lower()}"
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{data['title']} - ZeroSite</title>
+        <style>
+            {_get_common_styles()}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header class="header">
+                <h1>{data['title']}</h1>
+                <p class="subtitle">Module {data['module']}</p>
+            </header>
+            
+            <section class="module-section">
+                <div class="key-result-card">
+                    <div class="badge {grade_class}">{review['grade']}등급</div>
+                    <h2>심사 예측 결과: {review['decision']}</h2>
+                    <p class="confidence">승인 확률: {review['approval_probability']}%</p>
+                </div>
+                
+                <div class="key-metrics-grid">
+                    <div class="metric">
+                        <span class="label">총점</span>
+                        <span class="value">{review['total_score']:.1f}점</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">만점</span>
+                        <span class="value">{review['max_score']}점</span>
+                    </div>
+                    <div class="metric highlight">
+                        <span class="label">득점률</span>
+                        <span class="value">{score_details['percentage']}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">승인 확률</span>
+                        <span class="value">{review['approval_probability']}%</span>
+                    </div>
+                </div>
+                
+                <div class="narrative">
+                    <h3>심사 결과 해석</h3>
+                    <p>{interpretation['one_line']}</p>
+                    <p>{interpretation['detailed']}</p>
+                </div>
+                
+                <div class="ratio-section">
+                    <h3>심사 상세</h3>
+                    <table class="ratio-table">
+                        <tr>
+                            <th>항목</th>
+                            <th>내용</th>
+                        </tr>
+                        <tr>
+                            <td>심사 결과</td>
+                            <td><strong>{review['decision']}</strong></td>
+                        </tr>
+                        <tr>
+                            <td>총점</td>
+                            <td>{score_details['score_ratio']}점</td>
+                        </tr>
+                        <tr>
+                            <td>등급</td>
+                            <td>{review['grade']} ({score_details['grade_interpretation']})</td>
+                        </tr>
+                        <tr>
+                            <td>승인 확률</td>
+                            <td>{review['approval_probability']}%</td>
+                        </tr>
+                        <tr>
+                            <td>다음 단계</td>
+                            <td>{recommendation['next_step']}</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="policy-box {decision_class}">
+                    <strong>권장 사항:</strong>
+                    {recommendation['next_step']} - {interpretation['detailed']}
+                </div>
+            </section>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return html
 
 
 def _render_fallback_html(module: str, title: str, data: Dict[str, Any]) -> str:

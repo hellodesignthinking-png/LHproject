@@ -334,20 +334,32 @@ async def preview_module_html(
         
         # ✅ STEP 3: Module-specific adapter
         from app.services.module_html_adapter import (
+            adapt_m2_summary_for_html,
             adapt_m3_summary_for_html,
-            adapt_m4_summary_for_html
+            adapt_m4_summary_for_html,
+            adapt_m5_summary_for_html,
+            adapt_m6_summary_for_html
         )
         
-        if module == "M3":
+        if module == "M2":
+            adapted_data = adapt_m2_summary_for_html(canonical_summary)
+            logger.info(f"✅ M2 adapted: {adapted_data.get('appraisal_result', {}).get('total_value')}")
+        elif module == "M3":
             adapted_data = adapt_m3_summary_for_html(canonical_summary)
             logger.info(f"✅ M3 adapted: {adapted_data.get('recommended_type', {}).get('name')}")
         elif module == "M4":
             adapted_data = adapt_m4_summary_for_html(canonical_summary)
             logger.info(f"✅ M4 adapted: {adapted_data.get('development_summary', {}).get('total_units')} units")
+        elif module == "M5":
+            adapted_data = adapt_m5_summary_for_html(canonical_summary)
+            logger.info(f"✅ M5 adapted: NPV={adapted_data.get('financial_result', {}).get('npv')}, IRR={adapted_data.get('financial_result', {}).get('irr')}")
+        elif module == "M6":
+            adapted_data = adapt_m6_summary_for_html(canonical_summary)
+            logger.info(f"✅ M6 adapted: {adapted_data.get('review_result', {}).get('decision')}")
         else:
-            # M2, M5, M6 - TODO: implement adapters
             return HTMLResponse(
-                content=f"<html><body><h1>Module {module}</h1><p>Adapter not yet implemented</p><pre>{canonical_summary.get(module, {})}</pre></body></html>"
+                content=f"<html><body><h1>Module {module}</h1><p>Unknown module</p></body></html>",
+                status_code=400
             )
         
         # ✅ STEP 4: Module-specific renderer
