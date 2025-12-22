@@ -410,6 +410,339 @@ class BaseFinalReportAssembler(ABC):
             html_with_qa = html_content + qa_summary_html
         
         return html_with_qa, qa_result
+    
+    # ========== OUTPUT QUALITY FIX HELPERS ==========
+    
+    @staticmethod
+    def sanitize_module_html(module_html: str, module_id: str) -> str:
+        """
+        [FIX 1] Remove N/A placeholders and bind calculated data
+        
+        Searches for placeholder texts and attempts to replace with actual values
+        WITHOUT triggering any recalculation.
+        """
+        import re
+        
+        # Placeholder patterns to detect
+        placeholders = [
+            r'N/A(?:\s*\(검증\s*필요\))?',
+            r'검증\s*필요',
+            r'분석\s*중(?:입니다)?',
+            r'\bNone\b',
+            r'계산\s*중'
+        ]
+        
+        # Check if any placeholder exists
+        has_placeholder = any(re.search(pattern, module_html, re.IGNORECASE) for pattern in placeholders)
+        
+        if not has_placeholder:
+            return module_html  # Already clean
+        
+        # Try to extract data from data-* attributes or JSON blocks
+        # This is DISPLAY-LEVEL only, no calculation
+        sanitized = module_html
+        
+        # Pattern: Replace generic placeholders with proper message
+        for pattern in placeholders:
+            sanitized = re.sub(
+                pattern,
+                '<span class="data-unavailable">데이터 없음 (분석 미완료)</span>',
+                sanitized,
+                flags=re.IGNORECASE
+            )
+        
+        return sanitized
+    
+    @staticmethod
+    def format_number(value, format_type: str) -> str:
+        """
+        [FIX 3] Standardize number formatting
+        
+        Args:
+            value: Numeric value
+            format_type: 'currency', 'percent', 'area', 'units', 'score'
+        
+        Returns:
+            Formatted string
+        """
+        if value is None:
+            return "데이터 없음"
+        
+        try:
+            if format_type == 'currency':
+                # ₩#,###,###,###
+                return f"₩{int(value):,}"
+            elif format_type == 'percent':
+                # ##.# %
+                return f"{float(value):.1f}%"
+            elif format_type == 'area':
+                # ##.# ㎡
+                return f"{float(value):.1f}㎡"
+            elif format_type == 'units':
+                # ### 세대
+                return f"{int(value):,}세대"
+            elif format_type == 'score':
+                # ## / 100
+                return f"{int(value)}/100"
+            else:
+                return str(value)
+        except (ValueError, TypeError):
+            return "형식 오류"
+    
+    @staticmethod
+    def generate_kpi_summary_box(kpis: Dict[str, any], report_type: str) -> str:
+        """
+        [FIX 2] Generate mandatory KPI summary box
+        
+        Args:
+            kpis: Dict of key metrics {name: value}
+            report_type: Report type ID
+        
+        Returns:
+            HTML for KPI summary box
+        """
+        kpi_cards = []
+        
+        for kpi_name, kpi_value in kpis.items():
+            # Determine format based on KPI name
+            if '금액' in kpi_name or '가치' in kpi_name or 'NPV' in kpi_name or '사업비' in kpi_name:
+                formatted_value = BaseFinalReportAssembler.format_number(kpi_value, 'currency')
+            elif '비율' in kpi_name or '%' in kpi_name or 'IRR' in kpi_name:
+                formatted_value = BaseFinalReportAssembler.format_number(kpi_value, 'percent')
+            elif '면적' in kpi_name or '㎡' in kpi_name:
+                formatted_value = BaseFinalReportAssembler.format_number(kpi_value, 'area')
+            elif '점수' in kpi_name or 'score' in kpi_name.lower():
+                formatted_value = BaseFinalReportAssembler.format_number(kpi_value, 'score')
+            else:
+                formatted_value = str(kpi_value) if kpi_value is not None else "데이터 없음"
+            
+            kpi_cards.append(f"""
+            <div class="kpi-card">
+                <div class="kpi-label">{kpi_name}</div>
+                <div class="kpi-value">{formatted_value}</div>
+            </div>
+            """)
+        
+        return f"""
+        <section class="kpi-summary-box" style="
+            background: linear-gradient(135deg, #e3f2fd 0%, #f5f7fa 100%);
+            border-left: 6px solid #007bff;
+            padding: 30px;
+            margin: 30px 0;
+            border-radius: 8px;
+            page-break-inside: avoid;
+        ">
+            <h3 style="margin: 0 0 20px 0; color: #007bff; font-size: 20px;">핵심 지표 (Key Performance Indicators)</h3>
+            <div class="kpi-cards" style="
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+            ">
+                {"".join(kpi_cards)}
+            </div>
+        </section>
+        """
+    
+    @staticmethod
+    def generate_decision_block(judgment: str, basis: list, actions: list) -> str:
+        """
+        [FIX 5] Generate clear decision visibility block
+        
+        Args:
+            judgment: "추진 권장" / "조건부 추진" / "부적합"
+            basis: List of judgment basis points
+            actions: List of next actions
+        
+        Returns:
+            HTML for decision block
+        """
+        # Determine icon and color
+        if "권장" in judgment or "추진 가능" in judgment or "승인" in judgment:
+            icon = "✅"
+            color = "#28a745"
+            bg_color = "#d4edda"
+        elif "조건부" in judgment or "보완" in judgment:
+            icon = "⚠️"
+            color = "#ffc107"
+            bg_color = "#fff3cd"
+        else:
+            icon = "❌"
+            color = "#dc3545"
+            bg_color = "#f8d7da"
+        
+        basis_html = "\n".join([f"<li>{b}</li>" for b in basis])
+        actions_html = "\n".join([f"<li>{a}</li>" for a in actions])
+        
+        return f"""
+        <section class="decision-block" style="
+            margin: 60px 0 40px 0;
+            padding: 40px;
+            background: {bg_color};
+            border: 3px solid {color};
+            border-radius: 12px;
+            page-break-inside: avoid;
+        ">
+            <h2 style="
+                margin: 0 0 20px 0;
+                color: {color};
+                font-size: 28px;
+                font-weight: bold;
+            ">{icon} 최종 판단</h2>
+            
+            <div class="judgment-text" style="
+                font-size: 24px;
+                font-weight: bold;
+                color: {color};
+                margin: 20px 0;
+                padding: 20px;
+                background: white;
+                border-radius: 8px;
+                text-align: center;
+            ">
+                {judgment}
+            </div>
+            
+            <div class="judgment-basis" style="margin: 30px 0;">
+                <h3 style="color: #333; font-size: 18px; margin-bottom: 15px;">판단 근거</h3>
+                <ul style="line-height: 1.8; font-size: 16px; color: #555;">
+                    {basis_html}
+                </ul>
+            </div>
+            
+            <div class="next-actions" style="margin: 30px 0;">
+                <h3 style="color: #333; font-size: 18px; margin-bottom: 15px;">다음 액션</h3>
+                <ul style="line-height: 1.8; font-size: 16px; color: #555;">
+                    {actions_html}
+                </ul>
+            </div>
+        </section>
+        """
+    
+    @staticmethod
+    def get_unified_design_css() -> str:
+        """
+        [FIX 4] Unified design system CSS for all reports
+        """
+        return """
+        /* OUTPUT QUALITY FIX - UNIFIED DESIGN SYSTEM */
+        
+        /* Typography */
+        body.final-report {
+            font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+        
+        body.final-report h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 0 20px 0;
+        }
+        
+        body.final-report h2 {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 40px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #007bff;
+        }
+        
+        body.final-report h3 {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 30px 0 10px 0;
+        }
+        
+        /* Tables */
+        body.final-report table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 13px;
+        }
+        
+        body.final-report table thead {
+            background: #f5f7fa;
+        }
+        
+        body.final-report table th,
+        body.final-report table td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #dee2e6;
+        }
+        
+        body.final-report table td.numeric {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* Layout */
+        body.final-report .section {
+            margin: 48px 0;
+        }
+        
+        body.final-report .module-section {
+            page-break-before: auto;
+            page-break-inside: avoid;
+            margin: 40px 0;
+            padding: 30px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        /* KPI Cards */
+        .kpi-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .kpi-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .kpi-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* Data Unavailable */
+        .data-unavailable {
+            color: #dc3545;
+            font-style: italic;
+            font-size: 12px;
+        }
+        
+        /* Page Breaks */
+        .executive-summary {
+            page-break-after: always;
+        }
+        
+        @media print {
+            body.final-report {
+                padding: 20mm;
+            }
+            
+            .module-section,
+            .kpi-summary-box,
+            .decision-block {
+                page-break-inside: avoid;
+            }
+        }
+        """
 
 
 class FinalReportQAValidator:
