@@ -1285,10 +1285,63 @@ def _calculate_qa_status(data: FinalReportData) -> Dict[str, str]:
 # 메인 엔트리 포인트
 # ============================================================================
 
+def _apply_preview_truncation(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    v4.3: Preview용 데이터 축약 (분석화면용)
+    
+    규칙:
+    - 리스트는 상위 3개만 유지
+    - 긴 텍스트는 200자 제한
+    - 데이터 구조와 필드명은 그대로 유지
+    - 핵심 수치 데이터는 그대로 유지
+    
+    Args:
+        data: 전체 보고서 데이터
+    
+    Returns:
+        축약된 보고서 데이터
+    """
+    truncated = data.copy()
+    
+    # 리스트 필드 축약 (상위 3개만)
+    list_fields = [
+        'approval_barriers', 'key_requirements', 'housing_types',
+        'comparable_sales', 'zoning_restrictions', 'key_risks',
+        'next_actions', 'recommendations', 'policy_elements'
+    ]
+    
+    for field in list_fields:
+        if field in truncated and isinstance(truncated[field], list):
+            truncated[field] = truncated[field][:3]
+    
+    # 텍스트 필드 축약 (200자 제한)
+    text_fields = [
+        'executive_summary', 'site_overview', 'policy_overview',
+        'land_analysis_summary', 'financial_overview', 'risk_summary'
+    ]
+    
+    for field in text_fields:
+        if field in truncated and isinstance(truncated[field], str):
+            if len(truncated[field]) > 200:
+                truncated[field] = truncated[field][:200] + '...'
+    
+    # 중첩된 딕셔너리 내 리스트/텍스트 축약
+    for key, value in truncated.items():
+        if isinstance(value, dict):
+            for sub_key, sub_value in value.items():
+                if isinstance(sub_value, list) and len(sub_value) > 3:
+                    truncated[key][sub_key] = sub_value[:3]
+                elif isinstance(sub_value, str) and len(sub_value) > 200:
+                    truncated[key][sub_key] = sub_value[:200] + '...'
+    
+    return truncated
+
+
 def assemble_final_report(
     report_type: str,
     canonical_data: Dict[str, Any],
-    context_id: str
+    context_id: str,
+    is_preview: bool = False
 ) -> Dict[str, Any]:
     """
     최종보고서 데이터 조립 (메인 진입점)
@@ -1297,6 +1350,7 @@ def assemble_final_report(
         report_type: 보고서 유형 (all_in_one, landowner_summary, ...)
         canonical_data: get_frozen_context() 결과
         context_id: 분석 컨텍스트 ID
+        is_preview: True일 경우 분석화면용 요약본 생성 (v4.3)
     
     Returns:
         보고서 유형별 데이터 딕셔너리
@@ -1317,4 +1371,10 @@ def assemble_final_report(
     if not assembler:
         raise ValueError(f"Unknown report type: {report_type}")
     
-    return assembler(data)
+    report_data = assembler(data)
+    
+    # v4.3: Preview 모드일 경우 데이터 축약
+    if is_preview:
+        report_data = _apply_preview_truncation(report_data)
+    
+    return report_data
