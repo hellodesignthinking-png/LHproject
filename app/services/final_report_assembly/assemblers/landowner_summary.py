@@ -132,7 +132,12 @@ class LandownerSummaryAssembler(BaseFinalReportAssembler):
     
     def _extract_module_data(self, module_htmls: Dict[str, str]) -> Dict:
         """
-        Extract minimal data from module HTML for narrative generation
+        [FIX 1, 2, 3] Extract data from module HTML with strict consistency rules:
+        
+        1. NEVER recalculate - extract EXACT displayed values
+        2. Preserve ALL core M3/M4 data (even in summary reports)
+        3. Apply terminology normalization for consistency
+        4. Match units and rounding from source module
         
         NOTE: This is NOT calculation - just extracting displayed values
         """

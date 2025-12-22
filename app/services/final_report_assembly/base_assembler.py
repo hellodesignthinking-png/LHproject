@@ -816,6 +816,85 @@ class BaseFinalReportAssembler(ABC):
         """
 
 
+
+    @staticmethod
+    def normalize_terminology(text: str) -> str:
+        """
+        [FIX 5] Terminology Lock - Enforce canonical terms
+        
+        Replaces all synonym variations with canonical terms to ensure
+        consistency across module HTML, final reports, and narratives.
+        
+        Args:
+            text: Input text with potentially inconsistent terms
+            
+        Returns:
+            Text with normalized terminology
+        """
+        if not text:
+            return text
+        
+        # Canonical term mappings
+        replacements = {
+            # Household count variations
+            r'공급\s*세대': '총 세대수',
+            r'전체\s*세대': '총 세대수',
+            r'세대\s*수(?![대수])': '총 세대수',  # Negative lookahead to avoid matching 세대수익률
+            
+            # Financial metric variations
+            r'순현재가(?![치])': '순현재가치(NPV)',
+            r'순현재가치(?!\(NPV\))': '순현재가치(NPV)',
+            r'(?<![A-Z])NPV(?![)])': 'NPV',
+            r'내부수익률(?!\(IRR\))': '내부수익률(IRR)',
+            r'(?<![A-Z])IRR(?![)])': 'IRR',
+            
+            # Decision terminology
+            r'조건부(?!\s승인)': '조건부 승인',
+            r'추진\s*가능': '추진 권장',
+        }
+        
+        normalized = text
+        for pattern, replacement in replacements.items():
+            normalized = re.sub(pattern, replacement, normalized)
+        
+        return normalized
+
+
+
+    @staticmethod
+    def generate_source_reference(module_id: str, module_name: str = None) -> str:
+        """
+        [FIX 6] Module → Final Cross Reference Clarity
+        
+        Generate source reference box to clarify data origin and prevent
+        the impression that final reports "recalculated" module results.
+        
+        Args:
+            module_id: Module ID (e.g., "M5")
+            module_name: Optional display name (e.g., "사업성 분석")
+            
+        Returns:
+            HTML string for source reference box
+        """
+        # Default module names
+        default_names = {
+            "M2": "토지평가",
+            "M3": "주택유형 선정",
+            "M4": "건축규모 분석",
+            "M5": "사업성 분석",
+            "M6": "LH 심사"
+        }
+        
+        display_name = module_name or default_names.get(module_id, module_id)
+        
+        return f"""
+        <div class="source-reference">
+            <span class="source-icon">📌</span>
+            <span class="source-text">본 섹션은 {module_id} {display_name} 결과를 기반으로 구성되었습니다.</span>
+        </div>
+        """
+
+
     @staticmethod
     def ensure_numeric_anchor(narrative_text: str, modules_data: Dict) -> str:
         """
