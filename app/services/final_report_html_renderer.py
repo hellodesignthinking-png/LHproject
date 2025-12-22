@@ -392,6 +392,43 @@ def format_generic(value: Optional[Any], suffix: str = "") -> str:
     return f'<span class="data-value">{value}{suffix}</span>'
 
 
+def render_section_error_placeholder(section_name: str, error: Exception, show_debug: bool = False) -> str:
+    """섹션 렌더링 실패 시 대체 HTML
+    
+    Args:
+        section_name: 섹션 이름 (예: "재무 분석", "리스크 평가")
+        error: 발생한 예외
+        show_debug: 개발자용 디버그 정보 표시 여부
+    
+    Returns:
+        에러 placeholder HTML
+    """
+    debug_info = f"""
+    <div style="margin-top: 12px; padding: 12px; background: #FEF2F2; border-left: 3px solid #EF4444; font-size: 12px; color: #991B1B; font-family: monospace;">
+        <strong>🔧 개발자 정보:</strong><br>
+        오류 타입: {type(error).__name__}<br>
+        오류 메시지: {str(error)[:200]}
+    </div>
+    """ if show_debug else ""
+    
+    return f"""
+    <div style="padding: 24px; margin: 20px 0; background: #FFFBEB; border: 2px dashed #F59E0B; border-radius: 8px;">
+        <div style="text-align: center; margin-bottom: 16px;">
+            <span style="font-size: 48px;">⚠️</span>
+        </div>
+        <div style="text-align: center; margin-bottom: 12px;">
+            <strong style="font-size: 18px; color: #92400E;">이 섹션은 현재 생성되지 않았습니다</strong>
+        </div>
+        <div style="text-align: center; color: #78350F; line-height: 1.6;">
+            <strong>섹션명:</strong> {section_name}<br>
+            <strong>원인:</strong> 데이터 부족 또는 처리 오류<br>
+            <strong>권장사항:</strong> 모든 M2-M6 분석을 완료한 후 다시 생성해주세요.
+        </div>
+        {debug_info}
+    </div>
+    """
+
+
 def render_data_shortage_warning(missing_modules: list) -> str:
     """데이터 부족 경고 박스"""
     if not missing_modules:
@@ -3741,12 +3778,14 @@ def render_final_report_html(report_type: str, data: Dict[str, Any]) -> str:
     """
     최종보고서 HTML 렌더링 (메인 진입점)
     
+    🔥 FAIL-SAFE: 섹션별 오류 발생 시에도 나머지 보고서는 정상 생성
+    
     Args:
         report_type: 보고서 유형
         data: assemble_final_report() 결과
     
     Returns:
-        완전한 HTML 문자열
+        완전한 HTML 문자열 (일부 섹션 실패 시에도 반환)
     """
     
     renderers = {
@@ -3760,6 +3799,53 @@ def render_final_report_html(report_type: str, data: Dict[str, Any]) -> str:
     
     renderer = renderers.get(report_type)
     if not renderer:
+        # 알 수 없는 보고서 타입인 경우만 예외 발생
         raise ValueError(f"Unknown report type: {report_type}")
     
-    return renderer(data)
+    try:
+        # 정상 렌더링 시도
+        return renderer(data)
+    except Exception as e:
+        # 전체 렌더링 실패 시 - 최소한의 오류 페이지 반환
+        report_names = {
+            "all_in_one": "종합 최종보고서",
+            "landowner_summary": "토지주용 요약보고서",
+            "lh_technical": "LH 기술검토 보고서",
+            "financial_feasibility": "재무타당성 보고서",
+            "quick_check": "빠른 검토 보고서",
+            "presentation": "프레젠테이션용 보고서"
+        }
+        
+        return f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>보고서 생성 오류</title>
+            <style>
+                body {{
+                    font-family: 'Pretendard', sans-serif;
+                    padding: 40px;
+                    background: #F9FAFB;
+                }}
+                .error-container {{
+                    max-width: 800px;
+                    margin: 0 auto;
+                    background: white;
+                    padding: 40px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="error-container">
+                {render_section_error_placeholder(
+                    report_names.get(report_type, report_type),
+                    e,
+                    show_debug=True
+                )}
+            </div>
+        </body>
+        </html>
+        """
