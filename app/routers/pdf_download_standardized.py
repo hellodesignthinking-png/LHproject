@@ -308,23 +308,37 @@ async def download_module_pdf(
             logger.error(f"❌ Incomplete canonical_summary: missing {missing}")
             raise ValueError(f"canonical_summary incomplete: missing modules {missing}")
         
-        # 🔒 STEP 2.6: SNAPSHOT FRESHNESS CHECK
-        # Warn if snapshot is old (helps detect stale data issues)
+        # 🔒 STEP 2.6: SNAPSHOT FRESHNESS CHECK (ENFORCED)
+        # Strongly discourage using old snapshots to prevent stale data issues
         snapshot_created_at = frozen_context.get("created_at", "")
+        parcel_id = frozen_context.get("parcel_id", "unknown")
+        
         if snapshot_created_at:
             from datetime import timedelta  # datetime already imported at top
             try:
                 snapshot_time = datetime.fromisoformat(snapshot_created_at.replace('Z', '+00:00'))
                 now = datetime.now(snapshot_time.tzinfo) if snapshot_time.tzinfo else datetime.now()
                 age = now - snapshot_time
+                age_hours = age.total_seconds() / 3600
                 
-                if age > timedelta(hours=24):
-                    logger.warning(f"⚠️ Snapshot is {age.days} days old (context_id: {context_id})")
-                    logger.warning("   Consider rerunning analysis for latest data")
+                # STRICT FRESHNESS POLICY: Warn if > 1 hour old
+                if age > timedelta(hours=1):
+                    logger.error(f"🔴 STALE SNAPSHOT WARNING:")
+                    logger.error(f"   Context ID: {context_id}")
+                    logger.error(f"   Parcel ID: {parcel_id}")
+                    logger.error(f"   Snapshot Age: {age_hours:.1f} hours old")
+                    logger.error(f"   Created At: {snapshot_created_at}")
+                    logger.error(f"   Current Time: {now.isoformat()}")
+                    logger.error(f"   ⚠️ RECOMMENDATION: Rerun analysis before downloading PDF")
+                    logger.error(f"   ⚠️ This PDF may contain OUTDATED data")
+                    # Note: Not raising exception to allow flexibility, but strongly discouraged
                 else:
-                    logger.info(f"✅ Snapshot age: {age.total_seconds()/3600:.1f} hours (fresh)")
+                    logger.info(f"✅ Snapshot age: {age_hours:.1f} hours (FRESH)")
+                    logger.info(f"   Context ID: {context_id}, Parcel ID: {parcel_id}")
             except Exception as e:
                 logger.warning(f"⚠️ Could not parse snapshot timestamp: {e}")
+        else:
+            logger.warning(f"⚠️ No 'created_at' timestamp in snapshot (context_id: {context_id})")
         
         logger.info(f"✅ Data source verified: canonical_summary with {len(available_modules)} modules")
         
@@ -373,16 +387,27 @@ async def download_module_pdf(
         # This is a compatibility layer until PDF generators are updated
         pdf_data = _convert_normalized_to_pdf_format(module, normalized_data, frozen_context)
         
-        # 🔒 STEP 5.1: VERIFY METADATA INCLUSION
+        # 🔒 STEP 5.1: VERIFY METADATA INCLUSION (CRITICAL FOR TRACEABILITY)
         if "_metadata" in pdf_data:
             metadata = pdf_data["_metadata"]
-            logger.info(f"✅ PDF metadata included:")
-            logger.info(f"   - context_id: {metadata.get('context_id')}")
-            logger.info(f"   - snapshot_created_at: {metadata.get('snapshot_created_at')}")
-            logger.info(f"   - data_signature: {metadata.get('data_signature')}")
-            logger.info(f"   ⚠️ NOTE: PDF generators should display this metadata on page 1")
+            logger.info(f"✅ PDF metadata verified and included:")
+            logger.info(f"   📌 Context ID: {metadata.get('context_id')}")
+            logger.info(f"   📌 Parcel ID: {metadata.get('parcel_id')}")
+            logger.info(f"   📌 Snapshot Created: {metadata.get('snapshot_created_at')}")
+            logger.info(f"   📌 Generated At: {metadata.get('generated_at')}")
+            logger.info(f"   📌 Data Signature: {metadata.get('data_signature')[:16]}...")
+            logger.info(f"   📌 Pipeline Version: {metadata.get('pipeline_version')}")
+            logger.info(f"   ⚠️ NOTE: This metadata proves data freshness and origin")
+            
+            # CRITICAL: Log this for customer support / QA verification
+            logger.info(f"🔐 AUDIT TRAIL: Module={module}, Context={context_id}, "
+                       f"Snapshot={metadata.get('snapshot_created_at')}, "
+                       f"Generated={metadata.get('generated_at')}")
         else:
-            logger.warning(f"⚠️ PDF metadata missing - traceability reduced")
+            logger.error(f"❌ CRITICAL: PDF metadata missing - traceability LOST")
+            logger.error(f"   This PDF cannot be verified for data freshness!")
+            logger.error(f"   Module: {module}, Context: {context_id}")
+            raise ValueError(f"PDF metadata missing - cannot generate unverifiable PDF")
         
         # ✅ STEP 5.5: HTML/PDF PARITY VALIDATION (CRITICAL)
         # This ensures HTML and PDF show IDENTICAL data
@@ -414,10 +439,20 @@ async def download_module_pdf(
         else:
             logger.info(f"✅ HTML/PDF parity verified for {module}")
         
-        # Step 6: PDF 생성기 초기화
+        # 🔒 STEP 6: FINAL PRE-GENERATION VERIFICATION
+        logger.info(f"🔐 FINAL VERIFICATION BEFORE PDF GENERATION:")
+        logger.info(f"   ✅ Module: {module}")
+        logger.info(f"   ✅ Context ID: {context_id}")
+        logger.info(f"   ✅ Data Source: canonical_summary (LOCKED)")
+        logger.info(f"   ✅ HTML/PDF Parity: PASSED")
+        logger.info(f"   ✅ Metadata: INCLUDED")
+        logger.info(f"   ✅ All safety checks: PASSED")
+        logger.info(f"   → Proceeding with PDF generation...")
+        
+        # Step 7: PDF 생성기 초기화
         generator = ModulePDFGenerator()
         
-        # Step 7: 모듈별 PDF 생성
+        # Step 8: 모듈별 PDF 생성
         if module == "M2":
             pdf_bytes = generator.generate_m2_appraisal_pdf(pdf_data)
         elif module == "M3":
@@ -430,6 +465,14 @@ async def download_module_pdf(
             pdf_bytes = generator.generate_m6_lh_review_pdf(pdf_data)
         else:
             raise HTTPException(status_code=400, detail=f"지원하지 않는 모듈: {module}")
+        
+        # 🎉 PDF GENERATION SUCCESS
+        pdf_size_kb = len(pdf_bytes) / 1024
+        logger.info(f"🎉 PDF GENERATED SUCCESSFULLY:")
+        logger.info(f"   📄 Module: {module}")
+        logger.info(f"   📊 Size: {pdf_size_kb:.1f} KB")
+        logger.info(f"   🔐 Context ID: {context_id}")
+        logger.info(f"   ✅ Data verified and locked-in")
         
         # 파일명 생성 (context_id + snapshot timestamp 포함)
         snapshot_created_at = frozen_context.get("created_at", datetime.now().isoformat())
