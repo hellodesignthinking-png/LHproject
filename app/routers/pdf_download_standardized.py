@@ -276,20 +276,41 @@ async def download_module_pdf(
     try:
         logger.info(f"📄 PDF 다운로드 요청: module={module}, context_id={context_id}")
         
+        # 🔴 STEP 0: STRICT VALIDATION - context_id is MANDATORY
+        if not context_id or context_id.strip() == "":
+            logger.error("❌ PDF generation attempted without context_id")
+            raise HTTPException(
+                status_code=400,
+                detail="PDF generation requires explicit context_id. "
+                       "No implicit context or 'latest' snapshot allowed. "
+                       "This prevents old/cached data from being served."
+            )
+        
         # ✅ CRITICAL FIX: Load SAME data source as HTML preview
-        # Step 1: Load frozen context from DB
+        # Step 1: Load frozen context from DB (ONLY DATA SOURCE ALLOWED)
         frozen_context = context_storage.get_frozen_context(context_id)
         if not frozen_context:
             logger.error(f"❌ Context not found: {context_id}")
             raise FileNotFoundError(f"Context {context_id} not found")
         
-        # Step 2: Extract canonical_summary
+        # Step 2: Extract canonical_summary (SINGLE SOURCE OF TRUTH)
         canonical_summary = frozen_context.get("canonical_summary", {})
         if not canonical_summary:
             logger.error(f"❌ canonical_summary not found in context: {context_id}")
             raise ValueError("canonical_summary missing in context")
         
-        # Step 3: Use SAME adapters as HTML preview
+        # 🔒 STEP 2.5: VERIFY CANONICAL SUMMARY INTEGRITY
+        required_modules = {"M2", "M3", "M4", "M5", "M6"}
+        available_modules = set(canonical_summary.keys())
+        
+        if not required_modules.issubset(available_modules):
+            missing = required_modules - available_modules
+            logger.error(f"❌ Incomplete canonical_summary: missing {missing}")
+            raise ValueError(f"canonical_summary incomplete: missing modules {missing}")
+        
+        logger.info(f"✅ Data source verified: canonical_summary with {len(available_modules)} modules")
+        
+        # Step 3: Use SAME adapters as HTML preview (NO OTHER DATA SOURCE ALLOWED)
         from app.services.module_html_adapter import (
             adapt_m2_summary_for_html,
             adapt_m3_summary_for_html,
@@ -298,7 +319,7 @@ async def download_module_pdf(
             adapt_m6_summary_for_html
         )
         
-        # Step 4: Get normalized data (SAME as HTML)
+        # Step 4: Get normalized data (SAME as HTML - THIS IS THE LOCK)
         if module == "M2":
             normalized_data = adapt_m2_summary_for_html(canonical_summary)
         elif module == "M3":
@@ -336,9 +357,15 @@ async def download_module_pdf(
             ])
             logger.error(f"❌ HTML/PDF parity check FAILED for {module}:\n{error_details}")
             
-            # ⚠️ WARNING MODE: Log error but continue generation
-            # In production, consider: raise HTTPException(500, parity_result.message)
-            logger.warning(f"⚠️ Continuing PDF generation despite parity check failure")
+            # 🔴 BLOCKING MODE: Stop PDF generation on data mismatch
+            # This prevents users from receiving incorrect PDFs
+            raise HTTPException(
+                status_code=500,
+                detail=f"[PARITY BLOCKED] HTML/PDF data mismatch detected for {module}. "
+                       f"This is a critical error preventing incorrect data from being distributed. "
+                       f"Mismatches: {len(parity_result.mismatches)} fields. "
+                       f"Contact support with context_id: {context_id}"
+            )
         else:
             logger.info(f"✅ HTML/PDF parity verified for {module}")
         
