@@ -17,7 +17,45 @@ from ..base_assembler import BaseFinalReportAssembler, get_report_brand_class
 from ..narrative_generator import NarrativeGeneratorFactory
 from ..report_type_configs import REPORT_TYPE_CONFIGS, get_mandatory_kpi, get_critical_kpi
 
-# [Phase 3.10 Final Lock] Extract KPI using new extractor
+# [Phase 3.10 Final Lock + vPOST-FINAL] KPI Extractor with operational safety
+from ..kpi_extractor import (
+    KPIExtractor, 
+    validate_mandatory_kpi, 
+    validate_kpi_with_safe_gate,
+    log_kpi_pipeline, 
+    FinalReportAssemblyError
+)
+
+# [Phase 3.10] Hard-Fail KPI Binding
+
+
+logger = logging.getLogger(__name__)
+
+
+class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
+    """Financial Feasibility Report Assembler"""
+    
+    def __init__(self, context_id: str):
+        super().__init__(context_id)
+        self.report_type = "financial_feasibility"
+        self.config = REPORT_TYPE_CONFIGS[self.report_type]
+        self.narrative = NarrativeGeneratorFactory.get(self.report_type)
+    
+    def get_required_modules(self) -> List[Literal["M2", "M3", "M4", "M5", "M6"]]:
+        return ["M2", "M4", "M5"]
+    
+    def assemble(self) -> Dict[str, str]:
+        """Assemble Financial Feasibility Report"""
+        m2_html_raw = self.load_module_html("M2")
+        m4_html_raw = self.load_module_html("M4")
+        m5_html_raw = self.load_module_html("M5")
+
+        # [FIX 1] Sanitize module HTML (remove N/A placeholders)
+        m2_html = self.sanitize_module_html(m2_html_raw, "M2")
+        m4_html = self.sanitize_module_html(m4_html_raw, "M4")
+        m5_html = self.sanitize_module_html(m5_html_raw, "M5")
+                
+        # [Phase 3.10 Final Lock + vPOST-FINAL] Extract KPI using SAFE-GATE
         mandatory_kpi = get_mandatory_kpi(self.report_type)
         critical_kpi = get_critical_kpi(self.report_type)
         modules_data = self._extract_module_data(
@@ -53,8 +91,49 @@ from ..report_type_configs import REPORT_TYPE_CONFIGS, get_mandatory_kpi, get_cr
         
         # Generate data completeness panel if soft KPIs are missing
         data_completeness_panel = self.generate_data_completeness_panel(soft_missing)
+    
+    def _extract_module_data(self, module_htmls: Dict[str, str], mandatory_kpi: Dict[str, List[str]]) -> Dict:
+        """
+        [Phase 3.10 Final Lock] Extract module data using KPIExtractor
         
-        # Generate KPI summary box from modules_data# [FIX 2] Generate KPI Summary Box (Mandatory for financial_feasibility)
+        Args:
+            module_htmls: Dict of module_id -> HTML string
+            mandatory_kpi: Dict of module_id -> required KPI keys
+            
+        Returns:
+            Dict of module_id -> extracted KPI data
+        """
+        modules_data = {}
+        
+        for module_id, html in module_htmls.items():
+            if not html or html.strip() == "":
+                logger.warning(f"[{module_id}] Empty HTML")
+                modules_data[module_id] = {"status": "empty", "_complete": False}
+                continue
+            
+            # Get required keys for this module
+            required_keys = mandatory_kpi.get(module_id, [])
+            
+            try:
+                # Extract KPI using new extractor (SINGLE ENTRY POINT)
+                kpi_data = KPIExtractor.extract_module_kpi(html, module_id, required_keys)
+                modules_data[module_id] = kpi_data
+                
+                # Log pipeline for audit trail
+                log_kpi_pipeline(self.report_type, self.context_id, module_id, kpi_data)
+                
+            except FinalReportAssemblyError as e:
+                logger.error(f"[{module_id}] KPI extraction failed: {e}")
+                modules_data[module_id] = {
+                    "status": "extraction_failed",
+                    "_complete": False,
+                    "error": str(e)
+                }
+        
+        return modules_data
+
+        
+        # [FIX 2] Generate KPI Summary Box (Mandatory for financial_feasibility)
         kpis = {
             "총 토지 감정가": modules_data.get("M2", {}).get("land_value"),
             "순현재가치 (NPV)": modules_data.get("M5", {}).get("npv"),
@@ -79,6 +158,7 @@ from ..report_type_configs import REPORT_TYPE_CONFIGS, get_mandatory_kpi, get_cr
         
         sections = [
             self._generate_cover_page(),
+            data_completeness_panel,
             kpi_summary,  # KPI at top
             exec_summary,
             self._wrap_module_html("M2", m2_html),
