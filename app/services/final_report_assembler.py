@@ -2221,26 +2221,86 @@ def assemble_quick_check(data: FinalReportData) -> Dict[str, Any]:
     if not immediate_concerns:
         immediate_concerns = ["특이사항 없음 - 정상 진행 가능"]
     
-    # ========== ADDITIONAL SECTIONS FOR 50+ PAGES ==========
+    # ========== ADDITIONAL SECTIONS FOR 50+ PAGES (v4.3 FIX 2+3 적용) ==========
     # Section 4-6: 상세 평가 항목
+    
+    # Section 4: 토지 적합성 (FIX 2+3 적용)
+    land_base = get_conservative_narrative(
+        "토지 적합성",
+        "LH 기준 70점 이상",
+        "입지, 용도지역, 접근성 종합 평가"
+    ) if not data.m2 else f"""
+    <p style="line-height: 1.8; margin: 16px 0;">
+        <strong>토지 가치:</strong> {data.m2.land_value_total_krw:,}원 확인됨
+    </p>
+    <p style="line-height: 1.8; margin: 16px 0;">
+        평가 신뢰도 {data.m2.confidence_pct}%로 {'높은' if data.m2.confidence_pct >= 80 else '적정한'} 수준입니다.
+    </p>
+    """
+    
+    land_assessment = ensure_minimum_paragraphs(
+        section_content=land_base,
+        section_purpose="신속한 GO/NO-GO 판단을 위해 토지의 LH 사업 적합성을 즉시 평가",
+        data_interpretation=f"현재 토지는 {'LH 매입임대 사업에 적합한 입지' if data.m2 and data.m2.confidence_pct >= 70 else '추가 검토가 필요한 입지'}로 판단됩니다.",
+        assumptions="Quick Check는 5분 내 의사결정을 목표로 하므로, 세부 항목보다는 핵심 적합성 여부에 집중합니다.",
+        decision_implications="토지 적합성이 확인되면 즉시 상세 분석 단계로 진행 가능하며, 부적합 시 대안 검토가 우선입니다."
+    )
+    
+    # Section 5: 개발 가능성 (FIX 2+3 적용)
+    dev_base = get_conservative_narrative(
+        "개발 가능성",
+        "법적 제한 없음",
+        "인허가 가능 여부"
+    ) if not data.m4 else f"""
+    <p style="line-height: 1.8; margin: 16px 0;">
+        <strong>최대 개발 규모:</strong> {data.m4.incentive_units or data.m4.legal_units}세대
+    </p>
+    """
+    
+    development_feasibility = ensure_minimum_paragraphs(
+        section_content=dev_base,
+        section_purpose="법적·물리적 개발 가능성을 신속히 확인하여 사업 추진 여부 판단",
+        data_interpretation=f"{'개발 규모가 확정되어' if data.m4 else '개발 규모 확정이 필요하며'} 사업 추진의 {'기본 조건이 충족' if data.m4 else '사전 검토가 필요'}됩니다.",
+        assumptions="Quick Check 단계에서는 최대 개발 가능 규모를 확인하되, 실제 승인 가능 규모는 LH와의 협의에서 결정됩니다.",
+        decision_implications="개발 규모가 20세대 이상이면 LH 사업으로 적합하며, 10세대 미만은 다른 방식 검토가 필요합니다."
+    )
+    
+    # Section 6: 재무 전망 (FIX 3: Quick Check 관점)
+    fin_base = get_conservative_narrative(
+        "재무 전망",
+        "NPV 3-5억원 수준",
+        "투자 타당성 확인"
+    ) if not data.m5 else f"""
+    <p style="line-height: 1.8; margin: 16px 0;">
+        <strong>사업성 등급:</strong> {data.m5.grade}등급
+    </p>
+    """
+    
+    # FIX 3: Quick Check 관점 (신속 의사결정)
+    quick_decision_lens = f"""
+    <div style="background: #FEF3C7; padding: 16px; margin: 16px 0; border-left: 4px solid #F59E0B; border-radius: 4px;">
+        <p style="line-height: 1.8; margin: 8px 0;">
+            <strong>⚡ Quick Check 관점:</strong> 5분 내 의사결정을 위한 핵심 판단
+        </p>
+        <p style="line-height: 1.8; margin: 8px 0;">
+            사업성 등급이 {'A-B' if data.m5 and data.m5.grade in ['A', 'B'] else 'C-D'}이므로,
+            {'즉시 상세 검토 진행' if data.m5 and data.m5.grade in ['A', 'B'] else '추가 데이터 확보 후 재평가'} 권장합니다.
+        </p>
+    </div>
+    """
+    
+    financial_outlook = ensure_minimum_paragraphs(
+        section_content=fin_base + quick_decision_lens,
+        section_purpose="투자 가치를 신속히 판단하여 더 이상 검토할 가치가 있는지 결정",
+        data_interpretation=f"{'수익성이 확인되어' if data.m5 and data.m5.grade in ['A', 'B'] else '수익성 검증이 필요하여'} {'적극 검토' if data.m5 and data.m5.grade in ['A', 'B'] else '신중한 접근'} 단계입니다.",
+        assumptions="Quick Check 단계의 재무 전망은 보수적 시나리오 기준이며, 실제 수익은 LH 매입가 협의 결과에 따라 변동됩니다.",
+        decision_implications="A-B등급이면 즉시 추진, C등급이면 조건 보완 후 재검토, D등급이면 사업 보류가 합리적입니다."
+    )
+    
     detailed_evaluation = {
-        "land_assessment": get_conservative_narrative(
-            "토지 적합성",
-            "LH 기준 70점 이상",
-            "입지, 용도지역, 접근성 종합 평가"
-        ) if not data.m2 else f"토지 가치 {data.m2.land_value_total_krw:,}원 확인됨",
-        
-        "development_feasibility": get_conservative_narrative(
-            "개발 가능성",
-            "법적 제한 없음",
-            "인허가 가능 여부"
-        ) if not data.m4 else f"최대 {data.m4.incentive_units or data.m4.legal_units}세대 가능",
-        
-        "financial_outlook": get_conservative_narrative(
-            "재무 전망",
-            "NPV 3-5억원 수준",
-            "투자 타당성 확인"
-        ) if not data.m5 else f"사업성 등급 {data.m5.grade}"
+        "land_assessment": land_assessment,
+        "development_feasibility": development_feasibility,
+        "financial_outlook": financial_outlook
     }
     
     # Section 7-8: 리스크 및 기회
@@ -2363,8 +2423,10 @@ def assemble_presentation_report(data: FinalReportData) -> Dict[str, Any]:
         }
     })
     
-    # Slide 2: 핵심 요약 (Executive Summary)
+    # Slide 2: 핵심 요약 (Executive Summary) - v4.3 FIX 2+3 적용
     decision_text = "분석 중"
+    decision_details = ""
+    
     if data.m6:
         decision_map = {
             "GO": "✅ 추진 권장",
@@ -2372,6 +2434,25 @@ def assemble_presentation_report(data: FinalReportData) -> Dict[str, Any]:
             "NO-GO": "❌ 보류 권장"
         }
         decision_text = decision_map.get(data.m6.decision, "검토 중")
+        
+        # FIX 2: 최소 문단 밀도 (프레젠테이션용 간결 버전)
+        decision_details = f"""
+        <p style="line-height: 1.8; margin: 12px 0;">
+            <strong>📌 분석 목적:</strong> 본 토지의 LH 매입임대사업 가능성을 종합 검토
+        </p>
+        <p style="line-height: 1.8; margin: 12px 0;">
+            <strong>📊 핵심 판단:</strong> 승인 가능성 {data.m6.approval_probability_pct}%, 
+            사업 등급 {data.m6.grade}등급으로 평가됨
+        </p>
+        <p style="line-height: 1.8; margin: 12px 0;">
+            <strong>💡 시사점:</strong> {'즉시 추진 권장' if data.m6.decision == 'GO' else '조건 보완 후 추진 가능' if data.m6.decision == 'CONDITIONAL' else '추가 검토 필요'}
+        </p>
+        """
+    else:
+        decision_details = get_missing_data_explanation(
+            "종합 판단",
+            ["LH 승인 전망", "사업성 검토", "입지 평가"]
+        )
     
     slides.append({
         "slide_number": 2,
@@ -2380,7 +2461,8 @@ def assemble_presentation_report(data: FinalReportData) -> Dict[str, Any]:
         "content": {
             "decision": decision_text,
             "approval_probability": f"{data.m6.approval_probability_pct}%" if data.m6 else "분석 중",
-            "grade": data.m6.grade if data.m6 else "N/A"
+            "grade": data.m6.grade if data.m6 else "N/A",
+            "details": decision_details  # FIX 2: 상세 내용 추가
         }
     })
     
@@ -2408,17 +2490,53 @@ def assemble_presentation_report(data: FinalReportData) -> Dict[str, Any]:
         }
     })
     
-    # Slide 5: 사업성
+    # Slide 5: 사업성 (v4.3 FIX 2+3 적용)
+    financial_content = {
+        "npv": f"{data.m5.npv_public_krw:,}원" if data.m5 else "분석 중",
+        "irr": f"{data.m5.irr_pct}%" if data.m5 else "분석 중",
+        "roi": f"{data.m5.roi_pct}%" if data.m5 else "분석 중",
+        "grade": data.m5.grade if data.m5 else "N/A"
+    }
+    
+    # FIX 2+3: 프레젠테이션 관점 (시각적, 간결, 핵심)
+    if data.m5:
+        financial_interpretation = f"""
+        <div style="background: #F3E8FF; padding: 16px; margin: 12px 0; border-radius: 8px;">
+            <p style="line-height: 1.8; margin: 8px 0;">
+                <strong>📊 프레젠테이션 관점:</strong> 청중에게 전달할 핵심 메시지
+            </p>
+            <p style="line-height: 1.8; margin: 8px 0;">
+                본 사업은 <strong>{data.m5.grade}등급</strong>으로,
+                {'우수한 투자 가치' if data.m5.grade in ['A', 'B'] else '신중한 검토 필요'} 수준입니다.
+            </p>
+            <p style="line-height: 1.8; margin: 8px 0;">
+                <strong>한 줄 요약:</strong> 
+                {'LH 사업으로 적극 추진 권장' if data.m5.grade == 'A' else 
+                 '조건 보완 후 추진 가능' if data.m5.grade in ['B', 'C'] else 
+                 '대안 검토 필요'}
+            </p>
+        </div>
+        """
+        
+        financial_content["interpretation"] = ensure_minimum_paragraphs(
+            section_content=financial_interpretation,
+            section_purpose="프레젠테이션에서 사업성을 직관적으로 전달하여 청중의 즉각적 이해 유도",
+            data_interpretation=f"NPV {data.m5.npv_public_krw:,}원, IRR {data.m5.irr_pct}%로 {'수익성 확보' if data.m5.grade in ['A', 'B'] else '수익성 주의'}",
+            assumptions="프레젠테이션용 수치는 보수적 시나리오 기준이며, 실제 LH 협의 결과에 따라 변동 가능",
+            decision_implications="A-B등급이면 투자자 설득 가능, C-D등급이면 리스크 관리 방안 제시 필수"
+        )
+    else:
+        financial_content["interpretation"] = get_conservative_narrative(
+            "사업성 분석",
+            "NPV 3-5억원, IRR 11-13%",
+            "투자 의사결정의 핵심 근거"
+        )
+    
     slides.append({
         "slide_number": 5,
         "title": "사업성 분석",
         "type": "financial",
-        "content": {
-            "npv": f"{data.m5.npv_public_krw:,}원" if data.m5 else "분석 중",
-            "irr": f"{data.m5.irr_pct}%" if data.m5 else "분석 중",
-            "roi": f"{data.m5.roi_pct}%" if data.m5 else "분석 중",
-            "grade": data.m5.grade if data.m5 else "N/A"
-        }
+        "content": financial_content
     })
     
     # Slide 6: 리스크
