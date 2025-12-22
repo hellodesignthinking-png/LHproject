@@ -459,9 +459,11 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
                     'module': 'M5',
                     'context_id': request.parcel_id,
                     'summary': {
-                        'npv_public_krw': result.feasibility.financial_metrics.npv_public,
-                        'irr_pct': result.feasibility.financial_metrics.irr_public * 100 if hasattr(result.feasibility.financial_metrics, 'irr_public') else None,
-                        'roi_pct': result.feasibility.financial_metrics.roi * 100 if hasattr(result.feasibility.financial_metrics, 'roi') else None,
+                        # ✅ FIX: Convert to int to match M5Summary type
+                        'npv_public_krw': int(result.feasibility.financial_metrics.npv_public) if result.feasibility.financial_metrics.npv_public else None,
+                        # ✅ FIX: irr_public and roi are already percentages (7.14%), not decimals (0.0714)
+                        'irr_pct': result.feasibility.financial_metrics.irr_public if hasattr(result.feasibility.financial_metrics, 'irr_public') else None,
+                        'roi_pct': result.feasibility.financial_metrics.roi if hasattr(result.feasibility.financial_metrics, 'roi') else None,
                         'grade': feasibility_dict.get('profitability', {}).get('grade') if feasibility_dict else None,
                     },
                     'details': feasibility_dict
