@@ -977,6 +977,105 @@ class BaseFinalReportAssembler(ABC):
         return narrative_text
 
     @staticmethod
+    def generate_data_completeness_panel(soft_missing: List[str]) -> str:
+        """
+        [vPOST-FINAL] Generate DATA COMPLETENESS WARNING panel
+        
+        This panel is displayed at the top of reports when non-critical KPIs are missing.
+        Provides transparency to stakeholders about data limitations.
+        
+        Args:
+            soft_missing: List of missing non-critical KPI (e.g., ["M2.land_value_total", "M5.irr"])
+            
+        Returns:
+            HTML string for warning panel (empty if no missing KPIs)
+        """
+        if not soft_missing:
+            return ""
+        
+        # Parse missing KPIs by module
+        module_kpi_map = {}
+        for kpi_id in soft_missing:
+            module_id, kpi_key = kpi_id.split(".", 1)
+            if module_id not in module_kpi_map:
+                module_kpi_map[module_id] = []
+            module_kpi_map[module_id].append(kpi_key)
+        
+        # Generate human-readable messages
+        module_names = {
+            "M2": "토지 평가",
+            "M3": "LH 선호 유형",
+            "M4": "건축 규모",
+            "M5": "사업성 분석",
+            "M6": "LH 심사"
+        }
+        
+        kpi_names = {
+            "land_value_total": "총 토지 감정가",
+            "total_units": "계획 세대수",
+            "total_score": "선호 유형 종합 점수",
+            "npv": "순현재가치(NPV)",
+            "irr": "내부수익률(IRR)",
+            "decision": "LH 심사 결과"
+        }
+        
+        missing_items = []
+        for module_id, kpi_keys in sorted(module_kpi_map.items()):
+            module_name = module_names.get(module_id, module_id)
+            for key in kpi_keys:
+                kpi_name = kpi_names.get(key, key)
+                missing_items.append(f"<li>{kpi_name} ({module_name})</li>")
+        
+        return f'''
+<section class="data-completeness-warning" style="
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border: 2px solid #ffc107;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
+">
+    <h3 style="
+        color: #856404;
+        font-size: 18px;
+        margin: 0 0 15px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    ">
+        <span style="font-size: 24px;">⚠️</span>
+        데이터 일부 미확정
+    </h3>
+    <p style="
+        color: #856404;
+        font-size: 14px;
+        line-height: 1.6;
+        margin: 0 0 12px 0;
+    ">
+        본 보고서는 현재 확보된 데이터를 기준으로 생성되었습니다. 
+        아래 항목은 데이터 미확정 상태이며, 확정 시 보고서가 업데이트됩니다.
+    </p>
+    <ul style="
+        color: #856404;
+        font-size: 14px;
+        line-height: 1.8;
+        margin: 0;
+        padding-left: 20px;
+    ">
+        {"".join(missing_items)}
+    </ul>
+    <p style="
+        color: #856404;
+        font-size: 12px;
+        margin: 15px 0 0 0;
+        font-style: italic;
+    ">
+        💡 핵심 데이터는 모두 확보되어 있어 보고서 활용에는 문제가 없습니다.
+    </p>
+</section>
+'''
+
+    @staticmethod
     def get_unified_design_css() -> str:
         """
         [Phase 4.0] Unified design system CSS - Uses new DesignSystem module

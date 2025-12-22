@@ -289,6 +289,39 @@ MANDATORY_KPI = {
 }
 
 
+# ================================================================
+# vPOST-FINAL: CRITICAL KPI Declaration (Operational Safety)
+# ================================================================
+# KPIs that MUST be present for report generation (Hard-Fail)
+# Missing CRITICAL KPI → Report generation blocked
+# Missing non-critical KPI → Report generated with WARNING panel
+
+CRITICAL_KPI = {
+    "landowner_summary": {
+        "M5": ["npv"],  # Profitability is critical for landowner decision
+        "M6": ["decision"]  # LH decision is must-have
+    },
+    "quick_check": {
+        "M5": ["npv"],  # Quick decision needs profitability
+        "M6": ["decision"]  # LH decision is critical
+    },
+    "executive_summary": {
+        "M5": ["npv"],  # Investment decision requires NPV
+        "M6": ["decision"]  # LH approval status is critical
+    },
+    "lh_technical": {
+        "M6": ["decision"]  # LH review result is the core output
+    },
+    "financial_feasibility": {
+        "M5": ["npv", "irr"]  # Financial analysis core metrics
+    },
+    "all_in_one": {
+        "M5": ["npv"],  # Comprehensive report needs profitability
+        "M6": ["decision"]  # Final decision must be present
+    }
+}
+
+
 def get_mandatory_kpi(report_type: str) -> Dict[str, List[str]]:
     """
     Get mandatory KPI for a report type
@@ -303,3 +336,23 @@ def get_mandatory_kpi(report_type: str) -> Dict[str, List[str]]:
         return {}
     
     return MANDATORY_KPI[report_type]
+
+
+def get_critical_kpi(report_type: str) -> Dict[str, List[str]]:
+    """
+    [vPOST-FINAL] Get CRITICAL KPI for a report type
+    
+    CRITICAL KPIs are those that MUST be present for report generation.
+    Missing CRITICAL KPI → Hard-Fail (report blocked)
+    Missing non-critical KPI → Soft-Fail (report generated with WARNING)
+    
+    Args:
+        report_type: Report type ID
+        
+    Returns:
+        Dict mapping module_id to list of CRITICAL KPI keys
+    """
+    if report_type not in CRITICAL_KPI:
+        return {}
+    
+    return CRITICAL_KPI[report_type]

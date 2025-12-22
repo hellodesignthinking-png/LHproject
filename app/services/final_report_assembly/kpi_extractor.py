@@ -189,15 +189,17 @@ class KPIExtractor:
     def extract_module_kpi(
         html: str, 
         module_id: str, 
-        required_keys: List[str]
+        required_keys: List[str],
+        strict: bool = True
     ) -> Dict:
         """
-        Extract KPI from module HTML - SINGLE ENTRY POINT
+        [vPOST-FINAL] Extract KPI from module HTML - SINGLE ENTRY POINT with operational safety
         
         Args:
             html: Module HTML string
             module_id: Module ID (M2, M3, M4, M5, M6)
             required_keys: List of required KPI keys for this module
+            strict: If False, return incomplete data with reasons (operational mode)
             
         Returns:
             Dict with normalized KPI + metadata:
@@ -207,15 +209,16 @@ class KPIExtractor:
                 "_module_id": "M2",
                 "_required_keys": ["land_value_total"],
                 "_extracted_keys": ["land_value_total", "land_value_per_pyeong"],
-                "_normalized_ok": True
+                "_normalized_ok": True,
+                "_incomplete_reason": "data-land-value-total attribute missing"  # if strict=False
             }
             
         Raises:
-            FinalReportAssemblyError: If module root not found
+            FinalReportAssemblyError: If module root not found (always strict)
         """
-        logger.info(f"🔍 Extracting KPI from {module_id} (required: {required_keys})")
+        logger.info(f"🔍 Extracting KPI from {module_id} (required: {required_keys}, strict={strict})")
         
-        # Step 1: Get module root (ENFORCED)
+        # Step 1: Get module root (ENFORCED - always strict)
         root = KPIExtractor.get_module_root(html, module_id)
         
         # Step 2: Extract raw KPI from data-* attributes
@@ -227,14 +230,24 @@ class KPIExtractor:
         # Step 4: Normalize (required keys only)
         normalized = KPIExtractor.normalize_kpi(raw, required_keys, module_id)
         
+        # [vPOST-FINAL] Check completeness
+        missing_keys = [k for k in required_keys if normalized.get(k) is None]
+        is_complete = len(missing_keys) == 0
+        
         # Add metadata
         result = {
             **normalized,
             "_module_id": module_id,
             "_required_keys": required_keys,
             "_extracted_keys": list(raw.keys()),
-            "_normalized_ok": all(v is not None for k, v in normalized.items())
+            "_normalized_ok": is_complete
         }
+        
+        # [vPOST-FINAL] If incomplete and not strict, add reason
+        if not is_complete and not strict:
+            result["_incomplete_reason"] = f"Missing required KPI: {', '.join(missing_keys)}"
+            logger.warning(f"[{module_id}] Incomplete KPI (non-strict mode): {missing_keys}")
+        
         
         logger.info(
             f"✅ [{module_id}] Extracted: {len(raw)} raw, "
@@ -277,6 +290,66 @@ def validate_mandatory_kpi(
                 logger.error(f"❌ Missing required KPI: {module_id}.{key}")
     
     return missing
+
+
+def validate_kpi_with_safe_gate(
+    report_type: str,
+    modules_data: Dict[str, Dict],
+    mandatory_kpi: Dict[str, Dict[str, List[str]]],
+    critical_kpi: Dict[str, Dict[str, List[str]]]
+) -> Dict[str, List[str]]:
+    """
+    [vPOST-FINAL] Validate KPI with SAFE-GATE logic (operational safety)
+    
+    Two-level validation:
+    1. CRITICAL KPI missing → Hard-Fail (blocks report generation)
+    2. Non-critical KPI missing → Soft-Fail (allows report with WARNING)
+    
+    Args:
+        report_type: Report type (landowner_summary, quick_check, etc.)
+        modules_data: Extracted modules data
+        mandatory_kpi: MANDATORY_KPI dict (all required KPIs)
+        critical_kpi: CRITICAL_KPI dict (must-have KPIs only)
+        
+    Returns:
+        Dict with two lists:
+        {
+            "critical_missing": ["M5.npv", "M6.decision"],  # Hard-Fail
+            "soft_missing": ["M2.land_value_total"]  # Soft-Fail (WARNING only)
+        }
+    """
+    critical_missing = []
+    soft_missing = []
+    
+    if report_type not in mandatory_kpi:
+        logger.warning(f"⚠️ No mandatory KPI defined for report type: {report_type}")
+        return {"critical_missing": [], "soft_missing": []}
+    
+    # Get critical KPI for this report
+    critical_map = critical_kpi.get(report_type, {})
+    
+    # Check all mandatory KPI
+    for module_id, required_keys in mandatory_kpi[report_type].items():
+        module_data = modules_data.get(module_id, {})
+        critical_keys_for_module = critical_map.get(module_id, [])
+        
+        for key in required_keys:
+            value = module_data.get(key)
+            if value is None:
+                kpi_id = f"{module_id}.{key}"
+                
+                # Determine if this is CRITICAL or SOFT
+                if key in critical_keys_for_module:
+                    critical_missing.append(kpi_id)
+                    logger.error(f"🚫 CRITICAL KPI missing: {kpi_id} (Hard-Fail)")
+                else:
+                    soft_missing.append(kpi_id)
+                    logger.warning(f"⚠️  Soft KPI missing: {kpi_id} (WARNING only)")
+    
+    return {
+        "critical_missing": critical_missing,
+        "soft_missing": soft_missing
+    }
 
 
 def log_kpi_pipeline(
