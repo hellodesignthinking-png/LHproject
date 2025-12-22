@@ -424,16 +424,19 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
             legal_units = getattr(result.capacity.legal_capacity, 'total_units', None) if hasattr(result.capacity, 'legal_capacity') else None
             incentive_units = getattr(result.capacity.incentive_capacity, 'total_units', None) if hasattr(result.capacity, 'incentive_capacity') else None
             
-            # Handle parking solutions
+            # Handle parking solutions (dict of ParkingSolution objects)
             parking_alt_a = None
             parking_alt_b = None
             if hasattr(result.capacity, 'parking_solutions'):
                 ps = result.capacity.parking_solutions
                 if isinstance(ps, dict):
-                    parking_alt_a = ps.get('alternative_A', {}).get('total_parking_spaces')
-                    parking_alt_b = ps.get('alternative_B', {}).get('total_parking_spaces')
+                    # Values are ParkingSolution objects, not dicts
+                    alt_a = ps.get('alternative_A')
+                    alt_b = ps.get('alternative_B')
+                    parking_alt_a = getattr(alt_a, 'total_parking_spaces', None) if alt_a else None
+                    parking_alt_b = getattr(alt_b, 'total_parking_spaces', None) if alt_b else None
                 else:
-                    # Try to access as object attributes
+                    # Fallback: try to access as object attributes
                     parking_alt_a = getattr(getattr(ps, 'alternative_A', None), 'total_parking_spaces', None)
                     parking_alt_b = getattr(getattr(ps, 'alternative_B', None), 'total_parking_spaces', None)
             
@@ -458,7 +461,7 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
                         'npv_public_krw': result.feasibility.financial_metrics.npv_public,
                         'irr_pct': result.feasibility.financial_metrics.irr_public * 100 if hasattr(result.feasibility.financial_metrics, 'irr_public') else None,
                         'roi_pct': result.feasibility.financial_metrics.roi * 100 if hasattr(result.feasibility.financial_metrics, 'roi') else None,
-                        'grade': result.feasibility.grade,
+                        'grade': feasibility_dict.get('profitability', {}).get('grade') if feasibility_dict else None,
                     },
                     'details': feasibility_dict
                 },
