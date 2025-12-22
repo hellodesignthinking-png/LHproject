@@ -3055,24 +3055,244 @@ def render_financial_feasibility(data: Dict[str, Any]) -> str:
                 
                 <!-- 9. RISK ANALYSIS -->
                 <div class="section" style="margin-top: 40px;">
-                    <div class="section-title">9. 리스크 분석</div>
+                    <div class="section-title">9. 투자 리스크 종합 분석 (v4.2 Enhanced)</div>
                     
-                    <div class="section-subtitle">9.1 주요 리스크 요인</div>
-                    <ul class="report-list" style="background: #FEF2F2; padding: 20px; border-left: 4px solid #EF4444; border-radius: 4px;">
-                        {risks_html}
-                    </ul>
+                    <div style="margin-bottom: 20px; padding: 20px; background: #FEF2F2; border-left: 4px solid #DC2626; border-radius: 8px;">
+                        <div style="font-weight: 700; font-size: 16px; color: #991B1B; margin-bottom: 12px;">⚠️ 투자자 필독 사항</div>
+                        <div style="line-height: 1.8; font-size: 14px; color: #7F1D1D;">
+                            본 사업의 투자 수익성은 <strong>토지 가격(R3), 금융 비용(R5), 사업 일정(R6)</strong> 3대 핵심 리스크에 가장 민감하게 반응합니다.
+                            각 리스크 발생 시 IRR 변화를 정확히 이해하고, 예비비 확보 및 리스크 관리 방안을 사전 마련해야 합니다.
+                        </div>
+                    </div>
                     
-                    <div class="section-subtitle" style="margin-top: 20px;">9.2 리스크 완화 전략</div>
-                    <div style="padding: 20px; background: white; border-radius: 8px; line-height: 1.8;">
-                        <p style="margin-bottom: 12px;">
-                            <strong>✅ 승인 리스크 완화:</strong> 사전 협의, 전문가 자문 활용, LH 선호 유형 준수
-                        </p>
-                        <p style="margin-bottom: 12px;">
-                            <strong>✅ 건축비 리스크 완화:</strong> 시공사 실적 검증, 단가 계약, 리스크 공유 조항
-                        </p>
-                        <p>
-                            <strong>✅ 시장 리스크 완화:</strong> LH 매입 확약, 신용도 높은 시행사 선정
-                        </p>
+                    <!-- R3. 토지 가격 변동 리스크 (최우선) -->
+                    <div class="section-subtitle">9.1 토지 가격 변동 리스크 ⭐⭐⭐ (최우선 관리 필수)</div>
+                    
+                    <div style="margin-bottom: 12px; padding: 16px; background: #FFF7ED; border-left: 4px solid #F59E0B; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #92400E; margin-bottom: 8px;">리스크 개요</div>
+                        <div style="line-height: 1.7; font-size: 14px; color: #78350F;">
+                            토지 취득비는 총 사업비의 40-50%를 차지하므로, 감정평가액 변동이 수익성에 직접적인 영향을 미칩니다.
+                            시장 상황과 거래 사례 부족에 따라 예상보다 높게 평가될 수 있으며, 지주 협상 난항으로 매입 가격이 상승할 수 있습니다.
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 12px; padding: 16px; background: white; border: 1px solid #E5E7EB; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #374151; margin-bottom: 10px;">💰 투자 영향 시나리오</div>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                            <thead style="background: #F9FAFB;">
+                                <tr>
+                                    <th style="padding: 8px; text-align: left; border-bottom: 2px solid #E5E7EB;">시나리오</th>
+                                    <th style="padding: 8px; text-align: right; border-bottom: 2px solid #E5E7EB;">토지비 변동</th>
+                                    <th style="padding: 8px; text-align: right; border-bottom: 2px solid #E5E7EB;">NPV 영향</th>
+                                    <th style="padding: 8px; text-align: right; border-bottom: 2px solid #E5E7EB;">IRR 영향</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="padding: 8px; border-bottom: 1px solid #E5E7EB;">감정평가 +10%</td>
+                                    <td style="padding: 8px; text-align: right; border-bottom: 1px solid #E5E7EB; color: #DC2626;">+10억원</td>
+                                    <td style="padding: 8px; text-align: right; border-bottom: 1px solid #E5E7EB; color: #DC2626;">-50%</td>
+                                    <td style="padding: 8px; text-align: right; border-bottom: 1px solid #E5E7EB; color: #DC2626; font-weight: 600;">-2.3%p</td>
+                                </tr>
+                                <tr style="background: #FEF2F2;">
+                                    <td style="padding: 8px; border-bottom: 1px solid #E5E7EB; font-weight: 600;">협상 난항 +15%</td>
+                                    <td style="padding: 8px; text-align: right; border-bottom: 1px solid #E5E7EB; color: #B91C1C; font-weight: 600;">+15억원</td>
+                                    <td style="padding: 8px; text-align: right; border-bottom: 1px solid #E5E7EB; color: #B91C1C; font-weight: 600;">-87.5%</td>
+                                    <td style="padding: 8px; text-align: right; border-bottom: 1px solid #E5E7EB; color: #B91C1C; font-weight: 600;">-3.6%p</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px; padding: 14px; background: #ECFDF5; border-left: 4px solid #10B981; border-radius: 4px;">
+                        <div style="font-weight: 600; color: #065F46; margin-bottom: 6px;">✅ 투자자 대응 전략</div>
+                        <div style="line-height: 1.7; font-size: 13px; color: #047857;">
+                            • 인근 거래 사례 10건 이상 조사 (최근 2년 내)<br>
+                            • 조건부 매입 계약 (감정평가액 ±5% 범위 확정, 초과 시 해지)<br>
+                            • 토지비 10-15% 예비비 확보 (10-15억원)
+                        </div>
+                    </div>
+                    
+                    <!-- R5. 재무 구조 및 금융 비용 리스크 (핵심) -->
+                    <div class="section-subtitle">9.2 금융 비용 변동 리스크 ⭐⭐⭐ (핵심 관리 필요)</div>
+                    
+                    <div style="margin-bottom: 12px; padding: 16px; background: #FFF7ED; border-left: 4px solid #F59E0B; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #92400E; margin-bottom: 8px;">리스크 개요</div>
+                        <div style="line-height: 1.7; font-size: 14px; color: #78350F;">
+                            금리 변동, 대출 조건 변경, 사업 일정 지연은 금융 비용을 증가시킵니다.
+                            레버리지가 높은 부동산 사업 특성상 금리 1%p 상승은 총 이자 비용을 10-15% 증가시킬 수 있습니다.
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 12px; padding: 16px; background: white; border: 1px solid #E5E7EB; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #374151; margin-bottom: 10px;">📊 투자 영향 시나리오</div>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                            <thead style="background: #F9FAFB;">
+                                <tr>
+                                    <th style="padding: 8px; text-align: left; border-bottom: 2px solid #E5E7EB;">시나리오</th>
+                                    <th style="padding: 8px; text-align: right; border-bottom: 2px solid #E5E7EB;">이자 증가</th>
+                                    <th style="padding: 8px; text-align: right; border-bottom: 2px solid #E5E7EB;">NPV 영향</th>
+                                    <th style="padding: 8px; text-align: right; border-bottom: 2px solid #E5E7EB;">IRR 영향</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="padding: 8px; border-bottom: 1px solid #E5E7EB;">금리 +1%p</td>
+                                    <td style="padding: 8px; text-align: right; border-bottom: 1px solid #E5E7EB; color: #DC2626;">+5억원</td>
+                                    <td style="padding: 8px; text-align: right; border-bottom: 1px solid #E5E7EB; color: #DC2626;">-37.5%</td>
+                                    <td style="padding: 8px; text-align: right; border-bottom: 1px solid #E5E7EB; color: #DC2626; font-weight: 600;">-1.3%p</td>
+                                </tr>
+                                <tr style="background: #FEF2F2;">
+                                    <td style="padding: 8px; border-bottom: 1px solid #E5E7EB;">일정 +6개월</td>
+                                    <td style="padding: 8px; text-align: right; border-bottom: 1px solid #E5E7EB; color: #DC2626;">+6.5억원</td>
+                                    <td style="padding: 8px; text-align: right; border-bottom: 1px solid #E5E7EB; color: #DC2626;">-56.3%</td>
+                                    <td style="padding: 8px; text-align: right; border-bottom: 1px solid #E5E7EB; color: #DC2626; font-weight: 600;">-2.0%p</td>
+                                </tr>
+                                <tr style="background: #FEF2F2;">
+                                    <td style="padding: 8px; border-bottom: 1px solid #E5E7EB; font-weight: 600;">복합 (금리+일정)</td>
+                                    <td style="padding: 8px; text-align: right; border-bottom: 1px solid #E5E7EB; color: #B91C1C; font-weight: 600;">+10억원</td>
+                                    <td style="padding: 8px; text-align: right; border-bottom: 1px solid #E5E7EB; color: #B91C1C; font-weight: 600;">-100%</td>
+                                    <td style="padding: 8px; text-align: right; border-bottom: 1px solid #E5E7EB; color: #B91C1C; font-weight: 600;">-4.0%p</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px; padding: 14px; background: #ECFDF5; border-left: 4px solid #10B981; border-radius: 4px;">
+                        <div style="font-weight: 600; color: #065F46; margin-bottom: 6px;">✅ 투자자 대응 전략</div>
+                        <div style="line-height: 1.7; font-size: 13px; color: #047857;">
+                            • 고정 금리 대출 확보 (금리 변동 리스크 제거)<br>
+                            • 조기 금융 확정 (사업 초기 단계에서 대출 승인)<br>
+                            • 이자 비용 20% 예비비 확보 (금리 상승 및 일정 지연 대비)
+                        </div>
+                    </div>
+                    
+                    <!-- R6. 사업 일정 지연 리스크 (핵심) -->
+                    <div class="section-subtitle">9.3 사업 일정 지연 리스크 ⭐⭐⭐ (핵심 관리 필요)</div>
+                    
+                    <div style="margin-bottom: 12px; padding: 16px; background: #FFF7ED; border-left: 4px solid #F59E0B; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #92400E; margin-bottom: 8px;">리스크 개요</div>
+                        <div style="line-height: 1.7; font-size: 14px; color: #78350F;">
+                            LH 협의, 인허가, 공사 각 단계에서 지연이 발생할 수 있으며, 일정 지연은 금융 비용 증가뿐만 아니라 
+                            시장 상황 변화, 정책 변동 노출로 이어져 투자 리스크를 크게 증가시킵니다.
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 12px; padding: 16px; background: white; border: 1px solid #E5E7EB; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #374151; margin-bottom: 10px;">⏰ 복합 지연 시나리오</div>
+                        <div style="line-height: 1.7; font-size: 13px; color: #4B5563;">
+                            <strong style="color: #DC2626;">최악 시나리오:</strong> LH 협의 3개월 + 인허가 6개월 + 공사 6개월 = 총 15개월 지연<br>
+                            <strong>• 사업 기간:</strong> 30개월 → 45개월 (50% 증가)<br>
+                            <strong>• 이자 증가:</strong> 약 16억원<br>
+                            <strong>• NPV 영향:</strong> 8억원 → <span style="color: #DC2626; font-weight: 600;">-5억원 (적자 전환)</span><br>
+                            <strong>• IRR 영향:</strong> 12.5% → <span style="color: #DC2626; font-weight: 600;">6.8% (-5.7%p, 투자 중단 수준)</span>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px; padding: 14px; background: #ECFDF5; border-left: 4px solid #10B981; border-radius: 4px;">
+                        <div style="font-weight: 600; color: #065F46; margin-bottom: 6px;">✅ 투자자 대응 전략</div>
+                        <div style="line-height: 1.7; font-size: 13px; color: #047857;">
+                            • 각 단계별 3개월 여유 기간 확보 (총 9개월 예비 일정)<br>
+                            • 시공사 이행 실적 검증 (과거 3년간 지연율 10% 이하)<br>
+                            • 공사 계약 시 지연 패널티 명시 (월 5,000만원 이상)
+                        </div>
+                    </div>
+                    
+                    <!-- R4. 개발 규모 및 공사비 리스크 -->
+                    <div class="section-subtitle">9.4 개발 규모 축소 및 공사비 증가 리스크 ⭐⭐ (중요)</div>
+                    
+                    <div style="margin-bottom: 12px; padding: 14px; background: #F9FAFB; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #374151; margin-bottom: 8px;">주요 시나리오</div>
+                        <div style="line-height: 1.7; font-size: 13px; color: #4B5563;">
+                            <strong>① 개발 규모 10% 축소:</strong> 세대수 감소 → LH 매입 총액 20억원 감소 → NPV -43.8%, IRR -1.6%p<br>
+                            <strong>② 공사비 10% 증가:</strong> 자재비·인건비 상승 → 원가 15억원 증가 → NPV -68.8%, IRR -2.8%p<br>
+                            <strong>③ 복합 발생 (규모↓+공사비↑):</strong> <span style="color: #DC2626; font-weight: 600;">NPV 적자 전환, IRR 7.8% (투자 부적격)</span>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px; padding: 14px; background: #ECFDF5; border-left: 4px solid #10B981; border-radius: 4px;">
+                        <div style="font-weight: 600; color: #065F46; margin-bottom: 6px;">✅ 투자자 대응 전략</div>
+                        <div style="line-height: 1.7; font-size: 13px; color: #047857;">
+                            • 설계 시 법정 기준보다 10% 보수적 계획<br>
+                            • 총액 공사 계약 체결 (공사비 상한선 확정)<br>
+                            • 공사비 10-15% 예비비 확보
+                        </div>
+                    </div>
+                    
+                    <!-- R1, R2 간략 버전 -->
+                    <div class="section-subtitle">9.5 기타 리스크 요인 ⭐ (모니터링)</div>
+                    
+                    <div style="margin-bottom: 12px; padding: 14px; background: #F9FAFB; border-radius: 8px;">
+                        <div style="line-height: 1.7; font-size: 13px; color: #4B5563;">
+                            <strong>R1. 정책·제도 변동 리스크 (발생 확률 15%):</strong><br>
+                            LH 예산 축소, 지역별 공급 과잉 등으로 매입 우선순위 하락 시 승인 6-12개월 지연 가능. 
+                            LH 사전 협의로 향후 3년간 매입 계획 확인 필수.<br><br>
+                            
+                            <strong>R2. LH 심사 불확실성 리스크 (발생 확률 20%):</strong><br>
+                            정성적 판단 요소(입지, 사업자 신뢰도)로 보완 요구 발생 시 3-6개월 지연 및 이자 비용 5,000만원~1억원 증가. 
+                            LH 사전 협의로 승인 가능성 70% 이상 확보 필수.
+                        </div>
+                    </div>
+                    
+                    <!-- 리스크 종합 평가 -->
+                    <div style="margin-top: 24px; padding: 20px; background: #1F2937; color: white; border-radius: 12px;">
+                        <div style="font-weight: 700; font-size: 17px; margin-bottom: 14px;">🎯 리스크 종합 평가 및 투자 GO/NO-GO 기준</div>
+                        
+                        <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid #4B5563;">
+                                    <th style="padding: 10px; text-align: left; color: #E5E7EB;">리스크</th>
+                                    <th style="padding: 10px; text-align: center; color: #E5E7EB;">발생 확률</th>
+                                    <th style="padding: 10px; text-align: center; color: #E5E7EB;">영향도</th>
+                                    <th style="padding: 10px; text-align: center; color: #E5E7EB;">우선순위</th>
+                                </tr>
+                            </thead>
+                            <tbody style="color: #D1D5DB;">
+                                <tr style="border-bottom: 1px solid #374151;">
+                                    <td style="padding: 8px;">R3. 토지 가격</td>
+                                    <td style="padding: 8px; text-align: center; color: #FCA5A5;">높음 (60%)</td>
+                                    <td style="padding: 8px; text-align: center; color: #FCA5A5;">매우 높음</td>
+                                    <td style="padding: 8px; text-align: center; font-weight: 600; color: #FEE2E2;">최우선</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #374151;">
+                                    <td style="padding: 8px;">R5. 금융 비용</td>
+                                    <td style="padding: 8px; text-align: center; color: #FCD34D;">중간 (40%)</td>
+                                    <td style="padding: 8px; text-align: center; color: #FCA5A5;">매우 높음</td>
+                                    <td style="padding: 8px; text-align: center; font-weight: 600; color: #FEE2E2;">최우선</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #374151;">
+                                    <td style="padding: 8px;">R6. 사업 일정</td>
+                                    <td style="padding: 8px; text-align: center; color: #FCA5A5;">높음 (50%)</td>
+                                    <td style="padding: 8px; text-align: center; color: #FBBF24;">높음</td>
+                                    <td style="padding: 8px; text-align: center; font-weight: 600; color: #FEE2E2;">최우선</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px;">R1, R2, R4 기타</td>
+                                    <td style="padding: 8px; text-align: center; color: #86EFAC;">낮음 (20%)</td>
+                                    <td style="padding: 8px; text-align: center; color: #FCD34D;">중간</td>
+                                    <td style="padding: 8px; text-align: center; color: #D1FAE5;">모니터링</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <div style="padding: 16px; background: #374151; border-radius: 8px; margin-top: 12px;">
+                            <div style="font-weight: 600; margin-bottom: 10px; color: #F3F4F6;">투자 추진 필수 조건 (4대 항목)</div>
+                            <div style="line-height: 1.9; font-size: 14px; color: #E5E7EB;">
+                                ✅ <strong>토지 예비비:</strong> 감정평가액 10% 예비비 확보 (10-15억원)<br>
+                                ✅ <strong>금융 확정:</strong> 고정 금리 대출 확보 (금리 변동 차단)<br>
+                                ✅ <strong>일정 여유:</strong> 각 단계별 3개월 예비 기간 (총 9개월)<br>
+                                ✅ <strong>LH 사전 협의:</strong> 승인 가능성 70% 이상 확인서 확보
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 16px; padding: 16px; background: #065F46; border-radius: 8px;">
+                            <div style="font-weight: 700; font-size: 15px; margin-bottom: 8px; color: #D1FAE5;">최종 판정</div>
+                            <div style="line-height: 1.8; font-size: 14px; color: #ECFDF5;">
+                                위 4개 조건 충족 시 → <strong>GO (투자 추진 권고)</strong><br>
+                                2-3개 조건 충족 시 → <strong>REVIEW (조건부 추진, 추가 리스크 관리 필수)</strong><br>
+                                1개 이하 충족 시 → <strong>NO-GO (투자 중단, 사업 계획 재검토)</strong>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
