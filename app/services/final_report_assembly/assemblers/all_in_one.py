@@ -15,7 +15,7 @@ import re
 
 from ..base_assembler import BaseFinalReportAssembler, get_report_brand_class
 from ..narrative_generator import NarrativeGeneratorFactory
-from ..report_type_configs import REPORT_TYPE_CONFIGS, get_mandatory_kpi
+from ..report_type_configs import REPORT_TYPE_CONFIGS, get_mandatory_kpi, get_critical_kpi
 
 # [Phase 3.10 Final Lock] KPI Extractor
 from ..kpi_extractor import KPIExtractor, validate_mandatory_kpi, log_kpi_pipeline, FinalReportAssemblyError, validate_mandatory_kpi, log_kpi_pipeline, FinalReportAssemblyError
@@ -145,6 +145,7 @@ class AllInOneAssembler(BaseFinalReportAssembler):
         
         sections = [
             self._generate_cover_page(),
+            data_completeness_panel,
             kpi_summary,  # KPI at top
             exec_summary,
             self._wrap_module_html("M2", m2_html),
