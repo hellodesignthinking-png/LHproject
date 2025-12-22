@@ -1,18 +1,24 @@
 """
-ZeroSite v4.0 Final Report Data Assembler
-========================================
+ZeroSite v4.3 FINAL - Content & Data Recovery
+=============================================
 
 목적: context_id → canonical summary (M2~M6) → 6종 최종보고서 데이터 변환
 
-핵심 원칙:
-1. M2~M6 용어 절대 노출 금지 (사용자 친화적 언어로 변환)
-2. context_id → canonical summary에서만 데이터 로드 (화면 상태/임시 계산 금지)
-3. 데이터 없으면 빈 출력 아닌 방어 텍스트 출력
-4. 숫자는 반드시 단위 표기
-5. '요약 문장 → 핵심 데이터 → 해석' 구조 유지
+🔒 LOCK-IN RULES (절대 원칙):
+1. HTML/PDF/Preview = 동일한 데이터 경로 (canonical_summary only)
+2. "데이터 없음"이어도 섹션은 반드시 출력 (해석 기반)
+3. 최종보고서는 '계산 결과'가 아니라 '의사결정 문서'
+4. 보고서 분량은 "데이터 양"이 아니라 "기획 구조"로 결정
+5. QA Status = 결과 + 원인 + 조치
+6. 모듈 내부 개념 절대 노출 금지
 
-Version: 1.0
-Date: 2025-12-21
+핵심 개선 (v4.3):
+- 데이터 부족 시에도 50+ 페이지 보고서 생성
+- 숫자 없으면 → 해석 + 가정 + 시나리오로 보완
+- "N/A (검증 필요)" → 구체적 설명 + 다음 단계 안내
+
+Version: 4.3 FINAL
+Date: 2025-12-22
 """
 
 from typing import Dict, Any, Optional, List
@@ -21,6 +27,75 @@ from datetime import datetime
 from app.core.canonical_data_contract import (
     M2Summary, M3Summary, M4Summary, M5Summary, M6Summary
 )
+
+
+# ============================================================================
+# 🔥 v4.3 CONTENT RECOVERY HELPERS
+# ============================================================================
+
+def get_conservative_narrative(
+    metric_name: str, 
+    typical_range: str, 
+    decision_impact: str
+) -> str:
+    """데이터 부족 시 보수적 해석 제공
+    
+    Args:
+        metric_name: 지표명 (예: "순현재가치 (NPV)")
+        typical_range: 통상 범위 (예: "3-5억원")
+        decision_impact: 의사결정 영향 (예: "투자 매력도 판단 기준")
+        
+    Returns:
+        전문적 해석 문단
+    """
+    return f"""
+    <p style="line-height: 1.8; margin: 16px 0;">
+        <strong>{metric_name}</strong>는 현재 최종 검증 전 단계에 있습니다.
+        본 분석에서는 LH 매입임대사업의 통상적 기준 및 유사 사례 평균값을 보수적으로 적용하여 
+        해석을 제공합니다.
+    </p>
+    <p style="line-height: 1.8; margin: 16px 0; background: #F3F4F6; padding: 12px; border-radius: 4px;">
+        <strong>📊 업계 표준:</strong> LH 매입임대사업의 {metric_name}는 일반적으로 
+        <strong>{typical_range}</strong> 범위에서 형성됩니다. 
+        이는 {decision_impact}으로 활용됩니다.
+    </p>
+    <p style="line-height: 1.8; margin: 16px 0;">
+        <strong>💡 다음 단계:</strong> 정확한 {metric_name} 산출을 위해서는 
+        토지 가치 평가, 건축비 견적, LH 매입가격 협의가 완료되어야 합니다. 
+        현재 단계에서는 보수적 시나리오 기준으로 판단하시기 바랍니다.
+    </p>
+    """
+
+
+def get_missing_data_explanation(section_name: str, required_inputs: List[str]) -> str:
+    """필수 데이터 누락 시 안내 메시지
+    
+    Args:
+        section_name: 섹션명
+        required_inputs: 필요한 입력값 리스트
+        
+    Returns:
+        사용자 친화적 안내 HTML
+    """
+    inputs_html = "".join([f"<li>{inp}</li>" for inp in required_inputs])
+    
+    return f"""
+    <div style="padding: 20px; margin: 20px 0; background: #FEF3C7; border-left: 4px solid #F59E0B; border-radius: 4px;">
+        <div style="margin-bottom: 12px;">
+            <strong style="font-size: 16px; color: #92400E;">📋 {section_name} 분석 준비 중</strong>
+        </div>
+        <p style="line-height: 1.6; color: #78350F; margin: 12px 0;">
+            본 섹션의 상세 분석을 위해 다음 정보가 필요합니다:
+        </p>
+        <ul style="line-height: 1.8; color: #78350F; margin: 12px 0 12px 20px;">
+            {inputs_html}
+        </ul>
+        <p style="line-height: 1.6; color: #78350F; margin: 12px 0;">
+            위 정보가 확보되면 자동으로 상세 분석이 추가됩니다. 
+            현재는 일반적인 LH 매입임대사업 기준을 적용한 해석을 제공합니다.
+        </p>
+    </div>
+    """
 
 
 # ============================================================================
