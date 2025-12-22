@@ -312,7 +312,7 @@ async def preview_module_html(
         logger.info(f"📄 HTML 미리보기 요청 (UNIFIED): module={module}, context_id={context_id}")
         
         # ✅ STEP 1: canonical_summary 로드 (Final Report와 동일)
-        frozen_context = get_frozen_context(context_id)
+        frozen_context = context_storage.get_frozen_context(context_id)
         if not frozen_context:
             raise HTTPException(
                 status_code=404,
@@ -367,22 +367,201 @@ async def preview_module_html(
         
     except FileNotFoundError as e:
         logger.error(f"컨텍스트를 찾을 수 없음: {context_id}")
-        raise HTTPException(
-            status_code=404,
-            detail=f"컨텍스트를 찾을 수 없습니다: {context_id}"
+        # ✅ FIX 1: JSON 에러 대신 안내 HTML 반환
+        return HTMLResponse(
+            content=_render_data_preparation_page(
+                module=module,
+                context_id=context_id,
+                error_type="context_not_found"
+            ),
+            status_code=404
         )
     
     except Exception as e:
         logger.error(f"HTML 생성 중 예상치 못한 오류: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"HTML 생성 중 오류가 발생했습니다. (오류 ID: {context_id})"
+        # ✅ FIX 1: JSON 에러 대신 안내 HTML 반환
+        return HTMLResponse(
+            content=_render_data_preparation_page(
+                module=module,
+                context_id=context_id,
+                error_type="generation_failed",
+                error_detail=str(e)
+            ),
+            status_code=500
         )
 
 
 # ============================================================================
 # HTML Generation Helper
 # ============================================================================
+
+def _render_data_preparation_page(
+    module: str, 
+    context_id: str, 
+    error_type: str,
+    error_detail: str = ""
+) -> str:
+    """
+    데이터 준비 중 안내 페이지 (v4.3 FIX 1)
+    
+    JSON 에러 대신 사용자 친화적 HTML 페이지를 반환합니다.
+    어떤 데이터가 준비되지 않았는지 명확히 안내합니다.
+    
+    Args:
+        module: 모듈 ID (M2-M6)
+        context_id: 컨텍스트 ID
+        error_type: context_not_found | generation_failed
+        error_detail: 상세 에러 메시지 (선택)
+    
+    Returns:
+        사용자 친화적 HTML 안내 페이지
+    """
+    module_names = {
+        "M2": "토지 가치 평가",
+        "M3": "주택 유형 분석",
+        "M4": "건축 규모 결정",
+        "M5": "사업성 분석",
+        "M6": "LH 심사 예측"
+    }
+    
+    module_name = module_names.get(module, "보고서")
+    
+    if error_type == "context_not_found":
+        title = "📋 데이터 준비 중"
+        message = f"<strong>{module_name}</strong> 보고서를 생성하기 위한 데이터가 아직 준비되지 않았습니다."
+        instructions = """
+        <h3 style="color: #1E40AF; margin-top: 24px;">다음 단계를 진행해주세요:</h3>
+        <ol style="line-height: 2.0; padding-left: 20px;">
+            <li><strong>M1 분석 완료</strong>: 토지 정보 입력 및 기본 분석을 완료하세요</li>
+            <li><strong>'분석 시작' 클릭</strong>: 분석 화면에서 '분석 시작' 버튼을 눌러 컨텍스트를 저장하세요</li>
+            <li><strong>모듈 분석 완료</strong>: M2-M6 모듈 분석이 완료될 때까지 기다리세요</li>
+            <li><strong>보고서 생성</strong>: 분석 완료 후 다시 보고서를 요청하세요</li>
+        </ol>
+        """
+    else:  # generation_failed
+        title = "⚠️ 보고서 생성 중 오류"
+        message = f"<strong>{module_name}</strong> 보고서 생성 중 오류가 발생했습니다."
+        instructions = f"""
+        <h3 style="color: #DC2626; margin-top: 24px;">오류 정보:</h3>
+        <div style="background: #FEF2F2; padding: 16px; border-radius: 8px; border-left: 4px solid #DC2626; margin: 16px 0;">
+            <p style="margin: 0; color: #991B1B; font-family: monospace; font-size: 14px;">
+                {error_detail if error_detail else '상세 정보가 없습니다'}
+            </p>
+        </div>
+        <h3 style="color: #1E40AF; margin-top: 24px;">해결 방법:</h3>
+        <ol style="line-height: 2.0; padding-left: 20px;">
+            <li><strong>데이터 확인</strong>: M1-M6 분석이 모두 완료되었는지 확인하세요</li>
+            <li><strong>페이지 새로고침</strong>: 브라우저를 새로고침한 후 다시 시도하세요</li>
+            <li><strong>기술 지원</strong>: 문제가 계속되면 기술 지원팀에 문의하세요</li>
+        </ol>
+        <p style="margin-top: 16px; color: #6B7280;">
+            <strong>Context ID:</strong> <code style="background: #F3F4F6; padding: 4px 8px; border-radius: 4px;">{context_id}</code>
+        </p>
+        """
+    
+    return f"""
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{title} - ZeroSite</title>
+        <style>
+            @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+            
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }}
+            
+            body {{
+                font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }}
+            
+            .container {{
+                background: white;
+                max-width: 800px;
+                width: 100%;
+                border-radius: 16px;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                padding: 48px;
+            }}
+            
+            h1 {{
+                font-size: 32px;
+                color: #111827;
+                margin-bottom: 16px;
+            }}
+            
+            .message {{
+                font-size: 18px;
+                color: #374151;
+                line-height: 1.8;
+                margin-bottom: 32px;
+            }}
+            
+            .instructions {{
+                background: #F9FAFB;
+                padding: 24px;
+                border-radius: 12px;
+                border-left: 4px solid #3B82F6;
+            }}
+            
+            .instructions h3 {{
+                font-size: 20px;
+                margin-bottom: 16px;
+            }}
+            
+            .instructions ol {{
+                color: #374151;
+                line-height: 2.0;
+            }}
+            
+            .instructions li {{
+                margin-bottom: 8px;
+            }}
+            
+            .footer {{
+                margin-top: 32px;
+                padding-top: 24px;
+                border-top: 1px solid #E5E7EB;
+                text-align: center;
+                color: #6B7280;
+                font-size: 14px;
+            }}
+            
+            code {{
+                background: #F3F4F6;
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-family: 'Courier New', monospace;
+                font-size: 14px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>{title}</h1>
+            <p class="message">{message}</p>
+            <div class="instructions">
+                {instructions}
+            </div>
+            <div class="footer">
+                <p><strong>ZeroSite Expert Edition</strong> by Antenna Holdings</p>
+                <p style="margin-top: 8px;">LH 공공임대주택 사업 분석 플랫폼</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
 
 def _get_m6_next_steps_template() -> str:
     """
