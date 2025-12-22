@@ -308,6 +308,24 @@ async def download_module_pdf(
             logger.error(f"❌ Incomplete canonical_summary: missing {missing}")
             raise ValueError(f"canonical_summary incomplete: missing modules {missing}")
         
+        # 🔒 STEP 2.6: SNAPSHOT FRESHNESS CHECK
+        # Warn if snapshot is old (helps detect stale data issues)
+        snapshot_created_at = frozen_context.get("created_at", "")
+        if snapshot_created_at:
+            from datetime import datetime, timedelta
+            try:
+                snapshot_time = datetime.fromisoformat(snapshot_created_at.replace('Z', '+00:00'))
+                now = datetime.now(snapshot_time.tzinfo) if snapshot_time.tzinfo else datetime.now()
+                age = now - snapshot_time
+                
+                if age > timedelta(hours=24):
+                    logger.warning(f"⚠️ Snapshot is {age.days} days old (context_id: {context_id})")
+                    logger.warning("   Consider rerunning analysis for latest data")
+                else:
+                    logger.info(f"✅ Snapshot age: {age.total_seconds()/3600:.1f} hours (fresh)")
+            except Exception as e:
+                logger.warning(f"⚠️ Could not parse snapshot timestamp: {e}")
+        
         logger.info(f"✅ Data source verified: canonical_summary with {len(available_modules)} modules")
         
         # Step 3: Use SAME adapters as HTML preview (NO OTHER DATA SOURCE ALLOWED)
@@ -320,24 +338,51 @@ async def download_module_pdf(
         )
         
         # Step 4: Get normalized data (SAME as HTML - THIS IS THE LOCK)
+        # 🔒 CRITICAL: HTML and PDF MUST use the EXACT SAME adapter output
+        # Any deviation will be caught by parity validator and BLOCKED
         if module == "M2":
             normalized_data = adapt_m2_summary_for_html(canonical_summary)
+            logger.info(f"✅ M2: Using adapt_m2_summary_for_html (SAME as HTML)")
         elif module == "M3":
             normalized_data = adapt_m3_summary_for_html(canonical_summary)
+            logger.info(f"✅ M3: Using adapt_m3_summary_for_html (SAME as HTML)")
         elif module == "M4":
             normalized_data = adapt_m4_summary_for_html(canonical_summary)
+            logger.info(f"✅ M4: Using adapt_m4_summary_for_html (SAME as HTML)")
         elif module == "M5":
             normalized_data = adapt_m5_summary_for_html(canonical_summary)
+            logger.info(f"✅ M5: Using adapt_m5_summary_for_html (SAME as HTML)")
         elif module == "M6":
             normalized_data = adapt_m6_summary_for_html(canonical_summary)
+            logger.info(f"✅ M6: Using adapt_m6_summary_for_html (SAME as HTML)")
         else:
             raise HTTPException(status_code=400, detail=f"지원하지 않는 모듈: {module}")
+        
+        # 🔒 VERIFICATION: Ensure normalized_data is from adapter (not rebuilt)
+        if not isinstance(normalized_data, dict):
+            raise ValueError(f"Adapter must return dict, got {type(normalized_data)}")
+        
+        if "fallback" in normalized_data and normalized_data["fallback"]:
+            logger.warning(f"⚠️ Module {module} using fallback data (incomplete canonical_summary)")
+        
+        logger.info(f"✅ Data path locked: canonical_summary → adapter → normalized_data")
         
         logger.info(f"✅ Normalized data prepared for {module} PDF")
         
         # Step 5: Convert adapter output to PDF generator format
         # This is a compatibility layer until PDF generators are updated
         pdf_data = _convert_normalized_to_pdf_format(module, normalized_data, frozen_context)
+        
+        # 🔒 STEP 5.1: VERIFY METADATA INCLUSION
+        if "_metadata" in pdf_data:
+            metadata = pdf_data["_metadata"]
+            logger.info(f"✅ PDF metadata included:")
+            logger.info(f"   - context_id: {metadata.get('context_id')}")
+            logger.info(f"   - snapshot_created_at: {metadata.get('snapshot_created_at')}")
+            logger.info(f"   - data_signature: {metadata.get('data_signature')}")
+            logger.info(f"   ⚠️ NOTE: PDF generators should display this metadata on page 1")
+        else:
+            logger.warning(f"⚠️ PDF metadata missing - traceability reduced")
         
         # ✅ STEP 5.5: HTML/PDF PARITY VALIDATION (CRITICAL)
         # This ensures HTML and PDF show IDENTICAL data
