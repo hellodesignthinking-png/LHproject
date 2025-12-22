@@ -991,6 +991,629 @@ def render_landowner_summary(data: Dict[str, Any]) -> str:
                         확실한 확인을 받지 못하면, 나중에 큰 손해를 볼 수 있으니 주의하세요.
                     </div>
                 </div>
+                
+                <!-- ===== v4.2 추가: 정책·제도 파트 (200 lines) ===== -->
+                <div class="section">
+                    <div class="section-title">📜 LH 신축매입임대 제도, 정확히 이해하기</div>
+                    
+                    <!-- 1.1 제도의 도입 배경 -->
+                    <div style="padding: 20px; background: #F9FAFB; border-radius: 8px; margin-bottom: 20px;">
+                        <strong style="color: #1F2937; font-size: 16px; display: block; margin-bottom: 12px;">
+                            🏛️ 왜 이 제도가 생겼나요?
+                        </strong>
+                        <div style="line-height: 1.8; color: #374151;">
+                            <p style="margin-bottom: 12px;">
+                                <strong>LH 신축매입임대 제도</strong>는 2000년대 초반, 우리나라가 <strong>"주거복지 국가"</strong>로 
+                                전환하는 과정에서 만들어진 제도입니다.
+                            </p>
+                            <p style="margin-bottom: 12px;">
+                                당시 정부는 <strong>저소득층과 사회초년생</strong>의 주거 문제가 심각하다는 것을 인식했습니다. 
+                                하지만 정부와 LH가 직접 모든 땅을 사서 집을 짓기에는 <strong>예산과 인력이 부족</strong>했습니다.
+                            </p>
+                            <p style="margin-bottom: 12px;">
+                                그래서 나온 아이디어가 <strong>"민간이 짓고, LH가 사주는"</strong> 방식입니다. 
+                                토지주나 건설사가 건물을 지으면, LH가 완공 후 즉시 매입해서 공공임대주택으로 운영하는 구조입니다.
+                            </p>
+                            <p style="padding: 12px; background: #EFF6FF; border-radius: 6px; margin-top: 16px;">
+                                <strong style="color: #1E40AF;">💡 쉽게 정리하면</strong><br>
+                                "정부는 집이 필요한데 돈이 부족하고, 민간은 돈은 있는데 분양 리스크가 부담스럽다" 
+                                → 둘을 연결해주는 것이 바로 <strong>신축매입임대 제도</strong>입니다.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- 1.2 제도가 해결하려는 정책 문제 -->
+                    <div style="padding: 20px; background: #FEF3C7; border-radius: 8px; margin-bottom: 20px;">
+                        <strong style="color: #92400E; font-size: 16px; display: block; margin-bottom: 12px;">
+                            🎯 이 제도가 해결하려는 문제는?
+                        </strong>
+                        <div style="line-height: 1.8; color: #78350F;">
+                            <p style="margin-bottom: 12px;">
+                                <strong>1) 청년·신혼부부 주거난</strong><br>
+                                서울 및 수도권의 전세·월세 가격이 너무 비싸서, 
+                                <strong>사회초년생이나 신혼부부</strong>가 집을 구하기 어려운 상황입니다. 
+                                이들을 위한 <strong>저렴한 공공임대주택</strong>이 절실히 필요합니다.
+                            </p>
+                            <p style="margin-bottom: 12px;">
+                                <strong>2) 공공임대 물량 부족</strong><br>
+                                정부가 직접 공공임대주택을 짓는 속도가 <strong>수요를 따라가지 못합니다</strong>. 
+                                매년 수만 세대가 부족한 상황에서, 민간의 도움 없이는 물량 확보가 불가능합니다.
+                            </p>
+                            <p style="margin-bottom: 12px;">
+                                <strong>3) 민간 자본 활용 필요성</strong><br>
+                                정부 예산만으로는 한계가 있기 때문에, <strong>민간 자본</strong>을 활용해서 
+                                더 빠르게, 더 많은 공공임대주택을 공급하는 것이 목표입니다.
+                            </p>
+                            <p style="padding: 12px; background: #FFFBEB; border-radius: 6px; margin-top: 16px;">
+                                <strong style="color: #92400E;">📌 핵심 포인트</strong><br>
+                                이 제도는 <strong>"사회적 필요(공공임대)"</strong>와 <strong>"민간의 수익성"</strong>을 
+                                동시에 충족시키기 위한 <strong>윈-윈 구조</strong>입니다.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- 1.3 실제 LH 심사·집행 구조 -->
+                    <div style="padding: 20px; background: #ECFDF5; border-radius: 8px; margin-bottom: 20px;">
+                        <strong style="color: #065F46; font-size: 16px; display: block; margin-bottom: 12px;">
+                            🔍 LH는 어떻게 심사하나요?
+                        </strong>
+                        <div style="line-height: 1.8; color: #065F46;">
+                            <p style="margin-bottom: 12px;">
+                                LH 심사는 <strong>5단계 프로세스</strong>로 진행됩니다:
+                            </p>
+                            
+                            <div style="padding: 12px; background: white; border-radius: 6px; margin-bottom: 10px; border-left: 3px solid #10B981;">
+                                <strong style="color: #10B981;">1단계: 사전 상담 (1~2주)</strong><br>
+                                토지주가 LH 지역본부에 "이 땅으로 신축매입임대가 가능한가요?"라고 문의하면, 
+                                LH 담당자가 <strong>기본 입지 조건</strong>을 검토합니다. 
+                                이 단계에서 "불가능하다"고 판단되면 더 이상 진행하지 않습니다.
+                            </div>
+                            
+                            <div style="padding: 12px; background: white; border-radius: 6px; margin-bottom: 10px; border-left: 3px solid #10B981;">
+                                <strong style="color: #10B981;">2단계: 입지 평가 (2~3주)</strong><br>
+                                LH는 <strong>역세권 거리, 학군, 생활 인프라</strong> 등을 종합적으로 평가합니다. 
+                                특히 <strong>역에서 도보 10분 이내</strong> 같은 조건이 중요합니다. 
+                                입지가 적합하지 않으면 이 단계에서 탈락할 수 있습니다.
+                            </div>
+                            
+                            <div style="padding: 12px; background: white; border-radius: 6px; margin-bottom: 10px; border-left: 3px solid #10B981;">
+                                <strong style="color: #10B981;">3단계: 가격 협의 (3~4주)</strong><br>
+                                LH는 <strong>"표준 매입가 산정 기준"</strong>에 따라 매입 가격을 제시합니다. 
+                                이 가격은 <strong>건축비 + 토지비 + 적정 이윤</strong>으로 구성되는데, 
+                                토지주가 원하는 가격과 차이가 나면 <strong>협상</strong>이 필요합니다.
+                            </div>
+                            
+                            <div style="padding: 12px; background: white; border-radius: 6px; margin-bottom: 10px; border-left: 3px solid #10B981;">
+                                <strong style="color: #10B981;">4단계: 설계 검토 (4~6주)</strong><br>
+                                건축 설계가 <strong>LH 기준</strong>에 맞는지 검토합니다. 
+                                특히 <strong>세대 구성(1인 가구용, 신혼부부용 등)</strong>과 
+                                <strong>면적 기준(전용면적 40㎡ 이하)</strong>이 중요합니다.
+                            </div>
+                            
+                            <div style="padding: 12px; background: white; border-radius: 6px; border-left: 3px solid #10B981;">
+                                <strong style="color: #10B981;">5단계: 최종 승인 (2~3주)</strong><br>
+                                위 4개 단계를 모두 통과하면, LH 본부에서 <strong>최종 승인</strong>을 내립니다. 
+                                이 단계에서는 <strong>계약서 작성</strong>과 <strong>매입 조건 확정</strong>이 이루어집니다.
+                            </div>
+                            
+                            <p style="padding: 12px; background: #D1FAE5; border-radius: 6px; margin-top: 16px;">
+                                <strong style="color: #065F46;">⏱️ 전체 소요 기간</strong><br>
+                                사전 상담 시작부터 최종 승인까지 <strong>평균 3~4개월</strong>이 걸립니다. 
+                                하지만 협상이나 보완이 필요한 경우 <strong>6개월 이상</strong> 소요될 수 있습니다.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- 1.4 대상 사업에 미치는 영향 -->
+                    <div style="padding: 20px; background: #EFF6FF; border-radius: 8px; margin-bottom: 20px;">
+                        <strong style="color: #1E40AF; font-size: 16px; display: block; margin-bottom: 12px;">
+                            📍 이 땅에는 어떻게 적용되나요?
+                        </strong>
+                        <div style="line-height: 1.8; color: #1E3A8A;">
+                            <p style="margin-bottom: 12px;">
+                                <strong style="color: #3B82F6;">✅ 유리한 점</strong>
+                            </p>
+                            <ul style="margin-left: 20px; margin-bottom: 16px;">
+                                <li style="margin-bottom: 8px;">
+                                    <strong>입지 조건</strong>: 이 땅은 {data.get('location_advantage', '역세권 또는 주요 생활권에 위치')}하여 
+                                    LH 입지 기준을 충족할 가능성이 높습니다.
+                                </li>
+                                <li style="margin-bottom: 8px;">
+                                    <strong>개발 규모</strong>: 예상 세대수({format_units(data.get('buildable_units'))})가 
+                                    LH 선호 규모(50~150세대)에 적합합니다.
+                                </li>
+                                <li style="margin-bottom: 8px;">
+                                    <strong>용도지역</strong>: 현재 용도지역이 주거지역으로, 
+                                    공공임대주택 개발에 유리한 조건입니다.
+                                </li>
+                            </ul>
+                            
+                            <p style="margin-bottom: 12px; margin-top: 20px;">
+                                <strong style="color: #DC2626;">⚠️ 주의할 점</strong>
+                            </p>
+                            <ul style="margin-left: 20px;">
+                                <li style="margin-bottom: 8px;">
+                                    <strong>가격 협상</strong>: LH 표준 매입가와 토지주 기대 가격 간 차이가 있을 수 있으므로, 
+                                    <strong>유연한 협상 자세</strong>가 필요합니다.
+                                </li>
+                                <li style="margin-bottom: 8px;">
+                                    <strong>설계 기준</strong>: LH 기준에 맞는 설계가 필수이므로, 
+                                    초기 단계부터 <strong>LH 담당자와 긴밀히 협의</strong>해야 합니다.
+                                </li>
+                                <li style="margin-bottom: 8px;">
+                                    <strong>인허가 협조</strong>: 지자체 인허가 과정에서 LH 사업임을 명확히 밝히면 
+                                    <strong>우대받을 가능성</strong>이 있지만, 보장되는 것은 아닙니다.
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- 1.5 제도상 한계와 비공식 관행 -->
+                    <div style="padding: 20px; background: #FEF2F2; border-radius: 8px; margin-bottom: 20px;">
+                        <strong style="color: #991B1B; font-size: 16px; display: block; margin-bottom: 12px;">
+                            🚨 제도의 한계와 실제 운영
+                        </strong>
+                        <div style="line-height: 1.8; color: #7F1D1D;">
+                            <p style="margin-bottom: 12px;">
+                                <strong>공식 기준 vs 실제 운영</strong><br>
+                                LH는 <strong>공식 심사 기준</strong>을 공개하고 있지만, 
+                                실제로는 <strong>지역본부별로 해석과 적용이 다릅니다</strong>. 
+                                예를 들어, "역세권 도보 10분"이라는 기준도 
+                                어떤 지역본부는 엄격하게 적용하고, 어떤 곳은 유연하게 적용합니다.
+                            </p>
+                            <p style="margin-bottom: 12px;">
+                                <strong>지역본부별 차이</strong><br>
+                                서울·경기본부는 <strong>입지 기준이 까다로운 대신</strong> 매입가가 높고, 
+                                지방본부는 입지 기준이 유연한 대신 매입가가 낮은 경향이 있습니다. 
+                                따라서 <strong>어느 지역본부 관할인지</strong>가 중요합니다.
+                            </p>
+                            <p style="margin-bottom: 12px;">
+                                <strong>협상 여지</strong><br>
+                                LH 표준 매입가는 <strong>"협상의 출발점"</strong>이지 확정 가격이 아닙니다. 
+                                특히 LH가 해당 지역에서 <strong>물량 확보가 시급한 경우</strong>, 
+                                토지주에게 유리한 조건으로 협상될 가능성이 높아집니다.
+                            </p>
+                            <p style="padding: 12px; background: #FEE2E2; border-radius: 6px; margin-top: 16px;">
+                                <strong style="color: #991B1B;">💡 실무 팁</strong><br>
+                                LH 담당자와 <strong>초기 단계부터 신뢰 관계</strong>를 형성하고, 
+                                <strong>"이 사업을 꼭 성사시키겠다"</strong>는 의지를 보여주면 
+                                협상이 훨씬 수월해집니다.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <!-- ===== v4.2 정책·제도 파트 끝 ===== -->
+                
+                <!-- ===== v4.2 리스크 관리 섹션 시작 ===== -->
+                <div class="section">
+                    <div class="section-title">🛡️ 사업 진행 중 알아두셔야 할 변수들</div>
+                    
+                    <!-- 소개 -->
+                    <div style="padding: 16px; background: #F0F9FF; border-radius: 8px; line-height: 1.8; margin-bottom: 24px;">
+                        <strong style="color: #1E40AF; font-size: 15px;">이 섹션에서는</strong><br><br>
+                        LH 신축매입임대 사업을 진행할 때 주의해야 할 변수들을 설명드립니다. 
+                        이것들은 <strong>"사업이 불가능하다"는 의미가 아니라 "잘 관리해야 할 요소들"</strong>입니다. 
+                        각 변수를 정확히 이해하고 미리 대비하면, 안정적으로 사업을 진행할 수 있습니다.
+                    </div>
+                    
+                    <!-- 1. 제도 환경 -->
+                    <div style="padding: 20px; background: #F9FAFB; border-radius: 8px; margin-bottom: 20px;">
+                        <strong style="color: #1F2937; font-size: 16px; display: block; margin-bottom: 12px;">
+                            📋 제도 환경에 대한 이해
+                        </strong>
+                        
+                        <div style="line-height: 1.8; color: #374151; margin-bottom: 16px;">
+                            <strong style="color: #3B82F6;">정부 정책과 LH 사업의 관계</strong><br><br>
+                            LH 신축매입임대 제도는 지난 20년간 꾸준히 운영되어 온 정부의 주거복지 정책입니다. 
+                            이 제도는 청년, 신혼부부, 저소득층을 위한 공공임대주택을 민간의 도움을 받아 공급하는 방식으로, 
+                            정권이 바뀌어도 기본 틀은 계속 유지되어 왔습니다. 정부 예산 상황이나 부동산 시장 상황에 따라 
+                            세부 운영 방식(지역별 우선순위, 매입 물량 등)은 조정될 수 있지만, 제도 자체가 없어지는 것은 아닙니다.
+                        </div>
+                        
+                        <div style="line-height: 1.8; color: #374151; margin-bottom: 16px;">
+                            <strong style="color: #3B82F6;">실제로 어떤 변화가 있을 수 있나요?</strong><br><br>
+                            정책 환경이 변하면 LH가 선호하는 지역이나 주택 유형이 달라질 수 있습니다. 
+                            예를 들어, 올해는 수도권을 우선적으로 매입하다가 내년에는 지방 중소도시를 우선할 수도 있습니다. 
+                            또는 청년 1인 가구용 소형 주택을 더 많이 원하거나, 신혼부부용 중형 주택으로 방향을 바꿀 수도 있습니다. 
+                            하지만 이런 변화는 "갑자기" 일어나는 것이 아니라, LH가 미리 방향을 발표하고 
+                            기존 사업에는 경과 조치를 제공하는 것이 일반적입니다.
+                        </div>
+                        
+                        <div style="padding: 12px; background: #EFF6FF; border-radius: 6px; line-height: 1.8;">
+                            <strong style="color: #1E40AF;">✅ 토지주가 할 수 있는 일</strong><br><br>
+                            가장 중요한 것은 <strong>사업을 시작하기 전에 LH와 충분히 상담</strong>하는 것입니다. 
+                            LH 지역본부에 가서 "지금 이 지역에서 어떤 유형의 주택을 원하시나요?", 
+                            "앞으로 1~2년간 정책 방향이 어떻게 되나요?"라고 물어보면 담당자가 친절히 안내해 줍니다. 
+                            정책 변화를 두려워할 필요는 없고, <strong>변화에 맞춰 계획을 조정</strong>하면 됩니다.
+                        </div>
+                    </div>
+                    
+                    <!-- 2. 심사 과정 -->
+                    <div style="padding: 20px; background: #ECFDF5; border-radius: 8px; margin-bottom: 20px;">
+                        <strong style="color: #065F46; font-size: 16px; display: block; margin-bottom: 12px;">
+                            ✓ 심사 과정에서 고려되는 요소
+                        </strong>
+                        
+                        <div style="line-height: 1.8; color: #065F46; margin-bottom: 16px;">
+                            <strong style="color: #10B981;">LH는 어떤 기준으로 심사하나요?</strong><br><br>
+                            LH는 크게 세 가지를 봅니다. 첫째, <strong>입지가 좋은가?</strong> 
+                            (역에서 가깝고, 학교·마트·병원이 근처에 있는가), 
+                            둘째, <strong>가격이 적정한가?</strong> 
+                            (토지값과 건축비를 합쳐서 LH 예산 범위 안에 들어오는가), 
+                            셋째, <strong>사업자가 믿을 만한가?</strong> 
+                            (과거에 비슷한 사업을 해본 경험이 있거나, 자금력이 충분한가). 
+                            이 세 가지가 모두 적정 수준이면 승인 가능성이 높습니다.
+                        </div>
+                        
+                        <div style="line-height: 1.8; color: #065F46; margin-bottom: 16px;">
+                            <strong style="color: #10B981;">점수만 높으면 무조건 승인되나요?</strong><br><br>
+                            꼭 그렇지는 않습니다. LH는 공공기관이기 때문에 
+                            "이 사업이 공공 목적에 부합하는가", "이 지역에 정말 이런 주택이 필요한가", 
+                            "사업자가 실제로 건물을 완공할 능력이 있는가" 등을 종합적으로 판단합니다. 
+                            예를 들어, 어떤 땅이 입지 점수는 높지만 그 지역에 이미 공공임대주택이 많다면, 
+                            LH는 "지금은 다른 지역을 우선하겠습니다"라고 할 수 있습니다.
+                        </div>
+                        
+                        <div style="padding: 12px; background: #D1FAE5; border-radius: 6px; line-height: 1.8;">
+                            <strong style="color: #065F46;">✅ 승인 가능성을 높이는 방법</strong><br><br>
+                            가장 확실한 방법은 <strong>사전에 LH 담당자와 충분히 대화</strong>하는 것입니다. 
+                            "이 땅으로 사업하고 싶은데 가능할까요?", "어떤 점을 보완하면 좋을까요?"라고 물어보면, 
+                            담당자가 솔직하게 의견을 줍니다. <strong>LH 입장에서 "이 사업은 안전하고, 
+                            공공 목적에 맞고, 실행 가능하다"고 느끼게 만드는 것</strong>이 핵심입니다.
+                        </div>
+                    </div>
+                    
+                    <!-- 3. 토지 가치 -->
+                    <div style="padding: 20px; background: #FEF3C7; border-radius: 8px; margin-bottom: 20px;">
+                        <strong style="color: #92400E; font-size: 16px; display: block; margin-bottom: 12px;">
+                            💰 토지 가치 산정 시 유의사항
+                        </strong>
+                        
+                        <div style="line-height: 1.8; color: #78350F; margin-bottom: 16px;">
+                            <strong style="color: #F59E0B;">감정가는 얼마나 정확한가요?</strong><br><br>
+                            감정평가사가 산정한 토지 감정가는 <strong>"현재 시점의 합리적 추정치"</strong>입니다. 
+                            인근에서 실제로 거래된 땅의 가격을 참고하고, 이 땅의 특성(넓이, 형태, 용도지역 등)을 
+                            고려해서 계산합니다. 하지만 감정가는 "절대 정답"이 아니라 
+                            <strong>"이 정도면 합리적이다"는 범위</strong>라고 이해하시면 됩니다. 
+                            예를 들어, 평당 500만 원으로 감정이 나왔다면, 실제 거래 시 
+                            480만 원에서 520만 원 사이에서 결정될 가능성이 큽니다.
+                        </div>
+                        
+                        <div style="line-height: 1.8; color: #78350F; margin-bottom: 16px;">
+                            <strong style="color: #F59E0B;">감정가가 나중에 달라질 수 있나요?</strong><br><br>
+                            네, 달라질 수 있습니다. 감정평가는 <strong>특정 시점의 시장 상황</strong>을 반영하기 때문에, 
+                            6개월이나 1년 후에 다시 평가하면 가격이 오르거나 내릴 수 있습니다. 
+                            특히 그 지역에 큰 개발 계획(지하철 연장, 대형 상업시설 입점 등)이 발표되면 
+                            토지 가격이 급등할 수 있고, 반대로 부동산 시장이 전반적으로 침체되면 가격이 내려갈 수 있습니다.
+                        </div>
+                        
+                        <div style="padding: 12px; background: #FFFBEB; border-radius: 6px; line-height: 1.8;">
+                            <strong style="color: #92400E;">✅ 대비 방법</strong><br><br>
+                            가장 좋은 방법은 <strong>초기 감정가보다 약간 높게 잡고 계획을 세우는 것</strong>입니다. 
+                            예를 들어, 감정가가 평당 500만 원이 나왔다면, 실제 매입 시 평당 550만 원까지 
+                            오를 수 있다고 가정하고 사업 수익성을 계산해 보세요. 
+                            그래도 수익이 나온다면 안전한 사업입니다.
+                        </div>
+                    </div>
+                    
+                    <!-- 4. 사업 진행 변수 -->
+                    <div style="padding: 20px; background: #FEF2F2; border-radius: 8px; margin-bottom: 20px;">
+                        <strong style="color: #991B1B; font-size: 16px; display: block; margin-bottom: 12px;">
+                            ⚠️ 사업 진행 중 발생할 수 있는 변수
+                        </strong>
+                        
+                        <div style="line-height: 1.8; color: #7F1D1D; margin-bottom: 16px;">
+                            <strong style="color: #DC2626;">건축 규모가 줄어들 수 있나요?</strong><br><br>
+                            사전 검토에서 "이 땅에 80세대 지을 수 있다"고 나왔어도, 
+                            실제 건축허가를 받을 때 지자체가 "일조권 때문에 75세대까지만 가능합니다"라고 할 수 있습니다. 
+                            법규 자체는 명확하지만, <strong>법규를 어떻게 해석하고 적용하느냐는 
+                            지자체 담당자의 판단</strong>이 들어가기 때문입니다.
+                        </div>
+                        
+                        <div style="line-height: 1.8; color: #7F1D1D; margin-bottom: 16px;">
+                            <strong style="color: #DC2626;">건축비가 오를 수 있나요?</strong><br><br>
+                            네, 가능합니다. 건축비는 <strong>철근, 시멘트, 목재 같은 자재 가격과 인건비</strong>로 
+                            결정되는데, 이것들은 국제 원자재 시장, 환율, 건설 인력 수급 상황에 따라 변동합니다. 
+                            최근 몇 년간은 자재비가 많이 올라서, 1년 전에 평당 400만 원으로 예상했던 건축비가 
+                            실제 공사 시작 시점에는 평당 440만 원(10% 상승)이 되는 경우도 있었습니다.
+                        </div>
+                        
+                        <div style="line-height: 1.8; color: #7F1D1D; margin-bottom: 16px;">
+                            <strong style="color: #DC2626;">일정이 지연될 수 있나요?</strong><br><br>
+                            가능합니다. LH 승인 과정에서 추가 검토가 필요하거나, 지자체 건축허가에서 
+                            주민 민원 처리 때문에 시간이 더 걸리거나, 공사 중에 장마나 한파로 공사가 중단되는 등 
+                            여러 이유로 일정이 늦어질 수 있습니다. 일정이 6개월 지연되면, 
+                            그 6개월 동안 대출 이자가 계속 나가서 수익이 줄어듭니다.
+                        </div>
+                        
+                        <div style="padding: 12px; background: #FEE2E2; border-radius: 6px; line-height: 1.8;">
+                            <strong style="color: #991B1B;">✅ 대응 방법</strong><br><br>
+                            첫째, <strong>보수적으로 계산</strong>하세요. 건축 규모는 예상보다 5% 적게, 
+                            건축비는 예상보다 10% 높게, 일정은 예상보다 20% 길게 잡고 수익성을 계산해 보세요. 
+                            둘째, <strong>시공사와 총액 계약</strong>을 하세요. 
+                            "자재비가 올라도 계약 금액은 안 올린다"는 조건을 넣으면, 건축비 상승 리스크를 시공사가 부담합니다. 
+                            셋째, <strong>LH와 지자체 담당자와 자주 소통</strong>하세요.
+                        </div>
+                    </div>
+                    
+                    <!-- 5. 종합 판단 -->
+                    <div style="padding: 20px; background: #EFF6FF; border-radius: 8px; border-left: 4px solid #3B82F6;">
+                        <strong style="color: #1E40AF; font-size: 16px; display: block; margin-bottom: 12px;">
+                            ✨ 전체적으로 보았을 때의 판단
+                        </strong>
+                        
+                        <div style="line-height: 1.8; color: #1E3A8A; margin-bottom: 16px;">
+                            <strong style="color: #3B82F6;">이 사업은 안전한가요?</strong><br><br>
+                            위에서 말씀드린 여러 변수들이 있지만, 
+                            <strong>이것들은 "사업이 불가능하다"는 의미가 아니라 "관리해야 할 요소들"</strong>입니다. 
+                            LH 신축매입임대 사업은 지난 20년간 수많은 토지주와 건설사가 성공적으로 진행해 온 사업입니다. 
+                            가장 큰 장점은 <strong>"분양 리스크가 없다"</strong>는 것입니다.
+                        </div>
+                        
+                        <div style="line-height: 1.8; color: #1E3A8A; margin-bottom: 16px;">
+                            <strong style="color: #3B82F6;">수익은 어느 정도 기대할 수 있나요?</strong><br><br>
+                            LH 사업은 <strong>"큰 돈을 벌기보다는 안정적으로 적정한 수익을 내는 사업"</strong>입니다. 
+                            수익률은 보통 연 8~12% 정도로, 은행 예금(3~4%)보다는 높지만 
+                            고위험 부동산 개발(15~20%)보다는 낮습니다. 
+                            대신 리스크도 낮아서, 조심스럽게 계획하고 변수들을 잘 관리하면 안정적으로 수익을 낼 수 있습니다.
+                        </div>
+                        
+                        <div style="padding: 16px; background: white; border-radius: 6px; line-height: 1.8;">
+                            <strong style="color: #1E40AF;">🎯 지금 결정해야 할 것</strong><br><br>
+                            가장 먼저 할 일은 <strong>LH 지역본부와 상담</strong>입니다. 
+                            "이 땅으로 신축매입임대가 가능한가요?", "지금 이 지역에서 사업하기 좋은 시기인가요?"라고 
+                            물어보세요. LH 담당자의 반응이 긍정적이면, 다음 단계로 진행하면 됩니다. 
+                            <strong>서두르지 말고, 단계별로 확인하면서 진행</strong>하는 것이 가장 안전합니다.
+                        </div>
+                    </div>
+                    
+                    <!-- 최종 메시지 -->
+                    <div style="padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; margin-top: 24px;">
+                        <div style="color: white; line-height: 1.8; text-align: center;">
+                            <strong style="font-size: 18px; display: block; margin-bottom: 12px;">
+                                💡 결론: 리스크를 이해하고 관리하면, 충분히 가능한 사업입니다
+                            </strong>
+                            <p style="margin: 12px 0; opacity: 0.95;">
+                                LH 신축매입임대 사업에는 여러 변수가 있지만, 
+                                <strong>이것들은 대부분 "관리 가능한 변수"</strong>입니다.
+                            </p>
+                            <p style="margin: 12px 0; opacity: 0.95;">
+                                가장 중요한 것은 <strong>"서두르지 말고, 단계별로 확인하고, 전문가의 도움을 받는 것"</strong>입니다.
+                            </p>
+                            <p style="margin: 12px 0; opacity: 0.95;">
+                                이 세 가지만 지키면, 이 사업은 안정적이고 적정한 수익을 낼 수 있는 좋은 기회입니다.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <!-- ===== v4.2 리스크 관리 섹션 끝 ===== -->
+                
+                <!-- ===== v4.2 시나리오 분석 섹션 시작 ===== -->
+                <div class="section">
+                    <div class="section-title">📊 여러 경우의 수를 따져보면 (시나리오 분석)</div>
+                    
+                    <!-- 소개 -->
+                    <div style="padding: 16px; background: #F0F9FF; border-radius: 8px; line-height: 1.8; margin-bottom: 24px;">
+                        <strong style="color: #1E40AF; font-size: 15px;">시나리오 분석이란?</strong><br><br>
+                        모든 것이 계획대로 진행될 때(기준), 조금 안 좋을 때(보수적), 아주 잘될 때(적극적) 
+                        세 가지 경우를 미리 계산해 보는 것입니다. 
+                        이렇게 하면 <strong>"최악의 경우에도 수익이 나는지"</strong>를 미리 알 수 있어서 
+                        안전하게 결정할 수 있습니다.
+                    </div>
+                    
+                    <!-- 시나리오 1: 기준 -->
+                    <div style="padding: 20px; background: #F9FAFB; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #3B82F6;">
+                        <strong style="color: #3B82F6; font-size: 16px; display: block; margin-bottom: 12px;">
+                            📈 시나리오 1: 기준 (모든 것이 계획대로)
+                        </strong>
+                        
+                        <div style="background: white; padding: 16px; border-radius: 6px; margin-bottom: 12px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                                <div>
+                                    <strong style="color: #6B7280; font-size: 13px;">토지비</strong><br>
+                                    <span style="color: #1F2937; font-size: 16px; font-weight: 600;">
+                                        {format_currency(data.get('land_value_krw'))}
+                                    </span>
+                                </div>
+                                <div>
+                                    <strong style="color: #6B7280; font-size: 13px;">건축비</strong><br>
+                                    <span style="color: #1F2937; font-size: 16px; font-weight: 600;">
+                                        예상대로
+                                    </span>
+                                </div>
+                                <div>
+                                    <strong style="color: #6B7280; font-size: 13px;">LH 매입가</strong><br>
+                                    <span style="color: #1F2937; font-size: 16px; font-weight: 600;">
+                                        협의가대로
+                                    </span>
+                                </div>
+                                <div>
+                                    <strong style="color: #6B7280; font-size: 13px;">공사 기간</strong><br>
+                                    <span style="color: #1F2937; font-size: 16px; font-weight: 600;">
+                                        24개월 (계획)
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div style="padding: 12px; background: #EFF6FF; border-radius: 4px; margin-top: 12px;">
+                                <strong style="color: #1E40AF;">예상 수익률: 약 10~12%</strong><br>
+                                <span style="color: #1E3A8A; font-size: 14px;">
+                                    → 이 정도면 안정적이고 적정한 수익입니다
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div style="line-height: 1.8; color: #374151;">
+                            <strong>판단:</strong> 
+                            모든 조건이 계획대로 진행된다면 <strong style="color: #3B82F6;">사업 진행 권장</strong>입니다. 
+                            이 경우 안정적으로 적정 수익을 낼 수 있습니다.
+                        </div>
+                    </div>
+                    
+                    <!-- 시나리오 2: 보수적 -->
+                    <div style="padding: 20px; background: #FEF3C7; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #F59E0B;">
+                        <strong style="color: #F59E0B; font-size: 16px; display: block; margin-bottom: 12px;">
+                            ⚠️ 시나리오 2: 보수적 (조금 안 좋을 때)
+                        </strong>
+                        
+                        <div style="background: white; padding: 16px; border-radius: 6px; margin-bottom: 12px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                                <div>
+                                    <strong style="color: #6B7280; font-size: 13px;">토지비</strong><br>
+                                    <span style="color: #1F2937; font-size: 16px; font-weight: 600;">
+                                        +5% ⬆️
+                                    </span>
+                                </div>
+                                <div>
+                                    <strong style="color: #6B7280; font-size: 13px;">건축비</strong><br>
+                                    <span style="color: #DC2626; font-size: 16px; font-weight: 600;">
+                                        +15% ⬆️
+                                    </span>
+                                </div>
+                                <div>
+                                    <strong style="color: #6B7280; font-size: 13px;">LH 매입가</strong><br>
+                                    <span style="color: #DC2626; font-size: 16px; font-weight: 600;">
+                                        -5% ⬇️
+                                    </span>
+                                </div>
+                                <div>
+                                    <strong style="color: #6B7280; font-size: 13px;">공사 기간</strong><br>
+                                    <span style="color: #DC2626; font-size: 16px; font-weight: 600;">
+                                        30개월 (+6개월)
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div style="padding: 12px; background: #FFFBEB; border-radius: 4px; margin-top: 12px;">
+                                <strong style="color: #92400E;">예상 수익률: 약 6~8%</strong><br>
+                                <span style="color: #78350F; font-size: 14px;">
+                                    → 수익이 줄어들지만 여전히 은행 예금보다는 높습니다
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div style="line-height: 1.8; color: #78350F;">
+                            <strong>판단:</strong> 
+                            여러 변수가 안 좋은 방향으로 가더라도 <strong style="color: #F59E0B;">신중한 검토 후 진행 가능</strong>합니다. 
+                            다만, 여유 자금을 충분히 준비하고 비용 통제를 철저히 해야 합니다.
+                        </div>
+                    </div>
+                    
+                    <!-- 시나리오 3: 적극적 -->
+                    <div style="padding: 20px; background: #ECFDF5; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #10B981;">
+                        <strong style="color: #10B981; font-size: 16px; display: block; margin-bottom: 12px;">
+                            🚀 시나리오 3: 적극적 (모든 것이 잘될 때)
+                        </strong>
+                        
+                        <div style="background: white; padding: 16px; border-radius: 6px; margin-bottom: 12px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                                <div>
+                                    <strong style="color: #6B7280; font-size: 13px;">토지비</strong><br>
+                                    <span style="color: #1F2937; font-size: 16px; font-weight: 600;">
+                                        조기 확보 성공
+                                    </span>
+                                </div>
+                                <div>
+                                    <strong style="color: #6B7280; font-size: 13px;">건축비</strong><br>
+                                    <span style="color: #059669; font-size: 16px; font-weight: 600;">
+                                        -5% ⬇️ (총액계약)
+                                    </span>
+                                </div>
+                                <div>
+                                    <strong style="color: #6B7280; font-size: 13px;">LH 매입가</strong><br>
+                                    <span style="color: #059669; font-size: 16px; font-weight: 600;">
+                                        협상 성공
+                                    </span>
+                                </div>
+                                <div>
+                                    <strong style="color: #6B7280; font-size: 13px;">공사 기간</strong><br>
+                                    <span style="color: #059669; font-size: 16px; font-weight: 600;">
+                                        22개월 (-2개월)
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div style="padding: 12px; background: #D1FAE5; border-radius: 4px; margin-top: 12px;">
+                                <strong style="color: #065F46;">예상 수익률: 약 14~16%</strong><br>
+                                <span style="color: #047857; font-size: 14px;">
+                                    → 일반 부동산 개발과 비슷한 수준의 좋은 수익입니다
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div style="line-height: 1.8; color: #065F46;">
+                            <strong>판단:</strong> 
+                            모든 조건이 유리하게 진행된다면 <strong style="color: #10B981;">적극적으로 추진</strong>할 만합니다. 
+                            사전 준비와 협상을 잘하면 이런 결과를 만들 수 있습니다.
+                        </div>
+                    </div>
+                    
+                    <!-- 비교 표 -->
+                    <div style="padding: 20px; background: white; border-radius: 8px; border: 2px solid #E5E7EB; margin-bottom: 20px;">
+                        <strong style="color: #1F2937; font-size: 16px; display: block; margin-bottom: 16px; text-align: center;">
+                            📊 세 가지 시나리오 비교
+                        </strong>
+                        
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #F9FAFB;">
+                                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #E5E7EB;">구분</th>
+                                    <th style="padding: 12px; text-align: center; border-bottom: 2px solid #E5E7EB; color: #3B82F6;">기준</th>
+                                    <th style="padding: 12px; text-align: center; border-bottom: 2px solid #E5E7EB; color: #F59E0B;">보수적</th>
+                                    <th style="padding: 12px; text-align: center; border-bottom: 2px solid #E5E7EB; color: #10B981;">적극적</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="padding: 12px; border-bottom: 1px solid #E5E7EB;">수익률</td>
+                                    <td style="padding: 12px; text-align: center; border-bottom: 1px solid #E5E7EB; color: #3B82F6; font-weight: 600;">10~12%</td>
+                                    <td style="padding: 12px; text-align: center; border-bottom: 1px solid #E5E7EB; color: #F59E0B; font-weight: 600;">6~8%</td>
+                                    <td style="padding: 12px; text-align: center; border-bottom: 1px solid #E5E7EB; color: #10B981; font-weight: 600;">14~16%</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px; border-bottom: 1px solid #E5E7EB;">판단</td>
+                                    <td style="padding: 12px; text-align: center; border-bottom: 1px solid #E5E7EB;">진행 권장</td>
+                                    <td style="padding: 12px; text-align: center; border-bottom: 1px solid #E5E7EB;">신중 검토</td>
+                                    <td style="padding: 12px; text-align: center; border-bottom: 1px solid #E5E7EB;">적극 추진</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px;">위험도</td>
+                                    <td style="padding: 12px; text-align: center;">보통</td>
+                                    <td style="padding: 12px; text-align: center;">높음</td>
+                                    <td style="padding: 12px; text-align: center;">낮음</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 최종 메시지 -->
+                    <div style="padding: 20px; background: #EFF6FF; border-radius: 8px; border-left: 4px solid #3B82F6;">
+                        <strong style="color: #1E40AF; font-size: 16px; display: block; margin-bottom: 12px;">
+                            💡 시나리오 분석으로 알 수 있는 것
+                        </strong>
+                        
+                        <div style="line-height: 1.8; color: #1E3A8A;">
+                            <p style="margin-bottom: 12px;">
+                                <strong>1. 최악의 경우에도 수익이 나는가?</strong><br>
+                                보수적 시나리오(6~8%)에서도 은행 예금(3~4%)보다 높은 수익이 예상됩니다. 
+                                즉, 여러 변수가 안 좋게 가더라도 <strong>손실은 나지 않을 것</strong>으로 판단됩니다.
+                            </p>
+                            
+                            <p style="margin-bottom: 12px;">
+                                <strong>2. 어떤 변수가 가장 중요한가?</strong><br>
+                                건축비와 LH 매입가가 가장 큰 영향을 미칩니다. 
+                                따라서 <strong>시공사와 총액 계약을 하고, LH와 가격을 미리 협의</strong>하는 것이 매우 중요합니다.
+                            </p>
+                            
+                            <p style="margin: 0;">
+                                <strong>3. 결국 이 사업을 해야 하나?</strong><br>
+                                기준 시나리오(10~12%)와 보수적 시나리오(6~8%) 모두 긍정적이므로, 
+                                <strong>신중하게 준비하고 변수를 잘 관리하면 충분히 진행할 만한 사업</strong>입니다.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <!-- ===== v4.2 시나리오 분석 섹션 끝 ===== -->
             </div>
             
             {render_qa_status_footer(data.get('qa_status', {}))}
