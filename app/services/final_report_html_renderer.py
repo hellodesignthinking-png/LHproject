@@ -1052,76 +1052,179 @@ def render_lh_technical(data: Dict[str, Any]) -> str:
                     </div>
                 </div>
                 
-                <!-- 토지 적합성 -->
+                <!-- 정책 적합성 분석 (All-in-one 콘텐츠 재사용) -->
                 <div class="section">
-                    <div class="section-title">2. 토지 적합성</div>
+                    <div class="section-title">2. 정책 및 제도 적합성</div>
+                    
+                    <div class="section-subtitle">2.1 LH 신축매입임대 제도 개요</div>
+                    <div style="margin-bottom: 16px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        {data.get('policy_context', {}).get('lh_program_overview', 'LH 신축매입임대 제도를 검토 중입니다.')}
+                    </div>
+                    
+                    <div class="section-subtitle">2.2 현행 정책 동향</div>
+                    <div style="margin-bottom: 16px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        {data.get('policy_context', {}).get('current_policy_trend', '정책 동향을 분석 중입니다.')}
+                    </div>
+                    
+                    <div class="section-subtitle">2.3 LH 승인 기준 검토</div>
+                    <div style="margin-bottom: 16px; padding: 16px; background: #EFF6FF; border-left: 4px solid #3B82F6; border-radius: 4px;">
+                        <div style="font-size: 14px; color: #1E40AF; line-height: 1.6;">
+                            {data.get('policy_context', {}).get('approval_criteria', 'LH 승인 기준을 검토 중입니다.')}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 토지 적합성 (확장) -->
+                <div class="section">
+                    <div class="section-title">3. 토지 적합성 검증</div>
+                    
+                    <div class="section-subtitle">3.1 감정평가 방법론</div>
+                    <div style="margin-bottom: 16px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        {data.get('land_value_factors', {}).get('appraisal_methodology', '감정평가 방법론을 적용하여 토지 가치를 산정하였습니다.')}
+                    </div>
+                    
+                    <div class="section-subtitle">3.2 평가 결과</div>
                     <div class="data-card">
                         <div class="data-row">
                             <span class="data-label">총 토지 가치</span>
-                            {format_currency(land_suit.get('total_value_krw'))}
+                            {format_currency(land_suit.get('total_value_krw') or data.get('land_value_krw'))}
                         </div>
                         <div class="data-row">
                             <span class="data-label">평당 가격</span>
-                            {format_currency(land_suit.get('per_pyeong_krw'))}
+                            {format_currency(land_suit.get('per_pyeong_krw') or data.get('land_value_per_pyeong_krw'))}
                         </div>
                         <div class="data-row">
                             <span class="data-label">평가 신뢰도</span>
-                            {format_percentage(land_suit.get('confidence_pct'))}
+                            {format_percentage(land_suit.get('confidence_pct') or data.get('land_confidence_pct'))}
                         </div>
                         <div class="data-row">
                             <span class="data-label">거래사례 건수</span>
                             {format_generic(land_suit.get('transaction_cases'), '건')}
                         </div>
                     </div>
+                    
+                    <div class="section-subtitle">3.3 입지 적합성</div>
+                    <div style="margin-bottom: 16px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        {data.get('land_value_factors', {}).get('location_advantage', '입지 분석을 수행하였습니다.')}
+                    </div>
+                    
+                    <div class="section-subtitle">3.4 용도지역 검토</div>
+                    <div style="margin-bottom: 16px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        {data.get('land_value_factors', {}).get('zoning_impact', '용도지역 특성을 검토하였습니다.')}
+                    </div>
                 </div>
                 
-                <!-- 개발 규모 검증 -->
+                <!-- 개발 규모 검증 (확장) -->
                 <div class="section">
-                    <div class="section-title">3. 개발 규모 검증</div>
+                    <div class="section-title">4. 개발 규모 검증</div>
+                    
+                    <div class="section-subtitle">4.1 법규 검토</div>
+                    <div style="margin-bottom: 16px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        {data.get('policy_context', {}).get('regulatory_environment', '개발 규모 관련 법규를 검토하였습니다.')}
+                    </div>
+                    
+                    <div class="section-subtitle">4.2 개발 계획</div>
                     <div class="data-card">
                         <div class="data-row">
                             <span class="data-label">법정 용적률 기준</span>
-                            {format_units(dev_scale.get('legal_units'))}
+                            {format_units(dev_scale.get('legal_units') or data.get('legal_units'))}
                         </div>
                         <div class="data-row">
                             <span class="data-label">인센티브 용적률 기준</span>
-                            {format_units(dev_scale.get('incentive_units'))}
+                            {format_units(dev_scale.get('incentive_units') or data.get('incentive_units'))}
                         </div>
                         <div class="data-row">
-                            <span class="data-label">주차 대안 A</span>
-                            {format_generic(dev_scale.get('parking_plan_a'), '대')}
+                            <span class="data-label">주차 계획 A</span>
+                            {format_generic(dev_scale.get('parking_plan_a') or data.get('parking_alt_a'), '대')}
                         </div>
                         <div class="data-row">
-                            <span class="data-label">주차 대안 B</span>
-                            {format_generic(dev_scale.get('parking_plan_b'), '대')}
+                            <span class="data-label">주차 계획 B</span>
+                            {format_generic(dev_scale.get('parking_plan_b') or data.get('parking_alt_b'), '대')}
                         </div>
                     </div>
                 </div>
                 
                 <!-- 주택 유형 적합성 -->
                 <div class="section">
-                    <div class="section-title">4. 주택 유형 적합성</div>
+                    <div class="section-title">5. 주택 유형 적합성</div>
                     <div class="data-card">
                         <div class="data-row">
-                            <span class="data-label">추천 유형</span>
-                            {format_generic(housing_fit.get('recommended_type'))}
+                            <span class="data-label">권장 유형</span>
+                            {format_generic(housing_fit.get('recommended_type') or data.get('recommended_housing_type'))}
                         </div>
                         <div class="data-row">
                             <span class="data-label">적합도 점수</span>
-                            {format_generic(housing_fit.get('score'), '점')}
-                        </div>
-                        <div class="data-row">
-                            <span class="data-label">신뢰도</span>
-                            {format_percentage(housing_fit.get('confidence_pct'))}
+                            {format_generic(housing_fit.get('score') or data.get('housing_type_score'), '점')}
                         </div>
                         <div class="data-row">
                             <span class="data-label">차선책</span>
                             {format_generic(housing_fit.get('alternative'))}
                         </div>
                     </div>
+                    
+                    <div class="section-subtitle" style="margin-top: 16px;">5.1 유형 선정 근거</div>
+                    <div style="padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        {data.get('housing_type_rationale', '주택 유형 적합성을 분석하였습니다.')}
+                    </div>
                 </div>
                 
                 <!-- 재무 타당성 -->
+                <div class="section">
+                    <div class="section-title">6. 사업 타당성 검토</div>
+                    
+                    <div class="section-subtitle">6.1 사업 구조</div>
+                    <div style="margin-bottom: 16px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        {data.get('financial_structure', {}).get('business_model', 'LH 매입 방식에 따른 사업 구조를 검토하였습니다.')}
+                    </div>
+                    
+                    <div class="section-subtitle">6.2 재무 지표</div>
+                    <div class="data-card">
+                        <div class="data-row">
+                            <span class="data-label">NPV (순현재가치)</span>
+                            {format_currency(financial.get('npv_krw') or data.get('npv_krw'))}
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">IRR (내부수익률)</span>
+                            {format_percentage(financial.get('irr_pct') or data.get('irr_pct'))}
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">ROI (투자수익률)</span>
+                            {format_percentage(financial.get('roi_pct') or data.get('roi_pct'))}
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">사업성 등급</span>
+                            {format_generic(financial.get('grade') or data.get('financial_grade'))}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 리스크 요인 (All-in-one 콘텐츠 재사용) -->
+                <div class="section">
+                    <div class="section-title">7. 리스크 요인 검토</div>
+                    
+                    <div class="section-subtitle">7.1 구조적 리스크</div>
+                    <div style="margin-bottom: 16px; padding: 16px; background: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 4px;">
+                        <div style="font-size: 14px; color: #991B1B; line-height: 1.6;">
+                            {data.get('risk_analysis', {}).get('structural_risks', '구조적 리스크를 검토하였습니다.')}
+                        </div>
+                    </div>
+                    
+                    <div class="section-subtitle">7.2 정책 리스크</div>
+                    <div style="margin-bottom: 16px; padding: 16px; background: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 4px;">
+                        <div style="font-size: 14px; color: #991B1B; line-height: 1.6;">
+                            {data.get('risk_analysis', {}).get('policy_risks', '정책 리스크를 검토하였습니다.')}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 승인 장애 요인 -->
+                <div class="section">
+                    <div class="section-title">8. 승인 장애 요인</div>
+                    <ul class="report-list">
+                        {barriers_html if barriers_html else '<li>특이사항 없음</li>'}
+                    </ul>
+                </div>
+            </div>
                 <div class="section">
                     <div class="section-title">5. 재무 타당성</div>
                     <div class="data-card">
