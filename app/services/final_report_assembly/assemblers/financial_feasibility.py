@@ -53,8 +53,8 @@ class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
         kpi_summary = self.generate_kpi_summary_box(kpis, self.report_type)
         
         exec_summary = self.narrative.executive_summary(modules_data)
-        transition_m2_m4 = self.narrative.transitions("M2", "M4")
-        transition_m4_m5 = self.narrative.transitions("M4", "M5")
+        transition_m2_m4 = self.generate_module_transition("M2", "M4", self.report_type)
+        transition_m4_m5 = self.generate_module_transition("M4", "M5", self.report_type)
         final_judgment = self.narrative.final_judgment(modules_data)
         
         # [FIX 5] Generate Decision Block (Clear Visual Conclusion)
@@ -62,6 +62,9 @@ class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
         basis = self._generate_judgment_basis(modules_data)
         actions = self._generate_next_actions(modules_data)
         decision_block = self.generate_decision_block(judgment_text, basis, actions)
+        
+        # [FIX 4] Generate Next Actions Section
+        next_actions = self.generate_next_actions_section(modules_data, self.report_type)
         
         
         sections = [
@@ -74,6 +77,7 @@ class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
             transition_m4_m5,
             self._wrap_module_html("M5", m5_html),
             final_judgment,
+            next_actions,
             decision_block,  # Visual decision at bottom
             self._generate_footer()
         ]
@@ -223,7 +227,7 @@ class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
             {self._get_report_css()}
             </style>
         </head>
-        <body class="final-report {self.report_type}">
+        <body class="final-report report-color-financial {self.report_type}">
             {"".join(sections)}
         </body>
         </html>

@@ -40,6 +40,9 @@ class QuickCheckAssembler(BaseFinalReportAssembler):
         m5_html = self.sanitize_module_html(m5_html_raw, "M5")
         m6_html = self.sanitize_module_html(m6_html_raw, "M6")
         
+        # [FIX 2] Generate module transition
+        transition_m5_m6 = self.generate_module_transition("M5", "M6", self.report_type)
+        
         modules_data = self._extract_module_data({"M5": m5_html, "M6": m6_html})
         
         # [FIX 2] Generate KPI Summary Box (Mandatory for quick_check)
@@ -59,12 +62,16 @@ class QuickCheckAssembler(BaseFinalReportAssembler):
         actions = self._generate_next_actions(modules_data)
         decision_block = self.generate_decision_block(judgment_text, basis, actions)
         
+        # [FIX 4] Generate Next Actions Section
+        next_actions = self.generate_next_actions_section(modules_data, self.report_type)
+        
         sections = [
             kpi_summary,  # KPI at top
             exec_summary,
             self._wrap_module_html("M5", m5_html),
             self._wrap_module_html("M6", m6_html),
             final_judgment,
+            next_actions,
             decision_block,  # Visual decision at bottom
             self._generate_footer()
         ]
@@ -92,7 +99,8 @@ class QuickCheckAssembler(BaseFinalReportAssembler):
         
         # M5: NPV and profitability
         m5_html = module_htmls.get("M5", "")
-        npv_match = re.search(r'NPV[:\s]*([+-]?\d{1,3}(?:,\d{3})*?)\s*원', m5_html, re.IGNORECASE)
+        npv_match = re.search(r'NPV[:\s]*([+-]?\d{1,3}(?:,\d{3})*?)\s*원', m5_html,
+            transition_m5_m6, re.IGNORECASE)
         if npv_match:
             npv_str = npv_match.group(1).replace(",", "")
             npv_value = int(npv_str)
@@ -200,7 +208,7 @@ class QuickCheckAssembler(BaseFinalReportAssembler):
             {self._get_report_css()}
             </style>
         </head>
-        <body class="final-report {self.report_type}">
+        <body class="final-report report-color-quick {self.report_type}">
             {"".join(sections)}
         </body>
         </html>

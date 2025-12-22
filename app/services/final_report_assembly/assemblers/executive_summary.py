@@ -55,11 +55,18 @@ class ExecutiveSummaryAssembler(BaseFinalReportAssembler):
         exec_summary = self.narrative.executive_summary(modules_data)
         final_judgment = self.narrative.final_judgment(modules_data)
         
+        # [FIX 2] Generate module transitions (for consistency)
+        transition_m2_m5 = self.generate_module_transition("M2", "M5", self.report_type)
+        transition_m5_m6 = self.generate_module_transition("M5", "M6", self.report_type)
+        
         # [FIX 5] Generate Decision Block (Clear Visual Conclusion)
         judgment_text = self._determine_judgment(modules_data)
         basis = self._generate_judgment_basis(modules_data)
         actions = self._generate_next_actions(modules_data)
         decision_block = self.generate_decision_block(judgment_text, basis, actions)
+        
+        # [FIX 4] Generate Next Actions Section
+        next_actions = self.generate_next_actions_section(modules_data, self.report_type)
         
         
         # Executive summary is VERY brief - minimal module HTML
@@ -67,9 +74,12 @@ class ExecutiveSummaryAssembler(BaseFinalReportAssembler):
             kpi_summary,  # KPI at top
             exec_summary,
             self._wrap_module_html("M2", m2_html),
+            transition_m2_m5,
             self._wrap_module_html("M5", m5_html),
+            transition_m5_m6,
             self._wrap_module_html("M6", m6_html),
             final_judgment,
+            next_actions,
             decision_block,  # Visual decision at bottom
             self._generate_footer()
         ]
@@ -210,7 +220,7 @@ class ExecutiveSummaryAssembler(BaseFinalReportAssembler):
             {self._get_report_css()}
             </style>
         </head>
-        <body class="final-report {self.report_type}">
+        <body class="final-report compact-report report-color-executive {self.report_type}">
             {"".join(sections)}
         </body>
         </html>

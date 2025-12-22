@@ -84,8 +84,8 @@ class LandownerSummaryAssembler(BaseFinalReportAssembler):
         
         # Generate narrative elements
         exec_summary = self.narrative.executive_summary(modules_data)
-        transition_m2_m5 = self.narrative.transitions("M2", "M5")
-        transition_m5_m6 = self.narrative.transitions("M5", "M6")
+        transition_m2_m5 = self.generate_module_transition("M2", "M5", self.report_type)
+        transition_m5_m6 = self.generate_module_transition("M5", "M6", self.report_type)
         final_judgment_narrative = self.narrative.final_judgment(modules_data)
         
         # [FIX 5] Generate Decision Block (Clear Visual Conclusion)
@@ -93,6 +93,9 @@ class LandownerSummaryAssembler(BaseFinalReportAssembler):
         basis = self._generate_judgment_basis(modules_data)
         actions = self._generate_next_actions(modules_data)
         decision_block = self.generate_decision_block(judgment_text, basis, actions)
+        
+        # [FIX 4] Generate Next Actions Section
+        next_actions = self.generate_next_actions_section(modules_data, self.report_type)
         
         # Assemble sections
         sections = [
@@ -105,6 +108,7 @@ class LandownerSummaryAssembler(BaseFinalReportAssembler):
             transition_m5_m6,
             self._wrap_module_html("M6", m6_html),
             final_judgment_narrative,
+            next_actions,
             decision_block,  # Visual decision at bottom
             self._generate_footer()
         ]
@@ -268,7 +272,7 @@ class LandownerSummaryAssembler(BaseFinalReportAssembler):
             <title>{self.config.name_kr}</title>
             <style>{self._get_report_css()}</style>
         </head>
-        <body class="final-report {self.report_type}">
+        <body class="final-report report-color-landowner {self.report_type}">
             {"".join(sections)}
         </body>
         </html>

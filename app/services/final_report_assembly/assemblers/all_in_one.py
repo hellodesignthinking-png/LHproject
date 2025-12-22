@@ -61,12 +61,17 @@ class AllInOneAssembler(BaseFinalReportAssembler):
         kpi_summary = self.generate_kpi_summary_box(kpis, self.report_type)
         
         exec_summary = self.narrative.executive_summary(modules_data)
-        transitions = {
-            "M2_M3": self.narrative.transitions("M2", "M3"),
-            "M3_M4": self.narrative.transitions("M3", "M4"),
-            "M4_M5": self.narrative.transitions("M4", "M5"),
-            "M5_M6": self.narrative.transitions("M5", "M6")
-        }
+        
+        # [FIX 2] Generate module transitions
+        transition_m2_m3 = self.generate_module_transition("M2", "M3", self.report_type)
+        transition_m3_m4 = self.generate_module_transition("M3", "M4", self.report_type)
+        transition_m4_m5 = self.generate_module_transition("M4", "M5", self.report_type)
+        transition_m5_m6 = self.generate_module_transition("M5", "M6", self.report_type)
+        
+        # [FIX 5] Generate section dividers for dense report
+        divider_1 = self.generate_section_divider("주택 유형 및 사업 규모 검토", "토지 평가를 바탕으로 최적의 주택 유형과 사업 규모를 결정합니다.")
+        divider_2 = self.generate_section_divider("사업성 및 LH 심사 분석", "사업 규모를 바탕으로 재무 타당성과 LH 승인 가능성을 평가합니다.")
+        
         final_judgment = self.narrative.final_judgment(modules_data)
         
         # [FIX 5] Generate Decision Block (Clear Visual Conclusion)
@@ -75,21 +80,27 @@ class AllInOneAssembler(BaseFinalReportAssembler):
         actions = self._generate_next_actions(modules_data)
         decision_block = self.generate_decision_block(judgment_text, basis, actions)
         
+        # [FIX 4] Generate Next Actions Section
+        next_actions = self.generate_next_actions_section(modules_data, self.report_type)
+        
         
         sections = [
             self._generate_cover_page(),
             kpi_summary,  # KPI at top
             exec_summary,
             self._wrap_module_html("M2", m2_html),
-            transitions["M2_M3"],
+            transition_m2_m3,
+            divider_1,  # Section divider for visual break
             self._wrap_module_html("M3", m3_html),
-            transitions["M3_M4"],
+            transition_m3_m4,
             self._wrap_module_html("M4", m4_html),
-            transitions["M4_M5"],
+            transition_m4_m5,
+            divider_2,  # Section divider for visual break
             self._wrap_module_html("M5", m5_html),
-            transitions["M5_M6"],
+            transition_m5_m6,
             self._wrap_module_html("M6", m6_html),
             final_judgment,
+            next_actions,
             decision_block,  # Visual decision at bottom
             self._generate_footer()
         ]
@@ -233,7 +244,7 @@ class AllInOneAssembler(BaseFinalReportAssembler):
             {self._get_report_css()}
             </style>
         </head>
-        <body class="final-report {self.report_type}">
+        <body class="final-report dense-report report-color-all {self.report_type}">
             {"".join(sections)}
         </body>
         </html>
