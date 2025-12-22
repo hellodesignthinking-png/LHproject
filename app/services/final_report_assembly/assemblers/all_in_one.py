@@ -33,16 +33,32 @@ class AllInOneAssembler(BaseFinalReportAssembler):
     
     def assemble(self) -> Dict[str, str]:
         """Assemble All-in-One Comprehensive Report"""
-        m2_html = self.load_module_html("M2")
-        m3_html = self.load_module_html("M3")
-        m4_html = self.load_module_html("M4")
-        m5_html = self.load_module_html("M5")
-        m6_html = self.load_module_html("M6")
-        
+        m2_html_raw = self.load_module_html("M2")
+        m3_html_raw = self.load_module_html("M3")
+        m4_html_raw = self.load_module_html("M4")
+        m5_html_raw = self.load_module_html("M5")
+        m6_html_raw = self.load_module_html("M6")
+
+        # [FIX 1] Sanitize module HTML (remove N/A placeholders)
+        m2_html = self.sanitize_module_html(m2_html_raw, "M2")
+        m3_html = self.sanitize_module_html(m3_html_raw, "M3")
+        m4_html = self.sanitize_module_html(m4_html_raw, "M4")
+        m5_html = self.sanitize_module_html(m5_html_raw, "M5")
+        m6_html = self.sanitize_module_html(m6_html_raw, "M6")
+                
         modules_data = self._extract_module_data({
             "M2": m2_html, "M3": m3_html, "M4": m4_html,
             "M5": m5_html, "M6": m6_html
         })
+        
+        # [FIX 2] Generate KPI Summary Box (Mandatory for all_in_one)
+        kpis = {
+            "총 토지 감정가": modules_data.get("M2", {}).get("land_value"),
+            "계획 세대수": modules_data.get("M4", {}).get("household_count"),
+            "순현재가치 (NPV)": modules_data.get("M5", {}).get("npv"),
+            "LH 심사 결과": modules_data.get("M6", {}).get("decision", "분석 미완료")
+        }
+        kpi_summary = self.generate_kpi_summary_box(kpis, self.report_type)
         
         exec_summary = self.narrative.executive_summary(modules_data)
         transitions = {
@@ -53,24 +69,113 @@ class AllInOneAssembler(BaseFinalReportAssembler):
         }
         final_judgment = self.narrative.final_judgment(modules_data)
         
+        # [FIX 5] Generate Decision Block (Clear Visual Conclusion)
+        judgment_text = self._determine_judgment(modules_data)
+        basis = self._generate_judgment_basis(modules_data)
+        actions = self._generate_next_actions(modules_data)
+        decision_block = self.generate_decision_block(judgment_text, basis, actions)
+        
+        
         sections = [
             self._generate_cover_page(),
+            kpi_summary,  # KPI at top
             exec_summary,
-            self._wrap_module("M2", m2_html),
+            self._wrap_module_html("M2", m2_html),
             transitions["M2_M3"],
-            self._wrap_module("M3", m3_html),
+            self._wrap_module_html("M3", m3_html),
             transitions["M3_M4"],
-            self._wrap_module("M4", m4_html),
+            self._wrap_module_html("M4", m4_html),
             transitions["M4_M5"],
-            self._wrap_module("M5", m5_html),
+            self._wrap_module_html("M5", m5_html),
             transitions["M5_M6"],
-            self._wrap_module("M6", m6_html),
+            self._wrap_module_html("M6", m6_html),
             final_judgment,
+            decision_block,  # Visual decision at bottom
             self._generate_footer()
         ]
         
-        return {"html": self._wrap_in_document(sections)}
+        # Wrap in HTML document
+        html_content = self._wrap_in_document(sections)
+        
+        # [PROMPT 3.5-3] Insert QA Summary Page
+        html_with_qa, qa_result = self.generate_and_insert_qa_summary(
+            html_content=html_content,
+            report_type=self.report_type,
+            modules_data=modules_data
+        )
+        
+        logger.info(
+            f"[AllInOne] Assembly complete with QA Summary "
+            f"({len(html_with_qa):,} chars, QA Status: {qa_result['status']})"
+        )
+        
+        return {"html": html_with_qa, "qa_result": qa_result}
     
+    def _determine_judgment(self, modules_data: Dict) -> str:
+        """Determine final judgment text based on module data"""
+        m5_data = modules_data.get("M5", {})
+        m6_data = modules_data.get("M6", {})
+        
+        is_profitable = m5_data.get("is_profitable", False)
+        lh_decision = m6_data.get("decision", "")
+        
+        if is_profitable and "승인" in lh_decision:
+            return "사업 추진 권장"
+        elif "조건부" in lh_decision:
+            return "조건부 사업 추진"
+        elif not is_profitable:
+            return "사업 재검토 필요"
+        else:
+            return "추가 분석 필요"
+    
+    def _generate_judgment_basis(self, modules_data: Dict) -> list:
+        """Generate judgment basis points"""
+        basis = []
+        
+        m5_data = modules_data.get("M5", {})
+        m6_data = modules_data.get("M6", {})
+        
+        # Profitability
+        npv = m5_data.get("npv")
+        if npv and npv > 0:
+            basis.append(f"수익성: NPV {self.format_number(npv, 'currency')} (양호)")
+        elif npv and npv <= 0:
+            basis.append(f"수익성: NPV {self.format_number(npv, 'currency')} (부정적)")
+        else:
+            basis.append("수익성: 분석 데이터 부족")
+        
+        # LH Decision
+        lh_decision = m6_data.get("decision", "분석 미완료")
+        basis.append(f"LH 승인 가능성: {lh_decision}")
+        
+        # Risk assessment
+        basis.append("주요 리스크: 시장 변동성, 인허가 지연 가능성")
+        
+        return basis
+    
+    def _generate_next_actions(self, modules_data: Dict) -> list:
+        """Generate next action items"""
+        actions = []
+        
+        m5_data = modules_data.get("M5", {})
+        m6_data = modules_data.get("M6", {})
+        
+        is_profitable = m5_data.get("is_profitable", False)
+        lh_decision = m6_data.get("decision", "")
+        
+        if is_profitable and "승인" in lh_decision:
+            actions.append("LH 사전 협의 진행")
+            actions.append("설계 용역 발주 준비")
+        elif "조건부" in lh_decision:
+            actions.append("LH 지적 사항 보완")
+            actions.append("재분석 후 재제출 검토")
+        else:
+            actions.append("사업 계획 전면 재검토")
+            actions.append("대안 부지 탐색")
+        
+        return actions
+
+
     def _extract_module_data(self, module_htmls: Dict[str, str]) -> Dict:
         import re
         modules_data = {}
@@ -127,7 +232,7 @@ class AllInOneAssembler(BaseFinalReportAssembler):
         """
     
     def _get_report_css(self) -> str:
-        """[PROMPT 3.5-2] Report CSS with watermark and copyright"""
+        """[FIX 4] Report CSS with unified design system"""
         base_css = """
         body.final-report {
             font-family: 'Noto Sans KR', sans-serif;
@@ -142,4 +247,4 @@ class AllInOneAssembler(BaseFinalReportAssembler):
         """
         
         # Add watermark and copyright CSS
-        return base_css + self.get_zerosite_watermark_css() + self.get_copyright_footer_css()
+        return base_css + self.get_unified_design_css() + self.get_zerosite_watermark_css() + self.get_copyright_footer_css()
