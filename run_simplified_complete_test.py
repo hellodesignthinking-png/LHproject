@@ -200,7 +200,13 @@ def generate_all_final_reports(context_id: str, module_htmls: dict) -> dict:
             assembler.load_module_html = mock_load_module_html
             
             # Generate report (this will call _extract_module_data internally)
-            html = assembler.assemble()
+            result = assembler.assemble()
+            
+            # Extract HTML from result dict
+            if isinstance(result, dict):
+                html = result.get("html", "")
+            else:
+                html = result  # Old assemblers might return string directly
             
             if html and len(html) > 1000:
                 na_count = html.count("N/A")

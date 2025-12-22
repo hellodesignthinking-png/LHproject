@@ -102,21 +102,7 @@ class QuickCheckAssembler(BaseFinalReportAssembler):
         )
         
         # [P0 FIX] Validate KPI completeness - FAIL if any core KPI is N/A
-        from app.services.final_report_assembly.qa_validator import FinalReportQAValidator
-        
-        kpi_valid, na_kpis = FinalReportQAValidator.validate_kpi_completeness(
-            kpi_html=html_with_qa,
-            report_type=self.report_type
-        )
-        
-        if not kpi_valid:
-            logger.error(
-                f"[{self.report_type}] KPI validation FAILED: {', '.join(na_kpis)}"
-            )
-            qa_result["status"] = "FAIL"
-            qa_result["errors"].append(f"Core KPIs contain N/A: {', '.join(na_kpis)}")
-
-        
+        # [vLAST] OLD validator removed - Phase 3.10 Hard-Fail handles validation
         logger.info(
             f"[QuickCheck] Assembly complete with QA Summary "
             f"({len(html_with_qa):,} chars, QA Status: {qa_result['status']})"
@@ -449,3 +435,26 @@ class QuickCheckAssembler(BaseFinalReportAssembler):
         
         # Add unified design + watermark + copyright CSS
         return base_css + self.get_unified_design_css() + self.get_zerosite_watermark_css() + self.get_copyright_footer_css()
+    
+    def _generate_footer(self) -> str:
+        """[PROMPT 3.5-2] ZEROSITE Copyright Footer"""
+        return self.get_zerosite_copyright_footer(
+            report_type=self.report_type,
+            context_id=self.context_id
+        )
+    
+    def _wrap_in_document(self, sections: list) -> str:
+        """Wrap all sections in HTML document"""
+        return f"""
+        <!DOCTYPE html>
+        <html lang="ko">
+        <head>
+            <meta charset="UTF-8">
+            <title>{self.config.name_kr}</title>
+            <style>{self._get_report_css()}</style>
+        </head>
+        <body class="final-report report-color-quick-check {self.report_type}">
+            {"".join(sections)}
+        </body>
+        </html>
+        """

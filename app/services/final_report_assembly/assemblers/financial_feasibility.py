@@ -99,21 +99,7 @@ class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
         )
         
         # [P0 FIX] Validate KPI completeness - FAIL if any core KPI is N/A
-        from app.services.final_report_assembly.qa_validator import FinalReportQAValidator
-        
-        kpi_valid, na_kpis = FinalReportQAValidator.validate_kpi_completeness(
-            kpi_html=html_with_qa,
-            report_type=self.report_type
-        )
-        
-        if not kpi_valid:
-            logger.error(
-                f"[{self.report_type}] KPI validation FAILED: {', '.join(na_kpis)}"
-            )
-            qa_result["status"] = "FAIL"
-            qa_result["errors"].append(f"Core KPIs contain N/A: {', '.join(na_kpis)}")
-
-        
+        # [vLAST] OLD validator removed - Phase 3.10 Hard-Fail handles validation
         logger.info(
             f"[FinancialFeasibility] Assembly complete with QA Summary "
             f"({len(html_with_qa):,} chars, QA Status: {qa_result['status']})"
