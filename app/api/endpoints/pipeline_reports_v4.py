@@ -440,9 +440,10 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
                     parking_alt_a = getattr(getattr(ps, 'alternative_A', None), 'total_parking_spaces', None)
                     parking_alt_b = getattr(getattr(ps, 'alternative_B', None), 'total_parking_spaces', None)
             
+            # ✅ FIX: Convert Pydantic models to dicts for JSON serialization
             canonical_summary = {
-                'M2': convert_m2_to_standard(appraisal_dict, request.parcel_id),
-                'M3': convert_m3_to_standard(housing_dict, request.parcel_id),
+                'M2': convert_m2_to_standard(appraisal_dict, request.parcel_id).model_dump(),
+                'M3': convert_m3_to_standard(housing_dict, request.parcel_id).model_dump(),
                 'M4': {
                     'module': 'M4',
                     'context_id': request.parcel_id,
@@ -465,7 +466,7 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
                     },
                     'details': feasibility_dict
                 },
-                'M6': convert_m6_to_standard(lh_review_dict, request.parcel_id),
+                'M6': convert_m6_to_standard(lh_review_dict, request.parcel_id).model_dump(),
             }
             
             # Store context with canonical_summary
