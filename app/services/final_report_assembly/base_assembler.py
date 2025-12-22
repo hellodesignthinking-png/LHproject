@@ -266,15 +266,39 @@ class FinalReportQAValidator:
     """
     QA Validator specifically for Final Reports
     
-    SEPARATE from Module QA - validates report assembly, not module calculations
+    SEPARATE from Module QA - validates report assembly AND narrative quality
+    
+    This validator checks:
+    1. Structure QA: Modules present, sections exist
+    2. Narrative QA: Decision-ready content, context provided
+    3. Completeness QA: All required elements for decision-making
     """
+    
+    # Minimum narrative requirements per report type
+    MIN_NARRATIVE_PARAGRAPHS = {
+        "landowner_summary": 3,
+        "lh_technical": 5,
+        "quick_check": 2,
+        "financial_feasibility": 4,
+        "all_in_one": 6,
+        "executive_summary": 4,
+    }
+    
+    # Required decision keywords (at least one must be present)
+    DECISION_KEYWORDS = [
+        "GO", "NO-GO", "CONDITIONAL", "조건부",
+        "승인", "불가", "권장", "비권장",
+        "추천", "적합", "부적합"
+    ]
     
     @staticmethod
     def validate_final_report(
         report_type: str,
         required_modules: List[str],
         available_modules: Dict[str, bool],
-        html_content: str
+        html_content: str,
+        has_executive_intro: bool = False,
+        has_narrative_sections: bool = False
     ) -> Dict[str, any]:
         """
         Validate assembled final report
@@ -284,6 +308,8 @@ class FinalReportQAValidator:
             required_modules: List of modules that should be included
             available_modules: Dict of module availability status
             html_content: Generated HTML content
+            has_executive_intro: Whether executive intro section exists
+            has_narrative_sections: Whether narrative sections added
             
         Returns:
             QA result dict with status and details
@@ -293,8 +319,11 @@ class FinalReportQAValidator:
             "status": "PASS",
             "checks": [],
             "warnings": [],
-            "errors": []
+            "errors": [],
+            "qa_category": "Final Report (Decision-Ready Document)"
         }
+        
+        # ========== STRUCTURE QA ==========
         
         # Check 1: All required modules available
         missing_modules = [m for m, avail in available_modules.items() if not avail]
@@ -304,21 +333,117 @@ class FinalReportQAValidator:
                 f"Missing required modules: {', '.join(missing_modules)}"
             )
         else:
-            qa_result["checks"].append("✅ All required modules available")
+            qa_result["checks"].append(
+                f"✅ Structure: All {len(required_modules)} required modules available"
+            )
         
         # Check 2: HTML content not empty
         if not html_content or len(html_content) < 1000:
             qa_result["status"] = "FAIL"
-            qa_result["errors"].append("HTML content too short or empty")
+            qa_result["errors"].append("HTML content too short or empty (< 1000 chars)")
         else:
-            qa_result["checks"].append(f"✅ HTML content generated ({len(html_content)} chars)")
+            qa_result["checks"].append(
+                f"✅ Structure: HTML content generated ({len(html_content):,} chars)"
+            )
         
-        # Check 3: Module HTML fragments embedded (check for module titles)
+        # Check 3: Module HTML fragments embedded
+        embedded_count = 0
         for module in required_modules:
-            if f"module='{module}'" not in html_content and module not in html_content:
+            if module in html_content:
+                embedded_count += 1
+        
+        if embedded_count < len(required_modules):
+            qa_result["warnings"].append(
+                f"Only {embedded_count}/{len(required_modules)} modules clearly embedded"
+            )
+        else:
+            qa_result["checks"].append(
+                f"✅ Structure: All {embedded_count} modules embedded"
+            )
+        
+        # ========== NARRATIVE QA ==========
+        
+        # Check 4: Executive intro exists
+        if not has_executive_intro and report_type != "quick_check":
+            qa_result["status"] = "FAIL"
+            qa_result["errors"].append(
+                "Missing Executive Introduction section (required for decision context)"
+            )
+        else:
+            qa_result["checks"].append("✅ Narrative: Executive intro present")
+        
+        # Check 5: Minimum narrative paragraphs
+        min_required = FinalReportQAValidator.MIN_NARRATIVE_PARAGRAPHS.get(report_type, 3)
+        # Count <p> tags or narrative sections
+        narrative_count = html_content.count("<p") + html_content.count("narrative-section")
+        
+        if narrative_count < min_required:
+            qa_result["warnings"].append(
+                f"Narrative content may be insufficient: {narrative_count} paragraphs "
+                f"(minimum {min_required} recommended for {report_type})"
+            )
+        else:
+            qa_result["checks"].append(
+                f"✅ Narrative: {narrative_count} narrative elements (≥{min_required} required)"
+            )
+        
+        # Check 6: Decision keywords present
+        decision_found = False
+        found_keywords = []
+        for keyword in FinalReportQAValidator.DECISION_KEYWORDS:
+            if keyword in html_content.upper() or keyword in html_content:
+                decision_found = True
+                found_keywords.append(keyword)
+        
+        if not decision_found:
+            qa_result["status"] = "FAIL"
+            qa_result["errors"].append(
+                "No decision indicator found (GO/NO-GO/CONDITIONAL/승인/불가 etc.). "
+                "Report must provide clear decision guidance."
+            )
+        else:
+            qa_result["checks"].append(
+                f"✅ Decision: Clear decision indicators present ({', '.join(found_keywords[:2])})"
+            )
+        
+        # ========== COMPLETENESS QA ==========
+        
+        # Check 7: Report-specific sections
+        required_sections = ["cover", "qa_metadata"]
+        missing_sections = [s for s in required_sections if s not in html_content.lower()]
+        
+        if missing_sections:
+            qa_result["warnings"].append(
+                f"Missing recommended sections: {', '.join(missing_sections)}"
+            )
+        else:
+            qa_result["checks"].append("✅ Completeness: All standard sections present")
+        
+        # Check 8: Risk notice (for reports with financial content)
+        if any(m in required_modules for m in ["M2", "M5"]):
+            if "risk" not in html_content.lower() and "리스크" not in html_content:
                 qa_result["warnings"].append(
-                    f"Module {module} may not be properly embedded"
+                    "Financial reports should include risk notices"
                 )
+            else:
+                qa_result["checks"].append("✅ Completeness: Risk notice included")
+        
+        # ========== FINAL STATUS ==========
+        
+        # Summary counts
+        qa_result["summary"] = {
+            "total_checks": len(qa_result["checks"]),
+            "total_warnings": len(qa_result["warnings"]),
+            "total_errors": len(qa_result["errors"]),
+            "pass_rate": len(qa_result["checks"]) / (len(qa_result["checks"]) + len(qa_result["errors"]) + 1) * 100
+        }
+        
+        # If we have errors, status is FAIL
+        if qa_result["errors"]:
+            qa_result["status"] = "FAIL"
+        # If we have too many warnings, status is WARNING
+        elif len(qa_result["warnings"]) > 3:
+            qa_result["status"] = "WARNING"
         
         return qa_result
 
