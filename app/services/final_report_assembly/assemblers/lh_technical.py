@@ -17,6 +17,9 @@ from ..base_assembler import BaseFinalReportAssembler
 from ..narrative_generator import NarrativeGeneratorFactory
 from ..report_type_configs import REPORT_TYPE_CONFIGS
 
+# [Phase 3.10] Hard-Fail KPI Binding
+from ..kpi_hard_fail_enforcement import enforce_kpi_binding, KPIBindingError, FinalReportGenerationError
+
 logger = logging.getLogger(__name__)
 
 

@@ -17,6 +17,9 @@ from ..base_assembler import BaseFinalReportAssembler
 from ..narrative_generator import NarrativeGeneratorFactory
 from ..report_type_configs import REPORT_TYPE_CONFIGS
 
+# [Phase 3.10] Hard-Fail KPI Binding
+from ..kpi_hard_fail_enforcement import enforce_kpi_binding, KPIBindingError, FinalReportGenerationError
+
 logger = logging.getLogger(__name__)
 
 
@@ -46,13 +49,22 @@ class QuickCheckAssembler(BaseFinalReportAssembler):
         
         modules_data = self._extract_module_data({"M5": m5_html, "M6": m6_html})
         
-        # [FIX 2] Generate KPI Summary Box (Mandatory for quick_check)
-        kpis = {
-            "순현재가치 (NPV)": modules_data.get("M5", {}).get("npv"),
-            "수익성 판단": "수익성 있음" if modules_data.get("M5", {}).get("is_profitable", False) else "수익성 부족",
-            "LH 심사 결과": modules_data.get("M6", {}).get("decision", "분석 미완료")
-        }
-        kpi_summary = self.generate_kpi_summary_box(kpis, self.report_type)
+        # [Phase 3.10] HARD-FAIL: Normalize → Bind → Validate
+        try:
+            bound_kpis = enforce_kpi_binding(self.report_type, modules_data)
+            kpi_summary = self.generate_kpi_summary_box(bound_kpis, self.report_type)
+        except (KPIBindingError, FinalReportGenerationError) as e:
+            logger.error(f"[{self.report_type}] KPI binding FAILED: {e}")
+            return {
+                "html": f"<html><body><h1>❌ Report Generation Blocked</h1><pre>{str(e)}</pre></body></html>",
+                "qa_result": {
+                    "status": "FAIL",
+                    "errors": [str(e)],
+                    "warnings": [],
+                    "blocking": True,
+                    "reason": "KPI binding hard-fail - missing mandatory data"
+                }
+            }
         
         exec_summary = self.narrative.executive_summary(modules_data)
         final_judgment = self.narrative.final_judgment(modules_data)
