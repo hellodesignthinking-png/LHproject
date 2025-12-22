@@ -299,38 +299,61 @@ async def preview_module_html(
     context_id: str = Query(..., description="컨텍스트 ID"),
 ):
     """
-    모듈별 HTML 보고서 미리보기
+    모듈별 HTML 보고서 미리보기 (v4.3 UNIFIED)
+    
+    ✅ B-1: Analysis Preview Unification
+    - canonical_summary 기반
+    - final_report_assembler + is_preview=True 사용
+    - 최종보고서와 100% 동일한 데이터 구조
     
     PDF 다운로드 전 브라우저에서 내용을 확인할 수 있습니다.
     """
     try:
-        logger.info(f"📄 HTML 미리보기 요청: module={module}, context_id={context_id}")
+        logger.info(f"📄 HTML 미리보기 요청 (UNIFIED): module={module}, context_id={context_id}")
         
-        # 테스트 데이터 생성 (실제로는 DB에서 조회)
-        test_data = _get_test_data_for_module(module, context_id)
-        
-        if not test_data:
+        # ✅ STEP 1: canonical_summary 로드 (Final Report와 동일)
+        frozen_context = get_frozen_context(context_id)
+        if not frozen_context:
             raise HTTPException(
-                status_code=400,
-                detail=f"지원하지 않는 모듈: {module}"
+                status_code=404,
+                detail=(
+                    f"컨텍스트를 찾을 수 없습니다.\n\n"
+                    f"Context ID: {context_id}\n\n"
+                    f"💡 해결 방법:\n"
+                    f"1. M1 분석을 먼저 완료하세요.\n"
+                    f"2. '분석 시작' 버튼을 눌러 context를 저장하세요.\n"
+                    f"3. 분석 완료 후 미리보기를 요청하세요."
+                )
             )
         
-        # PDF 생성기 초기화
-        generator = ModulePDFGenerator()
+        # ✅ STEP 2: 모듈별 최종보고서 데이터 조립 (is_preview=True)
+        from app.services.final_report_assembler import assemble_final_report
         
-        # 모듈별 HTML 생성
-        if module == "M2":
-            html_content = generator.generate_m2_appraisal_html(test_data)
-        elif module == "M3":
-            html_content = generator.generate_m3_housing_type_html(test_data)
-        elif module == "M4":
-            html_content = generator.generate_m4_capacity_html(test_data)
-        elif module == "M5":
-            html_content = generator.generate_m5_feasibility_html(test_data)
-        elif module == "M6":
-            html_content = generator.generate_m6_lh_review_html(test_data)
-        else:
-            raise HTTPException(status_code=400, detail=f"지원하지 않는 모듈: {module}")
+        # 모듈 → 보고서 타입 매핑
+        module_to_report_type = {
+            "M2": "landowner_summary",  # 토지평가 → 토지주용 요약
+            "M3": "lh_technical",        # 주택유형 → LH 기술검토
+            "M4": "quick_check",         # 개발규모 → 빠른 검토
+            "M5": "financial_feasibility",  # 사업성 → 재무타당성
+            "M6": "all_in_one"           # LH심사 → 종합보고서
+        }
+        
+        report_type = module_to_report_type.get(module, "quick_check")
+        
+        assembled_data = assemble_final_report(
+            report_type=report_type,
+            canonical_data=frozen_context,
+            context_id=context_id,
+            is_preview=True  # ✅ v4.3: Preview 모드 활성화
+        )
+        
+        # ✅ STEP 3: HTML 렌더링 (Final Report와 동일 렌더러)
+        from app.services.final_report_html_renderer import render_final_report_html
+        
+        html_content = render_final_report_html(
+            report_type=report_type,
+            data=assembled_data
+        )
         
         # HTML 반환 (브라우저에서 직접 표시)
         return HTMLResponse(
@@ -347,19 +370,6 @@ async def preview_module_html(
         raise HTTPException(
             status_code=404,
             detail=f"컨텍스트를 찾을 수 없습니다: {context_id}"
-        )
-    
-    except AttributeError as e:
-        logger.warning(f"HTML 생성 메서드 없음: {str(e)} - 표준 렌더러 사용")
-        # 🔥 STANDARD RENDERER: 모든 모듈 HTML 표준 렌더러 사용
-        html_content = _render_standard_report_html(module, test_data, context_id)
-        return HTMLResponse(
-            content=html_content,
-            headers={
-                "Cache-Control": "no-cache, no-store, must-revalidate",
-                "Pragma": "no-cache",
-                "Expires": "0"
-            }
         )
     
     except Exception as e:
