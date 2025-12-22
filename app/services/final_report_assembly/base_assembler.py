@@ -372,6 +372,44 @@ class BaseFinalReportAssembler(ABC):
             }
         }
         """
+    
+    @staticmethod
+    def generate_and_insert_qa_summary(
+        html_content: str,
+        report_type: str,
+        modules_data: Dict[str, any]
+    ) -> tuple:
+        """
+        [PROMPT 3.5-3] Run QA validation and insert QA Summary page
+        
+        Args:
+            html_content: Generated HTML content
+            report_type: Report type ID
+            modules_data: Module data for QA checks
+        
+        Returns:
+            Tuple of (html_with_qa_summary, qa_result)
+        """
+        from .qa_validator import FinalReportQAValidator, generate_qa_summary_page
+        
+        # Run QA validation
+        qa_result = FinalReportQAValidator.validate(
+            report_type=report_type,
+            html_content=html_content,
+            modules_data=modules_data
+        )
+        
+        # Generate QA summary page
+        qa_summary_html = generate_qa_summary_page(qa_result)
+        
+        # Insert QA summary before closing </body> tag
+        if "</body>" in html_content:
+            html_with_qa = html_content.replace("</body>", f"{qa_summary_html}\n</body>")
+        else:
+            # Fallback: append at end
+            html_with_qa = html_content + qa_summary_html
+        
+        return html_with_qa, qa_result
 
 
 class FinalReportQAValidator:

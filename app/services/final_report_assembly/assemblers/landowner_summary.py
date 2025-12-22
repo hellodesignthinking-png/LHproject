@@ -91,9 +91,19 @@ class LandownerSummaryAssembler(BaseFinalReportAssembler):
         # Wrap in HTML document
         html_content = self._wrap_in_document(sections)
         
-        logger.info(f"[LandownerSummary] Assembly complete ({len(html_content):,} chars)")
+        # [PROMPT 3.5-3] Insert QA Summary Page
+        html_with_qa, qa_result = self.generate_and_insert_qa_summary(
+            html_content=html_content,
+            report_type=self.report_type,
+            modules_data=modules_data
+        )
         
-        return {"html": html_content}
+        logger.info(
+            f"[LandownerSummary] Assembly complete with QA Summary "
+            f"({len(html_with_qa):,} chars, QA Status: {qa_result['status']})"
+        )
+        
+        return {"html": html_with_qa, "qa_result": qa_result}
     
     def _extract_module_data(self, module_htmls: Dict[str, str]) -> Dict:
         """

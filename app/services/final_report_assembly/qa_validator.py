@@ -452,3 +452,113 @@ def log_qa_result(qa_result: Dict):
             logger.critical(f"  🚫 {issue}")
     
     logger.info("=" * 60)
+
+
+# ========== PROMPT 3.5-3: QA SUMMARY PAGE GENERATOR ==========
+
+def generate_qa_summary_page(qa_result: Dict) -> str:
+    """
+    [PROMPT 3.5-3] Generate QA Summary HTML page for Final Reports
+    
+    This page provides transparency about automated quality checks.
+    
+    Args:
+        qa_result: QA result dict from FinalReportQAValidator.validate()
+    
+    Returns:
+        HTML fragment of QA summary page
+    """
+    from datetime import datetime
+    
+    status = qa_result.get("status", "UNKNOWN")
+    checks = qa_result.get("checks", {})
+    warnings = qa_result.get("warnings", [])
+    errors = qa_result.get("errors", [])
+    blocking_issues = qa_result.get("blocking_issues", [])
+    report_type = qa_result.get("report_type", "N/A")
+    
+    # Status styling
+    status_colors = {
+        "PASS": "#28a745",
+        "WARNING": "#ffc107",
+        "FAIL": "#dc3545"
+    }
+    status_color = status_colors.get(status, "#6c757d")
+    
+    # Timestamp
+    verification_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    # Build checks table
+    checks_html = ""
+    for check_name, check_result in checks.items():
+        check_name_display = check_name.replace("_", " ").title()
+        check_icon = "✅" if check_result else "❌"
+        check_status = "통과" if check_result else "실패"
+        check_color = "#28a745" if check_result else "#dc3545"
+        
+        checks_html += f"""
+        <tr>
+            <td style="padding: 10px; border: 1px solid #dee2e6;">{check_icon} {check_name_display}</td>
+            <td style="padding: 10px; border: 1px solid #dee2e6; color: {check_color}; font-weight: bold;">{check_status}</td>
+        </tr>
+        """
+    
+    # Build warnings list
+    warnings_html = ""
+    if warnings:
+        warnings_html = "<ul style='margin: 10px 0; padding-left: 20px;'>"
+        for warning in warnings:
+            warnings_html += f"<li style='margin: 5px 0; color: #856404;'>{warning}</li>"
+        warnings_html += "</ul>"
+    else:
+        warnings_html = "<p style='margin: 10px 0; color: #6c757d;'>경고 사항 없음</p>"
+    
+    # Build HTML
+    return f"""
+    <section class="qa-summary-page" style="margin-top: 60px; padding: 40px 20px; background: #f8f9fa; border: 3px solid {status_color}; page-break-before: always;">
+        <h2 style="text-align: center; color: {status_color}; margin-bottom: 30px; font-size: 28px;">
+            📋 Final Report Quality Assurance Summary
+        </h2>
+        
+        <div class="qa-status" style="text-align: center; margin-bottom: 30px; padding: 20px; background: white; border-radius: 8px; border: 2px solid {status_color};">
+            <h3 style="margin: 0; color: {status_color}; font-size: 32px; font-weight: bold;">{status}</h3>
+            <p style="margin: 10px 0 0 0; color: #666; font-size: 14px;">Quality Assurance Status</p>
+        </div>
+        
+        <div class="qa-details" style="background: white; padding: 30px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 20px;">
+                검증 항목 (Validation Checks)
+            </h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #007bff; color: white;">
+                        <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">항목 (Check Item)</th>
+                        <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">결과 (Result)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {checks_html}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="qa-warnings" style="background: #fff3cd; padding: 20px; border-radius: 8px; border: 2px solid #ffc107; margin-bottom: 20px;">
+            <h3 style="color: #856404; margin-bottom: 15px;">
+                ⚠️ 경고 사항 (Warnings)
+            </h3>
+            {warnings_html}
+        </div>
+        
+        <div class="qa-metadata" style="background: white; padding: 20px; border-radius: 8px; text-align: center; color: #666; font-size: 12px;">
+            <p style="margin: 5px 0;"><strong>Report Type:</strong> {report_type}</p>
+            <p style="margin: 5px 0;"><strong>Verification Time:</strong> {verification_time}</p>
+            <p style="margin: 5px 0;"><strong>QA Version:</strong> v1.0 (PROMPT 3.5-3)</p>
+        </div>
+        
+        <div class="qa-disclaimer" style="margin-top: 20px; padding: 15px; background: #e9ecef; border-left: 4px solid #6c757d; font-size: 11px; color: #495057;">
+            <strong>QA 검증 정보:</strong> 본 품질 검증은 ZeroSite 시스템에 의해 자동으로 수행되었습니다. 
+            모든 검증 항목은 투명성과 신뢰성을 위해 보고서에 기록됩니다. 
+            FAIL 상태인 경우 PDF 생성이 차단되며, WARNING 상태인 경우 PDF는 생성되지만 주의가 필요합니다.
+        </div>
+    </section>
+    """
