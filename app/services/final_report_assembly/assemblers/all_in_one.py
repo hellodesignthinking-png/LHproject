@@ -103,7 +103,11 @@ class AllInOneAssembler(BaseFinalReportAssembler):
         return f'<section class="module-section" data-module="{module_id}">{html}</section>'
     
     def _generate_footer(self) -> str:
-        return '<footer class="report-footer"><p>본 보고서는 종합 분석 시스템에 의해 자동 생성되었습니다.</p></footer>'
+        """[PROMPT 3.5-2] ZEROSITE Copyright Footer"""
+        return self.get_zerosite_copyright_footer(
+            report_type=self.report_type,
+            context_id=self.context_id
+        )
     
     def _wrap_in_document(self, sections: List[str]) -> str:
         return f"""
@@ -112,9 +116,30 @@ class AllInOneAssembler(BaseFinalReportAssembler):
         <head>
             <meta charset="UTF-8">
             <title>{self.config.name_kr}</title>
+            <style>
+            {self._get_report_css()}
+            </style>
         </head>
         <body class="final-report {self.report_type}">
             {"".join(sections)}
         </body>
         </html>
         """
+    
+    def _get_report_css(self) -> str:
+        """[PROMPT 3.5-2] Report CSS with watermark and copyright"""
+        base_css = """
+        body.final-report {
+            font-family: 'Noto Sans KR', sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .cover-page { text-align: center; padding: 100px 20px; border-bottom: 2px solid #007bff; }
+        .narrative { margin: 20px 0; padding: 15px; background: #f8f9fa; }
+        .module-section { margin: 30px 0; padding: 20px; border: 1px solid #dee2e6; }
+        """
+        
+        # Add watermark and copyright CSS
+        return base_css + self.get_zerosite_watermark_css() + self.get_copyright_footer_css()

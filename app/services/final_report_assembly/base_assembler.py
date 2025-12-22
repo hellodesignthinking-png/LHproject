@@ -19,6 +19,7 @@ Phase: 3 (Final Report Assembly)
 
 from typing import Dict, List, Literal, Optional
 from abc import ABC, abstractmethod
+from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
@@ -245,6 +246,132 @@ class BaseFinalReportAssembler(ABC):
                 availability[module] = False
         
         return availability
+    
+    # ========== PROMPT 3.5-2: Shared Helper Methods ==========
+    
+    @staticmethod
+    def get_zerosite_watermark_css() -> str:
+        """
+        [PROMPT 3.5-2] ZEROSITE watermark CSS
+        
+        Adds fixed watermark in top-right corner of every page
+        """
+        return """
+        /* PROMPT 3.5-2: ZEROSITE Watermark */
+        body.final-report::before {
+            content: 'ZEROSITE';
+            position: fixed;
+            top: 15px;
+            right: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(0, 123, 255, 0.3);
+            z-index: 9999;
+            letter-spacing: 2px;
+            pointer-events: none;
+        }
+        
+        @media print {
+            body.final-report::before {
+                color: rgba(0, 123, 255, 0.2);
+            }
+        }
+        """
+    
+    @staticmethod
+    def get_zerosite_copyright_footer(report_type: str, context_id: str) -> str:
+        """
+        [PROMPT 3.5-2] ZEROSITE Copyright Footer
+        
+        Args:
+            report_type: Report type ID (e.g., "landowner_summary")
+            context_id: Analysis context ID
+        
+        Returns:
+            HTML footer with copyright, Report ID, and creation time
+        """
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        return f"""
+        <footer class="report-footer zerosite-copyright">
+            <div class="footer-content">
+                <div class="copyright">
+                    © ZeroSite by AntennaHoldings · nataiheum
+                </div>
+                <div class="report-metadata">
+                    <span class="metadata-item">Report ID: {context_id}</span>
+                    <span class="metadata-separator">|</span>
+                    <span class="metadata-item">Type: {report_type}</span>
+                    <span class="metadata-separator">|</span>
+                    <span class="metadata-item">Created: {now}</span>
+                </div>
+                <div class="disclaimer">
+                    본 보고서는 ZeroSite 시스템에 의해 자동 생성되었습니다. 
+                    최종 의사결정 시 전문가 자문을 권장합니다.
+                </div>
+            </div>
+        </footer>
+        """
+    
+    @staticmethod
+    def get_copyright_footer_css() -> str:
+        """
+        [PROMPT 3.5-2] Copyright footer CSS styling
+        """
+        return """
+        /* PROMPT 3.5-2: Copyright Footer Styling */
+        .report-footer.zerosite-copyright {
+            margin-top: 60px;
+            padding: 30px 20px;
+            background: #f8f9fa;
+            border-top: 3px solid #007bff;
+            text-align: center;
+        }
+        
+        .footer-content {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .copyright {
+            font-size: 16px;
+            font-weight: 700;
+            color: #007bff;
+            margin-bottom: 15px;
+            letter-spacing: 0.5px;
+        }
+        
+        .report-metadata {
+            font-size: 12px;
+            color: #666;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .metadata-item {
+            display: inline-block;
+            margin: 0 5px;
+        }
+        
+        .metadata-separator {
+            color: #ccc;
+            margin: 0 8px;
+        }
+        
+        .disclaimer {
+            font-size: 11px;
+            color: #999;
+            margin-top: 15px;
+            line-height: 1.5;
+        }
+        
+        @media print {
+            .report-footer.zerosite-copyright {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+        }
+        """
 
 
 class FinalReportQAValidator:

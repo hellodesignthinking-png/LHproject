@@ -149,15 +149,11 @@ class LandownerSummaryAssembler(BaseFinalReportAssembler):
         """
     
     def _generate_footer(self) -> str:
-        """Standard disclaimer"""
-        return """
-        <footer class="report-footer">
-            <p class="disclaimer">
-                본 보고서는 ZeroSite 시스템에 의해 자동 생성되었습니다.
-                최종 의사결정 시 전문가 자문을 권장합니다.
-            </p>
-        </footer>
-        """
+        """[PROMPT 3.5-2] ZEROSITE Copyright Footer"""
+        return self.get_zerosite_copyright_footer(
+            report_type=self.report_type,
+            context_id=self.context_id
+        )
     
     def _wrap_in_document(self, sections: List[str]) -> str:
         """Wrap all sections in HTML document"""
@@ -176,8 +172,8 @@ class LandownerSummaryAssembler(BaseFinalReportAssembler):
         """
     
     def _get_report_css(self) -> str:
-        """Report-specific CSS"""
-        return """
+        """[PROMPT 3.5-2] Report CSS with watermark and copyright"""
+        base_css = """
         body.final-report {
             font-family: 'Noto Sans KR', sans-serif;
             line-height: 1.6;
@@ -220,11 +216,7 @@ class LandownerSummaryAssembler(BaseFinalReportAssembler):
             color: #666;
             margin: 20px 0;
         }
-        .report-footer {
-            margin-top: 50px;
-            padding: 20px;
-            text-align: center;
-            color: #999;
-            border-top: 1px solid #ddd;
-        }
         """
+        
+        # Add watermark and copyright CSS
+        return base_css + self.get_zerosite_watermark_css() + self.get_copyright_footer_css()

@@ -24,7 +24,7 @@ from fastapi.responses import StreamingResponse, HTMLResponse
 from typing import Literal
 import logging
 import io
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 # Phase 3 imports
 from app.services.final_report_assembly.assemblers import (
@@ -93,6 +93,68 @@ def _validate_context_exists(context_id: str):
         )
     
     return frozen_context
+
+
+def _validate_snapshot_freshness(frozen_context: dict, context_id: str) -> None:
+    """
+    [PROMPT 3.5-1] Validate snapshot freshness (HARD BLOCKING for PDF)
+    
+    Rule: Snapshots older than 1 hour CANNOT generate PDFs
+    
+    Raises:
+        HTTPException(409): If snapshot is older than 1 hour
+    """
+    analyzed_at_str = frozen_context.get("analyzed_at")
+    
+    if not analyzed_at_str:
+        logger.warning(f"[FinalReportAPI] Context {context_id} missing 'analyzed_at' timestamp")
+        return
+    
+    try:
+        # Parse analyzed_at timestamp
+        analyzed_at = datetime.fromisoformat(analyzed_at_str.replace("Z", "+00:00"))
+        
+        # Get current time
+        now = datetime.now(timezone.utc)
+        
+        # Calculate age
+        age = now - analyzed_at
+        age_minutes = int(age.total_seconds() / 60)
+        
+        # Hard blocking threshold: 1 hour
+        MAX_AGE_HOURS = 1
+        
+        if age > timedelta(hours=MAX_AGE_HOURS):
+            logger.error(
+                f"[FinalReportAPI] SNAPSHOT TOO OLD: {context_id}, "
+                f"Age: {age_minutes} minutes (Max: {MAX_AGE_HOURS * 60} minutes). "
+                f"PDF GENERATION BLOCKED."
+            )
+            raise HTTPException(
+                status_code=409,  # 409 Conflict
+                detail={
+                    "error": "OUTDATED_SNAPSHOT",
+                    "message": f"Snapshot is too old ({age_minutes} minutes). "
+                               f"Maximum allowed age: {MAX_AGE_HOURS * 60} minutes. "
+                               f"Please run a new analysis to generate fresh data.",
+                    "context_id": context_id,
+                    "analyzed_at": analyzed_at_str,
+                    "age_minutes": age_minutes,
+                    "max_age_minutes": MAX_AGE_HOURS * 60,
+                    "recommendation": "Run a new analysis with /api/v4/analyze endpoint"
+                }
+            )
+        
+        logger.info(
+            f"[FinalReportAPI] Snapshot freshness OK: {context_id}, "
+            f"Age: {age_minutes} minutes"
+        )
+    
+    except ValueError as e:
+        logger.warning(
+            f"[FinalReportAPI] Invalid timestamp format for {context_id}: {analyzed_at_str}. "
+            f"Skipping freshness check. Error: {e}"
+        )
 
 
 def _extract_modules_data_for_qa(html_content: str) -> dict:
@@ -233,6 +295,9 @@ async def get_final_report_pdf(
     # Step 1: Validate inputs
     _validate_report_type(report_type)
     frozen_context = _validate_context_exists(context_id)
+    
+    # Step 1.5: [PROMPT 3.5-1] Validate snapshot freshness (HARD BLOCKING)
+    _validate_snapshot_freshness(frozen_context, context_id)
     
     try:
         # Step 2: Generate HTML (reuse HTML generation logic)

@@ -48,7 +48,8 @@ class ExecutiveSummaryAssembler(BaseFinalReportAssembler):
             self._wrap_module("M2", m2_html),
             self._wrap_module("M5", m5_html),
             self._wrap_module("M6", m6_html),
-            final_judgment
+            final_judgment,
+            self._generate_footer()
         ]
         
         return {"html": self._wrap_in_document(sections)}
@@ -81,6 +82,13 @@ class ExecutiveSummaryAssembler(BaseFinalReportAssembler):
     def _wrap_module(self, module_id: str, html: str) -> str:
         return f'<section class="module-section compact" data-module="{module_id}">{html}</section>'
     
+    def _generate_footer(self) -> str:
+        """[PROMPT 3.5-2] ZEROSITE Copyright Footer"""
+        return self.get_zerosite_copyright_footer(
+            report_type=self.report_type,
+            context_id=self.context_id
+        )
+    
     def _wrap_in_document(self, sections: List[str]) -> str:
         return f"""
         <!DOCTYPE html>
@@ -89,8 +97,7 @@ class ExecutiveSummaryAssembler(BaseFinalReportAssembler):
             <meta charset="UTF-8">
             <title>{self.config.name_kr}</title>
             <style>
-                body {{ font-family: sans-serif; max-width: 800px; margin: 0 auto; }}
-                .module-section.compact {{ font-size: 0.9em; padding: 10px; }}
+            {self._get_report_css()}
             </style>
         </head>
         <body class="final-report {self.report_type}">
@@ -98,3 +105,20 @@ class ExecutiveSummaryAssembler(BaseFinalReportAssembler):
         </body>
         </html>
         """
+    
+    def _get_report_css(self) -> str:
+        """[PROMPT 3.5-2] Report CSS with watermark and copyright"""
+        base_css = """
+        body.final-report {
+            font-family: 'Noto Sans KR', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .module-section.compact { font-size: 0.9em; padding: 10px; }
+        .narrative { margin: 15px 0; padding: 10px; background: #f8f9fa; }
+        """
+        
+        # Add watermark and copyright CSS
+        return base_css + self.get_zerosite_watermark_css() + self.get_copyright_footer_css()
