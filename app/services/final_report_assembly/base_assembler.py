@@ -175,13 +175,7 @@ class BaseFinalReportAssembler(ABC):
         # Load from module HTML renderer (Phase 1 output)
         try:
             # Import here to avoid circular dependency
-            from app.services.module_html_renderer import (
-                render_m2_html,
-                render_m3_html,
-                render_m4_html,
-                render_m5_html,
-                render_m6_html,
-            )
+            from app.services.module_html_renderer import render_module_html
             from app.services.module_html_adapter import (
                 adapt_m2_summary_for_html,
                 adapt_m3_summary_for_html,
@@ -200,7 +194,7 @@ class BaseFinalReportAssembler(ABC):
             
             canonical_summary = frozen_context.get("canonical_summary", {})
             
-            # Get adapter and renderer for the module
+            # Get adapter for the module
             adapter_map = {
                 "M2": adapt_m2_summary_for_html,
                 "M3": adapt_m3_summary_for_html,
@@ -209,23 +203,14 @@ class BaseFinalReportAssembler(ABC):
                 "M6": adapt_m6_summary_for_html,
             }
             
-            renderer_map = {
-                "M2": render_m2_html,
-                "M3": render_m3_html,
-                "M4": render_m4_html,
-                "M5": render_m5_html,
-                "M6": render_m6_html,
-            }
-            
             # Adapt and render
             adapter = adapter_map.get(module)
-            renderer = renderer_map.get(module)
             
-            if not adapter or not renderer:
-                raise FinalReportAssemblyError(f"No adapter/renderer found for {module}")
+            if not adapter:
+                raise FinalReportAssemblyError(f"No adapter found for {module}")
             
             normalized_data = adapter(canonical_summary)
-            html_fragment = renderer(normalized_data)
+            html_fragment = render_module_html(module, normalized_data)
             
             # Cache for reuse
             self._module_html_cache[module] = html_fragment
