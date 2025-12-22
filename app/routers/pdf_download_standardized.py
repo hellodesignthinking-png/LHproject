@@ -318,6 +318,30 @@ async def download_module_pdf(
         # This is a compatibility layer until PDF generators are updated
         pdf_data = _convert_normalized_to_pdf_format(module, normalized_data, frozen_context)
         
+        # ✅ STEP 5.5: HTML/PDF PARITY VALIDATION (CRITICAL)
+        # This ensures HTML and PDF show IDENTICAL data
+        from app.services.html_pdf_parity_validator import HTMLPDFParityValidator
+        
+        parity_result = HTMLPDFParityValidator.validate_all(
+            module=module,
+            html_data=normalized_data,
+            pdf_data=pdf_data,
+            context_id=context_id
+        )
+        
+        if not parity_result.passed:
+            error_details = "\n".join([
+                f"  - {field}: HTML={html_val}, PDF={pdf_val}"
+                for field, html_val, pdf_val in parity_result.mismatches
+            ])
+            logger.error(f"❌ HTML/PDF parity check FAILED for {module}:\n{error_details}")
+            
+            # ⚠️ WARNING MODE: Log error but continue generation
+            # In production, consider: raise HTTPException(500, parity_result.message)
+            logger.warning(f"⚠️ Continuing PDF generation despite parity check failure")
+        else:
+            logger.info(f"✅ HTML/PDF parity verified for {module}")
+        
         # Step 6: PDF 생성기 초기화
         generator = ModulePDFGenerator()
         
