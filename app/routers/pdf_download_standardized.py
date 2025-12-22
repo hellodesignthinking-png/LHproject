@@ -299,63 +299,65 @@ async def preview_module_html(
     context_id: str = Query(..., description="컨텍스트 ID"),
 ):
     """
-    모듈별 HTML 보고서 미리보기 (v4.3 UNIFIED)
+    모듈별 HTML 보고서 미리보기 (v4.3 MODULE-DEDICATED)
     
-    ✅ B-1: Analysis Preview Unification
-    - canonical_summary 기반
-    - final_report_assembler + is_preview=True 사용
-    - 최종보고서와 100% 동일한 데이터 구조
+    ✅ v4.3 FIX: Module-specific adapter + renderer
+    - canonical_summary → adapter → normalized JSON
+    - normalized JSON → module_html_renderer → HTML
+    - NO final_report_assembler (that's for final reports only)
     
     PDF 다운로드 전 브라우저에서 내용을 확인할 수 있습니다.
     """
     try:
-        logger.info(f"📄 HTML 미리보기 요청 (UNIFIED): module={module}, context_id={context_id}")
+        logger.info(f"📄 모듈 HTML 미리보기: module={module}, context_id={context_id}")
         
-        # ✅ STEP 1: canonical_summary 로드 (Final Report와 동일)
+        # ✅ STEP 1: Load frozen context from DB
         frozen_context = context_storage.get_frozen_context(context_id)
         if not frozen_context:
-            raise HTTPException(
-                status_code=404,
-                detail=(
-                    f"컨텍스트를 찾을 수 없습니다.\n\n"
-                    f"Context ID: {context_id}\n\n"
-                    f"💡 해결 방법:\n"
-                    f"1. M1 분석을 먼저 완료하세요.\n"
-                    f"2. '분석 시작' 버튼을 눌러 context를 저장하세요.\n"
-                    f"3. 분석 완료 후 미리보기를 요청하세요."
-                )
+            logger.warning(f"Context not found: {context_id}")
+            return HTMLResponse(
+                content=_render_data_preparation_page(
+                    module=module,
+                    context_id=context_id,
+                    error_type="context_not_found"
+                ),
+                status_code=404
             )
         
-        # ✅ STEP 2: 모듈별 최종보고서 데이터 조립 (is_preview=True)
-        from app.services.final_report_assembler import assemble_final_report
+        # ✅ STEP 2: Extract canonical_summary
+        canonical_summary = frozen_context.get("canonical_summary", {})
+        if not canonical_summary:
+            logger.error(f"canonical_summary not found in context: {context_id}")
+            raise HTTPException(status_code=500, detail="canonical_summary missing")
         
-        # 모듈 → 보고서 타입 매핑
-        module_to_report_type = {
-            "M2": "landowner_summary",  # 토지평가 → 토지주용 요약
-            "M3": "lh_technical",        # 주택유형 → LH 기술검토
-            "M4": "quick_check",         # 개발규모 → 빠른 검토
-            "M5": "financial_feasibility",  # 사업성 → 재무타당성
-            "M6": "all_in_one"           # LH심사 → 종합보고서
-        }
+        logger.info(f"canonical_summary keys: {list(canonical_summary.keys())}")
         
-        report_type = module_to_report_type.get(module, "quick_check")
-        
-        assembled_data = assemble_final_report(
-            report_type=report_type,
-            canonical_data=frozen_context,
-            context_id=context_id,
-            is_preview=True  # ✅ v4.3: Preview 모드 활성화
+        # ✅ STEP 3: Module-specific adapter
+        from app.services.module_html_adapter import (
+            adapt_m3_summary_for_html,
+            adapt_m4_summary_for_html
         )
         
-        # ✅ STEP 3: HTML 렌더링 (Final Report와 동일 렌더러)
-        from app.services.final_report_html_renderer import render_final_report_html
+        if module == "M3":
+            adapted_data = adapt_m3_summary_for_html(canonical_summary)
+            logger.info(f"✅ M3 adapted: {adapted_data.get('recommended_type', {}).get('name')}")
+        elif module == "M4":
+            adapted_data = adapt_m4_summary_for_html(canonical_summary)
+            logger.info(f"✅ M4 adapted: {adapted_data.get('development_summary', {}).get('total_units')} units")
+        else:
+            # M2, M5, M6 - TODO: implement adapters
+            return HTMLResponse(
+                content=f"<html><body><h1>Module {module}</h1><p>Adapter not yet implemented</p><pre>{canonical_summary.get(module, {})}</pre></body></html>"
+            )
         
-        html_content = render_final_report_html(
-            report_type=report_type,
-            data=assembled_data
-        )
+        # ✅ STEP 4: Module-specific renderer
+        from app.services.module_html_renderer import render_module_html
         
-        # HTML 반환 (브라우저에서 직접 표시)
+        html_content = render_module_html(module, adapted_data)
+        
+        logger.info(f"✅ HTML generated for {module}, length: {len(html_content)} chars")
+        
+        # Return HTML
         return HTMLResponse(
             content=html_content,
             headers={
@@ -365,21 +367,10 @@ async def preview_module_html(
             }
         )
         
-    except FileNotFoundError as e:
-        logger.error(f"컨텍스트를 찾을 수 없음: {context_id}")
-        # ✅ FIX 1: JSON 에러 대신 안내 HTML 반환
-        return HTMLResponse(
-            content=_render_data_preparation_page(
-                module=module,
-                context_id=context_id,
-                error_type="context_not_found"
-            ),
-            status_code=404
-        )
-    
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"HTML 생성 중 예상치 못한 오류: {str(e)}", exc_info=True)
-        # ✅ FIX 1: JSON 에러 대신 안내 HTML 반환
+        logger.error(f"❌ Module HTML generation failed: {str(e)}", exc_info=True)
         return HTMLResponse(
             content=_render_data_preparation_page(
                 module=module,
