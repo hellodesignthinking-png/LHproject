@@ -118,26 +118,99 @@ def _convert_normalized_to_pdf_format(module: str, normalized_data: dict, frozen
         })
     
     elif module == "M4":
-        dev_summary = normalized_data.get("development_summary", {})
-        area_analysis = normalized_data.get("area_analysis", {})
+        # M4 needs the full details structure for PDF generation
+        m4_canonical = canonical_summary.get("M4", {})
+        details = m4_canonical.get("details", {})
+        
+        # Extract direct data from canonical_summary details
+        legal_capacity = details.get("legal_capacity", {})
+        incentive_capacity = details.get("incentive_capacity", {})
+        massing_options = details.get("massing_options", [])
+        parking_solutions = details.get("parking_solutions", {})
+        
+        # Build scenarios from massing options
+        scenarios = []
+        for i, option in enumerate(massing_options):
+            scenario = {
+                "id": f"scenario_{option.get('option_id', chr(65+i))}",
+                "name": option.get("option_name", f"Option {chr(65+i)}"),
+                "units": incentive_capacity.get("total_units", 0),
+                "far": option.get("achieved_far", 0),
+                "parking": parking_solutions.get("alternative_A", {}).get("total_parking", 0),
+                "buildability_score": option.get("buildability_score", 0),
+                "efficiency_score": option.get("efficiency_score", 0)
+            }
+            scenarios.append(scenario)
+        
+        # Set selected scenario (use first option as default)
+        selected_scenario_id = f"scenario_{massing_options[0].get('option_id', 'A')}" if massing_options else "scenario_A"
+        
         pdf_data.update({
-            "total_units": dev_summary.get("total_units", 0),
-            "base_units": dev_summary.get("base_units", 0),
-            "incentive_units": dev_summary.get("incentive_units", 0),
-            "site_area": area_analysis.get("site_area", 0),
-            "floor_area_ratio": area_analysis.get("floor_area_ratio", 0),
+            "selected_scenario_id": selected_scenario_id,
+            "legal_capacity": {
+                "far_max": legal_capacity.get("applied_far", 200.0),
+                "bcr_max": legal_capacity.get("applied_bcr", 60.0),
+                "total_units": legal_capacity.get("total_units", 0),
+                "gross_floor_area": legal_capacity.get("target_gfa_sqm", 0),
+                "required_parking": legal_capacity.get("required_parking", 0)
+            },
+            "incentive_capacity": {
+                "far_max": incentive_capacity.get("applied_far", 260.0),
+                "bcr_max": incentive_capacity.get("applied_bcr", 60.0),
+                "total_units": incentive_capacity.get("total_units", 0),
+                "gross_floor_area": incentive_capacity.get("target_gfa_sqm", 0),
+                "required_parking": incentive_capacity.get("required_parking", 0)
+            },
+            "scenarios": scenarios,
+            "parking_solutions": parking_solutions,
+            "massing_options": massing_options,
             "interpretation": normalized_data.get("interpretation", {}),
             "lh_feasibility": normalized_data.get("lh_feasibility", {})
         })
     
     elif module == "M5":
-        financial = normalized_data.get("financial_result", {})
+        # M5 needs the full details structure for PDF generation
+        m5_canonical = canonical_summary.get("M5", {})
+        details = m5_canonical.get("details", {})
+        
+        # Extract financial data
+        appraisal = details.get("appraisal", {})
+        lh_purchase = details.get("lh_purchase", {})
+        costs = details.get("costs", {})
+        revenue = details.get("revenue", {})
+        financials = details.get("financials", {})
+        profitability = details.get("profitability", {})
+        
+        # Get household count from M4
+        m4_canonical = canonical_summary.get("M4", {})
+        m4_details = m4_canonical.get("details", {})
+        incentive_capacity = m4_details.get("incentive_capacity", {})
+        household_count = incentive_capacity.get("total_units", 0)
+        
+        # Calculate profit
+        total_revenue = revenue.get("total", 0)
+        total_cost = costs.get("total", 0)
+        profit = total_revenue - total_cost
+        profit_rate = (profit / total_cost * 100) if total_cost > 0 else 0
+        
         pdf_data.update({
-            "npv": financial.get("npv", 0),
-            "irr": financial.get("irr", 0),
-            "roi": financial.get("roi", 0),
-            "grade": financial.get("grade", "N/A"),
-            "key_metrics": normalized_data.get("key_metrics", []),
+            "household_count": household_count,
+            "avg_unit_area_m2": 30.0,  # From M3/M4 청년형 standard
+            "total_cost": total_cost,
+            "lh_purchase_price": lh_purchase.get("price", 0),
+            "profit": profit,
+            "profit_rate": profit_rate,
+            "npv": financials.get("npv_public", 0),
+            "irr": financials.get("irr_public", 0),
+            "roi": financials.get("roi", 0),
+            "payback_years": financials.get("payback_years", 0),
+            "grade": profitability.get("grade", "N/A"),
+            "is_profitable": profitability.get("is_profitable", False),
+            "costs": costs,
+            "revenue": revenue,
+            "appraisal": appraisal,
+            "lh_purchase": lh_purchase,
+            "risks": details.get("risks", {}),
             "interpretation": normalized_data.get("interpretation", {}),
             "lh_perspective": normalized_data.get("lh_perspective", {})
         })
