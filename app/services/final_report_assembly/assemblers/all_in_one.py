@@ -13,7 +13,7 @@ from typing import Dict, List, Literal
 import logging
 import re
 
-from ..base_assembler import BaseFinalReportAssembler
+from ..base_assembler import BaseFinalReportAssembler, get_report_brand_class
 from ..narrative_generator import NarrativeGeneratorFactory
 from ..report_type_configs import REPORT_TYPE_CONFIGS
 

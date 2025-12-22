@@ -22,6 +22,9 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 import logging
 
+# Phase 4.0: Import Unified Design System
+from .design_system import DesignSystem, get_report_brand_class
+
 logger = logging.getLogger(__name__)
 
 
@@ -976,10 +979,11 @@ class BaseFinalReportAssembler(ABC):
     @staticmethod
     def get_unified_design_css() -> str:
         """
-        [FIX 4] Unified design system CSS for all reports
+        [Phase 4.0] Unified design system CSS - Uses new DesignSystem module
+        Legacy CSS replaced with CSS variables, improved fonts, and cleaner design
         """
-        return """
-        /* OUTPUT QUALITY FIX - UNIFIED DESIGN SYSTEM */
+        return DesignSystem.get_complete_css() + """
+        /* LEGACY COMPATIBILITY - Additional styles for older reports */
         
         /* Typography */
         body.final-report {
@@ -1253,6 +1257,8 @@ class BaseFinalReportAssembler(ABC):
             page-break-inside: avoid !important;
             min-height: 100px;
         }
+        
+        /* END LEGACY COMPATIBILITY */
         """
 
 
@@ -1460,3 +1466,15 @@ def validate_phase3_compliance(func):
         return result
     
     return wrapper
+
+
+# Phase 4.0: Re-export design system helpers for convenience
+__all__ = [
+    'BaseFinalReportAssembler',
+    'FinalReportAssemblyError',
+    'FinalReportQAValidator',
+    'get_report_brand_class',  # From design_system
+]
+
+# Re-export get_report_brand_class for assemblers to import from base_assembler
+get_report_brand_class = get_report_brand_class

@@ -13,7 +13,7 @@ from typing import Dict, List, Literal
 import logging
 import re
 
-from ..base_assembler import BaseFinalReportAssembler
+from ..base_assembler import BaseFinalReportAssembler, get_report_brand_class
 from ..narrative_generator import NarrativeGeneratorFactory
 from ..report_type_configs import REPORT_TYPE_CONFIGS
 
@@ -448,7 +448,7 @@ class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
             {self._get_report_css()}
             </style>
         </head>
-        <body class="final-report report-color-financial {self.report_type}">
+        <body class="final-report {get_report_brand_class(self.report_type)} {self.report_type}">
             {"".join(sections)}
         </body>
         </html>
