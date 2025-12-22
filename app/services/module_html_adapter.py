@@ -115,7 +115,8 @@ def adapt_m4_summary_for_html(canonical_summary: Dict[str, Any]) -> Dict[str, An
                 "site_area": details.get("inputs", {}).get("land_area_sqm", 0),
                 "building_coverage_ratio": 60.0,  # TODO: Extract from details
                 "floor_area_ratio": details.get("inputs", {}).get("incentive_far", 250.0),
-                "legal_far_limit": details.get("inputs", {}).get("legal_far", 200.0)
+                "legal_far_limit": details.get("inputs", {}).get("legal_far", 200.0),
+                "gross_floor_area": summary.get("gross_floor_area", details.get("inputs", {}).get("land_area_sqm", 0) * 2.2)  # Calculate or use from summary
             },
             "interpretation": {
                 "one_line": "법적 허용 범위 내에서 인센티브를 활용한 최대 개발 규모가 가능합니다.",

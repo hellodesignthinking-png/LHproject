@@ -77,14 +77,14 @@ def _render_m3_html(data: Dict[str, Any]) -> str:
         </style>
     </head>
     <body>
-        <div class="container">
+        <div class="container" data-module="M3">
             <header class="header">
                 <h1>{data['title']}</h1>
                 <p class="subtitle">Module {data['module']}</p>
             </header>
             
             <section class="module-section">
-                <div class="key-result-card">
+                <div class="key-result-card" data-recommended-type="{rec_type['name']}" data-total-score="{rec_type['score']}" data-grade="{rec_type['grade']}" data-preferred-type="{rec_type['name']}" data-type-score="{rec_type['score']}">
                     <div class="badge {grade_class}">{rec_type['grade']}등급</div>
                     <h2>추천 유형: {rec_type['name']} ({rec_type['score']}점)</h2>
                     <p class="confidence">분석 신뢰도: {rec_type['confidence']}</p>
@@ -150,7 +150,7 @@ def _render_m4_html(data: Dict[str, Any]) -> str:
         </style>
     </head>
     <body>
-        <div class="container">
+        <div class="container" data-module="M4" data-total-units="{dev_summary['total_units']}" data-unit-count="{dev_summary['total_units']}" data-floor-area="{area_analysis['gross_floor_area']}" data-total-floor-area="{area_analysis['gross_floor_area']}">
             <header class="header">
                 <h1>{data['title']}</h1>
                 <p class="subtitle">Module {data['module']}</p>
@@ -244,14 +244,14 @@ def _render_m2_html(data: Dict[str, Any]) -> str:
         </style>
     </head>
     <body>
-        <div class="container">
+        <div class="container" data-module="M2">
             <header class="header">
                 <h1>{data['title']}</h1>
                 <p class="subtitle">Module {data['module']}</p>
             </header>
             
             <section class="module-section">
-                <div class="key-result-card">
+                <div class="key-result-card" data-land-value-total="{appraisal['total_value']}" data-land-value-per-pyeong="{appraisal['pyeong_price']}" data-land-area="{basis.get('land_area', 0)}">
                     <h2>토지 평가액: {appraisal['total_value']:,}원</h2>
                     <p class="confidence">평가 신뢰도: {appraisal['confidence']} ({appraisal['confidence_pct']}%)</p>
                     <div style="margin-top: 16px; font-size: 14px; color: #6B7280;">
@@ -352,7 +352,7 @@ def _render_m5_html(data: Dict[str, Any]) -> str:
         </style>
     </head>
     <body>
-        <div class="container">
+        <div class="container" data-module="M5" data-npv="{financial['npv']}" data-irr="{financial['irr']}" data-is-profitable="{str(financial['is_profitable']).lower()}" data-profitability-text="{financial['profitability_status']}">
             <header class="header">
                 <h1>{data['title']}</h1>
                 <p class="subtitle">Module {data['module']}</p>
@@ -445,7 +445,7 @@ def _render_m6_html(data: Dict[str, Any]) -> str:
         </style>
     </head>
     <body>
-        <div class="container">
+        <div class="container" data-module="M6" data-decision="{review['decision']}" data-lh-decision="{review['decision']}" data-risk-summary="{interpretation.get('risk_level', '정보 없음')} - {interpretation.get('summary', '')}">
             <header class="header">
                 <h1>{data['title']}</h1>
                 <p class="subtitle">Module {data['module']}</p>
