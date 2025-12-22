@@ -1,0 +1,2199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite Land Report v5.0 - ZeroSite</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+          crossorigin=""/>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+            crossorigin=""></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .input-hint {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .btn-analyze {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-analyze:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-analyze:active {
+            transform: translateY(0);
+        }
+
+        .btn-analyze:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+            color: #667eea;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            display: none;
+            margin-top: 30px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .result.active {
+            display: block;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .result-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .result-badge {
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .result-badge.eligible {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .result-badge.not-eligible {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        /* 등급 배지 스타일 */
+        .result-badge.grade-a {
+            background: linear-gradient(135deg, #4caf50, #66bb6a);
+            color: white;
+            box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+        }
+        
+        .result-badge.grade-b {
+            background: linear-gradient(135deg, #ff9800, #ffa726);
+            color: white;
+            box-shadow: 0 4px 8px rgba(255, 152, 0, 0.3);
+        }
+        
+        .result-badge.grade-c {
+            background: linear-gradient(135deg, #f44336, #e57373);
+            color: white;
+            box-shadow: 0 4px 8px rgba(244, 67, 54, 0.3);
+        }
+
+        .result-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .result-section h3 {
+            font-size: 16px;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .result-section h3::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #667eea;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .result-value {
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .risk-list {
+            list-style: none;
+        }
+
+        .risk-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .risk-high {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+
+        .risk-medium {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+
+        .risk-low {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .score-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .score-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            transition: width 1s ease;
+        }
+
+        .error {
+            display: none;
+            padding: 20px;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 10px;
+            color: #721c24;
+            margin-top: 20px;
+        }
+
+        .error.active {
+            display: block;
+        }
+
+        .example-addresses {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .example-btn {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 3px;
+            background: #e9ecef;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+
+        .example-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .facilities-list {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .facility-item {
+            padding: 8px;
+            margin-bottom: 5px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏢 ZeroSite LH 토지진단 시스템</h1>
+            <p>주소만 입력하면 자동으로 분석됩니다</p>
+            <p style="font-size: 11px; margin-top: 10px; opacity: 0.8;">© 2024 ZeroSite. All Rights Reserved. 본 시스템은 ZeroSite의 자산이며, 무단 복제 및 배포를 금지합니다.</p>
+        </div>
+
+        <div class="content">
+            <form id="analysisForm">
+                <div class="input-group">
+                    <label for="address">📍 토지 주소</label>
+                    <input 
+                        type="text" 
+                        id="address" 
+                        placeholder="예: 서울특별시 강남구 역삼동 679" 
+                        required
+                    >
+                    <div class="input-hint">도로명 주소 또는 지번 주소를 입력하세요</div>
+                    <div class="example-addresses">
+                        <strong>예시:</strong>
+                        <span class="example-btn" onclick="setExample('서울특별시 강남구 역삼동 679')">강남 역삼동</span>
+                        <span class="example-btn" onclick="setExample('서울특별시 마포구 서교동 395-1')">마포 홍대</span>
+                        <span class="example-btn" onclick="setExample('서울특별시 서초구 반포동 19-1')">서초 반포동</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="landArea">📐 토지 면적 (㎡)</label>
+                    <input 
+                        type="number" 
+                        id="landArea" 
+                        placeholder="500" 
+                        min="100" 
+                        max="10000"
+                        value="500"
+                        required
+                    >
+                    <div class="input-hint">100㎡ ~ 10,000㎡ 사이로 입력하세요</div>
+                </div>
+
+                <div class="input-group" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; color: white;">
+                    <label style="color: white; font-size: 14pt; font-weight: bold; margin-bottom: 10px; display: block;">
+                        🏠 세대 유형 선택 방식 (자동 분석)
+                    </label>
+                    <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; line-height: 1.8;">
+                        <p style="margin: 0 0 10px 0; font-weight: bold;">✨ 지능형 유형 추천 시스템</p>
+                        <p style="margin: 0; font-size: 10pt;">
+                            시스템이 <strong>LH 공식 7개 유형</strong>을 모두 자동으로 분석하여<br>
+                            해당 지역에 가장 적합한 유형을 추천합니다.
+                        </p>
+                        <ul style="margin: 10px 0 0 20px; font-size: 9pt; list-style: none; padding: 0;">
+                            <li>✓ 청년형 (만 19~39세, 30㎡)</li>
+                            <li>✓ 신혼·신생아 I형 (자녀 없음, 45㎡)</li>
+                            <li>✓ 신혼·신생아 II형 (자녀 1명 이상, 55㎡)</li>
+                            <li>✓ 다자녀형 (자녀 3명 이상, 65㎡)</li>
+                            <li>✓ 고령자형 (만 65세 이상, 40㎡)</li>
+                            <li>✓ 일반형 (소득 7분위 이하, 85㎡)</li>
+                            <li>✓ 든든전세형 (청년·신혼부부 전세, 85㎡)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="zoneType">🏗️ 용도지역 (정확한 정보 선택)</label>
+                    <select id="zoneType">
+                        <option value="">자동 조회 (API 사용)</option>
+                        <optgroup label="주거지역">
+                            <option value="제1종전용주거지역">제1종전용주거지역 (건폐율 50%, 용적률 100%)</option>
+                            <option value="제2종전용주거지역">제2종전용주거지역 (건폐율 50%, 용적률 150%)</option>
+                            <option value="제1종일반주거지역">제1종일반주거지역 (건폐율 60%, 용적률 200%)</option>
+                            <option value="제2종일반주거지역">제2종일반주거지역 (건폐율 60%, 용적률 200%)</option>
+                            <option value="제3종일반주거지역">제3종일반주거지역 (건폐율 50%, 용적률 300%)</option>
+                            <option value="준주거지역">준주거지역 (건폐율 70%, 용적률 500%)</option>
+                        </optgroup>
+                        <optgroup label="상업지역">
+                            <option value="중심상업지역">중심상업지역 (건폐율 90%, 용적률 1500%)</option>
+                            <option value="일반상업지역">일반상업지역 (건폐율 80%, 용적률 1300%)</option>
+                            <option value="근린상업지역">근린상업지역 (건폐율 70%, 용적률 900%)</option>
+                            <option value="유통상업지역">유통상업지역 (건폐율 80%, 용적률 1100%)</option>
+                        </optgroup>
+                        <optgroup label="공업지역">
+                            <option value="전용공업지역">전용공업지역 (건폐율 70%, 용적률 300%)</option>
+                            <option value="일반공업지역">일반공업지역 (건폐율 70%, 용적률 350%)</option>
+                            <option value="준공업지역">준공업지역 (건폐율 70%, 용적률 400%)</option>
+                        </optgroup>
+                        <optgroup label="녹지지역">
+                            <option value="보전녹지지역">보전녹지지역 (건폐율 20%, 용적률 80%)</option>
+                            <option value="생산녹지지역">생산녹지지역 (건폐율 20%, 용적률 100%)</option>
+                            <option value="자연녹지지역">자연녹지지역 (건폐율 20%, 용적률 100%)</option>
+                        </optgroup>
+                        <optgroup label="관리지역">
+                            <option value="보전관리지역">보전관리지역 (건폐율 20%, 용적률 80%)</option>
+                            <option value="생산관리지역">생산관리지역 (건폐율 20%, 용적률 80%)</option>
+                            <option value="계획관리지역">계획관리지역 (건폐율 40%, 용적률 100%)</option>
+                        </optgroup>
+                        <optgroup label="보전지역">
+                            <option value="자연환경보전지역">자연환경보전지역 (건폐율 20%, 용적률 80%)</option>
+                        </optgroup>
+                    </select>
+                    <div class="input-hint">정확한 용도지역을 알고 계시면 선택하세요 (API 조회보다 정확)</div>
+                </div>
+
+                <div class="input-group">
+                    <label for="landStatus">🏗️ 종전 대지 이용상태</label>
+                    <select id="landStatus" required>
+                        <option value="나대지" selected>나대지 (빈 땅)</option>
+                        <option value="주택">주택 (단독/다가구)</option>
+                        <option value="상가">상가/점포</option>
+                        <option value="공장">공장/창고</option>
+                        <option value="농지">농지/전답</option>
+                        <option value="임야">임야/산지</option>
+                        <option value="기타">기타</option>
+                    </select>
+                    <div class="input-hint">현재 토지의 이용 상태를 선택하세요</div>
+                </div>
+
+                <div class="input-group">
+                    <label for="landAppraisalPrice">💰 토지 탁상감정평가액 (원/㎡, 선택사항)</label>
+                    <input 
+                        type="number" 
+                        id="landAppraisalPrice" 
+                        placeholder="예: 5500000 (입력하지 않으면 자동 계산)" 
+                        min="100000" 
+                        max="100000000"
+                        step="10000"
+                    >
+                    <div class="input-hint">감정평가액을 직접 입력하면 해당 값으로 계산됩니다 (비어있으면 지역 거래가 기준 자동 계산)</div>
+                </div>
+
+                <!-- 가중치 조정 (신규) -->
+                <div style="margin: 30px 0; padding: 20px; background: #fff3cd; border-radius: 10px; border-left: 4px solid #ffc107;">
+                    <h3 style="margin: 0 0 15px 0; font-size: 15px; color: #333;">
+                        ⚖️ 평가 가중치 조정 (고급 옵션)
+                    </h3>
+                    <div style="margin-bottom: 10px; padding: 10px; background: white; border-radius: 6px; font-size: 12px; color: #666;">
+                        <strong>💡 팁:</strong> 각 카테고리의 중요도를 조정할 수 있습니다. 합계는 자동으로 100%로 맞춰집니다.
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <label style="font-size: 13px; color: #333; display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>📍 입지</span>
+                                <span id="weightLocationValue" style="font-weight: bold; color: #667eea;">30%</span>
+                            </label>
+                            <input type="range" id="weightLocation" min="0" max="60" value="30" step="5" 
+                                style="width: 100%; cursor: pointer;">
+                        </div>
+                        <div>
+                            <label style="font-size: 13px; color: #333; display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>🏗️ 규모</span>
+                                <span id="weightScaleValue" style="font-weight: bold; color: #667eea;">25%</span>
+                            </label>
+                            <input type="range" id="weightScale" min="0" max="60" value="25" step="5" 
+                                style="width: 100%; cursor: pointer;">
+                        </div>
+                        <div>
+                            <label style="font-size: 13px; color: #333; display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>💰 사업성</span>
+                                <span id="weightBusinessValue" style="font-weight: bold; color: #667eea;">30%</span>
+                            </label>
+                            <input type="range" id="weightBusiness" min="0" max="60" value="30" step="5" 
+                                style="width: 100%; cursor: pointer;">
+                        </div>
+                        <div>
+                            <label style="font-size: 13px; color: #333; display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>📋 법규</span>
+                                <span id="weightRegulationValue" style="font-weight: bold; color: #667eea;">15%</span>
+                            </label>
+                            <input type="range" id="weightRegulation" min="0" max="60" value="15" step="5" 
+                                style="width: 100%; cursor: pointer;">
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; padding: 10px; background: white; border-radius: 6px; text-align: center;">
+                        <span style="font-size: 12px; color: #666;">가중치 합계: </span>
+                        <span id="weightTotal" style="font-size: 16px; font-weight: bold; color: #667eea;">100%</span>
+                    </div>
+                </div>
+
+                <!-- 컨설팅 담당자 정보 -->
+                <div style="margin: 30px 0; padding: 20px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #667eea;">
+                    <h3 style="margin: 0 0 15px 0; font-size: 15px; color: #333;">
+                        👤 컨설팅 담당자 정보 (선택사항)
+                    </h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label for="consultantName" style="font-size: 13px;">이름</label>
+                            <input 
+                                type="text" 
+                                id="consultantName" 
+                                placeholder="홍길동"
+                                style="padding: 12px; font-size: 14px;"
+                            >
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label for="consultantPhone" style="font-size: 13px;">연락처</label>
+                            <input 
+                                type="tel" 
+                                id="consultantPhone" 
+                                placeholder="010-1234-5678"
+                                style="padding: 12px; font-size: 14px;"
+                            >
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label for="consultantDepartment" style="font-size: 13px;">부서</label>
+                            <input 
+                                type="text" 
+                                id="consultantDepartment" 
+                                placeholder="토지개발팀"
+                                style="padding: 12px; font-size: 14px;"
+                            >
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label for="consultantEmail" style="font-size: 13px;">이메일</label>
+                            <input 
+                                type="email" 
+                                id="consultantEmail" 
+                                placeholder="hong@example.com"
+                                style="padding: 12px; font-size: 14px;"
+                            >
+                        </div>
+                    </div>
+                    <div class="input-hint" style="margin-top: 10px;">
+                        담당자 정보는 보고서에 포함되며, 구글 시트에 함께 저장됩니다
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-analyze" id="analyzeBtn">
+                    🔍 토지 분석 시작
+                </button>
+
+                <!-- ✨ v5.0: 다중 필지 분석 UI -->
+                <div style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 12px; border: 2px solid #667eea;">
+                    <h3 style="margin: 0 0 15px 0; color: #333; font-size: 18px; display: flex; align-items: center;">
+                        <span style="font-size: 24px; margin-right: 10px;">📦</span>
+                        다중 필지 동시 분석 (최대 10개)
+                    </h3>
+                    <p style="margin: 0 0 15px 0; font-size: 13px; color: #666; line-height: 1.6;">
+                        여러 필지를 한번에 분석하여 최적의 필지와 조합을 찾아드립니다. 각 줄에 하나씩 주소를 입력하세요.
+                    </p>
+                    
+                    <div class="input-group" style="margin-bottom: 15px;">
+                        <label for="multiParcelAddresses" style="font-weight: 600; color: #333;">필지 주소 목록 (한 줄에 하나씩)</label>
+                        <textarea 
+                            id="multiParcelAddresses" 
+                            rows="6"
+                            placeholder="예시:&#10;서울특별시 마포구 월드컵북로 120&#10;서울특별시 마포구 월드컵북로 121&#10;서울특별시 마포구 월드컵북로 122"
+                            style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; resize: vertical;"
+                        ></textarea>
+                        <div class="input-hint">최대 10개 필지까지 입력 가능합니다</div>
+                    </div>
+
+                    <button type="button" class="btn-analyze" id="analyzeMultiParcelBtn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); width: 100%;">
+                        🚀 다중 필지 분석 시작
+                    </button>
+                </div>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>토지를 분석하고 있습니다...</p>
+                <p style="font-size: 14px; margin-top: 10px;">약 6-8초 소요됩니다</p>
+            </div>
+
+            <div class="error" id="error"></div>
+
+            <div class="result" id="result">
+                <div class="result-header">
+                    <div class="result-title" id="resultTitle">분석 결과</div>
+                    <div class="result-badge" id="resultBadge"></div>
+                </div>
+
+                <div class="result-section">
+                    <h3>📊 기본 정보</h3>
+                    <div class="result-item">
+                        <span class="result-label">주소</span>
+                        <span class="result-value" id="resultAddress"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">용도지역</span>
+                        <span class="result-value" id="resultZone"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">건폐율 / 용적률</span>
+                        <span class="result-value" id="resultRatio"></span>
+                    </div>
+                </div>
+
+                <div class="result-section">
+                    <h3>🏗️ 건축 규모</h3>
+                    <div class="result-item">
+                        <span class="result-label">예상 세대수</span>
+                        <span class="result-value" id="resultUnits"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">층수</span>
+                        <span class="result-value" id="resultFloors"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">주차대수</span>
+                        <span class="result-value" id="resultParking"></span>
+                    </div>
+                </div>
+
+                <div class="result-section" id="allTypesSection" style="display: none;">
+                    <h3>🏠 전체 유형 수요 점수 비교 (7개 유형 자동 분석)</h3>
+                    <div style="margin-bottom: 15px; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white;">
+                        <p style="margin: 0; font-size: 13px; font-weight: bold;">
+                            ✨ 추천 유형: <span id="recommendedType" style="font-size: 16px;"></span>
+                        </p>
+                        <p style="margin: 5px 0 0 0; font-size: 11px; opacity: 0.9;">
+                            시스템이 지역 특성을 분석하여 가장 적합한 유형을 추천했습니다
+                        </p>
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                        <thead>
+                            <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                                <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6; font-weight: 600;">순위</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6; font-weight: 600;">세대 유형</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #dee2e6; font-weight: 600;">평형</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #dee2e6; font-weight: 600;">수요 점수</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6; font-weight: 600;">점수 바</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allTypesTableBody">
+                            <!-- JavaScript로 동적 생성 -->
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 12px; padding: 10px; background: #f8f9fa; border-radius: 6px; font-size: 11px; color: #666;">
+                        💡 <strong>참고:</strong> 보고서는 추천 유형(최고 점수)을 기준으로 건축 설계 및 수지 분석이 작성됩니다.
+                    </div>
+                </div>
+
+                <div class="result-section">
+                    <h3>📈 수요 분석 (추천 유형 기준)</h3>
+                    <div class="result-item">
+                        <span class="result-label">수요 점수</span>
+                        <span class="result-value" id="resultScore"></span>
+                    </div>
+                    <div class="score-bar">
+                        <div class="score-fill" id="scoreBar"></div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <strong style="font-size: 14px; color: #333;">핵심 요인:</strong>
+                        <ul id="keyFactors" style="margin-top: 10px; padding-left: 20px; font-size: 14px; color: #666;"></ul>
+                    </div>
+                </div>
+
+                <div class="result-section" id="riskSection">
+                    <h3>⚠️ 리스크 요인</h3>
+                    <ul class="risk-list" id="riskList"></ul>
+                </div>
+
+                <!-- ✨ v5.0: Geo Optimization 지도 시각화 -->
+                <div class="result-section" id="geoOptimizationSection" style="display: none; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: 2px solid #2196f3;">
+                    <h3>🗺️ 지리적 최적화 분석</h3>
+                    
+                    <!-- 현재 위치 점수 -->
+                    <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4 style="margin: 0 0 5px 0; color: #333; font-size: 16px;">📍 분석 위치 점수</h4>
+                                <div id="geoCurrentAddress" style="font-size: 13px; color: #666;"></div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div id="geoOptimizationScore" style="font-size: 32px; font-weight: bold; color: #2196f3;"></div>
+                                <div style="font-size: 12px; color: #666;">최적화 점수</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 강약점 분석 -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div style="background: #e8f5e9; padding: 12px; border-radius: 8px; border-left: 3px solid #4caf50;">
+                            <h5 style="margin: 0 0 8px 0; color: #2e7d32; font-size: 14px;">✅ 강점</h5>
+                            <ul id="geoStrengths" style="margin: 0; padding-left: 18px; font-size: 12px; line-height: 1.6;"></ul>
+                        </div>
+                        <div style="background: #fff3e0; padding: 12px; border-radius: 8px; border-left: 3px solid #ff9800;">
+                            <h5 style="margin: 0 0 8px 0; color: #e65100; font-size: 14px;">⚠️ 약점</h5>
+                            <ul id="geoWeaknesses" style="margin: 0; padding-left: 18px; font-size: 12px; line-height: 1.6;"></ul>
+                        </div>
+                    </div>
+
+                    <!-- 추천 대안 위치 지도 -->
+                    <div style="background: white; padding: 15px; border-radius: 8px;">
+                        <h4 style="margin: 0 0 12px 0; color: #333; font-size: 15px;">🎯 추천 대안 위치 (상위 3개)</h4>
+                        <div id="geoMap" style="height: 400px; border-radius: 8px; overflow: hidden;"></div>
+                        <div style="margin-top: 12px; padding: 10px; background: #f5f5f5; border-radius: 6px; font-size: 11px; color: #666;">
+                            <strong>💡 범례:</strong> 
+                            <span style="display: inline-block; width: 12px; height: 12px; background: #4caf50; border-radius: 50%; margin: 0 5px;"></span> 80점 이상
+                            <span style="display: inline-block; width: 12px; height: 12px; background: #ff9800; border-radius: 50%; margin: 0 5px;"></span> 60-80점
+                            <span style="display: inline-block; width: 12px; height: 12px; background: #f44336; border-radius: 50%; margin: 0 5px;"></span> 60점 미만
+                            <span style="display: inline-block; width: 12px; height: 12px; background: #2196f3; border-radius: 50%; margin: 0 5px;"></span> 현재 위치
+                        </div>
+                    </div>
+
+                    <!-- 최적화 제안 -->
+                    <div id="geoSuggestions" style="display: none; background: #fff3cd; padding: 12px; border-radius: 8px; border-left: 3px solid #ffc107; margin-top: 15px;">
+                        <h5 style="margin: 0 0 8px 0; color: #856404; font-size: 14px;">💡 최적화 제안</h5>
+                        <ul id="geoSuggestionsList" style="margin: 0; padding-left: 18px; font-size: 12px; line-height: 1.6;"></ul>
+                    </div>
+
+                    <!-- 추천 사이트 상세 정보 -->
+                    <div id="geoSitesDetails" style="margin-top: 15px;"></div>
+                </div>
+
+                <!-- 등급 평가 결과 (신규) -->
+                <div class="result-section" id="gradeSection" style="display: none;">
+                    <h3>🏆 사업 등급 평가</h3>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <div id="gradeDisplay" style="display: inline-block; padding: 30px 50px; border-radius: 15px; font-size: 60px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></div>
+                        <div id="gradeScore" style="margin-top: 15px; font-size: 18px; color: #666; font-weight: 600;"></div>
+                    </div>
+                    <div id="gradeSummary" style="padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff; margin-top: 20px; font-size: 14px; line-height: 1.6;"></div>
+                    
+                    <!-- 카테고리별 점수 -->
+                    <div style="margin-top: 25px;">
+                        <h4 style="font-size: 15px; color: #333; margin-bottom: 15px;">📊 카테고리별 점수</h4>
+                        <div id="categoryScores"></div>
+                    </div>
+                    
+                    <!-- 개선 권장사항 -->
+                    <div id="recommendationsSection" style="display: none; margin-top: 25px;">
+                        <h4 style="font-size: 15px; color: #333; margin-bottom: 15px;">💡 개선 권장사항</h4>
+                        <ul id="recommendationsList" style="padding-left: 20px; font-size: 13px; line-height: 1.8;"></ul>
+                    </div>
+                </div>
+
+                <!-- 체크리스트 (신규) -->
+                <div class="result-section" id="checklistSection" style="display: none;">
+                    <h3>✅ LH 기준 체크리스트</h3>
+                    <div style="margin-bottom: 15px; padding: 12px; background: #e3f2fd; border-radius: 8px; font-size: 12px; color: #1976d2;">
+                        <strong>📌 참고:</strong> LH 신축매입임대 공고문 기준에 따라 항목별 적합성을 체크한 결과입니다.
+                    </div>
+                    <div id="checklistByCategory"></div>
+                </div>
+
+                <!-- 지자체 수요예측 (신규) -->
+                <div class="result-section" id="demandPredictionSection" style="display: none;">
+                    <h3>📊 지자체 수요예측 (LITE 1.0)</h3>
+                    <div style="margin-bottom: 15px; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; color: white;">
+                        <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">
+                            수요 수준: <span id="demandLevel"></span>
+                        </div>
+                        <div style="font-size: 24px; font-weight: bold;">
+                            <span id="demandScore"></span> <span style="font-size: 16px; opacity: 0.9;">/ 100점</span>
+                        </div>
+                    </div>
+                    <div id="demandComment" style="padding: 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 15px; font-size: 14px; line-height: 1.6;"></div>
+                    <div style="margin-bottom: 15px;">
+                        <h4 style="font-size: 14px; margin-bottom: 10px;">📈 요인별 점수</h4>
+                        <div id="demandFactors"></div>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 14px; margin-bottom: 10px;">💡 추천사항</h4>
+                        <ul id="demandRecommendations" style="padding-left: 20px; font-size: 13px; line-height: 1.8;"></ul>
+                    </div>
+                </div>
+
+                <!-- 협상전략 (신규) -->
+                <div class="result-section" id="negotiationSection" style="display: none;">
+                    <h3>🤝 사업성 협상전략</h3>
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="font-size: 14px; margin-bottom: 10px; color: #28a745;">✅ 협상 강점</h4>
+                        <ul id="negotiationStrengths" style="padding-left: 20px; font-size: 13px; line-height: 1.8; color: #155724;"></ul>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="font-size: 14px; margin-bottom: 10px; color: #dc3545;">⚠️ 협상 약점</h4>
+                        <ul id="negotiationWeaknesses" style="padding-left: 20px; font-size: 13px; line-height: 1.8; color: #721c24;"></ul>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="font-size: 14px; margin-bottom: 10px; color: #667eea;">📋 협상 전략</h4>
+                        <div id="negotiationStrategies"></div>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 14px; margin-bottom: 10px; color: #ff9800;">🎯 우선 조치사항</h4>
+                        <ul id="negotiationActions" style="padding-left: 20px; font-size: 13px; line-height: 1.8; font-weight: 600;"></ul>
+                    </div>
+                </div>
+
+                <div class="result-section">
+                    <h3>🎯 종합 판단</h3>
+                    <div class="result-item">
+                        <span class="result-label">LH 매입 적격</span>
+                        <span class="result-value" id="resultEligible"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">최종 추천</span>
+                        <span class="result-value" id="resultRecommendation"></span>
+                    </div>
+                </div>
+
+                <div class="result-section" id="facilitiesSection" style="display: none;">
+                    <h3>🚇 주변 시설</h3>
+                    <div class="facilities-list" id="facilitiesList"></div>
+                </div>
+
+                <!-- ✨ v5.0: Multi-Parcel Analysis Results -->
+                <div class="result-section" id="multiParcelResultsSection" style="display: none; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border: 2px solid #667eea;">
+                    <h3>📦 다중 필지 분석 결과</h3>
+                    
+                    <!-- 통계 요약 -->
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+                        <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: #667eea;" id="mpTotalParcels">0</div>
+                            <div style="font-size: 12px; color: #666; margin-top: 5px;">전체 필지</div>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: #4caf50;" id="mpSuccessful">0</div>
+                            <div style="font-size: 12px; color: #666; margin-top: 5px;">분석 성공</div>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: #f44336;" id="mpFailed">0</div>
+                            <div style="font-size: 12px; color: #666; margin-top: 5px;">분석 실패</div>
+                        </div>
+                    </div>
+
+                    <!-- 추천 필지 -->
+                    <div id="mpRecommended" style="display: none; background: linear-gradient(135deg, #fff9e6 0%, #ffe6f0 100%); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #667eea;">
+                        <h4 style="margin: 0 0 10px 0; color: #333; font-size: 16px;">🏆 추천 필지 (상위 3개)</h4>
+                        <div id="mpRecommendedList" style="font-size: 13px; line-height: 1.8;"></div>
+                    </div>
+
+                    <!-- 필지별 상세 결과 테이블 -->
+                    <div style="overflow-x: auto;">
+                        <table id="multiParcelResults" style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; font-size: 13px;">
+                            <thead>
+                                <tr style="background: #667eea; color: white;">
+                                    <th style="padding: 12px; text-align: center; border: 1px solid #5568d3;">순위</th>
+                                    <th style="padding: 12px; text-align: left; border: 1px solid #5568d3;">주소</th>
+                                    <th style="padding: 12px; text-align: center; border: 1px solid #5568d3;">상태</th>
+                                    <th style="padding: 12px; text-align: center; border: 1px solid #5568d3;">수요점수</th>
+                                    <th style="padding: 12px; text-align: center; border: 1px solid #5568d3;">세대수</th>
+                                    <th style="padding: 12px; text-align: center; border: 1px solid #5568d3;">적합성</th>
+                                </tr>
+                            </thead>
+                            <tbody id="multiParcelResultsBody">
+                                <!-- JavaScript로 동적 생성 -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 클러스터 분석 결과 (있는 경우) -->
+                    <div id="mpClusterAnalysis" style="display: none; margin-top: 20px;">
+                        <h4 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">🔗 다필지 조합 분석</h4>
+                        <div id="mpClusterContent" style="background: white; padding: 15px; border-radius: 8px;"></div>
+                    </div>
+                </div>
+
+                <!-- ✨ v5.0: Debug JSON Viewer for type_demand_scores verification -->
+                <div class="result-section" id="debugJsonSection" style="display: none; background: #f8f9fa; border: 2px dashed #6c757d;">
+                    <h3>🔍 개발자 디버그: API 응답 JSON</h3>
+                    <div style="margin-bottom: 10px;">
+                        <button type="button" id="toggleDebugBtn" style="padding: 8px 15px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">
+                            📋 전체 응답 JSON 보기/숨기기
+                        </button>
+                    </div>
+                    <div id="debugJsonContent" style="display: none;">
+                        <pre id="debugJsonPre" style="background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 8px; font-size: 12px; max-height: 500px; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word;"></pre>
+                    </div>
+                    <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-left: 3px solid #ffc107; border-radius: 4px; font-size: 11px; color: #856404;">
+                        <strong>💡 확인 사항:</strong>
+                        <ul style="margin: 5px 0 0 20px; padding: 0;">
+                            <li><code>type_demand_scores</code> 필드에 5개 유형의 독립적인 점수가 있는지 확인</li>
+                            <li>각 유형의 점수가 서로 다른 값인지 검증 (동일 값이면 버그)</li>
+                            <li><code>all_types_scores</code> 배열에 7개 유형 정보가 포함되어 있는지 확인</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <button type="button" class="btn-analyze" id="reportBtn" style="margin-top: 20px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                    📄 전문 보고서 생성 (LH 제출용)
+                </button>
+
+                <button type="button" class="btn-analyze" id="googleDocsBtn" style="margin-top: 10px; background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);">
+                    📝 Google Docs로 내보내기
+                </button>
+                
+                <div style="margin-top: 8px; padding: 10px; background: #e3f2fd; border-left: 3px solid #2196f3; border-radius: 4px; font-size: 12px; color: #1565c0;">
+                    <strong>💡 참고:</strong> Google Docs 기능을 사용하려면 Google Cloud 설정이 필요합니다.
+                    <a href="https://github.com/yourusername/yourrepo/blob/main/GOOGLE_DOCS_SETUP.md" target="_blank" style="color: #1976d2; text-decoration: underline; margin-left: 5px;">설정 가이드 보기</a>
+                    <span style="display: block; margin-top: 5px; font-size: 11px; color: #666;">
+                        또는 HTML 보고서를 생성하여 수동으로 복사하세요.
+                    </span>
+                </div>
+
+                <div class="result-section" id="reportSection" style="display: none; margin-top: 20px;">
+                    <h3>📄 전문 보고서</h3>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-top: 10px;">
+                        <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                            LH 신축매입약정 사업 제출용 전문 보고서가 생성되었습니다.
+                        </p>
+                        <button type="button" class="btn-analyze" id="viewReportBtn" style="padding: 12px; font-size: 14px;">
+                            📖 보고서 전문 보기
+                        </button>
+                        <button type="button" class="btn-analyze" id="downloadReportBtn" style="padding: 12px; font-size: 14px; margin-left: 10px; background: #6c757d;">
+                            💾 다운로드 (준비중)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="result-section" id="googleDocsSection" style="display: none; margin-top: 20px;">
+                    <h3>📝 Google Docs</h3>
+                    <div style="background: #e8f5e9; padding: 15px; border-radius: 10px; margin-top: 10px; border: 2px solid #4caf50;">
+                        <p style="font-size: 14px; color: #2e7d32; margin-bottom: 10px; font-weight: 600;">
+                            ✅ Google Docs 문서가 성공적으로 생성되었습니다!
+                        </p>
+                        <p style="font-size: 13px; color: #666; margin-bottom: 15px;" id="googleDocsTitle"></p>
+                        <a href="#" id="googleDocsLink" target="_blank" style="display: inline-block; background: #4285f4; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: 600; font-size: 14px;">
+                            🔗 Google Docs에서 열기
+                        </a>
+                        <p style="font-size: 12px; color: #999; margin-top: 10px;">
+                            💡 팁: Google Docs에서 편집, 공유, PDF 다운로드가 가능합니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 보고서 모달 -->
+    <div id="reportModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; overflow-y: auto;">
+        <div style="max-width: 1200px; margin: 30px auto; background: white; border-radius: 20px; padding: 20px; position: relative;">
+            <div style="position: sticky; top: 0; background: white; padding: 15px 20px; border-bottom: 2px solid #eee; margin: -20px -20px 20px -20px; border-radius: 20px 20px 0 0; z-index: 100; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0; color: #667eea; font-size: 20px;">📄 LH 신축매입임대 사업 감정평가 보고서</h2>
+                <div>
+                    <button id="printReportBtn" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 14px; margin-right: 10px; font-weight: 600;">
+                        🖨️ 인쇄
+                    </button>
+                    <button onclick="closeReportModal()" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: 600;">
+                        ✕ 닫기
+                    </button>
+                </div>
+            </div>
+            <div id="reportContent" style="font-family: 'Malgun Gothic', sans-serif; line-height: 1.6; color: #333;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin;
+
+        function setExample(address) {
+            document.getElementById('address').value = address;
+        }
+
+        document.getElementById('analysisForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const address = document.getElementById('address').value;
+            const landArea = parseFloat(document.getElementById('landArea').value);
+            const zoneType = document.getElementById('zoneType').value;
+            const landStatus = document.getElementById('landStatus').value;
+            const landAppraisalPrice = document.getElementById('landAppraisalPrice').value;
+            
+            // 가중치 (신규)
+            const weightLocation = parseFloat(document.getElementById('weightLocation').value);
+            const weightScale = parseFloat(document.getElementById('weightScale').value);
+            const weightBusiness = parseFloat(document.getElementById('weightBusiness').value);
+            const weightRegulation = parseFloat(document.getElementById('weightRegulation').value);
+            
+            // 컨설팅 담당자 정보
+            const consultantName = document.getElementById('consultantName').value;
+            const consultantPhone = document.getElementById('consultantPhone').value;
+            const consultantDepartment = document.getElementById('consultantDepartment').value;
+            const consultantEmail = document.getElementById('consultantEmail').value;
+
+            // UI 초기화
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('result').classList.remove('active');
+            document.getElementById('error').classList.remove('active');
+            document.getElementById('analyzeBtn').disabled = true;
+
+            try {
+                const requestBody = {
+                    address: address,
+                    land_area: landArea,
+                    land_status: landStatus,
+                    weights: {
+                        location: weightLocation,
+                        scale: weightScale,
+                        business: weightBusiness,
+                        regulation: weightRegulation
+                    }
+                    // unit_type은 제거됨 - 백엔드에서 7가지 유형 모두 자동 분석
+                };
+                
+                // 용도지역이 선택된 경우 추가
+                if (zoneType) {
+                    requestBody.zone_type = zoneType;
+                }
+
+                // 탁상감정평가액이 입력된 경우 추가
+                if (landAppraisalPrice && parseFloat(landAppraisalPrice) > 0) {
+                    requestBody.land_appraisal_price = parseFloat(landAppraisalPrice);
+                }
+                
+                // 컨설팅 담당자 정보 추가 (하나라도 입력된 경우)
+                if (consultantName || consultantPhone || consultantDepartment || consultantEmail) {
+                    requestBody.consultant = {
+                        name: consultantName || null,
+                        phone: consultantPhone || null,
+                        department: consultantDepartment || null,
+                        email: consultantEmail || null
+                    };
+                }
+                
+                const response = await fetch(`${API_URL}/api/analyze-land`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    throw new Error('분석 요청에 실패했습니다.');
+                }
+
+                const data = await response.json();
+                // 원본 요청 데이터를 분석 결과와 함께 저장
+                displayResult(data, requestBody);
+
+            } catch (error) {
+                document.getElementById('error').textContent = `오류: ${error.message}`;
+                document.getElementById('error').classList.add('active');
+            } finally {
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('analyzeBtn').disabled = false;
+            }
+        });
+
+        function displayResult(data, requestBody) {
+            // 분석 데이터 + 원본 요청 데이터 저장 (보고서 생성 시 사용)
+            currentAnalysisData = {
+                ...data,
+                // 원본 요청 데이터 추가 (보고서 생성에 필요)
+                address: requestBody.address,
+                land_area: requestBody.land_area,
+                unit_type: data.recommended_unit_type || requestBody.unit_type,
+                land_appraisal_price: requestBody.land_appraisal_price,
+                land_status: requestBody.land_status,
+                zone_type: requestBody.zone_type,
+                consultant: requestBody.consultant
+            };
+            
+            // 기본 정보
+            document.getElementById('resultAddress').textContent = data.address;
+            document.getElementById('resultZone').textContent = data.zone_info.zone_type;
+            document.getElementById('resultRatio').textContent = 
+                `${data.zone_info.building_coverage_ratio}% / ${data.zone_info.floor_area_ratio}%`;
+
+            // 건축 규모
+            document.getElementById('resultUnits').textContent = `${data.building_capacity.units}세대`;
+            document.getElementById('resultFloors').textContent = `${data.building_capacity.floors}층`;
+            document.getElementById('resultParking').textContent = `${data.building_capacity.parking_spaces}대`;
+
+            // ✨ v5.0: 유형별 수요점수 완전 분리 렌더링
+            const typeScores = data.type_demand_scores || {};
+            console.log('📊 유형별 수요점수:', typeScores);
+            
+            // 전체 유형 점수 비교 (all_types_scores 또는 type_demand_scores 사용)
+            let displayScores = [];
+            
+            if (data.all_types_scores && data.all_types_scores.length > 0) {
+                // all_types_scores가 있으면 우선 사용
+                displayScores = data.all_types_scores;
+            } else if (Object.keys(typeScores).length > 0) {
+                // type_demand_scores를 all_types_scores 형식으로 변환
+                const sizeMap = {
+                    "청년": "14평 (전용면적 40㎡ 이하)",
+                    "신혼·신생아 I": "18평 (전용면적 60㎡ 미만)",
+                    "신혼·신생아 II": "25평 (전용면적 60~85㎡)",
+                    "다자녀": "26평 (전용면적 85㎡)",
+                    "고령자": "12평 (전용면적 40㎡)"
+                };
+                
+                displayScores = Object.entries(typeScores).map(([unitType, score]) => ({
+                    unit_type: unitType,
+                    score: score,
+                    size: sizeMap[unitType] || "N/A"
+                }));
+                
+                // 점수 순으로 정렬
+                displayScores.sort((a, b) => b.score - a.score);
+            }
+            
+            if (displayScores.length > 0) {
+                document.getElementById('allTypesSection').style.display = 'block';
+                document.getElementById('recommendedType').textContent = data.recommended_unit_type || displayScores[0].unit_type;
+                
+                const tbody = document.getElementById('allTypesTableBody');
+                tbody.innerHTML = '';
+                
+                // 유형별 색상 정의
+                const typeColors = {
+                    "청년": "#3498db",           // 파랑
+                    "신혼·신생아 I": "#e91e63",  // 분홍
+                    "신혼·신생아 II": "#9c27b0", // 보라
+                    "다자녀": "#4caf50",          // 초록
+                    "고령자": "#ff9800"           // 주황
+                };
+                
+                displayScores.forEach((typeScore, index) => {
+                    const row = document.createElement('tr');
+                    const isRecommended = typeScore.unit_type === (data.recommended_unit_type || displayScores[0].unit_type);
+                    const typeColor = typeColors[typeScore.unit_type] || '#6c757d';
+                    
+                    if (isRecommended) {
+                        row.style.background = 'linear-gradient(135deg, #fff9e6 0%, #ffe6f0 100%)';
+                        row.style.borderLeft = '4px solid #667eea';
+                    }
+                    
+                    row.innerHTML = `
+                        <td style="padding: 10px; border: 1px solid #dee2e6; text-align: center;">
+                            ${isRecommended ? '🏆' : (index + 1)}
+                        </td>
+                        <td style="padding: 10px; border: 1px solid #dee2e6; font-weight: ${isRecommended ? 'bold' : 'normal'};">
+                            <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: ${typeColor}; margin-right: 5px;"></span>
+                            ${typeScore.unit_type}${isRecommended ? ' ⭐' : ''}
+                        </td>
+                        <td style="padding: 10px; border: 1px solid #dee2e6; text-align: center;">
+                            ${typeScore.size}
+                        </td>
+                        <td style="padding: 10px; border: 1px solid #dee2e6; text-align: center; font-weight: ${isRecommended ? 'bold' : 'normal'}; color: ${typeColor};">
+                            ${typeScore.score.toFixed(1)}점
+                        </td>
+                        <td style="padding: 10px; border: 1px solid #dee2e6;">
+                            <div style="background: #e9ecef; border-radius: 10px; height: 20px; overflow: hidden;">
+                                <div style="background: ${typeColor}; height: 100%; width: ${typeScore.score}%; transition: width 0.3s;"></div>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } else {
+                document.getElementById('allTypesSection').style.display = 'none';
+            }
+
+            // 수요 분석
+            const score = data.demand_analysis.demand_score;
+            document.getElementById('resultScore').textContent = `${score}/100점`;
+            document.getElementById('scoreBar').style.width = `${score}%`;
+            document.getElementById('scoreBar').textContent = `${score}점`;
+
+            // 핵심 요인
+            const factorsList = document.getElementById('keyFactors');
+            factorsList.innerHTML = '';
+            data.demand_analysis.key_factors.forEach(factor => {
+                const li = document.createElement('li');
+                li.textContent = factor;
+                li.style.marginBottom = '5px';
+                factorsList.appendChild(li);
+            });
+
+            // 리스크 요인
+            const riskList = document.getElementById('riskList');
+            riskList.innerHTML = '';
+            if (data.risk_factors.length > 0) {
+                data.risk_factors.forEach(risk => {
+                    const li = document.createElement('li');
+                    li.className = `risk-item risk-${risk.severity}`;
+                    li.textContent = `[${risk.category}] ${risk.description}`;
+                    riskList.appendChild(li);
+                });
+            } else {
+                riskList.innerHTML = '<li style="padding: 10px; color: #28a745;">✅ 리스크 요인이 없습니다.</li>';
+            }
+
+            // 등급 평가 결과 표시 (신규)
+            if (data.grade_info) {
+                document.getElementById('gradeSection').style.display = 'block';
+                
+                // 등급 표시
+                const gradeDisplay = document.getElementById('gradeDisplay');
+                const grade = data.grade_info.grade;
+                const gradeColors = {
+                    'A': { bg: '#4caf50', color: '#fff' },
+                    'B': { bg: '#ff9800', color: '#fff' },
+                    'C': { bg: '#f44336', color: '#fff' }
+                };
+                const gradeColor = gradeColors[grade] || gradeColors['C'];
+                gradeDisplay.textContent = `등급 ${grade}`;
+                gradeDisplay.style.background = gradeColor.bg;
+                gradeDisplay.style.color = gradeColor.color;
+                
+                // 점수 표시
+                document.getElementById('gradeScore').textContent = 
+                    `종합 점수: ${data.grade_info.total_score.toFixed(1)}점 / 100점`;
+                
+                // 종합 의견
+                document.getElementById('gradeSummary').innerHTML = 
+                    `<strong>📝 종합 의견:</strong><br>${data.grade_info.summary}`;
+                
+                // 카테고리별 점수
+                const categoryScoresDiv = document.getElementById('categoryScores');
+                categoryScoresDiv.innerHTML = '';
+                Object.entries(data.grade_info.category_scores).forEach(([category, score]) => {
+                    const scoreDiv = document.createElement('div');
+                    scoreDiv.style.marginBottom = '12px';
+                    
+                    const scoreColor = score >= 80 ? '#4caf50' : score >= 60 ? '#ff9800' : '#f44336';
+                    
+                    scoreDiv.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px;">
+                            <span style="font-weight: 600;">${category}</span>
+                            <span style="color: ${scoreColor}; font-weight: bold;">${score.toFixed(1)}점</span>
+                        </div>
+                        <div style="background: #e9ecef; border-radius: 10px; height: 12px; overflow: hidden;">
+                            <div style="background: ${scoreColor}; height: 100%; width: ${score}%; transition: width 0.5s;"></div>
+                        </div>
+                    `;
+                    categoryScoresDiv.appendChild(scoreDiv);
+                });
+                
+                // 개선 권장사항
+                if (data.grade_info.recommendations && data.grade_info.recommendations.length > 0) {
+                    document.getElementById('recommendationsSection').style.display = 'block';
+                    const recommendationsList = document.getElementById('recommendationsList');
+                    recommendationsList.innerHTML = '';
+                    data.grade_info.recommendations.forEach(rec => {
+                        const li = document.createElement('li');
+                        li.textContent = rec;
+                        li.style.marginBottom = '8px';
+                        if (rec.startsWith('[필수]')) {
+                            li.style.color = '#d32f2f';
+                            li.style.fontWeight = '600';
+                        } else if (rec.startsWith('[권장]')) {
+                            li.style.color = '#f57c00';
+                        }
+                        recommendationsList.appendChild(li);
+                    });
+                }
+            }
+            
+            // 체크리스트 표시 (신규)
+            if (data.checklist && data.checklist.length > 0) {
+                document.getElementById('checklistSection').style.display = 'block';
+                
+                // 카테고리별로 그룹화
+                const checklistByCategory = {};
+                data.checklist.forEach(item => {
+                    if (!checklistByCategory[item.category]) {
+                        checklistByCategory[item.category] = [];
+                    }
+                    checklistByCategory[item.category].push(item);
+                });
+                
+                const checklistDiv = document.getElementById('checklistByCategory');
+                checklistDiv.innerHTML = '';
+                
+                Object.entries(checklistByCategory).forEach(([category, items]) => {
+                    const categoryDiv = document.createElement('div');
+                    categoryDiv.style.marginBottom = '20px';
+                    
+                    categoryDiv.innerHTML = `
+                        <h4 style="font-size: 14px; color: #333; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #007bff;">
+                            📋 ${category}
+                        </h4>
+                    `;
+                    
+                    items.forEach(item => {
+                        const statusIcons = {
+                            '통과': '✅',
+                            '부적합': '❌',
+                            '주의': '⚠️',
+                            '참고': 'ℹ️'
+                        };
+                        const statusColors = {
+                            '통과': '#4caf50',
+                            '부적합': '#f44336',
+                            '주의': '#ff9800',
+                            '참고': '#2196f3'
+                        };
+                        
+                        const itemDiv = document.createElement('div');
+                        itemDiv.style.padding = '12px';
+                        itemDiv.style.marginBottom = '8px';
+                        itemDiv.style.background = '#f8f9fa';
+                        itemDiv.style.borderRadius = '6px';
+                        itemDiv.style.borderLeft = `4px solid ${statusColors[item.status] || '#ccc'}`;
+                        itemDiv.style.fontSize = '13px';
+                        
+                        itemDiv.innerHTML = `
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <strong style="color: #333;">${item.item}</strong>
+                                <span style="color: ${statusColors[item.status]}; font-weight: bold;">
+                                    ${statusIcons[item.status] || ''} ${item.status}
+                                </span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 12px; color: #666;">
+                                <span>실제: <strong>${item.value}</strong></span>
+                                <span>기준: ${item.standard}</span>
+                            </div>
+                            <div style="font-size: 12px; color: #666; font-style: italic;">
+                                ${item.description}
+                            </div>
+                            <div style="margin-top: 6px; font-size: 11px; color: #999;">
+                                평가 점수: ${item.score.toFixed(1)}점
+                            </div>
+                        `;
+                        
+                        categoryDiv.appendChild(itemDiv);
+                    });
+                    
+                    checklistDiv.appendChild(categoryDiv);
+                });
+            }
+
+            // 지자체 수요예측 표시 (신규)
+            if (data.demand_prediction) {
+                document.getElementById('demandPredictionSection').style.display = 'block';
+                document.getElementById('demandLevel').textContent = data.demand_prediction.demand_level;
+                document.getElementById('demandScore').textContent = data.demand_prediction.demand_score.toFixed(1);
+                document.getElementById('demandComment').textContent = data.demand_prediction.comment;
+                
+                // 요인별 점수
+                const factorsDiv = document.getElementById('demandFactors');
+                factorsDiv.innerHTML = '';
+                Object.entries(data.demand_prediction.factor_scores).forEach(([factor, score]) => {
+                    const scoreColor = score >= 80 ? '#4caf50' : score >= 60 ? '#ff9800' : '#f44336';
+                    factorsDiv.innerHTML += `
+                        <div style="margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px;">
+                                <span>${factor}</span>
+                                <span style="color: ${scoreColor}; font-weight: bold;">${score.toFixed(1)}점</span>
+                            </div>
+                            <div style="background: #e9ecef; border-radius: 10px; height: 10px; overflow: hidden;">
+                                <div style="background: ${scoreColor}; height: 100%; width: ${score}%; transition: width 0.5s;"></div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                // 추천사항
+                const recommendationsList = document.getElementById('demandRecommendations');
+                recommendationsList.innerHTML = '';
+                data.demand_prediction.recommendations.forEach(rec => {
+                    const li = document.createElement('li');
+                    li.textContent = rec;
+                    li.style.marginBottom = '8px';
+                    recommendationsList.appendChild(li);
+                });
+            }
+            
+            // 협상전략 표시 (신규)
+            if (data.negotiation_strategy) {
+                document.getElementById('negotiationSection').style.display = 'block';
+                
+                // 강점
+                const strengthsList = document.getElementById('negotiationStrengths');
+                strengthsList.innerHTML = '';
+                data.negotiation_strategy.strengths.forEach(strength => {
+                    const li = document.createElement('li');
+                    li.textContent = strength;
+                    li.style.marginBottom = '6px';
+                    strengthsList.appendChild(li);
+                });
+                
+                // 약점
+                const weaknessesList = document.getElementById('negotiationWeaknesses');
+                weaknessesList.innerHTML = '';
+                data.negotiation_strategy.weaknesses.forEach(weakness => {
+                    const li = document.createElement('li');
+                    li.textContent = weakness;
+                    li.style.marginBottom = '6px';
+                    weaknessesList.appendChild(li);
+                });
+                
+                // 전략
+                const strategiesDiv = document.getElementById('negotiationStrategies');
+                strategiesDiv.innerHTML = '';
+                data.negotiation_strategy.strategies.forEach((strategy, index) => {
+                    const strategyDiv = document.createElement('div');
+                    strategyDiv.style.padding = '12px';
+                    strategyDiv.style.marginBottom = '10px';
+                    strategyDiv.style.background = '#f8f9fa';
+                    strategyDiv.style.borderRadius = '8px';
+                    strategyDiv.style.borderLeft = '4px solid #667eea';
+                    strategyDiv.style.fontSize = '13px';
+                    strategyDiv.style.lineHeight = '1.6';
+                    strategyDiv.textContent = `${index + 1}. ${strategy}`;
+                    strategiesDiv.appendChild(strategyDiv);
+                });
+                
+                // 우선 조치사항
+                const actionsList = document.getElementById('negotiationActions');
+                actionsList.innerHTML = '';
+                data.negotiation_strategy.priority_actions.forEach(action => {
+                    const li = document.createElement('li');
+                    li.textContent = action;
+                    li.style.marginBottom = '8px';
+                    actionsList.appendChild(li);
+                });
+            }
+
+            // 종합 판단
+            const isEligible = data.summary.is_eligible;
+            document.getElementById('resultEligible').textContent = isEligible ? '✅ 적격' : '❌ 부적격';
+            document.getElementById('resultRecommendation').textContent = data.summary.recommendation;
+
+            // 배지 (등급으로 업데이트)
+            const badge = document.getElementById('resultBadge');
+            if (data.grade_info && data.grade_info.grade) {
+                badge.textContent = `등급 ${data.grade_info.grade}`;
+                const gradeClasses = {
+                    'A': 'grade-a',
+                    'B': 'grade-b',
+                    'C': 'grade-c'
+                };
+                badge.className = `result-badge ${gradeClasses[data.grade_info.grade] || 'not-eligible'}`;
+            } else {
+                badge.textContent = isEligible ? '✅ 적격' : '❌ 부적격';
+                badge.className = `result-badge ${isEligible ? 'eligible' : 'not-eligible'}`;
+            }
+
+            // 주변 시설 (있는 경우)
+            if (data.demand_analysis.nearby_facilities && data.demand_analysis.nearby_facilities.length > 0) {
+                const facilitiesSection = document.getElementById('facilitiesSection');
+                const facilitiesList = document.getElementById('facilitiesList');
+                facilitiesSection.style.display = 'block';
+                facilitiesList.innerHTML = '';
+                
+                data.demand_analysis.nearby_facilities.forEach(facility => {
+                    const div = document.createElement('div');
+                    div.className = 'facility-item';
+                    div.textContent = `${facility.name} (${Math.round(facility.distance)}m)`;
+                    facilitiesList.appendChild(div);
+                });
+            }
+
+            // ✨ v5.0: Debug JSON 뷰어 표시 및 데이터 설정
+            const debugJsonSection = document.getElementById('debugJsonSection');
+            debugJsonSection.style.display = 'block';
+            
+            // 전체 API 응답 JSON을 포맷하여 표시
+            const debugJsonPre = document.getElementById('debugJsonPre');
+            debugJsonPre.textContent = JSON.stringify(data, null, 2);
+            
+            // 토글 버튼 이벤트
+            document.getElementById('toggleDebugBtn').onclick = function() {
+                const debugContent = document.getElementById('debugJsonContent');
+                if (debugContent.style.display === 'none') {
+                    debugContent.style.display = 'block';
+                    this.textContent = '📋 전체 응답 JSON 숨기기';
+                } else {
+                    debugContent.style.display = 'none';
+                    this.textContent = '📋 전체 응답 JSON 보기';
+                }
+            };
+
+            // ✨ v5.0: Geo Optimization 시각화
+            if (data.geo_optimization) {
+                displayGeoOptimization(data.geo_optimization, data.coordinates);
+            }
+
+            // 결과 표시
+            document.getElementById('result').classList.add('active');
+
+            // Google Docs 버튼 표시 (분석 완료 후 바로 사용 가능)
+            console.log('🔍 Google Docs 버튼 표시 시도...');
+            const googleDocsBtn = document.getElementById('googleDocsBtn');
+            if (googleDocsBtn) {
+                googleDocsBtn.style.display = 'block';
+                console.log('✅ Google Docs 버튼 표시됨:', googleDocsBtn.style.display);
+            } else {
+                console.error('❌ Google Docs 버튼을 찾을 수 없음!');
+            }
+
+            // 결과로 스크롤
+            document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // 전문 보고서 생성 기능
+        let currentAnalysisData = null;
+        let currentReport = null;
+
+        document.getElementById('reportBtn').addEventListener('click', async () => {
+            if (!currentAnalysisData) {
+                alert('먼저 토지 분석을 실행해주세요.');
+                return;
+            }
+
+            // 탈락사유 확인
+            const riskFactors = currentAnalysisData.risk_factors || [];
+            const criticalRisks = riskFactors.filter(r => 
+                r.category === 'LH매입제외' || r.severity === 'critical' || r.severity === 'high'
+            );
+
+            if (criticalRisks.length > 0) {
+                const riskList = criticalRisks.map(r => `• ${r.description}`).join('\n');
+                const userChoice = confirm(
+                    `⚠️ 다음 탈락사유가 발견되었습니다:\n\n${riskList}\n\n` +
+                    `이 사유들을 제외하고 보고서를 생성하시겠습니까?\n\n` +
+                    `[확인] = 제외하고 생성\n[취소] = 포함해서 생성`
+                );
+
+                if (userChoice) {
+                    // 탈락사유 제외
+                    currentAnalysisData.exclude_risks = true;
+                    currentAnalysisData.risk_factors = riskFactors.filter(r => 
+                        r.category !== 'LH매입제외' && r.severity !== 'critical' && r.severity !== 'high'
+                    );
+                }
+            }
+
+            document.getElementById('reportBtn').disabled = true;
+            document.getElementById('reportBtn').textContent = '📄 보고서 생성 중...';
+
+            try {
+                // 🔥 CRITICAL: Force v7.5 FINAL mode explicitly
+                const reportPayload = {
+                    ...currentAnalysisData,
+                    report_mode: 'v7_5_final'  // ✅ Explicitly set v7.5 FINAL mode
+                };
+                
+                console.log('🔥 Requesting v7.5 FINAL Report...');
+                console.log('   Report Mode:', reportPayload.report_mode);
+                
+                const response = await fetch(`${API_URL}/api/generate-report`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(reportPayload)
+                });
+
+                if (!response.ok) {
+                    throw new Error('보고서 생성에 실패했습니다.');
+                }
+
+                const data = await response.json();
+                
+                // ✅ v7.5 FINAL: Handle new JSON structure
+                if (data.success && data.html) {
+                    currentReport = data.html;
+                    
+                    // Log v7.5 metadata
+                    if (data.metadata) {
+                        console.log('📊 v7.5 FINAL Report Generated:');
+                        console.log(`   Version: ${data.metadata.report_version || 'v7.5 FINAL'}`);
+                        console.log(`   Size: ${(data.html.length / 1024).toFixed(1)}KB`);
+                        console.log(`   Recommendation: ${data.metadata.recommendation || 'N/A'}`);
+                        console.log(`   Analysis ID: ${data.metadata.analysis_id || data.analysis_id}`);
+                    }
+                } else if (data.report) {
+                    // Legacy v7.2/v7.3 support
+                    currentReport = data.report;
+                    console.log('📊 Legacy Report Generated (v7.2/v7.3)');
+                } else {
+                    throw new Error('Invalid report response format');
+                }
+
+                // 보고서 섹션 및 Google Docs 버튼 표시
+                document.getElementById('reportSection').style.display = 'block';
+                document.getElementById('googleDocsBtn').style.display = 'block';
+                document.getElementById('reportBtn').textContent = '✅ 보고서 생성 완료';
+
+            } catch (error) {
+                console.error('Report generation error:', error);
+                alert(`오류: ${error.message}`);
+                document.getElementById('reportBtn').textContent = '📄 전문 보고서 생성 (LH 제출용)';
+            } finally {
+                document.getElementById('reportBtn').disabled = false;
+            }
+        });
+
+        // Google Docs 생성 기능
+        document.getElementById('googleDocsBtn').addEventListener('click', async () => {
+            if (!currentAnalysisData) {
+                alert('먼저 토지 분석을 실행해주세요.');
+                return;
+            }
+
+            // 버튼 비활성화 및 텍스트 변경
+            const btn = document.getElementById('googleDocsBtn');
+            btn.disabled = true;
+            btn.textContent = '📝 Google Docs 생성 중...';
+
+            try {
+                const response = await fetch(`${API_URL}/api/generate-google-docs`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(currentAnalysisData)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail?.message || 'Google Docs 생성에 실패했습니다.');
+                }
+
+                const data = await response.json();
+                
+                if (data.status === 'success' && data.google_docs) {
+                    // Google Docs 섹션 표시
+                    document.getElementById('googleDocsSection').style.display = 'block';
+                    document.getElementById('googleDocsTitle').textContent = 
+                        `문서 제목: ${data.google_docs.title}`;
+                    document.getElementById('googleDocsLink').href = data.google_docs.document_url;
+                    
+                    btn.textContent = '✅ Google Docs 생성 완료';
+                    
+                    // 3초 후 새 탭에서 자동으로 열기 제안
+                    setTimeout(() => {
+                        if (confirm('Google Docs 문서를 새 탭에서 여시겠습니까?')) {
+                            window.open(data.google_docs.document_url, '_blank');
+                        }
+                    }, 500);
+                } else {
+                    throw new Error('Google Docs 응답 형식이 올바르지 않습니다.');
+                }
+
+            } catch (error) {
+                console.error('Google Docs 생성 오류:', error);
+                
+                // 더 자세한 안내 메시지
+                const setupGuide = `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 Google Docs 내보내기 설정 필요
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ 오류: ${error.message}
+
+🔧 설정 방법:
+
+1. Google Cloud Console 접속
+   → https://console.cloud.google.com/
+
+2. 프로젝트 생성 및 API 활성화
+   ✅ Google Docs API
+   ✅ Google Drive API
+
+3. 서비스 계정 생성 및 JSON 키 다운로드
+
+4. 키 파일 배치
+   → /home/user/webapp/google_credentials.json
+
+5. 서버 재시작
+
+📖 자세한 가이드:
+   프로젝트 루트의 GOOGLE_DOCS_SETUP.md 참조
+
+💡 또는 HTML 보고서를 생성하여
+   수동으로 Google Docs에 복사하세요.
+                `.trim();
+                
+                alert(setupGuide);
+                btn.textContent = '📝 Google Docs로 내보내기';
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('viewReportBtn').addEventListener('click', () => {
+            if (!currentReport) {
+                alert('보고서가 생성되지 않았습니다.');
+                return;
+            }
+
+            // 바로 보고서 표시 (비밀번호 제거)
+            displayReport();
+        });
+
+        function displayReport() {
+            // HTML 보고서 직접 표시 (이미 HTML 형식)
+            document.getElementById('reportContent').innerHTML = currentReport;
+            document.getElementById('reportModal').style.display = 'block';
+            
+            // 인쇄 버튼 추가 이벤트
+            const printBtn = document.getElementById('printReportBtn');
+            if (printBtn) {
+                printBtn.onclick = () => {
+                    const reportWindow = window.open('', '_blank');
+                    reportWindow.document.write(currentReport);
+                    reportWindow.document.close();
+                    setTimeout(() => {
+                        reportWindow.print();
+                    }, 500);
+                };
+            }
+        }
+
+        function closeReportModal() {
+            document.getElementById('reportModal').style.display = 'none';
+        }
+
+        // 분석 실행 시 데이터 저장
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const response = await originalFetch(...args);
+            
+            if (args[0].includes('/api/analyze-land') && args[1]?.method === 'POST') {
+                const clonedResponse = response.clone();
+                const data = await clonedResponse.json();
+                
+                if (data.status === 'success') {
+                    // 분석 데이터 저장
+                    currentAnalysisData = JSON.parse(args[1].body);
+                }
+            }
+            
+            return response;
+        };
+        
+        // 가중치 슬라이더 이벤트 리스너 (신규)
+        function updateWeights() {
+            const location = parseFloat(document.getElementById('weightLocation').value);
+            const scale = parseFloat(document.getElementById('weightScale').value);
+            const business = parseFloat(document.getElementById('weightBusiness').value);
+            const regulation = parseFloat(document.getElementById('weightRegulation').value);
+            
+            // 값 표시
+            document.getElementById('weightLocationValue').textContent = location + '%';
+            document.getElementById('weightScaleValue').textContent = scale + '%';
+            document.getElementById('weightBusinessValue').textContent = business + '%';
+            document.getElementById('weightRegulationValue').textContent = regulation + '%';
+            
+            // 합계 계산
+            const total = location + scale + business + regulation;
+            document.getElementById('weightTotal').textContent = total + '%';
+            
+            // 합계가 100이 아니면 경고 색상
+            if (Math.abs(total - 100) > 0.01) {
+                document.getElementById('weightTotal').style.color = '#dc3545';
+            } else {
+                document.getElementById('weightTotal').style.color = '#667eea';
+            }
+        }
+        
+        // 슬라이더 이벤트 등록
+        document.getElementById('weightLocation').addEventListener('input', updateWeights);
+        document.getElementById('weightScale').addEventListener('input', updateWeights);
+        document.getElementById('weightBusiness').addEventListener('input', updateWeights);
+        document.getElementById('weightRegulation').addEventListener('input', updateWeights);
+
+        // ✨ v5.0: 다중 필지 분석 기능
+        document.getElementById('analyzeMultiParcelBtn').addEventListener('click', async function() {
+            const addressesText = document.getElementById('multiParcelAddresses').value.trim();
+            
+            if (!addressesText) {
+                alert('필지 주소를 입력해주세요.');
+                return;
+            }
+
+            // 줄 단위로 주소 분리
+            const addresses = addressesText.split('\n')
+                .map(addr => addr.trim())
+                .filter(addr => addr.length > 0);
+
+            if (addresses.length === 0) {
+                alert('유효한 주소를 입력해주세요.');
+                return;
+            }
+
+            if (addresses.length > 10) {
+                alert('최대 10개 필지까지 분석 가능합니다.');
+                return;
+            }
+
+            // 토지 면적 가져오기
+            const landArea = parseFloat(document.getElementById('landArea').value);
+            if (!landArea || landArea <= 0) {
+                alert('토지 면적을 입력해주세요.');
+                return;
+            }
+
+            // 유형 가져오기
+            const unitType = document.getElementById('unitType').value || null;
+
+            // 버튼 비활성화 및 로딩 표시
+            const button = document.getElementById('analyzeMultiParcelBtn');
+            button.disabled = true;
+            button.textContent = '🔄 분석 중...';
+
+            // 로딩 표시
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('multiParcelResultsSection').style.display = 'none';
+
+            try {
+                console.log('다중 필지 분석 시작:', addresses);
+                
+                const response = await fetch('/api/analyze-multi-parcel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        parcels: addresses,
+                        land_area: landArea,
+                        unit_type: unitType,
+                        lh_version: document.getElementById('lhVersion').value || '2024'
+                    })
+                });
+
+                const data = await response.json();
+                console.log('다중 필지 분석 결과:', data);
+
+                if (data.status === 'success') {
+                    displayMultiParcelResults(data);
+                } else {
+                    throw new Error(data.message || '분석 실패');
+                }
+
+            } catch (error) {
+                console.error('다중 필지 분석 오류:', error);
+                document.getElementById('error').textContent = 
+                    `❌ 다중 필지 분석 오류: ${error.message}`;
+                document.getElementById('error').style.display = 'block';
+            } finally {
+                button.disabled = false;
+                button.textContent = '🚀 다중 필지 분석 시작';
+                document.getElementById('loading').style.display = 'none';
+            }
+        });
+
+        // 다중 필지 결과 렌더링 함수
+        function displayMultiParcelResults(data) {
+            // 통계 표시
+            document.getElementById('mpTotalParcels').textContent = data.total_parcels;
+            document.getElementById('mpSuccessful').textContent = data.successful;
+            document.getElementById('mpFailed').textContent = data.failed;
+
+            // 추천 필지 표시
+            if (data.recommended_parcels && data.recommended_parcels.length > 0) {
+                document.getElementById('mpRecommended').style.display = 'block';
+                const recommendedList = document.getElementById('mpRecommendedList');
+                recommendedList.innerHTML = data.recommended_parcels
+                    .map((addr, idx) => `<div>🏆 ${idx + 1}위: ${addr}</div>`)
+                    .join('');
+            }
+
+            // 테이블 생성
+            const tbody = document.getElementById('multiParcelResultsBody');
+            tbody.innerHTML = '';
+
+            // 성공한 필지를 점수 순으로 정렬
+            const sortedResults = [...data.results]
+                .filter(r => r.success && r.demand_score != null)
+                .sort((a, b) => b.demand_score - a.demand_score);
+
+            // 실패한 필지
+            const failedResults = data.results.filter(r => !r.success);
+
+            // 성공한 필지 렌더링
+            sortedResults.forEach((result, index) => {
+                const row = document.createElement('tr');
+                const isTop3 = index < 3;
+                
+                if (isTop3) {
+                    row.style.background = 'linear-gradient(135deg, #fff9e6 0%, #ffe6f0 100%)';
+                }
+
+                const scoreColor = result.demand_score >= 80 ? '#4caf50' : 
+                                   result.demand_score >= 60 ? '#ff9800' : '#f44336';
+
+                row.innerHTML = `
+                    <td style="padding: 10px; border: 1px solid #dee2e6; text-align: center; font-weight: bold;">
+                        ${isTop3 ? '🏆' : (index + 1)}
+                    </td>
+                    <td style="padding: 10px; border: 1px solid #dee2e6;">
+                        ${result.address}
+                    </td>
+                    <td style="padding: 10px; border: 1px solid #dee2e6; text-align: center;">
+                        <span style="color: #4caf50; font-weight: bold;">✅ 성공</span>
+                    </td>
+                    <td style="padding: 10px; border: 1px solid #dee2e6; text-align: center; font-weight: bold; color: ${scoreColor};">
+                        ${result.demand_score.toFixed(1)}점
+                    </td>
+                    <td style="padding: 10px; border: 1px solid #dee2e6; text-align: center;">
+                        ${result.building_capacity || '-'}세대
+                    </td>
+                    <td style="padding: 10px; border: 1px solid #dee2e6; text-align: center;">
+                        ${result.summary?.is_eligible ? '✅ 적합' : '⚠️ 검토필요'}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // 실패한 필지 렌더링
+            failedResults.forEach(result => {
+                const row = document.createElement('tr');
+                row.style.background = '#ffebee';
+
+                row.innerHTML = `
+                    <td style="padding: 10px; border: 1px solid #dee2e6; text-align: center;">-</td>
+                    <td style="padding: 10px; border: 1px solid #dee2e6;">
+                        ${result.address}
+                    </td>
+                    <td style="padding: 10px; border: 1px solid #dee2e6; text-align: center;">
+                        <span style="color: #f44336; font-weight: bold;">❌ 실패</span>
+                    </td>
+                    <td colspan="3" style="padding: 10px; border: 1px solid #dee2e6; color: #666; font-size: 12px;">
+                        ${result.error_message || '분석 실패'}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // 클러스터 분석 결과 표시
+            if (data.cluster_analysis && data.cluster_analysis.clusters) {
+                document.getElementById('mpClusterAnalysis').style.display = 'block';
+                const clusterContent = document.getElementById('mpClusterContent');
+                
+                const clusters = data.cluster_analysis.clusters;
+                if (clusters.length > 0) {
+                    clusterContent.innerHTML = `
+                        <div style="margin-bottom: 15px;">
+                            <strong>총 ${clusters.length}개 조합 발견</strong>
+                        </div>
+                        ${clusters.slice(0, 3).map((cluster, idx) => `
+                            <div style="background: #f5f7fa; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid ${idx === 0 ? '#667eea' : '#ddd'};">
+                                <div style="font-weight: bold; margin-bottom: 8px;">
+                                    ${idx === 0 ? '🏆 ' : ''}조합 ${idx + 1}: ${cluster.cluster_id}
+                                </div>
+                                <div style="font-size: 13px; color: #666; line-height: 1.6;">
+                                    <div>📐 총 면적: ${cluster.total_area.toFixed(1)}㎡</div>
+                                    <div>🏠 총 세대수: ${cluster.total_capacity}세대</div>
+                                    <div>⭐ 클러스터 점수: ${cluster.cluster_score.toFixed(1)}점</div>
+                                    <div>🔗 시너지 점수: ${cluster.synergy_score.toFixed(1)}점</div>
+                                    <div style="margin-top: 8px; color: #333; font-weight: 600;">
+                                        ${cluster.recommendation}
+                                    </div>
+                                    ${cluster.strengths && cluster.strengths.length > 0 ? `
+                                        <div style="margin-top: 8px;">
+                                            <strong style="color: #4caf50;">강점:</strong>
+                                            <ul style="margin: 5px 0 0 20px; padding: 0;">
+                                                ${cluster.strengths.map(s => `<li>${s}</li>`).join('')}
+                                            </ul>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                        ${data.cluster_analysis.optimization_suggestions && data.cluster_analysis.optimization_suggestions.length > 0 ? `
+                            <div style="background: #fff3cd; padding: 12px; border-radius: 6px; border-left: 3px solid #ffc107; margin-top: 15px;">
+                                <strong>💡 최적화 제안:</strong>
+                                <ul style="margin: 8px 0 0 20px; padding: 0; font-size: 13px;">
+                                    ${data.cluster_analysis.optimization_suggestions.map(s => `<li>${s}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                    `;
+                } else {
+                    clusterContent.innerHTML = '<p style="color: #666;">조합 가능한 클러스터가 없습니다.</p>';
+                }
+            }
+
+            // 결과 섹션 표시
+            document.getElementById('multiParcelResultsSection').style.display = 'block';
+            
+            // 결과 섹션으로 스크롤
+            document.getElementById('multiParcelResultsSection').scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        }
+
+        // ✨ v5.0: Geo Optimization 지도 시각화 함수
+        let geoMap = null;
+
+        function displayGeoOptimization(geoData, currentCoords) {
+            console.log('🗺️ Geo Optimization 데이터:', geoData);
+            
+            // 섹션 표시
+            document.getElementById('geoOptimizationSection').style.display = 'block';
+            
+            // 현재 위치 정보 표시
+            document.getElementById('geoCurrentAddress').textContent = 
+                geoData.analyzed_location.address;
+            document.getElementById('geoOptimizationScore').textContent = 
+                geoData.optimization_score.toFixed(1) + '점';
+            
+            // 강점 표시
+            const strengthsList = document.getElementById('geoStrengths');
+            strengthsList.innerHTML = '';
+            geoData.current_site_strengths.forEach(strength => {
+                const li = document.createElement('li');
+                li.textContent = strength;
+                strengthsList.appendChild(li);
+            });
+            
+            // 약점 표시
+            const weaknessesList = document.getElementById('geoWeaknesses');
+            weaknessesList.innerHTML = '';
+            geoData.current_site_weaknesses.forEach(weakness => {
+                const li = document.createElement('li');
+                li.textContent = weakness;
+                weaknessesList.appendChild(li);
+            });
+            
+            // 최적화 제안 표시
+            if (geoData.optimization_suggestions && geoData.optimization_suggestions.length > 0) {
+                document.getElementById('geoSuggestions').style.display = 'block';
+                const suggestionsList = document.getElementById('geoSuggestionsList');
+                suggestionsList.innerHTML = '';
+                geoData.optimization_suggestions.forEach(suggestion => {
+                    const li = document.createElement('li');
+                    li.textContent = suggestion;
+                    suggestionsList.appendChild(li);
+                });
+            }
+            
+            // 지도 초기화
+            if (geoMap) {
+                geoMap.remove();
+            }
+            
+            const mapDiv = document.getElementById('geoMap');
+            geoMap = L.map(mapDiv).setView(
+                [currentCoords.latitude, currentCoords.longitude], 
+                14
+            );
+            
+            // OpenStreetMap 타일 추가
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 18
+            }).addTo(geoMap);
+            
+            // 현재 위치 마커 (파란색)
+            L.marker([currentCoords.latitude, currentCoords.longitude], {
+                icon: L.divIcon({
+                    className: 'custom-marker',
+                    html: '<div style="background: #2196f3; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
+                    iconSize: [30, 30]
+                })
+            })
+            .bindPopup(`
+                <b>📍 분석 위치 (현재)</b><br>
+                점수: ${geoData.optimization_score.toFixed(1)}점
+            `)
+            .addTo(geoMap);
+            
+            // 추천 사이트 마커
+            const allMarkers = [[currentCoords.latitude, currentCoords.longitude]];
+            
+            geoData.recommended_sites.forEach((site, index) => {
+                // 점수에 따른 색상
+                let color = '#4caf50'; // green
+                if (site.overall_score < 60) {
+                    color = '#f44336'; // red
+                } else if (site.overall_score < 80) {
+                    color = '#ff9800'; // orange
+                }
+                
+                // 마커 추가
+                L.marker([site.latitude, site.longitude], {
+                    icon: L.divIcon({
+                        className: 'custom-marker',
+                        html: `<div style="background: ${color}; width: 28px; height: 28px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;">${index + 1}</div>`,
+                        iconSize: [28, 28]
+                    })
+                })
+                .bindPopup(`
+                    <b>🎯 추천 사이트 #${index + 1}</b><br>
+                    <strong>점수:</strong> ${site.overall_score.toFixed(1)}점<br>
+                    <strong>주소:</strong> ${site.address}<br>
+                    <br>
+                    <strong>세부 점수:</strong><br>
+                    • 접근성: ${site.accessibility_score.toFixed(1)}점<br>
+                    • 수요: ${site.demand_score.toFixed(1)}점<br>
+                    • 인프라: ${site.infrastructure_score.toFixed(1)}점<br>
+                    • 환경: ${site.environment_score.toFixed(1)}점<br>
+                    <br>
+                    <strong>강점:</strong><br>
+                    ${site.strengths.map(s => '• ' + s).join('<br>')}<br>
+                    <br>
+                    <strong>추천 이유:</strong><br>
+                    ${site.recommendation_reason}
+                `)
+                .addTo(geoMap);
+                
+                allMarkers.push([site.latitude, site.longitude]);
+            });
+            
+            // 지도 범위 조정 (모든 마커가 보이도록)
+            const bounds = L.latLngBounds(allMarkers);
+            geoMap.fitBounds(bounds, { padding: [50, 50] });
+            
+            // 추천 사이트 상세 정보 카드
+            const sitesDetails = document.getElementById('geoSitesDetails');
+            sitesDetails.innerHTML = geoData.recommended_sites.map((site, index) => {
+                const scoreColor = site.overall_score >= 80 ? '#4caf50' : 
+                                   site.overall_score >= 60 ? '#ff9800' : '#f44336';
+                
+                return `
+                    <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid ${scoreColor};">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <h5 style="margin: 0; color: #333; font-size: 15px;">
+                                ${index === 0 ? '🏆 ' : ''}추천 사이트 #${index + 1}
+                            </h5>
+                            <div style="font-size: 24px; font-weight: bold; color: ${scoreColor};">
+                                ${site.overall_score.toFixed(1)}점
+                            </div>
+                        </div>
+                        <div style="font-size: 13px; color: #666; margin-bottom: 10px;">
+                            📍 ${site.address}
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px;">
+                            <div style="background: #f5f5f5; padding: 8px; border-radius: 6px; text-align: center;">
+                                <div style="font-size: 11px; color: #999;">접근성</div>
+                                <div style="font-size: 16px; font-weight: bold; color: #333;">${site.accessibility_score.toFixed(1)}</div>
+                            </div>
+                            <div style="background: #f5f5f5; padding: 8px; border-radius: 6px; text-align: center;">
+                                <div style="font-size: 11px; color: #999;">수요</div>
+                                <div style="font-size: 16px; font-weight: bold; color: #333;">${site.demand_score.toFixed(1)}</div>
+                            </div>
+                            <div style="background: #f5f5f5; padding: 8px; border-radius: 6px; text-align: center;">
+                                <div style="font-size: 11px; color: #999;">인프라</div>
+                                <div style="font-size: 16px; font-weight: bold; color: #333;">${site.infrastructure_score.toFixed(1)}</div>
+                            </div>
+                            <div style="background: #f5f5f5; padding: 8px; border-radius: 6px; text-align: center;">
+                                <div style="font-size: 11px; color: #999;">환경</div>
+                                <div style="font-size: 16px; font-weight: bold; color: #333;">${site.environment_score.toFixed(1)}</div>
+                            </div>
+                        </div>
+                        <div style="background: #e8f5e9; padding: 10px; border-radius: 6px; margin-bottom: 8px;">
+                            <strong style="font-size: 12px; color: #2e7d32;">✅ 강점:</strong>
+                            <ul style="margin: 5px 0 0 18px; padding: 0; font-size: 12px; line-height: 1.6;">
+                                ${site.strengths.map(s => `<li>${s}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div style="background: #fff3e0; padding: 10px; border-radius: 6px; margin-bottom: 8px;">
+                            <strong style="font-size: 12px; color: #e65100;">⚠️ 약점:</strong>
+                            <ul style="margin: 5px 0 0 18px; padding: 0; font-size: 12px; line-height: 1.6;">
+                                ${site.weaknesses.map(s => `<li>${s}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div style="font-size: 12px; color: #666; font-style: italic;">
+                            💡 ${site.recommendation_reason}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    </script>
+</body>
+</html>

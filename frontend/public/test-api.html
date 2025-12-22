@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>API Test</title>
+  <style>
+    body { font-family: monospace; padding: 20px; }
+    button { padding: 10px 20px; margin: 10px; font-size: 16px; }
+    pre { background: #f0f0f0; padding: 15px; border-radius: 5px; }
+    .error { color: red; }
+    .success { color: green; }
+  </style>
+</head>
+<body>
+  <h1>🧪 Backend API Test</h1>
+  
+  <button onclick="testHealth()">Test Health Endpoint</button>
+  <button onclick="testCollectAll()">Test collect-all</button>
+  <button onclick="testPipeline()">Test Pipeline Analyze</button>
+  
+  <h2>Results:</h2>
+  <div id="results"></div>
+  
+  <script>
+    const BACKEND = 'https://8005-iytptjlm3wjktifqay52f-2b54fc91.sandbox.novita.ai';
+    
+    function log(message, type = 'info') {
+      const results = document.getElementById('results');
+      const div = document.createElement('div');
+      div.className = type;
+      div.textContent = message;
+      results.appendChild(div);
+    }
+    
+    function logJSON(data) {
+      const results = document.getElementById('results');
+      const pre = document.createElement('pre');
+      pre.textContent = JSON.stringify(data, null, 2);
+      results.appendChild(pre);
+    }
+    
+    async function testHealth() {
+      document.getElementById('results').innerHTML = '';
+      log('Testing: ' + BACKEND + '/api/m1/health');
+      
+      try {
+        const response = await fetch(BACKEND + '/api/m1/health');
+        log('Status: ' + response.status + ' ' + response.statusText, 
+            response.ok ? 'success' : 'error');
+        
+        const data = await response.json();
+        logJSON(data);
+      } catch (err) {
+        log('ERROR: ' + err.message, 'error');
+      }
+    }
+    
+    async function testCollectAll() {
+      document.getElementById('results').innerHTML = '';
+      log('Testing: ' + BACKEND + '/api/m1/collect-all');
+      
+      try {
+        const response = await fetch(BACKEND + '/api/m1/collect-all', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            lat: 37.5012,
+            lon: 127.0396,
+            address: '서울 강남구'
+          })
+        });
+        
+        log('Status: ' + response.status + ' ' + response.statusText,
+            response.ok ? 'success' : 'error');
+        
+        const data = await response.json();
+        logJSON(data);
+      } catch (err) {
+        log('ERROR: ' + err.message, 'error');
+      }
+    }
+    
+    async function testPipeline() {
+      document.getElementById('results').innerHTML = '';
+      log('Testing: ' + BACKEND + '/api/v4/pipeline/analyze');
+      log('Note: Requires valid parcel_id from freeze-context-v2');
+      
+      try {
+        const response = await fetch(BACKEND + '/api/v4/pipeline/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            parcel_id: '116801010007370000',
+            use_cache: false
+          })
+        });
+        
+        log('Status: ' + response.status + ' ' + response.statusText,
+            response.ok ? 'success' : 'error');
+        
+        const data = await response.json();
+        logJSON(data);
+      } catch (err) {
+        log('ERROR: ' + err.message, 'error');
+      }
+    }
+  </script>
+</body>
+</html>

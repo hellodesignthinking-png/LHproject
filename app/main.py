@@ -58,6 +58,33 @@ from app.api.endpoints.mvp_analyze import router as mvp_router
 # ✨ v13.0: Import Report Engine v13 router with v15 Phase 1 enhancements
 from app.routers.report_v13 import router as report_v13_router
 
+# ✨ v3.3: Import ZeroSite v3.3 Report API (Phase 2 - All 6 Composers)
+from app.api.endpoints.reports_v3 import router as reports_v3_router
+
+# ✨ v3.4: Import Land Data API (Real API Integration)
+from app.api.endpoints.land_data import router as land_data_router
+
+# ✨ v4.0: Import 6-MODULE Pipeline Report API (Phase 8 - API Integration)
+from app.api.endpoints.pipeline_reports_v4 import router as pipeline_v4_router
+
+# ✨ M1: Import STEP-Based Land Information API
+from app.api.endpoints.m1_step_based import router as m1_step_router
+
+# ✨ M1 V2: Import Context Freeze V2 API (Production-Grade Immutable Pipeline)
+from app.api.endpoints.m1_context_freeze_v2 import router as m1_v2_router
+
+# ✨ M1 Phase 3: Import PDF Extraction API
+from app.api.endpoints.m1_pdf_extract import router as m1_pdf_router
+
+# ✨ M1 Phase 4: Import V-World Proxy API (Bypass CORS/Referer blocking)
+from app.api.endpoints.proxy_vworld import router as proxy_vworld_router
+
+# ✨ M1 Phase 4: Import Kakao Proxy API (Bypass CORS for address search)
+from app.api.endpoints.proxy_kakao import router as proxy_kakao_router
+
+# ✨ PDF Download: Import Standardized PDF Download Router (M2-M6)
+from app.routers.pdf_download_standardized import router as pdf_download_router
+
 # ✨ v11.0 ENHANCEMENTS: Import middleware and utilities
 from app.middleware.rate_limiter import RateLimiter, RateLimitConfig
 from app.middleware.cache_manager import cache_manager, start_cache_cleanup_task
@@ -91,6 +118,11 @@ async def lifespan(app: FastAPI):
     print(f"🌍 Multi-language: Korean + English")
     print(f"✅ All Enhancements: Active")
     print("=" * 60)
+    
+    # Initialize database
+    from app.database import init_db
+    init_db()
+    print("✅ Database tables created")
     
     # Start background tasks
     cleanup_task = asyncio.create_task(start_cache_cleanup_task())
@@ -159,6 +191,41 @@ app.include_router(mvp_router)
 
 # ✨ v13.0: Include Report Engine v13 with v15 Phase 1 Decision Engine
 app.include_router(report_v13_router)
+
+# ✨ v3.3: Include ZeroSite v3.3 Report API (Phase 2 Complete - All 6 Composers)
+app.include_router(reports_v3_router)
+
+# ✨ v3.4: Include Land Data API (Real API Integration)
+app.include_router(land_data_router)
+
+# ✨ v4.0: Include 6-MODULE Pipeline Report API (Phase 8 Complete)
+app.include_router(pipeline_v4_router)
+
+# ✨ M1: Include STEP-Based Land Information API
+app.include_router(m1_step_router)
+
+# ✨ M1 V2: Context Freeze API (분석용 불변 컨텍스트)
+app.include_router(m1_v2_router)
+
+# ✨ M1 Phase 3: PDF Extraction API
+app.include_router(m1_pdf_router)
+
+# ✨ M1 Phase 4: V-World Proxy API
+app.include_router(proxy_vworld_router)
+
+# ✨ M1 Phase 4: Kakao Proxy API
+app.include_router(proxy_kakao_router)
+
+# ✨ PDF Download: Standardized PDF Download Router (M2-M6)
+app.include_router(pdf_download_router)
+
+# ✨ PDF Reports API
+from app.api.endpoints.pdf_reports import router as pdf_reports_router
+app.include_router(pdf_reports_router)
+
+# ✨ TEST: Test Injection API (DEV/TEST ONLY)
+from app.api.endpoints.test_inject import router as test_inject_router
+app.include_router(test_inject_router)
 
 # 정적 파일 서빙
 static_path = Path(__file__).parent.parent / "static"

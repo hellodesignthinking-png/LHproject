@@ -201,7 +201,7 @@ ls -lh /tmp/downloaded_report.pdf
    - **Page 3:** Technical Details + Disclaimer
 
 4. **Footer:**
-   - Copyright: "© Antenna Holdings · Na Tae-heum. All rights reserved."
+   - Copyright: "© Antenna Holdings · nataiheum. All rights reserved."
    - Page numbers
    - ZeroSite v3 watermark
 

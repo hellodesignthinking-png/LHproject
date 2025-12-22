@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Debug Flow</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1e1e1e; color: #fff; }
+    h1 { color: #4CAF50; }
+    button { 
+      padding: 15px 30px; margin: 10px; font-size: 18px; 
+      background: #4CAF50; color: white; border: none; 
+      border-radius: 8px; cursor: pointer; font-weight: bold;
+    }
+    button:hover { background: #45a049; }
+    pre { background: #2d2d2d; padding: 15px; border-radius: 5px; overflow-x: auto; }
+    .step { margin: 20px 0; padding: 15px; background: #2d2d2d; border-left: 4px solid #4CAF50; }
+    .error { color: #f44336; }
+    .success { color: #4CAF50; }
+    .warning { color: #ff9800; }
+  </style>
+</head>
+<body>
+  <h1>🔍 M1 → Pipeline Full Flow Debug</h1>
+  
+  <div class="step">
+    <h2>Step 1: Freeze Context (M1 Lock)</h2>
+    <button onclick="testFreezeContext()">🔒 Test Freeze Context</button>
+    <div id="freeze-result"></div>
+  </div>
+  
+  <div class="step">
+    <h2>Step 2: Pipeline Analyze</h2>
+    <button onclick="testPipelineAnalyze()">🚀 Test Pipeline (use parcel_id from Step 1)</button>
+    <div id="pipeline-result"></div>
+  </div>
+  
+  <div class="step">
+    <h2>Step 3: Full Flow (Freeze + Pipeline)</h2>
+    <button onclick="testFullFlow()">⚡ Test Full Flow</button>
+    <div id="full-flow-result"></div>
+  </div>
+  
+  <script>
+    const BACKEND = 'https://8005-iytptjlm3wjktifqay52f-2b54fc91.sandbox.novita.ai';
+    let savedParcelId = null;
+    let savedContextId = null;
+    
+    function log(containerId, message, type = 'info') {
+      const container = document.getElementById(containerId);
+      const div = document.createElement('div');
+      div.className = type;
+      div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      container.appendChild(div);
+    }
+    
+    function logJSON(containerId, data) {
+      const container = document.getElementById(containerId);
+      const pre = document.createElement('pre');
+      pre.textContent = JSON.stringify(data, null, 2);
+      container.appendChild(pre);
+    }
+    
+    async function testFreezeContext() {
+      const container = document.getElementById('freeze-result');
+      container.innerHTML = '';
+      log('freeze-result', 'Starting freeze-context-v2...');
+      
+      try {
+        const response = await fetch(BACKEND + '/api/m1/freeze-context-v2', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            address: "서울특별시 강남구 역삼동 737",
+            road_address: "서울특별시 강남구 테헤란로 521",
+            sido: "서울특별시",
+            sigungu: "강남구",
+            dong: "역삼동",
+            beopjeong_dong: "역삼동",
+            coordinates: {lat: 37.5012, lon: 127.0396},
+            coordinates_verified: true,
+            address_source: "MANUAL",
+            coordinates_source: "MANUAL",
+            bonbun: "737",
+            bubun: "",
+            jimok: "대",
+            area: 500,
+            cadastral_source: "MANUAL",
+            zone_type: "제2종일반주거지역",
+            land_use: "주거",
+            far: 250,
+            bcr: 60,
+            height_limit: null,
+            regulations: [],
+            restrictions: [],
+            zoning_source: "MANUAL",
+            road_contact: "접도",
+            road_width: 25,
+            road_type: "일반도로",
+            nearby_roads: [],
+            road_source: "MANUAL",
+            official_land_price: 15000000,
+            official_land_price_date: "2024-01-01",
+            official_price_source: "MANUAL",
+            transaction_cases_appraisal: [],
+            transaction_cases_reference: [],
+            corner_lot: false,
+            wide_road: false,
+            created_by: "test_user"
+          })
+        });
+        
+        log('freeze-result', `Status: ${response.status} ${response.statusText}`,
+            response.ok ? 'success' : 'error');
+        
+        const data = await response.json();
+        savedParcelId = data.parcel_id;
+        savedContextId = data.context_id;
+        logJSON('freeze-result', data);
+        
+        if (response.ok) {
+          log('freeze-result', `✅ Saved: parcel_id=${savedParcelId}`, 'success');
+        }
+      } catch (err) {
+        log('freeze-result', `ERROR: ${err.message}`, 'error');
+      }
+    }
+    
+    async function testPipelineAnalyze() {
+      const container = document.getElementById('pipeline-result');
+      container.innerHTML = '';
+      
+      if (!savedParcelId) {
+        log('pipeline-result', '⚠️ No parcel_id! Run Step 1 first.', 'warning');
+        return;
+      }
+      
+      log('pipeline-result', `Starting pipeline with parcel_id=${savedParcelId}...`);
+      const startTime = Date.now();
+      
+      try {
+        const response = await fetch(BACKEND + '/api/v4/pipeline/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            parcel_id: savedParcelId,
+            use_cache: false
+          })
+        });
+        
+        const elapsed = Date.now() - startTime;
+        log('pipeline-result', `Status: ${response.status} ${response.statusText} (${elapsed}ms)`,
+            response.ok ? 'success' : 'error');
+        
+        const data = await response.json();
+        logJSON('pipeline-result', data);
+        
+        if (response.ok) {
+          log('pipeline-result', `✅ Pipeline completed in ${elapsed}ms`, 'success');
+        }
+      } catch (err) {
+        const elapsed = Date.now() - startTime;
+        log('pipeline-result', `ERROR after ${elapsed}ms: ${err.message}`, 'error');
+      }
+    }
+    
+    async function testFullFlow() {
+      const container = document.getElementById('full-flow-result');
+      container.innerHTML = '';
+      log('full-flow-result', '🚀 Starting FULL FLOW test...');
+      
+      // Step 1: Freeze
+      log('full-flow-result', '[1/2] Freezing context...');
+      await testFreezeContext();
+      
+      // Wait a bit
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Step 2: Pipeline
+      log('full-flow-result', '[2/2] Running pipeline...');
+      await testPipelineAnalyze();
+      
+      log('full-flow-result', '✅ FULL FLOW COMPLETE!', 'success');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+/* ProgressBar Styles */
+.progress-bar-container {
+  width: 100%;
+  padding: 20px 0;
+}
+
+/* Mobile View */
+.progress-bar-mobile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-indicator {
+  display: flex;
+  align-items: baseline;
+  font-size: 24px;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.current-step {
+  font-size: 32px;
+  color: #2563eb;
+}
+
+.separator {
+  margin: 0 4px;
+  color: #9ca3af;
+}
+
+.total-steps {
+  color: #6b7280;
+}
+
+.step-label-mobile {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* Desktop View */
+.progress-bar-desktop {
+  display: none;
+}
+
+.steps-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.step-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+/* Step States */
+.step-completed .step-circle {
+  background-color: #10b981;
+  border: 2px solid #10b981;
+  color: white;
+}
+
+.step-current .step-circle {
+  background-color: #2563eb;
+  border: 2px solid #2563eb;
+  color: white;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.step-future .step-circle {
+  background-color: white;
+  border: 2px solid #d1d5db;
+  color: #9ca3af;
+}
+
+.step-number {
+  font-size: 16px;
+}
+
+.step-label {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.step-current .step-label {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.step-completed .step-label {
+  color: #10b981;
+  font-weight: 600;
+}
+
+/* Connector Line */
+.step-connector {
+  flex: 1;
+  height: 2px;
+  margin: 0 -4px;
+  margin-top: 20px;
+  transition: all 0.3s ease;
+}
+
+.connector-completed {
+  background-color: #10b981;
+}
+
+.connector-current {
+  background: linear-gradient(
+    to right,
+    #10b981 0%,
+    #10b981 50%,
+    #d1d5db 50%,
+    #d1d5db 100%
+  );
+}
+
+.connector-future {
+  background-color: #d1d5db;
+}
+
+/* Progress Track */
+.progress-track {
+  width: 100%;
+  height: 4px;
+  background-color: #e5e7eb;
+  border-radius: 2px;
+  margin-top: 20px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, #10b981, #2563eb);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* Responsive Design */
+@media (min-width: 768px) {
+  .progress-bar-mobile {
+    display: none;
+  }
+
+  .progress-bar-desktop {
+    display: block;
+  }
+
+  .progress-track {
+    display: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .step-circle {
+    width: 48px;
+    height: 48px;
+  }
+
+  .step-number {
+    font-size: 18px;
+  }
+
+  .step-label {
+    font-size: 14px;
+  }
+}

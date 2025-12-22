@@ -1,0 +1,87 @@
+/* DataSourceBadge Styles */
+.data-source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: help;
+  transition: all 0.2s ease;
+}
+
+.data-source-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* API Auto - Green */
+.badge-api {
+  background-color: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.badge-api:hover {
+  background-color: #a7f3d0;
+}
+
+/* User Input - Blue */
+.badge-manual {
+  background-color: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+
+.badge-manual:hover {
+  background-color: #93c5fd;
+}
+
+/* PDF Based - Orange */
+.badge-pdf {
+  background-color: #fed7aa;
+  color: #92400e;
+  border: 1px solid #fbbf24;
+}
+
+.badge-pdf:hover {
+  background-color: #fbbf24;
+}
+
+/* Badge Elements */
+.badge-icon {
+  font-size: 10px;
+  line-height: 1;
+}
+
+.badge-label {
+  font-weight: 600;
+}
+
+.badge-api-name {
+  font-size: 11px;
+  opacity: 0.8;
+  font-weight: 400;
+}
+
+.badge-confidence {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  margin-left: 4px;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .data-source-badge {
+    font-size: 11px;
+    padding: 3px 10px;
+  }
+
+  .badge-api-name {
+    display: none;
+  }
+}

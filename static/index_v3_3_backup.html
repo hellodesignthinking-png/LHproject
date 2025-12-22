@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite OS v3.3 - 부동산 의사결정 엔진</title>
+    <meta name="description" content="토지 진단 · LH 판단 · 투자 검증까지 — 10초면 끝나는 부동산 엔진">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="/static/css/landing.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-cube"></i>
+                    <span>ZeroSite OS</span>
+                    <span class="version">v3.3</span>
+                </div>
+                <nav class="nav">
+                    <a href="#home">Home</a>
+                    <a href="#features">Features</a>
+                    <a href="#reports">Reports</a>
+                    <a href="/docs" target="_blank">API Docs</a>
+                    <a href="https://github.com/hellodesignthinking-png/LHproject" target="_blank">
+                        <i class="fab fa-github"></i> GitHub
+                    </a>
+                    <a href="/api/v3/reports/health" target="_blank" class="health-link">
+                        <i class="fas fa-heartbeat"></i> Health Check
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-background">
+            <div class="grid-pattern"></div>
+            <div class="gradient-overlay"></div>
+        </div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <i class="fas fa-bolt"></i>
+                    <span>Production Ready</span>
+                </div>
+                <h1 class="hero-title">
+                    ZeroSite OS
+                </h1>
+                <p class="hero-subtitle">
+                    토지 진단 · LH 판단 · 투자 검증까지
+                </p>
+                <p class="hero-tagline">
+                    10초면 끝나는 부동산 의사결정 엔진
+                </p>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-value">6</div>
+                        <div class="stat-label">Report Types</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">12</div>
+                        <div class="stat-label">API Endpoints</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">100%</div>
+                        <div class="stat-label">Test Coverage</div>
+                    </div>
+                </div>
+                <div class="hero-cta">
+                    <button class="btn btn-primary" onclick="scrollToReports()">
+                        <i class="fas fa-chart-line"></i>
+                        토지 분석 시작하기
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.location.href='/docs'">
+                        <i class="fas fa-book"></i>
+                        API 문서 보기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Canonical Flow Section -->
+    <section class="canonical-flow" id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">ZeroSite Canonical Flow</h2>
+                <p class="section-subtitle">
+                    단일 흐름. 단일 진실. ZeroSite OS의 핵심 엔진입니다.
+                </p>
+            </div>
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <div class="flow-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div class="flow-label">FACT</div>
+                    <div class="flow-desc">데이터 수집</div>
+                </div>
+                <div class="flow-arrow">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="flow-label">INTERPRETATION</div>
+                    <div class="flow-desc">데이터 해석</div>
+                </div>
+                <div class="flow-arrow">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-icon">
+                        <i class="fas fa-gavel"></i>
+                    </div>
+                    <div class="flow-label">JUDGMENT</div>
+                    <div class="flow-desc">의사결정</div>
+                </div>
+                <div class="flow-arrow">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="flow-label">REPORT</div>
+                    <div class="flow-desc">보고서 생성</div>
+                </div>
+                <div class="flow-arrow">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-icon">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div class="flow-label">PDF</div>
+                    <div class="flow-desc">최종 출력</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Report Composers Section -->
+    <section class="report-composers" id="reports">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">6 Report Composers</h2>
+                <p class="section-subtitle">
+                    각 목적에 최적화된 전문 보고서를 자동 생성합니다
+                </p>
+            </div>
+            <div class="composers-grid">
+                <!-- Pre-Report -->
+                <div class="composer-card">
+                    <div class="card-icon pre-report">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="card-header">
+                        <h3 class="card-title">Pre-Report</h3>
+                        <span class="card-pages">2 pages</span>
+                    </div>
+                    <p class="card-description">
+                        사업 가능성 요약 및 LH 적합도 초기 진단. 빠른 의사결정을 위한 핵심 요약 보고서.
+                    </p>
+                    <ul class="card-features">
+                        <li><i class="fas fa-check"></i> LH 가능성 분석</li>
+                        <li><i class="fas fa-check"></i> 예상 세대수 계산</li>
+                        <li><i class="fas fa-check"></i> 위험 요소 평가</li>
+                    </ul>
+                    <button class="card-btn" onclick="generateReport('pre-report')">
+                        <i class="fas fa-play"></i> API로 생성하기
+                    </button>
+                </div>
+
+                <!-- Comprehensive Report -->
+                <div class="composer-card featured">
+                    <div class="featured-badge">Most Popular</div>
+                    <div class="card-icon comprehensive">
+                        <i class="fas fa-file-contract"></i>
+                    </div>
+                    <div class="card-header">
+                        <h3 class="card-title">Comprehensive Report</h3>
+                        <span class="card-pages">17 pages</span>
+                    </div>
+                    <p class="card-description">
+                        토지진단 종합판. 입지·규모·규제 분석부터 재무 시뮬레이션까지 완벽 커버.
+                    </p>
+                    <ul class="card-features">
+                        <li><i class="fas fa-check"></i> 토지 기본 정보</li>
+                        <li><i class="fas fa-check"></i> LH 사업성 분석</li>
+                        <li><i class="fas fa-check"></i> 재무 시뮬레이션</li>
+                    </ul>
+                    <button class="card-btn" onclick="generateReport('comprehensive')">
+                        <i class="fas fa-play"></i> API로 생성하기
+                    </button>
+                </div>
+
+                <!-- LH Decision Report -->
+                <div class="composer-card">
+                    <div class="card-icon lh-decision">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="card-header">
+                        <h3 class="card-title">LH Decision Report</h3>
+                        <span class="card-pages">Variable</span>
+                    </div>
+                    <p class="card-description">
+                        LH 심사 적합성 판단 + 통과 확률 예측. 100점 만점 스코어링 시스템.
+                    </p>
+                    <ul class="card-features">
+                        <li><i class="fas fa-check"></i> GO/NO-GO 판단</li>
+                        <li><i class="fas fa-check"></i> 100점 스코어링</li>
+                        <li><i class="fas fa-check"></i> 공급 유형 추천</li>
+                    </ul>
+                    <button class="card-btn" onclick="generateReport('lh-decision')">
+                        <i class="fas fa-play"></i> API로 생성하기
+                    </button>
+                </div>
+
+                <!-- Investor Report -->
+                <div class="composer-card">
+                    <div class="card-icon investor">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="card-header">
+                        <h3 class="card-title">Investor Report</h3>
+                        <span class="card-pages">12 pages</span>
+                    </div>
+                    <p class="card-description">
+                        투자자를 위한 IRR/ROI 시나리오 분석. A~F 등급 평가 및 수익성 예측.
+                    </p>
+                    <ul class="card-features">
+                        <li><i class="fas fa-check"></i> IRR/ROI 계산</li>
+                        <li><i class="fas fa-check"></i> 투자 등급 (A~F)</li>
+                        <li><i class="fas fa-check"></i> 위험-수익 분석</li>
+                    </ul>
+                    <button class="card-btn" onclick="generateReport('investor')">
+                        <i class="fas fa-play"></i> API로 생성하기
+                    </button>
+                </div>
+
+                <!-- Land Price Report -->
+                <div class="composer-card">
+                    <div class="card-icon land-price">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <div class="card-header">
+                        <h3 class="card-title">Land Price Report</h3>
+                        <span class="card-pages">Variable</span>
+                    </div>
+                    <p class="card-description">
+                        감정평가 기반 토지가격 분석. 4-way 가격 비교 및 적정 가격 범위 제시.
+                    </p>
+                    <ul class="card-features">
+                        <li><i class="fas fa-check"></i> 4-way 가격 비교</li>
+                        <li><i class="fas fa-check"></i> 공시지가 트렌드</li>
+                        <li><i class="fas fa-check"></i> 적정 가격 범위</li>
+                    </ul>
+                    <button class="card-btn" onclick="generateReport('land-price')">
+                        <i class="fas fa-play"></i> API로 생성하기
+                    </button>
+                </div>
+
+                <!-- Internal Assessment -->
+                <div class="composer-card">
+                    <div class="card-icon internal">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <div class="card-header">
+                        <h3 class="card-title">Internal Assessment</h3>
+                        <span class="card-pages">5 pages</span>
+                    </div>
+                    <p class="card-description">
+                        내부 개발팀용 빠른 의사결정 보고서. 종합 점수 및 조건부 판단 제공.
+                    </p>
+                    <ul class="card-features">
+                        <li><i class="fas fa-check"></i> 종합 점수 (100점)</li>
+                        <li><i class="fas fa-check"></i> 조건부 판단</li>
+                        <li><i class="fas fa-check"></i> 개발 우선순위</li>
+                    </ul>
+                    <button class="card-btn" onclick="generateReport('internal')">
+                        <i class="fas fa-play"></i> API로 생성하기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- System Status Section -->
+    <section class="system-status">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Real-time System Status</h2>
+                <p class="section-subtitle">
+                    서버 상태를 실시간으로 모니터링합니다
+                </p>
+            </div>
+            <div class="status-grid">
+                <div class="status-card">
+                    <div class="status-icon" id="status-icon">
+                        <i class="fas fa-circle-notch fa-spin"></i>
+                    </div>
+                    <div class="status-label">Server Status</div>
+                    <div class="status-value" id="server-status">Loading...</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon">
+                        <i class="fas fa-code-branch"></i>
+                    </div>
+                    <div class="status-label">Version</div>
+                    <div class="status-value" id="version-status">-</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <div class="status-label">Composers</div>
+                    <div class="status-value" id="composers-status">-</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div class="status-label">PDF Engine</div>
+                    <div class="status-value" id="pdf-status">-</div>
+                </div>
+            </div>
+            <div class="status-details">
+                <pre id="status-json">Loading system status...</pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Quick Start Section -->
+    <section class="api-quickstart">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">API Quick Start</h2>
+                <p class="section-subtitle">
+                    간단한 API 호출로 보고서를 생성하세요
+                </p>
+            </div>
+            <div class="api-examples">
+                <div class="api-example">
+                    <div class="example-header">
+                        <h3>1. Health Check</h3>
+                        <button class="copy-btn" onclick="copyCode('code-health')">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <pre><code id="code-health">curl https://8000-ia7ssj6hrruzfzb34j25f-c81df28e.sandbox.novita.ai/api/v3/reports/health</code></pre>
+                </div>
+                <div class="api-example">
+                    <div class="example-header">
+                        <h3>2. Generate Pre-Report</h3>
+                        <button class="copy-btn" onclick="copyCode('code-pre-report')">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <pre><code id="code-pre-report">curl -X POST https://8000-ia7ssj6hrruzfzb34j25f-c81df28e.sandbox.novita.ai/api/v3/reports/pre-report \
+  -H "Content-Type: application/json" \
+  -d '{
+    "appraisal_context": {
+      "calculation": {
+        "land_area_sqm": 660.0,
+        "final_appraised_total": 4154535000
+      },
+      "zoning": {
+        "confirmed_type": "제2종일반주거지역",
+        "far": 250.0
+      }
+    }
+  }'</code></pre>
+                </div>
+                <div class="api-example">
+                    <div class="example-header">
+                        <h3>3. Download Report PDF</h3>
+                        <button class="copy-btn" onclick="copyCode('code-download')">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <pre><code id="code-download">curl https://8000-ia7ssj6hrruzfzb34j25f-c81df28e.sandbox.novita.ai/api/v3/reports/{report_id}/pdf \
+  -o report.pdf</code></pre>
+                </div>
+            </div>
+            <div class="api-cta">
+                <button class="btn btn-primary" onclick="window.open('/docs', '_blank')">
+                    <i class="fas fa-book-open"></i> 전체 API 문서 보기
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <div class="footer-logo">
+                        <i class="fas fa-cube"></i>
+                        <span>ZeroSite OS</span>
+                    </div>
+                    <p class="footer-tagline">
+                        부동산 의사결정의 새로운 표준
+                    </p>
+                    <p class="footer-copyright">
+                        © 2025 ZeroSite OS. All rights reserved.
+                    </p>
+                </div>
+                <div class="footer-right">
+                    <div class="footer-links">
+                        <div class="footer-column">
+                            <h4>Product</h4>
+                            <a href="#features">Features</a>
+                            <a href="#reports">Reports</a>
+                            <a href="/docs" target="_blank">API Docs</a>
+                        </div>
+                        <div class="footer-column">
+                            <h4>Resources</h4>
+                            <a href="/api/v3/reports/health" target="_blank">Health Check</a>
+                            <a href="https://github.com/hellodesignthinking-png/LHproject" target="_blank">GitHub</a>
+                            <a href="#">Documentation</a>
+                        </div>
+                        <div class="footer-column">
+                            <h4>System</h4>
+                            <a href="#" id="footer-version">Version v3.3</a>
+                            <a href="#" id="footer-status">Status: Loading...</a>
+                            <a href="#">Privacy Policy</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Report Generation Modal -->
+    <div id="reportModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modal-title">Generating Report...</h2>
+            <div class="modal-body">
+                <div class="loading-spinner">
+                    <i class="fas fa-circle-notch fa-spin"></i>
+                </div>
+                <p id="modal-message">Please wait while we generate your report...</p>
+                <div id="modal-result" style="display: none;">
+                    <div class="result-success">
+                        <i class="fas fa-check-circle"></i>
+                        <h3>Report Generated Successfully!</h3>
+                        <div class="result-info">
+                            <p><strong>Report ID:</strong> <span id="result-id"></span></p>
+                            <p><strong>Type:</strong> <span id="result-type"></span></p>
+                            <p><strong>Generation Time:</strong> <span id="result-time"></span></p>
+                        </div>
+                        <div class="result-actions">
+                            <button class="btn btn-primary" onclick="downloadReport('json')">
+                                <i class="fas fa-download"></i> Download JSON
+                            </button>
+                            <button class="btn btn-secondary" onclick="downloadReport('pdf')">
+                                <i class="fas fa-file-pdf"></i> Download PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="modal-error" style="display: none;">
+                    <div class="result-error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Generation Failed</h3>
+                        <p id="error-message"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/landing.js"></script>
+</body>
+</html>

@@ -1,0 +1,536 @@
+
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>종합 최종보고서 - ZeroSite</title>
+        
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #374151;
+            background: #F9FAFB;
+            padding: 40px 20px;
+        }
+        
+        .report-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        
+        /* 헤더 */
+        .report-header {
+            background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .report-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        
+        .report-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+        
+        .report-meta {
+            margin-top: 20px;
+            font-size: 13px;
+            opacity: 0.8;
+        }
+        
+        /* 컨텐츠 영역 */
+        .report-content {
+            padding: 40px;
+        }
+        
+        /* 섹션 */
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #3B82F6;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3B82F6;
+        }
+        
+        .section-subtitle {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1F2937;
+            margin: 20px 0 12px 0;
+        }
+        
+        /* 데이터 카드 */
+        .data-card {
+            background: #F9FAFB;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #E5E7EB;
+        }
+        
+        .data-row:last-child {
+            border-bottom: none;
+        }
+        
+        .data-label {
+            font-weight: 600;
+            color: #6B7280;
+            font-size: 13px;
+        }
+        
+        .data-value {
+            font-weight: 700;
+            color: #1F2937;
+            font-size: 15px;
+            text-align: right;
+        }
+        
+        .data-value.na {
+            color: #9CA3AF;
+            font-style: italic;
+        }
+        
+        /* 경고 박스 */
+        .warning-box {
+            background: #FEF3C7;
+            border: 2px solid #F59E0B;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .warning-icon {
+            font-size: 20px;
+            margin-right: 12px;
+        }
+        
+        .warning-text {
+            font-size: 14px;
+            color: #92400E;
+            line-height: 1.5;
+        }
+        
+        /* 의사결정 카드 (Executive Summary) */
+        .decision-card {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .decision-card.conditional {
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+        }
+        
+        .decision-card.negative {
+            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+        }
+        
+        .decision-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        
+        .decision-details {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        
+        .decision-metric {
+            text-align: center;
+        }
+        
+        .decision-metric-label {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-bottom: 8px;
+        }
+        
+        .decision-metric-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        /* 리스트 */
+        .report-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .report-list li {
+            padding: 10px 0;
+            padding-left: 24px;
+            position: relative;
+        }
+        
+        .report-list li:before {
+            content: "•";
+            position: absolute;
+            left: 8px;
+            color: #3B82F6;
+            font-weight: bold;
+        }
+        
+        /* 체크리스트 (Quick Check용) */
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #F9FAFB;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        
+        .checklist-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+        
+        .checklist-icon.ok {
+            background: #10B981;
+            color: white;
+        }
+        
+        .checklist-icon.check {
+            background: #F59E0B;
+            color: white;
+        }
+        
+        .checklist-icon.pending {
+            background: #9CA3AF;
+            color: white;
+        }
+        
+        .checklist-content {
+            flex: 1;
+        }
+        
+        .checklist-title {
+            font-weight: 600;
+            color: #1F2937;
+            margin-bottom: 4px;
+        }
+        
+        .checklist-note {
+            font-size: 13px;
+            color: #6B7280;
+        }
+        
+        /* 슬라이드 (Presentation용) */
+        .slide {
+            page-break-inside: avoid;
+            margin-bottom: 40px;
+            border: 2px solid #E5E7EB;
+            border-radius: 12px;
+            padding: 30px;
+            background: white;
+        }
+        
+        .slide-number {
+            font-size: 12px;
+            color: #9CA3AF;
+            margin-bottom: 16px;
+        }
+        
+        .slide-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #3B82F6;
+            margin-bottom: 24px;
+        }
+        
+        /* 푸터 (QA Status) */
+        .report-footer {
+            background: #F3F4F6;
+            padding: 30px 40px;
+            border-top: 2px solid #E5E7EB;
+        }
+        
+        .qa-status-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #6B7280;
+            margin-bottom: 16px;
+        }
+        
+        .qa-status-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        
+        .qa-status-item {
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .qa-status-label {
+            font-size: 12px;
+            color: #6B7280;
+            margin-bottom: 8px;
+        }
+        
+        .qa-status-value {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        /* 인쇄용 */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .report-container {
+                box-shadow: none;
+            }
+            
+            .section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+    
+    </head>
+    <body>
+        <div class="report-container">
+            <div class="report-header">
+                <div class="report-title">종합 최종보고서</div>
+                <div class="report-subtitle">LH 공공임대 토지 종합 분석</div>
+                <div class="report-meta">
+                    생성일: 2025-12-21T14:23:41.520380<br>
+                    Context ID: test-mock-20251221-142315
+                </div>
+            </div>
+            
+            <div class="report-content">
+                
+                
+                <!-- 1. 최종 판정 (Executive Summary) -->
+                <div class="section">
+                    <div class="section-title">1. 최종 판정 (Executive Summary)</div>
+                    
+    <div class="decision-card ">
+        <div class="decision-title">추진 권장</div>
+        <div style="margin: 16px 0; font-size: 14px; line-height: 1.6; opacity: 0.95;">
+            LH 공모 승인 가능성이 77%로 높습니다. 사업 추진을 권장합니다.
+        </div>
+        <div class="decision-details">
+            <div class="decision-metric">
+                <div class="decision-metric-label">승인 가능성</div>
+                <div class="decision-metric-value">
+                    77%
+                </div>
+            </div>
+            <div class="decision-metric">
+                <div class="decision-metric-label">종합 등급</div>
+                <div class="decision-metric-value">A</div>
+            </div>
+        </div>
+    </div>
+    
+                    
+                    <div class="section-subtitle">주요 리스크 요인</div>
+                    <ul class="report-list">
+                        <li>위험 요소 분석 중입니다</li>
+                    </ul>
+                </div>
+                
+                <!-- 2. 정책·제도 환경 분석 (NEW - 확장 콘텐츠) -->
+                <div class="section">
+                    <div class="section-title">2. 정책·제도 환경 분석</div>
+                    
+                    <div class="section-subtitle">2.1 LH 신축매입임대 사업 개요</div>
+                    <div style="margin-bottom: 16px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        LH 신축매입임대주택은 토지소유자가 건축한 주택을 LH가 매입하여 공공임대주택으로 공급하는 사업입니다.
+                    </div>
+                    
+                    <div class="section-subtitle">2.2 현재 정책 동향</div>
+                    <div style="margin-bottom: 16px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        정부의 공공임대 확대 정책에 따라 LH 신축매입임대 사업이 지속적으로 확대되고 있으며, 민간 토지를 활용한 공공주택 공급이 강화되고 있습니다.
+                    </div>
+                    
+                    <div class="section-subtitle">2.3 LH 승인 기준</div>
+                    <div style="margin-bottom: 16px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        LH 심사는 입지, 토지가치, 개발계획의 적정성, 사업성, 주변 수요 등을 종합적으로 평가합니다.
+                    </div>
+                    
+                    <div class="section-subtitle">2.4 규제 환경</div>
+                    <div style="margin-bottom: 16px; padding: 16px; background: #EFF6FF; border-left: 4px solid #3B82F6; border-radius: 4px;">
+                        <div style="font-size: 14px; color: #1E40AF; line-height: 1.6;">
+                            대상지는 용적률 인센티브 적용 시 최대 26세대까지 개발 가능합니다.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 3. 토지 가치 평가 및 입지 분석 -->
+                <div class="section">
+                    <div class="section-title">3. 토지 가치 평가 및 입지 분석</div>
+                    
+                    <div class="section-subtitle">3.1 종합 평가</div>
+                    <div style="margin-bottom: 16px; padding: 12px; background: #EFF6FF; border-left: 4px solid #3B82F6; border-radius: 4px;">
+                        <div style="font-size: 14px; color: #1E40AF; line-height: 1.6;">
+                            총 토지 가치는 약 16.2억원으로, 평당 10,723,014원 수준입니다. 신뢰도 85%로 평가 결과의 신뢰성이 높습니다.
+                        </div>
+                    </div>
+                    <div class="data-card">
+                        <div class="data-row">
+                            <span class="data-label">총 토지 가치</span>
+                            <span class="data-value">1,621,848,717원</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">평당 가격</span>
+                            <span class="data-value">10,723,014원</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">평가 신뢰도</span>
+                            <span class="data-value">85%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 3. 개발 규모 -->
+                <div class="section">
+                    <div class="section-title">3. 개발 규모</div>
+                    <div class="data-card">
+                        <div class="data-row">
+                            <span class="data-label">법정 용적률 기준</span>
+                            <span class="data-value">20세대</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">인센티브 용적률 기준</span>
+                            <span class="data-value">26세대</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">주차 대수</span>
+                            <span class="data-value">20대</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 4. 주택 유형 -->
+                <div class="section">
+                    <div class="section-title">4. 주택 유형 (LH 선호유형 분석)</div>
+                    <div class="data-card">
+                        <div class="data-row">
+                            <span class="data-label">추천 유형</span>
+                            <span class="data-value">청년형</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">적합도 점수</span>
+                            <span class="data-value">85점</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 5. 사업성 지표 -->
+                <div class="section">
+                    <div class="section-title">5. 사업성 지표</div>
+                    <div style="margin-bottom: 16px; padding: 12px; background: #ECFDF5; border-left: 4px solid #10B981; border-radius: 4px;">
+                        <div style="font-size: 14px; color: #065F46; line-height: 1.6;">
+                            NPV 7.9억원, IRR 12.8%, ROI 15.5%로 우수한 사업성을 보입니다. 투자 가치가 높습니다.
+                        </div>
+                    </div>
+                    <div class="data-card">
+                        <div class="data-row">
+                            <span class="data-label">순현재가치 (NPV)</span>
+                            <span class="data-value">793,000,000원</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">내부수익률 (IRR)</span>
+                            <span class="data-value">12.8%</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">투자수익률 (ROI)</span>
+                            <span class="data-value">15.5%</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">사업성 등급</span>
+                            <span class="data-value">A</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            
+    <div class="report-footer">
+        <div class="qa-status-title">📊 보고서 품질 상태 (QA Status)</div>
+        <div class="qa-status-grid" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="qa-status-item">
+                <div class="qa-status-label">Data Binding</div>
+                <div class="qa-status-value">✅ PASS</div>
+            </div>
+            <div class="qa-status-item">
+                <div class="qa-status-label">Content Completeness</div>
+                <div class="qa-status-value">✅ PASS</div>
+            </div>
+            <div class="qa-status-item">
+                <div class="qa-status-label">Narrative Consistency</div>
+                <div class="qa-status-value">✅ PASS</div>
+            </div>
+            <div class="qa-status-item">
+                <div class="qa-status-label">HTML-PDF Parity</div>
+                <div class="qa-status-value">✅ PASS (HTML 완료)</div>
+            </div>
+        </div>
+        <div style="margin-top: 16px; padding: 12px; background: #F3F4F6; border-radius: 6px; text-align: center;">
+            <div style="font-size: 13px; font-weight: 600; color: #6B7280; margin-bottom: 4px;">최종 제출 가능 여부</div>
+            <div style="font-size: 15px; font-weight: 700;">✅ 제출 가능</div>
+        </div>
+    </div>
+    
+        </div>
+    </body>
+    </html>
+    

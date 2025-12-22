@@ -1,0 +1,945 @@
+
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>종합 최종보고서 - ZeroSite</title>
+        
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #374151;
+            background: #F9FAFB;
+            padding: 40px 20px;
+        }
+        
+        .report-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        
+        /* 헤더 */
+        .report-header {
+            background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .report-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        
+        .report-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+        
+        .report-meta {
+            margin-top: 20px;
+            font-size: 13px;
+            opacity: 0.8;
+        }
+        
+        /* 컨텐츠 영역 */
+        .report-content {
+            padding: 40px;
+        }
+        
+        /* 섹션 */
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #3B82F6;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3B82F6;
+        }
+        
+        .section-subtitle {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1F2937;
+            margin: 20px 0 12px 0;
+        }
+        
+        /* 데이터 카드 */
+        .data-card {
+            background: #F9FAFB;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #E5E7EB;
+        }
+        
+        .data-row:last-child {
+            border-bottom: none;
+        }
+        
+        .data-label {
+            font-weight: 600;
+            color: #6B7280;
+            font-size: 13px;
+        }
+        
+        .data-value {
+            font-weight: 700;
+            color: #1F2937;
+            font-size: 15px;
+            text-align: right;
+        }
+        
+        .data-value.na {
+            color: #9CA3AF;
+            font-style: italic;
+        }
+        
+        /* 경고 박스 */
+        .warning-box {
+            background: #FEF3C7;
+            border: 2px solid #F59E0B;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .warning-icon {
+            font-size: 20px;
+            margin-right: 12px;
+        }
+        
+        .warning-text {
+            font-size: 14px;
+            color: #92400E;
+            line-height: 1.5;
+        }
+        
+        /* 의사결정 카드 (Executive Summary) */
+        .decision-card {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .decision-card.conditional {
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+        }
+        
+        .decision-card.negative {
+            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+        }
+        
+        .decision-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        
+        .decision-details {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        
+        .decision-metric {
+            text-align: center;
+        }
+        
+        .decision-metric-label {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-bottom: 8px;
+        }
+        
+        .decision-metric-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        /* 리스트 */
+        .report-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .report-list li {
+            padding: 10px 0;
+            padding-left: 24px;
+            position: relative;
+        }
+        
+        .report-list li:before {
+            content: "•";
+            position: absolute;
+            left: 8px;
+            color: #3B82F6;
+            font-weight: bold;
+        }
+        
+        /* 체크리스트 (Quick Check용) */
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #F9FAFB;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        
+        .checklist-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+        
+        .checklist-icon.ok {
+            background: #10B981;
+            color: white;
+        }
+        
+        .checklist-icon.check {
+            background: #F59E0B;
+            color: white;
+        }
+        
+        .checklist-icon.pending {
+            background: #9CA3AF;
+            color: white;
+        }
+        
+        .checklist-content {
+            flex: 1;
+        }
+        
+        .checklist-title {
+            font-weight: 600;
+            color: #1F2937;
+            margin-bottom: 4px;
+        }
+        
+        .checklist-note {
+            font-size: 13px;
+            color: #6B7280;
+        }
+        
+        /* 슬라이드 (Presentation용) */
+        .slide {
+            page-break-inside: avoid;
+            margin-bottom: 40px;
+            border: 2px solid #E5E7EB;
+            border-radius: 12px;
+            padding: 30px;
+            background: white;
+        }
+        
+        .slide-number {
+            font-size: 12px;
+            color: #9CA3AF;
+            margin-bottom: 16px;
+        }
+        
+        .slide-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #3B82F6;
+            margin-bottom: 24px;
+        }
+        
+        /* 푸터 (QA Status) */
+        .report-footer {
+            background: #F3F4F6;
+            padding: 30px 40px;
+            border-top: 2px solid #E5E7EB;
+        }
+        
+        .qa-status-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #6B7280;
+            margin-bottom: 16px;
+        }
+        
+        .qa-status-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        
+        .qa-status-item {
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .qa-status-label {
+            font-size: 12px;
+            color: #6B7280;
+            margin-bottom: 8px;
+        }
+        
+        .qa-status-value {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        /* 인쇄용 */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .report-container {
+                box-shadow: none;
+            }
+            
+            .section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+    
+    </head>
+    <body>
+        <div class="report-container">
+            <div class="report-header">
+                <div class="report-title">종합 최종보고서</div>
+                <div class="report-subtitle">LH 공공임대 토지 종합 분석</div>
+                <div class="report-meta">
+                    생성일: 2025-12-22T00:05:37.668272<br>
+                    Context ID: test-mock-20251222-000537
+                </div>
+            </div>
+            
+            <div class="report-content">
+                
+                
+                <!-- 1. 최종 판정 (Executive Summary) -->
+                <div class="section">
+                    <div class="section-title">1. 최종 판정 (Executive Summary)</div>
+                    
+    <div class="decision-card ">
+        <div class="decision-title">추진 권장</div>
+        <div style="margin: 16px 0; font-size: 14px; line-height: 1.6; opacity: 0.95;">
+            LH 공모 승인 가능성이 77%로 높습니다. 사업 추진을 권장합니다.
+        </div>
+        <div class="decision-details">
+            <div class="decision-metric">
+                <div class="decision-metric-label">승인 가능성</div>
+                <div class="decision-metric-value">
+                    77%
+                </div>
+            </div>
+            <div class="decision-metric">
+                <div class="decision-metric-label">종합 등급</div>
+                <div class="decision-metric-value">A</div>
+            </div>
+        </div>
+    </div>
+    
+                    
+                    <div class="section-subtitle">주요 리스크 요인</div>
+                    <ul class="report-list">
+                        <li>위험 요소 분석 중입니다</li>
+                    </ul>
+                </div>
+                
+                <!-- 2. 정책·제도 환경 분석 (NEW - 확장 콘텐츠) -->
+                <div class="section">
+                    <div class="section-title">2. 정책·제도 환경 분석</div>
+                    
+                    <div class="section-subtitle">2.1 LH 신축매입임대 사업 개요</div>
+                    <div style="margin-bottom: 16px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        <strong>LH 신축매입임대 사업의 구조와 목적</strong><br><br>
+LH 신축매입임대주택 사업은 토지소유자(또는 사업자)가 자기 소유 토지에 공공임대주택을 신축하면, 한국토지주택공사(LH)가 이를 매입하여 
+장기 공공임대주택으로 공급하는 제도입니다. 이 제도는 2009년 도입된 이래 정부의 핵심 주거복지 정책 수단으로 자리잡아 왔으며, 
+공공 재정 부담을 줄이면서도 공공임대주택 물량을 확보할 수 있다는 장점 때문에 지속적으로 확대되어 왔습니다.<br><br>
+
+사업 방식은 크게 ①토지소유자가 직접 건축 후 LH에 매도하는 방식과 ②사업시행자(건설사 등)가 토지를 매입·임차하여 건축 후 LH에 공급하는 방식으로 
+나뉩니다. LH는 준공 후 주택을 일괄 매입하되, 사전에 매입가격 산정 기준, 주택 유형·면적·품질 기준 등을 제시하므로, 
+사업 초기 단계에서 LH의 수요 및 승인 가능성을 정확히 판단하는 것이 사업 성패의 핵심입니다.<br><br>
+
+특히 최근에는 청년, 신혼부부, 고령자 등 특정 계층을 위한 맞춤형 공공주택 공급이 강조되면서, 
+LH는 단순한 매입 기관이 아니라 <strong>"주택 유형·설계 기준·입지 적합성"</strong>을 사전 심사하는 
+엄격한 검증 주체로 변모하고 있습니다.
+                    </div>
+                    
+                    <div class="section-subtitle">2.2 현재 정책 동향</div>
+                    <div style="margin-bottom: 16px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        <strong>2023-2025 공공임대 확대 기조와 LH 사업 방향성</strong><br><br>
+정부는 '제3차 장기 공공임대주택 종합계획(2023-2032)'을 통해 연간 공공임대 공급 목표를 명확히 제시하고 있으며, 
+이 중 신축매입임대가 차지하는 비중이 점진적으로 증가하고 있습니다. 특히 수도권 및 광역시 중심으로 
+<strong>민간 토지를 활용한 공공주택 공급 물량 확대</strong> 정책이 강화되고 있으며, 
+이에 따라 LH는 연간 매입 물량을 지속적으로 늘리고 있습니다.<br><br>
+
+다만, 최근 들어 LH의 심사 기준이 더욱 엄격해지고 있다는 점에 주목해야 합니다. 
+과거에는 '일단 건축하면 LH가 매입해 준다'는 인식이 있었으나, 현재는 <strong>사전 승인제</strong> 형태로 운영되며, 
+입지 부적합·과잉 공급 지역·시공 품질 우려 등의 사유로 승인이 거부되는 사례가 증가하고 있습니다.<br><br>
+
+따라서 본 사업에서도 단순히 '법적으로 건축 가능한가'를 넘어, <strong>'LH가 실제로 매입할 의향이 있는가'</strong>를 
+입지·수요·정책 적합성 측면에서 사전 검증하는 것이 필수적입니다.
+                    </div>
+                    
+                    <div class="section-subtitle">2.3 LH 승인 기준</div>
+                    <div style="margin-bottom: 16px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        <strong>LH 심사 기준의 구조와 평가 항목</strong><br><br>
+LH의 신축매입임대 승인 심사는 크게 5개 영역으로 구성됩니다:<br><br>
+<strong>1) 입지 적합성 (30점)</strong>: 대중교통 접근성, 생활편의시설(학교·병원·마트) 도보 거리, 
+주변 환경(소음·유해시설 유무) 등을 평가합니다. 특히 청년형·신혼부부형의 경우 직주근접성(산업단지·업무지구 접근성)이 
+중요한 가점 요인으로 작용합니다.<br><br>
+
+<strong>2) 토지 및 개발 계획의 적정성 (25점)</strong>: 토지 소유 관계의 명확성, 용도지역 적합성, 
+인·허가 가능성, 개발 밀도의 합리성 등을 검토합니다. 과도한 용적률은 오히려 감점 요인이 될 수 있으며, 
+주변 경관과의 조화, 일조권 침해 여부 등도 평가 대상입니다.<br><br>
+
+<strong>3) 사업성 및 매입가 적정성 (20점)</strong>: LH가 제시하는 표준 매입가 산정 기준에 부합하는지, 
+주변 시세 대비 과도하게 높은 가격을 요구하지 않는지 등을 평가합니다. 최근 건설 원가 상승으로 인해 
+LH도 매입가 상한을 엄격히 관리하고 있어, 사업비 구조의 합리성 입증이 중요합니다.<br><br>
+
+<strong>4) 주택 유형·면적의 수요 적합성 (15점)</strong>: 해당 지역의 LH 공급 계획, 기존 공급 물량, 
+특정 유형(예: 청년형 vs 신혼부부형)의 수요 과부족 등을 고려하여, 계획된 주택 유형이 지역 수요와 부합하는지 판단합니다.<br><br>
+
+<strong>5) 사업 추진 능력 (10점)</strong>: 사업시행자(또는 토지소유자)의 재무 건전성, 과거 사업 실적, 
+시공 품질 보증 방안 등을 평가합니다.<br><br>
+
+이상의 항목을 종합하여 <strong>100점 만점 기준 70점 이상</strong> 획득 시 '승인 권장', 
+60~69점은 '조건부 승인 검토', 60점 미만은 '승인 곤란' 판정을 받는 것이 일반적입니다.
+                    </div>
+                    
+                    <div class="section-subtitle">2.4 규제 환경</div>
+                    <div style="margin-bottom: 16px; padding: 16px; background: #EFF6FF; border-left: 4px solid #3B82F6; border-radius: 4px;">
+                        <div style="font-size: 14px; color: #1E40AF; line-height: 1.6;">
+                            <strong>대상지 규제 환경 및 개발 가능 범위</strong><br><br>
+대상지는 현행 용도지역 기준 및 지구단위계획 등에 따라 다음과 같은 개발 범위를 갖습니다:<br><br>
+• <strong>법정 기준 개발 규모</strong>: 20세대 (용적률 법정 상한 적용 시)<br>
+• <strong>인센티브 적용 시 최대 규모</strong>: 26세대 (공공기여·건축 완화 적용 시)<br><br>
+
+다만, 개발 규모가 크다고 해서 반드시 유리한 것은 아닙니다. LH는 과도한 밀도 개발에 대해 우려를 표하고 있으며, 
+특히 <strong>주차 확보, 세대당 전용면적 적정성, 단지 내 커뮤니티 시설 확보</strong> 등을 종합적으로 고려하여 
+적정 개발 규모를 판단합니다. 따라서 본 사업에서는 최대 인센티브 적용 규모보다는, 
+<strong>LH가 선호하는 '적정 규모'</strong> 범위 내에서 계획을 수립하는 것이 승인 가능성을 높이는 전략입니다.<br><br>
+
+또한 최근 강화된 <strong>주차장 설치 기준, 장애인 편의시설 의무 설치, 친환경 건축 기준(제로에너지 건축 등)</strong>도 
+준수해야 하므로, 단순한 용적률 계산을 넘어 실제 인허가 시 요구되는 모든 규제 사항을 사전 검토해야 합니다.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 3. 토지 가치 평가 및 입지 분석 (10페이지 분량 확장) -->
+                <div class="section">
+                    <div class="section-title">3. 토지 가치 평가 및 입지 분석</div>
+                    
+                    <div class="section-subtitle">3.1 감정평가 방법론 및 적용 기준</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        <strong>감정평가 방법론 및 적용 기준</strong><br><br>
+본 분석에서는 부동산 감정평가 실무기준에 따라 <strong>거래사례비교법</strong>을 주된 평가 방법으로 활용하였습니다. 
+거래사례비교법은 대상 토지와 유사한 입지·용도·면적의 토지 거래 사례를 수집한 뒤, 
+시점 수정(거래 시점과 평가 시점 간의 시장 변동 반영), 지역 요인 비교(지역별 가격 격차 조정), 
+개별 요인 비교(필지별 특성 차이 반영)를 거쳐 대상 토지의 적정 가격을 산출하는 방식입니다.<br><br>
+
+본 평가에서는 인근 지역에서 최근 10건의 실제 거래 사례를 확보하였으며, 
+이들 사례의 평균 거래 단가, 표준편차, 최고가·최저가 범위 등을 분석하여 대상지의 가격 수준을 도출하였습니다. 
+또한 공시지가, 개별공시지가, 표준지공시지가 등 공적 가격 정보와의 정합성도 교차 검증하였습니다.<br><br>
+
+평가 신뢰도는 <strong>85%</strong>로 산출되었으며, 
+이는 ①거래사례 수량의 충분성, ②사례의 최신성(6개월 이내 거래), ③사례 토지와 대상 토지의 유사성, 
+④평가 방법론의 적정성 등을 종합적으로 고려한 결과입니다. 일반적으로 신뢰도 80% 이상이면 '매우 신뢰 가능', 
+70~79%는 '신뢰 가능', 60~69%는 '보통', 60% 미만은 '추가 검증 필요'로 판단됩니다.<br><br>
+
+다만, 감정평가는 '평가 시점의 시장 상황'을 반영한 것이므로, 향후 부동산 시장 변동, 지역 개발 계획 변경, 
+금리·정책 변화 등에 따라 실제 거래가격이 평가액과 차이가 날 수 있습니다. 
+따라서 이 평가액은 <strong>현재 시점의 합리적 추정치</strong>로 이해해야 하며, 
+실제 거래 시에는 최신 시장 동향을 재확인하는 것이 필요합니다.
+                    </div>
+                    
+                    <div class="section-subtitle">3.2 토지 가치 종합 평가</div>
+                    <div style="margin-bottom: 16px; padding: 12px; background: #EFF6FF; border-left: 4px solid #3B82F6; border-radius: 4px;">
+                        <div style="font-size: 14px; color: #1E40AF; line-height: 1.6;">
+                            총 토지 가치는 약 16.2억원으로, 평당 10,723,014원 수준입니다. 신뢰도 85%로 평가 결과의 신뢰성이 높습니다.
+                        </div>
+                    </div>
+                    <div class="data-card">
+                        <div class="data-row">
+                            <span class="data-label">총 토지 가치</span>
+                            <span class="data-value">1,621,848,717원</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">평당 가격</span>
+                            <span class="data-value">10,723,014원</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">평가 신뢰도</span>
+                            <span class="data-value">85%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="section-subtitle">3.3 입지적 강점 및 접근성 분석</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        <strong>입지적 강점 및 접근성 분석</strong><br><br>
+대상지의 입지는 LH 신축매입임대 사업의 승인 가능성에 매우 큰 영향을 미치는 요인입니다. 
+LH는 입지 평가 시 크게 <strong>①교통 접근성, ②생활편의시설 접근성, ③주거환경 쾌적성</strong>을 중심으로 판단합니다.<br><br>
+
+<strong>1) 교통 접근성</strong><br>
+• 대중교통: 지하철역 또는 주요 버스정류장까지의 거리가 도보 10분 이내(약 700~800m)일 경우 최고점을 받으며, 
+도보 15분 이상 소요될 경우 접근성이 낮은 것으로 평가됩니다. 특히 청년형·신혼부부형 임대주택의 경우 
+출퇴근 편의성이 매우 중요하므로, 지하철 접근성이 부족하면 승인이 어렵습니다.<br>
+• 도로 접근성: 대상지가 면한 도로의 폭, 차량 진출입 가능성, 주변 교통 혼잡도 등도 평가 요소입니다. 
+폭 6m 이상의 도로에 면하는 것이 바람직하며, 막다른 골목길이나 협소한 이면도로만 접한 경우 불리합니다.<br><br>
+
+<strong>2) 생활편의시설 접근성</strong><br>
+• 초등학교, 중학교: 도보 10분 이내 위치 시 유리 (신혼부부형 주택의 경우 특히 중요)<br>
+• 대형마트 또는 전통시장: 도보 15분 또는 차량 5분 이내<br>
+• 의료시설(병원, 보건소): 차량 10분 이내<br>
+• 금융기관, 우체국 등 생활 서비스 시설: 도보 10~15분 이내<br><br>
+
+<strong>3) 주거환경 쾌적성</strong><br>
+• 공원, 녹지, 하천 등 자연환경 인접 여부<br>
+• 소음·진동 유발 시설(공장, 고속도로, 철도) 거리<br>
+• 유해시설(폐기물처리장, 혐오시설) 부재<br><br>
+
+대상지의 경우, 이러한 입지 요소들을 종합적으로 고려할 때 LH 심사 기준의 <strong>입지 적합성 항목에서 
+중위권 이상의 점수를 받을 것</strong>으로 예상되며, 특히 대중교통 접근성 및 생활편의시설 밀집도가 
+사업 승인 가능성에 긍정적 요인으로 작용할 것으로 판단됩니다.
+                    </div>
+                    
+                    <div class="section-subtitle">3.4 용도지역 특성이 토지가치에 미치는 영향</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        <strong>용도지역 특성이 토지가치에 미치는 영향</strong><br><br>
+용도지역 지정은 토지 가격 형성에 직접적인 영향을 미칩니다. 동일한 입지라도 용도지역에 따라 
+건폐율·용적률, 건축 가능 용도, 층수 제한 등이 달라지므로, 개발 잠재력이 크게 차이 나기 때문입니다.<br><br>
+
+LH 신축매입임대 사업에 적합한 용도지역은 주로 <strong>제2종 일반주거지역, 제3종 일반주거지역, 준주거지역</strong>입니다. 
+이들 지역은 공동주택 건축이 가능하며, 적정 수준의 용적률(150~300%)을 확보할 수 있어 
+중층 규모의 공공임대주택 개발에 유리합니다.<br><br>
+
+반면, 제1종 일반주거지역(용적률 100~150%)은 개발 밀도가 낮아 사업성이 떨어지며, 
+상업지역(용적률 400% 이상)은 토지가격이 과도하게 높아 LH 매입가 기준을 초과할 가능성이 큽니다.<br><br>
+
+대상지의 현재 용도지역은 <strong>LH 사업에 적합한 범위</strong>에 속하는 것으로 판단되며, 
+특히 용적률 인센티브 제도(예: 주차장 부설 기준 완화, 공공기여 시 용적률 상향 등)를 활용할 경우 
+추가적인 개발 여력을 확보할 수 있을 것으로 분석됩니다.
+                    </div>
+                    
+                    <div class="section-subtitle">3.5 시장 거래 사례 기반 비교 분석</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        <strong>시장 거래 사례 기반 비교 분석</strong><br><br>
+본 분석에서는 대상지 인근(반경 1~2km 이내)에서 최근 2년간 거래된 10건의 토지 거래 사례를 확보하였습니다. 
+이들 사례의 평균 거래 단가는 평당 약 10,186,863원~11,259,164원 수준이며, 
+대상지의 평가 단가인 <strong>평당 10,723,014원</strong>은 이 범위의 중위값에 해당합니다.<br><br>
+
+다만, 거래사례 중 일부는 대상지와 다음과 같은 차이점이 있어 가격 조정을 수행하였습니다:<br>
+• 도로 접면 상황 차이 (대로변 vs 이면도로)<br>
+• 필지 형상 및 면적 차이 (정방형 vs 부정형, 소필지 vs 대필지)<br>
+• 거래 시점 차이 (시장 상승기 vs 보합기)<br>
+• 개별 요인 (일조권, 조망권, 경사도 등)<br><br>
+
+이러한 조정을 거쳐 산출된 대상지의 감정평가액은 <strong>총 1,621,848,717원 (평당 10,723,014원)</strong>이며, 
+이는 현재 시장 수준에서 합리적인 가격 범위로 판단됩니다.
+                    </div>
+                    
+                    <div class="section-subtitle">3.6 평가 신뢰도의 의미와 검증 근거</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #EFF6FF; border-left: 4px solid #3B82F6; border-radius: 4px;">
+                        <div style="font-size: 14px; color: #1E40AF; line-height: 1.6;">
+                            <strong>평가 신뢰도의 의미와 검증 근거</strong><br><br>
+본 평가의 신뢰도는 <strong>85%</strong>로 산출되었습니다. 
+이는 단순히 '정확할 확률'을 의미하는 것이 아니라, <strong>평가에 사용된 데이터와 방법론의 신뢰성 수준</strong>을 
+정량화한 지표입니다. 신뢰도 산정 시 고려되는 주요 요소는 다음과 같습니다:<br><br>
+
+<strong>1) 거래사례의 수량 및 적시성</strong><br>
+• 사례 수가 많을수록(10건 이상), 최근 거래일수록(6개월 이내) 신뢰도 상승<br>
+• 오래된 사례(2년 이상)는 시장 변동을 충분히 반영하지 못할 수 있어 신뢰도 하락 요인<br><br>
+
+<strong>2) 사례와 대상 토지의 유사성</strong><br>
+• 용도지역, 도로 조건, 면적, 형상 등이 유사할수록 신뢰도 상승<br>
+• 대상지가 특수한 조건(예: 경사지, 부정형 필지)을 가질 경우 유사 사례 확보가 어려워 신뢰도 하락 가능<br><br>
+
+<strong>3) 평가 방법론의 적정성</strong><br>
+• 거래사례비교법, 원가법, 수익환원법 등 복수의 방법을 교차 검증한 경우 신뢰도 상승<br>
+• 단일 방법만 적용 시 상대적으로 신뢰도 낮음<br><br>
+
+<strong>4) 공적 가격과의 정합성</strong><br>
+• 공시지가, 표준지공시지가 등 공적 가격 정보와 평가액이 큰 괴리 없이 일관성을 보일 경우 신뢰도 상승<br><br>
+
+본 평가의 신뢰도 85%는 일반적인 감정평가 실무에서 '<strong>높은 신뢰 수준</strong>'에 해당하며, 
+LH를 포함한 공공기관의 의사결정 자료로 활용하기에 충분한 수준으로 판단됩니다. 
+다만, 향후 실제 거래 또는 LH 매입 협의 시에는 최신 시장 동향을 재반영한 재평가를 권장합니다.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 3. 개발 규모 -->
+                <div class="section">
+                    <div class="section-title">3. 개발 규모</div>
+                    <div class="data-card">
+                        <div class="data-row">
+                            <span class="data-label">법정 용적률 기준</span>
+                            <span class="data-value">20세대</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">인센티브 용적률 기준</span>
+                            <span class="data-value">26세대</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">주차 대수</span>
+                            <span class="data-value">20대</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 4. 주택 유형 -->
+                <div class="section">
+                    <div class="section-title">4. 주택 유형 (LH 선호유형 분석)</div>
+                    <div class="data-card">
+                        <div class="data-row">
+                            <span class="data-label">추천 유형</span>
+                            <span class="data-value">청년형</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">적합도 점수</span>
+                            <span class="data-value">85점</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 5. 사업성 및 재무 구조 분석 (10페이지 분량 확장) -->
+                <div class="section">
+                    <div class="section-title">5. 사업성 및 재무 구조 분석</div>
+                    
+                    <div class="section-subtitle">5.1 LH 신축매입임대 사업의 수익 구조</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        <strong>LH 신축매입임대 사업의 수익 구조</strong><br><br>
+LH 신축매입임대 사업의 수익 모델은 일반적인 부동산 개발 사업과 다릅니다. 
+일반 분양 사업은 '분양가 - 사업비 = 수익'의 구조이지만, 
+LH 매입 사업은 <strong>'LH 매입가 - 사업비 = 수익'</strong>의 구조로, 
+수익성이 LH가 제시하는 표준 매입가 기준에 의해 결정됩니다.<br><br>
+
+<strong>1) 수익 구조 (Revenue Model)</strong><br>
+• 매출액 = LH 매입가 × 세대수<br>
+• LH 매입가는 '토지비 + 건축비 + 적정 이윤'으로 구성<br>
+• 적정 이윤율은 일반적으로 총 사업비의 8~12% 수준 (지역·시기에 따라 변동)<br><br>
+
+본 사업의 경우, 계획 세대수 20세대 기준으로 
+LH 표준 매입가를 적용하면 총 매출액은 약 1,982,500,000억원 내외로 추정되며, 
+이는 지역별 매입가 기준 및 주택 유형(청년형/신혼부부형 등)에 따라 변동될 수 있습니다.<br><br>
+
+<strong>2) 사업비 구조 (Cost Breakdown)</strong><br>
+• <strong>토지비</strong>: 전체 사업비의 약 30~40% (본 사업: 약 1,621,848,717원)<br>
+• <strong>건축비</strong>: 전체 사업비의 약 50~60% (평당 건축비 × 연면적)<br>
+• <strong>부대비용</strong>: 설계비, 인허가비, 금융비용(이자), 분담금, 판매관리비 등 (약 10~15%)<br><br>
+
+특히 최근 건축 자재 가격 상승 및 인건비 증가로 인해 <strong>건축비 비중이 상승</strong>하고 있으며, 
+이는 사업 수익성에 직접적인 압박 요인으로 작용하고 있습니다. 
+따라서 LH 매입가 산정 시 이러한 원가 상승분이 충분히 반영되는지 여부가 사업 성패의 핵심입니다.<br><br>
+
+<strong>3) 수익성 지표 해석</strong><br>
+• <strong>NPV (순현재가치): 793,000,000원</strong><br>
+  NPV는 미래 현금흐름을 현재 가치로 환산한 금액입니다. NPV > 0이면 '투자 가치 있음'으로 판단되며, 
+  본 사업의 NPV 793,000,000원은 <strong>양호한 수준</strong>으로 평가됩니다.<br><br>
+
+• <strong>IRR (내부수익률): 12.8%</strong><br>
+  IRR은 사업의 연평균 수익률을 의미합니다. 일반적으로 부동산 개발 사업의 IRR은 10~15% 수준이 목표이며, 
+  본 사업의 IRR 12.8%는 <strong>우수한 수준</strong>입니다.<br><br>
+
+• <strong>ROI (투자수익률): 15.5%</strong><br>
+  ROI는 투입 자본 대비 수익의 비율입니다. ROI 15.5%는 
+  투자금 대비 15.5%의 수익을 얻을 수 있음을 의미하며, 
+  이는 <strong>매우 우수한 수준</strong>입니다.<br><br>
+
+• <strong>사업성 등급: A</strong><br>
+  종합 평가 결과, 본 사업은 <strong>A등급</strong>으로 분류되며, 
+  이는 최상위 수익성을 의미합니다.
+                    </div>
+                    
+                    <div class="section-subtitle">5.2 종합 사업성 평가</div>
+                    <div style="margin-bottom: 16px; padding: 12px; background: #ECFDF5; border-left: 4px solid #10B981; border-radius: 4px;">
+                        <div style="font-size: 14px; color: #065F46; line-height: 1.6;">
+                            NPV 7.9억원, IRR 12.8%, ROI 15.5%로 우수한 사업성을 보입니다. 투자 가치가 높습니다.
+                        </div>
+                    </div>
+                    <div class="data-card">
+                        <div class="data-row">
+                            <span class="data-label">순현재가치 (NPV)</span>
+                            <span class="data-value">793,000,000원</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">내부수익률 (IRR)</span>
+                            <span class="data-value">12.8%</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">투자수익률 (ROI)</span>
+                            <span class="data-value">15.5%</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">사업성 등급</span>
+                            <span class="data-value">A</span>
+                        </div>
+                    </div>
+                    
+                    <div class="section-subtitle">5.3 사업성 분석의 전제와 시나리오</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        <strong>사업성 분석의 전제와 시나리오</strong><br><br>
+본 사업성 분석은 다음과 같은 전제 조건 하에 수행되었습니다:<br><br>
+
+<strong>1) 전제 조건</strong><br>
+• 토지 매입 또는 소유권 확보: 1,621,848,717원 (평가액 기준)<br>
+• 건축 규모: 법정 기준 20세대 또는 인센티브 적용 26세대<br>
+• LH 매입가: 지역별 표준 매입가 기준 적용<br>
+• 사업 기간: 인허가 6개월 + 건축 18개월 + 매입 절차 3개월 = 총 27개월<br>
+• 금융비용: 연 5.5% (시중 사업자금 대출 기준)<br><br>
+
+<strong>2) 낙관적 시나리오 (Best Case)</strong><br>
+• 조건: LH 매입가 상향 협의 성공, 건축비 절감, 인허가 조기 완료<br>
+• 예상 결과: NPV 약 951,600,000원, IRR 14.7%, ROI 17.8%<br>
+• 확률: 약 20~30%<br><br>
+
+<strong>3) 기본 시나리오 (Base Case)</strong><br>
+• 조건: 현재 시장 상황 유지, 표준 매입가 적용, 정상적 사업 진행<br>
+• 예상 결과: NPV 793,000,000원, IRR 12.8%, ROI 15.5%<br>
+• 확률: 약 50~60%<br><br>
+
+<strong>4) 보수적 시나리오 (Worst Case)</strong><br>
+• 조건: 건축비 10% 추가 상승, 인허가 지연 6개월, LH 매입가 협상 난항<br>
+• 예상 결과: NPV 약 555,100,000원, IRR 10.2%, ROI 12.4%<br>
+• 확률: 약 20~30%<br><br>
+
+<strong>종합 판단</strong>: 기본 시나리오 기준으로 <strong>사업성이 확보</strong>되어 있으며, 
+보수적 시나리오에서도 최소한의 수익성이 유지되는 것으로 분석됩니다. 
+다만, 건축비 상승 리스크 및 LH 매입가 변동 가능성에 대비한 <strong>비용 관리 및 협상 전략</strong>이 필요합니다.
+                    </div>
+                    
+                    <div class="section-subtitle">5.4 공공 사업과 민간 사업의 수익성 비교</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        <strong>공공 사업과 민간 사업의 수익성 비교</strong><br><br>
+LH 신축매입임대는 '공공 사업'이지만, 사업 주체는 민간(토지소유자 또는 건설사)입니다. 
+따라서 <strong>'공공의 안정성 + 민간의 수익성'</strong>을 동시에 추구하는 하이브리드 모델입니다.<br><br>
+
+<strong>공공 사업의 장점</strong><br>
+• LH가 준공 후 100% 매입 → 분양 리스크 제로<br>
+• 사전 승인 시 매입가 확정 → 수익 예측 가능<br>
+• 대출 심사 시 LH 매입 확약서로 신용도 상승<br><br>
+
+<strong>공공 사업의 단점</strong><br>
+• LH 매입가는 시장가 대비 보수적 → 초과 수익 제한적<br>
+• LH 심사 기준 엄격 → 승인 절차 복잡<br>
+• 설계·시공 기준 준수 의무 → 비용 증가 가능<br><br>
+
+<strong>민간 분양 사업과 비교</strong><br>
+• 민간 분양: 고위험·고수익 (IRR 15~25%, 분양 실패 시 손실 위험)<br>
+• LH 매입: 저위험·중수익 (IRR 10~15%, 분양 리스크 없음)<br><br>
+
+따라서 <strong>안정적 현금흐름과 예측 가능한 수익을 원하는 사업자</strong>에게 LH 사업은 매력적인 선택지이며, 
+특히 토지를 이미 소유하고 있는 지주(地主) 입장에서는 토지 활용도를 극대화하면서도 
+리스크를 최소화할 수 있는 최적의 방안으로 평가됩니다.
+                    </div>
+                    
+                    <div class="section-subtitle">5.5 수익성을 결정하는 핵심 요인</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #EFF6FF; border-left: 4px solid #3B82F6; border-radius: 4px;">
+                        <div style="font-size: 14px; color: #1E40AF; line-height: 1.6;">
+                            <strong>수익성을 결정하는 핵심 요인</strong><br><br>
+본 사업의 수익성은 다음 5가지 핵심 요인에 의해 결정됩니다:<br><br>
+
+<strong>1) LH 매입가 수준</strong> (중요도: ★★★★★)<br>
+• LH 표준 매입가는 지역별·유형별로 차등 적용<br>
+• 수도권 > 광역시 > 지방 순으로 매입가 높음<br>
+• 신혼부부형 > 청년형 > 고령자형 순으로 매입가 높은 경향<br>
+• <strong>협상 여지</strong>: 토지 입지가 우수하거나 설계 품질이 높을 경우 매입가 상향 협의 가능<br><br>
+
+<strong>2) 건축비 관리</strong> (중요도: ★★★★★)<br>
+• 최근 건축비 상승률: 연 5~8% (자재비·인건비 동반 상승)<br>
+• 평당 건축비 목표: 중층 규모 기준 약 600~700만원 (지역에 따라 변동)<br>
+• <strong>절감 방안</strong>: 표준 설계 활용, 자재 공동 구매, 시공사 경쟁 입찰 등<br><br>
+
+<strong>3) 금융비용 (이자)</strong> (중요도: ★★★★)<br>
+• 사업 기간 2년 기준, 연 5.5% 금리 적용 시 총 사업비의 약 8~10%가 이자 비용<br>
+• 금리 1% 상승 시 수익률 약 2~3%p 하락<br>
+• <strong>대응책</strong>: 자기자본 비율 확대, 단기 대출 활용, LH 중도금 지급 협의 등<br><br>
+
+<strong>4) 인허가 기간</strong> (중요도: ★★★)<br>
+• 인허가 지연 6개월 시 금융비용 약 2~3% 증가<br>
+• 준공 지연 시 LH 매입 일정 조율 필요 (최악의 경우 매입가 재협상)<br>
+• <strong>대응책</strong>: 사전 협의, 인허가 대행 전문가 활용<br><br>
+
+<strong>5) 세대수 최적화</strong> (중요도: ★★★★)<br>
+• 세대수 ↑ → 총 매출 ↑ BUT 평당 건축비 ↓ (규모의 경제)<br>
+• 다만, 과도한 세대수는 LH 심사에서 부정적 요인 가능<br>
+• <strong>최적 전략</strong>: LH가 선호하는 범위 내에서 최대 규모 확보<br><br>
+
+종합적으로, 본 사업은 <strong>A등급</strong>의 사업성을 확보하고 있으며, 
+특히 LH 매입가 수준과 토지 입지가 우수하여 
+<strong>건축비 관리 및 금융비용 절감</strong>에 집중할 경우 수익성을 더욱 개선할 수 있을 것으로 판단됩니다.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 6. 리스크 요인 및 대응 전략 (4페이지 분량) -->
+                <div class="section">
+                    <div class="section-title">6. 리스크 요인 및 대응 전략</div>
+                    
+                    <div class="section-subtitle">6.1 구조적 리스크 요인</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 4px;">
+                        <div style="font-size: 14px; color: #991B1B; line-height: 1.6;">
+                            <strong>구조적 리스크 요인</strong><br><br>
+LH 신축매입임대 사업은 안정적인 사업 모델이지만, 다음과 같은 구조적 리스크가 존재합니다:<br><br>
+
+<strong>1) LH 승인 불확실성 리스크</strong><br>
+• 리스크 내용: 사업 계획 수립 후 LH 심사에서 승인 거부 가능<br>
+• 발생 확률: 약 10~20% (입지·수요·가격 부적합 사유)<br>
+• 영향도: <strong>치명적</strong> (승인 불가 시 사업 전면 중단)<br>
+• 대응 방안: 사전 협의 강화, 컨설팅 업체 활용, 대안 사업 검토<br><br>
+
+<strong>2) 건축비 상승 리스크</strong><br>
+• 리스크 내용: 자재비·인건비 상승으로 사업비 증가<br>
+• 발생 확률: 약 60~70% (최근 추세)<br>
+• 영향도: <strong>높음</strong> (건축비 10% 상승 시 수익률 3~5%p 하락)<br>
+• 대응 방안: 사전 견적 정밀화, 가격 헷지 계약, 비용 절감 설계<br><br>
+
+<strong>3) 인허가 지연 리스크</strong><br>
+• 리스크 내용: 건축허가·착공 신고 지연으로 사업 일정 차질<br>
+• 발생 확률: 약 30~40% (지자체 행정 지연)<br>
+• 영향도: <strong>중간</strong> (지연 6개월 시 금융비용 2~3% 증가)<br>
+• 대응 방안: 인허가 대행 활용, 지자체 사전 협의<br><br>
+
+<strong>4) 금리 상승 리스크</strong><br>
+• 리스크 내용: 사업자금 대출 금리 상승<br>
+• 발생 확률: 약 40~50% (금융시장 변동성)<br>
+• 영향도: <strong>중간</strong> (금리 1%p 상승 시 수익률 2%p 하락)<br>
+• 대응 방안: 고정금리 대출, 자기자본 비율 확대<br><br>
+
+<strong>5) LH 매입가 변동 리스크</strong><br>
+• 리스크 내용: 준공 후 LH 매입가 재협상 또는 하향 조정<br>
+• 발생 확률: 약 10~15% (드물지만 발생 사례 존재)<br>
+• 영향도: <strong>높음</strong> (매입가 5% 하락 시 수익 소멸 가능)<br>
+• 대응 방안: 매입가 확약서 사전 확보, 법적 계약 명확화<br><br>
+                        </div>
+                    </div>
+                    
+                    <div class="section-subtitle">6.2 정책 변동 리스크</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 4px;">
+                        <div style="font-size: 14px; color: #991B1B; line-height: 1.6;">
+                            <strong>정책 변동 리스크</strong><br><br>
+<strong>1) LH 공급 계획 변경 리스크</strong><br>
+• 정부 주거 정책 변화에 따라 LH 신축매입임대 물량 축소 가능<br>
+• 특히 '직접 건설 공급' 비중 확대 시 민간 매입 물량 감소 우려<br>
+• 대응: LH 연간 공급 계획 모니터링, 지역별 수요 파악<br><br>
+
+<strong>2) 건축 규제 강화 리스크</strong><br>
+• 제로에너지 건축 의무화, 주차장 기준 강화 등으로 비용 증가<br>
+• 환경 규제(미세먼지 저감, 탄소중립) 준수 의무 확대<br>
+• 대응: 최신 규제 반영한 설계, 친환경 인증 확보<br><br>
+
+<strong>3) 지역별 공급 과잉 리스크</strong><br>
+• 특정 지역에 LH 임대주택 집중 공급 시 신규 승인 중단 가능<br>
+• 대응: 지역별 기존 공급 물량 사전 조사, 대체 지역 검토<br><br>
+                        </div>
+                    </div>
+                    
+                    <div class="section-subtitle">6.3 종합 리스크 대응 전략</div>
+                    <div style="margin-bottom: 20px; padding: 16px; background: #ECFDF5; border-left: 4px solid #10B981; border-radius: 4px;">
+                        <div style="font-size: 14px; color: #065F46; line-height: 1.6;">
+                            <strong>종합 리스크 대응 전략</strong><br><br>
+본 사업의 리스크 수준은 <strong>낮음</strong>으로 평가되며, 
+다음과 같은 단계별 대응 전략을 권장합니다:<br><br>
+
+<strong>Phase 1: 사전 검증 단계 (현재)</strong><br>
+✅ LH 사전 협의 진행 (매입 의향, 예상 매입가 확인)<br>
+✅ 건축비 정밀 견적 (최소 3개 시공사 견적 비교)<br>
+✅ 인허가 가능성 검토 (지자체 건축과 사전 상담)<br>
+✅ 금융 조달 계획 수립 (대출 한도, 금리 조건 확인)<br><br>
+
+<strong>Phase 2: 사업 추진 단계</strong><br>
+✅ LH 승인 신청 및 매입가 확약서 확보<br>
+✅ 설계 완료 및 건축허가 신청<br>
+✅ 시공사 선정 및 공사 계약 (건축비 상한 명시)<br>
+✅ 금융기관 대출 실행 (가급적 고정금리)<br><br>
+
+<strong>Phase 3: 시공 단계</strong><br>
+✅ 공정 관리 및 비용 통제 (월별 집행 내역 점검)<br>
+✅ LH 중간 점검 대응 (설계 변경 최소화)<br>
+✅ 준공 일정 준수 (지연 시 LH 협의)<br><br>
+
+<strong>Phase 4: 매입 단계</strong><br>
+✅ LH 최종 검수 및 하자 보수<br>
+✅ 매입 대금 수령 및 대출 상환<br>
+✅ 수익 정산 및 세무 처리<br><br>
+
+<strong>최종 권고사항</strong>: 본 사업은 <strong>추진 권장</strong>로 판단되며, 
+특히 <strong>LH 사전 협의 및 건축비 관리</strong>에 집중할 것을 권장합니다.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            
+    <div class="report-footer">
+        <div class="qa-status-title">📊 보고서 품질 상태 (QA Status)</div>
+        <div class="qa-status-grid" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="qa-status-item">
+                <div class="qa-status-label">Data Binding</div>
+                <div class="qa-status-value">✅ PASS</div>
+            </div>
+            <div class="qa-status-item">
+                <div class="qa-status-label">Content Completeness</div>
+                <div class="qa-status-value">✅ PASS</div>
+            </div>
+            <div class="qa-status-item">
+                <div class="qa-status-label">Narrative Consistency</div>
+                <div class="qa-status-value">✅ PASS</div>
+            </div>
+            <div class="qa-status-item">
+                <div class="qa-status-label">HTML-PDF Parity</div>
+                <div class="qa-status-value">✅ PASS (HTML 완료)</div>
+            </div>
+        </div>
+        <div style="margin-top: 16px; padding: 12px; background: #F3F4F6; border-radius: 6px; text-align: center;">
+            <div style="font-size: 13px; font-weight: 600; color: #6B7280; margin-bottom: 4px;">최종 제출 가능 여부</div>
+            <div style="font-size: 15px; font-weight: 700;">✅ 제출 가능</div>
+        </div>
+    </div>
+    
+        </div>
+    </body>
+    </html>
+    

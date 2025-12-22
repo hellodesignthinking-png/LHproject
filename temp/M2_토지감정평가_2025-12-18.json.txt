@@ -1,0 +1,130 @@
+{
+  "appraisal": {
+    "land_value": 1621848717.2749999,
+    "unit_price_sqm": 3243697.43455,
+    "unit_price_pyeong": 10723014.97913539
+  },
+  "official_price": {
+    "total": 500000000,
+    "per_sqm": 1000000
+  },
+  "transactions": {
+    "count": 10,
+    "avg_price_sqm": 3243697.43455,
+    "samples": [
+      {
+        "address": "서울 마포구 논현동 482-54",
+        "date": "2024-01-23",
+        "price_sqm": 3400805,
+        "adjusted_price_sqm": 3314084.4725,
+        "distance_km": 0.33
+      },
+      {
+        "address": "서울 마포구 청담동 479",
+        "date": "2024-11-16",
+        "price_sqm": 3451825,
+        "adjusted_price_sqm": 3313752,
+        "distance_km": 0.64
+      },
+      {
+        "address": "서울 마포구 논현동 480-78",
+        "date": "2025-08-30",
+        "price_sqm": 3964565,
+        "adjusted_price_sqm": 3922937.0675000004,
+        "distance_km": 0.71
+      },
+      {
+        "address": "서울 마포구 대치동 471-77",
+        "date": "2024-11-10",
+        "price_sqm": 3456053,
+        "adjusted_price_sqm": 3297074.562,
+        "distance_km": 1.23
+      },
+      {
+        "address": "서울 마포구 역삼동 488-67",
+        "date": "2024-02-02",
+        "price_sqm": 3040949,
+        "adjusted_price_sqm": 2931474.836,
+        "distance_km": 1.23
+      },
+      {
+        "address": "서울 마포구 역삼동 457-40",
+        "date": "2025-10-03",
+        "price_sqm": 3690958,
+        "adjusted_price_sqm": 3613447.8819999998,
+        "distance_km": 1.52
+      },
+      {
+        "address": "서울 마포구 대치동 495-87",
+        "date": "2025-02-10",
+        "price_sqm": 3099443,
+        "adjusted_price_sqm": 3011108.8745,
+        "distance_km": 1.6
+      },
+      {
+        "address": "서울 마포구 논현동 495-28",
+        "date": "2025-06-08",
+        "price_sqm": 3243366,
+        "adjusted_price_sqm": 3150930.069,
+        "distance_km": 1.8
+      },
+      {
+        "address": "서울 마포구 청담동 3-5",
+        "date": "2024-09-12",
+        "price_sqm": 3060461,
+        "adjusted_price_sqm": 2919679.7939999998,
+        "distance_km": 1.89
+      },
+      {
+        "address": "서울 마포구 신사동 450-6",
+        "date": "2024-03-05",
+        "price_sqm": 3073117,
+        "adjusted_price_sqm": 2962484.7879999997,
+        "distance_km": 1.94
+      }
+    ]
+  },
+  "premium": {
+    "scores": {
+      "road": 4,
+      "terrain": 10,
+      "location": 7,
+      "accessibility": 7
+    },
+    "premiums": {
+      "distance": 0.05,
+      "time": 0.03,
+      "size": 0.02,
+      "zone": 0.05,
+      "total_rate": 15.000000000000002
+    }
+  },
+  "confidence": {
+    "scores": {
+      "sample_count": 0.23399999999999999,
+      "price_variance": 0.23399999999999999,
+      "distance": 0.195,
+      "recency": 0.11699999999999999
+    },
+    "confidence": {
+      "score": 0.78,
+      "level": "HIGH"
+    }
+  },
+  "price_range": {
+    "low": 1459839897,
+    "avg": 1621848717.2749999,
+    "high": 1961468533.7500002
+  },
+  "metadata": {
+    "date": "2025-12-18",
+    "method": "거래사례비교법 (4-Factor Enhanced)",
+    "appraiser": "ZeroSite AI Engine v9.1 (Refactored M2)",
+    "valuation_base_year": 2025,
+    "transaction_data_year": 2025
+  },
+  "warnings": {
+    "has_warnings": false,
+    "items": []
+  }
+}
