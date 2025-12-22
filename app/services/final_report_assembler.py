@@ -254,6 +254,9 @@ class FinalReportData:
         self.context_id = context_id
         self.canonical = canonical_data
         
+        # ✅ v4.3: canonical_summary 추출
+        self.canonical_summary = canonical_data.get('canonical_summary', {})
+        
         # M2-M6 Summary 파싱
         self.m2: Optional[M2Summary] = self._parse_m2()
         self.m3: Optional[M3Summary] = self._parse_m3()
@@ -264,7 +267,8 @@ class FinalReportData:
     def _parse_m2(self) -> Optional[M2Summary]:
         """M2 토지감정평가 데이터 추출"""
         try:
-            m2_data = self.canonical.get("m2_result", {})
+            # ✅ v4.3: canonical_summary에서 M2 추출
+            m2_data = self.canonical_summary.get("M2", {})
             if not m2_data:
                 return None
             summary = m2_data.get("summary", {})
@@ -275,7 +279,8 @@ class FinalReportData:
     def _parse_m3(self) -> Optional[M3Summary]:
         """M3 LH 선호유형 데이터 추출"""
         try:
-            m3_data = self.canonical.get("m3_result", {})
+            # ✅ v4.3: canonical_summary에서 M3 추출
+            m3_data = self.canonical_summary.get("M3", {})
             if not m3_data:
                 return None
             summary = m3_data.get("summary", {})
@@ -286,7 +291,8 @@ class FinalReportData:
     def _parse_m4(self) -> Optional[M4Summary]:
         """M4 건축규모 데이터 추출"""
         try:
-            m4_data = self.canonical.get("m4_result", {})
+            # ✅ v4.3: canonical_summary에서 M4 추출
+            m4_data = self.canonical_summary.get("M4", {})
             if not m4_data:
                 return None
             summary = m4_data.get("summary", {})
@@ -297,7 +303,8 @@ class FinalReportData:
     def _parse_m5(self) -> Optional[M5Summary]:
         """M5 사업성분석 데이터 추출"""
         try:
-            m5_data = self.canonical.get("m5_result", {})
+            # ✅ v4.3: canonical_summary에서 M5 추출
+            m5_data = self.canonical_summary.get("M5", {})
             if not m5_data:
                 return None
             summary = m5_data.get("summary", {})
@@ -308,7 +315,8 @@ class FinalReportData:
     def _parse_m6(self) -> Optional[M6Summary]:
         """M6 LH 심사예측 데이터 추출"""
         try:
-            m6_data = self.canonical.get("m6_result", {})
+            # ✅ v4.3: canonical_summary에서 M6 추출
+            m6_data = self.canonical_summary.get("M6", {})
             if not m6_data:
                 return None
             summary = m6_data.get("summary", {})
