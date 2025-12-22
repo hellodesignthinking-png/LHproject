@@ -19,6 +19,8 @@ from ..report_type_configs import REPORT_TYPE_CONFIGS
 
 # [Phase 3.10] Hard-Fail KPI Binding
 from ..kpi_hard_fail_enforcement import enforce_kpi_binding, KPIBindingError, FinalReportGenerationError
+from app.services.final_report_assembly.kpi_extraction_vlast import extract_module_kpis
+
 
 logger = logging.getLogger(__name__)
 
@@ -405,7 +407,7 @@ class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
                 continue
             
             # Use the enhanced extractor
-            kpis = self._extract_kpi_from_module_html(module_id, html)
+            kpis = extract_module_kpis(html, module_id)
             modules_data[module_id] = kpis
         
         return modules_data

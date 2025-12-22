@@ -191,6 +191,7 @@ def generate_all_final_reports(context_id: str, module_htmls: dict) -> dict:
             assembler = AssemblerClass(context_id)
             
             # Mock load_module_html to use our pre-generated HTML
+            # BUT DON'T bypass _extract_module_data - let it use vLAST extraction
             def mock_load_module_html(module_key):
                 html = module_htmls.get(module_key, "<div>Module not found</div>")
                 assembler._module_html_cache[module_key] = html
@@ -198,7 +199,7 @@ def generate_all_final_reports(context_id: str, module_htmls: dict) -> dict:
             
             assembler.load_module_html = mock_load_module_html
             
-            # Generate report
+            # Generate report (this will call _extract_module_data internally)
             html = assembler.assemble()
             
             if html and len(html) > 1000:
@@ -217,7 +218,7 @@ def generate_all_final_reports(context_id: str, module_htmls: dict) -> dict:
                     "html": html
                 }
             else:
-                print(f"  {name:30} | ❌ FAIL | Too small")
+                print(f"  {name:30} | ❌ FAIL | Too small ({len(html) if html else 0} bytes)")
                 results[report_id] = {
                     "success": False,
                     "size": len(html) if html else 0,
@@ -226,6 +227,8 @@ def generate_all_final_reports(context_id: str, module_htmls: dict) -> dict:
                 
         except Exception as e:
             print(f"  {name:30} | ❌ ERROR | {str(e)[:50]}")
+            import traceback
+            traceback.print_exc()
             results[report_id] = {
                 "success": False,
                 "error": str(e)[:200]
