@@ -15,10 +15,16 @@ import re
 
 from ..base_assembler import BaseFinalReportAssembler, get_report_brand_class
 from ..narrative_generator import NarrativeGeneratorFactory
-from ..report_type_configs import REPORT_TYPE_CONFIGS, get_mandatory_kpi
+from ..report_type_configs import REPORT_TYPE_CONFIGS, get_mandatory_kpi, get_critical_kpi
 
-# [Phase 3.10 Final Lock] KPI Extractor
-from ..kpi_extractor import KPIExtractor, validate_mandatory_kpi, log_kpi_pipeline, FinalReportAssemblyError, validate_mandatory_kpi, log_kpi_pipeline, FinalReportAssemblyError
+# [Phase 3.10 Final Lock + vPOST-FINAL] KPI Extractor with operational safety
+from ..kpi_extractor import (
+    KPIExtractor, 
+    validate_mandatory_kpi, 
+    validate_kpi_with_safe_gate,
+    log_kpi_pipeline, 
+    FinalReportAssemblyError
+)
 
 # [Phase 3.10] Hard-Fail KPI Binding
 
@@ -49,30 +55,96 @@ class LHTechnicalAssembler(BaseFinalReportAssembler):
         m4_html = self.sanitize_module_html(m4_html_raw, "M4")
         m6_html = self.sanitize_module_html(m6_html_raw, "M6")
                 
-        # [Phase 3.10 Final Lock] Extract KPI using new pipeline
+        # [Phase 3.10 Final Lock + vPOST-FINAL] Extract KPI using SAFE-GATE
         mandatory_kpi = get_mandatory_kpi(self.report_type)
+        critical_kpi = get_critical_kpi(self.report_type)
         modules_data = self._extract_module_data(
             {"M3": m3_html, "M4": m4_html, "M6": m6_html},
             mandatory_kpi
         )
         
-        # [Phase 3.10 Final Lock] HARD-FAIL: Validate mandatory KPI
-        missing_kpi = validate_mandatory_kpi(self.report_type, modules_data, {self.report_type: mandatory_kpi})
-        if missing_kpi:
-            error_msg = f"[BLOCKED] Missing required KPI: {', '.join(missing_kpi)}"
+        # [vPOST-FINAL] SAFE-GATE Validation: Critical vs Soft failures
+        validation_result = validate_kpi_with_safe_gate(
+            self.report_type, 
+            modules_data, 
+            {self.report_type: mandatory_kpi},
+            {self.report_type: critical_kpi}
+        )
+        
+        critical_missing = validation_result["critical_missing"]
+        soft_missing = validation_result["soft_missing"]
+        
+        # Hard-Fail ONLY if CRITICAL KPI is missing
+        if critical_missing:
+            error_msg = f"[BLOCKED] Missing CRITICAL KPI: {', '.join(critical_missing)}"
             logger.error(f"[{self.report_type}] {error_msg}")
             return {
-                "html": f"<html><body><h1>❌ Report Generation Blocked</h1><pre>{error_msg}</pre></body></html>",
+                "html": f"<html><body><h1>🚫 Report Generation Blocked</h1><pre>{error_msg}</pre><p>These KPIs are critical for decision-making and must be present.</p></body></html>",
                 "qa_result": {
                     "status": "FAIL",
                     "errors": [error_msg],
-                    "warnings": [],
+                    "warnings": [f"Soft KPI missing: {', '.join(soft_missing)}"] if soft_missing else [],
                     "blocking": True,
-                    "reason": "Hard-Fail: Required KPI missing"
+                    "reason": "Hard-Fail: Critical KPI missing"
                 }
             }
         
-    
+        # Generate data completeness panel if soft KPIs are missing
+        data_completeness_panel = self.generate_data_completeness_panel(soft_missing)
+        
+        # Generate KPI summary from modules_data
+        kpi_summary = self.generate_kpi_summary_box(modules_data, self.report_type)
+        
+        exec_summary = self.narrative.executive_summary(modules_data)
+        
+        # Generate module transitions
+        transition_m3_m4 = self.generate_module_transition("M3", "M4", self.report_type)
+        transition_m4_m6 = self.generate_module_transition("M4", "M6", self.report_type)
+        
+        final_judgment = self.narrative.final_judgment(modules_data)
+        
+        # Generate Decision Block
+        judgment_text = self._determine_judgment(modules_data)
+        basis = self._generate_judgment_basis(modules_data)
+        actions = self._generate_next_actions(modules_data)
+        decision_block = self.generate_decision_block(judgment_text, basis, actions)
+        
+        # Generate Next Actions Section
+        next_actions = self.generate_next_actions_section(modules_data, self.report_type)
+        
+        sections = [
+            self._generate_cover_page(),
+            data_completeness_panel,
+            kpi_summary,
+            exec_summary,
+            self._wrap_module_html("M3", m3_html),
+            transition_m3_m4,
+            self._wrap_module_html("M4", m4_html),
+            transition_m4_m6,
+            self._wrap_module_html("M6", m6_html),
+            final_judgment,
+            next_actions,
+            decision_block,
+            self._generate_footer()
+        ]
+        
+        # Wrap in HTML document
+        html_content = self._wrap_in_document(sections)
+        
+        # Insert QA Summary Page
+        html_with_qa, qa_result = self.generate_and_insert_qa_summary(
+            html_content=html_content,
+            report_type=self.report_type,
+            modules_data=modules_data
+        )
+        
+        logger.info(
+            f"[LHTechnical] Assembly complete with QA Summary "
+            f"({len(html_with_qa):,} chars, QA Status: {qa_result['status']})"
+        )
+        
+        return {"html": html_with_qa, "qa_result": qa_result}
+        
     def _extract_module_data(self, module_htmls: Dict[str, str], mandatory_kpi: Dict[str, List[str]]) -> Dict:
         """
         [Phase 3.10 Final Lock] Extract module data using KPIExtractor
