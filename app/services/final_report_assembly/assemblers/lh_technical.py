@@ -92,7 +92,77 @@ class LHTechnicalAssembler(BaseFinalReportAssembler):
         # Generate data completeness panel if soft KPIs are missing
         data_completeness_panel = self.generate_data_completeness_panel(soft_missing)
         
-        # Generate KPI summary from modules_data
+                # [vABSOLUTE-FINAL-9] Generate DATA SIGNATURE for content verification
+        import hashlib
+        import json
+        
+        # Create deterministic data signature from modules_data
+        data_for_signature = {
+            module_id: {
+                k: str(v) for k, v in data.items() 
+                if not k.startswith('_')  # Exclude metadata
+            }
+            for module_id, data in modules_data.items()
+        }
+        data_signature = hashlib.sha1(
+            json.dumps(data_for_signature, sort_keys=True).encode()
+        ).hexdigest()[:12]
+        
+        # Extract key input values for display
+        land_area = modules_data.get("M2", {}).get("land_value_total", "N/A")
+        total_units = modules_data.get("M4", {}).get("total_units", "N/A") if "M4" in modules_data else modules_data.get("M5", {}).get("total_units", "N/A")
+        lh_decision = modules_data.get("M6", {}).get("decision", "N/A")
+        npv = modules_data.get("M5", {}).get("npv", "N/A")
+        
+        # Format values safely
+        def format_value(val, fmt=",.0f", unit=""):
+            if val is None or val == "N/A" or (isinstance(val, str) and val.upper() == "N/A"):
+                return "N/A"
+            try:
+                if isinstance(val, (int, float)):
+                    return f"{val:{fmt}}{unit}"
+                return str(val)
+            except:
+                return str(val)
+        
+        land_area_str = format_value(land_area, unit="원")
+        total_units_str = format_value(total_units, unit="세대")
+        npv_str = format_value(npv, unit="원")
+        lh_decision_str = str(lh_decision) if lh_decision else "N/A"
+        
+        # Generate DATA SIGNATURE panel
+        data_signature_panel = f"""
+        <div style="
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 12px;
+            margin: 20px 0;
+            font-size: 11px;
+            color: #495057;
+        ">
+            <div style="font-weight: bold; margin-bottom: 8px; color: #212529;">
+                📊 Data Signature (데이터 시그니처)
+            </div>
+            <div style="font-family: monospace; color: #6c757d; margin-bottom: 8px;">
+                {data_signature}
+            </div>
+            <div style="font-size: 10px; color: #6c757d; line-height: 1.6;">
+                • 토지감정가: {land_area_str}<br/>
+                • 총세대수: {total_units_str}<br/>
+                • NPV: {npv_str}<br/>
+                • LH 판단: {lh_decision_str}
+            </div>
+            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #dee2e6; font-size: 9px; color: #adb5bd;">
+                ※ 이 보고서는 입력 데이터가 동일할 경우 이전 보고서와 동일하게 보일 수 있습니다. 이는 정상 동작입니다.<br/>
+                ※ 데이터 시그니처가 다르면 입력값이 변경되었음을 의미합니다.
+            </div>
+        </div>
+        """
+        
+        logger.info(f"[{self.report_type}] DATA SIGNATURE: {data_signature}")
+        
+# Generate KPI summary from modules_data
         kpi_summary = self.generate_kpi_summary_box(modules_data, self.report_type)
         
         exec_summary = self.narrative.executive_summary(modules_data)
@@ -113,6 +183,7 @@ class LHTechnicalAssembler(BaseFinalReportAssembler):
         next_actions = self.generate_next_actions_section(modules_data, self.report_type)
         
         sections = [
+            data_signature_panel,  # [vABSOLUTE-FINAL-9] Data signature first
             self._generate_cover_page(),
             data_completeness_panel,
             kpi_summary,
@@ -209,6 +280,7 @@ class LHTechnicalAssembler(BaseFinalReportAssembler):
         
         
         sections = [
+            data_signature_panel,  # [vABSOLUTE-FINAL-9] Data signature first
             self._generate_cover_page(),
             kpi_summary,  # KPI at top
             exec_summary,
