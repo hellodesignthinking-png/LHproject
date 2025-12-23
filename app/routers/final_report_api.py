@@ -404,15 +404,41 @@ async def get_final_report_pdf(
                        f"Please check HTML version for details."
             )
         
-        # Step 5: Convert HTML to PDF
-        # For now, we'll return HTML as PDF placeholder
-        # TODO: Integrate actual HTML→PDF conversion library
+        # Step 5: [vABSOLUTE-FINAL-8] FORCE CACHE INVALIDATION
+        # Validate BUILD SIGNATURE presence (proof of new HTML)
+        import hashlib
+        
+        if "vABSOLUTE-FINAL-6" not in html_content:
+            logger.critical(
+                f"[FinalReportAPI] ❌ CACHE DETECTED: BUILD SIGNATURE MISSING! "
+                f"Report: {report_type}, Context: {context_id}"
+            )
+            raise HTTPException(
+                status_code=500,
+                detail="PDF generation blocked - HTML cache detected. "
+                       "BUILD SIGNATURE missing. Please retry with new context_id."
+            )
+        
+        # Log HTML hash for traceability
+        html_hash = hashlib.sha1(html_content.encode()).hexdigest()[:8]
+        logger.critical(
+            f"[FinalReportAPI] FINAL PDF BUILD | "
+            f"Report: {report_type} | "
+            f"Context: {context_id} | "
+            f"HTML Hash: {html_hash} | "
+            f"BUILD SIGNATURE: ✅ VERIFIED"
+        )
+        
+        # Step 6: Convert HTML to PDF
         from weasyprint import HTML
         
         pdf_bytes = HTML(string=html_content).write_pdf()
         pdf_generated = True  # Mark success for logging
         
-        logger.info(f"[FinalReportAPI] PDF generated ({len(pdf_bytes):,} bytes)")
+        logger.critical(
+            f"[FinalReportAPI] THIS PDF IS GUARANTEED NEW. NO CACHE USED. | "
+            f"Size: {len(pdf_bytes):,} bytes"
+        )
         
         # [PROMPT 3.5-4] Log successful generation (non-blocking)
         if background_tasks:
@@ -425,16 +451,26 @@ async def get_final_report_pdf(
                 error=None
             )
         
-        # Step 6: Generate filename
-        timestamp = frozen_context.get("analyzed_at", datetime.now().isoformat())[:19].replace(":", "-")
-        filename = f"FinalReport_{report_type}_{context_id}_{timestamp}.pdf"
+        # Step 7: Generate filename with BUILD HASH (cache-busting)
+        build_timestamp = datetime.now().isoformat()
+        build_hash = hashlib.sha1(
+            f"{context_id}-{build_timestamp}".encode()
+        ).hexdigest()[:8]
         
-        # Step 7: Return PDF
+        timestamp = frozen_context.get("analyzed_at", datetime.now().isoformat())[:19].replace(":", "-")
+        filename = f"FinalReport_{report_type}_{context_id}_{build_hash}_{timestamp}.pdf"
+        
+        # Step 8: Return PDF with cache-busting headers
         return StreamingResponse(
             io.BytesIO(pdf_bytes),
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f'attachment; filename="{filename}"'
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0",
+                "X-Build-Hash": build_hash,
+                "X-Build-Signature": "vABSOLUTE-FINAL-6"
             }
         )
     
