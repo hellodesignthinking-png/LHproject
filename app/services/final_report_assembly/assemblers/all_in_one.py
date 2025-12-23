@@ -321,6 +321,27 @@ class AllInOneAssembler(BaseFinalReportAssembler):
         )
     
     def _wrap_in_document(self, sections: List[str]) -> str:
+        # [vABSOLUTE-FINAL-7] BUILD SIGNATURE for visual verification
+        from datetime import datetime
+        build_signature = f"""
+        <div style="
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            font-size: 11px;
+            color: red;
+            background: rgba(255,255,255,0.9);
+            padding: 8px;
+            border: 2px solid red;
+            z-index: 9999;
+            font-family: monospace;
+        ">
+            ✅ BUILD: vABSOLUTE-FINAL-6<br/>
+            📅 {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC<br/>
+            🔧 REPORT: {self.report_type}
+        </div>
+        """
+        
         return f"""
         <!DOCTYPE html>
         <html lang="ko">
@@ -331,12 +352,12 @@ class AllInOneAssembler(BaseFinalReportAssembler):
             {self._get_report_css()}
             </style>
         </head>
-        <body class="final-report dense-report report-color-all {self.report_type}">
+        <body class="final-report {get_report_brand_class(self.report_type)} {self.report_type}">
+            {build_signature}
             {"".join(sections)}
         </body>
         </html>
         """
-    
     def _get_report_css(self) -> str:
         """[FIX 4] Report CSS with unified design system"""
         base_css = """
