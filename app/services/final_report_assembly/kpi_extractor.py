@@ -159,9 +159,11 @@ class KPIExtractor:
         return raw
     
     @staticmethod
-    def normalize_kpi(raw: Dict[str, str], required_keys: List[str], module_id: str) -> Dict[str, Optional[float]]:
+    def normalize_kpi(raw: Dict[str, str], required_keys: List[str], module_id: str) -> Dict[str, any]:
         """
         Normalize KPI - ONLY for required keys, no extra key generation
+        
+        [vABSOLUTE-FINAL-5] Now supports STRING KPIs (e.g., M6.decision)
         
         Args:
             raw: Raw KPI dict
@@ -169,8 +171,14 @@ class KPIExtractor:
             module_id: Module ID (for logging)
             
         Returns:
-            Normalized KPI dict (key: str, value: float or None)
+            Normalized KPI dict (key: str, value: float/str or None)
         """
+        # Define which KPIs should be treated as strings (not parsed as numbers)
+        STRING_KPI_KEYS = {
+            "decision",  # M6 decision: "적합", "조건부 적합", "부적합"
+            "recommended_type",  # M3 recommended type
+        }
+        
         normalized = {}
         
         for key in required_keys:
@@ -178,10 +186,18 @@ class KPIExtractor:
                 logger.warning(f"⚠️ [{module_id}] Required key missing: {key}")
                 normalized[key] = None
             else:
-                parsed = KPIExtractor.parse_number(raw[key])
-                if parsed is None:
-                    logger.warning(f"⚠️ [{module_id}] Failed to parse {key}: {raw[key]}")
-                normalized[key] = parsed
+                raw_value = raw[key]
+                
+                # [vABSOLUTE-FINAL-5] String KPIs: keep as-is, don't parse as number
+                if key in STRING_KPI_KEYS:
+                    # For string KPIs, empty string is treated as None
+                    normalized[key] = raw_value if raw_value else None
+                else:
+                    # For numeric KPIs, parse as number
+                    parsed = KPIExtractor.parse_number(raw_value)
+                    if parsed is None and raw_value:  # Only warn if value exists but can't parse
+                        logger.warning(f"⚠️ [{module_id}] Failed to parse {key}: {raw_value}")
+                    normalized[key] = parsed
         
         return normalized
     

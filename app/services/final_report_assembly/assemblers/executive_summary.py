@@ -15,16 +15,10 @@ import re
 
 from ..base_assembler import BaseFinalReportAssembler, get_report_brand_class
 from ..narrative_generator import NarrativeGeneratorFactory
-from ..report_type_configs import REPORT_TYPE_CONFIGS, get_mandatory_kpi, get_critical_kpi
+from ..report_type_configs import REPORT_TYPE_CONFIGS, get_mandatory_kpi
 
-# [Phase 3.10 Final Lock + vPOST-FINAL] KPI Extractor with operational safety
-from ..kpi_extractor import (
-    KPIExtractor, 
-    validate_mandatory_kpi, 
-    validate_kpi_with_safe_gate,
-    log_kpi_pipeline, 
-    FinalReportAssemblyError
-)
+# [Phase 3.10 Final Lock] KPI Extractor
+from ..kpi_extractor import KPIExtractor, validate_mandatory_kpi, log_kpi_pipeline, FinalReportAssemblyError, validate_mandatory_kpi, log_kpi_pipeline, FinalReportAssemblyError
 
 # [Phase 3.10] Hard-Fail KPI Binding
 
@@ -55,42 +49,28 @@ class ExecutiveSummaryAssembler(BaseFinalReportAssembler):
         m5_html = self.sanitize_module_html(m5_html_raw, "M5")
         m6_html = self.sanitize_module_html(m6_html_raw, "M6")
                 
-        # [Phase 3.10 Final Lock + vPOST-FINAL] Extract KPI using SAFE-GATE
+        # [Phase 3.10 Final Lock] Extract KPI using new pipeline
         mandatory_kpi = get_mandatory_kpi(self.report_type)
-        critical_kpi = get_critical_kpi(self.report_type)
         modules_data = self._extract_module_data(
             {"M2": m2_html, "M5": m5_html, "M6": m6_html},
             mandatory_kpi
         )
         
-        # [vPOST-FINAL] SAFE-GATE Validation: Critical vs Soft failures
-        validation_result = validate_kpi_with_safe_gate(
-            self.report_type, 
-            modules_data, 
-            {self.report_type: mandatory_kpi},
-            {self.report_type: critical_kpi}
-        )
-        
-        critical_missing = validation_result["critical_missing"]
-        soft_missing = validation_result["soft_missing"]
-        
-        # Hard-Fail ONLY if CRITICAL KPI is missing
-        if critical_missing:
-            error_msg = f"[BLOCKED] Missing CRITICAL KPI: {', '.join(critical_missing)}"
+        # [Phase 3.10 Final Lock] HARD-FAIL: Validate mandatory KPI
+        missing_kpi = validate_mandatory_kpi(self.report_type, modules_data, {self.report_type: mandatory_kpi})
+        if missing_kpi:
+            error_msg = f"[BLOCKED] Missing required KPI: {', '.join(missing_kpi)}"
             logger.error(f"[{self.report_type}] {error_msg}")
             return {
-                "html": f"<html><body><h1>🚫 Report Generation Blocked</h1><pre>{error_msg}</pre><p>These KPIs are critical for decision-making and must be present.</p></body></html>",
+                "html": f"<html><body><h1>❌ Report Generation Blocked</h1><pre>{error_msg}</pre></body></html>",
                 "qa_result": {
                     "status": "FAIL",
                     "errors": [error_msg],
-                    "warnings": [f"Soft KPI missing: {', '.join(soft_missing)}"] if soft_missing else [],
+                    "warnings": [],
                     "blocking": True,
-                    "reason": "Hard-Fail: Critical KPI missing"
+                    "reason": "Hard-Fail: Required KPI missing"
                 }
             }
-        
-        # Generate data completeness panel if soft KPIs are missing
-        data_completeness_panel = self.generate_data_completeness_panel(soft_missing)
     
     def _extract_module_data(self, module_htmls: Dict[str, str], mandatory_kpi: Dict[str, List[str]]) -> Dict:
         """
@@ -131,6 +111,7 @@ class ExecutiveSummaryAssembler(BaseFinalReportAssembler):
                 }
         
         return modules_data
+
         
         # [FIX 2] Generate KPI Summary Box (Mandatory for executive_summary)
         kpis = {
@@ -159,7 +140,6 @@ class ExecutiveSummaryAssembler(BaseFinalReportAssembler):
         
         # Executive summary is VERY brief - minimal module HTML
         sections = [
-            data_completeness_panel,
             kpi_summary,  # KPI at top
             exec_summary,
             self._wrap_module_html("M2", m2_html),

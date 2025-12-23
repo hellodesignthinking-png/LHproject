@@ -92,6 +92,52 @@ class QuickCheckAssembler(BaseFinalReportAssembler):
         
         # Generate data completeness panel if soft KPIs are missing
         data_completeness_panel = self.generate_data_completeness_panel(soft_missing)
+        
+        # Generate KPI summary from modules_data
+        kpi_summary = self.generate_kpi_summary_box(modules_data, self.report_type)
+        
+        exec_summary = self.narrative.executive_summary(modules_data)
+        final_judgment = self.narrative.final_judgment(modules_data)
+        
+        # [FIX 5] Generate Decision Block (Clear Visual Conclusion)
+        judgment_text = self._determine_judgment(modules_data)
+        basis = self._generate_judgment_basis(modules_data)
+        actions = self._generate_next_actions(modules_data)
+        decision_block = self.generate_decision_block(judgment_text, basis, actions)
+        
+        # [FIX 4] Generate Next Actions Section
+        next_actions = self.generate_next_actions_section(modules_data, self.report_type)
+        
+        sections = [
+            data_completeness_panel,
+            kpi_summary,  # KPI at top
+            exec_summary,
+            self._wrap_module_html("M5", m5_html),
+            self._wrap_module_html("M6", m6_html),
+            final_judgment,
+            next_actions,
+            decision_block,  # Visual decision at bottom
+            self._generate_footer()
+        ]
+        
+        # Wrap in HTML document
+        html_content = self._wrap_in_document(sections)
+        
+        # [PROMPT 3.5-3] Insert QA Summary Page
+        html_with_qa, qa_result = self.generate_and_insert_qa_summary(
+            html_content=html_content,
+            report_type=self.report_type,
+            modules_data=modules_data
+        )
+        
+        # [P0 FIX] Validate KPI completeness - FAIL if any core KPI is N/A
+        # [vLAST] OLD validator removed - Phase 3.10 Hard-Fail handles validation
+        logger.info(
+            f"[QuickCheck] Assembly complete with QA Summary "
+            f"({len(html_with_qa):,} chars, QA Status: {qa_result['status']})"
+        )
+        
+        return {"html": html_with_qa, "qa_result": qa_result}
     
     def _extract_module_data(self, module_htmls: Dict[str, str], mandatory_kpi: Dict[str, List[str]]) -> Dict:
         """

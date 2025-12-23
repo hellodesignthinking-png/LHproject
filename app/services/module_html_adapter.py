@@ -381,21 +381,43 @@ def adapt_m6_summary_for_html(canonical_summary: Dict[str, Any]) -> Dict[str, An
         summary = m6_data.get("summary", {})
         
         # Extract core data
-        decision = summary.get("decision", "UNKNOWN")
+        decision_raw = summary.get("decision")
         total_score = summary.get("total_score", 0)
         max_score = summary.get("max_score", 110)
         grade = summary.get("grade", "N/A")
         approval_probability_pct = summary.get("approval_probability_pct", 0)
         
-        # Determine decision text and class
-        decision_mapping = {
-            "APPROVED": "승인",
-            "CONDITIONAL": "조건부 승인",
-            "REJECTED": "반려",
-            "REVIEW_REQUIRED": "추가 검토"
+        # [vABSOLUTE-FINAL-5] M6 Decision Data Contract (STRICT)
+        # Only 3 allowed values: "적합", "조건부 적합", "부적합"
+        DECISION_CONTRACT = {
+            # Official contract values (exact match)
+            "적합": "적합",
+            "조건부 적합": "조건부 적합",
+            "부적합": "부적합",
+            # Legacy/alternative values (normalization)
+            "추진 가능": "적합",
+            "조건부 승인": "조건부 적합",
+            "조건부 가능": "조건부 적합",
+            "불가": "부적합",
+            "부적절": "부적합",
+            # English enum values (for backward compatibility)
+            "APPROVED": "적합",
+            "CONDITIONAL": "조건부 적합",
+            "REJECTED": "부적합",
         }
-        decision_text = decision_mapping.get(decision, decision)
-        decision_class = "success" if decision == "APPROVED" else "warning" if decision == "CONDITIONAL" else "error"
+        
+        decision_text = DECISION_CONTRACT.get(decision_raw)
+        
+        if decision_text is None:
+            # [DATA CONTRACT VIOLATION] Raise error to catch invalid data early
+            raise ValueError(
+                f"[M6 DATA CONTRACT VIOLATION] "
+                f"Invalid decision value: {repr(decision_raw)}. "
+                f"Allowed: 적합, 조건부 적합, 부적합"
+            )
+        
+        # Determine CSS class
+        decision_class = "success" if decision_text == "적합" else "warning" if decision_text == "조건부 적합" else "error"
         
         # Build normalized structure
         adapted = {
@@ -420,7 +442,7 @@ def adapt_m6_summary_for_html(canonical_summary: Dict[str, Any]) -> Dict[str, An
             },
             "recommendation": {
                 "status": "검토 완료",
-                "next_step": "승인 조건 충족 확인" if decision == "CONDITIONAL" else "사업 추진" if decision == "APPROVED" else "보완 필요"
+                "next_step": "승인 조건 충족 확인" if decision_text == "조건부 적합" else "사업 추진" if decision_text == "적합" else "보완 필요"
             },
             "fallback": False
         }
