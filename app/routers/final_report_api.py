@@ -98,12 +98,13 @@ def _validate_context_exists(context_id: str):
     if not canonical_summary:
         logger.warning(f"Context {context_id} missing canonical_summary - attempting auto-recovery")
         
-        # Try to build canonical_summary from pipeline cache
+        # Try to build canonical_summary from pipeline results
         try:
-            from app.core.pipeline.pipeline_cache import pipeline_cache
+            # Import pipeline results cache
+            from app.api.endpoints.pipeline_reports_v4 import results_cache
             
             parcel_id = frozen_context.get("parcel_id", context_id)
-            pipeline_result = pipeline_cache.get(parcel_id)
+            pipeline_result = results_cache.get(parcel_id)
             
             if pipeline_result:
                 logger.info(f"✅ Found pipeline results for {parcel_id} - building canonical_summary")

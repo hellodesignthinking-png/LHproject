@@ -99,6 +99,7 @@ class PipelineAnalysisResponse(BaseModel):
     """Response for pipeline analysis"""
     
     parcel_id: str = Field(..., description="Parcel ID")
+    context_id: str = Field(..., description="Context ID (same as parcel_id, for report generation)")
     analysis_id: str = Field(..., description="Unique analysis ID")
     status: Literal["success", "failed"] = Field(..., description="Analysis status")
     version: str = Field(default="v4.0", description="Pipeline version")
@@ -382,6 +383,7 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
             
             return PipelineAnalysisResponse(
                 parcel_id=request.parcel_id,
+                context_id=request.parcel_id,  # ✅ CRITICAL: Add context_id for report generation
                 analysis_id=f"cached_{request.parcel_id}",
                 status="success",
                 execution_time_ms=0,
@@ -448,6 +450,7 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
                     'module': 'M4',
                     'context_id': request.parcel_id,
                     'summary': {
+                        'total_units': incentive_units or legal_units or 0,  # ✅ CRITICAL: total_units for validation
                         'legal_units': legal_units,
                         'incentive_units': incentive_units,
                         'parking_alt_a': parking_alt_a,
@@ -508,6 +511,7 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
         # Build response
         response = PipelineAnalysisResponse(
             parcel_id=request.parcel_id,
+            context_id=request.parcel_id,  # ✅ CRITICAL: Add context_id for report generation
             analysis_id=generate_analysis_id(request.parcel_id),
             status="success" if result.success else "failed",
             execution_time_ms=execution_time_ms,
