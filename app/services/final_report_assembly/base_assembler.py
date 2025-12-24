@@ -233,10 +233,13 @@ class BaseFinalReportAssembler(ABC):
         Raises:
             FinalReportAssemblyError: If module HTML not available
         """
+        # ❌ CACHE DISABLED: Always regenerate module HTML from fresh canonical_summary
         # Check cache first
-        if module in self._module_html_cache:
-            logger.debug(f"✅ Module {module} HTML loaded from cache")
-            return self._module_html_cache[module]
+        # if module in self._module_html_cache:
+        #     logger.debug(f"✅ Module {module} HTML loaded from cache")
+        #     return self._module_html_cache[module]
+        
+        # Force fresh generation every time
         
         # Load from module HTML renderer (Phase 1 output)
         try:
@@ -303,8 +306,9 @@ class BaseFinalReportAssembler(ABC):
                     f"Must be pure <section> fragment."
                 )
             
+            # ❌ CACHE DISABLED: Do not cache module HTML to ensure fresh data
             # Cache for reuse
-            self._module_html_cache[module] = html_fragment
+            # self._module_html_cache[module] = html_fragment
             
             logger.info(f"✅ Module {module} HTML loaded successfully")
             logger.info(f"   Fragment size: {len(html_fragment)} chars")
