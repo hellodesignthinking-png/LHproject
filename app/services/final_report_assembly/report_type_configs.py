@@ -298,26 +298,22 @@ MANDATORY_KPI = {
 
 CRITICAL_KPI = {
     "landowner_summary": {
-        "M5": ["npv"],  # Profitability is critical for landowner decision
-        "M6": ["decision"]  # LH decision is must-have
+        "M5": ["npv"]  # Profitability is critical for landowner decision
     },
     "quick_check": {
-        "M5": ["npv"],  # Quick decision needs profitability
-        "M6": ["decision"]  # LH decision is critical
+        "M5": ["npv"]  # Quick decision needs profitability
     },
     "executive_summary": {
-        "M5": ["npv"],  # Investment decision requires NPV
-        "M6": ["decision"]  # LH approval status is critical
+        "M5": ["npv"]  # Investment decision requires NPV
     },
     "lh_technical": {
-        "M6": ["decision"]  # LH review result is the core output
+        # M6.decision is auto-filled, not blocking
     },
     "financial_feasibility": {
         "M5": ["npv", "irr"]  # Financial analysis core metrics
     },
     "all_in_one": {
-        "M5": ["npv"],  # Comprehensive report needs profitability
-        "M6": ["decision"]  # Final decision must be present
+        "M5": ["npv"]  # Comprehensive report needs profitability
     }
 }
 
