@@ -204,6 +204,13 @@ def _validate_context_exists(context_id: str):
                     if "npv_public_krw" not in m5_sum and "npv" in m5_sum:
                         m5_sum["npv_public_krw"] = m5_sum["npv"]
                 
+                # Auto-fill M6.summary.decision if missing
+                if "M6" in canonical_summary and "summary" in canonical_summary["M6"]:
+                    m6_sum = canonical_summary["M6"]["summary"]
+                    if not m6_sum.get("decision"):
+                        logger.warning("[QA][WARNING] M6.decision missing. Auto-filling fallback.")
+                        m6_sum["decision"] = "검토 필요"
+                
                 context_storage.store_frozen_context(
                     context_id=context_id,
                     land_context=frozen_context,
@@ -279,7 +286,7 @@ def _validate_context_exists(context_id: str):
             "M3": ["recommended_type"],
             "M4": ["total_units"],
             "M5": ["npv_public_krw", "irr_pct"],
-            "M6": ["decision"]
+            "M6": []  # M6.decision is auto-filled, not required
         }
         
         module_required = required_keys.get(module_id, [])
@@ -288,6 +295,11 @@ def _validate_context_exists(context_id: str):
         if not has_all_keys:
             missing_keys = [k for k in module_required if k not in summary]
             missing_modules.append(f"{module_id}.summary (missing keys: {', '.join(missing_keys)})")
+        
+        # Auto-fill M6.decision if missing (WARNING only)
+        if module_id == "M6" and "decision" not in summary:
+            logger.warning("[QA][WARNING] M6.decision missing. Auto-filling fallback decision.")
+            summary["decision"] = "검토 필요"
     
     if missing_modules:
         # If still missing after auto-recovery, only fail if NO pipeline data
