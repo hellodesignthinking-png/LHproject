@@ -208,21 +208,25 @@ def _validate_context_exists(context_id: str):
                 
                 logger.info(f"✅ Auto-recovery successful: canonical_summary generated for {context_id}")
                 
+                # 🔁 CRITICAL: Reload context in same request
+                frozen_context = context_storage.get_frozen_context(context_id)
+                canonical_summary = frozen_context.get("canonical_summary")
+                
             else:
+                # No pipeline results - only NOW show error
                 raise HTTPException(
                     status_code=400,
-                    detail=f"분석 결과는 존재하지만 보고서용 Context가 아직 고정되지 않았습니다. "
-                           f"잠시 후 자동으로 복구되며, 문제가 지속되면 다시 시도해주세요."
+                    detail=f"분석 결과가 존재하지 않습니다. M1~M6 분석을 먼저 실행해주세요."
                 )
                 
         except HTTPException:
             raise
         except Exception as e:
             logger.error(f"❌ Auto-recovery failed: {e}")
+            # Only fail if truly no pipeline data
             raise HTTPException(
                 status_code=400,
-                detail=f"분석 결과는 존재하지만 보고서용 Context가 아직 고정되지 않았습니다. "
-                       f"잠시 후 자동으로 복구되며, 문제가 지속되면 다시 시도해주세요."
+                detail=f"분석 결과가 존재하지 않습니다. M1~M6 분석을 먼저 실행해주세요."
             )
     
     # Auto-correct canonical_summary structure
@@ -278,10 +282,10 @@ def _validate_context_exists(context_id: str):
             missing_modules.append(f"{module_id}.summary (missing keys: {', '.join(missing_keys)})")
     
     if missing_modules:
+        # If still missing after auto-recovery, only fail if NO pipeline data
         raise HTTPException(
             status_code=400,
-            detail=f"분석 결과는 존재하지만 보고서용 Context가 아직 고정되지 않았습니다. "
-                   f"잠시 후 자동으로 복구되며, 문제가 지속되면 다시 시도해주세요."
+            detail=f"분석 결과가 존재하지 않습니다. M1~M6 분석을 먼저 실행해주세요."
         )
     
     return frozen_context
