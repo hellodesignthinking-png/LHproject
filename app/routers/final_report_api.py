@@ -262,6 +262,14 @@ def _validate_context_exists(context_id: str):
             if "npv_public_krw" not in m5_sum:
                 m5_sum["npv_public_krw"] = m5_sum.get("npv", 0)
     
+    # None-safe protection for all modules
+    if canonical_summary:
+        for m in ["M2", "M3", "M4", "M5", "M6"]:
+            module = canonical_summary.get(m) or {}
+            summary = module.get("summary") or {}
+            module["summary"] = summary
+            canonical_summary[m] = module
+    
     # 🔒 ABSOLUTE FINAL: STRICT Context Freeze validation
     # Enforce that M2~M6 ALL exist with "summary" nested structure
     required_modules = ["M2", "M3", "M4", "M5", "M6"]

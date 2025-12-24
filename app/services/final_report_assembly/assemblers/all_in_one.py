@@ -281,7 +281,7 @@ class AllInOneAssembler(BaseFinalReportAssembler):
         m6_data = modules_data.get("M6", {})
         
         is_profitable = m5_data.get("is_profitable", False)
-        lh_decision = m6_data.get("decision", "")
+        lh_decision = m6_data.get("decision") or ""  # None-safe
         
         if is_profitable and "추진 가능" in lh_decision:
             return "사업 추진 권장"
@@ -333,7 +333,7 @@ class AllInOneAssembler(BaseFinalReportAssembler):
         m6_data = modules_data.get("M6", {})
         
         is_profitable = m5_data.get("is_profitable", False)
-        lh_decision = m6_data.get("decision", "")
+        lh_decision = m6_data.get("decision") or ""
         
         if is_profitable and "추진 가능" in lh_decision:
             actions.append("LH 사전 협의 진행")
