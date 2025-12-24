@@ -103,13 +103,14 @@ def _validate_context_exists(context_id: str):
             # Import pipeline results cache
             from app.api.endpoints.pipeline_reports_v4 import results_cache
             
-            parcel_id = frozen_context.get("parcel_id", context_id)
+            # CRITICAL: Use context_id as single source of truth
+            pipeline_result = results_cache.get(context_id)
             
-            # Try both context_id and parcel_id
-            pipeline_result = results_cache.get(context_id) or results_cache.get(parcel_id)
+            logger.info(f"[REPORT] context_id={context_id}")
+            logger.info(f"[CACHE]  found={bool(pipeline_result)}")
             
             if pipeline_result:
-                logger.info(f"✅ Found pipeline results for {parcel_id} - building canonical_summary")
+                logger.info(f"✅ Found pipeline results for {context_id} - building canonical_summary")
                 
                 # Build canonical_summary from pipeline results
                 canonical_summary = {}

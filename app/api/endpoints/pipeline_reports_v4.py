@@ -409,8 +409,15 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
         logger.info(f"🚀 Running 6-MODULE pipeline for {request.parcel_id}")
         result = pipeline.run(request.parcel_id)
         
-        # Cache results
+        # Cache results with BOTH keys for compatibility
         results_cache[request.parcel_id] = result
+        
+        # CRITICAL: Also cache with context_id (same as parcel_id for now)
+        # This ensures final_report_api can find it
+        context_id = request.parcel_id
+        results_cache[context_id] = result
+        
+        logger.info(f"[PIPELINE] Cached results: parcel_id={request.parcel_id}, context_id={context_id}")
         
         # 🔥 CRITICAL: Store context to DB with canonical_summary for final reports
         try:
