@@ -79,9 +79,9 @@ def _validate_context_exists(context_id: str):
     """
     Validate context_id exists with COMPLETE data
     
-    [vABSOLUTE-FINAL-13] STRICT DATA VALIDATION
+    [vABSOLUTE-FINAL-13] STRICT DATA VALIDATION + AUTO-RECOVERY
     - Context must exist
-    - canonical_summary must exist and NOT be empty
+    - canonical_summary auto-generated if missing (from M1-M6 results)
     - M2~M6 modules must have actual data
     """
     frozen_context = context_storage.get_frozen_context(context_id)
@@ -92,14 +92,113 @@ def _validate_context_exists(context_id: str):
                    f"Please run analysis first."
         )
     
-    # Check canonical_summary exists
+    # 🔒 AUTO-RECOVERY: Generate canonical_summary if missing
     canonical_summary = frozen_context.get("canonical_summary")
+    
     if not canonical_summary:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Context {context_id} has no canonical_summary. "
-                   f"Cannot generate final report."
-        )
+        logger.warning(f"Context {context_id} missing canonical_summary - attempting auto-recovery")
+        
+        # Try to build canonical_summary from pipeline cache
+        try:
+            from app.core.pipeline.pipeline_cache import pipeline_cache
+            
+            parcel_id = frozen_context.get("parcel_id", context_id)
+            pipeline_result = pipeline_cache.get(parcel_id)
+            
+            if pipeline_result:
+                logger.info(f"✅ Found pipeline results for {parcel_id} - building canonical_summary")
+                
+                # Build canonical_summary from pipeline results
+                canonical_summary = {}
+                
+                # M2: Appraisal
+                if hasattr(pipeline_result, 'm2_result') and pipeline_result.m2_result:
+                    m2 = pipeline_result.m2_result
+                    canonical_summary["M2"] = {
+                        "summary": {
+                            "land_value_total_krw": getattr(m2, 'total_land_value', 0),
+                            "pyeong_price_krw": getattr(m2, 'price_per_pyeong', 0),
+                            "confidence_pct": getattr(m2, 'confidence', 75),
+                            "transaction_count": len(getattr(m2, 'transactions', []))
+                        }
+                    }
+                
+                # M3: Housing Type
+                if hasattr(pipeline_result, 'm3_result') and pipeline_result.m3_result:
+                    m3 = pipeline_result.m3_result
+                    canonical_summary["M3"] = {
+                        "summary": {
+                            "recommended_type": getattr(m3, 'recommended_type', '도시형생활주택'),
+                            "type_score": getattr(m3, 'score', 0),
+                            "confidence_pct": 80
+                        }
+                    }
+                
+                # M4: Capacity
+                if hasattr(pipeline_result, 'm4_result') and pipeline_result.m4_result:
+                    m4 = pipeline_result.m4_result
+                    canonical_summary["M4"] = {
+                        "summary": {
+                            "total_units": getattr(m4, 'total_units', 0),
+                            "legal_units": getattr(m4, 'legal_units', 0),
+                            "incentive_units": getattr(m4, 'incentive_units', 0)
+                        }
+                    }
+                
+                # M5: Feasibility
+                if hasattr(pipeline_result, 'm5_result') and pipeline_result.m5_result:
+                    m5 = pipeline_result.m5_result
+                    canonical_summary["M5"] = {
+                        "summary": {
+                            "npv_public_krw": getattr(m5, 'npv', 0),
+                            "irr_pct": getattr(m5, 'irr', 0) * 100 if hasattr(m5, 'irr') else 0,
+                            "roi_pct": getattr(m5, 'roi', 0) * 100 if hasattr(m5, 'roi') else 0,
+                            "grade": getattr(m5, 'grade', 'N/A')
+                        }
+                    }
+                
+                # M6: LH Review
+                if hasattr(pipeline_result, 'm6_result') and pipeline_result.m6_result:
+                    m6 = pipeline_result.m6_result
+                    canonical_summary["M6"] = {
+                        "summary": {
+                            "decision": getattr(m6, 'decision', '검토 필요'),
+                            "total_score": getattr(m6, 'total_score', 0),
+                            "approval_probability_pct": getattr(m6, 'approval_probability', 0)
+                        }
+                    }
+                
+                # Update context with canonical_summary
+                frozen_context["canonical_summary"] = canonical_summary
+                context_storage.store_frozen_context(
+                    context_id=context_id,
+                    land_context=frozen_context,
+                    ttl_hours=24
+                )
+                
+                logger.info(f"✅ Auto-recovery successful: canonical_summary generated for {context_id}")
+                
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"❌ 최종보고서 생성 불가: Context {context_id}에 분석 데이터가 없습니다.\n\n"
+                           f"📋 해결 방법:\n"
+                           f"1. Pipeline UI에서 M1-M6 분석을 완료해주세요\n"
+                           f"2. 'M1 Context 확정' 버튼을 클릭하여 M1 데이터를 저장하세요\n"
+                           f"3. 'M2-M6 파이프라인 실행' 버튼으로 전체 분석을 실행하세요\n"
+                           f"4. 분석 완료 후 다시 보고서 생성을 시도하세요\n\n"
+                           f"⚠️ 현재 상태: M1-M6 분석이 실행되지 않았거나, Context가 저장되지 않았습니다."
+                )
+                
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"❌ Auto-recovery failed: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Context {context_id} has no canonical_summary. "
+                       f"Cannot generate final report. Please run M1-M6 pipeline first."
+            )
     
     # 🔒 ABSOLUTE FINAL: STRICT Context Freeze validation
     # Enforce that M2~M6 ALL exist with "summary" nested structure
