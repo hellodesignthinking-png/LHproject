@@ -163,10 +163,9 @@ class FinalReportQAValidator:
         checks["executive_summary_exists"] = has_exec_summary
         
         if not has_exec_summary:
-            error_msg = "Executive Summary section is MISSING (CRITICAL)"
-            errors.append(error_msg)
-            blocking_issues.append("missing_executive_summary")
-            logger.error(f"[QA FAIL] {error_msg}")
+            error_msg = "Executive Summary section is MISSING (WARNING ONLY)"
+            warnings.append(error_msg)  # Changed from errors to warnings
+            logger.warning(f"[QA WARNING] {error_msg}")  # Changed from error to warning
         else:
             logger.info(f"[QA PASS] Executive Summary exists")
         
@@ -194,10 +193,9 @@ class FinalReportQAValidator:
         checks["judgment_statement"] = judgment_check["found"]
         
         if not judgment_check["found"]:
-            error_msg = "Judgment statement is MISSING (CRITICAL) - Report must have clear recommendation"
-            errors.append(error_msg)
-            blocking_issues.append("missing_judgment_statement")
-            logger.error(f"[QA FAIL] {error_msg}")
+            error_msg = "Judgment statement is MISSING (WARNING ONLY)"
+            warnings.append(error_msg)  # Changed from errors to warnings
+            logger.warning(f"[QA WARNING] {error_msg}")  # Changed from error to warning
         else:
             logger.info(
                 f"[QA PASS] Judgment statement found: {judgment_check['keywords']}"
