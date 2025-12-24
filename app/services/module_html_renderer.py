@@ -66,18 +66,8 @@ def _render_m3_html(data: Dict[str, Any]) -> str:
     policy_class = "success" if lh_policy['policy_fit'] == "적합" else "warning"
     
     html = f"""
-    <!DOCTYPE html>
-    <html lang="ko">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{data['title']} - ZeroSite</title>
-        <style>
-            {_get_common_styles()}
-        </style>
-    </head>
-    <body>
-        <div class="container" data-module="M3">
+    <section data-module="M3" class="module-root">
+        <div class="container">
             <header class="header">
                 <h1>{data['title']}</h1>
                 <p class="subtitle">Module {data['module']}</p>
@@ -118,8 +108,6 @@ def _render_m3_html(data: Dict[str, Any]) -> str:
                 </div>
             </section>
         </div>
-    </body>
-    </html>
     """
     
     return html
@@ -139,18 +127,8 @@ def _render_m4_html(data: Dict[str, Any]) -> str:
     feasibility_class = "success" if lh_feasibility['status'] == "적합" else "warning"
     
     html = f"""
-    <!DOCTYPE html>
-    <html lang="ko">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{data['title']} - ZeroSite</title>
-        <style>
-            {_get_common_styles()}
-        </style>
-    </head>
-    <body>
-        <div class="container" data-module="M4" data-total-units="{dev_summary['total_units']}" data-unit-count="{dev_summary['total_units']}" data-floor-area="{area_analysis['gross_floor_area']}" data-total-floor-area="{area_analysis['gross_floor_area']}">
+    <section data-module="M4" class="module-root" data-total-units="{dev_summary['total_units']}" data-unit-count="{dev_summary['total_units']}" data-floor-area="{area_analysis['gross_floor_area']}" data-total-floor-area="{area_analysis['gross_floor_area']}">
+        <div class="container">
             <header class="header">
                 <h1>{data['title']}</h1>
                 <p class="subtitle">Module {data['module']}</p>
@@ -214,8 +192,6 @@ def _render_m4_html(data: Dict[str, Any]) -> str:
                 </div>
             </section>
         </div>
-    </body>
-    </html>
     """
     
     return html
@@ -233,18 +209,8 @@ def _render_m2_html(data: Dict[str, Any]) -> str:
     lh_perspective = data["lh_perspective"]
     
     html = f"""
-    <!DOCTYPE html>
-    <html lang="ko">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{data['title']} - ZeroSite</title>
-        <style>
-            {_get_common_styles()}
-        </style>
-    </head>
-    <body>
-        <div class="container" data-module="M2">
+    <section data-module="M2" class="module-root">
+        <div class="container">
             <header class="header">
                 <h1>{data['title']}</h1>
                 <p class="subtitle">Module {data['module']}</p>
@@ -308,8 +274,7 @@ def _render_m2_html(data: Dict[str, Any]) -> str:
                 </div>
             </section>
         </div>
-    </body>
-    </html>
+    </section>
     """
     
     return html
@@ -341,18 +306,8 @@ def _render_m5_html(data: Dict[str, Any]) -> str:
     grade_class = f"grade-{financial['grade'].lower()}"
     
     html = f"""
-    <!DOCTYPE html>
-    <html lang="ko">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{data['title']} - ZeroSite</title>
-        <style>
-            {_get_common_styles()}
-        </style>
-    </head>
-    <body>
-        <div class="container" data-module="M5" data-npv="{financial['npv']}" data-irr="{financial['irr']}" data-is-profitable="{str(financial['is_profitable']).lower()}" data-profitability-text="{financial['profitability_status']}">
+    <section data-module="M5" class="module-root" data-npv="{financial['npv']}" data-irr="{financial['irr']}" data-is-profitable="{str(financial['is_profitable']).lower()}" data-profitability-text="{financial['profitability_status']}">
+        <div class="container">
             <header class="header">
                 <h1>{data['title']}</h1>
                 <p class="subtitle">Module {data['module']}</p>
@@ -412,8 +367,6 @@ def _render_m5_html(data: Dict[str, Any]) -> str:
                 </div>
             </section>
         </div>
-    </body>
-    </html>
     """
     
     return html
@@ -434,18 +387,8 @@ def _render_m6_html(data: Dict[str, Any]) -> str:
     grade_class = f"grade-{review['grade'].lower()}"
     
     html = f"""
-    <!DOCTYPE html>
-    <html lang="ko">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{data['title']} - ZeroSite</title>
-        <style>
-            {_get_common_styles()}
-        </style>
-    </head>
-    <body>
-        <div class="container" data-module="M6" data-decision="{review['decision']}" data-lh-decision="{review['decision']}" data-risk-summary="{interpretation.get('risk_level', '정보 없음')} - {interpretation.get('summary', '')}">
+    <section data-module="M6" class="module-root" data-decision="{review['decision']}" data-lh-decision="{review['decision']}" data-risk-summary="{interpretation.get('risk_level', '정보 없음')} - {interpretation.get('summary', '')}">
+        <div class="container">
             <header class="header">
                 <h1>{data['title']}</h1>
                 <p class="subtitle">Module {data['module']}</p>
@@ -519,8 +462,6 @@ def _render_m6_html(data: Dict[str, Any]) -> str:
                 </div>
             </section>
         </div>
-    </body>
-    </html>
     """
     
     return html
