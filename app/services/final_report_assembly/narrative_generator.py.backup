@@ -1,6 +1,6 @@
 """
-ZeroSite Final Report - Narrative Generator (PROMPT 5 + vABSOLUTE-FINAL-10)
-============================================================================
+ZeroSite Final Report - Narrative Generator (PROMPT 5)
+=======================================================
 
 PURPOSE:
     Transform "module HTML listing" → "decision-ready story document"
@@ -19,52 +19,9 @@ CRITICAL RULES (PROMPT 5):
     
     Violation of these rules → RuntimeError
 
-[vABSOLUTE-FINAL-10] NEW MANDATE - ACTUAL VALUES ENFORCEMENT:
-=============================================================
-
-❗️ABSOLUTE REQUIREMENT: ALL NARRATIVES MUST USE ACTUAL DATA FROM modules_data
-
-**THE RULE:**
-    When modules_data provides a value → USE IT IN THE NARRATIVE
-    When modules_data has NO value → Say "산출 진행 중" (NOT "N/A 검증 필요")
-
-**FORBIDDEN PATTERNS:**
-    ❌ "NPV는 N/A (검증 필요)입니다"
-    ❌ "토지 가치: N/A"  
-    ❌ "검증이 필요합니다"
-    ❌ Generic templates without referencing actual numbers
-
-**REQUIRED PATTERNS:**
-    ✅ "순현재가치(NPV)는 약 4.2억 원으로 산출되었습니다"
-    ✅ "내부수익률(IRR) 13.2%로 투자 수익성이 양호합니다"
-    ✅ "LH 심사 결과 '조건부 적합' (등급: B+)로 예측됩니다"
-    ✅ "예상 {actual_units}세대 규모로 사업성이 확보됩니다"
-
-**DATA EXTRACTION PATTERN:**
-    ```python
-    # Multiple fallback keys for robustness
-    npv = m5_data.get("npv", m5_data.get("NPV", 0))
-    land_value = m2_data.get("land_value_total", 
-                            m2_data.get("total_land_value", 
-                                      m2_data.get("land_value", 0)))
-    
-    # Safe formatting with actual values
-    npv_str = f"{int(npv):,}원" if npv and npv != 0 else "산출 진행 중"
-    
-    # USE IN NARRATIVE
-    return f"본 사업의 NPV는 {npv_str}로..."
-    ```
-
-**VERIFICATION TEST:**
-    After each narrative update:
-    1. Generate report with test data
-    2. Search PDF for "N/A" - should find ZERO matches
-    3. Search PDF for actual numbers - should find MULTIPLE matches
-    4. Compare with previous version - text should be DIFFERENT
-
-VERSION: 2.0 (vABSOLUTE-FINAL-10 Update)
-DATE: 2025-12-24
-PHASE: 3.10 (Final Lock + Content Verification)
+VERSION: 1.0 (PROMPT 5 Implementation)
+DATE: 2025-12-22
+PHASE: 3
 """
 
 from abc import ABC, abstractmethod
@@ -185,26 +142,20 @@ class LandownerNarrativeGenerator(BaseNarrativeGenerator):
     
     def executive_summary(self, modules_data: Dict) -> str:
         """
-        [vABSOLUTE-FINAL-10] Executive Summary for Landowner - ACTUAL VALUES ONLY
+        Executive Summary for Landowner
+        
+        Explains:
+        - What this report is about
+        - Key findings (M2 land value, M5 profitability, M6 LH decision)
+        - Overall viability
         """
         m2_data = modules_data.get("M2", {})
         m5_data = modules_data.get("M5", {})
         m6_data = modules_data.get("M6", {})
-        m4_data = modules_data.get("M4", {})
         
-        # Extract with multiple fallback keys
-        land_value = m2_data.get("land_value_total", m2_data.get("total_land_value", m2_data.get("land_value", 0)))
-        npv = m5_data.get("npv", m5_data.get("NPV", 0))
-        irr = m5_data.get("irr", m5_data.get("IRR", 0))
-        lh_decision = m6_data.get("decision", m6_data.get("Decision", "검토 중"))
-        lh_grade = m6_data.get("grade", m6_data.get("Grade", ""))
-        total_units = m4_data.get("total_units", m5_data.get("total_units", 0))
-        
-        # Format numbers safely
-        land_str = f"{int(land_value):,}원" if land_value and land_value != 0 else "평가 진행 중"
-        npv_str = f"{int(npv):,}원" if npv and npv != 0 else "산출 진행 중"
-        irr_str = f"{float(irr)*100:.2f}%" if irr and irr != 0 else "산출 진행 중"
-        units_str = f"{int(total_units)}세대" if total_units and total_units != 0 else "미확정"
+        land_value = m2_data.get("land_value", 0)
+        npv = m5_data.get("npv", 0)
+        lh_decision = m6_data.get("decision", "검토 필요")
         
         return f"""
         <section class="narrative executive-summary">
@@ -217,19 +168,13 @@ class LandownerNarrativeGenerator(BaseNarrativeGenerator):
             </p>
             
             <p class="narrative">
-                <strong>1. 토지 가치 평가:</strong> 대상 토지의 감정가는 <strong>{land_str}</strong>로 
-                평가되었으며, 예상 건축 규모는 <strong>{units_str}</strong>입니다.
+                대상 토지의 감정가는 <strong>{land_value:,}원</strong> 수준으로 평가되었으며, 
+                이 토지를 활용한 LH 사업의 순현재가치(NPV)는 
+                <strong>{npv:,}원</strong>으로 산출되었습니다.
             </p>
             
             <p class="narrative">
-                <strong>2. 사업 수익성:</strong> 이 토지를 활용한 LH 사업의 순현재가치(NPV)는 
-                <strong>{npv_str}</strong>, 내부수익률(IRR)은 <strong>{irr_str}</strong>로 
-                산출되었습니다. 이는 사업의 재무적 타당성을 나타내는 핵심 지표입니다.
-            </p>
-            
-            <p class="narrative">
-                <strong>3. LH 승인 전망:</strong> LH 사전 심사 기준에 따른 검토 결과, 
-                본 사업은 <strong>"{lh_decision}"</strong> (예상 등급: <strong>{lh_grade}</strong>) 
+                LH 사전 심사 기준에 따른 검토 결과, 본 사업은 <strong>"{lh_decision}"</strong> 
                 판정을 받았습니다. 이는 토지의 입지 조건, 건축 규모, 정책 부합도를 
                 종합적으로 고려한 결과입니다.
             </p>
