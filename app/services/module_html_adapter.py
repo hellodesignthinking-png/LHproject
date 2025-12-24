@@ -404,6 +404,10 @@ def adapt_m6_summary_for_html(canonical_summary: Dict[str, Any]) -> Dict[str, An
             "APPROVED": "적합",
             "CONDITIONAL": "조건부 적합",
             "REJECTED": "부적합",
+            # NEW: Standard English enum values from M6Summary
+            "GO": "적합",
+            "NO-GO": "부적합",
+            "REVIEW": "조건부 적합",
         }
         
         decision_text = DECISION_CONTRACT.get(decision_raw)

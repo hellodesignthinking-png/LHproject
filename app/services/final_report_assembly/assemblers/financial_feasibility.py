@@ -13,7 +13,7 @@ from typing import Dict, List, Literal
 import logging
 import re
 
-from ..base_assembler import BaseFinalReportAssembler, get_report_brand_class
+from ..base_assembler import BaseFinalReportAssembler, get_report_brand_class, translate_decision_to_korean
 from ..narrative_generator import NarrativeGeneratorFactory
 from ..report_type_configs import REPORT_TYPE_CONFIGS, get_mandatory_kpi, get_critical_kpi
 
@@ -111,7 +111,7 @@ class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
         # Extract key input values for display
         land_area = modules_data.get("M2") or {}.get("land_value_total", "N/A")
         total_units = modules_data.get("M4") or {}.get("total_units", "N/A") if "M4" in modules_data else modules_data.get("M5") or {}.get("total_units", "N/A")
-        lh_decision = modules_data.get("M6") or {}.get("decision") or "N/A"
+        lh_decision = translate_decision_to_korean((modules_data.get("M6") or {}).get("decision") or "N/A")
         npv = modules_data.get("M5") or {}.get("npv", "N/A")
         
         # Format values safely
@@ -321,7 +321,7 @@ class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
         m6_data = modules_data.get("M6") or {}
         
         is_profitable = m5_data.get("is_profitable", False)
-        lh_decision = m6_data.get("decision") or ""
+        lh_decision = translate_decision_to_korean(m6_data.get("decision") or "")
         
         if is_profitable and "추진 가능" in lh_decision:
             return "사업 추진 권장"
@@ -350,7 +350,7 @@ class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
             basis.append("⚠️ 수익성: 분석 데이터 부족")
         
         # [FIX D] LH Decision with explicit status
-        lh_decision = m6_data.get("decision") or "분석 미완료"
+        lh_decision = translate_decision_to_korean(m6_data.get("decision") or "분석 미완료")
         if "추진 가능" in lh_decision:
             basis.append(f"✅ LH 심사: {lh_decision}")
         elif "조건부 가능" in lh_decision:
@@ -373,7 +373,7 @@ class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
         m6_data = modules_data.get("M6") or {}
         
         is_profitable = m5_data.get("is_profitable", False)
-        lh_decision = m6_data.get("decision") or ""
+        lh_decision = translate_decision_to_korean(m6_data.get("decision") or "")
         
         if is_profitable and "추진 가능" in lh_decision:
             actions.append("LH 사전 협의 진행")

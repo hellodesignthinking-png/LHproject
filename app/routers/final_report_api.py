@@ -121,11 +121,12 @@ def _validate_context_exists(context_id: str):
                 # M2: Appraisal
                 if hasattr(pipeline_result, 'm2_result') and pipeline_result.m2_result:
                     m2 = pipeline_result.m2_result
+                    land_value = getattr(m2, 'total_land_value', 0) or getattr(m2, 'estimated_value_krw', 0)
                     canonical_summary["M2"] = {
                         "summary": {
-                            "land_value_total_krw": getattr(m2, 'total_land_value', 0),
+                            "land_value_total_krw": land_value,
                             "pyeong_price_krw": getattr(m2, 'price_per_pyeong', 0),
-                            "confidence_pct": getattr(m2, 'confidence', 75),
+                            "confidence_pct": getattr(m2, 'confidence', 75) or 75,
                             "transaction_count": len(getattr(m2, 'transactions', []))
                         }
                     }
@@ -179,7 +180,7 @@ def _validate_context_exists(context_id: str):
                     m6 = pipeline_result.m6_result
                     canonical_summary["M6"] = {
                         "summary": {
-                            "decision": getattr(m6, 'decision', '검토 필요'),
+                            "decision": getattr(m6, 'decision', 'NO-GO'),
                             "total_score": getattr(m6, 'total_score', 0),
                             "approval_probability_pct": getattr(m6, 'approval_probability', 0)
                         }
@@ -210,6 +211,12 @@ def _validate_context_exists(context_id: str):
                     if not m6_sum.get("decision"):
                         logger.warning("[QA][WARNING] M6.decision missing. Auto-filling fallback.")
                         m6_sum["decision"] = "검토 필요"
+                
+                # Auto-fill M2.confidence_pct if None
+                if "M2" in canonical_summary and "summary" in canonical_summary["M2"]:
+                    m2_sum = canonical_summary["M2"]["summary"]
+                    if m2_sum.get("confidence_pct") is None:
+                        m2_sum["confidence_pct"] = 75
                 
                 context_storage.store_frozen_context(
                     context_id=context_id,
@@ -246,6 +253,12 @@ def _validate_context_exists(context_id: str):
     
     # Auto-correct canonical_summary structure
     if canonical_summary:
+        # M2.confidence_pct correction (None -> 75)
+        if "M2" in canonical_summary and "summary" in canonical_summary["M2"]:
+            m2_sum = canonical_summary["M2"]["summary"]
+            if m2_sum.get("confidence_pct") is None:
+                m2_sum["confidence_pct"] = 75
+        
         # M4.summary.total_units correction
         if "M4" in canonical_summary and "summary" in canonical_summary["M4"]:
             m4_sum = canonical_summary["M4"]["summary"]
@@ -261,6 +274,12 @@ def _validate_context_exists(context_id: str):
             m5_sum = canonical_summary["M5"]["summary"]
             if "npv_public_krw" not in m5_sum:
                 m5_sum["npv_public_krw"] = m5_sum.get("npv", 0)
+        
+        # M6.decision fallback (English only)
+        if "M6" in canonical_summary and "summary" in canonical_summary["M6"]:
+            m6_sum = canonical_summary["M6"]["summary"]
+            if not m6_sum.get("decision"):
+                m6_sum["decision"] = "REVIEW"
     
     # None-safe protection for all modules
     if canonical_summary:

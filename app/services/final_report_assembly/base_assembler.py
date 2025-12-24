@@ -28,6 +28,33 @@ from .design_system import DesignSystem, get_report_brand_class
 logger = logging.getLogger(__name__)
 
 
+def translate_decision_to_korean(decision: str) -> str:
+    """
+    Translate M6 decision from English to Korean
+    
+    Args:
+        decision: English decision value (GO, NO-GO, CONDITIONAL, REVIEW)
+        
+    Returns:
+        Korean translation
+    """
+    DECISION_MAP = {
+        "GO": "적합",
+        "NO-GO": "부적합",
+        "CONDITIONAL": "조건부 적합",
+        "REVIEW": "검토 필요",
+        # Korean values (passthrough)
+        "적합": "적합",
+        "부적합": "부적합",
+        "조건부 적합": "조건부 적합",
+        "검토 필요": "검토 필요",
+        "추진 가능": "적합",
+        "조건부 가능": "조건부 적합",
+        "불가": "부적합",
+    }
+    return DECISION_MAP.get(decision, "미확정")
+
+
 class FinalReportAssemblyError(RuntimeError):
     """Raised when Final Report Assembly principles are violated"""
     pass
@@ -756,11 +783,12 @@ class BaseFinalReportAssembler(ABC):
         # Extract key decision factors
         npv = (modules_data.get("M5") or {}).get("npv", 0)
         profitability = (modules_data.get("M5") or {}).get("profitability", "미확정")
-        decision = (modules_data.get("M6") or {}).get("decision") or "미확정"
+        decision_raw = (modules_data.get("M6") or {}).get("decision") or "미확정"
+        decision = translate_decision_to_korean(decision_raw)
         
         # Determine overall status
         is_profitable = npv and npv > 0 if isinstance(npv, (int, float)) else False
-        is_approved = "승인" in decision if isinstance(decision, str) else False
+        is_approved = "적합" in decision if isinstance(decision, str) else False
         is_conditional = "조건부" in decision if isinstance(decision, str) else False
         
         # Generate recommended actions
