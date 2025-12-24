@@ -754,9 +754,9 @@ class BaseFinalReportAssembler(ABC):
             HTML string for next actions section
         """
         # Extract key decision factors
-        npv = modules_data.get("M5", {}).get("npv", 0)
-        profitability = modules_data.get("M5", {}).get("profitability", "미확정")
-        decision = modules_data.get("M6", {}).get("decision", "미확정")
+        npv = (modules_data.get("M5") or {}).get("npv", 0)
+        profitability = (modules_data.get("M5") or {}).get("profitability", "미확정")
+        decision = (modules_data.get("M6") or {}).get("decision") or "미확정"
         
         # Determine overall status
         is_profitable = npv and npv > 0 if isinstance(npv, (int, float)) else False

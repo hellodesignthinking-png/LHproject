@@ -109,10 +109,10 @@ class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
         ).hexdigest()[:12]
         
         # Extract key input values for display
-        land_area = modules_data.get("M2", {}).get("land_value_total", "N/A")
-        total_units = modules_data.get("M4", {}).get("total_units", "N/A") if "M4" in modules_data else modules_data.get("M5", {}).get("total_units", "N/A")
-        lh_decision = modules_data.get("M6", {}).get("decision") or "N/A"
-        npv = modules_data.get("M5", {}).get("npv", "N/A")
+        land_area = modules_data.get("M2") or {}.get("land_value_total", "N/A")
+        total_units = modules_data.get("M4") or {}.get("total_units", "N/A") if "M4" in modules_data else modules_data.get("M5") or {}.get("total_units", "N/A")
+        lh_decision = modules_data.get("M6") or {}.get("decision") or "N/A"
+        npv = modules_data.get("M5") or {}.get("npv", "N/A")
         
         # Format values safely
         def format_value(val, fmt=",.0f", unit=""):
@@ -259,9 +259,9 @@ class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
         
         # [FIX 2] Generate KPI Summary Box (Mandatory for financial_feasibility)
         kpis = {
-            "총 토지 감정가": modules_data.get("M2", {}).get("land_value"),
-            "순현재가치 (NPV)": modules_data.get("M5", {}).get("npv"),
-            "내부내부수익률(IRR)(IRR) (IRR)": modules_data.get("M5", {}).get("irr")
+            "총 토지 감정가": modules_data.get("M2") or {}.get("land_value"),
+            "순현재가치 (NPV)": modules_data.get("M5") or {}.get("npv"),
+            "내부내부수익률(IRR)(IRR) (IRR)": modules_data.get("M5") or {}.get("irr")
         }
         kpi_summary = self.generate_kpi_summary_box(kpis, self.report_type)
         
@@ -317,8 +317,8 @@ class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
     
     def _determine_judgment(self, modules_data: Dict) -> str:
         """Determine final judgment text based on module data"""
-        m5_data = modules_data.get("M5", {})
-        m6_data = modules_data.get("M6", {})
+        m5_data = modules_data.get("M5") or {}
+        m6_data = modules_data.get("M6") or {}
         
         is_profitable = m5_data.get("is_profitable", False)
         lh_decision = m6_data.get("decision") or ""
@@ -336,9 +336,9 @@ class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
         """[FIX D] Generate judgment basis with explicit numeric evidence"""
         basis = []
         
-        m2_data = modules_data.get("M2", {})
-        m5_data = modules_data.get("M5", {})
-        m6_data = modules_data.get("M6", {})
+        m2_data = modules_data.get("M2") or {}
+        m5_data = modules_data.get("M5") or {}
+        m6_data = modules_data.get("M6") or {}
         
         # [FIX D] Profitability with explicit 순현재가치(NPV)
         npv = m5_data.get("npv")
@@ -369,8 +369,8 @@ class FinancialFeasibilityAssembler(BaseFinalReportAssembler):
         """Generate next action items"""
         actions = []
         
-        m5_data = modules_data.get("M5", {})
-        m6_data = modules_data.get("M6", {})
+        m5_data = modules_data.get("M5") or {}
+        m6_data = modules_data.get("M6") or {}
         
         is_profitable = m5_data.get("is_profitable", False)
         lh_decision = m6_data.get("decision") or ""

@@ -136,10 +136,10 @@ class LandownerSummaryAssembler(BaseFinalReportAssembler):
         ).hexdigest()[:12]
         
         # Extract key input values for display
-        land_area = modules_data.get("M2", {}).get("land_value_total", "N/A")
-        total_units = modules_data.get("M4", {}).get("total_units", "N/A") if "M4" in modules_data else modules_data.get("M5", {}).get("total_units", "N/A")
-        lh_decision = modules_data.get("M6", {}).get("decision") or "N/A"
-        npv = modules_data.get("M5", {}).get("npv", "N/A")
+        land_area = modules_data.get("M2") or {}.get("land_value_total", "N/A")
+        total_units = modules_data.get("M4") or {}.get("total_units", "N/A") if "M4" in modules_data else modules_data.get("M5") or {}.get("total_units", "N/A")
+        lh_decision = modules_data.get("M6") or {}.get("decision") or "N/A"
+        npv = modules_data.get("M5") or {}.get("npv", "N/A")
         
         # Format values safely
         def format_value(val, fmt=",.0f", unit=""):
@@ -484,8 +484,8 @@ class LandownerSummaryAssembler(BaseFinalReportAssembler):
 
     def _determine_judgment(self, modules_data: Dict) -> str:
         """Determine final judgment text based on module data"""
-        m5_data = modules_data.get("M5", {})
-        m6_data = modules_data.get("M6", {})
+        m5_data = modules_data.get("M5") or {}
+        m6_data = modules_data.get("M6") or {}
         
         is_profitable = m5_data.get("is_profitable", False)
         lh_decision = m6_data.get("decision") or ""
@@ -503,9 +503,9 @@ class LandownerSummaryAssembler(BaseFinalReportAssembler):
         """[FIX D] Generate judgment basis with explicit numeric evidence"""
         basis = []
         
-        m2_data = modules_data.get("M2", {})
-        m5_data = modules_data.get("M5", {})
-        m6_data = modules_data.get("M6", {})
+        m2_data = modules_data.get("M2") or {}
+        m5_data = modules_data.get("M5") or {}
+        m6_data = modules_data.get("M6") or {}
         
         # [FIX D] Profitability with explicit 순현재가치(NPV)
         npv = m5_data.get("npv")
@@ -536,8 +536,8 @@ class LandownerSummaryAssembler(BaseFinalReportAssembler):
         """Generate next action items"""
         actions = []
         
-        m5_data = modules_data.get("M5", {})
-        m6_data = modules_data.get("M6", {})
+        m5_data = modules_data.get("M5") or {}
+        m6_data = modules_data.get("M6") or {}
         
         is_profitable = m5_data.get("is_profitable", False)
         lh_decision = m6_data.get("decision") or ""
