@@ -251,11 +251,37 @@ class BaseFinalReportAssembler(ABC):
             normalized_data = adapter(canonical_summary)
             html_fragment = render_module_html(module, normalized_data)
             
+            # 🔒 ABSOLUTE FINAL: Enforce fragment contract
+            html_stripped = html_fragment.strip()
+            
+            # Assertion 1: Must start with <section
+            if not html_stripped.startswith("<section"):
+                raise FinalReportAssemblyError(
+                    f"❌ {module} HTML is not a fragment (does not start with <section>). "
+                    f"First 100 chars: {html_stripped[:100]}"
+                )
+            
+            # Assertion 2: Must have data-module attribute
+            if f'data-module="{module}"' not in html_fragment:
+                raise FinalReportAssemblyError(
+                    f"❌ {module} HTML missing data-module attribute. "
+                    f"Required: data-module=\"{module}\""
+                )
+            
+            # Assertion 3: Must NOT have HTML document wrapper
+            html_lower = html_fragment.lower()
+            if any(tag in html_lower for tag in ["<html", "<!doctype", "<body>"]):
+                raise FinalReportAssemblyError(
+                    f"❌ {module} HTML wrapped incorrectly (contains DOCTYPE/HTML/BODY). "
+                    f"Must be pure <section> fragment."
+                )
+            
             # Cache for reuse
             self._module_html_cache[module] = html_fragment
             
             logger.info(f"✅ Module {module} HTML loaded successfully")
             logger.info(f"   Fragment size: {len(html_fragment)} chars")
+            logger.info(f"   ✅ Fragment contract validated: <section data-module=\"{module}\">")
             
             return html_fragment
             

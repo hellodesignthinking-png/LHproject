@@ -468,16 +468,13 @@ def _render_m6_html(data: Dict[str, Any]) -> str:
 
 
 def _render_fallback_html(module: str, title: str, data: Dict[str, Any]) -> str:
-    """Render fallback HTML when data is unavailable"""
+    """
+    Render fallback HTML when data is unavailable
+    
+    🔒 ABSOLUTE FINAL: Must return <section> fragment, NOT full HTML document
+    """
     html = f"""
-    <!DOCTYPE html>
-    <html lang="ko">
-    <head>
-        <meta charset="UTF-8">
-        <title>{title} - 데이터 없음</title>
-        <style>{_get_common_styles()}</style>
-    </head>
-    <body>
+    <section data-module="{module}" class="module-root fallback">
         <div class="container">
             <header class="header error">
                 <h1>{title}</h1>
@@ -489,24 +486,25 @@ def _render_fallback_html(module: str, title: str, data: Dict[str, Any]) -> str:
                 <p>토지 분석(M1)을 완료한 후 다시 시도해 주세요.</p>
             </div>
         </div>
-    </body>
-    </html>
+    </section>
     """
     return html
 
 
 def _render_error_html(error_message: str) -> str:
-    """Render error HTML"""
+    """
+    Render error HTML
+    
+    🔒 ABSOLUTE FINAL: Returns minimal error section (not used in module fragments)
+    """
     return f"""
-    <!DOCTYPE html>
-    <html lang="ko">
-    <head>
-        <meta charset="UTF-8">
-        <title>오류</title>
-    </head>
-    <body>
-        <h1>오류 발생</h1>
-        <p>{error_message}</p>
+    <section class="error-section">
+        <div class="container">
+            <h1>오류 발생</h1>
+            <p>{error_message}</p>
+        </div>
+    </section>
+    """
     </body>
     </html>
     """
