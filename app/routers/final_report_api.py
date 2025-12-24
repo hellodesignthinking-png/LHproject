@@ -84,7 +84,11 @@ def _validate_context_exists(context_id: str):
     - canonical_summary auto-generated if missing (from M1-M6 results)
     - M2~M6 modules must have actual data
     """
+    logger.info(f"[REPORT] context_id={context_id}")
+    
     frozen_context = context_storage.get_frozen_context(context_id)
+    logger.info(f"[REPORT] has_frozen={bool(frozen_context and frozen_context.get('canonical_summary'))}")
+    
     if not frozen_context:
         raise HTTPException(
             status_code=404,
@@ -106,8 +110,7 @@ def _validate_context_exists(context_id: str):
             # CRITICAL: Use context_id as single source of truth
             pipeline_result = results_cache.get(context_id)
             
-            logger.info(f"[REPORT] context_id={context_id}")
-            logger.info(f"[CACHE]  found={bool(pipeline_result)}")
+            logger.info(f"[CACHE] key=context_id hit={bool(pipeline_result)}")
             
             if pipeline_result:
                 logger.info(f"✅ Found pipeline results for {context_id} - building canonical_summary")
@@ -215,19 +218,23 @@ def _validate_context_exists(context_id: str):
                 
             else:
                 # No pipeline results - only NOW show error
+                logger.error(f"[CACHE] MISS for context_id={context_id}")
                 raise HTTPException(
                     status_code=400,
-                    detail=f"분석 결과가 존재하지 않습니다. M1~M6 분석을 먼저 실행해주세요."
+                    detail=f"분석 결과가 존재하지 않습니다. (context_id={context_id}) "
+                           f"M1~M6 분석을 먼저 실행해주세요."
                 )
                 
         except HTTPException:
             raise
         except Exception as e:
             logger.error(f"❌ Auto-recovery failed: {e}")
+            logger.error(f"[CACHE] MISS for context_id={context_id}")
             # Only fail if truly no pipeline data
             raise HTTPException(
                 status_code=400,
-                detail=f"분석 결과가 존재하지 않습니다. M1~M6 분석을 먼저 실행해주세요."
+                detail=f"분석 결과가 존재하지 않습니다. (context_id={context_id}) "
+                       f"M1~M6 분석을 먼저 실행해주세요."
             )
     
     # Auto-correct canonical_summary structure

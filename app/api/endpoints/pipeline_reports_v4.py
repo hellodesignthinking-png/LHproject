@@ -409,15 +409,14 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
         logger.info(f"🚀 Running 6-MODULE pipeline for {request.parcel_id}")
         result = pipeline.run(request.parcel_id)
         
-        # Cache results with BOTH keys for compatibility
-        results_cache[request.parcel_id] = result
-        
-        # CRITICAL: Also cache with context_id (same as parcel_id for now)
-        # This ensures final_report_api can find it
+        # CRITICAL: context_id IS parcel_id (single source of truth)
         context_id = request.parcel_id
+        
+        # Cache results with context_id as primary key
         results_cache[context_id] = result
         
-        logger.info(f"[PIPELINE] Cached results: parcel_id={request.parcel_id}, context_id={context_id}")
+        logger.info(f"[PIPELINE] context_id={context_id} parcel_id={request.parcel_id}")
+        logger.info(f"[CACHE] set key=context_id")
         
         # 🔥 CRITICAL: Store context to DB with canonical_summary for final reports
         try:
@@ -490,12 +489,12 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
             }
             
             ContextStorageService.store_frozen_context(
-                context_id=request.parcel_id,
+                context_id=context_id,
                 land_context=context_data,
                 ttl_hours=24,
                 parcel_id=request.parcel_id
             )
-            logger.info(f"✅ Context stored with canonical_summary: {request.parcel_id}")
+            logger.info(f"✅ Context stored with canonical_summary: context_id={context_id}")
         except Exception as storage_err:
             logger.error(f"⚠️ Failed to store context (non-fatal): {storage_err}")
             import traceback
@@ -518,7 +517,7 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
         # Build response
         response = PipelineAnalysisResponse(
             parcel_id=request.parcel_id,
-            context_id=request.parcel_id,  # ✅ CRITICAL: Add context_id for report generation
+            context_id=context_id,  # ✅ CRITICAL: context_id for report generation
             analysis_id=generate_analysis_id(request.parcel_id),
             status="success" if result.success else "failed",
             execution_time_ms=execution_time_ms,
