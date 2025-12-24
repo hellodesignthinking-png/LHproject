@@ -184,9 +184,15 @@ export const PipelineOrchestrator: React.FC = () => {
       });
       
       console.log('🔄 Updating state to RESULTS_READY...');
+      
+      // 🔥 CRITICAL: Save context_id from pipeline response
+      const pipelineContextId = pipelineResult.context_id || pipelineResult.parcel_id || parcelId;
+      console.log('🔑 Pipeline context_id:', pipelineContextId);
+      
       setState(prev => ({
         ...prev,
         stage: 'RESULTS_READY',
+        contextId: pipelineContextId,  // ✅ CRITICAL: Use pipeline's context_id
         analysisId: pipelineResult.analysis_id,
         executionTimeMs: pipelineResult.execution_time_ms,
         m1Result: results.land,
