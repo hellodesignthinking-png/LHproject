@@ -158,7 +158,6 @@ class AllInOneAssembler(BaseFinalReportAssembler):
                 • LH 판단: {lh_decision_str}
             </div>
             <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #dee2e6; font-size: 9px; color: #adb5bd;">
-                ※ 이 보고서는 입력 데이터가 동일할 경우 이전 보고서와 동일하게 보일 수 있습니다. 이는 정상 동작입니다.<br/>
                 ※ 데이터 시그니처가 다르면 입력값이 변경되었음을 의미합니다.
             </div>
         </div>
