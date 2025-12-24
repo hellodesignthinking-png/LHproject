@@ -1,10 +1,10 @@
 """
-All-in-One Comprehensive Report Assembler (PROMPT 6)
-=====================================================
+Executive Summary Report Assembler (PROMPT 6)
+==============================================
 
-Target Audience: 전체 (종합 보고서)
-Goal: 모든 모듈 포괄적 분석
-Modules: M2, M3, M4, M5, M6 (ALL)
+Target Audience: 경영진 (2페이지 요약)
+Goal: 핵심 지표 + 간결한 결론
+Modules: M2 (토지가치), M5 (사업성), M6 (LH심사)
 
 ASSEMBLY ONLY - NO CALCULATION
 """
@@ -32,38 +32,34 @@ from ..kpi_extractor import (
 logger = logging.getLogger(__name__)
 
 
-class AllInOneAssembler(BaseFinalReportAssembler):
-    """All-in-One Comprehensive Report Assembler"""
+class ExecutiveSummaryAssembler(BaseFinalReportAssembler):
+    """Executive Summary Report Assembler - 2-Page Brief"""
     
     def __init__(self, context_id: str):
         super().__init__(context_id)
-        self.report_type = "all_in_one"
+        self.report_type = "executive_summary"
         self.config = REPORT_TYPE_CONFIGS[self.report_type]
         self.narrative = NarrativeGeneratorFactory.get(self.report_type)
     
     def get_required_modules(self) -> List[Literal["M2", "M3", "M4", "M5", "M6"]]:
-        return ["M2", "M3", "M4", "M5", "M6"]
+        return ["M2", "M5", "M6"]
     
     def assemble(self) -> Dict[str, str]:
-        """Assemble All-in-One Comprehensive Report"""
+        """Assemble Executive Summary Report (Brief)"""
         m2_html_raw = self.load_module_html("M2")
-        m3_html_raw = self.load_module_html("M3")
-        m4_html_raw = self.load_module_html("M4")
         m5_html_raw = self.load_module_html("M5")
         m6_html_raw = self.load_module_html("M6")
 
         # [FIX 1] Sanitize module HTML (remove N/A placeholders)
         m2_html = self.sanitize_module_html(m2_html_raw, "M2")
-        m3_html = self.sanitize_module_html(m3_html_raw, "M3")
-        m4_html = self.sanitize_module_html(m4_html_raw, "M4")
         m5_html = self.sanitize_module_html(m5_html_raw, "M5")
         m6_html = self.sanitize_module_html(m6_html_raw, "M6")
-        
+                
         # [Phase 3.10 Final Lock + vPOST-FINAL] Extract KPI using SAFE-GATE
         mandatory_kpi = get_mandatory_kpi(self.report_type)
         critical_kpi = get_critical_kpi(self.report_type)
         modules_data = self._extract_module_data(
-            {"M2": m2_html, "M3": m3_html, "M4": m4_html, "M5": m5_html, "M6": m6_html},
+            {"M2": m2_html, "M5": m5_html, "M6": m6_html},
             mandatory_kpi
         )
         
@@ -171,65 +167,49 @@ class AllInOneAssembler(BaseFinalReportAssembler):
         
         exec_summary = self.narrative.executive_summary(modules_data)
         
-        # [FIX 2] Generate module transitions
-        transition_m2_m3 = self.generate_module_transition("M2", "M3", self.report_type)
-        transition_m3_m4 = self.generate_module_transition("M3", "M4", self.report_type)
-        transition_m4_m5 = self.generate_module_transition("M4", "M5", self.report_type)
+        # Generate module transitions
+        transition_m2_m5 = self.generate_module_transition("M2", "M5", self.report_type)
         transition_m5_m6 = self.generate_module_transition("M5", "M6", self.report_type)
-        
-        # [FIX 5] Generate section dividers for dense report
-        divider_1 = self.generate_section_divider("주택 유형 및 사업 규모 검토", "토지 평가를 바탕으로 최적의 주택 유형과 사업 규모를 결정합니다.")
-        divider_2 = self.generate_section_divider("사업성 및 LH 심사 분석", "사업 규모를 바탕으로 재무 타당성과 LH 승인 가능성을 평가합니다.")
         
         final_judgment = self.narrative.final_judgment(modules_data)
         
-        # [FIX 5] Generate Decision Block (Clear Visual Conclusion)
+        # Generate Decision Block
         judgment_text = self._determine_judgment(modules_data)
         basis = self._generate_judgment_basis(modules_data)
         actions = self._generate_next_actions(modules_data)
         decision_block = self.generate_decision_block(judgment_text, basis, actions)
         
-        # [FIX 4] Generate Next Actions Section
+        # Generate Next Actions Section
         next_actions = self.generate_next_actions_section(modules_data, self.report_type)
-        
         
         sections = [
             data_signature_panel,  # [vABSOLUTE-FINAL-9] Data signature first
-            self._generate_cover_page(),
             data_completeness_panel,
-            kpi_summary,  # KPI at top
+            kpi_summary,
             exec_summary,
             self._wrap_module_html("M2", m2_html),
-            transition_m2_m3,
-            divider_1,  # Section divider for visual break
-            self._wrap_module_html("M3", m3_html),
-            transition_m3_m4,
-            self._wrap_module_html("M4", m4_html),
-            transition_m4_m5,
-            divider_2,  # Section divider for visual break
+            transition_m2_m5,
             self._wrap_module_html("M5", m5_html),
             transition_m5_m6,
             self._wrap_module_html("M6", m6_html),
             final_judgment,
             next_actions,
-            decision_block,  # Visual decision at bottom
-            self._generate_footer().replace("{data_signature}", data_signature)
+            decision_block,
+            self._generate_footer()
         ]
         
         # Wrap in HTML document
         html_content = self._wrap_in_document(sections)
         
-        # [PROMPT 3.5-3] Insert QA Summary Page
+        # Insert QA Summary Page
         html_with_qa, qa_result = self.generate_and_insert_qa_summary(
             html_content=html_content,
             report_type=self.report_type,
             modules_data=modules_data
         )
         
-        # [P0 FIX] Validate KPI completeness - FAIL if any core KPI is N/A
-        # [vLAST] OLD validator removed - Phase 3.10 Hard-Fail handles validation
         logger.info(
-            f"[AllInOne] Assembly complete with QA Summary "
+            f"[ExecutiveSummary] Assembly complete with QA Summary "
             f"({len(html_with_qa):,} chars, QA Status: {qa_result['status']})"
         )
         
@@ -274,6 +254,67 @@ class AllInOneAssembler(BaseFinalReportAssembler):
                 }
         
         return modules_data
+
+        
+        # [FIX 2] Generate KPI Summary Box (Mandatory for executive_summary)
+        kpis = {
+            "총 토지 감정가": modules_data.get("M2", {}).get("land_value"),
+            "순현재가치 (NPV)": modules_data.get("M5", {}).get("npv"),
+            "LH 심사 결과": modules_data.get("M6", {}).get("decision", "분석 미완료")
+        }
+        kpi_summary = self.generate_kpi_summary_box(kpis, self.report_type)
+        
+        exec_summary = self.narrative.executive_summary(modules_data)
+        final_judgment = self.narrative.final_judgment(modules_data)
+        
+        # [FIX 2] Generate module transitions (for consistency)
+        transition_m2_m5 = self.generate_module_transition("M2", "M5", self.report_type)
+        transition_m5_m6 = self.generate_module_transition("M5", "M6", self.report_type)
+        
+        # [FIX 5] Generate Decision Block (Clear Visual Conclusion)
+        judgment_text = self._determine_judgment(modules_data)
+        basis = self._generate_judgment_basis(modules_data)
+        actions = self._generate_next_actions(modules_data)
+        decision_block = self.generate_decision_block(judgment_text, basis, actions)
+        
+        # [FIX 4] Generate Next Actions Section
+        next_actions = self.generate_next_actions_section(modules_data, self.report_type)
+        
+        
+        # Executive summary is VERY brief - minimal module HTML
+        sections = [
+            data_signature_panel,  # [vABSOLUTE-FINAL-9] Data signature first
+            kpi_summary,  # KPI at top
+            exec_summary,
+            self._wrap_module_html("M2", m2_html),
+            transition_m2_m5,
+            self._wrap_module_html("M5", m5_html),
+            transition_m5_m6,
+            self._wrap_module_html("M6", m6_html),
+            final_judgment,
+            next_actions,
+            decision_block,  # Visual decision at bottom
+            self._generate_footer()
+        ]
+        
+        # Wrap in HTML document
+        html_content = self._wrap_in_document(sections)
+        
+        # [PROMPT 3.5-3] Insert QA Summary Page
+        html_with_qa, qa_result = self.generate_and_insert_qa_summary(
+            html_content=html_content,
+            report_type=self.report_type,
+            modules_data=modules_data
+        )
+        
+        # [P0 FIX] Validate KPI completeness - FAIL if any core KPI is N/A
+        # [vLAST] OLD validator removed - Phase 3.10 Hard-Fail handles validation
+        logger.info(
+            f"[ExecutiveSummary] Assembly complete with QA Summary "
+            f"({len(html_with_qa):,} chars, QA Status: {qa_result['status']})"
+        )
+        
+        return {"html": html_with_qa, "qa_result": qa_result}
     
     def _determine_judgment(self, modules_data: Dict) -> str:
         """Determine final judgment text based on module data"""
@@ -351,18 +392,8 @@ class AllInOneAssembler(BaseFinalReportAssembler):
     
 
 
-    def _generate_cover_page(self) -> str:
-        return f"""
-        <section class="cover-page">
-            <h1>{self.config.name_kr}</h1>
-            <p class="subtitle">{self.config.description}</p>
-            <p class="meta">분석 ID: {self.context_id}</p>
-            <p class="meta">포함 모듈: M2, M3, M4, M5, M6 (전체)</p>
-        </section>
-        """
-    
     def _wrap_module(self, module_id: str, html: str) -> str:
-        return f'<section class="module-section" data-module="{module_id}">{html}</section>'
+        return f'<section class="module-section compact" data-module="{module_id}">{html}</section>'
     
 
     def _wrap_module_html(self, module_id: str, html: str) -> str:
@@ -468,14 +499,13 @@ class AllInOneAssembler(BaseFinalReportAssembler):
         base_css = """
         body.final-report {
             font-family: 'Noto Sans KR', sans-serif;
-            line-height: 1.6;
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
+            line-height: 1.6;
             padding: 20px;
         }
-        .cover-page { text-align: center; padding: 100px 20px; border-bottom: 2px solid #007bff; }
-        .narrative { margin: 20px 0; padding: 15px; background: #f8f9fa; }
-        .module-section { margin: 30px 0; padding: 20px; border: 1px solid #dee2e6; }
+        .module-section.compact { font-size: 0.9em; padding: 10px; }
+        .narrative { margin: 15px 0; padding: 10px; background: #f8f9fa; }
         """
         
         # Add watermark and copyright CSS

@@ -222,7 +222,7 @@ class LandownerSummaryAssembler(BaseFinalReportAssembler):
             final_judgment_narrative,
             next_actions,
             decision_block,  # Visual decision at bottom
-            self._generate_footer()
+            self._generate_footer().replace("{data_signature}", data_signature)
         ]
         
         # Wrap in HTML document
@@ -586,11 +586,45 @@ class LandownerSummaryAssembler(BaseFinalReportAssembler):
         """
     
     def _generate_footer(self) -> str:
-        """[PROMPT 3.5-2] ZEROSITE Copyright Footer"""
-        return self.get_zerosite_copyright_footer(
+        """
+        [PROMPT 3.5-2] ZEROSITE Copyright Footer
+        [vABSOLUTE-FINAL-12] Add SEARCHABLE signature text for binary verification
+        """
+        from datetime import datetime
+        
+        # Searchable text block (for PDF binary search)
+        searchable_signature = f"""
+        <div style="
+            font-size: 10px;
+            color: #b00000;
+            border: 1px solid #b00000;
+            padding: 6px;
+            margin: 12px 0;
+            background: #fff8f8;
+            font-family: monospace;
+        ">
+            <div style="font-weight: bold; margin-bottom: 4px;">
+                📊 Report Verification Signature (보고서 검증 시그니처)
+            </div>
+            <div>
+                BUILD_SIGNATURE: vABSOLUTE-FINAL-12<br/>
+                BUILD_TS: {datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]}Z<br/>
+                REPORT: {self.report_type}<br/>
+                CONTEXT: {self.context_id}<br/>
+                DATA_SIGNATURE: {{data_signature}}
+            </div>
+            <div style="font-size: 8px; color: #666; margin-top: 4px;">
+                ※ This signature is embedded as searchable text for verification purposes.
+            </div>
+        </div>
+        """
+        
+        copyright = self.get_zerosite_copyright_footer(
             report_type=self.report_type,
             context_id=self.context_id
         )
+        
+        return searchable_signature + copyright
     
     def _wrap_in_document(self, sections: List[str]) -> str:
         """Wrap all sections in HTML document"""

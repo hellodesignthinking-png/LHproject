@@ -213,7 +213,7 @@ class AllInOneAssembler(BaseFinalReportAssembler):
             final_judgment,
             next_actions,
             decision_block,  # Visual decision at bottom
-            self._generate_footer().replace("{data_signature}", data_signature)
+            self._generate_footer()
         ]
         
         # Wrap in HTML document

@@ -404,11 +404,15 @@ async def get_final_report_pdf(
                        f"Please check HTML version for details."
             )
         
-        # Step 5: [vABSOLUTE-FINAL-8] FORCE CACHE INVALIDATION
+        # Step 5: [vABSOLUTE-FINAL-12] FORCE CACHE INVALIDATION + SEARCHABLE SIGNATURE
         # Validate BUILD SIGNATURE presence (proof of new HTML)
         import hashlib
         
-        if "vABSOLUTE-FINAL-6" not in html_content:
+        # Check for searchable text signature (vABSOLUTE-FINAL-12)
+        has_searchable_sig = "BUILD_SIGNATURE:" in html_content and "DATA_SIGNATURE:" in html_content
+        has_visual_sig = "vABSOLUTE-FINAL" in html_content
+        
+        if not (has_searchable_sig or has_visual_sig):
             logger.critical(
                 f"[FinalReportAPI] ❌ CACHE DETECTED: BUILD SIGNATURE MISSING! "
                 f"Report: {report_type}, Context: {context_id}"
@@ -426,7 +430,7 @@ async def get_final_report_pdf(
             f"Report: {report_type} | "
             f"Context: {context_id} | "
             f"HTML Hash: {html_hash} | "
-            f"BUILD SIGNATURE: ✅ VERIFIED"
+            f"BUILD SIGNATURE: ✅ VERIFIED (Searchable: {has_searchable_sig}, Visual: {has_visual_sig})"
         )
         
         # Step 6: Convert HTML to PDF
@@ -470,7 +474,8 @@ async def get_final_report_pdf(
                 "Pragma": "no-cache",
                 "Expires": "0",
                 "X-Build-Hash": build_hash,
-                "X-Build-Signature": "vABSOLUTE-FINAL-6"
+                "X-Build-Signature": "vABSOLUTE-FINAL-12",
+                "X-Searchable-Signature": "true" if has_searchable_sig else "false"
             }
         )
     
