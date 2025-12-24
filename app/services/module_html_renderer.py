@@ -505,9 +505,6 @@ def _render_error_html(error_message: str) -> str:
         </div>
     </section>
     """
-    </body>
-    </html>
-    """
 
 
 def _get_common_styles() -> str:

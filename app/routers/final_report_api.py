@@ -101,40 +101,48 @@ def _validate_context_exists(context_id: str):
                    f"Cannot generate final report."
         )
     
-    # [vABSOLUTE-FINAL-13] STRICT: Validate M2~M6 data exists
-    required_modules = {
-        "M2": ["land_value_total", "total_land_value"],  # At least one
-        "M3": ["recommended_type"],
-        "M4": ["total_units", "household_count"],  # At least one
-        "M5": ["npv", "irr"],
-        "M6": ["decision"]
-    }
+    # 🔒 ABSOLUTE FINAL: STRICT Context Freeze validation
+    # Enforce that M2~M6 ALL exist with "summary" nested structure
+    required_modules = ["M2", "M3", "M4", "M5", "M6"]
     
     missing_modules = []
-    for module_id, required_keys in required_modules.items():
-        module_data = canonical_summary.get(module_id, {})
+    for module_id in required_modules:
+        module_data = canonical_summary.get(module_id)
         
         if not module_data:
-            missing_modules.append(module_id)
+            missing_modules.append(f"{module_id} (not found)")
             continue
         
-        # Check if at least one required key has a non-empty value
-        has_data = False
-        for key in required_keys:
-            value = module_data.get(key)
-            if value is not None and value != "" and value != 0:
-                has_data = True
-                break
+        # 🔒 CRITICAL: Ensure "summary" key exists (ABSOLUTE FINAL contract)
+        summary = module_data.get("summary")
+        if not summary:
+            missing_modules.append(f"{module_id} (missing 'summary' key)")
+            continue
         
-        if not has_data:
-            missing_modules.append(f"{module_id} (empty)")
+        # Validate specific required keys per module
+        required_keys = {
+            "M2": ["land_value_total_krw"],
+            "M3": ["recommended_type"],
+            "M4": ["total_units"],
+            "M5": ["npv_public_krw", "irr_pct"],
+            "M6": ["decision"]
+        }
+        
+        module_required = required_keys.get(module_id, [])
+        has_all_keys = all(key in summary for key in module_required)
+        
+        if not has_all_keys:
+            missing_keys = [k for k in module_required if k not in summary]
+            missing_modules.append(f"{module_id}.summary (missing keys: {', '.join(missing_keys)})")
     
     if missing_modules:
         raise HTTPException(
             status_code=400,
-            detail=f"Context {context_id} is missing analysis data for: {', '.join(missing_modules)}. "
-                   f"Cannot generate final report with incomplete data. "
-                   f"Please complete M1~M6 analysis in the pipeline first."
+            detail=f"❌ Context {context_id} NOT FROZEN properly. "
+                   f"Missing modules or keys: {', '.join(missing_modules)}. "
+                   f"Required: M2.summary.land_value_total_krw, M3.summary.recommended_type, "
+                   f"M4.summary.total_units, M5.summary.npv_public_krw/irr_pct, M6.summary.decision. "
+                   f"Please complete M1~M6 analysis and freeze context first."
         )
     
     return frozen_context
