@@ -111,7 +111,7 @@ class LHTechnicalAssembler(BaseFinalReportAssembler):
         # Extract key input values for display
         land_area = modules_data.get("M2", {}).get("land_value_total", "N/A")
         total_units = modules_data.get("M4", {}).get("total_units", "N/A") if "M4" in modules_data else modules_data.get("M5", {}).get("total_units", "N/A")
-        lh_decision = modules_data.get("M6", {}).get("decision", "N/A")
+        lh_decision = modules_data.get("M6", {}).get("decision") or "N/A"
         npv = modules_data.get("M5", {}).get("npv", "N/A")
         
         # Format values safely
@@ -260,7 +260,7 @@ class LHTechnicalAssembler(BaseFinalReportAssembler):
         kpis = {
             "선호 유형": modules_data.get("M3", {}).get("recommended_type", "분석 미완료"),
             "계획 세대수": modules_data.get("M4", {}).get("household_count"),
-            "LH 심사 결과": modules_data.get("M6", {}).get("decision", "분석 미완료")
+            "LH 심사 결과": modules_data.get("M6", {}).get("decision") or "분석 미완료"
         }
         kpi_summary = self.generate_kpi_summary_box(kpis, self.report_type)
         
@@ -349,7 +349,7 @@ class LHTechnicalAssembler(BaseFinalReportAssembler):
             basis.append("⚠️ 수익성: 분석 데이터 부족")
         
         # [FIX D] LH Decision with explicit status
-        lh_decision = m6_data.get("decision", "분석 미완료")
+        lh_decision = m6_data.get("decision") or "분석 미완료"
         if "추진 가능" in lh_decision:
             basis.append(f"✅ LH 심사: {lh_decision}")
         elif "조건부 가능" in lh_decision:
