@@ -1354,41 +1354,68 @@ async def get_final_report_html(
     context_id: str = Query(..., description="분석 컨텍스트 ID")
 ):
     """
-    [vABSOLUTE-FINAL-14] LEGACY ROUTE BLOCKED
-    ==========================================
+    최종보고서 6종 HTML 미리보기
     
-    This endpoint has been DEPRECATED and replaced by the new Phase 3 API.
-    
-    ❌ OLD (DO NOT USE): /api/v4/reports/final/{report_type}/html
-    ✅ NEW (USE THIS):   /api/v4/final-report/{report_type}/html
-    
-    Reason for deprecation:
-    - This route uses OLD assemblers (final_report_assembler.py)
-    - Does NOT include vABSOLUTE-FINAL-11/12/13 fixes
-    - Does NOT use modules_data-based narratives
-    - Does NOT include BUILD_SIGNATURE/DATA_SIGNATURE
-    
-    Migration Guide:
-    1. Update frontend to call: /api/v4/final-report/{report_type}/html
-    2. Same parameters (report_type, context_id)
-    3. New route includes all Phase 3 fixes
-    
+    Args:
+        report_type: 최종보고서 타입 (all_in_one, landowner_summary, etc.)
+        context_id: 분석 컨텍스트 ID
+        
+    Returns:
+        HTML 보고서
+        
     Examples:
-        OLD: GET /api/v4/reports/final/all_in_one/html?context_id=test-001
-        NEW: GET /api/v4/final-report/all_in_one/html?context_id=test-001
+        GET /api/v4/reports/final/all_in_one/html?context_id=test-001
     """
-    raise HTTPException(
-        status_code=410,  # 410 Gone - permanently removed
-        detail={
-            "error": "LEGACY_ROUTE_BLOCKED",
-            "message": "This endpoint has been deprecated. Please use /api/v4/final-report/{report_type}/html instead.",
-            "old_path": f"/api/v4/reports/final/{report_type}/html",
-            "new_path": f"/api/v4/final-report/{report_type}/html",
-            "context_id": context_id,
-            "migration_reason": "Phase 3 assemblers with vABSOLUTE-FINAL-11/12/13 fixes",
-            "documentation": "See VABSOLUTE_FINAL_14_ROUTING_FIX.md"
-        }
-    )
+    try:
+        # 보고서 타입 검증
+        try:
+            final_report_type = FinalReportType(report_type)
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid report type: {report_type}. Allowed: {[t.value for t in FinalReportType]}"
+            )
+        
+        # ✅ STEP 1: context_id로 실제 저장된 컨텍스트 조회 (Redis/DB)
+        frozen_context = context_storage.get_frozen_context(context_id)
+        
+        if not frozen_context:
+            raise HTTPException(
+                status_code=404,
+                detail=(
+                    f"❌ 분석 데이터를 찾을 수 없습니다.\n\n"
+                    f"Context ID: {context_id}\n\n"
+                    f"💡 해결 방법:\n"
+                    f"1. M1 분석을 먼저 완료하세요.\n"
+                    f"2. '분석 시작' 버튼을 눌러 context를 저장하세요.\n"
+                    f"3. 분석 완료 후 최종보고서를 생성하세요."
+                )
+            )
+        
+        # ✅ STEP 4: 최종보고서 데이터 조립 (NEW: 통합 assembler 사용)
+        from app.services.final_report_assembler import assemble_final_report as assemble_report_data
+        
+        assembled_data = assemble_report_data(
+            report_type=final_report_type.value,
+            canonical_data=frozen_context,
+            context_id=context_id
+        )
+        
+        # ✅ STEP 5: HTML 렌더링 (NEW: 통합 renderer 사용)
+        from app.services.final_report_html_renderer import render_final_report_html
+        
+        html = render_final_report_html(
+            report_type=final_report_type.value,
+            data=assembled_data
+        )
+        
+        return HTMLResponse(content=html)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to generate final report HTML: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate HTML: {str(e)}")
 
 
 def _render_final_report_html(assembled_report: dict, context_id: str) -> str:
