@@ -76,7 +76,14 @@ def _validate_report_type(report_type: str):
 
 
 def _validate_context_exists(context_id: str):
-    """Validate context_id exists"""
+    """
+    Validate context_id exists with COMPLETE data
+    
+    [vABSOLUTE-FINAL-13] STRICT DATA VALIDATION
+    - Context must exist
+    - canonical_summary must exist and NOT be empty
+    - M2~M6 modules must have actual data
+    """
     frozen_context = context_storage.get_frozen_context(context_id)
     if not frozen_context:
         raise HTTPException(
@@ -92,6 +99,42 @@ def _validate_context_exists(context_id: str):
             status_code=400,
             detail=f"Context {context_id} has no canonical_summary. "
                    f"Cannot generate final report."
+        )
+    
+    # [vABSOLUTE-FINAL-13] STRICT: Validate M2~M6 data exists
+    required_modules = {
+        "M2": ["land_value_total", "total_land_value"],  # At least one
+        "M3": ["recommended_type"],
+        "M4": ["total_units", "household_count"],  # At least one
+        "M5": ["npv", "irr"],
+        "M6": ["decision"]
+    }
+    
+    missing_modules = []
+    for module_id, required_keys in required_modules.items():
+        module_data = canonical_summary.get(module_id, {})
+        
+        if not module_data:
+            missing_modules.append(module_id)
+            continue
+        
+        # Check if at least one required key has a non-empty value
+        has_data = False
+        for key in required_keys:
+            value = module_data.get(key)
+            if value is not None and value != "" and value != 0:
+                has_data = True
+                break
+        
+        if not has_data:
+            missing_modules.append(f"{module_id} (empty)")
+    
+    if missing_modules:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Context {context_id} is missing analysis data for: {', '.join(missing_modules)}. "
+                   f"Cannot generate final report with incomplete data. "
+                   f"Please complete M1~M6 analysis in the pipeline first."
         )
     
     return frozen_context
