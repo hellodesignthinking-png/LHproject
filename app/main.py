@@ -85,6 +85,9 @@ from app.api.endpoints.proxy_kakao import router as proxy_kakao_router
 # ✨ PDF Download: Import Standardized PDF Download Router (M2-M6)
 from app.routers.pdf_download_standardized import router as pdf_download_router
 
+# ✨ Phase 3: Import Final Report API Router (6 Report Types)
+from app.routers.final_report_api import router as final_report_router
+
 # ✨ v11.0 ENHANCEMENTS: Import middleware and utilities
 from app.middleware.rate_limiter import RateLimiter, RateLimitConfig
 from app.middleware.cache_manager import cache_manager, start_cache_cleanup_task
@@ -218,6 +221,9 @@ app.include_router(proxy_kakao_router)
 
 # ✨ PDF Download: Standardized PDF Download Router (M2-M6)
 app.include_router(pdf_download_router)
+
+# ✨ Phase 3: Final Report API Router (6 Report Types)
+app.include_router(final_report_router)
 
 # ✨ PDF Reports API
 from app.api.endpoints.pdf_reports import router as pdf_reports_router

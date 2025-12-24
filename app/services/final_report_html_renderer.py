@@ -392,6 +392,136 @@ def format_generic(value: Optional[Any], suffix: str = "") -> str:
     return f'<span class="data-value">{value}{suffix}</span>'
 
 
+def render_section_error_placeholder(section_name: str, error: Exception, show_debug: bool = False) -> str:
+    """섹션 렌더링 실패 시 대체 HTML (사용자 친화적 + 개발자 디버그)
+    
+    Args:
+        section_name: 섹션 이름 (예: "재무 분석", "리스크 평가")
+        error: 발생한 예외
+        show_debug: 개발자용 디버그 정보 표시 여부 (기본값: False)
+    
+    Returns:
+        사용자용 안내 HTML + 숨겨진 개발자 정보
+    """
+    # 개발자용 디버그 정보 (HTML 주석으로 숨김)
+    debug_comment = f"""
+    <!-- 
+    🔧 DEVELOPER DEBUG INFO:
+    Error Type: {type(error).__name__}
+    Error Message: {str(error)[:300]}
+    Section: {section_name}
+    -->
+    """ if show_debug else ""
+    
+    # 사용자용 표시 (기술적 내용 제외)
+    return f"""
+    {debug_comment}
+    <div style="padding: 24px; margin: 20px 0; background: #FFFBEB; border: 2px dashed #F59E0B; border-radius: 8px;">
+        <div style="text-align: center; margin-bottom: 16px;">
+            <span style="font-size: 48px;">⚠️</span>
+        </div>
+        <div style="text-align: center; margin-bottom: 12px;">
+            <strong style="font-size: 18px; color: #92400E;">본 항목은 현재 자동 생성 과정에서 제외되었습니다</strong>
+        </div>
+        <div style="text-align: center; color: #78350F; line-height: 1.6;">
+            <strong>대상 섹션:</strong> {section_name}<br>
+            <strong>가능한 원인:</strong> 필수 데이터 부족 또는 분석 미완료<br>
+            <strong>권장 조치:</strong> M2~M6 모든 분석 단계를 완료한 후 보고서를 다시 생성해주세요.
+        </div>
+        <div style="margin-top: 16px; padding: 12px; background: white; border-radius: 4px; text-align: left; font-size: 13px; color: #6B7280;">
+            <strong>💡 참고:</strong> 이 메시지는 데이터가 준비되면 자동으로 사라지며, 
+            해당 섹션이 정상적인 분석 내용으로 채워집니다.
+        </div>
+    </div>
+    """
+
+
+def get_required_sections_by_report_type(report_type: str) -> list:
+    """보고서 타입별 필수 섹션 정의 (기획서 기준)
+    
+    Args:
+        report_type: 보고서 유형
+        
+    Returns:
+        필수 섹션 키워드 리스트
+    """
+    required_sections = {
+        "all_in_one": [
+            "요약", "결론", "정책", "리스크", "시나리오", "최종판단"
+        ],
+        "landowner_summary": [
+            "무엇을 할 수 있나요", "리스크", "예상 수익", "추진 가능성"
+        ],
+        "lh_technical": [
+            "법령", "기준", "검토 기준", "적합성", "승인 전망"
+        ],
+        "financial_feasibility": [
+            "재무 분석", "수익률", "투자 판단", "시나리오", "리스크"
+        ],
+        "quick_check": [
+            "결론", "GO", "CONDITIONAL", "NO-GO"
+        ],
+        "presentation": [
+            "요약", "핵심 지표", "결론", "추천"
+        ]
+    }
+    
+    return required_sections.get(report_type, [])
+
+
+def check_section_completeness(html_content: str, report_type: str) -> tuple:
+    """보고서 HTML에 필수 섹션이 포함되었는지 검증
+    
+    Args:
+        html_content: 생성된 HTML 문자열
+        report_type: 보고서 타입
+        
+    Returns:
+        (is_complete: bool, missing_sections: list)
+    """
+    required = get_required_sections_by_report_type(report_type)
+    missing = []
+    
+    for section_keyword in required:
+        # 대소문자 구분 없이 검색
+        if section_keyword.lower() not in html_content.lower():
+            missing.append(section_keyword)
+    
+    return (len(missing) == 0, missing)
+
+
+def render_section_completeness_warning(missing_sections: list) -> str:
+    """필수 섹션 누락 경고 박스
+    
+    Args:
+        missing_sections: 누락된 섹션 키워드 리스트
+        
+    Returns:
+        경고 HTML
+    """
+    if not missing_sections:
+        return ""
+    
+    missing_text = ", ".join([f"'{s}'" for s in missing_sections])
+    
+    return f"""
+    <div style="margin: 20px 0; padding: 20px; background: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 4px;">
+        <div style="margin-bottom: 12px;">
+            <span style="font-size: 24px;">🚨</span>
+            <strong style="font-size: 16px; color: #991B1B; margin-left: 8px;">기획 섹션 누락 감지</strong>
+        </div>
+        <div style="color: #7F1D1D; line-height: 1.6; margin-bottom: 12px;">
+            다음 필수 섹션이 보고서에 포함되지 않았습니다:<br>
+            <strong>{missing_text}</strong>
+        </div>
+        <div style="padding: 12px; background: white; border-radius: 4px; font-size: 13px; color: #6B7280;">
+            <strong>💡 권장 조치:</strong> 모든 M2~M6 분석을 완료하고 보고서를 재생성하거나, 
+            개발팀에 기획서 기준 섹션 구현 여부를 확인해주세요.
+        </div>
+    </div>
+    """
+
+
 def render_data_shortage_warning(missing_modules: list) -> str:
     """데이터 부족 경고 박스"""
     if not missing_modules:
@@ -1402,7 +1532,7 @@ def render_financial_feasibility(data: Dict[str, Any]) -> str:
                             내부수익률(IRR) <strong style="color: #10B981;">{format_percentage(irr_pct)}</strong>는 
                             투자금이 창출하는 연평균 수익률을 의미합니다. 부동산 개발사업의 목표 수익률이 
                             일반적으로 10-15% 수준임을 고려할 때, 본 사업의 IRR은 
-                            {'목표 수익률을 달성' if irr_pct and irr_pct >= 10 else '시장 평균 수준'을 나타냅니다.
+                            {'목표 수익률을 달성' if irr_pct and irr_pct >= 10 else '시장 평균 수준'}을 나타냅니다.
                             투자수익률(ROI) <strong style="color: #8B5CF6;">{format_percentage(roi_pct)}</strong>는 
                             투자 원금 대비 총 수익의 비율로, LH 매입임대사업의 평균 ROI 12-18% 대비 
                             {'경쟁력 있는' if roi_pct and roi_pct >= 12 else '검토가 필요한'} 수준입니다.
@@ -1753,7 +1883,7 @@ def render_financial_feasibility(data: Dict[str, Any]) -> str:
                             <p style="margin: 12px 0 0 0; color: #374151; line-height: 1.8;">
                                 NPV가 <strong style="color: {'#10B981' if npv_krw and npv_krw > 0 else '#EF4444'};">
                                 {format_currency(npv_krw)}</strong>로 
-                                {'양수(+)' if npv_krw and npv_krw > 0 else '음수(-)'입니다.
+                                {'양수(+)' if npv_krw and npv_krw > 0 else '음수(-)'}입니다.
                                 이는 이 사업이 최소 요구수익률(6.0%)을 
                                 {'<strong style="color: #10B981;">초과하는 초과 이익</strong>을 창출한다는 의미입니다.' if npv_krw and npv_krw > 0 else '<strong style="color: #EF4444;">충족하지 못한다</strong는 의미입니다.'}
                             </p>
@@ -1868,7 +1998,7 @@ def render_financial_feasibility(data: Dict[str, Any]) -> str:
                             </p>
                             <p style="margin: 12px 0 0 0; color: #374151; line-height: 1.8;">
                                 IRR {format_percentage(irr_pct)}는 부동산 개발사업의 
-                                {'평균 이상' if irr_pct and irr_pct >= 12 else '평균 수준'의 수익률입니다.
+                                {'평균 이상' if irr_pct and irr_pct >= 12 else '평균 수준'}의 수익률입니다.
                                 투자자의 요구수익률(보통 10-12%)을 
                                 {'초과' if irr_pct and irr_pct >= 12 else '충족'}하므로 
                                 {'투자 매력도가 높습니다' if irr_pct and irr_pct >= 12 else '투자 검토가 가능합니다'}.
@@ -1909,7 +2039,7 @@ def render_financial_feasibility(data: Dict[str, Any]) -> str:
                             <p style="margin: 12px 0 0 0; color: #374151; line-height: 1.8;">
                                 LH 매입임대사업의 평균 ROI는 12-18%입니다.
                                 본 사업의 ROI {format_percentage(roi_pct)}는 
-                                {'업계 평균 이상' if roi_pct and roi_pct >= 15 else '평균 수준'으로 
+                                {'업계 평균 이상' if roi_pct and roi_pct >= 15 else '평균 수준'}으로 
                                 {'우수한' if roi_pct and roi_pct >= 15 else '적정한'} 수익성을 보입니다.
                                 1억원 투자 시 약 {format_currency(int(100000000 * roi_pct / 100) if roi_pct else None)}의 
                                 수익을 기대할 수 있습니다.
@@ -3347,7 +3477,7 @@ def render_presentation_report(data: Dict[str, Any]) -> str:
                         </p>
                         <p>
                             "이는 LH 매입임대사업의 평균 수익률인 IRR 11-13%, ROI 12-18%와 비교할 때,
-                            {'평균 이상' if irr_pct and irr_pct >= 12 else '평균 수준'의 수익성을 보입니다.
+                            {'평균 이상' if irr_pct and irr_pct >= 12 else '평균 수준'}의 수익성을 보입니다.
                             NPV가 {'3억원 이상' if npv_krw and npv_krw >= 300000000 else '양수(+)'}로,
                             투자 타당성이 {'충분히' if npv_krw and npv_krw >= 300000000 else ''} 확보되었습니다."
                         </p>
@@ -3741,12 +3871,15 @@ def render_final_report_html(report_type: str, data: Dict[str, Any]) -> str:
     """
     최종보고서 HTML 렌더링 (메인 진입점)
     
+    🔥 FAIL-SAFE: 섹션별 오류 발생 시에도 나머지 보고서는 정상 생성
+    ✅ QA CHECK: 필수 섹션 완전성 자동 검증
+    
     Args:
         report_type: 보고서 유형
         data: assemble_final_report() 결과
     
     Returns:
-        완전한 HTML 문자열
+        완전한 HTML 문자열 (일부 섹션 실패 시에도 반환)
     """
     
     renderers = {
@@ -3760,6 +3893,71 @@ def render_final_report_html(report_type: str, data: Dict[str, Any]) -> str:
     
     renderer = renderers.get(report_type)
     if not renderer:
+        # 알 수 없는 보고서 타입인 경우만 예외 발생
         raise ValueError(f"Unknown report type: {report_type}")
     
-    return renderer(data)
+    try:
+        # 정상 렌더링 시도
+        html = renderer(data)
+        
+        # ✅ QA CHECK: 필수 섹션 완전성 검증
+        is_complete, missing_sections = check_section_completeness(html, report_type)
+        
+        if not is_complete:
+            # 누락된 섹션이 있으면 경고 박스를 HTML 상단에 삽입
+            warning_html = render_section_completeness_warning(missing_sections)
+            # <body> 태그 바로 다음에 경고 삽입
+            html = html.replace('<div class="report-container">', 
+                               f'{warning_html}<div class="report-container">', 1)
+            
+            # QA Status 업데이트 (data에 반영)
+            if 'qa_status' not in data:
+                data['qa_status'] = {}
+            data['qa_status']['content_completeness'] = 'WARNING - 일부 섹션 누락'
+        
+        return html
+        
+    except Exception as e:
+        # 전체 렌더링 실패 시 - 최소한의 오류 페이지 반환
+        report_names = {
+            "all_in_one": "종합 최종보고서",
+            "landowner_summary": "토지주용 요약보고서",
+            "lh_technical": "LH 기술검토 보고서",
+            "financial_feasibility": "재무타당성 보고서",
+            "quick_check": "빠른 검토 보고서",
+            "presentation": "프레젠테이션용 보고서"
+        }
+        
+        return f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>보고서 생성 오류</title>
+            <style>
+                body {{
+                    font-family: 'Pretendard', sans-serif;
+                    padding: 40px;
+                    background: #F9FAFB;
+                }}
+                .error-container {{
+                    max-width: 800px;
+                    margin: 0 auto;
+                    background: white;
+                    padding: 40px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="error-container">
+                {render_section_error_placeholder(
+                    report_names.get(report_type, report_type),
+                    e,
+                    show_debug=True
+                )}
+            </div>
+        </body>
+        </html>
+        """

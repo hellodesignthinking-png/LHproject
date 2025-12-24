@@ -53,6 +53,7 @@ from app.core.canonical_data_contract import (
     M5Summary,
     M5Result
 )
+from app.services.context_storage import ContextStorageService
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +99,7 @@ class PipelineAnalysisResponse(BaseModel):
     """Response for pipeline analysis"""
     
     parcel_id: str = Field(..., description="Parcel ID")
+    context_id: str = Field(..., description="Context ID (same as parcel_id, for report generation)")
     analysis_id: str = Field(..., description="Unique analysis ID")
     status: Literal["success", "failed"] = Field(..., description="Analysis status")
     version: str = Field(default="v4.0", description="Pipeline version")
@@ -381,6 +383,7 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
             
             return PipelineAnalysisResponse(
                 parcel_id=request.parcel_id,
+                context_id=request.parcel_id,  # ✅ CRITICAL: Add context_id for report generation
                 analysis_id=f"cached_{request.parcel_id}",
                 status="success",
                 execution_time_ms=0,
@@ -406,8 +409,96 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
         logger.info(f"🚀 Running 6-MODULE pipeline for {request.parcel_id}")
         result = pipeline.run(request.parcel_id)
         
-        # Cache results
-        results_cache[request.parcel_id] = result
+        # CRITICAL: context_id IS parcel_id (single source of truth)
+        context_id = request.parcel_id
+        
+        # Cache results with context_id as primary key
+        results_cache[context_id] = result
+        
+        logger.info(f"[PIPELINE] context_id={context_id} parcel_id={request.parcel_id}")
+        logger.info(f"[CACHE] set key=context_id")
+        
+        # 🔥 CRITICAL: Store context to DB with canonical_summary for final reports
+        try:
+            # Build canonical_summary from pipeline results
+            # Convert appraisal context to dict for conversion
+            appraisal_dict = result.appraisal.to_dict() if hasattr(result.appraisal, 'to_dict') else {}
+            housing_dict = result.housing_type.to_dict() if hasattr(result.housing_type, 'to_dict') else {}
+            lh_review_dict = result.lh_review.to_dict() if hasattr(result.lh_review, 'to_dict') else {}
+            capacity_dict = result.capacity.to_dict() if hasattr(result.capacity, 'to_dict') else {}
+            feasibility_dict = result.feasibility.to_dict() if hasattr(result.feasibility, 'to_dict') else {}
+            
+            # Extract M4 summary safely
+            legal_units = getattr(result.capacity.legal_capacity, 'total_units', None) if hasattr(result.capacity, 'legal_capacity') else None
+            incentive_units = getattr(result.capacity.incentive_capacity, 'total_units', None) if hasattr(result.capacity, 'incentive_capacity') else None
+            
+            # Handle parking solutions (dict of ParkingSolution objects)
+            parking_alt_a = None
+            parking_alt_b = None
+            if hasattr(result.capacity, 'parking_solutions'):
+                ps = result.capacity.parking_solutions
+                if isinstance(ps, dict):
+                    # Values are ParkingSolution objects, not dicts
+                    alt_a = ps.get('alternative_A')
+                    alt_b = ps.get('alternative_B')
+                    parking_alt_a = getattr(alt_a, 'total_parking_spaces', None) if alt_a else None
+                    parking_alt_b = getattr(alt_b, 'total_parking_spaces', None) if alt_b else None
+                else:
+                    # Fallback: try to access as object attributes
+                    parking_alt_a = getattr(getattr(ps, 'alternative_A', None), 'total_parking_spaces', None)
+                    parking_alt_b = getattr(getattr(ps, 'alternative_B', None), 'total_parking_spaces', None)
+            
+            # ✅ FIX: Convert Pydantic models to dicts for JSON serialization
+            canonical_summary = {
+                'M2': convert_m2_to_standard(appraisal_dict, request.parcel_id).model_dump(),
+                'M3': convert_m3_to_standard(housing_dict, request.parcel_id).model_dump(),
+                'M4': {
+                    'module': 'M4',
+                    'context_id': request.parcel_id,
+                    'summary': {
+                        'total_units': incentive_units or legal_units or 0,  # ✅ CRITICAL: total_units for validation
+                        'legal_units': legal_units,
+                        'incentive_units': incentive_units,
+                        'parking_alt_a': parking_alt_a,
+                        'parking_alt_b': parking_alt_b,
+                    },
+                    'details': capacity_dict
+                },
+                'M5': {
+                    'module': 'M5',
+                    'context_id': request.parcel_id,
+                    'summary': {
+                        # ✅ FIX: Convert to int to match M5Summary type
+                        'npv_public_krw': int(result.feasibility.financial_metrics.npv_public) if result.feasibility.financial_metrics.npv_public else None,
+                        # ✅ FIX: irr_public and roi are already percentages (7.14%), not decimals (0.0714)
+                        'irr_pct': result.feasibility.financial_metrics.irr_public if hasattr(result.feasibility.financial_metrics, 'irr_public') else None,
+                        'roi_pct': result.feasibility.financial_metrics.roi if hasattr(result.feasibility.financial_metrics, 'roi') else None,
+                        'grade': feasibility_dict.get('profitability', {}).get('grade') if feasibility_dict else None,
+                    },
+                    'details': feasibility_dict
+                },
+                'M6': convert_m6_to_standard(lh_review_dict, request.parcel_id).model_dump(),
+            }
+            
+            # Store context with canonical_summary
+            context_data = {
+                'parcel_id': request.parcel_id,
+                'canonical_summary': canonical_summary,
+                'pipeline_version': 'v4.0',
+                'analyzed_at': datetime.now().isoformat(),
+            }
+            
+            ContextStorageService.store_frozen_context(
+                context_id=context_id,
+                land_context=context_data,
+                ttl_hours=24,
+                parcel_id=request.parcel_id
+            )
+            logger.info(f"✅ Context stored with canonical_summary: context_id={context_id}")
+        except Exception as storage_err:
+            logger.error(f"⚠️ Failed to store context (non-fatal): {storage_err}")
+            import traceback
+            logger.error(traceback.format_exc())
         
         # Calculate execution time
         execution_time_ms = (time.time() - start_time) * 1000
@@ -426,6 +517,7 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
         # Build response
         response = PipelineAnalysisResponse(
             parcel_id=request.parcel_id,
+            context_id=context_id,  # ✅ CRITICAL: context_id for report generation
             analysis_id=generate_analysis_id(request.parcel_id),
             status="success" if result.success else "failed",
             execution_time_ms=execution_time_ms,

@@ -184,9 +184,15 @@ export const PipelineOrchestrator: React.FC = () => {
       });
       
       console.log('🔄 Updating state to RESULTS_READY...');
+      
+      // 🔥 CRITICAL: Save context_id from pipeline response
+      const pipelineContextId = pipelineResult.context_id || pipelineResult.parcel_id || parcelId;
+      console.log('🔑 Pipeline context_id:', pipelineContextId);
+      
       setState(prev => ({
         ...prev,
         stage: 'RESULTS_READY',
+        contextId: pipelineContextId,  // ✅ CRITICAL: Use pipeline's context_id
         analysisId: pipelineResult.analysis_id,
         executionTimeMs: pipelineResult.execution_time_ms,
         m1Result: results.land,
@@ -666,7 +672,7 @@ export const PipelineOrchestrator: React.FC = () => {
                         alert('⚠️ M1 분석을 먼저 완료해주세요.');
                         return;
                       }
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/all_in_one/html?context_id=${state.contextId}`;
+                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/final-report/all_in_one/html?context_id=${state.contextId}`;
                       window.open(url, '_blank');
                     }}
                     disabled={!state.contextId}
@@ -699,7 +705,7 @@ export const PipelineOrchestrator: React.FC = () => {
                         alert('⚠️ M1 분석을 먼저 완료해주세요.');
                         return;
                       }
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/landowner_summary/html?context_id=${state.contextId}`;
+                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/final-report/landowner_summary/html?context_id=${state.contextId}`;
                       window.open(url, '_blank');
                     }}
                     disabled={!state.contextId}
@@ -732,7 +738,7 @@ export const PipelineOrchestrator: React.FC = () => {
                         alert('⚠️ M1 분석을 먼저 완료해주세요.');
                         return;
                       }
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/lh_technical/html?context_id=${state.contextId}`;
+                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/final-report/lh_technical/html?context_id=${state.contextId}`;
                       window.open(url, '_blank');
                     }}
                     disabled={!state.contextId}
@@ -761,7 +767,7 @@ export const PipelineOrchestrator: React.FC = () => {
                   {/* 4. 사업성·투자 검토 보고서 */}
                   <button
                     onClick={() => {
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/financial_feasibility/html?context_id=${state.contextId}`;
+                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/final-report/financial_feasibility/html?context_id=${state.contextId}`;
                       window.open(url, '_blank');
                     }}
                     style={{
@@ -788,7 +794,7 @@ export const PipelineOrchestrator: React.FC = () => {
                   {/* 5. 사전 검토 리포트 */}
                   <button
                     onClick={() => {
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/quick_check/html?context_id=${state.contextId}`;
+                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/final-report/quick_check/html?context_id=${state.contextId}`;
                       window.open(url, '_blank');
                     }}
                     style={{
@@ -819,7 +825,7 @@ export const PipelineOrchestrator: React.FC = () => {
                         alert('⚠️ M1 분석을 먼저 완료해주세요.');
                         return;
                       }
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/presentation/html?context_id=${state.contextId}`;
+                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/final-report/executive_summary/html?context_id=${state.contextId}`;
                       window.open(url, '_blank');
                     }}
                     disabled={!state.contextId}

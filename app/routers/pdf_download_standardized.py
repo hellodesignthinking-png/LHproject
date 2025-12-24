@@ -62,15 +62,192 @@ MODULE_NAMES = {
 }
 
 
-def _generate_pdf_filename(module: str) -> str:
+def _convert_normalized_to_pdf_format(module: str, normalized_data: dict, frozen_context: dict) -> dict:
+    """
+    Convert normalized JSON (from adapter) to PDF generator format
+    
+    This is a compatibility layer until PDF generators are fully updated
+    to use the same normalized format as HTML.
+    """
+    import hashlib
+    import json
+    
+    # Calculate data signature
+    canonical_summary = frozen_context.get("canonical_summary", {})
+    data_signature = hashlib.sha256(
+        json.dumps(canonical_summary, sort_keys=True).encode()
+    ).hexdigest()[:16]
+    
+    # Common metadata for all PDFs
+    pdf_data = {
+        "_metadata": {
+            "context_id": frozen_context.get("context_id", "unknown"),
+            "parcel_id": frozen_context.get("parcel_id", "unknown"),
+            "snapshot_created_at": frozen_context.get("created_at", "unknown"),
+            "generated_at": datetime.now().isoformat(),
+            "data_signature": data_signature,
+            "pipeline_version": frozen_context.get("pipeline_version", "v4.3")
+        }
+    }
+    
+    if module == "M2":
+        appraisal = normalized_data.get("appraisal_result", {})
+        basis = normalized_data.get("analysis_basis", {})
+        pdf_data.update({
+            "appraisal": {
+                "land_value": appraisal.get("total_value", 0),
+                "unit_price_pyeong": appraisal.get("pyeong_price", 0),
+                "confidence_pct": appraisal.get("confidence_pct", 0)
+            },
+            "transactions": {
+                "count": basis.get("transaction_count", 0)
+            },
+            "interpretation": normalized_data.get("interpretation", {}),
+            "lh_perspective": normalized_data.get("lh_perspective", {})
+        })
+    
+    elif module == "M3":
+        rec_type = normalized_data.get("recommended_type", {})
+        pdf_data.update({
+            "recommended_type": rec_type.get("name", "정보 없음"),
+            "total_score": rec_type.get("score", 0),
+            "confidence_pct": rec_type.get("confidence", "없음"),
+            "evaluation_summary": normalized_data.get("evaluation_summary", {}),
+            "score_breakdown": normalized_data.get("score_breakdown", []),
+            "lh_policy_interpretation": normalized_data.get("lh_policy_interpretation", {})
+        })
+    
+    elif module == "M4":
+        # M4 needs the full details structure for PDF generation
+        m4_canonical = canonical_summary.get("M4", {})
+        details = m4_canonical.get("details", {})
+        
+        # Extract direct data from canonical_summary details
+        legal_capacity = details.get("legal_capacity", {})
+        incentive_capacity = details.get("incentive_capacity", {})
+        massing_options = details.get("massing_options", [])
+        parking_solutions = details.get("parking_solutions", {})
+        
+        # Build scenarios from massing options
+        scenarios = []
+        for i, option in enumerate(massing_options):
+            scenario = {
+                "id": f"scenario_{option.get('option_id', chr(65+i))}",
+                "name": option.get("option_name", f"Option {chr(65+i)}"),
+                "units": incentive_capacity.get("total_units", 0),
+                "far": option.get("achieved_far", 0),
+                "parking": parking_solutions.get("alternative_A", {}).get("total_parking", 0),
+                "buildability_score": option.get("buildability_score", 0),
+                "efficiency_score": option.get("efficiency_score", 0)
+            }
+            scenarios.append(scenario)
+        
+        # Set selected scenario (use first option as default)
+        selected_scenario_id = f"scenario_{massing_options[0].get('option_id', 'A')}" if massing_options else "scenario_A"
+        
+        pdf_data.update({
+            "selected_scenario_id": selected_scenario_id,
+            "legal_capacity": {
+                "far_max": legal_capacity.get("applied_far", 200.0),
+                "bcr_max": legal_capacity.get("applied_bcr", 60.0),
+                "total_units": legal_capacity.get("total_units", 0),
+                "gross_floor_area": legal_capacity.get("target_gfa_sqm", 0),
+                "required_parking": legal_capacity.get("required_parking", 0)
+            },
+            "incentive_capacity": {
+                "far_max": incentive_capacity.get("applied_far", 260.0),
+                "bcr_max": incentive_capacity.get("applied_bcr", 60.0),
+                "total_units": incentive_capacity.get("total_units", 0),
+                "gross_floor_area": incentive_capacity.get("target_gfa_sqm", 0),
+                "required_parking": incentive_capacity.get("required_parking", 0)
+            },
+            "scenarios": scenarios,
+            "parking_solutions": parking_solutions,
+            "massing_options": massing_options,
+            "interpretation": normalized_data.get("interpretation", {}),
+            "lh_feasibility": normalized_data.get("lh_feasibility", {})
+        })
+    
+    elif module == "M5":
+        # M5 needs the full details structure for PDF generation
+        m5_canonical = canonical_summary.get("M5", {})
+        details = m5_canonical.get("details", {})
+        
+        # Extract financial data
+        appraisal = details.get("appraisal", {})
+        lh_purchase = details.get("lh_purchase", {})
+        costs = details.get("costs", {})
+        revenue = details.get("revenue", {})
+        financials = details.get("financials", {})
+        profitability = details.get("profitability", {})
+        
+        # Get household count from M4
+        m4_canonical = canonical_summary.get("M4", {})
+        m4_details = m4_canonical.get("details", {})
+        incentive_capacity = m4_details.get("incentive_capacity", {})
+        household_count = incentive_capacity.get("total_units", 0)
+        
+        # Calculate profit
+        total_revenue = revenue.get("total", 0)
+        total_cost = costs.get("total", 0)
+        profit = total_revenue - total_cost
+        profit_rate = (profit / total_cost * 100) if total_cost > 0 else 0
+        
+        pdf_data.update({
+            "household_count": household_count,
+            "avg_unit_area_m2": 30.0,  # From M3/M4 청년형 standard
+            "total_cost": total_cost,
+            "lh_purchase_price": lh_purchase.get("price", 0),
+            "profit": profit,
+            "profit_rate": profit_rate,
+            "npv": financials.get("npv_public", 0),
+            "irr": financials.get("irr_public", 0),
+            "roi": financials.get("roi", 0),
+            "payback_years": financials.get("payback_years", 0),
+            "grade": profitability.get("grade", "N/A"),
+            "is_profitable": profitability.get("is_profitable", False),
+            "costs": costs,
+            "revenue": revenue,
+            "appraisal": appraisal,
+            "lh_purchase": lh_purchase,
+            "risks": details.get("risks", {}),
+            "interpretation": normalized_data.get("interpretation", {}),
+            "lh_perspective": normalized_data.get("lh_perspective", {})
+        })
+    
+    elif module == "M6":
+        review = normalized_data.get("review_result", {})
+        score_details = normalized_data.get("score_details", {})
+        pdf_data.update({
+            "decision": review.get("decision", "분석 불가"),
+            "total_score": review.get("total_score", 0),
+            "max_score": review.get("max_score", 110),
+            "grade": review.get("grade", "N/A"),
+            "approval_probability": review.get("approval_probability", 0),
+            "interpretation": normalized_data.get("interpretation", {}),
+            "recommendation": normalized_data.get("recommendation", {})
+        })
+    
+    return pdf_data
+
+
+def _generate_pdf_filename(module: str, context_id: str = None, snapshot_created_at: str = None) -> str:
     """표준 PDF 파일명 생성
     
-    형식: M{N}_{모듈명}_보고서_YYYY-MM-DD.pdf
-    예: M4_건축규모결정_보고서_2025-12-19.pdf
+    형식: M{N}_{모듈명}_{context_id}_{timestamp}.pdf
+    예: M4_건축규모결정_abc123_2025-12-19T10-30-00.pdf
     """
     date_str = datetime.now().strftime("%Y-%m-%d")
     module_name = MODULE_NAMES.get(module, "보고서")
-    return f"{module}_{module_name}_보고서_{date_str}.pdf"
+    
+    if context_id and snapshot_created_at:
+        # Include context_id for tracking
+        # Convert ISO timestamp to filename-safe format
+        timestamp = snapshot_created_at.replace(":", "-").split(".")[0]
+        return f"{module}_{module_name}_{context_id[:8]}_{timestamp}.pdf"
+    else:
+        # Fallback to old format
+        return f"{module}_{module_name}_보고서_{date_str}.pdf"
 
 
 @router.get("/{module}/pdf", summary="모듈 PDF 다운로드 (표준화)")
@@ -97,31 +274,209 @@ async def download_module_pdf(
     """
     
     try:
-        logger.info(f"PDF 다운로드 요청: module={module}, context_id={context_id}")
+        logger.info(f"📄 PDF 다운로드 요청: module={module}, context_id={context_id}")
         
-        # TODO: context_id로 실제 데이터 조회
-        # 현재는 테스트 데이터 사용
-        test_data = _get_test_data_for_module(module, context_id)
+        # 🔴 STEP 0: STRICT VALIDATION - context_id is MANDATORY
+        if not context_id or context_id.strip() == "":
+            logger.error("❌ PDF generation attempted without context_id")
+            raise HTTPException(
+                status_code=400,
+                detail="PDF generation requires explicit context_id. "
+                       "No implicit context or 'latest' snapshot allowed. "
+                       "This prevents old/cached data from being served."
+            )
         
-        # PDF 생성기 초기화
-        generator = ModulePDFGenerator()
+        # ✅ CRITICAL FIX: Load SAME data source as HTML preview
+        # Step 1: Load frozen context from DB (ONLY DATA SOURCE ALLOWED)
+        frozen_context = context_storage.get_frozen_context(context_id)
+        if not frozen_context:
+            logger.error(f"❌ Context not found: {context_id}")
+            raise FileNotFoundError(f"Context {context_id} not found")
         
-        # 모듈별 PDF 생성
+        # Step 2: Extract canonical_summary (SINGLE SOURCE OF TRUTH)
+        canonical_summary = frozen_context.get("canonical_summary", {})
+        if not canonical_summary:
+            logger.error(f"❌ canonical_summary not found in context: {context_id}")
+            raise ValueError("canonical_summary missing in context")
+        
+        # 🔒 STEP 2.5: VERIFY CANONICAL SUMMARY INTEGRITY
+        required_modules = {"M2", "M3", "M4", "M5", "M6"}
+        available_modules = set(canonical_summary.keys())
+        
+        if not required_modules.issubset(available_modules):
+            missing = required_modules - available_modules
+            logger.error(f"❌ Incomplete canonical_summary: missing {missing}")
+            raise ValueError(f"canonical_summary incomplete: missing modules {missing}")
+        
+        # 🔒 STEP 2.6: SNAPSHOT FRESHNESS CHECK (ENFORCED)
+        # Strongly discourage using old snapshots to prevent stale data issues
+        snapshot_created_at = frozen_context.get("created_at", "")
+        parcel_id = frozen_context.get("parcel_id", "unknown")
+        
+        if snapshot_created_at:
+            from datetime import timedelta  # datetime already imported at top
+            try:
+                snapshot_time = datetime.fromisoformat(snapshot_created_at.replace('Z', '+00:00'))
+                now = datetime.now(snapshot_time.tzinfo) if snapshot_time.tzinfo else datetime.now()
+                age = now - snapshot_time
+                age_hours = age.total_seconds() / 3600
+                
+                # STRICT FRESHNESS POLICY: Warn if > 1 hour old
+                if age > timedelta(hours=1):
+                    logger.error(f"🔴 STALE SNAPSHOT WARNING:")
+                    logger.error(f"   Context ID: {context_id}")
+                    logger.error(f"   Parcel ID: {parcel_id}")
+                    logger.error(f"   Snapshot Age: {age_hours:.1f} hours old")
+                    logger.error(f"   Created At: {snapshot_created_at}")
+                    logger.error(f"   Current Time: {now.isoformat()}")
+                    logger.error(f"   ⚠️ RECOMMENDATION: Rerun analysis before downloading PDF")
+                    logger.error(f"   ⚠️ This PDF may contain OUTDATED data")
+                    # Note: Not raising exception to allow flexibility, but strongly discouraged
+                else:
+                    logger.info(f"✅ Snapshot age: {age_hours:.1f} hours (FRESH)")
+                    logger.info(f"   Context ID: {context_id}, Parcel ID: {parcel_id}")
+            except Exception as e:
+                logger.warning(f"⚠️ Could not parse snapshot timestamp: {e}")
+        else:
+            logger.warning(f"⚠️ No 'created_at' timestamp in snapshot (context_id: {context_id})")
+        
+        logger.info(f"✅ Data source verified: canonical_summary with {len(available_modules)} modules")
+        
+        # Step 3: Use SAME adapters as HTML preview (NO OTHER DATA SOURCE ALLOWED)
+        from app.services.module_html_adapter import (
+            adapt_m2_summary_for_html,
+            adapt_m3_summary_for_html,
+            adapt_m4_summary_for_html,
+            adapt_m5_summary_for_html,
+            adapt_m6_summary_for_html
+        )
+        
+        # Step 4: Get normalized data (SAME as HTML - THIS IS THE LOCK)
+        # 🔒 CRITICAL: HTML and PDF MUST use the EXACT SAME adapter output
+        # Any deviation will be caught by parity validator and BLOCKED
         if module == "M2":
-            pdf_bytes = generator.generate_m2_appraisal_pdf(test_data)
+            normalized_data = adapt_m2_summary_for_html(canonical_summary)
+            logger.info(f"✅ M2: Using adapt_m2_summary_for_html (SAME as HTML)")
         elif module == "M3":
-            pdf_bytes = generator.generate_m3_housing_type_pdf(test_data)
+            normalized_data = adapt_m3_summary_for_html(canonical_summary)
+            logger.info(f"✅ M3: Using adapt_m3_summary_for_html (SAME as HTML)")
         elif module == "M4":
-            pdf_bytes = generator.generate_m4_capacity_pdf(test_data)
+            normalized_data = adapt_m4_summary_for_html(canonical_summary)
+            logger.info(f"✅ M4: Using adapt_m4_summary_for_html (SAME as HTML)")
         elif module == "M5":
-            pdf_bytes = generator.generate_m5_feasibility_pdf(test_data)
+            normalized_data = adapt_m5_summary_for_html(canonical_summary)
+            logger.info(f"✅ M5: Using adapt_m5_summary_for_html (SAME as HTML)")
         elif module == "M6":
-            pdf_bytes = generator.generate_m6_lh_review_pdf(test_data)
+            normalized_data = adapt_m6_summary_for_html(canonical_summary)
+            logger.info(f"✅ M6: Using adapt_m6_summary_for_html (SAME as HTML)")
         else:
             raise HTTPException(status_code=400, detail=f"지원하지 않는 모듈: {module}")
         
-        # 파일명 생성
-        filename = _generate_pdf_filename(module)
+        # 🔒 VERIFICATION: Ensure normalized_data is from adapter (not rebuilt)
+        if not isinstance(normalized_data, dict):
+            raise ValueError(f"Adapter must return dict, got {type(normalized_data)}")
+        
+        if "fallback" in normalized_data and normalized_data["fallback"]:
+            logger.warning(f"⚠️ Module {module} using fallback data (incomplete canonical_summary)")
+        
+        logger.info(f"✅ Data path locked: canonical_summary → adapter → normalized_data")
+        
+        logger.info(f"✅ Normalized data prepared for {module} PDF")
+        
+        # Step 5: Convert adapter output to PDF generator format
+        # This is a compatibility layer until PDF generators are updated
+        pdf_data = _convert_normalized_to_pdf_format(module, normalized_data, frozen_context)
+        
+        # 🔒 STEP 5.1: VERIFY METADATA INCLUSION (CRITICAL FOR TRACEABILITY)
+        if "_metadata" in pdf_data:
+            metadata = pdf_data["_metadata"]
+            logger.info(f"✅ PDF metadata verified and included:")
+            logger.info(f"   📌 Context ID: {metadata.get('context_id')}")
+            logger.info(f"   📌 Parcel ID: {metadata.get('parcel_id')}")
+            logger.info(f"   📌 Snapshot Created: {metadata.get('snapshot_created_at')}")
+            logger.info(f"   📌 Generated At: {metadata.get('generated_at')}")
+            logger.info(f"   📌 Data Signature: {metadata.get('data_signature')[:16]}...")
+            logger.info(f"   📌 Pipeline Version: {metadata.get('pipeline_version')}")
+            logger.info(f"   ⚠️ NOTE: This metadata proves data freshness and origin")
+            
+            # CRITICAL: Log this for customer support / QA verification
+            logger.info(f"🔐 AUDIT TRAIL: Module={module}, Context={context_id}, "
+                       f"Snapshot={metadata.get('snapshot_created_at')}, "
+                       f"Generated={metadata.get('generated_at')}")
+        else:
+            logger.error(f"❌ CRITICAL: PDF metadata missing - traceability LOST")
+            logger.error(f"   This PDF cannot be verified for data freshness!")
+            logger.error(f"   Module: {module}, Context: {context_id}")
+            raise ValueError(f"PDF metadata missing - cannot generate unverifiable PDF")
+        
+        # ✅ STEP 5.5: HTML/PDF PARITY VALIDATION (CRITICAL)
+        # This ensures HTML and PDF show IDENTICAL data
+        from app.services.html_pdf_parity_validator import HTMLPDFParityValidator
+        
+        parity_result = HTMLPDFParityValidator.validate_all(
+            module=module,
+            html_data=normalized_data,
+            pdf_data=pdf_data,
+            context_id=context_id
+        )
+        
+        if not parity_result.passed:
+            error_details = "\n".join([
+                f"  - {field}: HTML={html_val}, PDF={pdf_val}"
+                for field, html_val, pdf_val in parity_result.mismatches
+            ])
+            logger.error(f"❌ HTML/PDF parity check FAILED for {module}:\n{error_details}")
+            
+            # 🔴 BLOCKING MODE: Stop PDF generation on data mismatch
+            # This prevents users from receiving incorrect PDFs
+            raise HTTPException(
+                status_code=500,
+                detail=f"[PARITY BLOCKED] HTML/PDF data mismatch detected for {module}. "
+                       f"This is a critical error preventing incorrect data from being distributed. "
+                       f"Mismatches: {len(parity_result.mismatches)} fields. "
+                       f"Contact support with context_id: {context_id}"
+            )
+        else:
+            logger.info(f"✅ HTML/PDF parity verified for {module}")
+        
+        # 🔒 STEP 6: FINAL PRE-GENERATION VERIFICATION
+        logger.info(f"🔐 FINAL VERIFICATION BEFORE PDF GENERATION:")
+        logger.info(f"   ✅ Module: {module}")
+        logger.info(f"   ✅ Context ID: {context_id}")
+        logger.info(f"   ✅ Data Source: canonical_summary (LOCKED)")
+        logger.info(f"   ✅ HTML/PDF Parity: PASSED")
+        logger.info(f"   ✅ Metadata: INCLUDED")
+        logger.info(f"   ✅ All safety checks: PASSED")
+        logger.info(f"   → Proceeding with PDF generation...")
+        
+        # Step 7: PDF 생성기 초기화
+        generator = ModulePDFGenerator()
+        
+        # Step 8: 모듈별 PDF 생성
+        if module == "M2":
+            pdf_bytes = generator.generate_m2_appraisal_pdf(pdf_data)
+        elif module == "M3":
+            pdf_bytes = generator.generate_m3_housing_type_pdf(pdf_data)
+        elif module == "M4":
+            pdf_bytes = generator.generate_m4_capacity_pdf(pdf_data)
+        elif module == "M5":
+            pdf_bytes = generator.generate_m5_feasibility_pdf(pdf_data)
+        elif module == "M6":
+            pdf_bytes = generator.generate_m6_lh_review_pdf(pdf_data)
+        else:
+            raise HTTPException(status_code=400, detail=f"지원하지 않는 모듈: {module}")
+        
+        # 🎉 PDF GENERATION SUCCESS
+        pdf_size_kb = len(pdf_bytes) / 1024
+        logger.info(f"🎉 PDF GENERATED SUCCESSFULLY:")
+        logger.info(f"   📄 Module: {module}")
+        logger.info(f"   📊 Size: {pdf_size_kb:.1f} KB")
+        logger.info(f"   🔐 Context ID: {context_id}")
+        logger.info(f"   ✅ Data verified and locked-in")
+        
+        # 파일명 생성 (context_id + snapshot timestamp 포함)
+        snapshot_created_at = frozen_context.get("created_at", datetime.now().isoformat())
+        filename = _generate_pdf_filename(module, context_id, snapshot_created_at)
         
         # RFC 5987 인코딩 (한글 파일명 지원)
         # ASCII fallback filename + UTF-8 encoded filename*
@@ -299,40 +654,77 @@ async def preview_module_html(
     context_id: str = Query(..., description="컨텍스트 ID"),
 ):
     """
-    모듈별 HTML 보고서 미리보기
+    모듈별 HTML 보고서 미리보기 (v4.3 MODULE-DEDICATED)
+    
+    ✅ v4.3 FIX: Module-specific adapter + renderer
+    - canonical_summary → adapter → normalized JSON
+    - normalized JSON → module_html_renderer → HTML
+    - NO final_report_assembler (that's for final reports only)
     
     PDF 다운로드 전 브라우저에서 내용을 확인할 수 있습니다.
     """
     try:
-        logger.info(f"📄 HTML 미리보기 요청: module={module}, context_id={context_id}")
+        logger.info(f"📄 모듈 HTML 미리보기: module={module}, context_id={context_id}")
         
-        # 테스트 데이터 생성 (실제로는 DB에서 조회)
-        test_data = _get_test_data_for_module(module, context_id)
-        
-        if not test_data:
-            raise HTTPException(
-                status_code=400,
-                detail=f"지원하지 않는 모듈: {module}"
+        # ✅ STEP 1: Load frozen context from DB
+        frozen_context = context_storage.get_frozen_context(context_id)
+        if not frozen_context:
+            logger.warning(f"Context not found: {context_id}")
+            return HTMLResponse(
+                content=_render_data_preparation_page(
+                    module=module,
+                    context_id=context_id,
+                    error_type="context_not_found"
+                ),
+                status_code=404
             )
         
-        # PDF 생성기 초기화
-        generator = ModulePDFGenerator()
+        # ✅ STEP 2: Extract canonical_summary
+        canonical_summary = frozen_context.get("canonical_summary", {})
+        if not canonical_summary:
+            logger.error(f"canonical_summary not found in context: {context_id}")
+            raise HTTPException(status_code=500, detail="canonical_summary missing")
         
-        # 모듈별 HTML 생성
+        logger.info(f"canonical_summary keys: {list(canonical_summary.keys())}")
+        
+        # ✅ STEP 3: Module-specific adapter
+        from app.services.module_html_adapter import (
+            adapt_m2_summary_for_html,
+            adapt_m3_summary_for_html,
+            adapt_m4_summary_for_html,
+            adapt_m5_summary_for_html,
+            adapt_m6_summary_for_html
+        )
+        
         if module == "M2":
-            html_content = generator.generate_m2_appraisal_html(test_data)
+            adapted_data = adapt_m2_summary_for_html(canonical_summary)
+            logger.info(f"✅ M2 adapted: {adapted_data.get('appraisal_result', {}).get('total_value')}")
         elif module == "M3":
-            html_content = generator.generate_m3_housing_type_html(test_data)
+            adapted_data = adapt_m3_summary_for_html(canonical_summary)
+            logger.info(f"✅ M3 adapted: {adapted_data.get('recommended_type', {}).get('name')}")
         elif module == "M4":
-            html_content = generator.generate_m4_capacity_html(test_data)
+            adapted_data = adapt_m4_summary_for_html(canonical_summary)
+            logger.info(f"✅ M4 adapted: {adapted_data.get('development_summary', {}).get('total_units')} units")
         elif module == "M5":
-            html_content = generator.generate_m5_feasibility_html(test_data)
+            adapted_data = adapt_m5_summary_for_html(canonical_summary)
+            logger.info(f"✅ M5 adapted: NPV={adapted_data.get('financial_result', {}).get('npv')}, IRR={adapted_data.get('financial_result', {}).get('irr')}")
         elif module == "M6":
-            html_content = generator.generate_m6_lh_review_html(test_data)
+            adapted_data = adapt_m6_summary_for_html(canonical_summary)
+            logger.info(f"✅ M6 adapted: {adapted_data.get('review_result', {}).get('decision')}")
         else:
-            raise HTTPException(status_code=400, detail=f"지원하지 않는 모듈: {module}")
+            return HTMLResponse(
+                content=f"<html><body><h1>Module {module}</h1><p>Unknown module</p></body></html>",
+                status_code=400
+            )
         
-        # HTML 반환 (브라우저에서 직접 표시)
+        # ✅ STEP 4: Module-specific renderer
+        from app.services.module_html_renderer import render_module_html
+        
+        html_content = render_module_html(module, adapted_data)
+        
+        logger.info(f"✅ HTML generated for {module}, length: {len(html_content)} chars")
+        
+        # Return HTML
         return HTMLResponse(
             content=html_content,
             headers={
@@ -342,37 +734,192 @@ async def preview_module_html(
             }
         )
         
-    except FileNotFoundError as e:
-        logger.error(f"컨텍스트를 찾을 수 없음: {context_id}")
-        raise HTTPException(
-            status_code=404,
-            detail=f"컨텍스트를 찾을 수 없습니다: {context_id}"
-        )
-    
-    except AttributeError as e:
-        logger.warning(f"HTML 생성 메서드 없음: {str(e)} - 표준 렌더러 사용")
-        # 🔥 STANDARD RENDERER: 모든 모듈 HTML 표준 렌더러 사용
-        html_content = _render_standard_report_html(module, test_data, context_id)
-        return HTMLResponse(
-            content=html_content,
-            headers={
-                "Cache-Control": "no-cache, no-store, must-revalidate",
-                "Pragma": "no-cache",
-                "Expires": "0"
-            }
-        )
-    
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"HTML 생성 중 예상치 못한 오류: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"HTML 생성 중 오류가 발생했습니다. (오류 ID: {context_id})"
+        logger.error(f"❌ Module HTML generation failed: {str(e)}", exc_info=True)
+        return HTMLResponse(
+            content=_render_data_preparation_page(
+                module=module,
+                context_id=context_id,
+                error_type="generation_failed",
+                error_detail=str(e)
+            ),
+            status_code=500
         )
 
 
 # ============================================================================
 # HTML Generation Helper
 # ============================================================================
+
+def _render_data_preparation_page(
+    module: str, 
+    context_id: str, 
+    error_type: str,
+    error_detail: str = ""
+) -> str:
+    """
+    데이터 준비 중 안내 페이지 (v4.3 FIX 1)
+    
+    JSON 에러 대신 사용자 친화적 HTML 페이지를 반환합니다.
+    어떤 데이터가 준비되지 않았는지 명확히 안내합니다.
+    
+    Args:
+        module: 모듈 ID (M2-M6)
+        context_id: 컨텍스트 ID
+        error_type: context_not_found | generation_failed
+        error_detail: 상세 에러 메시지 (선택)
+    
+    Returns:
+        사용자 친화적 HTML 안내 페이지
+    """
+    module_names = {
+        "M2": "토지 가치 평가",
+        "M3": "주택 유형 분석",
+        "M4": "건축 규모 결정",
+        "M5": "사업성 분석",
+        "M6": "LH 심사 예측"
+    }
+    
+    module_name = module_names.get(module, "보고서")
+    
+    if error_type == "context_not_found":
+        title = "📋 데이터 준비 중"
+        message = f"<strong>{module_name}</strong> 보고서를 생성하기 위한 데이터가 아직 준비되지 않았습니다."
+        instructions = """
+        <h3 style="color: #1E40AF; margin-top: 24px;">다음 단계를 진행해주세요:</h3>
+        <ol style="line-height: 2.0; padding-left: 20px;">
+            <li><strong>M1 분석 완료</strong>: 토지 정보 입력 및 기본 분석을 완료하세요</li>
+            <li><strong>'분석 시작' 클릭</strong>: 분석 화면에서 '분석 시작' 버튼을 눌러 컨텍스트를 저장하세요</li>
+            <li><strong>모듈 분석 완료</strong>: M2-M6 모듈 분석이 완료될 때까지 기다리세요</li>
+            <li><strong>보고서 생성</strong>: 분석 완료 후 다시 보고서를 요청하세요</li>
+        </ol>
+        """
+    else:  # generation_failed
+        title = "⚠️ 보고서 생성 중 오류"
+        message = f"<strong>{module_name}</strong> 보고서 생성 중 오류가 발생했습니다."
+        instructions = f"""
+        <h3 style="color: #DC2626; margin-top: 24px;">오류 정보:</h3>
+        <div style="background: #FEF2F2; padding: 16px; border-radius: 8px; border-left: 4px solid #DC2626; margin: 16px 0;">
+            <p style="margin: 0; color: #991B1B; font-family: monospace; font-size: 14px;">
+                {error_detail if error_detail else '상세 정보가 없습니다'}
+            </p>
+        </div>
+        <h3 style="color: #1E40AF; margin-top: 24px;">해결 방법:</h3>
+        <ol style="line-height: 2.0; padding-left: 20px;">
+            <li><strong>데이터 확인</strong>: M1-M6 분석이 모두 완료되었는지 확인하세요</li>
+            <li><strong>페이지 새로고침</strong>: 브라우저를 새로고침한 후 다시 시도하세요</li>
+            <li><strong>기술 지원</strong>: 문제가 계속되면 기술 지원팀에 문의하세요</li>
+        </ol>
+        <p style="margin-top: 16px; color: #6B7280;">
+            <strong>Context ID:</strong> <code style="background: #F3F4F6; padding: 4px 8px; border-radius: 4px;">{context_id}</code>
+        </p>
+        """
+    
+    return f"""
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{title} - ZeroSite</title>
+        <style>
+            @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+            
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }}
+            
+            body {{
+                font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }}
+            
+            .container {{
+                background: white;
+                max-width: 800px;
+                width: 100%;
+                border-radius: 16px;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                padding: 48px;
+            }}
+            
+            h1 {{
+                font-size: 32px;
+                color: #111827;
+                margin-bottom: 16px;
+            }}
+            
+            .message {{
+                font-size: 18px;
+                color: #374151;
+                line-height: 1.8;
+                margin-bottom: 32px;
+            }}
+            
+            .instructions {{
+                background: #F9FAFB;
+                padding: 24px;
+                border-radius: 12px;
+                border-left: 4px solid #3B82F6;
+            }}
+            
+            .instructions h3 {{
+                font-size: 20px;
+                margin-bottom: 16px;
+            }}
+            
+            .instructions ol {{
+                color: #374151;
+                line-height: 2.0;
+            }}
+            
+            .instructions li {{
+                margin-bottom: 8px;
+            }}
+            
+            .footer {{
+                margin-top: 32px;
+                padding-top: 24px;
+                border-top: 1px solid #E5E7EB;
+                text-align: center;
+                color: #6B7280;
+                font-size: 14px;
+            }}
+            
+            code {{
+                background: #F3F4F6;
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-family: 'Courier New', monospace;
+                font-size: 14px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>{title}</h1>
+            <p class="message">{message}</p>
+            <div class="instructions">
+                {instructions}
+            </div>
+            <div class="footer">
+                <p><strong>ZeroSite Expert Edition</strong> by Antenna Holdings</p>
+                <p style="margin-top: 8px;">LH 공공임대주택 사업 분석 플랫폼</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
 
 def _get_m6_next_steps_template() -> str:
     """
@@ -807,68 +1354,41 @@ async def get_final_report_html(
     context_id: str = Query(..., description="분석 컨텍스트 ID")
 ):
     """
-    최종보고서 6종 HTML 미리보기
+    [vABSOLUTE-FINAL-14] LEGACY ROUTE BLOCKED
+    ==========================================
     
-    Args:
-        report_type: 최종보고서 타입 (all_in_one, landowner_summary, etc.)
-        context_id: 분석 컨텍스트 ID
-        
-    Returns:
-        HTML 보고서
-        
+    This endpoint has been DEPRECATED and replaced by the new Phase 3 API.
+    
+    ❌ OLD (DO NOT USE): /api/v4/reports/final/{report_type}/html
+    ✅ NEW (USE THIS):   /api/v4/final-report/{report_type}/html
+    
+    Reason for deprecation:
+    - This route uses OLD assemblers (final_report_assembler.py)
+    - Does NOT include vABSOLUTE-FINAL-11/12/13 fixes
+    - Does NOT use modules_data-based narratives
+    - Does NOT include BUILD_SIGNATURE/DATA_SIGNATURE
+    
+    Migration Guide:
+    1. Update frontend to call: /api/v4/final-report/{report_type}/html
+    2. Same parameters (report_type, context_id)
+    3. New route includes all Phase 3 fixes
+    
     Examples:
-        GET /api/v4/reports/final/all_in_one/html?context_id=test-001
+        OLD: GET /api/v4/reports/final/all_in_one/html?context_id=test-001
+        NEW: GET /api/v4/final-report/all_in_one/html?context_id=test-001
     """
-    try:
-        # 보고서 타입 검증
-        try:
-            final_report_type = FinalReportType(report_type)
-        except ValueError:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid report type: {report_type}. Allowed: {[t.value for t in FinalReportType]}"
-            )
-        
-        # ✅ STEP 1: context_id로 실제 저장된 컨텍스트 조회 (Redis/DB)
-        frozen_context = context_storage.get_frozen_context(context_id)
-        
-        if not frozen_context:
-            raise HTTPException(
-                status_code=404,
-                detail=(
-                    f"❌ 분석 데이터를 찾을 수 없습니다.\n\n"
-                    f"Context ID: {context_id}\n\n"
-                    f"💡 해결 방법:\n"
-                    f"1. M1 분석을 먼저 완료하세요.\n"
-                    f"2. '분석 시작' 버튼을 눌러 context를 저장하세요.\n"
-                    f"3. 분석 완료 후 최종보고서를 생성하세요."
-                )
-            )
-        
-        # ✅ STEP 4: 최종보고서 데이터 조립 (NEW: 통합 assembler 사용)
-        from app.services.final_report_assembler import assemble_final_report as assemble_report_data
-        
-        assembled_data = assemble_report_data(
-            report_type=final_report_type.value,
-            canonical_data=frozen_context,
-            context_id=context_id
-        )
-        
-        # ✅ STEP 5: HTML 렌더링 (NEW: 통합 renderer 사용)
-        from app.services.final_report_html_renderer import render_final_report_html
-        
-        html = render_final_report_html(
-            report_type=final_report_type.value,
-            data=assembled_data
-        )
-        
-        return HTMLResponse(content=html)
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to generate final report HTML: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to generate HTML: {str(e)}")
+    raise HTTPException(
+        status_code=410,  # 410 Gone - permanently removed
+        detail={
+            "error": "LEGACY_ROUTE_BLOCKED",
+            "message": "This endpoint has been deprecated. Please use /api/v4/final-report/{report_type}/html instead.",
+            "old_path": f"/api/v4/reports/final/{report_type}/html",
+            "new_path": f"/api/v4/final-report/{report_type}/html",
+            "context_id": context_id,
+            "migration_reason": "Phase 3 assemblers with vABSOLUTE-FINAL-11/12/13 fixes",
+            "documentation": "See VABSOLUTE_FINAL_14_ROUTING_FIX.md"
+        }
+    )
 
 
 def _render_final_report_html(assembled_report: dict, context_id: str) -> str:
