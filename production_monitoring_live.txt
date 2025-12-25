@@ -1,0 +1,78 @@
+
+================================================================================
+📊 ZEROSITE v4.0 PRODUCTION MONITORING DASHBOARD
+================================================================================
+
+⏱️  Uptime: 0:00:00.000515
+📅 Started: 2025-12-25 14:32:57
+
+================================================================================
+📈 GENERATION STATISTICS
+================================================================================
+
+Total Requests:        6
+✅ Successful:         6 (100.0%)
+❌ Failed:             0 (0.0%)
+
+Report Types Generated:
+  - all_in_one                    1 generations
+  - executive_summary             1 generations
+  - financial_feasibility         1 generations
+  - landowner_summary             1 generations
+  - lh_technical                  1 generations
+  - quick_check                   1 generations
+
+================================================================================
+⚡ PERFORMANCE METRICS
+================================================================================
+
+Average Generation Time:   0.1 ms
+Average HTML Size:         41,232 characters
+Average N/A Count:         27.8
+Average KPI Present:       2.5/6
+
+
+================================================================================
+⚠️  KPI ISSUES (Last 10)
+================================================================================
+
+
+  Timestamp:    2025-12-25T14:32:57.372780
+  Report Type:  quick_check
+  Context ID:   prod-test-001
+  KPI Present:  3/6 (Missing: 3)
+
+  Timestamp:    2025-12-25T14:32:57.372810
+  Report Type:  financial_feasibility
+  Context ID:   prod-test-001
+  KPI Present:  2/6 (Missing: 4)
+
+  Timestamp:    2025-12-25T14:32:57.372828
+  Report Type:  lh_technical
+  Context ID:   prod-test-001
+  KPI Present:  2/6 (Missing: 4)
+
+  Timestamp:    2025-12-25T14:32:57.372841
+  Report Type:  executive_summary
+  Context ID:   prod-test-001
+  KPI Present:  3/6 (Missing: 3)
+
+  Timestamp:    2025-12-25T14:32:57.372855
+  Report Type:  landowner_summary
+  Context ID:   prod-test-001
+  KPI Present:  1/6 (Missing: 5)
+
+  Timestamp:    2025-12-25T14:32:57.372868
+  Report Type:  all_in_one
+  Context ID:   prod-test-001
+  KPI Present:  4/6 (Missing: 2)
+
+================================================================================
+🏥 SYSTEM HEALTH
+================================================================================
+
+Success Rate: ✅ EXCELLENT (100.0%)
+KPI Display:  ❌ CRITICAL (2.5/6)
+N/A Count:    ❌ CRITICAL (27.8)
+
+================================================================================
