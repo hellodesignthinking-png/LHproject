@@ -52,34 +52,70 @@ class FinalReportData:
     def _parse_m2(self) -> Optional[M2Summary]:
         """M2 토지감정평가 데이터 추출
         
-        ✅ FIX: AppraisalContext.to_dict() 구조에 맞게 파싱
-        실제 구조: canonical["m2_result"]["appraisal"]["land_value"]
-        또는: canonical["m2_result"]["summary"] (v4.0 호환)
+        ⚠️ CRITICAL: 실제 CanonicalAppraisalResult 구조에 맞게 파싱
+        
+        실제 구조 (3가지 시나리오):
+        1) CanonicalAppraisalResult.to_context_dict() - 실제 프로덕션
+           - calculation["final_appraised_total"] → land_value_total_krw
+           - calculation["premium_adjusted_per_sqm"] → pyeong_price_krw (계산 필요)
+           - confidence["overall_score"] → confidence_pct
+           - transaction_cases 배열 길이 → transaction_count
+        
+        2) M2Result with summary (v4.0 표준)
+           - m2_result["summary"]["land_value_total_krw"]
+        
+        3) Test data fallback (appraisal 최상위)
+           - appraisal["land_value"]
         """
         try:
-            # Try m2_result first (nested structure)
             m2_data = self.canonical.get("m2_result", {})
             
-            # v4.0 standard structure (M2Result with summary field)
+            # Scenario 2: v4.0 standard structure
             if m2_data:
                 summary = m2_data.get("summary", {})
-                if summary:
+                if summary and "land_value_total_krw" in summary:
                     return M2Summary(**summary)
             
-            # AppraisalContext.to_dict() structure (nested in m2_result or top-level)
+            # Scenario 1: CanonicalAppraisalResult structure (PRODUCTION)
             if m2_data:
-                appraisal = m2_data.get("appraisal", {})
-                confidence = m2_data.get("confidence", {})
-                transactions = m2_data.get("transactions", {})
-            else:
-                # Try top-level keys (for test data compatibility)
-                appraisal = self.canonical.get("appraisal", {})
-                confidence = self.canonical.get("confidence", {})
-                transactions = self.canonical.get("transactions", {})
+                calculation = m2_data.get("calculation", {})
+                confidence_info = m2_data.get("confidence", {})
+                transaction_cases = m2_data.get("transaction_cases", [])
+                
+                if calculation and "final_appraised_total" in calculation:
+                    # Extract values from CanonicalAppraisalResult structure
+                    land_value_total = calculation.get("final_appraised_total")
+                    premium_adjusted_per_sqm = calculation.get("premium_adjusted_per_sqm")
+                    
+                    # Calculate pyeong price: per_sqm * 3.3058
+                    pyeong_price = None
+                    if premium_adjusted_per_sqm:
+                        pyeong_price = int(premium_adjusted_per_sqm * 3.3058)
+                    
+                    # Extract confidence score
+                    confidence_pct = None
+                    if isinstance(confidence_info, dict):
+                        overall_score = confidence_info.get("overall_score")
+                        if overall_score is not None:
+                            confidence_pct = int(overall_score * 100) if overall_score <= 1 else int(overall_score)
+                    
+                    # Count transaction cases
+                    transaction_count = len(transaction_cases) if isinstance(transaction_cases, list) else None
+                    
+                    return M2Summary(
+                        land_value_total_krw=int(land_value_total) if land_value_total else None,
+                        pyeong_price_krw=pyeong_price,
+                        confidence_pct=confidence_pct,
+                        transaction_count=transaction_count
+                    )
             
-            if appraisal:
-                # Map AppraisalContext fields to M2Summary fields
-                # Try multiple paths for confidence_score
+            # Scenario 3: Test data fallback (appraisal at top level or nested)
+            appraisal = m2_data.get("appraisal", {}) if m2_data else self.canonical.get("appraisal", {})
+            confidence = m2_data.get("confidence", {}) if m2_data else self.canonical.get("confidence", {})
+            transactions = m2_data.get("transactions", {}) if m2_data else self.canonical.get("transactions", {})
+            
+            if appraisal and "land_value" in appraisal:
+                # Test data structure
                 confidence_raw = None
                 if isinstance(confidence, dict):
                     confidence_raw = confidence.get("scores", {}).get("confidence_score")
@@ -88,7 +124,6 @@ class FinalReportData:
                 if confidence_raw is None:
                     confidence_raw = appraisal.get("confidence_score")
                 
-                # Try multiple paths for transaction_count
                 transaction_cnt = None
                 if isinstance(transactions, dict):
                     transaction_cnt = transactions.get("count")
@@ -102,9 +137,13 @@ class FinalReportData:
                     transaction_count=transaction_cnt
                 )
             
+            logger.warning("M2 파싱 실패: m2_result, calculation, appraisal 모두 없음")
             return None
+            
         except Exception as e:
             logger.error(f"❌ Failed to parse M2 data: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             return None
     
     def _parse_m3(self) -> Optional[M3Summary]:
