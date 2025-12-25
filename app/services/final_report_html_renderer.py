@@ -1624,6 +1624,7 @@ def render_final_report_html(report_type: str, data: Dict[str, Any]) -> str:
         "lh_technical": render_lh_technical,
         "financial_feasibility": render_financial_feasibility,
         "quick_check": render_quick_check,
+        "executive_summary": render_presentation_report,
         "presentation": render_presentation_report
     }
     
