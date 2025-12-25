@@ -84,42 +84,48 @@ def get_common_styles() -> str:
             padding: 40px;
         }
         
-        /* 섹션 */
+        /* 섹션 - Phase 2.5: 위계 강화 */
         .section {
-            margin-bottom: 40px;
+            margin-bottom: 60px;  /* 40px → 60px: 섹션 간 호흡 확보 */
+            page-break-inside: avoid;  /* 출력 시 섹션 분리 방지 */
         }
         
         .section-title {
-            font-size: 18px;
+            font-size: 20px;  /* 18px → 20px: H1 위계 강화 */
             font-weight: 700;
-            color: #3B82F6;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #3B82F6;
+            color: #1F2937;  /* 파란색 → 진한 회색: 전문성 강화 */
+            margin-bottom: 24px;  /* 20px → 24px */
+            padding-bottom: 12px;  /* 10px → 12px */
+            border-bottom: 3px solid #3B82F6;  /* 2px → 3px: 더 명확한 구분 */
+            letter-spacing: -0.02em;  /* 가독성 향상 */
         }
         
         .section-subtitle {
-            font-size: 15px;
+            font-size: 16px;  /* 15px → 16px: H2 위계 */
             font-weight: 600;
-            color: #1F2937;
-            margin: 20px 0 12px 0;
+            color: #374151;  /* 더 진한 톤 */
+            margin: 28px 0 16px 0;  /* 여백 확대 */
+            padding-left: 12px;  /* 들여쓰기로 위계 표현 */
+            border-left: 4px solid #3B82F6;  /* 시각적 구분 */
         }
         
-        /* 데이터 카드 */
+        /* 데이터 카드 - Phase 2.5: KPI 카드 상단 여백 확보 */
         .data-card {
             background: #F9FAFB;
             border: 1px solid #E5E7EB;
             border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 16px;
+            padding: 24px;  /* 20px → 24px: 여유 공간 */
+            margin-bottom: 20px;  /* 16px → 20px */
+            margin-top: 8px;  /* 상단 여백 추가 */
         }
         
         .data-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
+            padding: 14px 0;  /* 10px → 14px: 행 높이 통일 */
             border-bottom: 1px solid #E5E7EB;
+            min-height: 48px;  /* 최소 높이 보장 */
         }
         
         .data-row:last-child {
@@ -127,21 +133,40 @@ def get_common_styles() -> str:
         }
         
         .data-label {
-            font-weight: 600;
+            font-weight: 500;  /* 600 → 500: 값과 차별화 */
             color: #6B7280;
-            font-size: 13px;
+            font-size: 14px;  /* 13px → 14px: 가독성 */
         }
         
         .data-value {
-            font-weight: 700;
+            font-weight: 600;  /* 700 → 600: 과도한 굵기 완화 */
             color: #1F2937;
             font-size: 15px;
             text-align: right;
         }
         
+        /* Phase 2.5: KPI 핵심/비교/보조 차별화 */
+        .data-value.highlight {
+            font-size: 18px;
+            font-weight: 700;
+            color: #3B82F6;  /* 파란색으로 핵심 KPI 강조 */
+        }
+        
+        .data-value.comparison {
+            font-weight: 400;  /* 비교 수치는 보통 굵기 */
+            color: #6B7280;
+        }
+        
+        .data-value.auxiliary {
+            font-weight: 400;
+            color: #9CA3AF;  /* 보조 지표는 회색 톤 */
+            font-size: 13px;
+        }
+        
         .data-value.na {
-            color: #9CA3AF;
-            font-style: italic;
+            color: #6B7280;  /* 회색 톤 완화 */
+            font-style: normal;  /* italic 제거 */
+            font-size: 13px;
         }
         
         /* 경고 박스 */
@@ -345,6 +370,94 @@ def get_common_styles() -> str:
             font-weight: 600;
         }
         
+        /* Phase 2.5: 최종 결론 섹션 강조 */
+        .final-conclusion {
+            background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+            border: 3px solid #3B82F6;
+            border-radius: 12px;
+            padding: 32px;
+            margin: 48px 0;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+        }
+        
+        .final-conclusion-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1F2937;
+            margin-bottom: 20px;
+            text-align: center;
+            letter-spacing: -0.02em;
+        }
+        
+        .final-conclusion-text {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #374151;
+            text-align: center;
+        }
+        
+        .final-conclusion-highlight {
+            font-size: 20px;
+            font-weight: 700;
+            color: #3B82F6;
+            margin: 16px 0;
+        }
+        
+        /* Phase 2.5: 표 개선 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+        }
+        
+        table caption {
+            font-size: 15px;
+            font-weight: 600;
+            color: #374151;
+            text-align: left;
+            margin-bottom: 12px;
+            padding-left: 4px;
+        }
+        
+        table thead tr {
+            background: #F3F4F6;
+            border-bottom: 2px solid #3B82F6;
+        }
+        
+        table th {
+            padding: 14px 12px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            color: #1F2937;
+        }
+        
+        table td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #E5E7EB;
+            font-size: 14px;
+            min-height: 48px;
+        }
+        
+        table tbody tr:hover {
+            background: #F9FAFB;
+        }
+        
+        table tbody tr:nth-child(even) {
+            background: #FAFAFA;
+        }
+        
+        table tbody tr.row-highlight {
+            background: #EEF2FF !important;
+            border-left: 4px solid #3B82F6;
+            font-weight: 600;
+        }
+        
+        table tbody tr.row-highlight:hover {
+            background: #E0E7FF !important;
+        }
+        
         /* 인쇄용 */
         @media print {
             body {
@@ -359,36 +472,40 @@ def get_common_styles() -> str:
             .section {
                 page-break-inside: avoid;
             }
+            
+            .final-conclusion {
+                page-break-inside: avoid;
+            }
         }
     </style>
     """
 
 
-def format_currency(value: Optional[int]) -> str:
-    """원화 포맷팅 (방어적 렌더링)"""
+def format_currency(value: Optional[int], context: str = "금액") -> str:
+    """원화 포맷팅 (방어적 렌더링 - Phase 2.5: 설명 치환)"""
     if value is None:
-        return '<span class="data-value na">N/A (검증 필요)</span>'
+        return f'<span class="data-value na">본 {context}는 현 단계에서 산출 대상에서 제외되었습니다</span>'
     return f'<span class="data-value">{value:,}원</span>'
 
 
-def format_percentage(value: Optional[float]) -> str:
-    """퍼센트 포맷팅 (방어적 렌더링)"""
+def format_percentage(value: Optional[float], context: str = "비율") -> str:
+    """퍼센트 포맷팅 (방어적 렌더링 - Phase 2.5: 설명 치환)"""
     if value is None:
-        return '<span class="data-value na">N/A (검증 필요)</span>'
+        return f'<span class="data-value na">본 {context}는 현 단계에서 산출 대상에서 제외되었습니다</span>'
     return f'<span class="data-value">{value}%</span>'
 
 
-def format_units(value: Optional[int]) -> str:
-    """세대수 포맷팅 (방어적 렌더링)"""
+def format_units(value: Optional[int], unit: str = "세대", context: str = "수량") -> str:
+    """세대수 포맷팅 (방어적 렌더링 - Phase 2.5: 설명 치환)"""
     if value is None:
-        return '<span class="data-value na">N/A (검증 필요)</span>'
-    return f'<span class="data-value">{value}세대</span>'
+        return f'<span class="data-value na">본 {context}는 현 단계에서 산출 대상에서 제외되었습니다</span>'
+    return f'<span class="data-value">{value}{unit}</span>'
 
 
-def format_generic(value: Optional[Any], suffix: str = "") -> str:
-    """일반 값 포맷팅 (방어적 렌더링)"""
+def format_generic(value: Optional[Any], suffix: str = "", context: str = "항목") -> str:
+    """일반 값 포맷팅 (방어적 렌더링 - Phase 2.5: 설명 치환)"""
     if value is None or value == "":
-        return '<span class="data-value na">N/A (검증 필요)</span>'
+        return f'<span class="data-value na">본 {context}는 현 단계에서 산출 대상에서 제외되었습니다</span>'
     return f'<span class="data-value">{value}{suffix}</span>'
 
 
