@@ -1,0 +1,223 @@
+{
+  "land_basic_info": {
+    "address": "서울특별시 강남구 역삼동 123-45",
+    "area_m2": 500.0,
+    "land_use_zone": "제2종일반주거지역",
+    "building_coverage_ratio": 60.0,
+    "floor_area_ratio": 200.0,
+    "road_contact": true,
+    "road_width_m": 8.0,
+    "corner_lot": false,
+    "terrain_type": "평지"
+  },
+  
+  "land_value_analysis": {
+    "individual_land_price_per_m2": 12000000,
+    "recent_transaction_avg_per_m2": 15000000,
+    "transaction_count_6months": 3,
+    "market_adjustment_factor": 1.15,
+    "location_premium": 1.25,
+    "estimated_land_value": 7500000000,
+    "confidence_score": 0.82,
+    "comparable_sales": [
+      {
+        "address": "역삼동 123-40",
+        "price_per_m2": 14500000,
+        "transaction_date": "2024-10-15",
+        "area_m2": 480.0
+      },
+      {
+        "address": "역삼동 123-50",
+        "price_per_m2": 15500000,
+        "transaction_date": "2024-11-20",
+        "area_m2": 520.0
+      }
+    ]
+  },
+  
+  "building_plan": {
+    "max_building_area_m2": 300.0,
+    "max_total_floor_area_m2": 1000.0,
+    "estimated_floors": 5,
+    "building_type": "근린생활시설",
+    "parking_requirement": 10,
+    "parking_provided": 12,
+    "height_limit_m": 20.0,
+    "setback_requirements": {
+      "front": 3.0,
+      "side": 1.5,
+      "rear": 2.0
+    },
+    "legal_constraints": [
+      "일조권 검토 필요",
+      "지하 2층 이상 불가",
+      "상업시설 용도 제한"
+    ]
+  },
+  
+  "financial_feasibility": {
+    "total_project_cost": 9500000000,
+    "cost_breakdown": {
+      "land_acquisition_cost": 7500000000,
+      "construction_cost": 1500000000,
+      "design_supervision": 150000000,
+      "permits_fees": 100000000,
+      "contingency": 250000000
+    },
+    "expected_revenue": 12000000000,
+    "revenue_breakdown": {
+      "sales_revenue": 11000000000,
+      "rental_income_3years": 1000000000
+    },
+    "roi_percentage": 26.3,
+    "payback_period_months": 36,
+    "npv": 1850000000,
+    "irr": 18.5,
+    "break_even_occupancy": 72.0
+  },
+  
+  "lh_evaluation": {
+    "eligibility_status": "조건부적격",
+    "overall_score": 78.5,
+    "score_breakdown": {
+      "technical_score": 82.0,
+      "financial_score": 75.0,
+      "location_score": 85.0,
+      "social_value_score": 72.0
+    },
+    "evaluation_criteria": {
+      "land_utilization_efficiency": 85.0,
+      "public_benefit": 70.0,
+      "financial_stability": 75.0,
+      "construction_feasibility": 88.0,
+      "environmental_impact": 80.0
+    },
+    "pass_threshold": 75.0,
+    "risk_factors": [
+      {
+        "category": "재무",
+        "description": "초기 투자비 대비 단기 수익성 낮음",
+        "severity": "중",
+        "mitigation": "분양가 10% 상향 또는 임대수익 모델 병행"
+      },
+      {
+        "category": "법률",
+        "description": "일조권 사전 협의 미완료",
+        "severity": "상",
+        "mitigation": "인접 토지주와 사전 동의서 확보 필요"
+      },
+      {
+        "category": "시장",
+        "description": "해당 지역 공실률 증가 추세",
+        "severity": "중",
+        "mitigation": "임대료 조정 및 분양가격 경쟁력 강화"
+      }
+    ],
+    "recommendations": [
+      "건축 설계 최적화로 주차면적 15% 절감 가능",
+      "옥상 태양광 설치로 ESG 점수 5점 상승 가능",
+      "지역 커뮤니티 시설 포함 시 공공성 점수 8점 추가"
+    ]
+  },
+  
+  "risk_assessment": {
+    "overall_risk_level": "중",
+    "market_risk": {
+      "level": "중",
+      "factors": [
+        "최근 6개월 거래량 20% 감소",
+        "인근 신규 공급 증가",
+        "금리 인상 영향"
+      ],
+      "mitigation": "분양가 탄력 조정, 임대 병행 전략"
+    },
+    "legal_risk": {
+      "level": "상",
+      "factors": [
+        "일조권 분쟁 가능성",
+        "용도변경 승인 불확실성",
+        "인허가 지연 가능성"
+      ],
+      "mitigation": "법률 자문 확보, 사전 협의 강화"
+    },
+    "financial_risk": {
+      "level": "중",
+      "factors": [
+        "공사비 상승 추세",
+        "금융비용 증가",
+        "분양률 저조 위험"
+      ],
+      "mitigation": "건설사 계약 조건 명확화, 금융조달 다변화"
+    },
+    "construction_risk": {
+      "level": "하",
+      "factors": [
+        "표준 공법 적용 가능",
+        "숙련된 시공사 다수 존재"
+      ],
+      "mitigation": "시공 모니터링 강화"
+    }
+  },
+  
+  "stakeholder_analysis": {
+    "landowner": {
+      "expected_return": 2500000000,
+      "return_percentage": 33.3,
+      "risk_tolerance": "중",
+      "timeline_preference": "36개월 이내",
+      "key_concerns": [
+        "투자금 회수 기간",
+        "세금 최적화",
+        "안정적 현금흐름"
+      ]
+    },
+    "lh_perspective": {
+      "public_benefit_score": 72.0,
+      "policy_alignment": "양호",
+      "priority_level": "중",
+      "support_potential": "조건부",
+      "required_improvements": [
+        "공공시설 기여도 상향",
+        "에너지 효율 등급 강화",
+        "지역 고용 창출 계획 구체화"
+      ]
+    },
+    "financial_institution": {
+      "loan_feasibility": "가능",
+      "max_ltv": 70.0,
+      "estimated_interest_rate": 5.5,
+      "credit_rating": "BBB+",
+      "collateral_value": 8500000000,
+      "key_requirements": [
+        "추가 담보 또는 보증 필요",
+        "분양보증보험 가입 필수",
+        "시공사 신용등급 A- 이상"
+      ]
+    }
+  },
+  
+  "meta_info": {
+    "analysis_date": "2024-12-25T03:21:00Z",
+    "data_sources": [
+      "국토교통부 실거래가 공개시스템",
+      "한국감정원 개별공시지가",
+      "건축행정시스템 세움터",
+      "LH 내부 심사기준 v2024.2"
+    ],
+    "key_assumptions": [
+      "건축비: 1,500,000원/m² (2024년 4분기 기준)",
+      "분양가: 12,000,000원/m² 가정",
+      "공실률: 15% 가정 (지역 평균 대비)",
+      "금리: 5.5% 고정 (대출금리 기준)",
+      "공사기간: 18개월"
+    ],
+    "limitations": [
+      "시장 변동성으로 인한 가격 변동 가능",
+      "법규 변경에 따른 계획 수정 가능성",
+      "정확한 토질조사 미실시",
+      "실제 인허가 과정에서 조건 변경 가능"
+    ],
+    "analysis_version": "v4.3",
+    "analyst_notes": "전반적으로 사업성은 양호하나, 법적 리스크 해소가 우선 과제임. LH 심사 통과를 위해서는 공공성 강화 및 일조권 사전 협의 완료 필수."
+  }
+}

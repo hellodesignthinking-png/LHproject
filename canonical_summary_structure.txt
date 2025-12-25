@@ -1,0 +1,74 @@
+# Canonical Summary Structure
+# LH 토지+건축 통합 분석 시스템 - 표준 데이터 구조
+
+## 1. 토지 기본 정보 (M1 Input Data)
+- address: 지번 주소
+- area_m2: 토지 면적 (m²)
+- land_use_zone: 용도지역 (예: 제2종일반주거지역)
+- building_coverage_ratio: 건폐율 (%)
+- floor_area_ratio: 용적률 (%)
+- road_contact: 도로 접면 여부
+
+## 2. 토지 가치 분석 (M2 Market Analysis)
+- individual_land_price_per_m2: 개별공시지가 (원/m²)
+- recent_transaction_avg_per_m2: 최근 실거래가 평균 (원/m²)
+- market_adjustment_factor: 시장 보정계수
+- location_premium: 입지 프리미엄
+- estimated_land_value: 추정 토지가치 (원)
+- confidence_score: 신뢰도 점수 (0-1)
+
+## 3. 건축 계획 (M4 Building Plan)
+- max_building_area_m2: 최대 건축면적 (m²)
+- max_total_floor_area_m2: 최대 연면적 (m²)
+- estimated_floors: 예상 층수
+- parking_requirement: 주차대수 요구사항
+- legal_constraints: 법적 제약사항 목록
+- building_type: 건축물 유형
+
+## 4. 사업성 분석 (M5 Financial Feasibility)
+- total_project_cost: 총사업비 (원)
+  - land_acquisition_cost: 토지비
+  - construction_cost: 건축비
+  - additional_costs: 부대비용
+- expected_revenue: 예상 수익 (원)
+- roi_percentage: 투자수익률 (%)
+- payback_period_months: 회수기간 (개월)
+- npv: 순현재가치 (원)
+- irr: 내부수익률 (%)
+
+## 5. LH 심사 기준 분석 (M6 LH Evaluation)
+- eligibility_status: 적격 여부 (적격/부적격/조건부적격)
+- technical_score: 기술 점수 (100점 만점)
+- financial_score: 재무 점수 (100점 만점)
+- location_score: 입지 점수 (100점 만점)
+- overall_score: 종합 점수
+- risk_factors: 리스크 요인 목록
+- recommendations: 개선 권고사항
+
+## 6. 리스크 평가
+- market_risk: 시장 리스크 (상/중/하)
+- legal_risk: 법률 리스크 (상/중/하)
+- financial_risk: 재무 리스크 (상/중/하)
+- construction_risk: 시공 리스크 (상/중/하)
+- mitigation_strategies: 리스크 완화 전략
+
+## 7. 이해관계자 분석
+- landowner_perspective: 토지주 관점
+  - expected_return: 예상 수익
+  - risk_tolerance: 리스크 허용도
+  - timeline_preference: 선호 일정
+- lh_perspective: LH 관점
+  - public_benefit: 공공성
+  - policy_alignment: 정책 부합도
+  - feasibility_assessment: 사업성 평가
+- financial_institution_perspective: 금융기관 관점
+  - credit_rating: 신용등급
+  - collateral_value: 담보가치
+  - loan_feasibility: 대출 가능성
+
+## 8. 메타 정보
+- analysis_date: 분석 일시
+- data_sources: 데이터 출처
+- assumptions: 주요 가정사항
+- limitations: 분석의 한계
+- version: 분석 버전
