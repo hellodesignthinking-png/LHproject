@@ -367,28 +367,28 @@ def get_common_styles() -> str:
 def format_currency(value: Optional[int]) -> str:
     """원화 포맷팅 (방어적 렌더링)"""
     if value is None:
-        return '<span class="data-value na">N/A (검증 필요)</span>'
+        return '<span class="data-value auxiliary">본 항목은 현 단계에서 산출 대상에서 제외되었습니다</span>'
     return f'<span class="data-value">{value:,}원</span>'
 
 
 def format_percentage(value: Optional[float]) -> str:
     """퍼센트 포맷팅 (방어적 렌더링)"""
     if value is None:
-        return '<span class="data-value na">N/A (검증 필요)</span>'
+        return '<span class="data-value auxiliary">본 항목은 현 단계에서 산출 대상에서 제외되었습니다</span>'
     return f'<span class="data-value">{value}%</span>'
 
 
 def format_units(value: Optional[int]) -> str:
     """세대수 포맷팅 (방어적 렌더링)"""
     if value is None:
-        return '<span class="data-value na">N/A (검증 필요)</span>'
+        return '<span class="data-value auxiliary">본 항목은 현 단계에서 산출 대상에서 제외되었습니다</span>'
     return f'<span class="data-value">{value}세대</span>'
 
 
 def format_generic(value: Optional[Any], suffix: str = "") -> str:
     """일반 값 포맷팅 (방어적 렌더링)"""
     if value is None or value == "":
-        return '<span class="data-value na">N/A (검증 필요)</span>'
+        return '<span class="data-value auxiliary">실시설계 또는 인허가 단계에서 추가 검토 예정</span>'
     return f'<span class="data-value">{value}{suffix}</span>'
 
 

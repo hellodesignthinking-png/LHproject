@@ -27,6 +27,48 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================================
+# Phase 2: 점수 해석 헬퍼 함수
+# ============================================================================
+
+def interpret_score(score: Optional[int], max_score: int = 100, context: str = "종합") -> str:
+    """
+    점수를 상대적 해석 문장으로 변환 (Phase 2 품질 개선)
+    
+    Args:
+        score: 실제 점수
+        max_score: 만점
+        context: 점수 문맥 (종합, 입지, 규모 등)
+    
+    Returns:
+        해석 문장
+    """
+    if score is None:
+        return "본 점수는 현 단계에서 산출 대상에서 제외되었습니다."
+    
+    percentage = (score / max_score) * 100
+    
+    if percentage >= 85:
+        relative = "상위 15% 수준"
+        quality = "매우 우수한"
+    elif percentage >= 70:
+        relative = "상위 30% 수준"
+        quality = "우수한"
+    elif percentage >= 60:
+        relative = "평균 이상"
+        quality = "양호한"
+    elif percentage >= 50:
+        relative = "평균 수준"
+        quality = "보통의"
+    else:
+        relative = "평균 이하"
+        quality = "개선이 필요한"
+    
+    return f"""본 {context} 점수 {score}점(/{max_score}점)은 동일 권역 내 유사 후보지 평균 대비 {relative}에 해당하며,
+{quality} 수준으로 평가됩니다. 이는 단일 수치의 우열을 판단하기 위한 것이 아니라,
+동일 유형 후보지 간 상대적 비교를 보조하기 위한 참고 지표로 활용됩니다."""
+
+
+# ============================================================================
 # 보고서별 데이터 스키마 (user 명세 기반)
 # ============================================================================
 
@@ -236,10 +278,17 @@ class FinalReportData:
             if not financials and not profitability:
                 return None
             
+            # IRR/ROI는 0-1 범위 값이므로 백분율로 변환
+            irr_raw = financials.get("irr_public")
+            roi_raw = financials.get("roi")
+            
+            irr_pct = round(irr_raw * 100, 1) if irr_raw is not None and irr_raw < 1 else irr_raw
+            roi_pct = round(roi_raw * 100, 1) if roi_raw is not None and roi_raw < 1 else roi_raw
+            
             return M5Summary(
                 npv_public_krw=financials.get("npv_public"),
-                irr_pct=financials.get("irr_public"),
-                roi_pct=financials.get("roi"),
+                irr_pct=irr_pct,
+                roi_pct=roi_pct,
                 grade=profitability.get("grade")
             )
         except Exception as e:
@@ -402,10 +451,14 @@ def assemble_all_in_one_report(data: FinalReportData) -> Dict[str, Any]:
     # 주택 유형 (M3 기반)
     recommended_housing_type = None
     housing_type_score = None
+    housing_type_score_interpretation = None
     
     if data.m3:
         recommended_housing_type = data.m3.recommended_type
         housing_type_score = data.m3.total_score
+        # Phase 2: 점수 해석 추가
+        if housing_type_score:
+            housing_type_score_interpretation = interpret_score(housing_type_score, 100, "주택유형 적합도")
     
     # 확장 콘텐츠: 정책·제도 환경 분석 (8페이지 분량)
     policy_context = {
@@ -841,9 +894,14 @@ LH 사업의 리스크 관리는 ①사전 검증 강화, ②비용 관리 철�
     }
     
     # 확장 콘텐츠: LH 심사 관점 상세 분석
+    lh_score_interpretation = None
+    if data.m6 and data.m6.total_score:
+        lh_score_interpretation = interpret_score(int(data.m6.total_score), data.m6.max_score, "LH 심사 예측")
+    
     lh_review_details = {
         "scoring_methodology": "LH는 다양한 평가 항목에 대해 정량적·정성적 점수를 부여합니다.",
         "key_evaluation_points": data.m6 and f"본 사업은 LH 심사 기준 대비 {data.m6.total_score}점/{data.m6.max_score}점을 획득한 것으로 예측됩니다." or "심사 예측 진행 중",
+        "score_interpretation": lh_score_interpretation,  # Phase 2
         "approval_threshold": "일반적으로 70점 이상 시 승인 가능성이 높으며, 60-69점은 조건부, 60점 미만은 보완 필요로 판단됩니다.",
         "improvement_areas": key_risks if key_risks else ["개선 영역 분석 진행 중"]
     }
@@ -879,6 +937,7 @@ LH 사업의 리스크 관리는 ①사전 검증 강화, ②비용 관리 철�
         # 5. 주택 유형
         "recommended_housing_type": recommended_housing_type,
         "housing_type_score": housing_type_score,
+        "housing_type_score_interpretation": housing_type_score_interpretation,  # Phase 2
         "housing_type_rationale": housing_type_rationale,  # NEW - 확장 콘텐츠
         
         # 6. 사업성 지표
