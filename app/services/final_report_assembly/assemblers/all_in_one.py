@@ -41,6 +41,24 @@ class AllInOneAssembler(BaseFinalReportAssembler):
         self.config = REPORT_TYPE_CONFIGS[self.report_type]
         self.narrative = NarrativeGeneratorFactory.get(self.report_type)
     
+
+
+    def safe_format_value(self, val, default="산출 진행 중"):
+        """Safely format a value, preventing dict/list exposure"""
+        if val is None:
+            return default
+        if isinstance(val, dict):
+            return default
+        if isinstance(val, list):
+            return default
+        if isinstance(val, str) and (val.upper() == "N/A" or not val.strip()):
+            return default
+        if isinstance(val, (int, float)):
+            if val == 0:
+                return default
+            return f"{val:,.0f}"
+        return str(val)
+
     def get_required_modules(self) -> List[Literal["M2", "M3", "M4", "M5", "M6"]]:
         return ["M2", "M3", "M4", "M5", "M6"]
     
@@ -129,10 +147,10 @@ class AllInOneAssembler(BaseFinalReportAssembler):
             except:
                 return str(val)
         
-        land_area_str = format_value(land_area, unit="원")
-        total_units_str = format_value(total_units, unit="세대")
-        npv_str = format_value(npv, unit="원")
-        lh_decision_str = str(lh_decision) if lh_decision else "N/A"
+        land_area_str = self.safe_format_value(land_area, default="산출 진행 중") + ("원" if isinstance(land_area, (int, float)) and land_area > 0 else "")
+        total_units_str = self.safe_format_value(total_units, default="산출 진행 중") + ("세대" if isinstance(total_units, (int, float)) and total_units > 0 else "")
+        npv_str = self.safe_format_value(npv, default="산출 진행 중") + ("원" if isinstance(npv, (int, float)) and npv != 0 else "")
+        lh_decision_str = self.safe_format_value(lh_decision, default="심사 진행 중")
         
         # Generate DATA SIGNATURE panel
         data_signature_panel = f"""

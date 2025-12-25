@@ -209,7 +209,7 @@ def _render_m2_html(data: Dict[str, Any]) -> str:
     lh_perspective = data["lh_perspective"]
     
     html = f"""
-    <section data-module="M2" class="module-root">
+    <section data-module="M2" class="module-root" data-land-value-total="{appraisal['total_value']}" data-land-value-per-pyeong="{appraisal['pyeong_price']}" data-land-area="{basis.get('land_area', 0)}">
         <div class="container">
             <header class="header">
                 <h1>{data['title']}</h1>
@@ -217,7 +217,7 @@ def _render_m2_html(data: Dict[str, Any]) -> str:
             </header>
             
             <section class="module-section">
-                <div class="key-result-card" data-land-value-total="{appraisal['total_value']}" data-land-value-per-pyeong="{appraisal['pyeong_price']}" data-land-area="{basis.get('land_area', 0)}">
+                <div class="key-result-card">
                     <h2>토지 평가액: {appraisal['total_value']:,}원</h2>
                     <p class="confidence">평가 신뢰도: {appraisal['confidence']} ({appraisal['confidence_pct']}%)</p>
                     <div style="margin-top: 16px; font-size: 14px; color: #6B7280;">
