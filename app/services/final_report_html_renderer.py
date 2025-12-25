@@ -1402,7 +1402,7 @@ def render_financial_feasibility(data: Dict[str, Any]) -> str:
                             내부수익률(IRR) <strong style="color: #10B981;">{format_percentage(irr_pct)}</strong>는 
                             투자금이 창출하는 연평균 수익률을 의미합니다. 부동산 개발사업의 목표 수익률이 
                             일반적으로 10-15% 수준임을 고려할 때, 본 사업의 IRR은 
-                            {'목표 수익률을 달성' if irr_pct and irr_pct >= 10 else '시장 평균 수준'을 나타냅니다.
+                            {'목표 수익률을 달성' if irr_pct and irr_pct >= 10 else '시장 평균 수준'}을 나타냅니다.
                             투자수익률(ROI) <strong style="color: #8B5CF6;">{format_percentage(roi_pct)}</strong>는 
                             투자 원금 대비 총 수익의 비율로, LH 매입임대사업의 평균 ROI 12-18% 대비 
                             {'경쟁력 있는' if roi_pct and roi_pct >= 12 else '검토가 필요한'} 수준입니다.
@@ -1753,7 +1753,7 @@ def render_financial_feasibility(data: Dict[str, Any]) -> str:
                             <p style="margin: 12px 0 0 0; color: #374151; line-height: 1.8;">
                                 NPV가 <strong style="color: {'#10B981' if npv_krw and npv_krw > 0 else '#EF4444'};">
                                 {format_currency(npv_krw)}</strong>로 
-                                {'양수(+)' if npv_krw and npv_krw > 0 else '음수(-)'입니다.
+                                {'양수(+)' if npv_krw and npv_krw > 0 else '음수(-)'}입니다.
                                 이는 이 사업이 최소 요구수익률(6.0%)을 
                                 {'<strong style="color: #10B981;">초과하는 초과 이익</strong>을 창출한다는 의미입니다.' if npv_krw and npv_krw > 0 else '<strong style="color: #EF4444;">충족하지 못한다</strong는 의미입니다.'}
                             </p>
@@ -1868,7 +1868,7 @@ def render_financial_feasibility(data: Dict[str, Any]) -> str:
                             </p>
                             <p style="margin: 12px 0 0 0; color: #374151; line-height: 1.8;">
                                 IRR {format_percentage(irr_pct)}는 부동산 개발사업의 
-                                {'평균 이상' if irr_pct and irr_pct >= 12 else '평균 수준'의 수익률입니다.
+                                {'평균 이상' if irr_pct and irr_pct >= 12 else '평균 수준'}의 수익률입니다.
                                 투자자의 요구수익률(보통 10-12%)을 
                                 {'초과' if irr_pct and irr_pct >= 12 else '충족'}하므로 
                                 {'투자 매력도가 높습니다' if irr_pct and irr_pct >= 12 else '투자 검토가 가능합니다'}.
@@ -1909,7 +1909,7 @@ def render_financial_feasibility(data: Dict[str, Any]) -> str:
                             <p style="margin: 12px 0 0 0; color: #374151; line-height: 1.8;">
                                 LH 매입임대사업의 평균 ROI는 12-18%입니다.
                                 본 사업의 ROI {format_percentage(roi_pct)}는 
-                                {'업계 평균 이상' if roi_pct and roi_pct >= 15 else '평균 수준'으로 
+                                {'업계 평균 이상' if roi_pct and roi_pct >= 15 else '평균 수준'}으로 
                                 {'우수한' if roi_pct and roi_pct >= 15 else '적정한'} 수익성을 보입니다.
                                 1억원 투자 시 약 {format_currency(int(100000000 * roi_pct / 100) if roi_pct else None)}의 
                                 수익을 기대할 수 있습니다.
@@ -3347,7 +3347,7 @@ def render_presentation_report(data: Dict[str, Any]) -> str:
                         </p>
                         <p>
                             "이는 LH 매입임대사업의 평균 수익률인 IRR 11-13%, ROI 12-18%와 비교할 때,
-                            {'평균 이상' if irr_pct and irr_pct >= 12 else '평균 수준'의 수익성을 보입니다.
+                            {'평균 이상' if irr_pct and irr_pct >= 12 else '평균 수준'}의 수익성을 보입니다.
                             NPV가 {'3억원 이상' if npv_krw and npv_krw >= 300000000 else '양수(+)'}로,
                             투자 타당성이 {'충분히' if npv_krw and npv_krw >= 300000000 else ''} 확보되었습니다."
                         </p>
@@ -3755,7 +3755,8 @@ def render_final_report_html(report_type: str, data: Dict[str, Any]) -> str:
         "lh_technical": render_lh_technical,
         "financial_feasibility": render_financial_feasibility,
         "quick_check": render_quick_check,
-        "presentation": render_presentation_report
+        "presentation": render_presentation_report,
+        "executive_summary": render_presentation_report  # Alias for presentation
     }
     
     renderer = renderers.get(report_type)

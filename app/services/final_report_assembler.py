@@ -1310,7 +1310,8 @@ def assemble_final_report(
         "lh_technical": assemble_lh_technical,
         "financial_feasibility": assemble_financial_feasibility,
         "quick_check": assemble_quick_check,
-        "presentation": assemble_presentation_report
+        "presentation": assemble_presentation_report,
+        "executive_summary": assemble_presentation_report  # Alias for presentation
     }
     
     assembler = assemblers.get(report_type)
