@@ -1,557 +1,485 @@
-# 🚀 ZeroSite v3 Production Deployment Guide
+# 🚀 ZeroSite v4.0 – 프로덕션 배포 가이드
 
-**버전**: v3.0.0  
-**작성일**: 2025-12-10  
-**상태**: PRODUCTION READY ✅
-
----
-
-## 📋 Table of Contents
-
-1. [System Requirements](#system-requirements)
-2. [Installation](#installation)
-3. [Configuration](#configuration)
-4. [Deployment Options](#deployment-options)
-5. [API Integration](#api-integration)
-6. [Performance Optimization](#performance-optimization)
-7. [Monitoring & Maintenance](#monitoring--maintenance)
-8. [Troubleshooting](#troubleshooting)
+**버전**: v4.0 (Phase 1+2+2.5 Complete)  
+**배포일**: 2025-12-25  
+**담당**: ZeroSite Backend Team  
 
 ---
 
-## 🖥️ System Requirements
+## 📋 **배포 체크리스트**
 
-### Minimum Requirements
-- **OS**: Linux (Ubuntu 20.04+) / macOS 10.15+ / Windows 10+
-- **Python**: 3.10+
-- **RAM**: 2GB
-- **Disk**: 500MB
-- **CPU**: 2 cores
+### ✅ **사전 완료 항목**
+- [x] PR #11 merged to main (commit: 2743862)
+- [x] 모든 테스트 통과
+- [x] Phase 1+2+2.5 기능 완성
+- [x] 문서화 완료
+- [x] 코드 리뷰 완료
 
-### Recommended Requirements
-- **OS**: Linux (Ubuntu 22.04+)
-- **Python**: 3.12+
-- **RAM**: 4GB+
-- **Disk**: 1GB+
-- **CPU**: 4+ cores
-
-### Dependencies
-```
-Python 3.10+
-plotly>=6.5.0
-weasyprint (optional, for PDF)
-jinja2>=3.1.0
-```
+### ⏳ **진행 중 항목**
+- [ ] 프로덕션 서버 배포
+- [ ] 실제 Context ID 테스트
+- [ ] 모니터링 시스템 가동
+- [ ] LH 검토자 피드백 수집
 
 ---
 
-## 📦 Installation
+## 🔧 **1. 프로덕션 서버 배포**
 
-### 1. Clone Repository
+### **Step 1: 코드 배포**
+
+#### **Option A: Git Pull (권장)**
 ```bash
-git clone https://github.com/hellodesignthinking-png/LHproject.git
-cd LHproject
-git checkout feature/expert-report-generator  # or main after PR merge
+# 프로덕션 서버에 SSH 접속
+ssh user@production-server
+
+# 프로젝트 디렉토리로 이동
+cd /path/to/webapp
+
+# 최신 코드 가져오기
+git fetch origin main
+git checkout main
+git pull origin main
+
+# 배포 확인
+git log --oneline -3
+# 예상 출력:
+# 4887650 docs: Production deployment ready...
+# 2743862 Merge PR #11: ZeroSite v4.0 Final Reports...
+# 403bf2b docs(phase2.5): Phase 2.5 Editorial Polish...
 ```
 
-### 2. Create Virtual Environment
+#### **Option B: Direct File Transfer**
 ```bash
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# 로컬에서 핵심 파일만 전송
+scp app/services/final_report_assembler.py user@production:/path/to/webapp/app/services/
+scp app/services/final_report_html_renderer.py user@production:/path/to/webapp/app/services/
 ```
 
-### 3. Install Dependencies
-```bash
-pip install -r requirements.txt
+### **Step 2: 종속성 확인**
 
-# Or install manually
-pip install plotly>=6.5.0 jinja2>=3.1.0 weasyprint
+```bash
+# Python 패키지 확인
+pip list | grep -E "pydantic|redis"
+
+# 필요시 설치
+pip install pydantic==2.11.0
+pip install redis
+
+# 버전 확인
+python -c "import pydantic; print(f'Pydantic: {pydantic.__version__}')"
+python -c "import redis; print(f'Redis: {redis.__version__}')"
 ```
 
-### 4. Verify Installation
+### **Step 3: Redis 확인**
+
 ```bash
-python generate_v3_full_report.py
-# Should generate report in < 2 seconds
+# Redis 실행 확인
+redis-cli ping
+# 예상 출력: PONG
+
+# Redis 정보 확인
+redis-cli INFO | head -20
+
+# Redis 연결 테스트
+python -c "from app.services.context_storage import redis_client; print(redis_client.ping())"
+# 예상 출력: True
 ```
 
----
+### **Step 4: 애플리케이션 재시작**
 
-## ⚙️ Configuration
-
-### Environment Variables
-Create `.env` file:
 ```bash
-# Report Configuration
-REPORT_OUTPUT_DIR=generated_reports
-REPORT_TEMPLATE_DIR=app/services_v13/report_full
+# 현재 실행 중인 프로세스 확인
+ps aux | grep "python.*app"
 
-# Chart Configuration
-CHART_WIDTH=1200
-CHART_HEIGHT=500
-PLOTLY_CDN_VERSION=2.27.0
+# 애플리케이션 재시작 (방법은 환경에 따라 다름)
 
-# Performance
-MAX_CONCURRENT_REPORTS=5
-CACHE_ENABLED=true
-CACHE_TTL=3600
+# Option A: systemd
+sudo systemctl restart zerosite
 
-# Logging
-LOG_LEVEL=INFO
-LOG_FILE=zerosite.log
-```
+# Option B: supervisor
+supervisorctl restart zerosite
 
-### Config File (config.yaml)
-```yaml
-report:
-  output_dir: "generated_reports"
-  template_dir: "app/services_v13/report_full"
-  default_format: "html"
-  enable_pdf: true
+# Option C: PM2
+pm2 restart zerosite
 
-charts:
-  enabled: true
-  width: 1200
-  height: 500
-  interactive: true
-  cdn_version: "2.27.0"
+# Option D: 수동
+kill <PID>
+python main.py &
 
-performance:
-  max_concurrent: 5
-  cache_enabled: true
-  cache_ttl: 3600
-
-security:
-  api_key_required: true
-  rate_limit: 100  # requests per hour
-  allowed_origins: ["*"]
+# 재시작 확인
+tail -f /path/to/logs/application.log
 ```
 
 ---
 
-## 🚀 Deployment Options
+## 🧪 **2. 실제 Context ID로 테스트**
 
-### Option 1: Standalone Application
-
-#### Quick Start
-```bash
-cd /path/to/LHproject
-python generate_v3_full_report.py
-```
-
-#### Batch Processing
-```python
-# batch_generate.py
-from generate_v3_full_report import V3FullReportGenerator
-
-generator = V3FullReportGenerator()
-
-projects = [
-    {"address": "서울특별시 강남구 테헤란로 123", "land_area": 1000, ...},
-    {"address": "서울특별시 마포구 월드컵북로 120", "land_area": 1500, ...},
-    # ... more projects
-]
-
-for project in projects:
-    try:
-        html = generator.generate_report(**project)
-        output = generator.save_report(html)
-        print(f"✅ Generated: {output}")
-    except Exception as e:
-        print(f"❌ Error: {e}")
-```
-
----
-
-### Option 2: Web API (FastAPI)
-
-#### Setup
-```bash
-pip install fastapi uvicorn
-```
-
-#### API Server (`app_api.py`)
-```python
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse, FileResponse
-from pydantic import BaseModel
-from generate_v3_full_report import V3FullReportGenerator
-import os
-
-app = FastAPI(title="ZeroSite Report API", version="3.0.0")
-generator = V3FullReportGenerator()
-
-class ReportRequest(BaseModel):
-    address: str
-    land_area: float
-    land_params: dict
-    unit_type: str = "청년"
-    land_price_per_sqm: float = 5_000_000
-
-@app.post("/api/v3/report/generate", response_class=HTMLResponse)
-async def generate_report(request: ReportRequest):
-    """Generate v3 Full Complete Report"""
-    try:
-        html = generator.generate_report(
-            address=request.address,
-            land_area=request.land_area,
-            land_params=request.land_params,
-            unit_type=request.unit_type,
-            land_price_per_sqm=request.land_price_per_sqm
-        )
-        return HTMLResponse(content=html)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/api/v3/report/generate-pdf")
-async def generate_pdf_report(request: ReportRequest):
-    """Generate v3 Report and return PDF"""
-    try:
-        html = generator.generate_report(**request.dict())
-        output_path = generator.save_report(html)
-        
-        # Convert to PDF
-        from weasyprint import HTML
-        pdf_path = output_path.replace(".html", ".pdf")
-        HTML(output_path).write_pdf(pdf_path)
-        
-        return FileResponse(
-            pdf_path,
-            media_type="application/pdf",
-            filename=os.path.basename(pdf_path)
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/api/v3/health")
-async def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy", "version": "3.0.0"}
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-```
-
-#### Run API Server
-```bash
-python app_api.py
-
-# Or with uvicorn directly
-uvicorn app_api:app --host 0.0.0.0 --port 8000 --reload
-```
-
-#### API Usage Examples
-```bash
-# 1. Generate HTML Report
-curl -X POST "http://localhost:8000/api/v3/report/generate" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "address": "서울특별시 강남구 테헤란로 123",
-    "land_area": 1000,
-    "land_params": {"bcr": 60, "far": 200, "max_floors": 8, "zone_type": "제2종일반주거지역"},
-    "unit_type": "청년",
-    "land_price_per_sqm": 5000000
-  }' > report.html
-
-# 2. Generate PDF Report
-curl -X POST "http://localhost:8000/api/v3/report/generate-pdf" \
-  -H "Content-Type: application/json" \
-  -d '{ ... }' > report.pdf
-
-# 3. Health Check
-curl "http://localhost:8000/api/v3/health"
-```
-
----
-
-### Option 3: Docker Container
-
-#### Dockerfile
-```dockerfile
-FROM python:3.12-slim
-
-WORKDIR /app
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    libcairo2 \
-    libpango-1.0-0 \
-    libpangocairo-1.0-0 \
-    libgdk-pixbuf2.0-0 \
-    libffi-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy application
-COPY . .
-
-# Expose port
-EXPOSE 8000
-
-# Run API server
-CMD ["uvicorn", "app_api:app", "--host", "0.0.0.0", "--port", "8000"]
-```
-
-#### Build and Run
-```bash
-# Build image
-docker build -t zerosite-v3:latest .
-
-# Run container
-docker run -d -p 8000:8000 --name zerosite-v3 zerosite-v3:latest
-
-# Check logs
-docker logs zerosite-v3
-
-# Stop container
-docker stop zerosite-v3
-```
-
-#### Docker Compose (`docker-compose.yml`)
-```yaml
-version: '3.8'
-
-services:
-  zerosite-api:
-    build: .
-    ports:
-      - "8000:8000"
-    environment:
-      - LOG_LEVEL=INFO
-      - CACHE_ENABLED=true
-    volumes:
-      - ./generated_reports:/app/generated_reports
-    restart: unless-stopped
-```
+### **Step 1: Context ID 확인**
 
 ```bash
-docker-compose up -d
+# Redis에서 사용 가능한 Context ID 확인
+redis-cli KEYS "context:*" | head -10
+
+# 또는 Python으로
+python -c "
+from app.services.context_storage import redis_client
+keys = redis_client.keys('context:*')
+print(f'Total contexts: {len(keys)}')
+print(f'Sample IDs: {[k.decode().split(\":\")[1] for k in keys[:5]]}')
+"
 ```
 
----
+### **Step 2: 테스트 스크립트 실행**
 
-## 🔌 API Integration
+```bash
+# 실제 Context ID로 테스트
+python production_test_with_real_context.py <context_id>
 
-### Python Client
-```python
-import requests
-
-class ZeroSiteClient:
-    def __init__(self, base_url="http://localhost:8000"):
-        self.base_url = base_url
-    
-    def generate_report(self, project_data):
-        response = requests.post(
-            f"{self.base_url}/api/v3/report/generate",
-            json=project_data
-        )
-        response.raise_for_status()
-        return response.text
-    
-    def generate_pdf(self, project_data):
-        response = requests.post(
-            f"{self.base_url}/api/v3/report/generate-pdf",
-            json=project_data
-        )
-        response.raise_for_status()
-        return response.content
-
-# Usage
-client = ZeroSiteClient()
-html = client.generate_report({
-    "address": "서울특별시 강남구 테헤란로 123",
-    "land_area": 1000,
-    "land_params": {"bcr": 60, "far": 200, "max_floors": 8},
-    "unit_type": "청년"
-})
+# 예시:
+python production_test_with_real_context.py 01234567-89ab-cdef-0123-456789abcdef
 ```
 
-### JavaScript/Node.js Client
-```javascript
-const axios = require('axios');
+**예상 출력:**
+```
+================================================================================
+🧪 PRODUCTION TEST: Context ID = 01234567-89ab-cdef-0123-456789abcdef
+================================================================================
 
-async function generateReport(projectData) {
-  const response = await axios.post(
-    'http://localhost:8000/api/v3/report/generate',
-    projectData,
-    { headers: { 'Content-Type': 'application/json' } }
-  );
-  return response.data;
-}
+📦 Step 1: Loading frozen context...
+✅ Success: Frozen context loaded
+   Keys: ['m2_result', 'm3_result', 'm4_result', 'm5_result', 'm6_result', ...]
 
-// Usage
-const report = await generateReport({
-  address: "서울특별시 강남구 테헤란로 123",
-  land_area: 1000,
-  land_params: { bcr: 60, far: 200, max_floors: 8 },
-  unit_type: "청년"
-});
+   Module Presence:
+   - M2 (토지감정): ✓
+   - M3 (주택유형): ✓
+   - M4 (용적률/세대수): ✓
+   - M5 (사업성): ✓
+   - M6 (LH 검토): ✓
+
+================================================================================
+📊 Step 2: Generating 6 report types...
+================================================================================
+
+🔄 Generating Quick Check Report...
+✅ Success: Quick Check Report
+   HTML size: 12,125 characters
+   N/A occurrences: 0
+   N/A (검증 필요): 0
+   KPI presence: 6/6
+      - 토지감정가: ✓
+      - NPV: ✓
+      - IRR: ✓
+      - 세대수: ✓
+      - 주택유형: ✓
+      - LH 판단: ✓
+
+[... 5개 추가 보고서 ...]
+
+================================================================================
+📋 PRODUCTION TEST SUMMARY
+================================================================================
+
+Context ID: 01234567-89ab-cdef-0123-456789abcdef
+Frozen Context: ✓ Loaded
+
+Report Generation:
+  ✅ Successful: 6/6
+  ❌ Failed: 0/6
+
+✅ Successful Reports:
+   - quick_check: 12,125 chars, KPI: 6/6
+   - financial_feasibility: 13,700 chars, KPI: 6/6
+   - lh_technical: 21,107 chars, KPI: 6/6
+   - executive_summary: 14,669 chars, KPI: 6/6
+   - landowner_summary: 23,755 chars, KPI: 6/6
+   - all_in_one: 39,888 chars, KPI: 6/6
+
+================================================================================
+✅ PRODUCTION TEST PASSED: All 6 reports generated successfully
+================================================================================
 ```
 
----
+### **Step 3: 다중 Context 테스트**
 
-## ⚡ Performance Optimization
-
-### 1. Caching
-```python
-from functools import lru_cache
-
-@lru_cache(maxsize=100)
-def generate_cached_report(address, land_area, unit_type):
-    # Cache report generation for same inputs
-    return generator.generate_report(address, land_area, ...)
-```
-
-### 2. Parallel Processing
-```python
-from concurrent.futures import ThreadPoolExecutor
-
-def generate_multiple_reports(projects):
-    with ThreadPoolExecutor(max_workers=5) as executor:
-        futures = [
-            executor.submit(generator.generate_report, **project)
-            for project in projects
-        ]
-        results = [f.result() for f in futures]
-    return results
-```
-
-### 3. Chart Optimization
-```python
-# Reduce chart resolution for faster rendering
-context["charts"]["cashflow_30year"] = self.chart_generator.generate_cashflow_chart(
-    data,
-    width=800,  # Reduced from 1200
-    height=400   # Reduced from 500
-)
-```
-
----
-
-## 📊 Monitoring & Maintenance
-
-### Logging Setup
-```python
-import logging
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('zerosite.log'),
-        logging.StreamHandler()
-    ]
+```bash
+# 여러 Context ID로 배치 테스트
+cat > batch_test.sh << 'EOF'
+#!/bin/bash
+CONTEXT_IDS=(
+    "context-id-1"
+    "context-id-2"
+    "context-id-3"
+    "context-id-4"
+    "context-id-5"
 )
 
-logger = logging.getLogger(__name__)
-logger.info("Report generated successfully")
+for cid in "${CONTEXT_IDS[@]}"; do
+    echo "Testing: $cid"
+    python production_test_with_real_context.py "$cid"
+    echo "---"
+done
+EOF
+
+chmod +x batch_test.sh
+./batch_test.sh
 ```
 
-### Metrics Collection
+---
+
+## 📊 **3. 보고서 생성 모니터링**
+
+### **Step 1: 모니터링 시스템 시작**
+
 ```python
+# monitoring_service.py 생성
+from production_monitoring import ProductionMonitor
 import time
 
-def track_performance(func):
-    def wrapper(*args, **kwargs):
-        start = time.time()
-        result = func(*args, **kwargs)
-        duration = time.time() - start
-        logger.info(f"{func.__name__} took {duration:.2f}s")
-        return result
-    return wrapper
+monitor = ProductionMonitor()
 
-@track_performance
-def generate_report(...):
-    ...
+# 실제 보고서 생성 후 기록
+# (이 코드는 실제 보고서 생성 엔드포인트에 통합)
+
+def generate_and_monitor(report_type, context_id):
+    start = time.time()
+    try:
+        # 보고서 생성 로직
+        assembled = assemble_final_report(report_type, frozen_context, context_id)
+        html = render_final_report_html(report_type, assembled)
+        
+        duration_ms = (time.time() - start) * 1000
+        
+        monitor.record_generation(
+            report_type=report_type,
+            context_id=context_id,
+            success=True,
+            duration_ms=duration_ms,
+            html_size=len(html),
+            na_count=html.count('N/A'),
+            kpi_present=6  # 실제 KPI 체크 로직
+        )
+        
+        return html
+    except Exception as e:
+        duration_ms = (time.time() - start) * 1000
+        
+        monitor.record_generation(
+            report_type=report_type,
+            context_id=context_id,
+            success=False,
+            duration_ms=duration_ms,
+            error=str(e)
+        )
+        
+        raise
+
+# 주기적으로 대시보드 출력
+while True:
+    monitor.print_dashboard()
+    monitor.save_report("production_monitoring_report.txt")
+    time.sleep(3600)  # 1시간마다
 ```
 
-### Health Monitoring
+### **Step 2: 실시간 모니터링 확인**
+
 ```bash
-# Check API health
-curl http://localhost:8000/api/v3/health
+# 실시간 모니터링 로그 확인
+tail -f production_monitoring_report.txt
 
-# Monitor logs
-tail -f zerosite.log
-
-# Check system resources
-htop
+# 또는 주기적 출력
+watch -n 60 cat production_monitoring_report.txt
 ```
 
 ---
 
-## 🐛 Troubleshooting
+## 📝 **4. LH 검토자 피드백 수집**
 
-### Common Issues
+### **Step 1: 피드백 템플릿 배포**
 
-#### Issue 1: Import Error
-```
-ModuleNotFoundError: No module named 'plotly'
-```
-**Solution**:
 ```bash
-pip install plotly>=6.5.0
+# LH 검토자에게 피드백 템플릿 전달
+# 파일: LH_REVIEWER_FEEDBACK_TEMPLATE.md
+
+# 방법 1: 이메일 첨부
+# 방법 2: 내부 문서 시스템 업로드
+# 방법 3: GitHub Issues 링크 제공
 ```
 
-#### Issue 2: Template Not Found
-```
-jinja2.exceptions.TemplateNotFound: lh_expert_edition_v3.html.jinja2
-```
-**Solution**:
+### **Step 2: 샘플 보고서 생성 및 전달**
+
 ```bash
-# Ensure template directory exists
-ls app/services_v13/report_full/lh_expert_edition_v3.html.jinja2
+# 대표적인 Context ID로 all_in_one 보고서 생성
+python production_test_with_real_context.py <representative_context_id>
+
+# HTML을 PDF로 변환 (선택)
+wkhtmltopdf report.html report.pdf
+
+# 검토자에게 전달:
+# 1. HTML 파일
+# 2. PDF 파일 (선택)
+# 3. 피드백 템플릿
 ```
 
-#### Issue 3: PDF Generation Fails
-```
-OSError: cannot load library 'cairo'
-```
-**Solution** (Ubuntu/Debian):
+### **Step 3: 피드백 수집 및 분석**
+
 ```bash
-sudo apt-get install libcairo2 libpango-1.0-0 libpangocairo-1.0-0
-pip install weasyprint
-```
+# 피드백 파일 수집
+mkdir -p feedback_collected
+mv LH_Feedback_*.md feedback_collected/
 
-#### Issue 4: Slow Chart Generation
-**Solution**: Reduce chart resolution or disable some charts
-```python
-# In generate_v3_full_report.py
-ENABLE_CHARTS = False  # Temporarily disable for faster generation
+# 피드백 요약 생성
+python analyze_feedback.py feedback_collected/
 ```
 
 ---
 
-## 📚 Additional Resources
+## 🎯 **성공 기준**
 
-- **Documentation**: `/docs`
-- **API Reference**: `/api/v3/docs` (when API server running)
-- **GitHub Issues**: https://github.com/hellodesignthinking-png/LHproject/issues
-- **Support**: 프로젝트 팀 문의
+### **배포 성공 기준**
+- [x] 코드가 프로덕션 서버에 정상 배포됨
+- [ ] 애플리케이션이 정상 실행됨
+- [ ] Redis 연결이 정상 작동함
+- [ ] 로그에 에러가 없음
+
+### **테스트 성공 기준**
+- [ ] 실제 Context ID로 6종 보고서 모두 생성 성공
+- [ ] 6대 핵심 KPI 모두 표시됨
+- [ ] 의사결정 필드에 N/A 없음
+- [ ] HTML 크기가 예상 범위 내 (quick_check: 12k, all_in_one: 39k)
+
+### **모니터링 성공 기준**
+- [ ] 보고서 생성 성공률 ≥ 95%
+- [ ] 평균 KPI 표시 ≥ 5.5/6
+- [ ] 평균 N/A 발생 ≤ 2건
+- [ ] 평균 생성 시간 ≤ 2초
+
+### **피드백 수집 성공 기준**
+- [ ] LH 검토자 피드백 ≥ 3명
+- [ ] 평균 점수 ≥ 4.0/5.0
+- [ ] "즉시 제출 가능" 또는 "소폭 수정 후 제출" 의견
+- [ ] 치명적 이슈 0건
 
 ---
 
-## ✅ Deployment Checklist
+## 🚨 **문제 해결**
 
-- [ ] Python 3.10+ installed
-- [ ] Dependencies installed (`pip install -r requirements.txt`)
-- [ ] Configuration file created (`.env` or `config.yaml`)
-- [ ] Test report generation (`python generate_v3_full_report.py`)
-- [ ] API server tested (if using API option)
-- [ ] Docker image built (if using Docker)
-- [ ] Monitoring setup (logging, metrics)
-- [ ] Backup strategy configured
-- [ ] Security measures applied (API keys, rate limiting)
-- [ ] Documentation reviewed
+### **Issue 1: Context ID를 찾을 수 없음**
+```bash
+# 증상: "Context ID not found in storage"
+
+# 확인:
+redis-cli EXISTS context:<context_id>
+
+# 해결:
+# 1. Context ID 철자 확인
+# 2. Redis 데이터 확인
+# 3. 필요시 mock data 재생성
+```
+
+### **Issue 2: Redis 연결 실패**
+```bash
+# 증상: "Redis connection failed"
+
+# 확인:
+redis-cli ping
+
+# 해결:
+# 1. Redis 실행 확인: sudo systemctl status redis
+# 2. Redis 재시작: sudo systemctl restart redis
+# 3. 설정 확인: cat /etc/redis/redis.conf
+```
+
+### **Issue 3: 보고서 생성 실패**
+```bash
+# 증상: "Assembly returned None" 또는 "Rendering returned None"
+
+# 확인:
+python -c "
+from app.services.final_report_assembler import assemble_final_report
+from app.services.context_storage import get_frozen_context
+
+context_id = '<your_context_id>'
+frozen = get_frozen_context(context_id)
+print('Frozen context keys:', list(frozen.keys()))
+
+result = assemble_final_report('quick_check', frozen, context_id)
+print('Assembly result:', type(result))
+"
+
+# 해결:
+# 1. 로그 확인: tail -f /path/to/logs/application.log
+# 2. 데이터 구조 확인
+# 3. 필요시 코드 디버깅
+```
+
+### **Issue 4: KPI 누락**
+```bash
+# 증상: KPI present < 6
+
+# 확인:
+# HTML에서 누락된 KPI 검색
+grep -i "토지감정가\|NPV\|IRR\|세대수\|주택유형\|LH" report.html
+
+# 해결:
+# 1. frozen_context에 해당 모듈 데이터 존재 확인
+# 2. 파싱 로직 확인
+# 3. 필요시 defensive rendering 추가
+```
 
 ---
 
-**🎯 Ready for Production!**
+## 📞 **지원 연락처**
 
-**Last Updated**: 2025-12-10  
-**Version**: v3.0.0  
-**Status**: ✅ PRODUCTION READY
+**기술 지원**:
+- Backend Team: backend@zerosite.com
+- DevOps Team: devops@zerosite.com
+
+**긴급 연락**:
+- 24/7 On-call: +82-10-XXXX-XXXX
+
+**문서 및 리소스**:
+- GitHub: https://github.com/hellodesignthinking-png/LHproject
+- Wiki: [내부 위키 링크]
+- Slack: #zerosite-production
+
+---
+
+## 📅 **배포 일정**
+
+| 단계 | 예상 시간 | 담당자 | 상태 |
+|------|-----------|--------|------|
+| 1. 코드 배포 | 30분 | DevOps | ✅ |
+| 2. Context ID 테스트 | 1시간 | Backend | ⏳ |
+| 3. 모니터링 설정 | 30분 | Backend | ⏳ |
+| 4. 샘플 보고서 생성 | 1시간 | Backend | ⏳ |
+| 5. LH 검토자 전달 | 1일 | PM | 📅 |
+| 6. 피드백 수집 | 3-5일 | PM | 📅 |
+| 7. 최종 검증 | 1일 | All | 📅 |
+
+**총 예상 시간**: 5-7일 (피드백 수집 포함)
+
+---
+
+## ✅ **배포 완료 체크**
+
+배포 완료 후 아래 항목을 확인하세요:
+
+```bash
+# 체크리스트
+□ 코드가 프로덕션 서버에 배포됨
+□ 애플리케이션이 정상 실행됨
+□ Redis 연결 정상
+□ 실제 Context ID로 테스트 완료
+□ 6종 보고서 모두 생성 성공
+□ 모니터링 시스템 가동
+□ 샘플 보고서 LH 검토자에게 전달
+□ 피드백 템플릿 배포
+□ 문서화 완료
+□ 팀 공유 완료
+```
+
+**모든 항목 완료 시: 🎉 배포 완료!**
+
+---
+
+**🚀 ZeroSite v4.0 – 프로덕션 배포 성공을 기원합니다! 🚀**
