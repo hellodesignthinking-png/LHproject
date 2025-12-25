@@ -1,0 +1,522 @@
+{
+  "M2": {
+    "module": "M2",
+    "context_id": "116801010001230045",
+    "summary": {
+      "land_value_total_krw": 1621848717,
+      "pyeong_price_krw": 10723014,
+      "confidence_pct": null,
+      "transaction_count": 10
+    },
+    "details": {
+      "appraisal": {
+        "land_value": 1621848717.2749999,
+        "unit_price_sqm": 3243697.43455,
+        "unit_price_pyeong": 10723014.97913539
+      },
+      "official_price": {
+        "total": 500000000.0,
+        "per_sqm": 1000000
+      },
+      "transactions": {
+        "count": 10,
+        "avg_price_sqm": 3243697.43455,
+        "samples": [
+          {
+            "address": "서울 마포구 논현동 482-54",
+            "date": "2024-01-30",
+            "price_sqm": 3400805,
+            "adjusted_price_sqm": 3314084.4725,
+            "distance_km": 0.33
+          },
+          {
+            "address": "서울 마포구 청담동 479",
+            "date": "2024-11-23",
+            "price_sqm": 3451825,
+            "adjusted_price_sqm": 3313752.0,
+            "distance_km": 0.64
+          },
+          {
+            "address": "서울 마포구 논현동 480-78",
+            "date": "2025-09-06",
+            "price_sqm": 3964565,
+            "adjusted_price_sqm": 3922937.0675000004,
+            "distance_km": 0.71
+          },
+          {
+            "address": "서울 마포구 대치동 471-77",
+            "date": "2024-11-17",
+            "price_sqm": 3456053,
+            "adjusted_price_sqm": 3297074.562,
+            "distance_km": 1.23
+          },
+          {
+            "address": "서울 마포구 역삼동 488-67",
+            "date": "2024-02-09",
+            "price_sqm": 3040949,
+            "adjusted_price_sqm": 2931474.836,
+            "distance_km": 1.23
+          },
+          {
+            "address": "서울 마포구 역삼동 457-40",
+            "date": "2025-10-10",
+            "price_sqm": 3690958,
+            "adjusted_price_sqm": 3613447.8819999998,
+            "distance_km": 1.52
+          },
+          {
+            "address": "서울 마포구 대치동 495-87",
+            "date": "2025-02-17",
+            "price_sqm": 3099443,
+            "adjusted_price_sqm": 3011108.8745,
+            "distance_km": 1.6
+          },
+          {
+            "address": "서울 마포구 논현동 495-28",
+            "date": "2025-06-15",
+            "price_sqm": 3243366,
+            "adjusted_price_sqm": 3150930.069,
+            "distance_km": 1.8
+          },
+          {
+            "address": "서울 마포구 청담동 3-5",
+            "date": "2024-09-19",
+            "price_sqm": 3060461,
+            "adjusted_price_sqm": 2919679.7939999998,
+            "distance_km": 1.89
+          },
+          {
+            "address": "서울 마포구 신사동 450-6",
+            "date": "2024-03-12",
+            "price_sqm": 3073117,
+            "adjusted_price_sqm": 2962484.7879999997,
+            "distance_km": 1.94
+          }
+        ]
+      },
+      "premium": {
+        "scores": {
+          "road": 4.0,
+          "terrain": 10,
+          "location": 7,
+          "accessibility": 7
+        },
+        "premiums": {
+          "distance": 0.05,
+          "time": 0.03,
+          "size": 0.02,
+          "zone": 0.05,
+          "total_rate": 15.000000000000002
+        }
+      },
+      "confidence": {
+        "scores": {
+          "sample_count": 0.23399999999999999,
+          "price_variance": 0.23399999999999999,
+          "distance": 0.195,
+          "recency": 0.11699999999999999
+        },
+        "confidence": {
+          "score": 0.78,
+          "level": "HIGH"
+        }
+      },
+      "price_range": {
+        "low": 1459839897.0,
+        "avg": 1621848717.2749999,
+        "high": 1961468533.7500002
+      },
+      "metadata": {
+        "date": "2025-12-25",
+        "method": "거래사례비교법 (4-Factor Enhanced)",
+        "appraiser": "ZeroSite AI Engine v9.1 (Refactored M2)",
+        "valuation_base_year": 2025,
+        "transaction_data_year": 2025
+      },
+      "warnings": {
+        "has_warnings": false,
+        "items": []
+      }
+    },
+    "meta": {
+      "generated_at": "2025-12-25T02:18:57.303168",
+      "data_quality": {
+        "is_mock": false,
+        "warnings": []
+      }
+    }
+  },
+  "M3": {
+    "module": "M3",
+    "context_id": "116801010001230045",
+    "summary": {
+      "recommended_type": "청년형",
+      "total_score": 85,
+      "confidence_pct": 85,
+      "second_choice": "신혼희망타운 I"
+    },
+    "details": {
+      "selected": {
+        "type": "youth",
+        "name": "청년형",
+        "confidence": 0.85,
+        "is_tie": false,
+        "display_string": "청년형"
+      },
+      "scores": {
+        "youth": {
+          "name": "청년형",
+          "total": 85.0,
+          "location": 30.0,
+          "accessibility": 28.0,
+          "poi": 27.0,
+          "demand": 85.0
+        },
+        "newlywed_1": {
+          "name": "신혼희망타운 I",
+          "total": 75.0,
+          "location": 28.0,
+          "accessibility": 25.0,
+          "poi": 22.0,
+          "demand": 75.0
+        },
+        "newlywed_2": {
+          "name": "신혼희망타운 II",
+          "total": 70.0,
+          "location": 26.0,
+          "accessibility": 24.0,
+          "poi": 20.0,
+          "demand": 70.0
+        },
+        "multi_child": {
+          "name": "다자녀형",
+          "total": 65.0,
+          "location": 24.0,
+          "accessibility": 22.0,
+          "poi": 19.0,
+          "demand": 65.0
+        },
+        "senior": {
+          "name": "고령자형",
+          "total": 60.0,
+          "location": 22.0,
+          "accessibility": 20.0,
+          "poi": 18.0,
+          "demand": 60.0
+        }
+      },
+      "location": {
+        "score": 30.0,
+        "poi": {
+          "subway_distance": 800.0,
+          "school_distance": 500.0,
+          "hospital_distance": 1200.0,
+          "commercial_distance": 300.0,
+          "total_count": 25
+        }
+      },
+      "demand": {
+        "prediction": 85.0,
+        "trend": "HIGH",
+        "target_population": 50000
+      },
+      "competition": {
+        "count": 3,
+        "analysis": "MODERATE"
+      },
+      "insights": {
+        "strengths": [
+          "역세권 우수",
+          "청년 인구 밀집",
+          "LH 정책 우선순위"
+        ],
+        "weaknesses": [
+          "경쟁 단지 3개 존재"
+        ],
+        "recommendations": [
+          "청년형으로 진행 권장",
+          "역세권 입지 강점 활용"
+        ]
+      },
+      "metadata": {
+        "date": "2025-12-25",
+        "sources": [
+          "POI DB",
+          "인구통계 API",
+          "LH 정책"
+        ]
+      }
+    },
+    "meta": {
+      "generated_at": "2025-12-25T02:18:57.303357",
+      "data_quality": {
+        "is_mock": false,
+        "warnings": []
+      }
+    }
+  },
+  "M4": {
+    "module": "M4",
+    "context_id": "116801010001230045",
+    "summary": {
+      "total_units": 26,
+      "legal_units": 20,
+      "incentive_units": 26,
+      "parking_alt_a": 13,
+      "parking_alt_b": 13
+    },
+    "details": {
+      "module_version": "2.0",
+      "calculation_date": "2025-12-25 02:18:57",
+      "legal_capacity": {
+        "applied_far": 200.0,
+        "applied_bcr": 60.0,
+        "target_gfa_sqm": 1000.0,
+        "total_units": 20,
+        "required_parking": 10,
+        "gfa_breakdown": {
+          "nia_sqm": 600.0,
+          "common_sqm": 300.0,
+          "mechanical_loss_sqm": 100.0
+        }
+      },
+      "incentive_capacity": {
+        "applied_far": 260.0,
+        "applied_bcr": 60.0,
+        "target_gfa_sqm": 1300.0,
+        "total_units": 26,
+        "required_parking": 13,
+        "gfa_breakdown": {
+          "nia_sqm": 780.0,
+          "common_sqm": 390.0,
+          "mechanical_loss_sqm": 130.0
+        }
+      },
+      "massing_options": [
+        {
+          "option_id": "A",
+          "option_name": "2개동 중층형",
+          "building_count": 2,
+          "floors": 10,
+          "units_per_floor": 1,
+          "achieved_far": 247.0,
+          "buildability_score": 85.0,
+          "efficiency_score": 90.0
+        },
+        {
+          "option_id": "B",
+          "option_name": "3개동 저층형",
+          "building_count": 3,
+          "floors": 8,
+          "units_per_floor": 1,
+          "achieved_far": 234.0,
+          "buildability_score": 90.0,
+          "efficiency_score": 85.0
+        },
+        {
+          "option_id": "C",
+          "option_name": "1개동 고층형",
+          "building_count": 1,
+          "floors": 15,
+          "units_per_floor": 1,
+          "achieved_far": 254.79999999999998,
+          "buildability_score": 75.0,
+          "efficiency_score": 95.0
+        }
+      ],
+      "unit_summary": {
+        "total_units": 26,
+        "preferred_type": "청년형",
+        "unit_count_by_type": {
+          "30㎡": 26
+        },
+        "average_area_sqm": 30.0
+      },
+      "parking_solutions": {
+        "alternative_A": {
+          "solution_type": "far_maximization",
+          "total_parking": 13,
+          "basement_floors": 2,
+          "ramp_feasibility": "feasible",
+          "achievability_score": 90.0
+        },
+        "alternative_B": {
+          "solution_type": "parking_priority",
+          "total_parking": 13,
+          "adjusted_units": 26,
+          "far_sacrifice": 0.0,
+          "achievability_score": 90.0
+        }
+      },
+      "schematic_drawings": {
+        "ground_layout": "/home/user/webapp/static/schematics/116801010001230045_ground_layout.svg",
+        "standard_floor": "/home/user/webapp/static/schematics/116801010001230045_standard_floor.svg",
+        "basement_parking": "/home/user/webapp/static/schematics/116801010001230045_basement_parking.svg",
+        "massing_comparison": "/home/user/webapp/static/schematics/116801010001230045_massing_comparison.svg"
+      },
+      "inputs": {
+        "land_area_sqm": 500.0,
+        "legal_far": 200.0,
+        "incentive_far": 260.0,
+        "housing_type": "청년형"
+      },
+      "metadata": {
+        "assumptions": {
+          "nia_ratio": 0.6,
+          "parking_ratio": 0.6,
+          "basement_efficiency": 0.85
+        },
+        "constraints": [
+          "법정 건폐율: 60.0%",
+          "법정 용적률: 200.0%",
+          "도로폭: 8.0m"
+        ],
+        "notes": [
+          "M4는 물리적 건축 규모만 산출합니다",
+          "사업성 판단은 M5에서 수행합니다",
+          "LH 의사결정은 M6에서 수행합니다"
+        ]
+      }
+    }
+  },
+  "M5": {
+    "module": "M5",
+    "context_id": "116801010001230045",
+    "summary": {
+      "npv_public_krw": 793000000,
+      "irr_pct": 12.808846674788727,
+      "roi_pct": 12.808846674788727,
+      "grade": "C"
+    },
+    "details": {
+      "appraisal": {
+        "value": 1621848717.2749999,
+        "unit_price": 3243697.43455,
+        "source": "M2.AppraisalContext (READ-ONLY)"
+      },
+      "lh_purchase": {
+        "price": 1784033589.0025,
+        "unit_price": 3568067.178005,
+        "premium_rate": 10.0,
+        "price_gap_pct": 10.000000000000012
+      },
+      "costs": {
+        "land": 1621848717.2749999,
+        "construction": 3900000000.0,
+        "total": 6191033589.002501
+      },
+      "revenue": {
+        "lh_purchase": 1784033589.0025,
+        "rental_annual": 312000000,
+        "total": 6984033589.002501
+      },
+      "financials": {
+        "npv_public": 793000000.0,
+        "npv_market": 443798320.5498743,
+        "irr_public": 12.808846674788727,
+        "irr_market": 7.168404341049281,
+        "roi": 12.808846674788727,
+        "payback_years": 10.0
+      },
+      "profitability": {
+        "is_profitable": true,
+        "grade": "C",
+        "score": 30.0
+      },
+      "risks": {
+        "financial": [
+          "LH 매입가 변동 리스크",
+          "공사비 상승 리스크"
+        ],
+        "mitigation": [
+          "공사비 연동제 적용",
+          "단계별 LH 협의"
+        ]
+      },
+      "meta": {
+        "analysis_date": "2025-12-25",
+        "construction_cost_base_year": 2025,
+        "base_year_note": "공사비는 2025년 기준입니다"
+      }
+    }
+  },
+  "M6": {
+    "module": "M6",
+    "context_id": "116801010001230045",
+    "summary": {
+      "decision": "GO",
+      "total_score": 85.0,
+      "max_score": 110,
+      "grade": "A",
+      "approval_probability_pct": 77
+    },
+    "details": {
+      "scores": {
+        "location": 30.0,
+        "scale": 10.0,
+        "feasibility": 30.0,
+        "compliance": 15.0,
+        "total": 85.0
+      },
+      "grade": "A",
+      "decision": {
+        "type": "GO",
+        "rationale": "A등급, 85.0/110점. GO 결정."
+      },
+      "approval": {
+        "probability": 0.7727272727272727,
+        "likelihood": "MEDIUM",
+        "expected_conditions": [],
+        "critical_factors": [
+          "입지 점수: 30.0/35",
+          "사업성 점수: 30.0/40"
+        ]
+      },
+      "swot": {
+        "strengths": [
+          "입지 우수 (청년형)",
+          "사업성 C등급",
+          "ROI 12.8%"
+        ],
+        "weaknesses": [
+          "규모 부족 (최소 50세대 권장)"
+        ],
+        "opportunities": [
+          "LH 신축매입임대 정책 확대",
+          "지역 수요 증가 추세"
+        ],
+        "threats": [
+          "경쟁 단지 증가",
+          "공사비 상승 리스크"
+        ]
+      },
+      "recommendations": {
+        "general": [
+          "LH 협의 즉시 진행 권장",
+          "토지비 감정평가 접수",
+          "사업계획서 작성 착수"
+        ],
+        "actions": [
+          "1단계: LH 사업부서 문의",
+          "2단계: 감정평가 의뢰",
+          "3단계: 사업계획서 제출"
+        ],
+        "improvements": {
+          "규모": "최소 50세대 이상 확보 권장"
+        }
+      },
+      "metadata": {
+        "date": "2025-12-25",
+        "reviewer": "ZeroSite AI LH Review Engine v9.1 (Refactored M6)",
+        "version": "2025 LH 기준 (110점 체계)"
+      }
+    },
+    "meta": {
+      "generated_at": "2025-12-25T02:18:57.303486",
+      "data_quality": {
+        "is_mock": false,
+        "warnings": []
+      }
+    }
+  }
+}
