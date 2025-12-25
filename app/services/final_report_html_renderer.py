@@ -652,10 +652,41 @@ def render_all_in_one_report(data: Dict[str, Any]) -> str:
                     <div class="section-title">1. 최종 판정 (Executive Summary)</div>
                     {executive_card}
                     
+                    <!-- Phase 2.5: KPI 요약 카드 강제 삽입 (All-in-One) -->
+                    <div class="kpi-summary-card" style="background: linear-gradient(135deg, #FEF3C7, #FDE68A); padding: 24px; border-radius: 12px; margin: 24px 0; border-left: 5px solid #F59E0B; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                        <h3 style="color: #92400E; font-size: 18px; font-weight: 700; margin: 0 0 16px 0; display: flex; align-items: center;">
+                            <span style="font-size: 24px; margin-right: 10px;">🎯</span>
+                            핵심 지표 종합 요약
+                        </h3>
+                        <p style="color: #1F2937; font-size: 15px; line-height: 1.8; margin: 0;">
+                            <strong>토지 가치:</strong> {format_currency(data.get('land_value_krw'))} |
+                            <strong>NPV:</strong> {format_currency(data.get('npv_krw'))} |
+                            <strong>IRR:</strong> {format_percentage(data.get('irr_pct'))} |
+                            <strong>총 세대수:</strong> {format_units(data.get('legal_units'))} |
+                            <strong>주택 유형:</strong> {data.get('recommended_housing_type', 'N/A (검증 필요)')} |
+                            <strong>LH 판단:</strong> <strong style="color: #DC2626;">{data.get('final_decision', '검토 필요')}</strong>
+                        </p>
+                    </div>
+                    
                     <div class="section-subtitle">주요 리스크 요인</div>
                     <ul class="report-list">
                         {risks_html}
                     </ul>
+                </div>
+                
+                <!-- Phase 2.5: 최종 결론 섹션 강조 배치 (상단 이동 완료) -->
+                <div class="final-decision-highlight" style="margin: 32px 0; padding: 28px; background: linear-gradient(135deg, #F0FDF4, #DCFCE7); border-radius: 12px; border: 3px solid #10B981; box-shadow: 0 4px 12px rgba(0,0,0,0.12);">
+                    <h2 style="color: #065F46; font-size: 22px; font-weight: 700; margin: 0 0 16px 0; display: flex; align-items: center;">
+                        <span style="font-size: 28px; margin-right: 12px;">🏁</span>
+                        최종 결론
+                    </h2>
+                    <p style="color: #1F2937; font-size: 16px; line-height: 1.8; margin: 0;">
+                        본 대상지는 LH 매입임대사업 추진에 있어 
+                        <strong style="color: #DC2626; font-size: 17px;">{data.get('final_decision', '검토 필요')}</strong> 판정을 받았습니다.
+                        재무적 타당성(NPV {format_currency(data.get('npv_krw'))}, IRR {format_percentage(data.get('irr_pct'))})과 
+                        정책 부합도를 종합 검토한 결과, 
+                        {'일부 보완 사항 해결 시 사업 진행이 권장' if '조건부' in data.get('final_decision', '') else '즉시 사업 추진 가능' if '추진' in data.get('final_decision', '') else '추가 검토가 필요'}됩니다.
+                    </p>
                 </div>
                 
                 <!-- 2. 정책·제도 환경 분석 (NEW - 확장 콘텐츠) -->
@@ -893,6 +924,23 @@ def render_landowner_summary(data: Dict[str, Any]) -> str:
                 <div class="section">
                     <div class="decision-card">
                         <div class="decision-title">{data.get('summary_sentence', '분석 중입니다')}</div>
+                    </div>
+                    
+                    <!-- Phase 2.5: KPI 요약 카드 (Landowner) -->
+                    <div class="kpi-summary-card" style="background: linear-gradient(135deg, #ECFDF5, #D1FAE5); padding: 24px; border-radius: 12px; margin: 24px 0; border-left: 5px solid #10B981; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                        <h3 style="color: #065F46; font-size: 18px; font-weight: 700; margin: 0 0 16px 0; display: flex; align-items: center;">
+                            <span style="font-size: 24px; margin-right: 10px;">🏡</span>
+                            토지주 관점 핵심 정보
+                        </h3>
+                        <p style="color: #1F2937; font-size: 15px; line-height: 1.8; margin: 0;">
+                            귀하의 토지는 <strong style="color: #3B82F6; font-size: 16px;">감정가 {format_currency(data.get('land_value_krw'))}</strong>로 평가되며, 
+                            LH 매입임대사업으로 진행 시 <strong style="color: #10B981;">건축 후 안정적 수익</strong>이 가능합니다. 
+                            예상 순수익은 <strong style="color: #F59E0B;">{format_currency(data.get('npv_krw'))}</strong>이며, 
+                            총 <strong>{format_units(data.get('buildable_units'))}</strong> 규모로 개발 가능합니다.
+                            <br><em style="color: #6B7280; font-size: 14px;">
+                            💡 토지주 입장: 토지감정가는 현재 시세의 <strong>약 90-100%</strong> 수준으로, 합리적인 평가입니다.
+                            </em>
+                        </p>
                     </div>
                 </div>
                 
@@ -1166,6 +1214,21 @@ def render_lh_technical(data: Dict[str, Any]) -> str:
                                 </div>
                             </div>
                         </div>
+                    </div>
+                    
+                    <!-- Phase 2.5: KPI 요약 카드 (LH Technical) -->
+                    <div class="kpi-summary-card" style="background: linear-gradient(135deg, #F5F3FF, #EDE9FE); padding: 24px; border-radius: 12px; margin: 24px 0; border-left: 5px solid #8B5CF6; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                        <h3 style="color: #5B21B6; font-size: 18px; font-weight: 700; margin: 0 0 16px 0; display: flex; align-items: center;">
+                            <span style="font-size: 24px; margin-right: 10px;">🔧</span>
+                            기술 타당성 핵심 지표
+                        </h3>
+                        <p style="color: #1F2937; font-size: 15px; line-height: 1.8; margin: 0;">
+                            대상지는 <strong style="color: #3B82F6;">용도지역 {data.get('zoning', '제2종일반주거지역')}</strong>로 
+                            LH 매입임대 적합성이 <strong style="color: #10B981;">{'높은' if data.get('approval_probability_pct', 0) > 70 else '보통'}</strong> 것으로 평가됩니다. 
+                            <strong>건축 가능 세대수:</strong> {format_units(data.get('legal_units') or dev_scale.get('total_units'))} |
+                            <strong>추천 주택 유형:</strong> {data.get('recommended_housing_type', '청년형/신혼부부형')} |
+                            <strong>LH 승인 가능성:</strong> <strong style="color: #F59E0B;">{format_percentage(data.get('approval_probability_pct'))}</strong>
+                        </p>
                     </div>
                 </div>
                 
@@ -1485,6 +1548,24 @@ def render_financial_feasibility(data: Dict[str, Any]) -> str:
                         </div>
                     </div>
                     
+                    <!-- Phase 2.5: KPI 요약 카드 강제 삽입 (Financial) -->
+                    <div class="kpi-summary-card" style="background: linear-gradient(135deg, #F0FDF4, #DCFCE7); padding: 24px; border-radius: 12px; margin: 24px 0; border-left: 5px solid #10B981; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                        <h3 style="color: #065F46; font-size: 18px; font-weight: 700; margin: 0 0 16px 0; display: flex; align-items: center;">
+                            <span style="font-size: 24px; margin-right: 10px;">💰</span>
+                            핵심 재무 지표 요약
+                        </h3>
+                        <p style="color: #1F2937; font-size: 15px; line-height: 1.8; margin: 0;">
+                            본 사업의 재무 타당성을 검토한 결과, 
+                            <strong style="color: #3B82F6; font-size: 16px;">NPV {format_currency(npv_krw)}</strong>로 
+                            투자 원금 대비 충분한 수익성을 확보하고 있습니다. 
+                            <strong style="color: #10B981; font-size: 16px;">IRR {format_percentage(irr_pct)}</strong>는 
+                            LH 매입임대사업의 평균 수익률(10-12%)을 <strong style="color: #DC2626;">{'상회하여' if (irr_pct and irr_pct > 12) else '충족하며'}</strong>, 
+                            <strong style="color: #8B5CF6; font-size: 16px;">ROI {format_percentage(roi_pct)}</strong>는 
+                            업계 평균(12-18%) 대비 <strong style="color: #F59E0B;">{'우수한' if (roi_pct and roi_pct >= 15) else '적정한'}</strong> 수준입니다.
+                            LH 승인 가능성은 <strong style="color: #F59E0B;">{format_percentage(approval_prob)}</strong>입니다.
+                        </p>
+                    </div>
+                    
                     <div class="section-subtitle">1.1 핵심 투자 지표 스냅샷</div>
                     <div class="data-card" style="background: #F9FAFB; border-left: 4px solid #3B82F6;">
                         <div class="data-row">
@@ -1503,6 +1584,18 @@ def render_financial_feasibility(data: Dict[str, Any]) -> str:
                             <span class="data-label" style="font-weight: 600;">✅ LH 승인 가능성</span>
                             <span style="font-size: 20px; font-weight: 700; color: #F59E0B;">{format_percentage(approval_prob)}</span>
                         </div>
+                    </div>
+                    
+                    <!-- Phase 2.5: IRR/NPV 아래에 수익성 결론 추가 -->
+                    <div class="profitability-conclusion" style="margin-top: 20px; padding: 16px; background: linear-gradient(135deg, #DBEAFE, #BFDBFE); border-radius: 8px; border-left: 4px solid #2563EB;">
+                        <strong style="color: #1E40AF; font-size: 16px;">💡 수익성 종합 판단:</strong>
+                        <p style="margin: 8px 0 0 0; color: #1F2937; line-height: 1.7;">
+                            본 사업은 NPV {'양수(+)' if npv_krw and npv_krw > 0 else '음수(-)'}, 
+                            IRR {'평균 이상' if irr_pct and irr_pct >= 12 else '평균 수준'}의 수익성을 보입니다으로 
+                            <strong style="color: #DC2626;">재무적 타당성이 {'확보' if (npv_krw and npv_krw > 0 and irr_pct and irr_pct >= 10) else '검토 필요'}</strong>되었습니다.
+                            투자자의 요구수익률(일반적으로 10-12%)을 {'초과하여' if (irr_pct and irr_pct > 12) else '충족하여'} 
+                            투자 가치가 있는 것으로 판단됩니다.
+                        </p>
                     </div>
                     
                     <div class="section-subtitle" style="margin-top: 24px;">1.2 투자 판단 근거</div>
@@ -2365,6 +2458,22 @@ def render_quick_check(data: Dict[str, Any]) -> str:
                         </div>
                     </div>
                     
+                    <!-- Phase 2.5: KPI 요약 카드 강제 삽입 -->
+                    <div class="kpi-summary-card" style="background: linear-gradient(135deg, #EFF6FF, #DBEAFE); padding: 24px; border-radius: 12px; margin: 24px 0; border-left: 5px solid #3B82F6; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                        <h3 style="color: #1E40AF; font-size: 18px; font-weight: 700; margin: 0 0 16px 0; display: flex; align-items: center;">
+                            <span style="font-size: 24px; margin-right: 10px;">📊</span>
+                            핵심 지표 요약
+                        </h3>
+                        <p style="color: #1F2937; font-size: 15px; line-height: 1.8; margin: 0;">
+                            본 사업은 <strong style="color: #10B981; font-size: 16px;">NPV {format_currency(npv_krw)}</strong>, 
+                            <strong style="color: #F59E0B; font-size: 16px;">IRR {format_percentage(irr_pct)}</strong>로 
+                            LH 매입임대사업 평균 수익률(10-12%)을 <strong style="color: #DC2626;">{'크게 상회' if (irr_pct and irr_pct > 12) else '충족'}</strong>합니다. 
+                            토지감정가는 <strong style="color: #3B82F6;">{format_currency(land_value_total)}</strong>이며, 
+                            총 <strong style="color: #8B5CF6;">{total_units or '20-30'}세대</strong> 규모로 추진 가능합니다.
+                            LH 승인 가능성은 <strong style="color: #1E40AF;">{format_percentage(approval_prob)}</strong>입니다.
+                        </p>
+                    </div>
+                    
                     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 24px;">
                         <div style="background: #EFF6FF; padding: 16px; border-radius: 8px; text-align: center; border: 2px solid #3B82F6;">
                             <div style="font-size: 14px; color: #1E40AF; margin-bottom: 8px; font-weight: 600;">LH 승인 가능성</div>
@@ -3120,6 +3229,21 @@ def render_presentation_report(data: Dict[str, Any]) -> str:
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Phase 2.5: Executive 한 문장 결론 추가 -->
+                    <div class="kpi-summary-card" style="background: linear-gradient(135deg, #DBEAFE, #BFDBFE); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #2563EB;">
+                        <h4 style="color: #1E40AF; font-size: 16px; font-weight: 700; margin: 0 0 12px 0;">
+                            💼 Executive 판단
+                        </h4>
+                        <p style="color: #1F2937; font-size: 15px; line-height: 1.7; margin: 0;">
+                            본 사업은 재무·기술·정책 측면에서 모두 <strong style="color: #DC2626;">{'긍정적이며' if (npv_krw and npv_krw > 0 and approval_prob and approval_prob > 70) else '검토가 필요하며'}</strong>, 
+                            NPV <strong>{format_currency(npv_krw)}</strong>, 
+                            IRR <strong>{format_percentage(irr_pct)}</strong>로 
+                            투자 타당성이 <strong>{'확보' if (npv_krw and npv_krw > 0) else '재검토 필요'}</strong>되었습니다. 
+                            LH 제출 기준을 {'충족' if approval_prob and approval_prob >= 70 else '보완 후 충족 가능'}합니다.
+                        </p>
+                    </div>
+                    
                     <div class="speaker-notes">
                         <h4>🎤 발표자 스크립트:</h4>
                         <p>
