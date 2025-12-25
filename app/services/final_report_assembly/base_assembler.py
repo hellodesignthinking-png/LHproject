@@ -21,11 +21,23 @@ from typing import Dict, List, Literal, Optional, Tuple
 from abc import ABC, abstractmethod
 from datetime import datetime
 import logging
+import os
 
 # Phase 4.0: Import Unified Design System
 from .design_system import DesignSystem, get_report_brand_class
 
+# Phase 4.1: Import Unified Value Presenter
+from .value_presenter import present, present_soft_kpi, format_currency, format_units, format_percentage
+
 logger = logging.getLogger(__name__)
+
+# Load unified CSS
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UNIFIED_CSS_PATH = os.path.join(BASE_DIR, "base_report_style.css")
+UNIFIED_CSS = ""
+if os.path.exists(UNIFIED_CSS_PATH):
+    with open(UNIFIED_CSS_PATH, "r", encoding="utf-8") as f:
+        UNIFIED_CSS = f.read()
 
 
 def translate_decision_to_korean(decision: str) -> str:
@@ -609,9 +621,15 @@ class BaseFinalReportAssembler(ABC):
             elif '점수' in kpi_name or 'score' in kpi_name.lower():
                 formatted_value = BaseFinalReportAssembler.format_number(kpi_value, 'score')
             else:
-                # [FIX B] Fallback guarantee - no empty values
+                # [FIX B] Fallback guarantee - no empty values, no dict exposure
                 if kpi_value is None or kpi_value == "" or (isinstance(kpi_value, (int, float)) and kpi_value == 0):
                     formatted_value = '<span class="kpi-undefined" title="분석 결과는 존재하나 표시 불가">데이터 미확정</span>'
+                elif isinstance(kpi_value, dict):
+                    # CRITICAL: Never expose dict structure
+                    formatted_value = '<span class="kpi-undefined">산출 중</span>'
+                elif isinstance(kpi_value, list):
+                    # CRITICAL: Never expose list structure
+                    formatted_value = '<span class="kpi-undefined">산출 중</span>'
                 else:
                     formatted_value = str(kpi_value)
             

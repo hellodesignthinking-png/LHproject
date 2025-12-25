@@ -10,6 +10,7 @@ ASSEMBLY ONLY - NO CALCULATION
 """
 
 from typing import Dict, List, Literal
+import os
 import logging
 import re
 
@@ -18,6 +19,8 @@ from ..narrative_generator import NarrativeGeneratorFactory
 from ..report_type_configs import REPORT_TYPE_CONFIGS, get_mandatory_kpi, get_critical_kpi
 
 # [Phase 3.10 Final Lock + vPOST-FINAL] KPI Extractor with operational safety
+from ..value_presenter import present, present_soft_kpi, format_currency, format_units, format_percentage
+from app.utils.report_value_resolver import resolve_scalar
 from ..kpi_extractor import (
     KPIExtractor, 
     validate_mandatory_kpi, 
@@ -43,24 +46,31 @@ class ExecutiveSummaryAssembler(BaseFinalReportAssembler):
     
 
 
-    def safe_format_value(self, val, default="산출 진행 중"):
-        """Safely format a value, preventing dict/list exposure"""
-        if val is None:
-            return default
-        if isinstance(val, dict):
-            return default
-        if isinstance(val, list):
-            return default
-        if isinstance(val, str) and (val.upper() == "N/A" or not val.strip()):
-            return default
-        if isinstance(val, (int, float)):
-            if val == 0:
-                return default
-            return f"{val:,.0f}"
-        return str(val)
-
     def get_required_modules(self) -> List[Literal["M2", "M3", "M4", "M5", "M6"]]:
         return ["M2", "M5", "M6"]
+    def generate_interpretation_paragraph(self, label: str, value, interpretation: str) -> str:
+        """Generate data + interpretation paragraph"""
+        from app.utils.report_value_resolver import present_money_krw, present_int, present_pct
+        
+        # Format value based on type
+        if isinstance(value, (int, float)):
+            if '원' in label or 'NPV' in label or '감정가' in label:
+                formatted = present_money_krw(value)
+            elif '%' in label or 'IRR' in label or '수익률' in label:
+                formatted = present_pct(value)
+            else:
+                formatted = present_int(value)
+        else:
+            formatted = str(value) if value else "산출 진행 중"
+        
+        return f"""
+        <div class="data-interpretation-block">
+            <div class="data-label"><strong>{label}:</strong> {formatted}</div>
+            <div class="interpretation-text">{interpretation}</div>
+        </div>
+        """
+    
+
     
     def assemble(self) -> Dict[str, str]:
         """Assemble Executive Summary Report (Brief)"""
@@ -127,26 +137,14 @@ class ExecutiveSummaryAssembler(BaseFinalReportAssembler):
         ).hexdigest()[:12]
         
         # Extract key input values for display
-        land_area = (modules_data.get("M2") or {}).get("land_value_total", "N/A")
-        total_units = (modules_data.get("M4") or {}).get("total_units", "N/A") if "M4" in modules_data else (modules_data.get("M5") or {}).get("total_units", "N/A")
-        lh_decision = translate_decision_to_korean((modules_data.get("M6") or {}).get("decision") or "N/A")
-        npv = (modules_data.get("M5") or {}).get("npv", "N/A")
-        
-        # Format values safely
-        def format_value(val, fmt=",.0f", unit=""):
-            if val is None or val == "N/A" or (isinstance(val, str) and val.upper() == "N/A"):
-                return "N/A"
-            try:
-                if isinstance(val, (int, float)):
-                    return f"{val:{fmt}}{unit}"
-                return str(val)
-            except:
-                return str(val)
-        
-        land_area_str = self.safe_format_value(land_area, default="산출 진행 중") + ("원" if isinstance(land_area, (int, float)) and land_area > 0 else "")
-        total_units_str = self.safe_format_value(total_units, default="산출 진행 중") + ("세대" if isinstance(total_units, (int, float)) and total_units > 0 else "")
-        npv_str = self.safe_format_value(npv, default="산출 진행 중") + ("원" if isinstance(npv, (int, float)) and npv != 0 else "")
-        lh_decision_str = self.safe_format_value(lh_decision, default="심사 진행 중")
+        land_area = resolve_scalar(modules_data, "M2", "land_value_total")
+        total_units = resolve_scalar(modules_data, "M4", "total_units") or resolve_scalar(modules_data, "M5", "total_units")
+        lh_decision = translate_decision_to_korean(resolve_scalar(modules_data, "M6", "decision") or "검토 필요")
+        npv = resolve_scalar(modules_data, "M5", "npv")
+        land_area_str = format_currency(land_area) if isinstance(land_area, (int, float)) and land_area > 0 else "산출 진행 중"
+        total_units_str = format_units(total_units) if isinstance(total_units, (int, float)) and total_units > 0 else "산출 진행 중"
+        npv_str = format_currency(npv) if isinstance(npv, (int, float)) else "산출 진행 중"
+        lh_decision_str = present(lh_decision)
         
         # Generate DATA SIGNATURE panel
         data_signature_panel = f"""
@@ -343,7 +341,7 @@ class ExecutiveSummaryAssembler(BaseFinalReportAssembler):
         
         if is_profitable and "추진 가능" in lh_decision:
             return "사업 추진 권장"
-        elif "조건부 가능" in lh_decision:
+        elif lh_decision and "조건부 가능" in str(lh_decision):
             return "조건부 가능 사업 추진"
         elif not is_profitable:
             return "사업 재검토 필요"
@@ -369,9 +367,9 @@ class ExecutiveSummaryAssembler(BaseFinalReportAssembler):
         
         # [FIX D] LH Decision with explicit status
         lh_decision = translate_decision_to_korean(m6_data.get("decision") or "분석 미완료")
-        if "추진 가능" in lh_decision:
+        if lh_decision and "추진 가능" in str(lh_decision):
             basis.append(f"✅ LH 심사: {lh_decision}")
-        elif "조건부 가능" in lh_decision:
+        elif lh_decision and "조건부 가능" in str(lh_decision):
             basis.append(f"⚠️ LH 심사: {lh_decision}")
         else:
             basis.append(f"❌ LH 심사: {lh_decision}")
@@ -396,7 +394,7 @@ class ExecutiveSummaryAssembler(BaseFinalReportAssembler):
         if is_profitable and "추진 가능" in lh_decision:
             actions.append("LH 사전 협의 진행")
             actions.append("설계 용역 발주 준비")
-        elif "조건부 가능" in lh_decision:
+        elif lh_decision and "조건부 가능" in str(lh_decision):
             actions.append("LH 지적 사항 보완")
             actions.append("재분석 후 재제출 검토")
         else:
@@ -512,18 +510,72 @@ class ExecutiveSummaryAssembler(BaseFinalReportAssembler):
         </html>
         """
     def _get_report_css(self) -> str:
-        """[FIX 4] Report CSS with unified design system"""
-        base_css = """
-        body.final-report {
-            font-family: 'Noto Sans KR', sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            line-height: 1.6;
-            padding: 20px;
-        }
-        .module-section.compact { font-size: 0.9em; padding: 10px; }
-        .narrative { margin: 15px 0; padding: 10px; background: #f8f9fa; }
-        """
+        """[UNIFIED] Report CSS - DO NOT MODIFY"""
+        base_css = """/* 
+FINAL REPORT UNIFIED STYLE
+Applied to ALL 6 report types
+NO overrides allowed
+*/
+
+body {
+  font-family: "Noto Sans KR", -apple-system, BlinkMacSystemFont, system-ui;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #111;
+  word-break: keep-all;
+  margin: 0;
+  padding: 0;
+}
+
+h1 { 
+  font-size: 22px; 
+  font-weight: 700; 
+  margin-bottom: 18px;
+  color: #111;
+}
+
+h2 { 
+  font-size: 18px; 
+  font-weight: 600; 
+  margin: 28px 0 12px;
+  color: #111;
+}
+
+h3 { 
+  font-size: 15px; 
+  font-weight: 600; 
+  margin: 18px 0 8px;
+  color: #111;
+}
+
+.section {
+  margin-bottom: 32px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th, td {
+  border: 1px solid #dcdcdc;
+  padding: 8px 10px;
+  vertical-align: top;
+  text-align: left;
+}
+
+th {
+  background-color: #f5f7fa;
+  font-weight: 600;
+}
+
+/* Prevent any dict/JSON exposure */
+.hidden {
+  display: none !important;
+}
+"""
         
         # Add watermark and copyright CSS
         return base_css + self.get_unified_design_css() + self.get_zerosite_watermark_css() + self.get_copyright_footer_css()
+

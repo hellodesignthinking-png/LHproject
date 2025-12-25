@@ -1,0 +1,135 @@
+/* Unified Report Theme - DO NOT MODIFY */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --text: #111;
+  --muted: #667085;
+  --border: #D0D5DD;
+  --bg: #F9FAFB;
+  --h1: 22px;
+  --h2: 18px;
+  --h3: 15px;
+  --base: 14px;
+  --small: 13px;
+  --lh: 1.65;
+}
+
+html, body {
+  font-family: "Noto Sans KR", -apple-system, BlinkMacSystemFont, system-ui;
+  font-size: var(--base);
+  line-height: var(--lh);
+  color: var(--text);
+  margin: 0;
+  padding: 20px;
+}
+
+h1 {
+  font-size: var(--h1);
+  font-weight: 800;
+  margin: 0 0 14px;
+  color: var(--text);
+}
+
+h2 {
+  font-size: var(--h2);
+  font-weight: 700;
+  margin: 22px 0 10px;
+  color: var(--text);
+}
+
+h3 {
+  font-size: var(--h3);
+  font-weight: 700;
+  margin: 14px 0 8px;
+  color: var(--text);
+}
+
+.section {
+  margin: 18px 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.kpi-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  background: var(--bg);
+}
+
+.kpi-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.kpi-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--small);
+  margin: 16px 0;
+}
+
+th, td {
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  vertical-align: top;
+  text-align: left;
+}
+
+th {
+  background: var(--bg);
+  font-weight: 700;
+}
+
+.footer {
+  margin-top: 18px;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Prevent dict/None exposure */
+.hidden {
+  display: none !important;
+}
+
+/* No inline styles allowed */
+
+/* Data + Interpretation Blocks */
+.data-interpretation-block {
+  margin: 16px 0;
+  padding: 12px;
+  background: #F9FAFB;
+  border-left: 3px solid #2563EB;
+  border-radius: 4px;
+}
+
+.data-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111;
+  margin-bottom: 8px;
+}
+
+.interpretation-text {
+  font-size: 14px;
+  line-height: 1.65;
+  color: #374151;
+  text-align: justify;
+}
