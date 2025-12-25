@@ -1224,7 +1224,7 @@ def render_lh_technical(data: Dict[str, Any]) -> str:
                         </h3>
                         <p style="color: #1F2937; font-size: 15px; line-height: 1.8; margin: 0;">
                             대상지는 <strong style="color: #3B82F6;">용도지역 {data.get('zoning', '제2종일반주거지역')}</strong>로 
-                            LH 매입임대 적합성이 <strong style="color: #10B981;">{'높은' if data.get('approval_probability_pct', 0) > 70 else '보통'}</strong> 것으로 평가됩니다. 
+                            LH 매입임대 적합성이 <strong style="color: #10B981;">{'높은' if (data.get('approval_probability_pct') or 0) > 70 else '보통'}</strong> 것으로 평가됩니다. 
                             <strong>건축 가능 세대수:</strong> {format_units(data.get('legal_units') or dev_scale.get('total_units'))} |
                             <strong>추천 주택 유형:</strong> {data.get('recommended_housing_type', '청년형/신혼부부형')} |
                             <strong>LH 승인 가능성:</strong> <strong style="color: #F59E0B;">{format_percentage(data.get('approval_probability_pct'))}</strong>
