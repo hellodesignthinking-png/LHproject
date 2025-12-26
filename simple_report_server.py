@@ -2,13 +2,85 @@
 """
 Simple HTTP server to serve local HTML reports
 This serves the pre-generated Phase 2.5 HTML reports with complete data
-PLUS: Basic M1 API endpoints for address search
+PLUS: M1 API endpoints with real Kakao address search
 """
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 import os
 import sys
 import json
+import httpx
 from urllib.parse import urlparse, parse_qs
+
+# Kakao API Configuration
+KAKAO_ADDRESS_SEARCH_URL = "https://dapi.kakao.com/v2/local/search/address.json"
+
+def search_address_kakao(query: str, api_key: str) -> dict:
+    """
+    Search address using real Kakao API
+    
+    Args:
+        query: Address search query
+        api_key: Kakao REST API key
+        
+    Returns:
+        Search results with suggestions
+    """
+    try:
+        print(f"[Kakao API] Searching: '{query}'")
+        
+        headers = {"Authorization": f"KakaoAK {api_key}"}
+        params = {"query": query, "size": 10}
+        
+        with httpx.Client(timeout=10.0) as client:
+            response = client.get(
+                KAKAO_ADDRESS_SEARCH_URL,
+                headers=headers,
+                params=params
+            )
+            
+            if response.status_code != 200:
+                print(f"[Kakao API] Error: HTTP {response.status_code}")
+                print(f"[Kakao API] Response: {response.text}")
+                return None
+            
+            data = response.json()
+            documents = data.get("documents", [])
+            
+            if not documents:
+                print(f"[Kakao API] No results found for: '{query}'")
+                return None
+            
+            # Convert Kakao format to our format
+            suggestions = []
+            for doc in documents:
+                address_info = doc.get("address", {})
+                road_address_info = doc.get("road_address", {})
+                
+                suggestion = {
+                    "road_address": road_address_info.get("address_name", "") if road_address_info else "",
+                    "jibun_address": address_info.get("address_name", ""),
+                    "zone_no": road_address_info.get("zone_no", "") if road_address_info else "",
+                    "display": road_address_info.get("address_name", "") if road_address_info else address_info.get("address_name", "")
+                }
+                
+                # Only add if display is not empty
+                if suggestion["display"]:
+                    suggestions.append(suggestion)
+            
+            print(f"[Kakao API] Found {len(suggestions)} results")
+            return {
+                "suggestions": suggestions,
+                "using_mock_data": False,
+                "message": "Real Kakao API results"
+            }
+            
+    except httpx.TimeoutException:
+        print(f"[Kakao API] Timeout error")
+        return None
+    except Exception as e:
+        print(f"[Kakao API] Error: {str(e)}")
+        return None
+
 
 class ReportHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -30,7 +102,36 @@ class ReportHandler(SimpleHTTPRequestHandler):
                 request_data = json.loads(post_data.decode('utf-8'))
                 query = request_data.get('query', '').strip()
                 
-                print(f"[Address Search] Query: '{query}'")  # Debug log
+                # Check for API key in headers (from frontend SessionStorage)
+                kakao_api_key = self.headers.get('X-Kakao-API-Key', '').strip()
+                
+                # Also check environment variable
+                if not kakao_api_key:
+                    kakao_api_key = os.environ.get('KAKAO_REST_API_KEY', '').strip()
+                
+                print(f"[Address Search] Query: '{query}'")
+                print(f"[Address Search] API Key present: {bool(kakao_api_key)}")
+                
+                # Try real Kakao API if key is available
+                if kakao_api_key and query:
+                    kakao_result = search_address_kakao(query, kakao_api_key)
+                    if kakao_result and kakao_result.get('suggestions'):
+                        print(f"[Address Search] Using Kakao API - {len(kakao_result['suggestions'])} results")
+                        response = {
+                            'success': True,
+                            'data': kakao_result
+                        }
+                        response_json = json.dumps(response, ensure_ascii=False)
+                        self.send_response(200)
+                        self.send_header('Content-Type', 'application/json; charset=utf-8')
+                        self.send_header('Content-Length', str(len(response_json.encode('utf-8'))))
+                        self.send_header('Access-Control-Allow-Origin', '*')
+                        self.end_headers()
+                        self.wfile.write(response_json.encode('utf-8'))
+                        return
+                
+                # Fallback to Mock data
+                print(f"[Address Search] Using Mock data (no API key or no results)")
                 
                 # Mock address suggestions
                 mock_suggestions = [
