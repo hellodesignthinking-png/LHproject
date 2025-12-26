@@ -2,10 +2,12 @@
 """
 Simple HTTP server to serve local HTML reports
 This serves the pre-generated Phase 2.5 HTML reports with complete data
+PLUS: Basic M1 API endpoints for address search
 """
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 import os
 import sys
+import json
 from urllib.parse import urlparse, parse_qs
 
 class ReportHandler(SimpleHTTPRequestHandler):
@@ -13,6 +15,89 @@ class ReportHandler(SimpleHTTPRequestHandler):
         # Set the directory to serve files from
         self.directory = '/home/user/webapp/final_reports_phase25'
         super().__init__(*args, directory=self.directory, **kwargs)
+    
+    def do_POST(self):
+        """Handle POST requests for M1 API"""
+        parsed_path = urlparse(self.path)
+        path = parsed_path.path
+        
+        # M1 Address Search API
+        if path == '/api/m1/address/search':
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            
+            try:
+                request_data = json.loads(post_data.decode('utf-8'))
+                query = request_data.get('query', '')
+                
+                # Mock address suggestions
+                mock_suggestions = [
+                    {
+                        'road_address': '서울특별시 강남구 테헤란로 123',
+                        'jibun_address': '서울특별시 강남구 역삼동 123-45',
+                        'zone_no': '06234',
+                        'display': '서울특별시 강남구 테헤란로 123'
+                    },
+                    {
+                        'road_address': '서울특별시 강남구 테헤란로 152',
+                        'jibun_address': '서울특별시 강남구 역삼동 678-90',
+                        'zone_no': '06236',
+                        'display': '서울특별시 강남구 테헤란로 152'
+                    },
+                    {
+                        'road_address': '서울특별시 강남구 강남대로 123',
+                        'jibun_address': '서울특별시 강남구 역삼동 111-22',
+                        'zone_no': '06241',
+                        'display': '서울특별시 강남구 강남대로 123'
+                    }
+                ]
+                
+                # Filter suggestions based on query
+                filtered = [s for s in mock_suggestions if query.lower() in s['display'].lower()]
+                
+                response = {
+                    'success': True,
+                    'data': {
+                        'suggestions': filtered if filtered else mock_suggestions,
+                        'using_mock_data': True,
+                        'message': 'Mock data - Kakao API key not configured'
+                    }
+                }
+                
+                response_json = json.dumps(response, ensure_ascii=False)
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.send_header('Content-Length', str(len(response_json.encode('utf-8'))))
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(response_json.encode('utf-8'))
+                return
+                
+            except Exception as e:
+                error_response = {
+                    'success': False,
+                    'error': {
+                        'detail': f'Error processing request: {str(e)}'
+                    }
+                }
+                response_json = json.dumps(error_response)
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(response_json.encode('utf-8'))
+                return
+        
+        # Default: Method not supported
+        self.send_error(501, "Unsupported POST endpoint")
+    
+    def do_OPTIONS(self):
+        """Handle OPTIONS for CORS preflight"""
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
     
     def do_GET(self):
         """Handle GET requests"""

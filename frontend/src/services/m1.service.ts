@@ -85,7 +85,15 @@ async function apiCall<T>(
     // Get API keys from SessionStorage and add to headers
     const apiKeyHeaders = getApiKeysFromSession();
     
-    const response = await fetch(`${API_BASE}${endpoint}`, {
+    const fullUrl = `${API_BASE}${endpoint}`;
+    console.log('🌐 API Call:', {
+      url: fullUrl,
+      method: options.method || 'GET',
+      API_BASE,
+      BACKEND_URL
+    });
+    
+    const response = await fetch(fullUrl, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
@@ -94,8 +102,11 @@ async function apiCall<T>(
       },
     });
 
+    console.log('📡 Response status:', response.status);
+
     if (!response.ok) {
       const error = await response.json();
+      console.error('❌ API Error:', error);
       return {
         success: false,
         error: {
@@ -106,8 +117,10 @@ async function apiCall<T>(
     }
 
     const data = await response.json();
+    console.log('✅ API Success:', data);
     return { success: true, data };
   } catch (error) {
+    console.error('🔥 Fetch Error:', error);
     return {
       success: false,
       error: {

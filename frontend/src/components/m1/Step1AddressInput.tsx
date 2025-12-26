@@ -27,6 +27,10 @@ export const Step1AddressInput: React.FC<Step1Props> = ({ onNext, onBack }) => {
     }
     
     console.log('🔍 주소 검색 시작:', query);
+    console.log('🔧 Config check:', {
+      BACKEND_URL: import.meta.env.VITE_BACKEND_URL,
+      API_URL: `${import.meta.env.VITE_BACKEND_URL || 'https://8005-iwm3znz7z15o7t0185x5u-b9b802c4.sandbox.novita.ai'}/api/m1/address/search`
+    });
     setLoading(true);
     setSearched(false);
     
