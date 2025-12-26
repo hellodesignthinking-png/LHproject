@@ -28,7 +28,9 @@ class ReportHandler(SimpleHTTPRequestHandler):
             
             try:
                 request_data = json.loads(post_data.decode('utf-8'))
-                query = request_data.get('query', '')
+                query = request_data.get('query', '').strip()
+                
+                print(f"[Address Search] Query: '{query}'")  # Debug log
                 
                 # Mock address suggestions
                 mock_suggestions = [
@@ -52,13 +54,26 @@ class ReportHandler(SimpleHTTPRequestHandler):
                     }
                 ]
                 
-                # Filter suggestions based on query
-                filtered = [s for s in mock_suggestions if query.lower() in s['display'].lower()]
+                # More lenient filtering: check if any part of query matches
+                # Remove spaces and compare
+                query_normalized = query.replace(' ', '').lower()
+                filtered = []
+                
+                if query_normalized:  # Only filter if query is not empty
+                    for s in mock_suggestions:
+                        display_normalized = s['display'].replace(' ', '').lower()
+                        if query_normalized in display_normalized:
+                            filtered.append(s)
+                
+                # If no matches found or query is empty, return all suggestions
+                result_suggestions = filtered if filtered else mock_suggestions
+                
+                print(f"[Address Search] Returning {len(result_suggestions)} suggestions")  # Debug log
                 
                 response = {
                     'success': True,
                     'data': {
-                        'suggestions': filtered if filtered else mock_suggestions,
+                        'suggestions': result_suggestions,
                         'using_mock_data': True,
                         'message': 'Mock data - Kakao API key not configured'
                     }

@@ -36,9 +36,13 @@ export const Step1AddressInput: React.FC<Step1Props> = ({ onNext, onBack }) => {
     
     try {
       const result = await m1ApiService.searchAddress(query);
-      console.log('📝 검색 결과:', result);
+      console.log('📝 검색 결과 (전체):', JSON.stringify(result, null, 2));
+      console.log('📝 result.success:', result.success);
+      console.log('📝 result.data:', result.data);
+      console.log('📝 result.data?.suggestions:', result.data?.suggestions);
+      console.log('📝 suggestions 길이:', result.data?.suggestions?.length);
       
-      if (result.success && result.data && result.data.suggestions) {
+      if (result.success && result.data && result.data.suggestions && result.data.suggestions.length > 0) {
         setSuggestions(result.data.suggestions);
         setSearched(true);
         console.log('✅ 검색 성공:', result.data.suggestions.length, '개 결과');
@@ -55,7 +59,9 @@ export const Step1AddressInput: React.FC<Step1Props> = ({ onNext, onBack }) => {
           );
         }
       } else {
-        // Handle API errors
+        // Handle API errors or empty results
+        console.warn('⚠️ 검색 결과 처리 실패');
+        console.warn('⚠️ result:', result);
         setSuggestions([]);
         setSearched(true);
         
@@ -73,8 +79,12 @@ export const Step1AddressInput: React.FC<Step1Props> = ({ onNext, onBack }) => {
             console.warn('⚠️ 검색 결과 없음');
             alert('검색 결과가 없습니다. 다른 주소를 입력해주세요.');
           }
+        } else if (result.success && result.data && result.data.suggestions && result.data.suggestions.length === 0) {
+          console.warn('⚠️ 빈 결과 반환됨');
+          alert('해당 주소를 찾을 수 없습니다.\n\n현재 Mock 모드에서는 "서울" 관련 주소만 검색 가능합니다.\n실제 주소 검색을 위해서는 Kakao API 키를 설정해주세요.');
         } else {
-          console.warn('⚠️ 검색 결과 없음');
+          console.warn('⚠️ 알 수 없는 응답 형식');
+          alert('검색 결과가 없습니다. 다른 주소를 입력해주세요.');
         }
       }
     } catch (error) {
