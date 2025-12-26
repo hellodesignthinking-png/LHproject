@@ -29,6 +29,7 @@ from app.core.context.housing_type_context import HousingTypeContext, TypeScore,
 from app.modules.m2_appraisal.service import AppraisalService
 from app.modules.m4_capacity.service_v2 import CapacityServiceV2
 from app.modules.m5_feasibility.service import FeasibilityService
+from app.modules.m6_lh_review.service import LHReviewService
 
 
 class M1M2M4M5AutoChain:
@@ -48,7 +49,7 @@ class M1M2M4M5AutoChain:
     def __init__(self):
         """Initialize services"""
         print("\n" + "="*80)
-        print("🔧 M1→M2→M4→M5 AUTO CHAIN INITIALIZATION")
+        print("🔧 M1→M2→M3→M4→M5→M6 AUTO CHAIN INITIALIZATION")
         print("="*80)
         
         # M2: Appraisal Service
@@ -62,6 +63,10 @@ class M1M2M4M5AutoChain:
         # M5: Feasibility Service
         self.m5_service = FeasibilityService()
         print("✓ M5 Feasibility Service initialized")
+        
+        # M6: LH Review Service
+        self.m6_service = LHReviewService()
+        print("✓ M6 LH Review Service initialized")
         
         print("="*80 + "\n")
     
@@ -144,8 +149,21 @@ class M1M2M4M5AutoChain:
             print(f"   IRR (Public): {m5_result.financial_metrics.irr_public:.2f}%")
             print(f"   Profitability: {m5_result.profitability_grade}")
             
-            # Step 5: Build Canonical Summary
-            print("\n[STEP 5] 📦 Building Canonical Summary...")
+            # Step 5: M6 LH Review (AUTO, using M3+M4+M5 results)
+            print("\n[STEP 5] ⚖️ M6 LH REVIEW - Auto Execution (using M3+M4+M5 results)")
+            
+            # M6 requires HousingTypeContext + CapacityContext + FeasibilityContext
+            m6_result = self.m6_service.run(m3_result, m4_result, m5_result)
+            
+            print("\n✅ M6 LH REVIEW COMPLETED")
+            print(f"   Decision: {m6_result.decision.value}")
+            print(f"   Total Score: {m6_result.total_score:.1f}/110")
+            print(f"   Grade: {m6_result.grade.value}")
+            print(f"   Approval Probability: {m6_result.approval_prediction.approval_probability:.1%}")
+            print(f"   Decision Rationale: {m6_result.decision_rationale}")
+            
+            # Step 6: Build Canonical Summary
+            print("\n[STEP 6] 📦 Building Canonical Summary...")
             
             canonical_summary = {
                 "M1": {
@@ -216,26 +234,45 @@ class M1M2M4M5AutoChain:
                     "irr_public": m5_result.financial_metrics.irr_public,
                     "profitability_grade": m5_result.profitability_grade
                 },
+                "M6": {
+                    "decision": m6_result.decision,
+                    "total_score": m6_result.score_breakdown.total_score,
+                    "grade": m6_result.grade,
+                    "approval_prediction": {
+                        "probability": m6_result.approval_prediction.approval_probability,
+                        "likelihood": m6_result.approval_prediction.approval_likelihood
+                    },
+                    "decision_rationale": m6_result.decision_rationale,
+                    "score_breakdown": {
+                        "location_score": m6_result.score_breakdown.location_score,
+                        "scale_score": m6_result.score_breakdown.scale_score,
+                        "feasibility_score": m6_result.score_breakdown.feasibility_score,
+                        "compliance_score": m6_result.score_breakdown.compliance_score
+                    },
+                    "strengths": m6_result.strengths[:3] if m6_result.strengths else [],
+                    "weaknesses": m6_result.weaknesses[:3] if m6_result.weaknesses else []
+                },
                 "pipeline_status": {
                     "m1_completed": True,
                     "m2_completed": True,
                     "m3_completed": True,
                     "m4_completed": True,
                     "m5_completed": True,
+                    "m6_completed": True,
                     "auto_chain_verified": True
                 }
             }
             
             print("\n" + "#"*80)
-            print("# M1 → M2 → M3 → M4 → M5 AUTO PIPELINE VERIFIED")
+            print("# M1 → M2 → M3 → M4 → M5 → M6 AUTO PIPELINE VERIFIED")
             print("# Real numbers propagated automatically")
-            print("# Ready for full M1–M6 chain")
+            print("# LH decision engine fully automated")
             print("#"*80 + "\n")
             
             return {
                 "success": True,
                 "canonical_summary": canonical_summary,
-                "message": "M1 → M2 → M3 → M4 → M5 chain completed successfully"
+                "message": "M1 → M2 → M3 → M4 → M5 → M6 chain completed successfully"
             }
             
         except Exception as e:
