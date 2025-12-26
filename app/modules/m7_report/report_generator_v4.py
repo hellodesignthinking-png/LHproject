@@ -265,7 +265,7 @@ class ReportGeneratorV4:
                     "name": "정책·유형 적합성",
                     "score": m6_result.section_a_policy.raw_score,
                     "max": m6_result.section_a_policy.max_score,
-                    "items": m6_result.section_a_policy.items,
+                    "score_items": m6_result.section_a_policy.items,
                     "analysis": self._analyze_policy_section(m6_result.section_a_policy)
                 },
                 {
@@ -273,7 +273,7 @@ class ReportGeneratorV4:
                     "name": "입지·환경 평가",
                     "score": m6_result.section_b_location.raw_score,
                     "max": m6_result.section_b_location.max_score,
-                    "items": m6_result.section_b_location.items,
+                    "score_items": m6_result.section_b_location.items,
                     "analysis": self._analyze_location_section(m6_result.section_b_location)
                 },
                 {
@@ -281,7 +281,7 @@ class ReportGeneratorV4:
                     "name": "건축 가능성",
                     "score": m6_result.section_c_construction.raw_score,
                     "max": m6_result.section_c_construction.max_score,
-                    "items": m6_result.section_c_construction.items,
+                    "score_items": m6_result.section_c_construction.items,
                     "analysis": self._analyze_construction_section(m6_result.section_c_construction)
                 },
                 {
@@ -289,7 +289,7 @@ class ReportGeneratorV4:
                     "name": "가격·매입 적정성",
                     "score": m6_result.section_d_price.raw_score,
                     "max": m6_result.section_d_price.max_score,
-                    "items": m6_result.section_d_price.items,
+                    "score_items": m6_result.section_d_price.items,
                     "analysis": self._analyze_price_section(m6_result.section_d_price)
                 },
                 {
@@ -297,7 +297,7 @@ class ReportGeneratorV4:
                     "name": "사업성",
                     "score": m6_result.section_e_business.raw_score,
                     "max": m6_result.section_e_business.max_score,
-                    "items": m6_result.section_e_business.items,
+                    "score_items": m6_result.section_e_business.items,
                     "analysis": self._analyze_business_section(m6_result.section_e_business)
                 }
             ]

@@ -31,6 +31,7 @@ from app.modules.m4_capacity.service_v2 import CapacityServiceV2
 from app.modules.m5_feasibility.service import FeasibilityService
 from app.modules.m6_lh_review.service_v3 import LHReviewServiceV3
 from app.modules.m7_report.report_generator_v4 import ReportGeneratorV4
+from app.modules.m7_report.pdf_renderer import PDFRenderer
 
 
 class M1M2M4M5AutoChain:
@@ -72,6 +73,10 @@ class M1M2M4M5AutoChain:
         # M7: Report Generator V4
         self.m7_report_gen = ReportGeneratorV4()
         print("✓ M7 Report Generator V4 initialized")
+        
+        # PDF Renderer
+        self.pdf_renderer = PDFRenderer()
+        print("✓ PDF Renderer initialized")
         
         print("="*80 + "\n")
     
@@ -200,8 +205,26 @@ class M1M2M4M5AutoChain:
             print(f"     • Score: {report['executive_summary']['key_metrics']['total_score']}")
             print(f"     • Recommendation: {report['executive_summary']['recommendation']}")
             
-            # Step 7: Build Canonical Summary
-            print("\n[STEP 7] 📦 Building Canonical Summary...")
+            # Step 7: HTML Report Generation
+            print("\n[STEP 7] 📄 HTML REPORT GENERATION")
+            html_output_dir = Path(__file__).parent / "output" / "reports"
+            html_output_dir.mkdir(parents=True, exist_ok=True)
+            
+            html_filename = f"{report['metadata']['report_id']}.html"
+            html_path = html_output_dir / html_filename
+            
+            # Generate HTML
+            html_content = self.pdf_renderer.render_to_html(report)
+            with open(html_path, 'w', encoding='utf-8') as f:
+                f.write(html_content)
+            
+            print("\n✅ HTML REPORT GENERATION COMPLETED")
+            print(f"   HTML Path: {html_path}")
+            print(f"   HTML Size: {len(html_content):,} characters")
+            print(f"   ⚠️  PDF generation temporarily disabled (WeasyPrint issue)")
+            
+            # Step 8: Build Canonical Summary
+            print("\n[STEP 8] 📦 Building Canonical Summary...")
             
             canonical_summary = {
                 "M1": {
@@ -319,6 +342,8 @@ class M1M2M4M5AutoChain:
                 "M7": {
                     "report_id": report["metadata"]["report_id"],
                     "report_title": report["metadata"]["report_title"],
+                    "html_path": str(html_path),
+                    "html_size_chars": len(html_content),
                     "executive_summary": report["executive_summary"],
                     "lh_scorecard": report["lh_scorecard"],
                     "improvement_roadmap": report["improvement_roadmap"],
@@ -332,6 +357,8 @@ class M1M2M4M5AutoChain:
                     "m5_completed": True,
                     "m6_completed": True,
                     "m7_completed": True,
+                    "html_generated": True,
+                    "pdf_generated": False,
                     "auto_chain_verified": True
                 }
             }
@@ -340,14 +367,16 @@ class M1M2M4M5AutoChain:
             print("# M1 → M2 → M3 → M4 → M5 → M6 → M7 AUTO PIPELINE VERIFIED")
             print("# Real numbers propagated automatically")
             print("# LH decision engine fully automated")
-            print("# Professional report generated")
+            print("# Professional report generated (JSON + HTML)")
+            print(f"# HTML: {html_path}")
             print("#"*80 + "\n")
             
             return {
                 "success": True,
                 "canonical_summary": canonical_summary,
                 "professional_report": report,
-                "message": "M1 → M2 → M3 → M4 → M5 → M6 → M7 chain completed successfully"
+                "html_path": str(html_path),
+                "message": "M1 → M2 → M3 → M4 → M5 → M6 → M7 chain completed successfully (HTML generated)"
             }
             
         except Exception as e:

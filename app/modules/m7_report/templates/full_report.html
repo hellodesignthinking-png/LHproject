@@ -1,0 +1,482 @@
+{% extends "base_report.html" %}
+
+{% block content %}
+
+<!-- 1. Executive Summary -->
+<h1>1. 경영진 요약 (Executive Summary)</h1>
+
+<div class="score-card">
+    <div class="score-label">LH 종합 평가 점수</div>
+    <div class="score-value">{{ executive_summary.key_metrics.total_score }}</div>
+    <div class="score-label">판정: {{ executive_summary.key_metrics.judgement }} | 등급: {{ executive_summary.key_metrics.grade }}</div>
+</div>
+
+<h2>핵심 지표</h2>
+<div class="section-grid">
+    <div class="section-item">
+        <h4>지역</h4>
+        <div class="value">{{ executive_summary.key_metrics.region }}</div>
+    </div>
+    <div class="section-item">
+        <h4>토지가</h4>
+        <div class="value">{{ executive_summary.key_metrics.land_value }}</div>
+    </div>
+    <div class="section-item">
+        <h4>총 세대수</h4>
+        <div class="value">{{ executive_summary.key_metrics.total_units }}세대</div>
+    </div>
+    <div class="section-item">
+        <h4>NPV</h4>
+        <div class="value">{{ executive_summary.key_metrics.npv }}</div>
+    </div>
+    <div class="section-item">
+        <h4>IRR</h4>
+        <div class="value">{{ executive_summary.key_metrics.irr }}</div>
+    </div>
+    <div class="section-item">
+        <h4>판정</h4>
+        <div class="value">
+            {% if executive_summary.key_metrics.judgement == "GO" %}
+                <span class="badge badge-success">GO</span>
+            {% elif executive_summary.key_metrics.judgement == "CONDITIONAL" %}
+                <span class="badge badge-warning">CONDITIONAL</span>
+            {% else %}
+                <span class="badge badge-danger">NO_GO</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<h2>핵심 강점</h2>
+<div class="info-box success">
+    <ul>
+    {% for strength in executive_summary.strengths %}
+        <li>✓ {{ strength }}</li>
+    {% endfor %}
+    </ul>
+</div>
+
+<h2>핵심 약점</h2>
+<div class="info-box warning">
+    <ul>
+    {% for weakness in executive_summary.weaknesses %}
+        <li>⚠ {{ weakness }}</li>
+    {% endfor %}
+    </ul>
+</div>
+
+<h2>즉시 대응 필요 항목</h2>
+<div class="info-box danger">
+    <ul>
+    {% for action in executive_summary.immediate_actions %}
+        <li>🚨 {{ action }}</li>
+    {% endfor %}
+    </ul>
+</div>
+
+<h2>최종 권고사항</h2>
+<div class="info-box">
+    <p><strong>{{ executive_summary.recommendation }}</strong></p>
+</div>
+
+<div class="page-break"></div>
+
+<!-- 2. LH Scorecard -->
+<h1>2. LH 100점 평가표 (Comprehensive Scorecard)</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>섹션</th>
+            <th>원점수</th>
+            <th>가중 점수</th>
+            <th>만점</th>
+            <th>비율</th>
+            <th>상태</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>[A] 정책·유형 적합성</strong></td>
+            <td>{{ "%.1f"|format(lh_scorecard.sections.policy.raw_score) }}</td>
+            <td>{{ "%.1f"|format(lh_scorecard.sections.policy.weighted_score) }}</td>
+            <td>{{ lh_scorecard.sections.policy.max_score }}</td>
+            <td>{{ "%.0f"|format(lh_scorecard.sections.policy.percentage) }}%</td>
+            <td>
+                {% if lh_scorecard.sections.policy.status == "우수" %}
+                    <span class="badge badge-success">{{ lh_scorecard.sections.policy.status }}</span>
+                {% elif lh_scorecard.sections.policy.status == "양호" %}
+                    <span class="badge badge-info">{{ lh_scorecard.sections.policy.status }}</span>
+                {% elif lh_scorecard.sections.policy.status == "보통" %}
+                    <span class="badge badge-warning">{{ lh_scorecard.sections.policy.status }}</span>
+                {% else %}
+                    <span class="badge badge-danger">{{ lh_scorecard.sections.policy.status }}</span>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td><strong>[B] 입지·환경 평가</strong></td>
+            <td>{{ "%.1f"|format(lh_scorecard.sections.location.raw_score) }}</td>
+            <td>{{ "%.1f"|format(lh_scorecard.sections.location.weighted_score) }}</td>
+            <td>{{ lh_scorecard.sections.location.max_score }}</td>
+            <td>{{ "%.0f"|format(lh_scorecard.sections.location.percentage) }}%</td>
+            <td>
+                {% if lh_scorecard.sections.location.status == "우수" %}
+                    <span class="badge badge-success">{{ lh_scorecard.sections.location.status }}</span>
+                {% elif lh_scorecard.sections.location.status == "양호" %}
+                    <span class="badge badge-info">{{ lh_scorecard.sections.location.status }}</span>
+                {% elif lh_scorecard.sections.location.status == "보통" %}
+                    <span class="badge badge-warning">{{ lh_scorecard.sections.location.status }}</span>
+                {% else %}
+                    <span class="badge badge-danger">{{ lh_scorecard.sections.location.status }}</span>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td><strong>[C] 건축 가능성</strong></td>
+            <td>{{ "%.1f"|format(lh_scorecard.sections.construction.raw_score) }}</td>
+            <td>{{ "%.1f"|format(lh_scorecard.sections.construction.weighted_score) }}</td>
+            <td>{{ lh_scorecard.sections.construction.max_score }}</td>
+            <td>{{ "%.0f"|format(lh_scorecard.sections.construction.percentage) }}%</td>
+            <td>
+                {% if lh_scorecard.sections.construction.status == "우수" %}
+                    <span class="badge badge-success">{{ lh_scorecard.sections.construction.status }}</span>
+                {% elif lh_scorecard.sections.construction.status == "양호" %}
+                    <span class="badge badge-info">{{ lh_scorecard.sections.construction.status }}</span>
+                {% elif lh_scorecard.sections.construction.status == "보통" %}
+                    <span class="badge badge-warning">{{ lh_scorecard.sections.construction.status }}</span>
+                {% else %}
+                    <span class="badge badge-danger">{{ lh_scorecard.sections.construction.status }}</span>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td><strong>[D] 가격·매입 적정성</strong></td>
+            <td>{{ "%.1f"|format(lh_scorecard.sections.price.raw_score) }}</td>
+            <td>{{ "%.1f"|format(lh_scorecard.sections.price.weighted_score) }}</td>
+            <td>{{ lh_scorecard.sections.price.max_score }}</td>
+            <td>{{ "%.0f"|format(lh_scorecard.sections.price.percentage) }}%</td>
+            <td>
+                {% if lh_scorecard.sections.price.status == "우수" %}
+                    <span class="badge badge-success">{{ lh_scorecard.sections.price.status }}</span>
+                {% elif lh_scorecard.sections.price.status == "양호" %}
+                    <span class="badge badge-info">{{ lh_scorecard.sections.price.status }}</span>
+                {% elif lh_scorecard.sections.price.status == "보통" %}
+                    <span class="badge badge-warning">{{ lh_scorecard.sections.price.status }}</span>
+                {% else %}
+                    <span class="badge badge-danger">{{ lh_scorecard.sections.price.status }}</span>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td><strong>[E] 사업성</strong></td>
+            <td>{{ "%.1f"|format(lh_scorecard.sections.business.raw_score) }}</td>
+            <td>{{ "%.1f"|format(lh_scorecard.sections.business.weighted_score) }}</td>
+            <td>{{ lh_scorecard.sections.business.max_score }}</td>
+            <td>{{ "%.0f"|format(lh_scorecard.sections.business.percentage) }}%</td>
+            <td>
+                {% if lh_scorecard.sections.business.status == "우수" %}
+                    <span class="badge badge-success">{{ lh_scorecard.sections.business.status }}</span>
+                {% elif lh_scorecard.sections.business.status == "양호" %}
+                    <span class="badge badge-info">{{ lh_scorecard.sections.business.status }}</span>
+                {% elif lh_scorecard.sections.business.status == "보통" %}
+                    <span class="badge badge-warning">{{ lh_scorecard.sections.business.status }}</span>
+                {% else %}
+                    <span class="badge badge-danger">{{ lh_scorecard.sections.business.status }}</span>
+                {% endif %}
+            </td>
+        </tr>
+        <tr style="background-color: #f0f0f0; font-weight: bold;">
+            <td><strong>합계</strong></td>
+            <td><strong>{{ "%.1f"|format(lh_scorecard.total_score) }}</strong></td>
+            <td>-</td>
+            <td><strong>100</strong></td>
+            <td><strong>{{ "%.0f"|format(lh_scorecard.total_score) }}%</strong></td>
+            <td><strong>{{ lh_scorecard.grade }}</strong></td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>지점별 가중치 ({{ lh_scorecard.region_weight }})</h2>
+<table>
+    <thead>
+        <tr>
+            <th>항목</th>
+            <th>가중치</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>정책·유형</td>
+            <td>×{{ lh_scorecard.applied_weights.policy }}</td>
+        </tr>
+        <tr>
+            <td>입지·환경</td>
+            <td>×{{ lh_scorecard.applied_weights.location }}</td>
+        </tr>
+        <tr>
+            <td>건축</td>
+            <td>×{{ lh_scorecard.applied_weights.construction }}</td>
+        </tr>
+        <tr>
+            <td>가격</td>
+            <td>×{{ lh_scorecard.applied_weights.price }}</td>
+        </tr>
+        <tr>
+            <td>사업성</td>
+            <td>×{{ lh_scorecard.applied_weights.business }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<!-- 3. Section Analysis -->
+<h1>3. 섹션별 상세 분석 (Section Analysis)</h1>
+
+{% for section in section_analysis.sections %}
+<h2>[{{ section.id }}] {{ section.name }} ({{ "%.0f"|format((section.score / section.max) * 100) }}%)</h2>
+
+<div class="progress">
+    <div class="progress-bar 
+        {% if (section.score / section.max) >= 0.8 %}progress-bar-success
+        {% elif (section.score / section.max) >= 0.6 %}progress-bar-warning
+        {% else %}progress-bar-danger{% endif %}"
+        style="width: {{ "%.0f"|format((section.score / section.max) * 100) }}%">
+        {{ "%.1f"|format(section.score) }}/{{ section.max }}
+    </div>
+</div>
+
+<h3>세부 항목</h3>
+<table>
+    <thead>
+        <tr>
+            <th>항목</th>
+            <th>점수</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for item_name, item_score in section.score_items.items() %}
+        <tr>
+            <td>{{ item_name }}</td>
+            <td>{{ "%.1f"|format(item_score) }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<h3>전문가 분석</h3>
+<div class="info-box">
+    <p>{{ section.analysis }}</p>
+</div>
+{% endfor %}
+
+<div class="page-break"></div>
+
+<!-- 4. Improvement Roadmap -->
+<h1>4. 개선 로드맵 (Improvement Roadmap)</h1>
+
+{% if improvement_roadmap.reject_reasons %}
+<h2>즉시 탈락 사유</h2>
+<div class="info-box danger">
+    <ul>
+    {% for reason in improvement_roadmap.reject_reasons %}
+        <li>❌ {{ reason }}</li>
+    {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+{% if improvement_roadmap.deduction_reasons %}
+<h2>감점 사유</h2>
+<div class="info-box warning">
+    <ul>
+    {% for reason in improvement_roadmap.deduction_reasons %}
+        <li>⚠ {{ reason }}</li>
+    {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<h2>개선 방안</h2>
+<div class="info-box success">
+    <ul>
+    {% for point in improvement_roadmap.improvement_points %}
+        <li>✓ {{ point }}</li>
+    {% endfor %}
+    </ul>
+</div>
+
+<h2>우선순위 액션</h2>
+<table>
+    <thead>
+        <tr>
+            <th>우선순위</th>
+            <th>액션</th>
+            <th>타임라인</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for action in improvement_roadmap.priority_actions %}
+        <tr>
+            <td>
+                {% if action.priority == "Critical" %}
+                    <span class="badge badge-danger">{{ action.priority }}</span>
+                {% elif action.priority == "High" %}
+                    <span class="badge badge-warning">{{ action.priority }}</span>
+                {% else %}
+                    <span class="badge badge-info">{{ action.priority }}</span>
+                {% endif %}
+            </td>
+            <td>{{ action.action }}</td>
+            <td>{{ action.timeline }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<h2>개선 타임라인</h2>
+<div class="section-grid">
+    {% for phase, description in improvement_roadmap.timeline.items() %}
+    <div class="section-item">
+        <h4>{{ phase|upper|replace("_", " ") }}</h4>
+        <div class="value" style="font-size: 12pt;">{{ description }}</div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="page-break"></div>
+
+<!-- 5. Financial Analysis -->
+<h1>5. 재무 분석 (Financial Analysis)</h1>
+
+<h2>토지 매입</h2>
+<table>
+    <tbody>
+        <tr>
+            <td>총 토지가</td>
+            <td><strong>₩{{ "{:,.0f}".format(financial_analysis.land_acquisition.total_land_value) }}</strong></td>
+        </tr>
+        <tr>
+            <td>㎡당 단가</td>
+            <td>₩{{ "{:,.0f}".format(financial_analysis.land_acquisition.unit_price_sqm) }}</td>
+        </tr>
+        <tr>
+            <td>평당 단가</td>
+            <td>₩{{ "{:,.0f}".format(financial_analysis.land_acquisition.unit_price_pyeong) }}</td>
+        </tr>
+        <tr>
+            <td>신뢰도</td>
+            <td>{{ "%.0f"|format(financial_analysis.land_acquisition.confidence * 100) }}%</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>개발 규모</h2>
+<table>
+    <tbody>
+        <tr>
+            <td>총 세대수</td>
+            <td><strong>{{ financial_analysis.development_scale.total_units }}세대</strong></td>
+        </tr>
+        <tr>
+            <td>연면적</td>
+            <td>{{ "{:,.1f}".format(financial_analysis.development_scale.total_gfa_sqm) }}㎡</td>
+        </tr>
+        <tr>
+            <td>적용 용적률</td>
+            <td>{{ financial_analysis.development_scale.far_applied }}%</td>
+        </tr>
+        <tr>
+            <td>적용 건폐율</td>
+            <td>{{ financial_analysis.development_scale.bcr_applied }}%</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>비용 구조</h2>
+<table>
+    <tbody>
+        <tr>
+            <td>총 사업비</td>
+            <td><strong>₩{{ "{:,.0f}".format(financial_analysis.cost_structure.total_cost) }}</strong></td>
+        </tr>
+        <tr>
+            <td>토지비</td>
+            <td>₩{{ "{:,.0f}".format(financial_analysis.cost_structure.land_cost) }} ({{ "%.1f"|format((financial_analysis.cost_structure.land_cost / financial_analysis.cost_structure.total_cost) * 100) }}%)</td>
+        </tr>
+        <tr>
+            <td>공사비</td>
+            <td>₩{{ "{:,.0f}".format(financial_analysis.cost_structure.construction_cost) }} ({{ "%.1f"|format((financial_analysis.cost_structure.construction_cost / financial_analysis.cost_structure.total_cost) * 100) }}%)</td>
+        </tr>
+        <tr>
+            <td>세대당 비용</td>
+            <td>₩{{ "{:,.0f}".format(financial_analysis.cost_structure.cost_per_unit) }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>수익성</h2>
+<table>
+    <tbody>
+        <tr>
+            <td>총 수익</td>
+            <td><strong>₩{{ "{:,.0f}".format(financial_analysis.revenue_projection.total_revenue) }}</strong></td>
+        </tr>
+        <tr>
+            <td>NPV (공공)</td>
+            <td>
+                {% if financial_analysis.profitability.npv_public >= 0 %}
+                    <span style="color: green;">₩{{ "{:,.0f}".format(financial_analysis.profitability.npv_public) }}</span>
+                {% else %}
+                    <span style="color: red;">₩{{ "{:,.0f}".format(financial_analysis.profitability.npv_public) }}</span>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td>IRR (공공)</td>
+            <td>
+                {% if financial_analysis.profitability.irr_public >= 12 %}
+                    <span style="color: green;">{{ "%.2f"|format(financial_analysis.profitability.irr_public) }}%</span>
+                {% else %}
+                    <span style="color: red;">{{ "%.2f"|format(financial_analysis.profitability.irr_public) }}%</span>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td>수익성 등급</td>
+            <td><span class="badge 
+                {% if financial_analysis.profitability.grade in ['S', 'A'] %}badge-success
+                {% elif financial_analysis.profitability.grade in ['B', 'C'] %}badge-warning
+                {% else %}badge-danger{% endif %}">{{ financial_analysis.profitability.grade }}</span></td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<!-- 6. Conclusion -->
+<h1>6. 결론 (Conclusion)</h1>
+
+<div class="score-card">
+    <div class="score-label">최종 판정</div>
+    <div class="score-value" style="font-size: 36pt;">{{ conclusion.final_judgement }}</div>
+    <div class="score-label">총점: {{ conclusion.total_score }} | 등급: {{ conclusion.grade }} | 신뢰도: {{ conclusion.confidence_level }}</div>
+</div>
+
+<h2>최종 권고사항</h2>
+<div class="info-box 
+    {% if conclusion.final_judgement == 'GO' %}success
+    {% elif conclusion.final_judgement == 'CONDITIONAL' %}warning
+    {% else %}danger{% endif %}">
+    <p><strong>{{ conclusion.recommendation }}</strong></p>
+</div>
+
+<h2>다음 단계 (Next Steps)</h2>
+<ol>
+{% for step in conclusion.next_steps %}
+    <li>{{ step }}</li>
+{% endfor %}
+</ol>
+
+{% endblock %}
