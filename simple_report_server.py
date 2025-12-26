@@ -45,10 +45,17 @@ def search_address_kakao(query: str, api_key: str) -> dict:
         Search results with suggestions
     """
     try:
-        print(f"[Kakao API] Searching: '{query}'")
+        print(f"\n{'='*60}")
+        print(f"[DEBUG] 🔍 Address search query: '{query}'")
+        print(f"[DEBUG] 🔑 API key present: {bool(api_key)}")
+        print(f"[DEBUG] 🔑 API key length: {len(api_key) if api_key else 0}")
         
         headers = {"Authorization": f"KakaoAK {api_key}"}
         params = {"query": query, "size": 10}
+        
+        print(f"[DEBUG] 📡 Request URL: {KAKAO_ADDRESS_SEARCH_URL}")
+        print(f"[DEBUG] 📡 Request params: {params}")
+        print(f"[DEBUG] 📡 Request headers: Authorization: KakaoAK {api_key[:10]}...")
         
         with httpx.Client(timeout=10.0) as client:
             response = client.get(
@@ -57,21 +64,29 @@ def search_address_kakao(query: str, api_key: str) -> dict:
                 params=params
             )
             
+            print(f"[DEBUG] 📥 Response status: {response.status_code}")
+            
             if response.status_code != 200:
-                print(f"[Kakao API] Error: HTTP {response.status_code}")
-                print(f"[Kakao API] Response: {response.text}")
+                print(f"[DEBUG] ❌ Error: HTTP {response.status_code}")
+                print(f"[DEBUG] ❌ Response text: {response.text}")
                 return None
             
             data = response.json()
+            print(f"[DEBUG] 📋 Kakao API raw response: {json.dumps(data, ensure_ascii=False)[:500]}")
+            
             documents = data.get("documents", [])
+            print(f"[DEBUG] 📊 Documents count: {len(documents)}")
             
             if not documents:
-                print(f"[Kakao API] No results found for: '{query}'")
+                print(f"[DEBUG] ⚠️ No results found for: '{query}'")
+                print(f"[DEBUG] ⚠️ Response meta: {data.get('meta', {})}")
                 return None
             
             # Convert Kakao format to our format
             suggestions = []
-            for doc in documents:
+            for idx, doc in enumerate(documents):
+                print(f"[DEBUG] 📄 Document {idx + 1}: {json.dumps(doc, ensure_ascii=False)[:200]}")
+                
                 address_info = doc.get("address", {})
                 road_address_info = doc.get("road_address", {})
                 
@@ -85,8 +100,13 @@ def search_address_kakao(query: str, api_key: str) -> dict:
                 # Only add if display is not empty
                 if suggestion["display"]:
                     suggestions.append(suggestion)
+                    print(f"[DEBUG] ✅ Added suggestion: {suggestion['display']}")
+                else:
+                    print(f"[DEBUG] ⚠️ Skipped empty suggestion")
             
-            print(f"[Kakao API] Found {len(suggestions)} results")
+            print(f"[DEBUG] 🎉 Successfully parsed {len(suggestions)} suggestions")
+            print(f"{'='*60}\n")
+            
             return {
                 "suggestions": suggestions,
                 "using_mock_data": False,
@@ -94,10 +114,13 @@ def search_address_kakao(query: str, api_key: str) -> dict:
             }
             
     except httpx.TimeoutException:
-        print(f"[Kakao API] Timeout error")
+        print(f"[DEBUG] ❌ Timeout error")
         return None
     except Exception as e:
-        print(f"[Kakao API] Error: {str(e)}")
+        print(f"[DEBUG] ❌ Exception: {type(e).__name__}")
+        print(f"[DEBUG] ❌ Error message: {str(e)}")
+        import traceback
+        print(f"[DEBUG] ❌ Traceback: {traceback.format_exc()}")
         return None
 
 
