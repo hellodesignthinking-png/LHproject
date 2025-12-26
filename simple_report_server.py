@@ -10,6 +10,25 @@ import sys
 import json
 import httpx
 from urllib.parse import urlparse, parse_qs
+from pathlib import Path
+
+# Load environment variables from .env file
+def load_env_file():
+    """Load .env file if it exists"""
+    env_path = Path(__file__).parent / '.env'
+    if env_path.exists():
+        with open(env_path) as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    os.environ[key.strip()] = value.strip()
+        print(f"✅ Loaded .env file")
+    else:
+        print(f"⚠️ No .env file found")
+
+# Load environment variables at startup
+load_env_file()
 
 # Kakao API Configuration
 KAKAO_ADDRESS_SEARCH_URL = "https://dapi.kakao.com/v2/local/search/address.json"
