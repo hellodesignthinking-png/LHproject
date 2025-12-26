@@ -29,8 +29,7 @@ from app.core.context.housing_type_context import HousingTypeContext, TypeScore,
 from app.modules.m2_appraisal.service import AppraisalService
 from app.modules.m4_capacity.service_v2 import CapacityServiceV2
 from app.modules.m5_feasibility.service import FeasibilityService
-from app.modules.m6_lh_review.service_v2 import LHReviewServiceV2
-from app.modules.m6_lh_review.lh_scorecard import LHBranchType
+from app.modules.m6_lh_review.service_v3 import LHReviewServiceV3
 
 
 class M1M2M4M5AutoChain:
@@ -65,9 +64,9 @@ class M1M2M4M5AutoChain:
         self.m5_service = FeasibilityService()
         print("✓ M5 Feasibility Service initialized")
         
-        # M6: LH Review Service V2
-        self.m6_service = LHReviewServiceV2()
-        print("✓ M6 LH Review Service V2 initialized (100-point scorecard)")
+        # M6: LH Review Service V3 (ZeroSite 4.0 FIX)
+        self.m6_service = LHReviewServiceV3()
+        print("✓ M6 LH Review Service V3 initialized (ZeroSite 4.0 FIX)")
         
         print("="*80 + "\n")
     
@@ -150,29 +149,32 @@ class M1M2M4M5AutoChain:
             print(f"   IRR (Public): {m5_result.financial_metrics.irr_public:.2f}%")
             print(f"   Profitability: {m5_result.profitability_grade}")
             
-            # Step 5: M6 LH Review (AUTO, using M1+M3+M4+M5 results)
-            print("\n[STEP 5] ⚖️ M6 LH REVIEW - Auto Execution (using M1+M3+M4+M5 results)")
+            # Step 5: M6 LH Review V3 (AUTO, using M1+M2+M3+M4+M5 results)
+            print("\n[STEP 5] ⚖️ M6 LH COMPREHENSIVE JUDGEMENT - Auto Execution")
             
-            # Determine branch type based on region
-            branch_type = LHBranchType.CAPITAL if land_ctx.sido in ["서울특별시", "경기도", "인천광역시"] else LHBranchType.LOCAL
-            print(f"   Branch Type: {branch_type.value}")
-            
-            # M6 V2 requires: land_ctx + housing_type_ctx + capacity_ctx + feasibility_ctx + branch_type
+            # M6 V3 requires: land_ctx, appraisal_ctx, housing_type_ctx, capacity_ctx, feasibility_ctx
             m6_result = self.m6_service.run(
                 land_ctx=land_ctx,
+                appraisal_ctx=m2_result,
                 housing_type_ctx=m3_result,
                 capacity_ctx=m4_result,
-                feasibility_ctx=m5_result,
-                branch_type=branch_type
+                feasibility_ctx=m5_result
             )
             
-            print("\n✅ M6 LH REVIEW COMPLETED")
-            print(f"   Decision: {m6_result.decision.value}")
-            print(f"   Total Score: {m6_result.total_score:.1f}/100")
-            print(f"   Branch Type: {m6_result.branch_type.value}")
-            print(f"   Decision Reasons:")
-            for reason in m6_result.decision_reasons:
-                print(f"     • {reason}")
+            print("\n✅ M6 LH COMPREHENSIVE JUDGEMENT COMPLETED")
+            print(f"   Judgement: {m6_result.judgement.value}")
+            print(f"   Total Score: {m6_result.lh_score_total:.1f}/100")
+            print(f"   Grade: {m6_result.grade.value}")
+            print(f"   Region Weight: {m6_result.region_weight.value}")
+            print(f"   Fatal Reject: {m6_result.fatal_reject}")
+            if m6_result.reject_reasons:
+                print(f"   Reject Reasons:")
+                for reason in m6_result.reject_reasons:
+                    print(f"     • {reason}")
+            if m6_result.improvement_points:
+                print(f"   Improvement Points:")
+                for point in m6_result.improvement_points:
+                    print(f"     • {point}")
             
             # Step 6: Build Canonical Summary
             print("\n[STEP 6] 📦 Building Canonical Summary...")
@@ -247,13 +249,48 @@ class M1M2M4M5AutoChain:
                     "profitability_grade": m5_result.profitability_grade
                 },
                 "M6": {
-                    "branch_type": m6_result.branch_type.value,
-                    "decision": m6_result.decision.value,
-                    "total_score": m6_result.total_score,
-                    "raw_scores": m6_result.raw_scores.to_dict(),
-                    "weighted_scores": m6_result.weighted_scores.to_dict(),
-                    "weights_applied": m6_result.weights_applied,
-                    "decision_reasons": m6_result.decision_reasons
+                    "lh_score_total": m6_result.lh_score_total,
+                    "judgement": m6_result.judgement.value,
+                    "grade": m6_result.grade.value,
+                    "fatal_reject": m6_result.fatal_reject,
+                    "reject_reasons": m6_result.reject_reasons,
+                    "deduction_reasons": m6_result.deduction_reasons,
+                    "improvement_points": m6_result.improvement_points,
+                    "region_weight": m6_result.region_weight.value,
+                    "confidence_level": m6_result.confidence_level,
+                    "section_scores": {
+                        "policy": {
+                            "raw": m6_result.section_a_policy.raw_score,
+                            "weighted": m6_result.section_a_policy.weighted_score,
+                            "max": m6_result.section_a_policy.max_score,
+                            "items": m6_result.section_a_policy.items
+                        },
+                        "location": {
+                            "raw": m6_result.section_b_location.raw_score,
+                            "weighted": m6_result.section_b_location.weighted_score,
+                            "max": m6_result.section_b_location.max_score,
+                            "items": m6_result.section_b_location.items
+                        },
+                        "construction": {
+                            "raw": m6_result.section_c_construction.raw_score,
+                            "weighted": m6_result.section_c_construction.weighted_score,
+                            "max": m6_result.section_c_construction.max_score,
+                            "items": m6_result.section_c_construction.items
+                        },
+                        "price": {
+                            "raw": m6_result.section_d_price.raw_score,
+                            "weighted": m6_result.section_d_price.weighted_score,
+                            "max": m6_result.section_d_price.max_score,
+                            "items": m6_result.section_d_price.items
+                        },
+                        "business": {
+                            "raw": m6_result.section_e_business.raw_score,
+                            "weighted": m6_result.section_e_business.weighted_score,
+                            "max": m6_result.section_e_business.max_score,
+                            "items": m6_result.section_e_business.items
+                        }
+                    },
+                    "applied_weights": m6_result.applied_weights
                 },
                 "pipeline_status": {
                     "m1_completed": True,
