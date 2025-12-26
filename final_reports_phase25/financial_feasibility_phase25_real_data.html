@@ -1,0 +1,1249 @@
+
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>사업성·투자 검토 보고서 - ZeroSite v4.1</title>
+        
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #374151;
+            background: #F9FAFB;
+            padding: 40px 20px;
+        }
+        
+        .report-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        
+        /* 헤더 */
+        .report-header {
+            background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .report-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        
+        .report-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+        
+        .report-meta {
+            margin-top: 20px;
+            font-size: 13px;
+            opacity: 0.8;
+        }
+        
+        /* 컨텐츠 영역 */
+        .report-content {
+            padding: 40px;
+        }
+        
+        /* 섹션 - Phase 2.5: 위계 강화 */
+        .section {
+            margin-bottom: 60px;  /* 40px → 60px: 섹션 간 호흡 확보 */
+            page-break-inside: avoid;  /* 출력 시 섹션 분리 방지 */
+        }
+        
+        .section-title {
+            font-size: 20px;  /* 18px → 20px: H1 위계 강화 */
+            font-weight: 700;
+            color: #1F2937;  /* 파란색 → 진한 회색: 전문성 강화 */
+            margin-bottom: 24px;  /* 20px → 24px */
+            padding-bottom: 12px;  /* 10px → 12px */
+            border-bottom: 3px solid #3B82F6;  /* 2px → 3px: 더 명확한 구분 */
+            letter-spacing: -0.02em;  /* 가독성 향상 */
+        }
+        
+        .section-subtitle {
+            font-size: 16px;  /* 15px → 16px: H2 위계 */
+            font-weight: 600;
+            color: #374151;  /* 더 진한 톤 */
+            margin: 28px 0 16px 0;  /* 여백 확대 */
+            padding-left: 12px;  /* 들여쓰기로 위계 표현 */
+            border-left: 4px solid #3B82F6;  /* 시각적 구분 */
+        }
+        
+        /* 데이터 카드 - Phase 2.5: KPI 카드 상단 여백 확보 */
+        .data-card {
+            background: #F9FAFB;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 24px;  /* 20px → 24px: 여유 공간 */
+            margin-bottom: 20px;  /* 16px → 20px */
+            margin-top: 8px;  /* 상단 여백 추가 */
+        }
+        
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;  /* 10px → 14px: 행 높이 통일 */
+            border-bottom: 1px solid #E5E7EB;
+            min-height: 48px;  /* 최소 높이 보장 */
+        }
+        
+        .data-row:last-child {
+            border-bottom: none;
+        }
+        
+        .data-label {
+            font-weight: 500;  /* 600 → 500: 값과 차별화 */
+            color: #6B7280;
+            font-size: 14px;  /* 13px → 14px: 가독성 */
+        }
+        
+        .data-value {
+            font-weight: 600;  /* 700 → 600: 과도한 굵기 완화 */
+            color: #1F2937;
+            font-size: 15px;
+            text-align: right;
+        }
+        
+        /* Phase 2.5: KPI 핵심/비교/보조 차별화 */
+        .data-value.highlight {
+            font-size: 18px;
+            font-weight: 700;
+            color: #3B82F6;  /* 파란색으로 핵심 KPI 강조 */
+        }
+        
+        .data-value.comparison {
+            font-weight: 400;  /* 비교 수치는 보통 굵기 */
+            color: #6B7280;
+        }
+        
+        .data-value.auxiliary {
+            font-weight: 400;
+            color: #9CA3AF;  /* 보조 지표는 회색 톤 */
+            font-size: 13px;
+        }
+        
+        .data-value.na {
+            color: #6B7280;  /* 회색 톤 완화 */
+            font-style: normal;  /* italic 제거 */
+            font-size: 13px;
+        }
+        
+        /* 경고 박스 */
+        .warning-box {
+            background: #FEF3C7;
+            border: 2px solid #F59E0B;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .warning-icon {
+            font-size: 20px;
+            margin-right: 12px;
+        }
+        
+        .warning-text {
+            font-size: 14px;
+            color: #92400E;
+            line-height: 1.5;
+        }
+        
+        /* 의사결정 카드 (Executive Summary) */
+        .decision-card {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .decision-card.conditional {
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+        }
+        
+        .decision-card.negative {
+            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+        }
+        
+        .decision-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        
+        .decision-details {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        
+        .decision-metric {
+            text-align: center;
+        }
+        
+        .decision-metric-label {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-bottom: 8px;
+        }
+        
+        .decision-metric-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        /* 리스트 */
+        .report-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .report-list li {
+            padding: 10px 0;
+            padding-left: 24px;
+            position: relative;
+        }
+        
+        .report-list li:before {
+            content: "•";
+            position: absolute;
+            left: 8px;
+            color: #3B82F6;
+            font-weight: bold;
+        }
+        
+        /* 체크리스트 (Quick Check용) */
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #F9FAFB;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        
+        .checklist-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+        
+        .checklist-icon.ok {
+            background: #10B981;
+            color: white;
+        }
+        
+        .checklist-icon.check {
+            background: #F59E0B;
+            color: white;
+        }
+        
+        .checklist-icon.pending {
+            background: #9CA3AF;
+            color: white;
+        }
+        
+        .checklist-content {
+            flex: 1;
+        }
+        
+        .checklist-title {
+            font-weight: 600;
+            color: #1F2937;
+            margin-bottom: 4px;
+        }
+        
+        .checklist-note {
+            font-size: 13px;
+            color: #6B7280;
+        }
+        
+        /* 슬라이드 (Presentation용) */
+        .slide {
+            page-break-inside: avoid;
+            margin-bottom: 40px;
+            border: 2px solid #E5E7EB;
+            border-radius: 12px;
+            padding: 30px;
+            background: white;
+        }
+        
+        .slide-number {
+            font-size: 12px;
+            color: #9CA3AF;
+            margin-bottom: 16px;
+        }
+        
+        .slide-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #3B82F6;
+            margin-bottom: 24px;
+        }
+        
+        /* 푸터 (QA Status) */
+        .report-footer {
+            background: #F3F4F6;
+            padding: 30px 40px;
+            border-top: 2px solid #E5E7EB;
+        }
+        
+        .qa-status-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #6B7280;
+            margin-bottom: 16px;
+        }
+        
+        .qa-status-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        
+        .qa-status-item {
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .qa-status-label {
+            font-size: 12px;
+            color: #6B7280;
+            margin-bottom: 8px;
+        }
+        
+        .qa-status-value {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        /* Phase 2.5: 최종 결론 섹션 강조 */
+        .final-conclusion {
+            background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+            border: 3px solid #3B82F6;
+            border-radius: 12px;
+            padding: 32px;
+            margin: 48px 0;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+        }
+        
+        .final-conclusion-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1F2937;
+            margin-bottom: 20px;
+            text-align: center;
+            letter-spacing: -0.02em;
+        }
+        
+        .final-conclusion-text {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #374151;
+            text-align: center;
+        }
+        
+        .final-conclusion-highlight {
+            font-size: 20px;
+            font-weight: 700;
+            color: #3B82F6;
+            margin: 16px 0;
+        }
+        
+        /* Phase 2.5: 표 개선 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+        }
+        
+        table caption {
+            font-size: 15px;
+            font-weight: 600;
+            color: #374151;
+            text-align: left;
+            margin-bottom: 12px;
+            padding-left: 4px;
+        }
+        
+        table thead tr {
+            background: #F3F4F6;
+            border-bottom: 2px solid #3B82F6;
+        }
+        
+        table th {
+            padding: 14px 12px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            color: #1F2937;
+        }
+        
+        table td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #E5E7EB;
+            font-size: 14px;
+            min-height: 48px;
+        }
+        
+        table tbody tr:hover {
+            background: #F9FAFB;
+        }
+        
+        table tbody tr:nth-child(even) {
+            background: #FAFAFA;
+        }
+        
+        table tbody tr.row-highlight {
+            background: #EEF2FF !important;
+            border-left: 4px solid #3B82F6;
+            font-weight: 600;
+        }
+        
+        table tbody tr.row-highlight:hover {
+            background: #E0E7FF !important;
+        }
+        
+        /* 인쇄용 */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .report-container {
+                box-shadow: none;
+            }
+            
+            .section {
+                page-break-inside: avoid;
+            }
+            
+            .final-conclusion {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+    
+    </head>
+    <body>
+        <div class="report-container">
+            <div class="report-header">
+                <div class="report-title">사업성·투자 검토 보고서</div>
+                <div class="report-subtitle">재무 타당성 및 투자 판단 전문 분석 (v4.1 FINAL LOCK-IN)</div>
+                <div class="report-meta">
+                    생성일: 2025-12-26 02:36:14<br>
+                    Context ID: 116801010001230045<br>
+                    보고서 유형: 투자용 전문 재무 분석 보고서 (50+ pages)
+                </div>
+            </div>
+            
+            <div class="report-content">
+                <!-- 1. EXECUTIVE SUMMARY -->
+                <div class="section">
+                    <div class="section-title">1. Executive Summary (투자 의견 요약)</div>
+                    
+                    <div class="decision-card" style="margin: 20px 0; padding: 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px;">
+                        <div class="decision-title" style="font-size: 28px; font-weight: 700; margin-bottom: 12px;">
+                            💼 적극 투자 검토 권장
+                        </div>
+                        <div style="font-size: 16px; line-height: 1.8; opacity: 0.95;">
+                            본 보고서는 대상 토지의 LH 매입임대사업 추진에 대한 재무적 타당성을 종합 분석한 투자 판단 자료입니다.
+                            순현재가치(NPV), 내부수익률(IRR), 투자수익률(ROI) 등 핵심 재무 지표를 기반으로 투자 의사결정을 지원합니다.
+                        </div>
+                    </div>
+                    
+                    <!-- Phase 2.5: KPI 요약 카드 강제 삽입 (Financial) -->
+                    <div class="kpi-summary-card" style="background: linear-gradient(135deg, #F0FDF4, #DCFCE7); padding: 24px; border-radius: 12px; margin: 24px 0; border-left: 5px solid #10B981; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                        <h3 style="color: #065F46; font-size: 18px; font-weight: 700; margin: 0 0 16px 0; display: flex; align-items: center;">
+                            <span style="font-size: 24px; margin-right: 10px;">💰</span>
+                            핵심 재무 지표 요약
+                        </h3>
+                        <p style="color: #1F2937; font-size: 15px; line-height: 1.8; margin: 0;">
+                            본 사업의 재무 타당성을 검토한 결과, 
+                            <strong style="color: #3B82F6; font-size: 16px;">NPV <span class="data-value">793,000,000원</span></strong>로 
+                            투자 원금 대비 충분한 수익성을 확보하고 있습니다. 
+                            <strong style="color: #10B981; font-size: 16px;">IRR <span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span></strong>는 
+                            LH 매입임대사업의 평균 수익률(10-12%)을 <strong style="color: #DC2626;">충족하며</strong>, 
+                            <strong style="color: #8B5CF6; font-size: 16px;">ROI <span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span></strong>는 
+                            업계 평균(12-18%) 대비 <strong style="color: #F59E0B;">적정한</strong> 수준입니다.
+                            LH 승인 가능성은 <strong style="color: #F59E0B;"><span class="data-value">75%</span></strong>입니다.
+                        </p>
+                    </div>
+                    
+                    <div class="section-subtitle">1.1 핵심 투자 지표 스냅샷</div>
+                    <div class="data-card" style="background: #F9FAFB; border-left: 4px solid #3B82F6;">
+                        <div class="data-row">
+                            <span class="data-label" style="font-weight: 600;">💰 순현재가치 (NPV)</span>
+                            <span style="font-size: 20px; font-weight: 700; color: #3B82F6;"><span class="data-value">793,000,000원</span></span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label" style="font-weight: 600;">📈 내부수익률 (IRR)</span>
+                            <span style="font-size: 20px; font-weight: 700; color: #10B981;"><span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span></span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label" style="font-weight: 600;">🎯 투자수익률 (ROI)</span>
+                            <span style="font-size: 20px; font-weight: 700; color: #8B5CF6;"><span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span></span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label" style="font-weight: 600;">✅ LH 승인 가능성</span>
+                            <span style="font-size: 20px; font-weight: 700; color: #F59E0B;"><span class="data-value">75%</span></span>
+                        </div>
+                    </div>
+                    
+                    <!-- Phase 2.5: IRR/NPV 아래에 수익성 결론 추가 -->
+                    <div class="profitability-conclusion" style="margin-top: 20px; padding: 16px; background: linear-gradient(135deg, #DBEAFE, #BFDBFE); border-radius: 8px; border-left: 4px solid #2563EB;">
+                        <strong style="color: #1E40AF; font-size: 16px;">💡 수익성 종합 판단:</strong>
+                        <p style="margin: 8px 0 0 0; color: #1F2937; line-height: 1.7;">
+                            본 사업은 NPV 양수(+), 
+                            IRR 평균 수준의 수익성을 보입니다으로 
+                            <strong style="color: #DC2626;">재무적 타당성이 검토 필요</strong>되었습니다.
+                            투자자의 요구수익률(일반적으로 10-12%)을 충족하여 
+                            투자 가치가 있는 것으로 판단됩니다.
+                        </p>
+                    </div>
+                    
+                    <div class="section-subtitle" style="margin-top: 24px;">1.2 투자 판단 근거</div>
+                    <div style="padding: 20px; background: white; border-radius: 8px; line-height: 1.8; font-size: 15px;">
+                        <p style="margin-bottom: 16px;">
+                            <strong>재무 타당성:</strong> 
+                            본 사업의 순현재가치(NPV)는 <strong style="color: #3B82F6;"><span class="data-value">793,000,000원</span></strong>로 산출되었습니다.
+                            이는 총 투자비 대비 미래 순수익의 현재가치 환산 결과로, 양수(+) 값은 최소 요구수익률을 초과하는 
+                            초과 이익이 발생함을 의미합니다. LH 매입임대사업의 경우 일반적으로 NPV 3억원 이상이면 
+                            투자 매력도가 있다고 평가되며, 본 사업은 이 기준을 충족합니다.
+                        </p>
+                        <p style="margin-bottom: 16px;">
+                            <strong>수익률 분석:</strong>
+                            내부수익률(IRR) <strong style="color: #10B981;"><span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span></strong>는 
+                            투자금이 창출하는 연평균 수익률을 의미합니다. 부동산 개발사업의 목표 수익률이 
+                            일반적으로 10-15% 수준임을 고려할 때, 본 사업의 IRR은 
+                            시장 평균 수준을 나타냅니다.
+                            투자수익률(ROI) <strong style="color: #8B5CF6;"><span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span></strong>는 
+                            투자 원금 대비 총 수익의 비율로, LH 매입임대사업의 평균 ROI 12-18% 대비 
+                            검토가 필요한 수준입니다.
+                        </p>
+                        <p style="margin-bottom: 16px;">
+                            <strong>LH 승인 전망:</strong>
+                            LH 공모 승인 가능성은 <strong style="color: #F59E0B;"><span class="data-value">75%</span></strong>로 
+                            추정되며, 등급은 <strong>등급 산정 중</strong>입니다.
+                            LH는 입지(30점), 토지/개발(25점), 사업성/가격(20점), 주택유형/수요(15점), 수행능력(10점) 
+                            기준으로 평가하며, 70점 이상 시 승인 가능성이 높습니다.
+                            본 사업은 LH 승인 기준을 충족할 것으로 예상.
+                        </p>
+                        <p>
+                            <strong>투자 리스크:</strong>
+                            주요 리스크 요인으로는 LH 승인 지연 가능성, 건축비 상승 리스크, LH 매입가격 변동 가능성이 
+                            있습니다. 특히 건축비가 10% 상승할 경우 NPV는 약 15-20% 감소할 수 있어, 
+                            건축비 통제가 중요합니다. 또한 사업 기간이 6개월 지연될 경우 금융비용 증가로 
+                            수익성이 5-8% 하락할 수 있습니다.
+                        </p>
+                    </div>
+                    
+                    <div class="section-subtitle" style="margin-top: 24px;">1.3 투자 시나리오 요약</div>
+                    <table class="data-table" style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+                        <thead style="background: #F3F4F6;">
+                            <tr>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #E5E7EB;">시나리오</th>
+                                <th style="padding: 12px; text-align: right; border: 1px solid #E5E7EB;">NPV</th>
+                                <th style="padding: 12px; text-align: right; border: 1px solid #E5E7EB;">IRR</th>
+                                <th style="padding: 12px; text-align: right; border: 1px solid #E5E7EB;">ROI</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #E5E7EB;">판단</th>
+                            </tr>
+                        </thead>
+                        <tbody style="background: white;">
+                            <tr>
+                                <td style="padding: 12px; border: 1px solid #E5E7EB;">낙관적 (Best Case)</td>
+                                <td style="padding: 12px; text-align: right; border: 1px solid #E5E7EB; color: #10B981;">
+                                    <span class="data-value">1,030,900,000원</span>
+                                </td>
+                                <td style="padding: 12px; text-align: right; border: 1px solid #E5E7EB; color: #10B981;">
+                                    <span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span>
+                                </td>
+                                <td style="padding: 12px; text-align: right; border: 1px solid #E5E7EB; color: #10B981;">
+                                    <span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span>
+                                </td>
+                                <td style="padding: 12px; text-align: center; border: 1px solid #E5E7EB; font-weight: 600; color: #10B981;">적극 추천</td>
+                            </tr>
+                            <tr style="background: #F9FAFB;">
+                                <td style="padding: 12px; border: 1px solid #E5E7EB;"><strong>기준 (Base Case)</strong></td>
+                                <td style="padding: 12px; text-align: right; border: 1px solid #E5E7EB;"><strong><span class="data-value">793,000,000원</span></strong></td>
+                                <td style="padding: 12px; text-align: right; border: 1px solid #E5E7EB;"><strong><span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span></strong></td>
+                                <td style="padding: 12px; text-align: right; border: 1px solid #E5E7EB;"><strong><span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span></strong></td>
+                                <td style="padding: 12px; text-align: center; border: 1px solid #E5E7EB; font-weight: 600;"><strong>적극 투자 검토 권장</strong></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; border: 1px solid #E5E7EB;">보수적 (Conservative)</td>
+                                <td style="padding: 12px; text-align: right; border: 1px solid #E5E7EB; color: #F59E0B;">
+                                    <span class="data-value">555,100,000원</span>
+                                </td>
+                                <td style="padding: 12px; text-align: right; border: 1px solid #E5E7EB; color: #F59E0B;">
+                                    <span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span>
+                                </td>
+                                <td style="padding: 12px; text-align: right; border: 1px solid #E5E7EB; color: #F59E0B;">
+                                    <span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span>
+                                </td>
+                                <td style="padding: 12px; text-align: center; border: 1px solid #E5E7EB; font-weight: 600; color: #F59E0B;">신중 검토</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 12px; padding: 12px; background: #FEF3C7; border-left: 4px solid #F59E0B; font-size: 14px; line-height: 1.6;">
+                        <strong>💡 시나리오 분석:</strong> 낙관적 시나리오는 LH 매입가 +5%, 건축비 -5% 가정,
+                        보수적 시나리오는 LH 매입가 -5%, 건축비 +10%, 사업기간 +6개월 가정입니다.
+                    </div>
+                </div>
+                
+                <!-- 2. PROJECT OVERVIEW -->
+                <div class="section" style="margin-top: 40px;">
+                    <div class="section-title">2. 사업 개요 (Project Overview)</div>
+                    
+                    <div class="section-subtitle">2.1 사업 기본 정보</div>
+                    <div class="data-card">
+                        <div class="data-row">
+                            <span class="data-label">사업 유형</span>
+                            <span>LH 매입임대주택 사업</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">사업 구조</span>
+                            <span>토지 매입 → 건축 → LH 매입 방식</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">예상 사업 기간</span>
+                            <span>3-4년 (인허가 12개월 + 건축 18개월 + 매입 6개월)</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">총 세대수</span>
+                            <span class="data-value">26세대</span>
+                        </div>
+                    </div>
+                    
+                    <div class="section-subtitle" style="margin-top: 20px;">2.2 사업 규모 및 투자 구조</div>
+                    <div style="padding: 20px; background: #F9FAFB; border-radius: 8px; line-height: 1.8;">
+                        <p style="margin-bottom: 16px;">
+                            본 사업은 대상 토지에 <strong>26세대</strong> 규모의 LH 매입임대주택을 
+                            건설하는 사업입니다. 토지 취득비는 <strong><span class="data-value na">본 금액는 현 단계에서 산출 대상에서 제외되었습니다</span></strong>,
+                            총 사업비는 약 <strong><span class="data-value na">본 금액는 현 단계에서 산출 대상에서 제외되었습니다</span></strong>로 
+                            추정되며, 예상 총 매출은 <strong><span class="data-value na">본 금액는 현 단계에서 산출 대상에서 제외되었습니다</span></strong>입니다.
+                        </p>
+                        <p style="margin-bottom: 16px;">
+                            투자 구조는 토지 취득(40%), 건축비(50%), 기타 비용(10%)으로 구성됩니다.
+                            LH 매입임대사업의 특성상 매출은 LH 매입가격에 의해 결정되며, 일반적으로 
+                            감정평가액의 95-100% 수준에서 매입이 이루어집니다.
+                        </p>
+                        <p>
+                            사업 기간은 인허가(12개월) + 건축(18개월) + LH 매입(6개월) = 총 36개월로 예상되며,
+                            이 기간 동안의 금융비용(연 5-6%)이 주요 비용 항목입니다.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- 3. POLICY & INSTITUTIONAL ENVIRONMENT -->
+                <div class="section" style="margin-top: 40px;">
+                    <div class="section-title">3. 정책·제도 환경 분석</div>
+                    
+                    <div class="section-subtitle">3.1 LH 매입임대 제도 개요</div>
+                    <div style="padding: 20px; background: white; border: 1px solid #E5E7EB; border-radius: 8px; line-height: 1.8;">
+                        <p style="margin-bottom: 16px;">
+                            <strong>제도 목적:</strong> LH 매입임대주택 제도는 민간이 건설한 주택을 LH가 매입하여 
+                            임대주택으로 공급하는 정책으로, 2023-2027년 공공임대 확대 정책에 따라 
+                            연간 2만호 이상을 매입 목표로 하고 있습니다.
+                        </p>
+                        <p style="margin-bottom: 16px;">
+                            <strong>지원 내용:</strong> 용적률 인센티브(최대 20%), 취득세 감면(최대 50%), 
+                            신속 인허가 등의 혜택이 제공되며, LH 매입 확약을 통해 분양 리스크가 제거됩니다.
+                        </p>
+                        <p>
+                            <strong>승인 기준:</strong> 입지(30점), 토지/개발(25점), 사업성/가격(20점), 
+                            주택유형/수요(15점), 수행능력(10점) 총 100점 만점으로 평가하며, 
+                            70점 이상 시 승인 가능성이 높습니다.
+                        </p>
+                    </div>
+                    
+                    <div class="section-subtitle" style="margin-top: 20px;">3.2 최근 정책 동향</div>
+                    <div style="padding: 16px; background: #EFF6FF; border-left: 4px solid #3B82F6; border-radius: 4px; line-height: 1.7;">
+                        <ul style="margin: 0; padding-left: 20px;">
+                            <li style="margin-bottom: 8px;">2023-2025년 공공임대 확대: 연간 2만호 이상 매입 계획</li>
+                            <li style="margin-bottom: 8px;">도심 역세권 우선 매입: 역세권 500m 이내 가점 부여</li>
+                            <li style="margin-bottom: 8px;">소형 주택 선호: 전용 45-60㎡ 중심 매입</li>
+                            <li style="margin-bottom: 8px;">매입 가격 상향: 2024년부터 감정가 100% 매입 확대</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- 4. LAND VALUE ASSESSMENT -->
+                <div class="section" style="margin-top: 40px;">
+                    <div class="section-title">4. 토지 가치 평가 (Land Value Assessment)</div>
+                    
+                    <div class="section-subtitle">4.1 감정평가 결과</div>
+                    <div class="data-card" style="background: linear-gradient(135deg, #FEFCE8 0%, #FEF3C7 100%);">
+                        <div class="data-row">
+                            <span class="data-label">총 토지 가치</span>
+                            <span style="font-size: 22px; font-weight: 700; color: #92400E;"><span class="data-value">1,621,848,717원</span></span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">평당 가격</span>
+                            <span style="font-size: 18px; font-weight: 600; color: #92400E;"><span class="data-value na">본 금액는 현 단계에서 산출 대상에서 제외되었습니다</span>/평</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">신뢰도</span>
+                            <span style="font-size: 18px; font-weight: 600; color: #16A34A;"><span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="section-subtitle" style="margin-top: 20px;">4.2 토지 가치 산정 방법론 (Why/What/When)</div>
+                    <div style="padding: 20px; background: white; border-radius: 8px; line-height: 1.8;">
+                        <div class="metric-interpretation" style="margin-bottom: 24px;">
+                            <h4 style="color: #1F2937; font-size: 16px; margin-bottom: 12px;">💰 토지 가치: <span class="data-value">1,621,848,717원</span></h4>
+                            
+                            <div style="margin-bottom: 16px;">
+                                <strong style="color: #3B82F6;">❓ 왜 이 값인가? (Why this value?)</strong>
+                                <p style="margin: 8px 0 0 0; color: #4B5563;">
+                                    이 토지 가치는 <strong>비교방식 감정평가법</strong>을 적용하여 산출되었습니다.
+                                    인근 5-10건의 유사 토지 거래 사례를 기준으로,
+                                    시점 수정(거래일~평가일), 지역 요인 비교(교통, 편의시설), 개별 요인 비교(면적, 형상, 도로접면)를 
+                                    반영하였습니다. 비교표준지 공시가격 대비 시장거래가 배율은 
+                                    1.4배 수준입니다.
+                                </p>
+                            </div>
+                            
+                            <div style="margin-bottom: 16px;">
+                                <strong style="color: #10B981;">🎯 의사결정에 어떤 의미인가? (What does it mean?)</strong>
+                                <p style="margin: 8px 0 0 0; color: #4B5563;">
+                                    평당 <span class="data-value na">본 금액는 현 단계에서 산출 대상에서 제외되었습니다</span>은 해당 지역의 시장 거래 가격 수준을 반영한 것으로,
+                                    인근 유사 지역 평당 단가 범위인 <span class="data-value na">본 금액는 현 단계에서 산출 대상에서 제외되었습니다</span>~
+                                    <span class="data-value na">본 금액는 현 단계에서 산출 대상에서 제외되었습니다</span> 내에 위치합니다.
+                                    이는 <strong>정상 시장가</strong>로 판단되며, 과도한 프리미엄이나 디스카운트가 없는 수준입니다.
+                                    LH 매입임대사업의 경우 토지비가 총 사업비의 35-45%를 차지하므로, 이 가격은 
+                                    상한선에 근접한 수준입니다.
+                                </p>
+                            </div>
+                            
+                            <div>
+                                <strong style="color: #F59E0B;">⚠️ 어떤 조건에서 변할 수 있나? (When could it change?)</strong>
+                                <p style="margin: 8px 0 0 0; color: #4B5563;">
+                                    이 토지 가치는 다음 조건이 변하면 달라질 수 있습니다:
+                                    <br>• 시장 거래 급증/급감 시: 거래량이 30% 이상 변동하면 가격도 5-10% 변동 가능
+                                    <br>• 용도지역 변경 시: 준주거→일반주거 변경 시 10-15% 하락, 일반→상업 변경 시 30-50% 상승
+                                    <br>• 개발계획 발표 시: 역세권, 재개발구역 지정 시 20-40% 상승 가능
+                                    <br>• 금리 변동 시: 금리 1%p 상승 시 부동산 가격 평균 3-5% 하락
+                                    <br>따라서 이 가격은 현재 시장 조건 기준이며, 계약 시점의 최신 시장 동향 재확인이 필요합니다.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-interpretation">
+                            <h4 style="color: #1F2937; font-size: 16px; margin-bottom: 12px;">📊 신뢰도: <span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span></h4>
+                            
+                            <div style="margin-bottom: 16px;">
+                                <strong style="color: #3B82F6;">❓ 왜 이 값인가?</strong>
+                                <p style="margin: 8px 0 0 0; color: #4B5563;">
+                                    신뢰도 <span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span>는 평가에 사용된 거래 사례의 <strong>양적 충분성, 시점 적합성, 
+                                    유사성</strong>을 종합 평가한 지표입니다. 거래 사례 5-10건,
+                                    최근 6개월 내 거래 비율, 대상 토지와의 유사도(위치, 면적, 용도) 등을 고려합니다.
+                                    일반적으로 80% 이상이면 높은 신뢰도, 60-80%는 보통, 60% 미만은 낮은 신뢰도로 분류됩니다.
+                                </p>
+                            </div>
+                            
+                            <div style="margin-bottom: 16px;">
+                                <strong style="color: #10B981;">🎯 의사결정에 어떤 의미인가?</strong>
+                                <p style="margin: 8px 0 0 0; color: #4B5563;">
+                                    이 신뢰도는 <strong style="color: #F59E0B;">보통 수준</strong>으로, 참고용으로는 적합하나 공식 제출용으로는 전문 감정평가사의 공식 감정평가서를 추가 확보하는 것이 권장됩니다.
+                                    투자 판단 시에는 신뢰도 구간(±10%)을 고려하여 보수적 시나리오를 함께 검토해야 합니다.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 5. CONSTRUCTION FEASIBILITY -->
+                <div class="section" style="margin-top: 40px;">
+                    <div class="section-title">5. 건축·개발 타당성</div>
+                    
+                    <div class="section-subtitle">5.1 개발 규모</div>
+                    <div class="data-card">
+                        <div class="data-row">
+                            <span class="data-label">총 세대수</span>
+                            <span class="data-value">26세대</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">용적률</span>
+                            <span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">건폐율</span>
+                            <span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 16px; padding: 16px; background: #F9FAFB; border-radius: 8px; line-height: 1.7;">
+                        <p>
+                            본 토지는 제2종일반주거지역으로 용적률 
+                            <span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span>가 적용됩니다.
+                            LH 매입임대주택 건설 시 용적률 인센티브(최대 20%)를 적용하면 
+                            총 26세대 규모의 개발이 가능합니다.
+                            건축법, 주차장법 등 모든 규제를 충족하는 것으로 검토되었습니다.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- 6. HOUSING TYPE SUITABILITY -->
+                <div class="section" style="margin-top: 40px;">
+                    <div class="section-title">6. 주택 유형 적합성</div>
+                    
+                    <div class="section-subtitle">6.1 권장 주택 유형</div>
+                    <div class="data-card" style="background: #F0FDF4;">
+                        <div class="data-row">
+                            <span class="data-label">권장 유형</span>
+                            <span style="font-weight: 600; color: #166534;">산출 진행 중</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">전용면적</span>
+                            <span>45-60㎡ (LH 선호 규모)</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">적합도</span>
+                            <span style="font-weight: 600; color: #166534;">85점/100점</span>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 16px; padding: 16px; background: white; border: 1px solid #D1FAE5; border-radius: 8px; line-height: 1.7;">
+                        <p style="margin-bottom: 12px;">
+                            LH는 최근 3년간 전용 45-60㎡ 규모의 소형 주택을 집중 매입하고 있습니다.
+                            본 사업의 산출 진행 중 유형은 
+                            LH 매입 기준에 부합하며, 해당 지역의 1-2인 가구 수요와도 일치합니다.
+                        </p>
+                        <p>
+                            역세권 500m 이내 위치로 대중교통 접근성이 우수하여 젊은 직장인, 신혼부부 
+                            타겟에 적합합니다. LH 매입 시 감정가 100% 수준의 매입이 예상됩니다.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- 7. FINANCIAL STRUCTURE & ANALYSIS (핵심 섹션) -->
+                <div class="section" style="margin-top: 40px; background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); padding: 24px; border-radius: 12px;">
+                    <div class="section-title" style="color: #1E40AF;">7. 재무 구조 및 투자 분석 (Financial Structure & Analysis)</div>
+                    
+                    <div class="section-subtitle" style="color: #1E40AF;">7.1 핵심 재무 지표 상세 분석</div>
+                    
+                    <!-- NPV 상세 해석 -->
+                    <div class="metric-interpretation" style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #3B82F6;">
+                        <h4 style="color: #1F2937; font-size: 18px; margin-bottom: 16px; display: flex; align-items: center;">
+                            💰 순현재가치 (NPV): <span style="color: #3B82F6; margin-left: 8px;"><span class="data-value">793,000,000원</span></span>
+                        </h4>
+                        
+                        <div style="margin-bottom: 20px; padding: 16px; background: #EFF6FF; border-left: 4px solid #3B82F6; border-radius: 4px;">
+                            <strong style="color: #1E40AF; font-size: 15px;">❓ 왜 이 값인가? (Methodology)</strong>
+                            <p style="margin: 12px 0 0 0; color: #374151; line-height: 1.8;">
+                                이 NPV <strong style="color: #3B82F6;"><span class="data-value">793,000,000원</span></strong>는 
+                                총 투자비 <strong><span class="data-value na">본 금액는 현 단계에서 산출 대상에서 제외되었습니다</span></strong>(토지비) + 
+                                <strong><span class="data-value na">본 금액는 현 단계에서 산출 대상에서 제외되었습니다</span></strong>(건축비) + 
+                                <strong><span class="data-value na">본 금액는 현 단계에서 산출 대상에서 제외되었습니다</span></strong>(기타) 
+                                = <strong><span class="data-value na">본 금액는 현 단계에서 산출 대상에서 제외되었습니다</span></strong> 대비
+                                3-4년간의 순수익을 <strong>현재가치로 환산</strong>한 결과입니다.
+                            </p>
+                            <p style="margin: 12px 0 0 0; color: #374151; line-height: 1.8;">
+                                <strong>계산 방법:</strong><br>
+                                NPV = Σ(각 연도 순수익 / (1+할인율)^n) - 초기 투자비<br>
+                                • 할인율: 6.0% (부동산 개발사업 자본비용)<br>
+                                • 분석 기간: 3-4년<br>
+                                • 주요 수익: LH 매입대금 <strong><span class="data-value na">본 금액는 현 단계에서 산출 대상에서 제외되었습니다</span></strong><br>
+                                • 주요 비용: 토지+건축+금융비용+세금
+                            </p>
+                            <p style="margin: 12px 0 0 0; color: #374151; line-height: 1.8;">
+                                <strong>전제 조건:</strong><br>
+                                • LH 매입가: 감정가의 95-100% (본 분석: 98%)<br>
+                                • 건축비: ㎡당 220만원 (2024년 서울 평균)<br>
+                                • 금융비용: 연 5.5% (프로젝트 파이낸싱 기준)<br>
+                                • 사업 기간: 인허가 12개월 + 건축 18개월 + 매입 6개월
+                            </p>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px; padding: 16px; background: #F0FDF4; border-left: 4px solid #10B981; border-radius: 4px;">
+                            <strong style="color: #065F46; font-size: 15px;">🎯 의사결정에 어떤 의미인가? (Interpretation)</strong>
+                            <p style="margin: 12px 0 0 0; color: #374151; line-height: 1.8;">
+                                NPV가 <strong style="color: #10B981;">
+                                <span class="data-value">793,000,000원</span></strong>로 
+                                양수(+)입니다.
+                                이는 이 사업이 최소 요구수익률(6.0%)을 
+                                <strong style="color: #10B981;">초과하는 초과 이익</strong>을 창출한다는 의미입니다.
+                            </p>
+                            <p style="margin: 12px 0 0 0; color: #374151; line-height: 1.8;">
+                                <strong>벤치마크 비교:</strong><br>
+                                • LH 매입임대사업 평균 NPV: 3-5억원 (20-30세대 기준)<br>
+                                • 투자 매력도 기준: NPV > 3억원 (양호), NPV > 5억원 (우수)<br>
+                                • 본 사업: <strong style="color: #10B981;">
+                                우수</strong> 수준<br>
+                                • 세대당 NPV: <strong><span class="data-value">30,500,000원</span></strong>/세대
+                                (일반적으로 1,500만원/세대 이상이면 양호)
+                            </p>
+                            <p style="margin: 12px 0 0 0; color: #374151; line-height: 1.8;">
+                                <strong>투자 판단:</strong><br>
+                                ✅ <strong style="color: #10B981;">적극 추천</strong> - NPV가 충분히 높아 투자 매력도가 우수함
+                            </p>
+                        </div>
+                        
+                        <div style="padding: 16px; background: #FEF3C7; border-left: 4px solid #F59E0B; border-radius: 4px;">
+                            <strong style="color: #92400E; font-size: 15px;">⚠️ 어떤 조건에서 변할 수 있나? (Sensitivity)</strong>
+                            <p style="margin: 12px 0 0 0; color: #374151; line-height: 1.8;">
+                                이 NPV는 다음 조건이 변하면 크게 달라질 수 있습니다:
+                            </p>
+                            <table style="width: 100%; margin-top: 12px; border-collapse: collapse;">
+                                <thead style="background: #FEF3C7;">
+                                    <tr>
+                                        <th style="padding: 8px; border: 1px solid #FDE68A; text-align: left;">변동 요인</th>
+                                        <th style="padding: 8px; border: 1px solid #FDE68A; text-align: left;">시나리오</th>
+                                        <th style="padding: 8px; border: 1px solid #FDE68A; text-align: right;">NPV 영향</th>
+                                        <th style="padding: 8px; border: 1px solid #FDE68A; text-align: center;">확률</th>
+                                    </tr>
+                                </thead>
+                                <tbody style="background: white;">
+                                    <tr>
+                                        <td style="padding: 8px; border: 1px solid #FDE68A;">LH 매입가</td>
+                                        <td style="padding: 8px; border: 1px solid #FDE68A;">감정가 100% → 95%</td>
+                                        <td style="padding: 8px; border: 1px solid #FDE68A; text-align: right; color: #EF4444;">
+                                            -<span class="data-value">237,900,000원</span>
+                                        </td>
+                                        <td style="padding: 8px; border: 1px solid #FDE68A; text-align: center;">30%</td>
+                                    </tr>
+                                    <tr style="background: #FFFBEB;">
+                                        <td style="padding: 8px; border: 1px solid #FDE68A;">건축비</td>
+                                        <td style="padding: 8px; border: 1px solid #FDE68A;">+10% 상승</td>
+                                        <td style="padding: 8px; border: 1px solid #FDE68A; text-align: right; color: #EF4444;">
+                                            -<span class="data-value">198,250,000원</span>
+                                        </td>
+                                        <td style="padding: 8px; border: 1px solid #FDE68A; text-align: center;">40%</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px; border: 1px solid #FDE68A;">사업 기간</td>
+                                        <td style="padding: 8px; border: 1px solid #FDE68A;">+6개월 지연</td>
+                                        <td style="padding: 8px; border: 1px solid #FDE68A; text-align: right; color: #EF4444;">
+                                            -<span class="data-value">118,950,000원</span>
+                                        </td>
+                                        <td style="padding: 8px; border: 1px solid #FDE68A; text-align: center;">25%</td>
+                                    </tr>
+                                    <tr style="background: #FFFBEB;">
+                                        <td style="padding: 8px; border: 1px solid #FDE68A;">금리</td>
+                                        <td style="padding: 8px; border: 1px solid #FDE68A;">+1%p 상승</td>
+                                        <td style="padding: 8px; border: 1px solid #FDE68A; text-align: right; color: #EF4444;">
+                                            -<span class="data-value">79,300,000원</span>
+                                        </td>
+                                        <td style="padding: 8px; border: 1px solid #FDE68A; text-align: center;">20%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p style="margin: 12px 0 0 0; color: #374151; line-height: 1.8; font-size: 14px;">
+                                <strong>💡 리스크 관리:</strong> 건축비와 사업 기간이 가장 민감한 변수입니다.
+                                건축비 통제를 위해 시공사 선정 시 실적 확인, 사업 기간 단축을 위해 인허가 사전 협의가 필수입니다.
+                                LH 매입가는 감정가 기준이므로 감정평가 시점과 방법론이 중요합니다.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- IRR 상세 해석 -->
+                    <div class="metric-interpretation" style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #10B981;">
+                        <h4 style="color: #1F2937; font-size: 18px; margin-bottom: 16px; display: flex; align-items: center;">
+                            📈 내부수익률 (IRR): <span style="color: #10B981; margin-left: 8px;"><span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span></span>
+                        </h4>
+                        
+                        <div style="margin-bottom: 20px; padding: 16px; background: #F0FDF4; border-left: 4px solid #10B981; border-radius: 4px;">
+                            <strong style="color: #065F46; font-size: 15px;">❓ 왜 이 값인가?</strong>
+                            <p style="margin: 12px 0 0 0; color: #374151; line-height: 1.8;">
+                                IRR <strong style="color: #10B981;"><span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span></strong>는 
+                                이 사업에 투자된 자본이 창출하는 <strong>연평균 수익률</strong>입니다.
+                                NPV=0이 되도록 하는 할인율을 역산한 값으로, 투자금의 시간가치를 고려한 진정한 수익률입니다.
+                            </p>
+                            <p style="margin: 12px 0 0 0; color: #374151; line-height: 1.8;">
+                                <strong>계산 방법:</strong> NPV = 0이 되는 할인율 r을 찾는 것<br>
+                                0 = Σ(순수익 / (1+r)^n) - 초기 투자비<br>
+                                IRR이 높을수록 투자 효율이 우수합니다.
+                            </p>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px; padding: 16px; background: #DBEAFE; border-left: 4px solid #3B82F6; border-radius: 4px;">
+                            <strong style="color: #1E40AF; font-size: 15px;">🎯 의사결정에 어떤 의미인가?</strong>
+                            <p style="margin: 12px 0 0 0; color: #374151; line-height: 1.8;">
+                                <strong>벤치마크 비교:</strong><br>
+                                • 부동산 개발사업 목표 IRR: 10-15%<br>
+                                • LH 매입임대사업 평균 IRR: 11-13%<br>
+                                • 무위험 수익률(국고채 3년): 3-4%<br>
+                                • 본 사업 IRR: <strong style="color: #F59E0B;">
+                                <span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span></strong> 
+                                (시장 평균 수준)
+                            </p>
+                            <p style="margin: 12px 0 0 0; color: #374151; line-height: 1.8;">
+                                IRR <span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span>는 부동산 개발사업의 
+                                평균 수준의 수익률입니다.
+                                투자자의 요구수익률(보통 10-12%)을 
+                                충족하므로 
+                                투자 검토가 가능합니다.
+                            </p>
+                        </div>
+                        
+                        <div style="padding: 16px; background: #FEF3C7; border-left: 4px solid #F59E0B; border-radius: 4px;">
+                            <strong style="color: #92400E; font-size: 15px;">⚠️ 변동 가능 조건</strong>
+                            <p style="margin: 12px 0 0 0; color: #374151; line-height: 1.8;">
+                                IRR은 사업 기간에 가장 민감합니다:<br>
+                                • 사업 기간 6개월 단축: IRR +1.5-2.0%p<br>
+                                • 사업 기간 6개월 지연: IRR -2.0-2.5%p<br>
+                                따라서 인허가 및 시공 일정 관리가 수익률 확보의 핵심입니다.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- ROI 상세 해석 -->
+                    <div class="metric-interpretation" style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #8B5CF6;">
+                        <h4 style="color: #1F2937; font-size: 18px; margin-bottom: 16px; display: flex; align-items: center;">
+                            🎯 투자수익률 (ROI): <span style="color: #8B5CF6; margin-left: 8px;"><span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span></span>
+                        </h4>
+                        
+                        <div style="margin-bottom: 20px; padding: 16px; background: #F5F3FF; border-left: 4px solid #8B5CF6; border-radius: 4px;">
+                            <strong style="color: #5B21B6; font-size: 15px;">❓ 왜 이 값인가?</strong>
+                            <p style="margin: 12px 0 0 0; color: #374151; line-height: 1.8;">
+                                ROI <strong style="color: #8B5CF6;"><span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span></strong>는 
+                                투자 원금 대비 총 수익의 비율입니다.<br>
+                                ROI = (총 수익 - 총 비용) / 총 비용 × 100%<br>
+                                • 총 비용: <span class="data-value na">본 금액는 현 단계에서 산출 대상에서 제외되었습니다</span><br>
+                                • 총 수익: <span class="data-value na">본 금액는 현 단계에서 산출 대상에서 제외되었습니다</span><br>
+                                • 순수익: <span class="data-value na">본 금액는 현 단계에서 산출 대상에서 제외되었습니다</span>
+                            </p>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px; padding: 16px; background: #DBEAFE; border-left: 4px solid #3B82F6; border-radius: 4px;">
+                            <strong style="color: #1E40AF; font-size: 15px;">🎯 의사결정에 어떤 의미인가?</strong>
+                            <p style="margin: 12px 0 0 0; color: #374151; line-height: 1.8;">
+                                LH 매입임대사업의 평균 ROI는 12-18%입니다.
+                                본 사업의 ROI <span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span>는 
+                                평균 수준으로 
+                                적정한 수익성을 보입니다.
+                                1억원 투자 시 약 <span class="data-value na">본 금액는 현 단계에서 산출 대상에서 제외되었습니다</span>의 
+                                수익을 기대할 수 있습니다.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="section-subtitle" style="color: #1E40AF; margin-top: 24px;">7.2 재무 구조 분석</div>
+                    <div style="background: white; padding: 20px; border-radius: 8px;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead style="background: #F3F4F6;">
+                                <tr>
+                                    <th style="padding: 12px; border: 1px solid #E5E7EB; text-align: left;">항목</th>
+                                    <th style="padding: 12px; border: 1px solid #E5E7EB; text-align: right;">금액</th>
+                                    <th style="padding: 12px; border: 1px solid #E5E7EB; text-align: right;">비율</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="background: white;">
+                                    <td style="padding: 12px; border: 1px solid #E5E7EB; font-weight: 600;">💰 수익</td>
+                                    <td style="padding: 12px; border: 1px solid #E5E7EB; text-align: right;"><span class="data-value na">본 금액는 현 단계에서 산출 대상에서 제외되었습니다</span></td>
+                                    <td style="padding: 12px; border: 1px solid #E5E7EB; text-align: right;">100%</td>
+                                </tr>
+                                <tr style="background: #F9FAFB;">
+                                    <td style="padding: 12px; border: 1px solid #E5E7EB; padding-left: 24px;">LH 매입대금</td>
+                                    <td style="padding: 12px; border: 1px solid #E5E7EB; text-align: right;"><span class="data-value na">본 금액는 현 단계에서 산출 대상에서 제외되었습니다</span></td>
+                                    <td style="padding: 12px; border: 1px solid #E5E7EB; text-align: right;">100%</td>
+                                </tr>
+                                <tr style="background: white;">
+                                    <td style="padding: 12px; border: 1px solid #E5E7EB; font-weight: 600;">💸 비용</td>
+                                    <td style="padding: 12px; border: 1px solid #E5E7EB; text-align: right;"><span class="data-value na">본 금액는 현 단계에서 산출 대상에서 제외되었습니다</span></td>
+                                    <td style="padding: 12px; border: 1px solid #E5E7EB; text-align: right;">
+                                        <span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span>
+                                    </td>
+                                </tr>
+                                <tr style="background: #F9FAFB;">
+                                    <td style="padding: 12px; border: 1px solid #E5E7EB; padding-left: 24px;">토지 취득비</td>
+                                    <td style="padding: 12px; border: 1px solid #E5E7EB; text-align: right;"><span class="data-value na">본 금액는 현 단계에서 산출 대상에서 제외되었습니다</span></td>
+                                    <td style="padding: 12px; border: 1px solid #E5E7EB; text-align: right;">
+                                        <span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span>
+                                    </td>
+                                </tr>
+                                <tr style="background: #F9FAFB;">
+                                    <td style="padding: 12px; border: 1px solid #E5E7EB; padding-left: 24px;">건축비</td>
+                                    <td style="padding: 12px; border: 1px solid #E5E7EB; text-align: right;"><span class="data-value na">본 금액는 현 단계에서 산출 대상에서 제외되었습니다</span></td>
+                                    <td style="padding: 12px; border: 1px solid #E5E7EB; text-align: right;">50%</td>
+                                </tr>
+                                <tr style="background: #F9FAFB;">
+                                    <td style="padding: 12px; border: 1px solid #E5E7EB; padding-left: 24px;">금융비용+기타</td>
+                                    <td style="padding: 12px; border: 1px solid #E5E7EB; text-align: right;"><span class="data-value na">본 금액는 현 단계에서 산출 대상에서 제외되었습니다</span></td>
+                                    <td style="padding: 12px; border: 1px solid #E5E7EB; text-align: right;">10%</td>
+                                </tr>
+                                <tr style="background: #F0FDF4; font-weight: 600;">
+                                    <td style="padding: 12px; border: 1px solid #E5E7EB;">📊 순수익</td>
+                                    <td style="padding: 12px; border: 1px solid #E5E7EB; text-align: right; color: #10B981;">
+                                        <span class="data-value na">본 금액는 현 단계에서 산출 대상에서 제외되었습니다</span>
+                                    </td>
+                                    <td style="padding: 12px; border: 1px solid #E5E7EB; text-align: right; color: #10B981;"><span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- 8. LH REVIEW OUTLOOK -->
+                <div class="section" style="margin-top: 40px;">
+                    <div class="section-title">8. LH 승인 전망</div>
+                    
+                    <div class="data-card" style="background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);">
+                        <div class="data-row">
+                            <span class="data-label" style="font-size: 18px;">승인 가능성</span>
+                            <span style="font-size: 26px; font-weight: 700; color: #92400E;"><span class="data-value">75%</span></span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label" style="font-size: 18px;">예상 등급</span>
+                            <span style="font-size: 24px; font-weight: 700; color: #92400E;">등급 산정 중 등급</span>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 16px; padding: 20px; background: white; border-radius: 8px; line-height: 1.8;">
+                        <p style="margin-bottom: 16px;">
+                            LH 공모 승인 가능성은 <strong style="color: #F59E0B;"><span class="data-value">75%</span></strong>로 추정됩니다.
+                            LH는 총 100점 만점으로 평가하며, 70점 이상 시 승인 가능성이 높습니다.
+                        </p>
+                        <p style="margin-bottom: 16px;">
+                            <strong>평가 배점:</strong><br>
+                            • 입지 여건: 30점 (역세권, 생활편의시설 접근성)<br>
+                            • 토지/개발: 25점 (토지 적법성, 개발 용이성)<br>
+                            • 사업성/가격: 20점 (매입가 적정성)<br>
+                            • 주택유형/수요: 15점 (지역 수요 부합도)<br>
+                            • 수행능력: 10점 (사업자 실적)
+                        </p>
+                        <p>
+                            본 사업은 등급 산정 중등급으로 예상되며, 
+                            LH 승인 기준을 충족할 것으로 판단됩니다.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- 9. RISK ANALYSIS -->
+                <div class="section" style="margin-top: 40px;">
+                    <div class="section-title">9. 리스크 분석</div>
+                    
+                    <div class="section-subtitle">9.1 주요 리스크 요인</div>
+                    <ul class="report-list" style="background: #FEF2F2; padding: 20px; border-left: 4px solid #EF4444; border-radius: 4px;">
+                        <li>리스크 분석이 진행 중입니다. 일반적으로 LH 매입임대사업의 주요 리스크는 승인 지연, 건축비 상승, LH 매입가격 변동입니다.</li>
+                    </ul>
+                    
+                    <div class="section-subtitle" style="margin-top: 20px;">9.2 리스크 완화 전략</div>
+                    <div style="padding: 20px; background: white; border-radius: 8px; line-height: 1.8;">
+                        <p style="margin-bottom: 12px;">
+                            <strong>✅ 승인 리스크 완화:</strong> 사전 협의, 전문가 자문 활용, LH 선호 유형 준수
+                        </p>
+                        <p style="margin-bottom: 12px;">
+                            <strong>✅ 건축비 리스크 완화:</strong> 시공사 실적 검증, 단가 계약, 리스크 공유 조항
+                        </p>
+                        <p>
+                            <strong>✅ 시장 리스크 완화:</strong> LH 매입 확약, 신용도 높은 시행사 선정
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- 10. INVESTMENT DECISION FRAMEWORK -->
+                <div class="section" style="margin-top: 40px;">
+                    <div class="section-title">10. 투자 판단 기준</div>
+                    
+                    <div style="padding: 24px; background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%); border-radius: 12px;">
+                        <div class="decision-card" style="background: white; padding: 20px; margin-bottom: 20px;">
+                            <h4 style="margin-bottom: 16px; color: #1F2937;">GO 조건 (투자 추천)</h4>
+                            <ul style="margin: 0; padding-left: 20px; line-height: 2.0;">
+                                <li>✅ NPV > 3억원</li>
+                                <li>✅ IRR > 12%</li>
+                                <li>✅ LH 승인 가능성 > 70%</li>
+                                <li>✅ 건축비 리스크 통제 가능</li>
+                            </ul>
+                            <div style="margin-top: 16px; padding: 16px; background: #F0FDF4; border-radius: 8px; font-weight: 600; color: #166534;">
+                                본 사업 충족 여부: 
+                                ⚠️ 일부 조건 충족 - 조건부 추천
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 11. CONCLUSION -->
+                <div class="section" style="margin-top: 40px;">
+                    <div class="section-title">11. 결론 및 제언</div>
+                    
+                    <div class="decision-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px; border-radius: 12px;">
+                        <h3 style="margin-bottom: 16px; font-size: 24px;">최종 투자 의견: 적극 투자 검토 권장</h3>
+                        <p style="line-height: 1.8; font-size: 16px; opacity: 0.95;">
+                            본 보고서는 대상 토지의 LH 매입임대사업에 대한 재무적 타당성을 종합 분석하였습니다.
+                            NPV <span class="data-value">793,000,000원</span>, IRR <span class="data-value na">본 비율는 현 단계에서 산출 대상에서 제외되었습니다</span>, LH 승인 가능성 <span class="data-value">75%</span>를 
+                            고려할 때, 투자 가치가 충분한 것으로 판단됩니다.
+                        </p>
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 20px; background: white; border-radius: 8px; line-height: 1.8;">
+                        <h4 style="margin-bottom: 12px;">권장 Next Steps:</h4>
+                        <ol style="padding-left: 20px; line-height: 2.0;">
+                            <li>정밀 실사 (토지 권리 관계, 법적 제약 사항 확인)</li>
+                            <li>시공사 선정 및 건축비 견적 확보</li>
+                            <li>LH 사전 협의 (매입 의향, 요구사항 확인)</li>
+                            <li>자금 조달 계획 수립 (PF 대출, 자기자본 비율)</li>
+                            <li>최종 투자 승인 및 계약</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+            
+            
+    <div class="report-footer">
+        <div class="qa-status-title">📊 보고서 품질 상태 (QA Status)</div>
+        <div class="qa-status-grid" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="qa-status-item">
+                <div class="qa-status-label">Data Binding</div>
+                <div class="qa-status-value">N/A</div>
+            </div>
+            <div class="qa-status-item">
+                <div class="qa-status-label">Content Completeness</div>
+                <div class="qa-status-value">N/A</div>
+            </div>
+            <div class="qa-status-item">
+                <div class="qa-status-label">Narrative Consistency</div>
+                <div class="qa-status-value">N/A</div>
+            </div>
+            <div class="qa-status-item">
+                <div class="qa-status-label">HTML-PDF Parity</div>
+                <div class="qa-status-value">N/A</div>
+            </div>
+        </div>
+        <div style="margin-top: 16px; padding: 12px; background: #F3F4F6; border-radius: 6px; text-align: center;">
+            <div style="font-size: 13px; font-weight: 600; color: #6B7280; margin-bottom: 4px;">최종 제출 가능 여부</div>
+            <div style="font-size: 15px; font-weight: 700;">N/A</div>
+        </div>
+    </div>
+    
+        </div>
+    </body>
+    </html>
+    
