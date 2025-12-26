@@ -3,6 +3,7 @@
 Simple HTTP server to serve local HTML reports
 This serves the pre-generated Phase 2.5 HTML reports with complete data
 PLUS: M1 API endpoints with real Kakao address search
+PLUS: M1 Full Pipeline Integration (Kakao → V-World → MOLIT)
 """
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 import os
@@ -11,6 +12,15 @@ import json
 import httpx
 from urllib.parse import urlparse, parse_qs
 from pathlib import Path
+
+# Import M1 Pipeline Integration
+try:
+    from m1_pipeline_integration import M1PipelineIntegration
+    M1_PIPELINE_AVAILABLE = True
+    print("[Server] M1 Pipeline Integration loaded ✓")
+except ImportError as e:
+    M1_PIPELINE_AVAILABLE = False
+    print(f"[Server] M1 Pipeline Integration not available: {e}")
 
 # Load environment variables from .env file
 def load_env_file():
@@ -128,6 +138,9 @@ class ReportHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         # Set the directory to serve files from
         self.directory = '/home/user/webapp/final_reports_phase25'
+        # Initialize M1 Pipeline if available
+        if M1_PIPELINE_AVAILABLE:
+            self.m1_pipeline = M1PipelineIntegration()
         super().__init__(*args, directory=self.directory, **kwargs)
     
     def do_POST(self):
@@ -135,7 +148,72 @@ class ReportHandler(SimpleHTTPRequestHandler):
         parsed_path = urlparse(self.path)
         path = parsed_path.path
         
-        # M1 Address Search API
+        # M1 Full Pipeline API (NEW)
+        if path == '/api/m1/pipeline/full':
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            
+            try:
+                request_data = json.loads(post_data.decode('utf-8'))
+                address_query = request_data.get('address', '').strip()
+                
+                if not address_query:
+                    error_response = {
+                        'success': False,
+                        'error': {'detail': 'Address query is required'}
+                    }
+                    response_json = json.dumps(error_response, ensure_ascii=False)
+                    self.send_response(400)
+                    self.send_header('Content-Type', 'application/json; charset=utf-8')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(response_json.encode('utf-8'))
+                    return
+                
+                if not M1_PIPELINE_AVAILABLE:
+                    error_response = {
+                        'success': False,
+                        'error': {'detail': 'M1 Pipeline not available'}
+                    }
+                    response_json = json.dumps(error_response, ensure_ascii=False)
+                    self.send_response(503)
+                    self.send_header('Content-Type', 'application/json; charset=utf-8')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(response_json.encode('utf-8'))
+                    return
+                
+                # Run full pipeline
+                print(f"[M1 Full Pipeline] Running for: {address_query}")
+                result = self.m1_pipeline.run_full_pipeline(address_query)
+                
+                response_json = json.dumps(result, ensure_ascii=False)
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.send_header('Content-Length', str(len(response_json.encode('utf-8'))))
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(response_json.encode('utf-8'))
+                return
+                
+            except Exception as e:
+                import traceback
+                error_response = {
+                    'success': False,
+                    'error': {
+                        'detail': f'Pipeline error: {str(e)}',
+                        'traceback': traceback.format_exc()
+                    }
+                }
+                response_json = json.dumps(error_response, ensure_ascii=False)
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(response_json.encode('utf-8'))
+                return
+        
+        # M1 Address Search API (EXISTING)
         if path == '/api/m1/address/search':
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
