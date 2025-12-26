@@ -30,6 +30,7 @@ from app.modules.m2_appraisal.service import AppraisalService
 from app.modules.m4_capacity.service_v2 import CapacityServiceV2
 from app.modules.m5_feasibility.service import FeasibilityService
 from app.modules.m6_lh_review.service_v3 import LHReviewServiceV3
+from app.modules.m7_report.report_generator_v4 import ReportGeneratorV4
 
 
 class M1M2M4M5AutoChain:
@@ -67,6 +68,10 @@ class M1M2M4M5AutoChain:
         # M6: LH Review Service V3 (ZeroSite 4.0 FIX)
         self.m6_service = LHReviewServiceV3()
         print("✓ M6 LH Review Service V3 initialized (ZeroSite 4.0 FIX)")
+        
+        # M7: Report Generator V4
+        self.m7_report_gen = ReportGeneratorV4()
+        print("✓ M7 Report Generator V4 initialized")
         
         print("="*80 + "\n")
     
@@ -176,8 +181,27 @@ class M1M2M4M5AutoChain:
                 for point in m6_result.improvement_points:
                     print(f"     • {point}")
             
-            # Step 6: Build Canonical Summary
-            print("\n[STEP 6] 📦 Building Canonical Summary...")
+            # Step 6: M7 Professional Report Generation
+            print("\n[STEP 6] 📄 M7 REPORT GENERATION - Professional Report")
+            report = self.m7_report_gen.generate(
+                land_ctx=land_ctx,
+                appraisal_ctx=m2_result,
+                housing_type_ctx=m3_result,
+                capacity_ctx=m4_result,
+                feasibility_ctx=m5_result,
+                m6_result=m6_result
+            )
+            
+            print("\n✅ M7 PROFESSIONAL REPORT COMPLETED")
+            print(f"   Report ID: {report['metadata']['report_id']}")
+            print(f"   Title: {report['metadata']['report_title']}")
+            print(f"   Executive Summary:")
+            print(f"     • Judgement: {report['executive_summary']['key_metrics']['judgement']}")
+            print(f"     • Score: {report['executive_summary']['key_metrics']['total_score']}")
+            print(f"     • Recommendation: {report['executive_summary']['recommendation']}")
+            
+            # Step 7: Build Canonical Summary
+            print("\n[STEP 7] 📦 Building Canonical Summary...")
             
             canonical_summary = {
                 "M1": {
@@ -292,6 +316,14 @@ class M1M2M4M5AutoChain:
                     },
                     "applied_weights": m6_result.applied_weights
                 },
+                "M7": {
+                    "report_id": report["metadata"]["report_id"],
+                    "report_title": report["metadata"]["report_title"],
+                    "executive_summary": report["executive_summary"],
+                    "lh_scorecard": report["lh_scorecard"],
+                    "improvement_roadmap": report["improvement_roadmap"],
+                    "conclusion": report["conclusion"]
+                },
                 "pipeline_status": {
                     "m1_completed": True,
                     "m2_completed": True,
@@ -299,20 +331,23 @@ class M1M2M4M5AutoChain:
                     "m4_completed": True,
                     "m5_completed": True,
                     "m6_completed": True,
+                    "m7_completed": True,
                     "auto_chain_verified": True
                 }
             }
             
             print("\n" + "#"*80)
-            print("# M1 → M2 → M3 → M4 → M5 → M6 AUTO PIPELINE VERIFIED")
+            print("# M1 → M2 → M3 → M4 → M5 → M6 → M7 AUTO PIPELINE VERIFIED")
             print("# Real numbers propagated automatically")
             print("# LH decision engine fully automated")
+            print("# Professional report generated")
             print("#"*80 + "\n")
             
             return {
                 "success": True,
                 "canonical_summary": canonical_summary,
-                "message": "M1 → M2 → M3 → M4 → M5 → M6 chain completed successfully"
+                "professional_report": report,
+                "message": "M1 → M2 → M3 → M4 → M5 → M6 → M7 chain completed successfully"
             }
             
         except Exception as e:
