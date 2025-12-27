@@ -406,7 +406,14 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
         
         # 🔥 CRITICAL FIX: Save to context_storage for PDF/HTML/Reports
         # Import context_storage
-        from app.services.context_storage import context_storage
+        from app.services.pipeline_tracer import (
+    PipelineTracer,
+    PipelineStage,
+    ReasonCode,
+    PipelineExecutionError
+)
+from app.services.context_storage import context_storage
+from app.services.data_contract import DataValidationError, DataBindingError
         
         # Convert PipelineResult to Phase 3.5D assembled_data format
         context_id = request.parcel_id  # Use parcel_id as context_id
