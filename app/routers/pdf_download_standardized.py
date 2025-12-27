@@ -948,19 +948,42 @@ async def get_final_report_html(
                 }
             }
         
-        # 🔴 STEP 3 (NEW - Phase 2): M6-Centered Report 생성
+        # 🔴 STEP 3 (Phase 3.5F): assembled_data 표준 스키마 생성
         from app.services.m6_centered_report_base import create_m6_centered_report
         
-        # M1~M5는 근거 데이터로만 사용
-        m1_m5_evidence = {
-            'm1': frozen_context.get('m1', {}),
-            'm2': frozen_context.get('m2', {}),
-            'm3': frozen_context.get('m3', {}),
-            'm4': frozen_context.get('m4', {}),
-            'm5': frozen_context.get('m5', {}),
+        # ✅ Phase 3.5F: 표준 Data Contract 구조 사용
+        assembled_data = {
+            "m6_result": m6_result,
+            "modules": {
+                "M1": {
+                    "summary": frozen_context.get('m1', {}),
+                    "details": {},
+                    "raw_data": {}
+                },
+                "M2": {
+                    "summary": frozen_context.get('m2_result', {}),
+                    "details": {},
+                    "raw_data": {}
+                },
+                "M3": {
+                    "summary": frozen_context.get('m3_result', {}),
+                    "details": {},
+                    "raw_data": {}
+                },
+                "M4": {
+                    "summary": frozen_context.get('m4_result', {}),
+                    "details": {},
+                    "raw_data": {}
+                },
+                "M5": {
+                    "summary": frozen_context.get('m5_result', {}),
+                    "details": {},
+                    "raw_data": {}
+                }
+            }
         }
         
-        logger.info(f"🔥 Phase 2: Generating M6-centered {report_type} for context_id={context_id}")
+        logger.info(f"🔥 Phase 3.5F: Generating M6-centered {report_type} for context_id={context_id}")
         logger.info(f"   M6 Judgement: {m6_result.get('judgement', 'N/A')}")
         logger.info(f"   M6 Score: {m6_result.get('lh_score_total', 'N/A')}/100")
         
@@ -968,7 +991,7 @@ async def get_final_report_html(
         report_data = create_m6_centered_report(
             report_type=report_type,
             m6_result=m6_result,
-            m1_m5_data=m1_m5_evidence
+            assembled_data=assembled_data  # ✅ 표준 스키마 전달
         )
         
         # ✅ STEP 4: HTML 렌더링 (M6 중심)
