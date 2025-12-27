@@ -157,6 +157,20 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# 🔥 CRITICAL: Add global exception handler for PipelineExecutionError
+from app.services.pipeline_tracer import PipelineExecutionError
+
+@app.exception_handler(PipelineExecutionError)
+async def pipeline_execution_error_handler(request, exc: PipelineExecutionError):
+    """
+    Global handler for PipelineExecutionError
+    Converts pipeline errors to standardized JSON responses
+    """
+    return JSONResponse(
+        status_code=500,
+        content=exc.to_dict()
+    )
+
 # CORS 설정
 app.add_middleware(
     CORSMiddleware,

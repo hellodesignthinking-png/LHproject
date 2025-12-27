@@ -73,15 +73,6 @@ router = APIRouter(prefix="/api/v4/pipeline", tags=["ZeroSite v4.0 Pipeline"])
 # 🔥 CRITICAL: Hard timeout to prevent infinite loading
 PIPELINE_TIMEOUT_SEC = 15  # Max time before returning error
 
-# 🔥 NEW: Exception handler for PipelineExecutionError
-@router.exception_handler(PipelineExecutionError)
-async def pipeline_error_handler(request, exc: PipelineExecutionError):
-    """Convert PipelineExecutionError to standardized JSON response"""
-    return JSONResponse(
-        status_code=500,
-        content=exc.to_dict()
-    )
-
 # Pipeline instance (singleton)
 pipeline = ZeroSitePipeline()
 
@@ -407,7 +398,7 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
     except Exception as e:
         # 🔥 SAFETY NET: Unknown error - wrap and return
         logger.error(f"❌ Unexpected error in pipeline: {e}", exc_info=True)
-        raise tracer.wrap_error(
+        raise tracer.wrap(
             e,
             reason_code=ReasonCode.UNKNOWN,
             details={"error_type": type(e).__name__, "parcel_id": request.parcel_id}
@@ -474,7 +465,7 @@ async def _execute_pipeline(request: PipelineAnalysisRequest, tracer: PipelineTr
             result = pipeline.run(request.parcel_id)
         except TimeoutError as timeout_err:
             # External API timeout
-            raise tracer.wrap_error(
+            raise tracer.wrap(
                 timeout_err,
                 reason_code=ReasonCode.EXTERNAL_API_TIMEOUT,
                 details={"timeout_sec": 60}
@@ -482,7 +473,7 @@ async def _execute_pipeline(request: PipelineAnalysisRequest, tracer: PipelineTr
         except AttributeError as attr_err:
             # M1 data missing
             if "land" in str(attr_err) or "parcel" in str(attr_err):
-                raise tracer.wrap_error(
+                raise tracer.wrap(
                     attr_err,
                     reason_code=ReasonCode.MODULE_DATA_MISSING,
                     message_ko="M1 입력 데이터가 누락되었습니다. M1 확정을 먼저 완료해 주세요."
@@ -546,8 +537,8 @@ async def _execute_pipeline(request: PipelineAnalysisRequest, tracer: PipelineTr
                 "M5": {
                     "summary": {
                         "npv_public_krw": result.feasibility.financial_metrics.npv_public,
-                        "irr_pct": result.feasibility.financial_metrics.irr * 100 if result.feasibility.financial_metrics.irr else 0,
-                        "roi_pct": getattr(result.feasibility.financial_metrics, 'roi', 0) * 100 if hasattr(result.feasibility.financial_metrics, 'roi') else 0,
+                        "irr_pct": result.feasibility.financial_metrics.irr_public * 100 if hasattr(result.feasibility.financial_metrics, 'irr_public') and result.feasibility.financial_metrics.irr_public else 0,
+                        "roi_pct": result.feasibility.financial_metrics.roi * 100 if hasattr(result.feasibility.financial_metrics, 'roi') and result.feasibility.financial_metrics.roi else 0,
                         "financial_grade": getattr(result.feasibility, 'grade', 'B'),
                         "total_cost": getattr(result.feasibility, 'total_cost', 0),
                         "total_revenue": getattr(result.feasibility, 'total_revenue', 0)
@@ -581,7 +572,7 @@ async def _execute_pipeline(request: PipelineAnalysisRequest, tracer: PipelineTr
             logger.info(f"✅ Pipeline results saved to context_storage: {context_id}")
         except Exception as storage_err:
             logger.error(f"⚠️ Failed to save to context_storage: {storage_err}")
-            raise tracer.wrap_error(
+            raise tracer.wrap(
                 storage_err,
                 reason_code=ReasonCode.STORAGE_ERROR,
                 details={"context_id": context_id}
@@ -633,14 +624,14 @@ async def _execute_pipeline(request: PipelineAnalysisRequest, tracer: PipelineTr
     # 🔥 Step 7: Enhanced exception handling
     except DataValidationError as dv_err:
         # Data validation failed - wrap with context
-        raise tracer.wrap_error(
+        raise tracer.wrap(
             dv_err,
             reason_code=ReasonCode.DATA_BINDING_MISSING,
             details={"validation_errors": str(dv_err)}
         )
     except DataBindingError as db_err:
         # Data binding failed - wrap with missing paths
-        raise tracer.wrap_error(
+        raise tracer.wrap(
             db_err,
             reason_code=ReasonCode.DATA_BINDING_MISSING,
             details=getattr(db_err, 'to_dict', lambda: {"error": str(db_err)})()
@@ -652,7 +643,7 @@ async def _execute_pipeline(request: PipelineAnalysisRequest, tracer: PipelineTr
         logger.error(f"❌ Pipeline analysis failed: {str(e)}", exc_info=True)
         
         # Unknown error - wrap it
-        raise tracer.wrap_error(
+        raise tracer.wrap(
             e,
             reason_code=ReasonCode.UNKNOWN,
             details={
