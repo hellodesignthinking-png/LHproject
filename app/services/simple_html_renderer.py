@@ -271,16 +271,16 @@ def render_simple_html(report_data: Dict[str, Any]) -> str:
                 <h2>🏗️ M4 용적률 분석 (근거 데이터)</h2>
                 <div class="data-grid">
                     <div class="data-card">
-                        <div class="label">법정 세대수</div>
-                        <div class="value">{m4.get('legal_units', 0)}세대</div>
+                        <div class="label">세대수</div>
+                        <div class="value">{m4.get('total_units', 0)}세대</div>
                     </div>
                     <div class="data-card">
-                        <div class="label">인센티브 세대수</div>
-                        <div class="value">{m4.get('incentive_units', 0)}세대</div>
+                        <div class="label">연면적</div>
+                        <div class="value">{format_area_sqm(m4.get('gross_area_sqm', 0))}</div>
                     </div>
                     <div class="data-card">
-                        <div class="label">증가율</div>
-                        <div class="value">{((m4.get('incentive_units', 0) - m4.get('legal_units', 1)) / max(m4.get('legal_units', 1), 1) * 100):.1f}%</div>
+                        <div class="label">주차면수</div>
+                        <div class="value">{m4.get('parking_spaces', 0)}면</div>
                     </div>
                 </div>
                 <div class="note">

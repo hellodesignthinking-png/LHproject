@@ -42,32 +42,61 @@ def sample_m6_result():
 
 @pytest.fixture
 def sample_m1_m5_data():
-    """샘플 M1~M5 데이터"""
+    """샘플 M1~M5 데이터 (Phase 3.5D 표준 스키마)"""
     return {
-        'm1': {
-            'address': '서울특별시 강남구 테헤란로 123',
-            'area_pyeong': 300
+        "m6_result": {
+            'lh_score_total': 75.0,
+            'judgement': 'CONDITIONAL',
+            'grade': 'B',
+            'fatal_reject': False,
+            'deduction_reasons': ['주차 효율 부족 -4점', '인근 공급 과잉 -3점'],
+            'improvement_points': ['+6점: 주차 확보', '+4점: 차별화 전략'],
+            'section_scores': {
+                'policy': 15,
+                'location': 18,
+                'construction': 12,
+                'price': 10,
+                'business': 10
+            }
         },
-        'm2': {
-            'land_value': 6081933538,
-            'land_value_per_pyeong': 50000000,
-            'confidence_pct': 85.0
-        },
-        'm3': {
-            'recommended_type': 'youth',
-            'total_score': 85.5,
-            'demand_score': 90.0
-        },
-        'm4': {
-            'legal_units': 20,
-            'incentive_units': 26,
-            'floor_area': 1500.0
-        },
-        'm5': {
-            'npv_public_krw': 792999999,
-            'irr_pct': 12.5,
-            'roi_pct': 15.2,
-            'grade': 'B'
+        "modules": {
+            "M2": {
+                "summary": {
+                    'land_value': 6081933538,
+                    'land_value_per_pyeong': 50000000,
+                    'confidence_pct': 85.0
+                },
+                "details": {},
+                "raw_data": {}
+            },
+            "M3": {
+                "summary": {
+                    'recommended_type': 'youth',
+                    'total_score': 85.5,
+                    'demand_score': 90.0
+                },
+                "details": {},
+                "raw_data": {}
+            },
+            "M4": {
+                "summary": {
+                    'total_units': 20,  # Updated from legal_units
+                    'incentive_units': 26,
+                    'gross_area_sqm': 1500.0  # Updated from floor_area
+                },
+                "details": {},
+                "raw_data": {}
+            },
+            "M5": {
+                "summary": {
+                    'npv_public_krw': 792999999,
+                    'irr_pct': 12.5,
+                    'roi_pct': 15.2,
+                    'financial_grade': 'B'  # Updated from grade
+                },
+                "details": {},
+                "raw_data": {}
+            }
         }
     }
 
@@ -81,7 +110,8 @@ class TestDataRestoration:
     
     def test_m2_data_exists(self, sample_m6_result, sample_m1_m5_data):
         """M2 데이터가 보고서에 포함되는지 확인"""
-        report = create_m6_centered_report('all_in_one', sample_m6_result, sample_m1_m5_data)
+        # Phase 3.5D: m6_result is already inside sample_m1_m5_data
+        report = create_m6_centered_report('all_in_one', sample_m1_m5_data["m6_result"], sample_m1_m5_data)
         
         evidence = report.get('evidence_data', {})
         m2 = evidence.get('m2_appraisal', {})
@@ -94,7 +124,7 @@ class TestDataRestoration:
     
     def test_m3_data_exists(self, sample_m6_result, sample_m1_m5_data):
         """M3 데이터가 보고서에 포함되는지 확인"""
-        report = create_m6_centered_report('all_in_one', sample_m6_result, sample_m1_m5_data)
+        report = create_m6_centered_report('all_in_one', sample_m1_m5_data["m6_result"], sample_m1_m5_data)
         
         evidence = report.get('evidence_data', {})
         m3 = evidence.get('m3_housing_type', {})
@@ -107,20 +137,20 @@ class TestDataRestoration:
     
     def test_m4_data_exists(self, sample_m6_result, sample_m1_m5_data):
         """M4 데이터가 보고서에 포함되는지 확인"""
-        report = create_m6_centered_report('all_in_one', sample_m6_result, sample_m1_m5_data)
+        report = create_m6_centered_report('all_in_one', sample_m1_m5_data["m6_result"], sample_m1_m5_data)
         
         evidence = report.get('evidence_data', {})
         m4 = evidence.get('m4_capacity', {})
         
         # M4 데이터 존재 확인
         assert m4, "M4 데이터가 비어있습니다"
-        assert 'legal_units' in m4, "legal_units이 없습니다"
-        assert m4['legal_units'] == 20, f"legal_units 불일치: {m4['legal_units']}"
+        assert 'total_units' in m4, "legal_units이 없습니다"
+        assert m4['total_units'] == 20, f"legal_units 불일치: {m4['total_units']}"
         assert m4['incentive_units'] == 26, "incentive_units 불일치"
     
     def test_m5_data_exists(self, sample_m6_result, sample_m1_m5_data):
         """M5 데이터가 보고서에 포함되는지 확인"""
-        report = create_m6_centered_report('all_in_one', sample_m6_result, sample_m1_m5_data)
+        report = create_m6_centered_report('all_in_one', sample_m1_m5_data["m6_result"], sample_m1_m5_data)
         
         evidence = report.get('evidence_data', {})
         m5 = evidence.get('m5_feasibility', {})
@@ -134,13 +164,13 @@ class TestDataRestoration:
     
     def test_html_rendering_includes_data(self, sample_m6_result, sample_m1_m5_data):
         """HTML 렌더링에 데이터가 포함되는지 확인"""
-        report = create_m6_centered_report('all_in_one', sample_m6_result, sample_m1_m5_data)
+        report = create_m6_centered_report('all_in_one', sample_m1_m5_data["m6_result"], sample_m1_m5_data)
         html = render_simple_html(report)
         
         # HTML에 실제 데이터가 포함되는지 확인
         assert '60.82억원' in html or '6081933538' in html, "M2 land_value가 HTML에 없음"
         assert 'youth' in html, "M3 recommended_type이 HTML에 없음"
-        assert '20세대' in html, "M4 legal_units이 HTML에 없음"
+        assert '20세대' in html, "M4 total_units가 HTML에 없음"
         assert '7.93억원' in html or '792999999' in html, "M5 NPV가 HTML에 없음"
         
         # N/A가 없어야 함 (실제 데이터가 있으므로)
@@ -148,7 +178,7 @@ class TestDataRestoration:
     
     def test_no_judgement_in_module_data(self, sample_m6_result, sample_m1_m5_data):
         """M2~M5 데이터에 판단 표현이 없는지 확인"""
-        report = create_m6_centered_report('all_in_one', sample_m6_result, sample_m1_m5_data)
+        report = create_m6_centered_report('all_in_one', sample_m1_m5_data["m6_result"], sample_m1_m5_data)
         
         evidence = report.get('evidence_data', {})
         m2 = evidence.get('m2_appraisal', {})
@@ -179,7 +209,7 @@ class TestPhase35CCompletion:
     
     def test_all_data_visible(self, sample_m6_result, sample_m1_m5_data):
         """모든 모듈 데이터가 보이는지 확인"""
-        report = create_m6_centered_report('all_in_one', sample_m6_result, sample_m1_m5_data)
+        report = create_m6_centered_report('all_in_one', sample_m1_m5_data["m6_result"], sample_m1_m5_data)
         html = render_simple_html(report)
         
         # Phase 3.5C 완료 기준
@@ -198,7 +228,7 @@ class TestPhase35CCompletion:
     
     def test_m6_only_judgement(self, sample_m6_result, sample_m1_m5_data):
         """M6만 판단하는지 확인"""
-        report = create_m6_centered_report('all_in_one', sample_m6_result, sample_m1_m5_data)
+        report = create_m6_centered_report('all_in_one', sample_m1_m5_data["m6_result"], sample_m1_m5_data)
         
         # M6 판단 확인
         assert 'final_conclusion' in report, "final_conclusion이 없음"

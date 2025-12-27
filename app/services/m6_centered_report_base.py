@@ -218,23 +218,28 @@ class M6CenteredReportBase:
         logger.info("✅ Report consistency validation PASSED")
         return True
     
-    def get_m1_m5_as_evidence(self, m1_m5_data: Dict[str, Any]) -> Dict[str, Any]:
+    def get_m1_m5_as_evidence(self, assembled_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         M1~M5 데이터를 M6 결론의 근거로 변환
         
         Args:
-            m1_m5_data: M1~M5 원본 데이터
+            assembled_data: Phase 3.5D 표준 스키마 (modules with M2-M5)
             
         Returns:
             M6 결론을 뒷받침하는 근거 데이터
         """
+        # ✅ Phase 3.5D: 표준 스키마에서 추출
+        from app.services.data_contract import get_module_summary
+        
+        modules = assembled_data.get("modules", {})
+        
         return {
             "evidence_note": "아래 데이터는 M6 판단의 근거로 사용되었습니다.",
-            "m1_land_info": m1_m5_data.get("m1", {}),
-            "m2_appraisal": m1_m5_data.get("m2", {}),
-            "m3_housing_type": m1_m5_data.get("m3", {}),
-            "m4_capacity": m1_m5_data.get("m4", {}),
-            "m5_feasibility": m1_m5_data.get("m5", {}),
+            "m1_land_info": {},  # M1 deprecated
+            "m2_appraisal": get_module_summary(assembled_data, "M2"),
+            "m3_housing_type": get_module_summary(assembled_data, "M3"),
+            "m4_capacity": get_module_summary(assembled_data, "M4"),
+            "m5_feasibility": get_module_summary(assembled_data, "M5"),
             "evidence_summary": (
                 f"위 데이터를 종합한 결과, M6는 다음과 같이 판단하였습니다: "
                 f"{self.m6_truth.judgement.value} (점수: {self.m6_truth.lh_total_score:.1f}/100)"
