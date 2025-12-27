@@ -1344,16 +1344,50 @@ def assemble_final_report(
     logger.info(f"   M6 Judgement: {m6_result.get('judgement', 'N/A')}")
     logger.info(f"   M6 Score: {m6_result.get('lh_score_total', 'N/A')}/100")
     
-    # 🔴 STEP 2: M1~M5 근거 데이터 추출 (읽기 전용)
-    m1_m5_evidence = {
-        'm1': canonical_data.get('m1', {}),
-        'm2': canonical_data.get('m2_result', {}),
-        'm3': canonical_data.get('m3_result', {}),
-        'm4': canonical_data.get('m4_result', {}),
-        'm5': canonical_data.get('m5_result', {}),
+    # 🔴 STEP 2: assembled_data 생성 (표준 Data Contract)
+    # Phase 3.5D: 단일 표준 스키마로 통일
+    assembled_data = {
+        "m6_result": m6_result,
+        "modules": {
+            "M1": {
+                "summary": canonical_data.get('m1', {}),
+                "details": {},
+                "raw_data": {}
+            },
+            "M2": {
+                "summary": canonical_data.get('m2_result', {}),
+                "details": {},
+                "raw_data": {}
+            },
+            "M3": {
+                "summary": canonical_data.get('m3_result', {}),
+                "details": {},
+                "raw_data": {}
+            },
+            "M4": {
+                "summary": canonical_data.get('m4_result', {}),
+                "details": {},
+                "raw_data": {}
+            },
+            "M5": {
+                "summary": canonical_data.get('m5_result', {}),
+                "details": {},
+                "raw_data": {}
+            }
+        }
     }
     
-    logger.info("   M1~M5 evidence data loaded (read-only)")
+    # 🔴 STEP 2.5: Data Contract 검증 (FAIL FAST)
+    from app.services.data_contract import validate_assembled_data
+    
+    if not validate_assembled_data(assembled_data):
+        logger.error(f"❌ assembled_data validation FAILED for context_id={context_id}")
+        raise ValueError(
+            f"assembled_data validation failed. Missing or invalid module data. "
+            f"Required: m6_result + modules[M2-M5]"
+        )
+    
+    logger.info("   ✅ assembled_data created and validated (standard Data Contract)")
     
     # 🔴 STEP 3: M6 중심 보고서 생성
     from app.services.m6_centered_report_base import create_m6_centered_report
@@ -1362,7 +1396,7 @@ def assemble_final_report(
         report_data = create_m6_centered_report(
             report_type=report_type,
             m6_result=m6_result,
-            m1_m5_data=m1_m5_evidence
+            m1_m5_data=assembled_data  # ✅ 표준 스키마 전달
         )
     except Exception as e:
         logger.error(f"❌ Failed to create M6-centered report: {e}", exc_info=True)
