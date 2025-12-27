@@ -1051,7 +1051,14 @@ async def get_final_report_html(
         # ✅ Phase 3.5F: Smart key fallback (try multiple key formats)
         def safe_get_module(ctx, module_id):
             """Try multiple key formats to find module data"""
-            # Try lowercase with _result suffix (e.g., m2_result)
+            # 🔥 FIX: First check if data is in 'modules' structure
+            if 'modules' in ctx and isinstance(ctx['modules'], dict):
+                module_data = ctx['modules'].get(module_id.upper(), {})
+                if isinstance(module_data, dict) and module_data.get('summary'):
+                    logger.info(f"🔍 {module_id}: found in modules.{module_id.upper()}.summary")
+                    return module_data.get('summary', {})
+            
+            # Fallback: Try lowercase with _result suffix (e.g., m2_result)
             key1 = f"{module_id.lower()}_result"
             # Try uppercase (e.g., M2)
             key2 = module_id.upper()
