@@ -762,11 +762,12 @@ def assemble_landowner_summary(data: FinalReportData) -> Dict[str, Any]:
     if data.m4:
         buildable_units = data.m4.incentive_units or data.m4.legal_units
     
-    # 예상 수익성
+    # 예상 수익성 (M5 grade 기반 표현 변환)
+    # Phase 3+: 이것은 M5 데이터를 한국어로 변환하는 것이므로 허용
     expected_profit = "분석 중"
     if data.m5:
         if data.m5.grade in ["A", "B"]:
-            expected_profit = "긍정적"
+            expected_profit = "양호"  # Phase 3+: Objective expression based on M5 grade
         elif data.m5.grade == "C":
             expected_profit = "보통"
         else:
