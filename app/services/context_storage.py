@@ -180,12 +180,13 @@ class ContextStorageService:
         Retrieve frozen context with RESILIENT FALLBACK
         
         Strategy:
-        1. Try Redis (FAST)
-        2. If not found → Try DB Snapshot (RELIABLE)
-        3. If found in DB → Restore to Redis for future requests
+        1. Try Redis (FAST) with context_id
+        2. If not found → Try by parcel_id (for backward compatibility)
+        3. If not found → Try DB Snapshot (RELIABLE)
+        4. If found in DB → Restore to Redis for future requests
         
         Args:
-            context_id: Unique context identifier
+            context_id: Unique context identifier (UUID or parcel_id)
             
         Returns:
             Optional[Dict]: Context data if found, None otherwise
@@ -222,14 +223,16 @@ class ContextStorageService:
             
             try:
                 db: Session = SessionLocal()
+                # 🔥 FIX: Try both context_id AND parcel_id
                 snapshot = db.query(ContextSnapshot).filter(
-                    ContextSnapshot.context_id == context_id
+                    (ContextSnapshot.context_id == context_id) | 
+                    (ContextSnapshot.parcel_id == context_id)
                 ).first()
                 
                 if snapshot:
                     # Found in DB!
                     context_data = json.loads(snapshot.context_data)
-                    logger.info(f"✅ [DB] Context recovered from snapshot: {context_id}")
+                    logger.info(f"✅ [DB] Context recovered from snapshot: {context_id} (matched via {'context_id' if snapshot.context_id == context_id else 'parcel_id'})")
                     
                     # Update access tracking
                     snapshot.accessed_at = datetime.utcnow()
@@ -250,7 +253,7 @@ class ContextStorageService:
                     
                     return context_data
                 else:
-                    logger.warning(f"⚠️ [DB] Context not found: {context_id}")
+                    logger.warning(f"⚠️ [DB] Context not found (searched by context_id and parcel_id): {context_id}")
                     # 🔥 FINAL FALLBACK: Try memory one last time before giving up
                     if key in _memory_storage:
                         context_data = _memory_storage[key]['data']
