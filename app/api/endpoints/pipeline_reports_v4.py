@@ -410,8 +410,7 @@ async def _execute_pipeline(request: PipelineAnalysisRequest, tracer: PipelineTr
     Internal pipeline execution (wrapped by timeout)
     🔥 MUST return PipelineAnalysisResponse or raise PipelineExecutionError
     """
-    print(f"🔥🔥🔥 _execute_pipeline CALLED for {request.parcel_id} 🔥🔥🔥", flush=True)
-    logger.critical(f"🔥🔥🔥 _execute_pipeline CALLED for {request.parcel_id}")
+    logger.info(f"📊 Pipeline execution started for {request.parcel_id}")
     
     try:
         start_time = time.time()
@@ -459,7 +458,7 @@ async def _execute_pipeline(request: PipelineAnalysisRequest, tracer: PipelineTr
             )
         
         # 🔥 Step 3: Run pipeline with stage tracking
-        logger.critical(f"🔥 STEP 3: Running pipeline for {request.parcel_id}")
+        logger.info(f"▶️ Running 6-module pipeline: {request.parcel_id}")
         logger.info(f"🚀 Running 6-MODULE pipeline for {request.parcel_id}")
         
         try:
@@ -485,10 +484,10 @@ async def _execute_pipeline(request: PipelineAnalysisRequest, tracer: PipelineTr
         
         # Cache results
         results_cache[request.parcel_id] = result
-        logger.critical(f"🔥 STEP 3 DONE: Results cached for {request.parcel_id}")
+        logger.info(f"✅ Pipeline complete, caching results: {request.parcel_id}")
         
         # 🔥 Step 4: ASSEMBLE - Convert PipelineResult to Phase 3.5D assembled_data format
-        logger.critical(f"🔥 STEP 4: ASSEMBLE starting for {request.parcel_id}")
+        logger.info(f"📦 Assembling Phase 3.5D data for {request.parcel_id}")
         tracer.set_stage(PipelineStage.ASSEMBLE)
         context_id = request.parcel_id  # Use parcel_id as context_id
         
@@ -506,16 +505,6 @@ async def _execute_pipeline(request: PipelineAnalysisRequest, tracer: PipelineTr
                 return {k: to_serializable(v) for k, v in obj.items()}
             else:
                 return obj
-        
-        # 🔍 DEBUG: Log M4 capacity structure
-        if hasattr(result.capacity, 'to_dict'):
-            capacity_dict = result.capacity.to_dict()
-            logger.critical(f"🔍 M4 capacity.to_dict() keys: {list(capacity_dict.keys())[:15]}")
-            logger.critical(f"🔍 M4 has selected_scenario_id: {'selected_scenario_id' in capacity_dict}")
-            logger.critical(f"🔍 M4 has legal_capacity: {'legal_capacity' in capacity_dict}")
-            logger.critical(f"🔍 M4 has scenarios: {'scenarios' in capacity_dict}")
-        else:
-            logger.critical(f"🔍 M4 capacity has no to_dict() method!")
         
         assembled_data = {
             "m6_result": {
@@ -582,26 +571,19 @@ async def _execute_pipeline(request: PipelineAnalysisRequest, tracer: PipelineTr
             "_frozen": True,
             "_context_id": context_id
         }
-        logger.critical(f"🔥 assembled_data created with keys: {list(assembled_data.keys())}")
-        
-        # 🔥 Step 5: SAVE - Store in context_storage
-        logger.critical(f"🔥 STEP 5: SAVE starting for {context_id}")
-        logger.critical(f"🔍 DEBUG: About to save context_id={context_id}, parcel_id={request.parcel_id}")
-        logger.critical(f"🔍 DEBUG: assembled_data keys={list(assembled_data.keys())}")
+        logger.info(f"💾 Step 5: Saving context {context_id}")
         
         tracer.set_stage(PipelineStage.SAVE)
         try:
-            logger.critical(f"🔍 DEBUG: Calling store_frozen_context...")
             success = context_storage.store_frozen_context(
                 context_id=context_id,
                 land_context=assembled_data,
                 ttl_hours=24,
                 parcel_id=request.parcel_id
             )
-            logger.critical(f"🔍 DEBUG: store_frozen_context returned: {success}")
             
             if success:
-                logger.critical(f"✅ Pipeline results saved to context_storage: {context_id}")
+                logger.info(f"✅ Context saved: {context_id}")
             else:
                 logger.warning(f"⚠️ store_frozen_context returned False for: {context_id}")
         except Exception as storage_err:
