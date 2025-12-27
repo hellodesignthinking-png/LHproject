@@ -54,10 +54,29 @@ from app.core.canonical_data_contract import (
     M5Result
 )
 
+# 🔥 NEW: Pipeline Failure Tracking
+from app.services.pipeline_tracer import (
+    PipelineTracer,
+    PipelineStage,
+    ReasonCode,
+    PipelineExecutionError
+)
+from app.services.context_storage import context_storage
+from app.services.data_contract import DataValidationError, DataBindingError
+
 logger = logging.getLogger(__name__)
 
 # Router
 router = APIRouter(prefix="/api/v4/pipeline", tags=["ZeroSite v4.0 Pipeline"])
+
+# 🔥 NEW: Exception handler for PipelineExecutionError
+@router.exception_handler(PipelineExecutionError)
+async def pipeline_error_handler(request, exc: PipelineExecutionError):
+    """Convert PipelineExecutionError to standardized JSON response"""
+    return JSONResponse(
+        status_code=500,
+        content=exc.to_dict()
+    )
 
 # Pipeline instance (singleton)
 pipeline = ZeroSitePipeline()
@@ -355,6 +374,9 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
     Returns:
         Comprehensive analysis results with all Context data
     """
+    # 🔥 Step 1: Initialize PipelineTracer
+    tracer = PipelineTracer(parcel_id=request.parcel_id)
+    
     try:
         start_time = time.time()
         
@@ -362,6 +384,9 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
         if request.use_cache and request.parcel_id in results_cache:
             logger.info(f"✅ Using cached results for {request.parcel_id}")
             cached_result = results_cache[request.parcel_id]
+            
+            # 🔥 Step 2: Mark as complete if using cache
+            tracer.complete()
             
             # Extract M4 V2 data from cached result
             capacity_v2 = cached_result.capacity
@@ -397,25 +422,35 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
                 schematic_drawings_available=schematics_available
             )
         
-        # Run pipeline
+        # 🔥 Step 3: Run pipeline with stage tracking
         logger.info(f"🚀 Running 6-MODULE pipeline for {request.parcel_id}")
-        result = pipeline.run(request.parcel_id)
+        
+        try:
+            # M1 is handled internally by pipeline, start tracking at M2
+            tracer.set_stage(PipelineStage.M2)
+            result = pipeline.run(request.parcel_id)
+        except TimeoutError as timeout_err:
+            # External API timeout
+            raise tracer.wrap_error(
+                timeout_err,
+                reason_code=ReasonCode.EXTERNAL_API_TIMEOUT,
+                details={"timeout_sec": 60}
+            )
+        except AttributeError as attr_err:
+            # M1 data missing
+            if "land" in str(attr_err) or "parcel" in str(attr_err):
+                raise tracer.wrap_error(
+                    attr_err,
+                    reason_code=ReasonCode.MODULE_DATA_MISSING,
+                    message_ko="M1 입력 데이터가 누락되었습니다. M1 확정을 먼저 완료해 주세요."
+                )
+            raise
         
         # Cache results
         results_cache[request.parcel_id] = result
         
-        # 🔥 CRITICAL FIX: Save to context_storage for PDF/HTML/Reports
-        # Import context_storage
-        from app.services.pipeline_tracer import (
-    PipelineTracer,
-    PipelineStage,
-    ReasonCode,
-    PipelineExecutionError
-)
-from app.services.context_storage import context_storage
-from app.services.data_contract import DataValidationError, DataBindingError
-        
-        # Convert PipelineResult to Phase 3.5D assembled_data format
+        # 🔥 Step 4: ASSEMBLE - Convert PipelineResult to Phase 3.5D assembled_data format
+        tracer.set_stage(PipelineStage.ASSEMBLE)
         context_id = request.parcel_id  # Use parcel_id as context_id
         
         # Build Phase 3.5D assembled_data from pipeline result
@@ -491,7 +526,8 @@ from app.services.data_contract import DataValidationError, DataBindingError
             "_context_id": context_id
         }
         
-        # Store in context_storage
+        # 🔥 Step 5: SAVE - Store in context_storage
+        tracer.set_stage(PipelineStage.SAVE)
         try:
             context_storage.store_frozen_context(
                 context_id=context_id,
@@ -502,7 +538,11 @@ from app.services.data_contract import DataValidationError, DataBindingError
             logger.info(f"✅ Pipeline results saved to context_storage: {context_id}")
         except Exception as storage_err:
             logger.error(f"⚠️ Failed to save to context_storage: {storage_err}")
-            # Don't fail the request, just log the error
+            raise tracer.wrap_error(
+                storage_err,
+                reason_code=ReasonCode.STORAGE_ERROR,
+                details={"context_id": context_id}
+            )
         
         # Calculate execution time
         execution_time_ms = (time.time() - start_time) * 1000
@@ -542,42 +582,40 @@ from app.services.data_contract import DataValidationError, DataBindingError
             schematic_drawings_available=schematics_available
         )
         
+        # 🔥 Step 6: Complete and return
         logger.info(f"✅ Pipeline completed in {execution_time_ms:.0f}ms")
+        tracer.complete()
         return response
         
+    # 🔥 Step 7: Enhanced exception handling
+    except DataValidationError as dv_err:
+        # Data validation failed - wrap with context
+        raise tracer.wrap_error(
+            dv_err,
+            reason_code=ReasonCode.DATA_BINDING_MISSING,
+            details={"validation_errors": str(dv_err)}
+        )
+    except DataBindingError as db_err:
+        # Data binding failed - wrap with missing paths
+        raise tracer.wrap_error(
+            db_err,
+            reason_code=ReasonCode.DATA_BINDING_MISSING,
+            details=getattr(db_err, 'to_dict', lambda: {"error": str(db_err)})()
+        )
+    except PipelineExecutionError:
+        # Already wrapped - just re-raise
+        raise
     except Exception as e:
         logger.error(f"❌ Pipeline analysis failed: {str(e)}", exc_info=True)
         
-        # Generate detailed error response
-        error_detail = {
-            "error": str(e),
-            "error_type": type(e).__name__,
-            "parcel_id": request.parcel_id,
-            "timestamp": datetime.now().isoformat(),
-            "hint": "Check if M1 Context is frozen and contains all required fields"
-        }
-        
-        # Try to identify specific missing field
-        error_message = str(e).lower()
-        if "land_value" in error_message or "appraisal" in error_message:
-            error_detail["missing_field"] = "land_value"
-            error_detail["hint"] = "M2 Appraisal failed - Check official_land_price or transaction data"
-        elif "area" in error_message or "jimok" in error_message:
-            error_detail["missing_field"] = "cadastral_data"
-            error_detail["hint"] = "M1 cadastral data missing or invalid - Check area, jimok fields"
-        elif "floor_area_ratio" in error_message or "용적률" in error_message:
-            error_detail["missing_field"] = "floor_area_ratio"
-            error_detail["hint"] = "Floor Area Ratio (FAR) missing - Required for capacity calculation"
-        elif "building_coverage" in error_message or "건폐율" in error_message:
-            error_detail["missing_field"] = "building_coverage_ratio"
-            error_detail["hint"] = "Building Coverage Ratio (BCR) missing - Required for capacity calculation"
-        elif "road_width" in error_message or "도로" in error_message:
-            error_detail["missing_field"] = "road_width"
-            error_detail["hint"] = "Road width missing - Required for road access validation"
-        
-        raise HTTPException(
-            status_code=500,
-            detail=error_detail
+        # Unknown error - wrap it
+        raise tracer.wrap_error(
+            e,
+            reason_code=ReasonCode.UNKNOWN,
+            details={
+                "error_type": type(e).__name__,
+                "parcel_id": request.parcel_id
+            }
         )
 
 
