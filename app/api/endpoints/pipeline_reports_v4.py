@@ -507,6 +507,16 @@ async def _execute_pipeline(request: PipelineAnalysisRequest, tracer: PipelineTr
             else:
                 return obj
         
+        # 🔍 DEBUG: Log M4 capacity structure
+        if hasattr(result.capacity, 'to_dict'):
+            capacity_dict = result.capacity.to_dict()
+            logger.critical(f"🔍 M4 capacity.to_dict() keys: {list(capacity_dict.keys())[:15]}")
+            logger.critical(f"🔍 M4 has selected_scenario_id: {'selected_scenario_id' in capacity_dict}")
+            logger.critical(f"🔍 M4 has legal_capacity: {'legal_capacity' in capacity_dict}")
+            logger.critical(f"🔍 M4 has scenarios: {'scenarios' in capacity_dict}")
+        else:
+            logger.critical(f"🔍 M4 capacity has no to_dict() method!")
+        
         assembled_data = {
             "m6_result": {
                 "lh_score_total": result.lh_review.total_score,
@@ -554,34 +564,17 @@ async def _execute_pipeline(request: PipelineAnalysisRequest, tracer: PipelineTr
                     "raw_data": {}
                 },
                 "M4": {
-                    "summary": {
-                        "total_units": result.capacity.unit_summary.total_units,
-                        "incentive_units": getattr(result.capacity, 'incentive_units', result.capacity.unit_summary.total_units),
-                        "gross_area_sqm": result.capacity.unit_summary.total_floor_area if hasattr(result.capacity.unit_summary, 'total_floor_area') else 0,
-                        "far_used": getattr(result.capacity, 'far_used', 0),
-                        "bcr_used": getattr(result.capacity, 'bcr_used', 0)
-                    },
+                    "summary": to_serializable(result.capacity),
                     "details": {},
                     "raw_data": {}
                 },
                 "M5": {
-                    "summary": {
-                        "npv_public_krw": result.feasibility.financial_metrics.npv_public,
-                        "irr_pct": result.feasibility.financial_metrics.irr_public * 100 if hasattr(result.feasibility.financial_metrics, 'irr_public') and result.feasibility.financial_metrics.irr_public else 0,
-                        "roi_pct": result.feasibility.financial_metrics.roi * 100 if hasattr(result.feasibility.financial_metrics, 'roi') and result.feasibility.financial_metrics.roi else 0,
-                        "financial_grade": getattr(result.feasibility, 'grade', 'B'),
-                        "total_cost": getattr(result.feasibility, 'total_cost', 0),
-                        "total_revenue": getattr(result.feasibility, 'total_revenue', 0)
-                    },
+                    "summary": to_serializable(result.feasibility),
                     "details": {},
                     "raw_data": {}
                 },
                 "M6": {
-                    "summary": {
-                        "lh_score_total": result.lh_review.total_score,
-                        "judgement": result.lh_review.decision,
-                        "grade": result.lh_review.grade if hasattr(result.lh_review, 'grade') else 'N/A'
-                    },
+                    "summary": to_serializable(result.lh_review),
                     "details": {},
                     "raw_data": {}
                 }

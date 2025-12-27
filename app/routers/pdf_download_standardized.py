@@ -245,6 +245,11 @@ async def download_module_pdf(
                     "summary": modules_data.get('M5', {}).get('summary', safe_get_module(frozen_context, 'M5')),
                     "details": {},
                     "raw_data": {}
+                },
+                "M6": {
+                    "summary": modules_data.get('M6', {}).get('summary', safe_get_module(frozen_context, 'M6')),
+                    "details": {},
+                    "raw_data": {}
                 }
             }
         }
