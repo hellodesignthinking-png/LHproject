@@ -89,6 +89,12 @@ class PipelineAnalysisRequest(BaseModel):
     
     parcel_id: str = Field(..., description="Parcel ID (PNU code)")
     
+    # 🔥 NEW: Context ID from frontend (UUID)
+    context_id: Optional[str] = Field(
+        None,
+        description="Context ID from frontend (UUID). If not provided, parcel_id will be used."
+    )
+    
     # Optional: For testing with mock data
     mock_land_data: Optional[Dict[str, Any]] = Field(
         None,
@@ -152,6 +158,12 @@ class ReportGenerationRequest(BaseModel):
     """Request for report generation from pipeline results"""
     
     parcel_id: str = Field(..., description="Parcel ID (must have pipeline results)")
+    
+    # 🔥 NEW: Context ID from frontend (UUID)
+    context_id: Optional[str] = Field(
+        None,
+        description="Context ID from frontend (UUID). If not provided, parcel_id will be used."
+    )
     
     report_type: Literal["comprehensive", "pre_report", "lh_decision"] = Field(
         "comprehensive",
@@ -490,7 +502,8 @@ async def _execute_pipeline(request: PipelineAnalysisRequest, tracer: PipelineTr
         # 🔥 Step 4: ASSEMBLE - Convert PipelineResult to Phase 3.5D assembled_data format
         logger.info(f"📦 Assembling Phase 3.5D data for {request.parcel_id}")
         tracer.set_stage(PipelineStage.ASSEMBLE)
-        context_id = request.parcel_id  # Use parcel_id as context_id
+        # 🔥 FIXED: Use context_id from request (UUID from frontend) or fallback to parcel_id
+        context_id = request.context_id or request.parcel_id
         
         # Build Phase 3.5D assembled_data from pipeline result
         # 🔥 CRITICAL: Convert all dataclass objects to primitive dicts for JSON serialization
@@ -708,33 +721,84 @@ async def generate_comprehensive_report(request: ReportGenerationRequest):
     try:
         start_time = time.time()
         
-        # Check if pipeline results exist
-        if request.parcel_id not in results_cache:
-            raise HTTPException(
-                status_code=404,
-                detail=f"No pipeline results for {request.parcel_id}. Run /analyze first."
-            )
+        # 🔥 FIXED: Use context_id from request (UUID from frontend)
+        context_id = request.context_id or request.parcel_id
+        logger.info(f"📄 Generating comprehensive report for context_id: {context_id}")
         
-        result = results_cache[request.parcel_id]
+        # 🔥 Step 1: Load frozen context from storage (Redis/Memory/DB)
+        frozen_context = context_storage.get_frozen_context(context_id)
         
-        # Generate report data (simplified - full implementation would use report composers)
-        report_data = {
-            "executive_summary": {
-                "land_value": result.appraisal.land_value,
-                "confidence_level": result.appraisal.confidence_metrics.confidence_level,
-                "lh_decision": result.lh_review.decision,
-                "lh_score": result.lh_review.total_score,
-                "recommendation": result.appraisal.recommendation
-            },
-            "detailed_analysis": {
-                "land_info": result.land.to_dict() if hasattr(result.land, 'to_dict') else {},
-                "appraisal": result.appraisal.to_dict() if hasattr(result.appraisal, 'to_dict') else {},
-                "housing_type": result.housing_type.to_dict() if hasattr(result.housing_type, 'to_dict') else {},
-                "capacity": result.capacity.to_dict() if hasattr(result.capacity, 'to_dict') else {},
-                "feasibility": result.feasibility.to_dict() if hasattr(result.feasibility, 'to_dict') else {},
-                "lh_review": result.lh_review.to_dict() if hasattr(result.lh_review, 'to_dict') else {}
+        if not frozen_context:
+            missing_modules = []
+            # Try to find from cache
+            if request.parcel_id in results_cache:
+                result = results_cache[request.parcel_id]
+            else:
+                # No data found
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"필수 분석 데이터가 누락되었습니다: M2, M3, M4, M5\n\n💡 해결 방법:\n1. M2-M6 파이프라인을 완료해주세요\n2. 각 모듈 분석이 정상적으로 완료되었는지 확인하세요\n3. Context ID: {context_id}"
+                )
+        else:
+            # Load modules from frozen context
+            logger.info(f"✅ Loaded frozen context: {context_id}")
+            modules = frozen_context.get('modules', {})
+            
+            # Validate that all required modules exist
+            required_modules = ['M2', 'M3', 'M4', 'M5']
+            missing_modules = [m for m in required_modules if m not in modules or not modules[m]]
+            
+            if missing_modules:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"필수 분석 데이터가 누락되었습니다: {', '.join(missing_modules)}\n\n💡 해결 방법:\n1. M2-M6 파이프라인을 완료해주세요\n2. 각 모듈 분석이 정상적으로 완료되었는지 확인하세요\n3. Context ID: {context_id}"
+                )
+            
+            # Use frozen context data
+            result = None  # Will use frozen_context directly for report generation
+        
+        # Generate report data from frozen_context or cached result
+        if frozen_context and result is None:
+            # Use frozen context
+            modules = frozen_context.get('modules', {})
+            m6_result = frozen_context.get('m6_result', {})
+            
+            report_data = {
+                "executive_summary": {
+                    "land_value": modules.get('M2', {}).get('summary', {}).get('land_value', 0),
+                    "confidence_level": "HIGH" if modules.get('M2', {}).get('summary', {}).get('confidence_pct', 0) >= 80 else "MEDIUM",
+                    "lh_decision": m6_result.get('judgement', 'N/A'),
+                    "lh_score": m6_result.get('lh_score_total', 0),
+                    "recommendation": "권장" if m6_result.get('lh_score_total', 0) >= 80 else "보완 필요"
+                },
+                "detailed_analysis": {
+                    "land_info": modules.get('M1', {}),
+                    "appraisal": modules.get('M2', {}),
+                    "housing_type": modules.get('M3', {}),
+                    "capacity": modules.get('M4', {}),
+                    "feasibility": modules.get('M5', {}),
+                    "lh_review": m6_result
+                }
             }
-        }
+        else:
+            # Use cached result (backward compatibility)
+            report_data = {
+                "executive_summary": {
+                    "land_value": result.appraisal.land_value,
+                    "confidence_level": result.appraisal.confidence_metrics.confidence_level,
+                    "lh_decision": result.lh_review.decision,
+                    "lh_score": result.lh_review.total_score,
+                    "recommendation": result.appraisal.recommendation
+                },
+                "detailed_analysis": {
+                    "land_info": result.land.to_dict() if hasattr(result.land, 'to_dict') else {},
+                    "appraisal": result.appraisal.to_dict() if hasattr(result.appraisal, 'to_dict') else {},
+                    "housing_type": result.housing_type.to_dict() if hasattr(result.housing_type, 'to_dict') else {},
+                    "capacity": result.capacity.to_dict() if hasattr(result.capacity, 'to_dict') else {},
+                    "feasibility": result.feasibility.to_dict() if hasattr(result.feasibility, 'to_dict') else {},
+                    "lh_review": result.lh_review.to_dict() if hasattr(result.lh_review, 'to_dict') else {}
+                }
+            }
         
         generation_time_ms = (time.time() - start_time) * 1000
         
@@ -770,27 +834,52 @@ async def generate_pre_report(request: ReportGenerationRequest):
     try:
         start_time = time.time()
         
-        # Check if pipeline results exist
-        if request.parcel_id not in results_cache:
-            raise HTTPException(
-                status_code=404,
-                detail=f"No pipeline results for {request.parcel_id}. Run /analyze first."
-            )
+        # 🔥 FIXED: Use context_id from request (UUID from frontend)
+        context_id = request.context_id or request.parcel_id
+        logger.info(f"📄 Generating pre-report for context_id: {context_id}")
         
-        result = results_cache[request.parcel_id]
+        # 🔥 Step 1: Load frozen context from storage
+        frozen_context = context_storage.get_frozen_context(context_id)
+        
+        if not frozen_context:
+            if request.parcel_id in results_cache:
+                result = results_cache[request.parcel_id]
+            else:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"필수 분석 데이터가 누락되었습니다\n\n💡 해결 방법:\n1. M2-M6 파이프라인을 완료해주세요\n2. Context ID: {context_id}"
+                )
+        else:
+            result = None  # Will use frozen_context
         
         # Generate simplified 2-page pre-report data
-        report_data = {
-            "executive_summary": {
-                "land_value": result.appraisal.land_value,
-                "confidence_level": result.appraisal.confidence_metrics.confidence_level,
-                "recommended_housing_type": result.housing_type.selected_type if hasattr(result.housing_type, 'selected_type') else "N/A",
-                "recommended_units": result.capacity.unit_plan.recommended_units if hasattr(result.capacity, 'unit_plan') else 0,
-                "npv_public": result.feasibility.npv_public if hasattr(result.feasibility, 'npv_public') else 0,
-                "lh_decision": result.lh_review.decision,
-                "lh_score": result.lh_review.total_score
+        if frozen_context and result is None:
+            modules = frozen_context.get('modules', {})
+            m6_result = frozen_context.get('m6_result', {})
+            
+            report_data = {
+                "executive_summary": {
+                    "land_value": modules.get('M2', {}).get('summary', {}).get('land_value', 0),
+                    "confidence_level": "HIGH" if modules.get('M2', {}).get('summary', {}).get('confidence_pct', 0) >= 80 else "MEDIUM",
+                    "recommended_housing_type": modules.get('M3', {}).get('summary', {}).get('recommended_type', 'N/A'),
+                    "recommended_units": modules.get('M4', {}).get('summary', {}).get('legal_units', 0),
+                    "npv_public": modules.get('M5', {}).get('summary', {}).get('npv_public', 0),
+                    "lh_decision": m6_result.get('judgement', 'N/A'),
+                    "lh_score": m6_result.get('lh_score_total', 0)
+                }
             }
-        }
+        else:
+            report_data = {
+                "executive_summary": {
+                    "land_value": result.appraisal.land_value,
+                    "confidence_level": result.appraisal.confidence_metrics.confidence_level,
+                    "recommended_housing_type": result.housing_type.selected_type if hasattr(result.housing_type, 'selected_type') else "N/A",
+                    "recommended_units": result.capacity.unit_plan.recommended_units if hasattr(result.capacity, 'unit_plan') else 0,
+                    "npv_public": result.feasibility.npv_public if hasattr(result.feasibility, 'npv_public') else 0,
+                    "lh_decision": result.lh_review.decision,
+                    "lh_score": result.lh_review.total_score
+                }
+            }
         
         generation_time_ms = (time.time() - start_time) * 1000
         
@@ -826,31 +915,60 @@ async def generate_lh_decision_report(request: ReportGenerationRequest):
     try:
         start_time = time.time()
         
-        # Check if pipeline results exist
-        if request.parcel_id not in results_cache:
-            raise HTTPException(
-                status_code=404,
-                detail=f"No pipeline results for {request.parcel_id}. Run /analyze first."
-            )
+        # 🔥 FIXED: Use context_id from request (UUID from frontend)
+        context_id = request.context_id or request.parcel_id
+        logger.info(f"📄 Generating LH decision report for context_id: {context_id}")
         
-        result = results_cache[request.parcel_id]
+        # 🔥 Step 1: Load frozen context from storage
+        frozen_context = context_storage.get_frozen_context(context_id)
+        
+        if not frozen_context:
+            if request.parcel_id in results_cache:
+                result = results_cache[request.parcel_id]
+            else:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"필수 분석 데이터가 누락되었습니다\n\n💡 해결 방법:\n1. M2-M6 파이프라인을 완료해주세요\n2. Context ID: {context_id}"
+                )
+        else:
+            result = None  # Will use frozen_context
         
         # Generate LH decision-focused report data
-        report_data = {
-            "lh_review": {
-                "decision": result.lh_review.decision,
-                "total_score": result.lh_review.total_score,
-                "grade": result.lh_review.grade if hasattr(result.lh_review, 'grade') else "N/A",
-                "section_scores": result.lh_review.score_breakdown.to_dict() if hasattr(result.lh_review, 'score_breakdown') and hasattr(result.lh_review.score_breakdown, 'to_dict') else {},
-                "decision_rationale": result.lh_review.decision_rationale if hasattr(result.lh_review, 'decision_rationale') else "N/A"
-            },
-            "context": {
-                "land_value": result.appraisal.land_value,
-                "housing_type": result.housing_type.selected_type if hasattr(result.housing_type, 'selected_type') else "N/A",
-                "total_units": result.capacity.unit_plan.recommended_units if hasattr(result.capacity, 'unit_plan') else 0,
-                "npv_public": result.feasibility.npv_public if hasattr(result.feasibility, 'npv_public') else 0
+        if frozen_context and result is None:
+            modules = frozen_context.get('modules', {})
+            m6_result = frozen_context.get('m6_result', {})
+            
+            report_data = {
+                "lh_review": {
+                    "decision": m6_result.get('judgement', 'N/A'),
+                    "total_score": m6_result.get('lh_score_total', 0),
+                    "grade": m6_result.get('grade', 'N/A'),
+                    "section_scores": m6_result.get('section_scores', {}),
+                    "decision_rationale": "💡 LH심사 결과를 기반으로 한 판단"
+                },
+                "context": {
+                    "land_value": modules.get('M2', {}).get('summary', {}).get('land_value', 0),
+                    "housing_type": modules.get('M3', {}).get('summary', {}).get('recommended_type', 'N/A'),
+                    "total_units": modules.get('M4', {}).get('summary', {}).get('legal_units', 0),
+                    "npv_public": modules.get('M5', {}).get('summary', {}).get('npv_public', 0)
+                }
             }
-        }
+        else:
+            report_data = {
+                "lh_review": {
+                    "decision": result.lh_review.decision,
+                    "total_score": result.lh_review.total_score,
+                    "grade": result.lh_review.grade if hasattr(result.lh_review, 'grade') else "N/A",
+                    "section_scores": result.lh_review.score_breakdown.to_dict() if hasattr(result.lh_review, 'score_breakdown') and hasattr(result.lh_review.score_breakdown, 'to_dict') else {},
+                    "decision_rationale": result.lh_review.decision_rationale if hasattr(result.lh_review, 'decision_rationale') else "N/A"
+                },
+                "context": {
+                    "land_value": result.appraisal.land_value,
+                    "housing_type": result.housing_type.selected_type if hasattr(result.housing_type, 'selected_type') else "N/A",
+                    "total_units": result.capacity.unit_plan.recommended_units if hasattr(result.capacity, 'unit_plan') else 0,
+                    "npv_public": result.feasibility.npv_public if hasattr(result.feasibility, 'npv_public') else 0
+                }
+            }
         
         generation_time_ms = (time.time() - start_time) * 1000
         
