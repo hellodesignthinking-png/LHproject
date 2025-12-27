@@ -410,6 +410,8 @@ async def _execute_pipeline(request: PipelineAnalysisRequest, tracer: PipelineTr
     Internal pipeline execution (wrapped by timeout)
     🔥 MUST return PipelineAnalysisResponse or raise PipelineExecutionError
     """
+    print(f"🔥🔥🔥 _execute_pipeline CALLED for {request.parcel_id} 🔥🔥🔥", flush=True)
+    logger.critical(f"🔥🔥🔥 _execute_pipeline CALLED for {request.parcel_id}")
     
     try:
         start_time = time.time()
@@ -457,6 +459,7 @@ async def _execute_pipeline(request: PipelineAnalysisRequest, tracer: PipelineTr
             )
         
         # 🔥 Step 3: Run pipeline with stage tracking
+        logger.critical(f"🔥 STEP 3: Running pipeline for {request.parcel_id}")
         logger.info(f"🚀 Running 6-MODULE pipeline for {request.parcel_id}")
         
         try:
@@ -482,21 +485,37 @@ async def _execute_pipeline(request: PipelineAnalysisRequest, tracer: PipelineTr
         
         # Cache results
         results_cache[request.parcel_id] = result
+        logger.critical(f"🔥 STEP 3 DONE: Results cached for {request.parcel_id}")
         
         # 🔥 Step 4: ASSEMBLE - Convert PipelineResult to Phase 3.5D assembled_data format
+        logger.critical(f"🔥 STEP 4: ASSEMBLE starting for {request.parcel_id}")
         tracer.set_stage(PipelineStage.ASSEMBLE)
         context_id = request.parcel_id  # Use parcel_id as context_id
         
         # Build Phase 3.5D assembled_data from pipeline result
+        # 🔥 CRITICAL: Convert all dataclass objects to primitive dicts for JSON serialization
+        def to_serializable(obj):
+            """Recursively convert dataclass and complex objects to dict"""
+            if hasattr(obj, 'to_dict'):
+                return obj.to_dict()
+            elif hasattr(obj, '__dict__'):
+                return {k: to_serializable(v) for k, v in obj.__dict__.items()}
+            elif isinstance(obj, (list, tuple)):
+                return [to_serializable(item) for item in obj]
+            elif isinstance(obj, dict):
+                return {k: to_serializable(v) for k, v in obj.items()}
+            else:
+                return obj
+        
         assembled_data = {
             "m6_result": {
                 "lh_score_total": result.lh_review.total_score,
                 "judgement": result.lh_review.decision,
                 "grade": result.lh_review.grade if hasattr(result.lh_review, 'grade') else 'N/A',
                 "fatal_reject": False,
-                "deduction_reasons": getattr(result.lh_review, 'deduction_reasons', []),
-                "improvement_points": getattr(result.lh_review, 'improvement_suggestions', []),
-                "section_scores": getattr(result.lh_review, 'section_scores', {})
+                "deduction_reasons": to_serializable(getattr(result.lh_review, 'deduction_reasons', [])),
+                "improvement_points": to_serializable(getattr(result.lh_review, 'improvement_suggestions', [])),
+                "section_scores": to_serializable(getattr(result.lh_review, 'section_scores', {}))
             },
             "modules": {
                 "M2": {
@@ -518,7 +537,18 @@ async def _execute_pipeline(request: PipelineAnalysisRequest, tracer: PipelineTr
                         "recommended_type": result.housing_type.selected_type,
                         "total_score": getattr(result.housing_type, 'total_score', 85.0),
                         "demand_score": getattr(result.housing_type, 'demand_score', 90.0),
-                        "type_scores": getattr(result.housing_type, 'type_scores', {})
+                        "type_scores": {
+                            type_key: {
+                                "type_name": score.type_name,
+                                "type_code": score.type_code,
+                                "total_score": score.total_score,
+                                "location_score": score.location_score,
+                                "accessibility_score": score.accessibility_score,
+                                "poi_score": score.poi_score,
+                                "demand_prediction": score.demand_prediction
+                            }
+                            for type_key, score in getattr(result.housing_type, 'type_scores', {}).items()
+                        } if hasattr(result.housing_type, 'type_scores') else {}
                     },
                     "details": {},
                     "raw_data": {}
@@ -559,19 +589,30 @@ async def _execute_pipeline(request: PipelineAnalysisRequest, tracer: PipelineTr
             "_frozen": True,
             "_context_id": context_id
         }
+        logger.critical(f"🔥 assembled_data created with keys: {list(assembled_data.keys())}")
         
         # 🔥 Step 5: SAVE - Store in context_storage
+        logger.critical(f"🔥 STEP 5: SAVE starting for {context_id}")
+        logger.critical(f"🔍 DEBUG: About to save context_id={context_id}, parcel_id={request.parcel_id}")
+        logger.critical(f"🔍 DEBUG: assembled_data keys={list(assembled_data.keys())}")
+        
         tracer.set_stage(PipelineStage.SAVE)
         try:
-            context_storage.store_frozen_context(
+            logger.critical(f"🔍 DEBUG: Calling store_frozen_context...")
+            success = context_storage.store_frozen_context(
                 context_id=context_id,
                 land_context=assembled_data,
                 ttl_hours=24,
                 parcel_id=request.parcel_id
             )
-            logger.info(f"✅ Pipeline results saved to context_storage: {context_id}")
+            logger.critical(f"🔍 DEBUG: store_frozen_context returned: {success}")
+            
+            if success:
+                logger.critical(f"✅ Pipeline results saved to context_storage: {context_id}")
+            else:
+                logger.warning(f"⚠️ store_frozen_context returned False for: {context_id}")
         except Exception as storage_err:
-            logger.error(f"⚠️ Failed to save to context_storage: {storage_err}")
+            logger.error(f"⚠️ Failed to save to context_storage: {storage_err}", exc_info=True)
             raise tracer.wrap(
                 storage_err,
                 reason_code=ReasonCode.STORAGE_ERROR,

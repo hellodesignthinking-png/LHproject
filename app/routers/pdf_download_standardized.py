@@ -215,31 +215,34 @@ async def download_module_pdf(
             return result
         
         # ✅ STEP 4: assembled_data 표준 스키마 생성 (Phase 3.5F)
+        # 🔥 CRITICAL: Use modules from frozen_context if available (Phase 3.5D format)
+        modules_data = frozen_context.get('modules', {})
+        
         assembled_data = {
             "m6_result": m6_result,
             "modules": {
                 "M1": {
-                    "summary": safe_get_module(frozen_context, 'M1'),
+                    "summary": modules_data.get('M1', {}).get('summary', safe_get_module(frozen_context, 'M1')),
                     "details": {},
                     "raw_data": {}
                 },
                 "M2": {
-                    "summary": safe_get_module(frozen_context, 'M2'),
+                    "summary": modules_data.get('M2', {}).get('summary', safe_get_module(frozen_context, 'M2')),
                     "details": {},
                     "raw_data": {}
                 },
                 "M3": {
-                    "summary": safe_get_module(frozen_context, 'M3'),
+                    "summary": modules_data.get('M3', {}).get('summary', safe_get_module(frozen_context, 'M3')),
                     "details": {},
                     "raw_data": {}
                 },
                 "M4": {
-                    "summary": safe_get_module(frozen_context, 'M4'),
+                    "summary": modules_data.get('M4', {}).get('summary', safe_get_module(frozen_context, 'M4')),
                     "details": {},
                     "raw_data": {}
                 },
                 "M5": {
-                    "summary": safe_get_module(frozen_context, 'M5'),
+                    "summary": modules_data.get('M5', {}).get('summary', safe_get_module(frozen_context, 'M5')),
                     "details": {},
                     "raw_data": {}
                 }

@@ -100,7 +100,7 @@ class ContextStorageService:
             key = f"context:{context_id}"
             value = json.dumps(context_data, ensure_ascii=False)
             
-            # STEP 1: Try Redis (PRIMARY)
+            # STEP 1: Try Redis (PRIMARY), fallback to memory if fails
             if redis_client:
                 try:
                     redis_client.setex(
@@ -112,8 +112,15 @@ class ContextStorageService:
                     logger.info(f"✅ [Redis] Context stored: {context_id} (TTL: {ttl_hours}h)")
                 except Exception as redis_err:
                     logger.error(f"❌ [Redis] Failed to store: {redis_err}")
+                    # Fallback to memory storage when Redis fails
+                    _memory_storage[key] = {
+                        'data': context_data,
+                        'expires_at': None
+                    }
+                    redis_success = True
+                    logger.info(f"✅ [Memory] Context stored (Redis failed): {context_id}")
             else:
-                # Fallback to memory storage
+                # Fallback to memory storage when Redis is not available
                 _memory_storage[key] = {
                     'data': context_data,
                     'expires_at': None
@@ -203,6 +210,13 @@ class ContextStorageService:
                     logger.info(f"✅ [Memory] Context retrieved: {context_id}")
                     return context_data
             
+            # 🔥 CRITICAL FIX: Always try in-memory before DB fallback
+            # This ensures data stored in memory (when Redis fails) can be retrieved
+            if key in _memory_storage:
+                context_data = _memory_storage[key]['data']
+                logger.info(f"✅ [Memory] Context retrieved (pre-DB check): {context_id}")
+                return context_data
+            
             # STEP 2: Redis miss → Try DB Snapshot (FALLBACK)
             logger.info(f"⚠️ [Redis] Context not found, trying DB fallback: {context_id}")
             
@@ -237,10 +251,20 @@ class ContextStorageService:
                     return context_data
                 else:
                     logger.warning(f"⚠️ [DB] Context not found: {context_id}")
+                    # 🔥 FINAL FALLBACK: Try memory one last time before giving up
+                    if key in _memory_storage:
+                        context_data = _memory_storage[key]['data']
+                        logger.info(f"✅ [Memory] Context retrieved (final fallback): {context_id}")
+                        return context_data
                     return None
                     
             except Exception as db_err:
                 logger.error(f"❌ [DB] Fallback retrieval failed: {db_err}")
+                # 🔥 CRITICAL: Try memory storage as final resort
+                if key in _memory_storage:
+                    context_data = _memory_storage[key]['data']
+                    logger.info(f"✅ [Memory] Context retrieved (after DB error): {context_id}")
+                    return context_data
                 return None
             finally:
                 if 'db' in locals():
