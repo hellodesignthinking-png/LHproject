@@ -37,6 +37,7 @@ from datetime import datetime
 import uuid
 import logging
 import time
+import asyncio  # 🔥 NEW: For timeout handling
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Query
 from fastapi.responses import JSONResponse
@@ -68,6 +69,9 @@ logger = logging.getLogger(__name__)
 
 # Router
 router = APIRouter(prefix="/api/v4/pipeline", tags=["ZeroSite v4.0 Pipeline"])
+
+# 🔥 CRITICAL: Hard timeout to prevent infinite loading
+PIPELINE_TIMEOUT_SEC = 15  # Max time before returning error
 
 # 🔥 NEW: Exception handler for PipelineExecutionError
 @router.exception_handler(PipelineExecutionError)
@@ -366,16 +370,55 @@ async def pipeline_analyze_options():
 @router.post("/analyze", response_model=PipelineAnalysisResponse)
 async def run_pipeline_analysis(request: PipelineAnalysisRequest):
     """
-    Run full 6-MODULE pipeline analysis
+    Run full 6-MODULE pipeline analysis with GUARANTEED response
     
     Executes: M1 (Land Info) → M2 (Appraisal) 🔒 → M3 (LH Demand) 
               → M4 (Capacity) → M5 (Feasibility) → M6 (LH Review)
     
     Returns:
         Comprehensive analysis results with all Context data
+        
+    🔥 CRITICAL: ALWAYS returns response within PIPELINE_TIMEOUT_SEC
     """
-    # 🔥 Step 1: Initialize PipelineTracer
+    # 🔥 Step 1: Initialize PipelineTracer BEFORE timeout wrapper
     tracer = PipelineTracer(parcel_id=request.parcel_id)
+    
+    # 🔥 Step 2: Wrap entire execution in timeout
+    try:
+        result = await asyncio.wait_for(
+            _execute_pipeline(request, tracer),
+            timeout=PIPELINE_TIMEOUT_SEC
+        )
+        return result
+        
+    except asyncio.TimeoutError:
+        # 🔥 TIMEOUT: Return error immediately
+        logger.error(f"⏰ Pipeline timeout after {PIPELINE_TIMEOUT_SEC}s for {request.parcel_id}")
+        raise PipelineExecutionError(
+            stage=tracer.current_stage or PipelineStage.M2,
+            reason_code=ReasonCode.EXTERNAL_API_TIMEOUT,
+            message_ko=f"분석 시간이 {PIPELINE_TIMEOUT_SEC}초를 초과했습니다. 잠시 후 다시 시도해 주세요.",
+            debug_id=tracer.trace_id,
+            details={"timeout_sec": PIPELINE_TIMEOUT_SEC}
+        )
+    except PipelineExecutionError:
+        # Already wrapped - just re-raise (will be caught by exception handler)
+        raise
+    except Exception as e:
+        # 🔥 SAFETY NET: Unknown error - wrap and return
+        logger.error(f"❌ Unexpected error in pipeline: {e}", exc_info=True)
+        raise tracer.wrap_error(
+            e,
+            reason_code=ReasonCode.UNKNOWN,
+            details={"error_type": type(e).__name__, "parcel_id": request.parcel_id}
+        )
+
+
+async def _execute_pipeline(request: PipelineAnalysisRequest, tracer: PipelineTracer):
+    """
+    Internal pipeline execution (wrapped by timeout)
+    🔥 MUST return PipelineAnalysisResponse or raise PipelineExecutionError
+    """
     
     try:
         start_time = time.time()
