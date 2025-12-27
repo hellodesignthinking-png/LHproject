@@ -23,6 +23,25 @@ from dataclasses import dataclass
 logger = logging.getLogger(__name__)
 
 
+# ============================================================================
+# Phase 2/3: Exception for Report Consistency Violations
+# ============================================================================
+
+class ReportConsistencyError(Exception):
+    """
+    M6 Single Source of Truth 위반 시 발생
+    
+    Phase 2/3 원칙:
+    - 보고서 간 점수/판단/등급이 불일치하면 생성 중단
+    - FAIL FAST: 문제가 있으면 즉시 실패
+    """
+    pass
+
+
+# ============================================================================
+# M6 Single Source of Truth Data Structures
+# ============================================================================
+
 class M6Judgement(str, Enum):
     """M6 최종 판단 (Single Source of Truth)"""
     GO = "GO"
@@ -273,6 +292,9 @@ class LandownerSummaryReport(M6CenteredReportBase):
         return {
             "report_type": "landowner_summary",
             "report_name": "토지주 요약 보고서",
+            # Phase 3: 표준 judgement 반드시 포함 (검증용)
+            "judgement": self.m6_truth.judgement.value,
+            # 토지주 친화적 표현 (사람이 읽을 용도)
             "simple_judgement": judgement_map[self.m6_truth.judgement],
             "simple_message": simple_message,
             "key_points": {
@@ -489,7 +511,13 @@ def create_m6_centered_report(
 
 
 __all__ = [
+    # Core Data Structures
     "M6SingleSourceOfTruth",
+    "M6Judgement",
+    "M6Grade",
+    # Exceptions
+    "ReportConsistencyError",
+    # Report Generators
     "M6CenteredReportBase",
     "AllInOneReport",
     "LandownerSummaryReport",
@@ -497,5 +525,6 @@ __all__ = [
     "FinancialFeasibilityReport",
     "QuickCheckReport",
     "PresentationReport",
+    # Factory Function
     "create_m6_centered_report"
 ]

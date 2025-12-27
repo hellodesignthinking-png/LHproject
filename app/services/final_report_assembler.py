@@ -27,6 +27,13 @@ Date: 2025-12-27
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 
+# Phase 2/3: Import ReportConsistencyError from M6 module
+from app.services.m6_centered_report_base import (
+    create_m6_centered_report,
+    ReportConsistencyError,
+    M6SingleSourceOfTruth
+)
+
 from app.core.canonical_data_contract import (
     M2Summary, M3Summary, M4Summary, M5Summary, M6Summary
 )
