@@ -1,511 +1,460 @@
-# 🚀 ZeroSite v4.0: Production Deployment Guide
+# ZeroSite v4.0 - Complete Deployment Guide
 
-**Date**: 2025-12-22  
-**Version**: v4.0 (60-Page Professional Consulting Reports)  
-**PR**: [#11](https://github.com/hellodesignthinking-png/LHproject/pull/11)  
-**Branch**: `feature/expert-report-generator` → `main`
+**🚀 Production-Ready Enterprise System**
 
 ---
 
-## 📋 Pre-Deployment Checklist
+## 📦 Quick Start Options
 
-### ✅ Code Quality
-- [x] All 6 report types fully implemented and tested
-- [x] Zero N/A in core data fields
-- [x] Professional consulting-level content (40-60 pages per report)
-- [x] Clear differentiation across report types
-- [x] All commits follow conventional commit format
-- [x] Code review completed
-
-### ✅ Testing
-- [x] Unit tests pass
-- [x] Integration tests pass
-- [x] All 6 reports generate successfully
-- [x] Data binding verified (M2-M6 canonical data)
-- [x] Content quality verified (3+ paragraphs per metric)
-
-### ✅ Documentation
-- [x] `FINAL_60PAGE_COMPLETION_REPORT.md` created
-- [x] `DEPLOYMENT_GUIDE.md` created
-- [x] Code comments updated
-- [x] API documentation reviewed
-
----
-
-## 🔄 Deployment Steps
-
-### **Step 1: Merge PR #11 to Main**
+### Option 1: Docker Compose (Recommended for Development)
 
 ```bash
-# Switch to main branch
-git checkout main
+# 1. Clone repository
+git clone https://github.com/hellodesignthinking-png/LHproject.git
+cd LHproject
 
-# Pull latest changes
-git pull origin main
+# 2. Create environment file
+cat > .env << EOF
+DATABASE_URL=postgresql+asyncpg://zerosite:zerosite123@db:5432/zerosite_db
+REDIS_URL=redis://redis:6379/0
+SECRET_KEY=your-secret-key-change-in-production
+EOF
 
-# Merge feature branch (use squash merge for clean history)
-git merge --squash feature/expert-report-generator
+# 3. Start services
+docker-compose up -d
 
-# Commit the squashed changes
-git commit -m "feat: Implement 60-page professional consulting reports for all 6 types
+# 4. Initialize database
+docker-compose exec web python -c "
+from app.core.database import init_db
+import asyncio
+asyncio.run(init_db())
+"
 
-BREAKING CHANGE: Final report API now generates 40-60 page professional consulting reports
-
-Features:
-- ✅ All 6 report types expanded to professional consulting level
-- ✅ Policy/institutional analysis (8 pages)
-- ✅ Land value assessment (10 pages)  
-- ✅ Financial structure analysis (10 pages)
-- ✅ Risk analysis (4 pages - NEW)
-- ✅ Clear differentiation by audience (LH, landowner, investor)
-- ✅ Zero N/A in core data fields
-- ✅ 3+ paragraphs interpretation per metric
-
-Quality Metrics:
-- Content Completeness: 100%
-- Data Binding: 100%
-- Narrative Consistency: 100%
-- Report Differentiation: 100%
-
-Report Types:
-① 종합 최종보고서 (All-in-One): 944 lines (~60p)
-② 토지주 제출용 요약 (Landowner): 608 lines (~40p)
-③ LH 기술검증 (LH Technical): 607 lines (~40p)
-④ 사업성·투자 (Financial): 465 lines (~31p)
-⑤ 사전검토 (Quick Check): 441 lines (~29p)
-⑥ 발표용 (Presentation): 507 lines (~33p)
-
-Modified Files:
-- app/services/final_report_assembler.py (+800 lines)
-- app/services/final_report_html_renderer.py (+600 lines)
-
-Closes #11"
-
-# Push to main
-git push origin main
-
-# Tag the release
-git tag -a v4.0.0 -m "Release v4.0.0: 60-Page Professional Consulting Reports"
-git push origin v4.0.0
+# 5. Access application
+echo "✅ Application running at http://localhost:80"
 ```
 
-### **Step 2: Deploy to Production Environment**
-
-#### Option A: Docker Deployment (Recommended)
+### Option 2: Kubernetes (Production)
 
 ```bash
-# Build production Docker image
-docker build -t zerosite-v4:latest .
+# 1. Set up kubectl and connect to cluster
+kubectl cluster-info
 
-# Tag for production
-docker tag zerosite-v4:latest zerosite-v4:v4.0.0
+# 2. Create namespace
+kubectl create namespace zerosite
 
-# Push to container registry (if using)
-# docker push your-registry/zerosite-v4:v4.0.0
+# 3. Apply configurations
+kubectl apply -f k8s/config.yaml -n zerosite
+kubectl apply -f k8s/postgres.yaml -n zerosite
+kubectl apply -f k8s/redis.yaml -n zerosite
+kubectl apply -f k8s/deployment.yaml -n zerosite
 
-# Deploy to production
-docker-compose -f docker-compose.prod.yml up -d
+# 4. Wait for deployment
+kubectl wait --for=condition=available --timeout=300s deployment/zerosite-api -n zerosite
 
-# Verify deployment
-docker ps
-docker logs zerosite-v4-app
+# 5. Get external IP
+kubectl get service zerosite-service -n zerosite
 ```
 
-#### Option B: Direct Server Deployment
+### Option 3: Manual Installation
 
 ```bash
-# Pull latest code on production server
-ssh your-production-server
-cd /path/to/webapp
-git pull origin main
+# 1. Install Python 3.9+
+python3 --version
 
-# Install/update dependencies
+# 2. Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# 3. Install dependencies
 pip install -r requirements.txt
 
-# Restart application
-sudo systemctl restart zerosite
+# 4. Set up PostgreSQL & Redis
+# Install PostgreSQL 14
+sudo apt-get install postgresql-14
 
-# Or using PM2
-pm2 restart zerosite
+# Install Redis
+sudo apt-get install redis-server
 
-# Verify service is running
-sudo systemctl status zerosite
-# Or
-pm2 status
-```
+# 5. Create database
+sudo -u postgres psql
+CREATE DATABASE zerosite_db;
+CREATE USER zerosite WITH PASSWORD 'zerosite123';
+GRANT ALL PRIVILEGES ON DATABASE zerosite_db TO zerosite;
+\q
 
-#### Option C: Cloud Platform Deployment
+# 6. Initialize database
+python -c "
+from app.core.database import init_db
+import asyncio
+asyncio.run(init_db())
+"
 
-**Heroku:**
-```bash
-git push heroku main
-heroku logs --tail
-```
-
-**AWS Elastic Beanstalk:**
-```bash
-eb deploy production
-eb status
-```
-
-**Google Cloud Run:**
-```bash
-gcloud run deploy zerosite-v4 --source .
-```
-
-### **Step 3: Post-Deployment Verification**
-
-```bash
-# Test health endpoint
-curl https://your-production-domain/health
-
-# Test mock canonical data injection
-curl -X POST https://your-production-domain/api/test/inject-mock-canonical
-
-# Extract context_id from response
-CONTEXT_ID="your-context-id"
-
-# Test all 6 report types
-for TYPE in all_in_one landowner_summary lh_technical financial_feasibility quick_check presentation; do
-    echo "Testing: $TYPE"
-    curl "https://your-production-domain/api/v4/reports/final/${TYPE}/html?context_id=${CONTEXT_ID}" \
-         -o "prod_test_${TYPE}.html"
-    echo "✅ Generated: prod_test_${TYPE}.html"
-done
-
-# Verify line counts match expectations
-wc -l prod_test_*.html
-
-# Expected:
-# ~944 lines: all_in_one
-# ~608 lines: landowner_summary
-# ~607 lines: lh_technical
-# ~465 lines: financial_feasibility
-# ~441 lines: quick_check
-# ~507 lines: presentation
-```
-
-### **Step 4: Frontend Integration**
-
-Update frontend to use new report endpoints:
-
-```javascript
-// Example: Update frontend API calls
-
-// Old endpoint (deprecated)
-// GET /api/reports/final/{type}
-
-// New endpoint (v4.0)
-GET /api/v4/reports/final/{type}/html?context_id={context_id}
-
-// Report types:
-// - all_in_one
-// - landowner_summary
-// - lh_technical
-// - financial_feasibility
-// - quick_check
-// - presentation
-
-// Example usage:
-async function generateFinalReport(contextId, reportType) {
-    const response = await fetch(
-        `/api/v4/reports/final/${reportType}/html?context_id=${contextId}`
-    );
-    const html = await response.text();
-    
-    // Display or download report
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
-}
-
-// Generate PDF (if PDF endpoint is available)
-async function generateFinalReportPDF(contextId, reportType) {
-    const response = await fetch(
-        `/api/v4/reports/final/${reportType}/pdf?context_id=${contextId}`
-    );
-    const blob = await response.blob();
-    
-    // Download PDF
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${reportType}_report.pdf`;
-    a.click();
-}
+# 7. Run application
+uvicorn api_server_secured:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
 ---
 
-## 🔧 Configuration
+## 🔐 Security Configuration
 
-### Environment Variables
+### 1. Environment Variables
 
-Ensure these environment variables are set in production:
+Create `.env` file:
 
 ```bash
-# Application
-APP_ENV=production
-DEBUG=False
-
 # Database
-DATABASE_URL=postgresql://user:pass@host:5432/dbname
-
-# Redis (for context storage)
+DATABASE_URL=postgresql+asyncpg://user:password@host:5432/dbname
 REDIS_URL=redis://host:6379/0
 
-# API Settings
-API_BASE_URL=https://your-production-domain
+# Security
+SECRET_KEY=generate-strong-random-key-here
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
 
-# Report Generation
-REPORT_CACHE_TTL=3600
-MAX_CONTEXT_AGE_DAYS=30
+# Email (optional)
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+MAIL_FROM=noreply@zerosite.com
 
-# PDF Generation (if using)
-WKHTMLTOPDF_PATH=/usr/local/bin/wkhtmltopdf
-
-# Logging
-LOG_LEVEL=INFO
-LOG_FILE=/var/log/zerosite/app.log
+# Monitoring (optional)
+SENTRY_DSN=your-sentry-dsn
 ```
 
-### Nginx Configuration (if applicable)
+### 2. Generate Secret Key
 
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-    
-    # Redirect HTTP to HTTPS
-    return 301 https://$server_name$request_uri;
-}
+```python
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
 
-server {
-    listen 443 ssl http2;
-    server_name your-domain.com;
-    
-    ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
-    
-    # Report generation can be slow (60-page reports)
-    proxy_read_timeout 300s;
-    proxy_connect_timeout 300s;
-    
-    location / {
-        proxy_pass http://localhost:8005;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-    
-    # Static files (if any)
-    location /static/ {
-        alias /path/to/webapp/static/;
-        expires 30d;
-    }
+### 3. SSL Certificates
+
+```bash
+# Using Let's Encrypt
+sudo certbot certonly --nginx -d your-domain.com
+
+# Certificates will be in:
+# /etc/letsencrypt/live/your-domain.com/fullchain.pem
+# /etc/letsencrypt/live/your-domain.com/privkey.pem
+```
+
+---
+
+## 📊 Monitoring & Logging
+
+### 1. Prometheus Metrics
+
+Add to `api_server_secured.py`:
+
+```python
+from prometheus_client import Counter, Histogram, generate_latest
+
+# Metrics
+request_count = Counter('http_requests_total', 'Total HTTP requests')
+request_duration = Histogram('http_request_duration_seconds', 'HTTP request duration')
+
+@app.get("/metrics")
+async def metrics():
+    return Response(generate_latest(), media_type="text/plain")
+```
+
+### 2. Grafana Dashboard
+
+```yaml
+# docker-compose.yml - add services
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+  
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+```
+
+### 3. ELK Stack
+
+```yaml
+  elasticsearch:
+    image: elasticsearch:8.11.0
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+  
+  kibana:
+    image: kibana:8.11.0
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+```
+
+---
+
+## 🧪 Testing
+
+### Unit Tests
+
+```bash
+# Run all tests
+pytest tests/ -v
+
+# With coverage
+pytest tests/ --cov=app --cov-report=html
+
+# Specific test
+pytest tests/test_auth.py -v
+```
+
+### Load Testing
+
+```bash
+# Install locust
+pip install locust
+
+# Run load test
+locust -f tests/load_test.py --host=http://localhost:8000
+```
+
+### API Testing
+
+```bash
+# Install httpie
+pip install httpie
+
+# Test login
+http POST localhost:8000/api/v1/auth/token username=admin password=admin123
+
+# Test with token
+http GET localhost:8000/api/v1/auth/me "Authorization: Bearer YOUR_TOKEN"
+```
+
+---
+
+## 🔧 Maintenance
+
+### Database Migrations
+
+```bash
+# Create migration
+alembic revision --autogenerate -m "Add new table"
+
+# Apply migration
+alembic upgrade head
+
+# Rollback
+alembic downgrade -1
+
+# Check current version
+alembic current
+```
+
+### Backup & Restore
+
+```bash
+# Backup PostgreSQL
+docker-compose exec db pg_dump -U zerosite zerosite_db > backup.sql
+
+# Restore
+docker-compose exec -T db psql -U zerosite zerosite_db < backup.sql
+
+# Backup Redis
+docker-compose exec redis redis-cli SAVE
+docker cp zerosite-redis:/data/dump.rdb ./redis_backup.rdb
+```
+
+### Log Rotation
+
+```bash
+# /etc/logrotate.d/zerosite
+/var/log/zerosite/*.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    notifempty
+    create 0640 www-data www-data
+    sharedscripts
+    postrotate
+        systemctl reload zerosite
+    endscript
 }
 ```
 
 ---
 
-## 📊 Monitoring & Observability
+## 📈 Scaling
 
-### Key Metrics to Monitor
-
-1. **Report Generation Time**
-   - Target: < 5 seconds per report
-   - Alert if: > 10 seconds
-
-2. **Report Success Rate**
-   - Target: > 99%
-   - Alert if: < 95%
-
-3. **Data Binding Errors**
-   - Target: 0 N/A values in core fields
-   - Alert if: Any N/A appears in production reports
-
-4. **API Response Times**
-   - `/api/v4/reports/final/{type}/html`: < 5s
-   - `/api/v4/reports/final/{type}/pdf`: < 10s
-
-### Health Check Endpoint
+### Horizontal Scaling (Kubernetes)
 
 ```bash
-# Expected response
-curl https://your-production-domain/health
+# Scale up
+kubectl scale deployment zerosite-api --replicas=10 -n zerosite
 
-{
-    "status": "healthy",
-    "version": "4.0.0",
-    "services": {
-        "database": "connected",
-        "redis": "connected",
-        "report_generator": "operational"
-    }
-}
+# Auto-scaling (already configured in HPA)
+kubectl get hpa zerosite-hpa -n zerosite
 ```
 
-### Log Monitoring
+### Database Read Replicas
+
+```yaml
+# Add to k8s/postgres.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-read
+spec:
+  selector:
+    app: postgres
+    role: replica
+  ports:
+  - port: 5432
+```
+
+### Redis Cluster
 
 ```bash
-# Monitor application logs
-tail -f /var/log/zerosite/app.log | grep "ERROR\|WARNING"
-
-# Monitor report generation
-tail -f /var/log/zerosite/app.log | grep "report_generation"
-
-# Monitor data binding issues
-tail -f /var/log/zerosite/app.log | grep "N/A\|missing_data"
+# Redis Cluster setup
+docker-compose -f docker-compose.redis-cluster.yml up -d
 ```
 
 ---
 
-## 🚨 Rollback Plan
-
-If issues are encountered in production:
-
-### Quick Rollback
-
-```bash
-# Revert to previous version
-git checkout main
-git revert HEAD
-git push origin main
-
-# Or rollback to previous tag
-git checkout v3.9.0
-git tag -a v3.9.1 -m "Rollback to v3.9.0"
-git push origin v3.9.1
-
-# Redeploy previous version
-docker pull your-registry/zerosite-v4:v3.9.0
-docker-compose -f docker-compose.prod.yml up -d
-```
-
-### Communication
-
-If rollback is needed:
-1. Notify stakeholders immediately
-2. Document the issue in GitHub Issues
-3. Schedule post-mortem review
-4. Plan fixes for next deployment
-
----
-
-## 📞 Support & Troubleshooting
+## 🚨 Troubleshooting
 
 ### Common Issues
 
-#### Issue 1: Reports generating blank/empty
-**Solution:**
+#### 1. Database Connection Error
 ```bash
-# Check context_id is valid
-curl https://your-domain/api/contexts/{context_id}
+# Check PostgreSQL status
+docker-compose ps db
 
-# Verify canonical data exists
-# Check Redis or database for context data
+# Check logs
+docker-compose logs db
+
+# Test connection
+docker-compose exec db psql -U zerosite -d zerosite_db -c "SELECT 1;"
 ```
 
-#### Issue 2: Reports still showing N/A values
-**Solution:**
+#### 2. Redis Connection Error
 ```bash
-# Check data assembler logs
-tail -f /var/log/zerosite/app.log | grep "assembler"
+# Check Redis status
+docker-compose ps redis
 
-# Verify M2-M6 canonical summaries are complete
-# Check database: SELECT * FROM canonical_summaries WHERE context_id = ?
+# Test connection
+docker-compose exec redis redis-cli ping
 ```
 
-#### Issue 3: Slow report generation
-**Solution:**
+#### 3. High Memory Usage
 ```bash
-# Check CPU/memory usage
-htop
+# Check container stats
+docker stats
 
-# Optimize report rendering
-# Consider implementing report caching
-# Check database query performance
+# Limit memory
+docker-compose up -d --scale web=2 --memory=2g
+```
+
+#### 4. Slow API Response
+```bash
+# Check logs
+docker-compose logs web | grep "slow"
+
+# Profile endpoint
+python -m cProfile -o profile.stats api_server_secured.py
+
+# Analyze
+python -c "import pstats; p = pstats.Stats('profile.stats'); p.sort_stats('cumulative').print_stats(20)"
 ```
 
 ---
 
-## 🎯 Success Criteria
+## 📋 Checklist
 
-Deployment is considered successful when:
+### Pre-Deployment
+- [ ] Update `SECRET_KEY` in environment variables
+- [ ] Configure database credentials
+- [ ] Set up SSL certificates
+- [ ] Configure CORS origins
+- [ ] Enable firewall rules
+- [ ] Set up backup strategy
 
-- ✅ All 6 report types generate successfully in < 5 seconds
-- ✅ Zero N/A values in core data fields
-- ✅ Reports average 40-60 pages (HTML line count 440-944)
-- ✅ No errors in application logs for 1 hour after deployment
-- ✅ Health check endpoint returns "healthy"
-- ✅ Frontend successfully displays all report types
+### Post-Deployment
+- [ ] Verify health endpoint: `/health`
+- [ ] Test authentication: `/api/v1/auth/token`
+- [ ] Monitor logs for errors
+- [ ] Set up alerts (Prometheus/Grafana)
+- [ ] Configure auto-scaling
+- [ ] Schedule regular backups
 
----
-
-## 📅 Post-Deployment Tasks
-
-### Week 1
-- [ ] Monitor error rates and performance metrics
-- [ ] Collect user feedback from LH reviewers
-- [ ] Collect user feedback from landowners
-- [ ] Collect user feedback from investors
-
-### Week 2
-- [ ] Analyze usage patterns
-- [ ] Identify most/least used report types
-- [ ] Review any reported issues
-- [ ] Plan content refinements based on feedback
-
-### Month 1
-- [ ] Performance optimization review
-- [ ] Content quality assessment
-- [ ] User satisfaction survey
-- [ ] Plan v4.1 enhancements
+### Security
+- [ ] Change default passwords
+- [ ] Enable HTTPS only
+- [ ] Configure rate limiting
+- [ ] Set up WAF (Web Application Firewall)
+- [ ] Enable audit logging
+- [ ] Regular security scans
 
 ---
 
-## 🔄 Continuous Improvement
+## 🎯 Performance Tuning
 
-### Planned Enhancements (Future Versions)
+### Database Optimization
 
-**v4.1 (Optional)**
-- [ ] Add charts/graphs to reports
-- [ ] Optimize PDF conversion styling
-- [ ] Add real estate photos/maps
-- [ ] Custom branding per report type
+```sql
+-- Create indexes
+CREATE INDEX idx_users_username ON users(username);
+CREATE INDEX idx_analysis_jobs_status ON analysis_jobs(status);
 
-**v4.2 (Optional)**
-- [ ] Multi-language support (English version)
-- [ ] Interactive report elements
-- [ ] Export to Word/Excel
-- [ ] Email delivery integration
+-- Analyze tables
+ANALYZE users;
+ANALYZE analysis_jobs;
 
-**v5.0 (Future)**
-- [ ] AI-powered content recommendations
-- [ ] Real-time collaboration features
-- [ ] Advanced analytics dashboard
-- [ ] Mobile app integration
+-- Vacuum
+VACUUM ANALYZE;
+```
 
----
+### Redis Optimization
 
-## 📚 Additional Resources
+```bash
+# redis.conf
+maxmemory 2gb
+maxmemory-policy allkeys-lru
+save 900 1
+save 300 10
+```
 
-- **PR #11**: https://github.com/hellodesignthinking-png/LHproject/pull/11
-- **Completion Report**: `FINAL_60PAGE_COMPLETION_REPORT.md`
-- **API Documentation**: `/docs` (if available)
-- **Architecture Diagram**: TBD
+### Uvicorn Workers
 
----
-
-## ✅ Deployment Approval
-
-**Reviewed by**: _________________  
-**Approved by**: _________________  
-**Date**: _________________  
-
-**Status**: 🟢 **READY FOR PRODUCTION DEPLOYMENT**
+```bash
+# Production setup
+uvicorn api_server_secured:app \
+  --host 0.0.0.0 \
+  --port 8000 \
+  --workers 4 \
+  --loop uvloop \
+  --log-level info
+```
 
 ---
 
-**End of Deployment Guide**
+## 📞 Support
+
+- **Documentation**: https://github.com/hellodesignthinking-png/LHproject
+- **Issues**: https://github.com/hellodesignthinking-png/LHproject/issues
+- **Email**: support@zerosite.com
+
+---
+
+## 📄 License
+
+© 2025 ZeroSite. All Rights Reserved.
+
+---
+
+*Last Updated: 2025-12-27*

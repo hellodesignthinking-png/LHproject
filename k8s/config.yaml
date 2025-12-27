@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: zerosite-config
+data:
+  redis-url: "redis://zerosite-redis:6379/0"
+  environment: "production"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: zerosite-secrets
+type: Opaque
+stringData:
+  database-url: "postgresql+asyncpg://zerosite:CHANGE_ME@zerosite-postgres:5432/zerosite_db"
+  secret-key: "CHANGE_THIS_SECRET_KEY_IN_PRODUCTION"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: zerosite-output-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: standard
