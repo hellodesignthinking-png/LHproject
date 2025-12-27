@@ -65,7 +65,7 @@ class TestScenarioA_NormalFlow:
             }
         }
         
-        self.m1_m5_data = {
+        self.assembled_data = {
             'm1': {'address': '서울특별시 강남구 테헤란로 123', 'area': 1000},
             'm2': {'land_value': 6081933538},
             'm3': {'recommended_type': 'youth'},
@@ -94,7 +94,7 @@ class TestScenarioA_NormalFlow:
             report = create_m6_centered_report(
                 report_type=report_type,
                 m6_result=self.m6_result,
-                m1_m5_data=self.m1_m5_data
+                assembled_data=self.assembled_data
             )
             
             # Phase 3: 표준 judgement 추출
@@ -138,7 +138,7 @@ class TestScenarioA_NormalFlow:
             report = create_m6_centered_report(
                 report_type=report_type,
                 m6_result=self.m6_result,
-                m1_m5_data=self.m1_m5_data
+                assembled_data=self.assembled_data
             )
             
             # Phase 3: 표준 score 추출
@@ -189,7 +189,7 @@ class TestScenarioA_NormalFlow:
             report = create_m6_centered_report(
                 report_type=report_type,
                 m6_result=self.m6_result,
-                m1_m5_data=self.m1_m5_data
+                assembled_data=self.assembled_data
             )
             
             # Phase 3: 표준 grade 추출
@@ -227,7 +227,7 @@ class TestScenarioB_ExtremeChange:
         
         Expected: GO 상태에서 생성된 보고서와 NOGO 상태에서 생성된 보고서가 완전히 다름
         """
-        m1_m5_data = {
+        assembled_data = {
             'm1': {'address': '서울특별시 강남구 테헤란로 123', 'area': 1000},
             'm2': {'land_value': 6081933538},
             'm3': {'recommended_type': 'youth'},
@@ -261,14 +261,14 @@ class TestScenarioB_ExtremeChange:
         report_go = create_m6_centered_report(
             report_type="all_in_one",
             m6_result=m6_go,
-            m1_m5_data=m1_m5_data
+            assembled_data=assembled_data
         )
         
         # NOGO 상태 보고서 생성
         report_nogo = create_m6_centered_report(
             report_type="all_in_one",
             m6_result=m6_nogo,
-            m1_m5_data=m1_m5_data
+            assembled_data=assembled_data
         )
         
         # Phase 3: 표준 추출 로직 사용

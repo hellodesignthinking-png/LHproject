@@ -34,20 +34,35 @@ def get_judgement_color(judgement: str) -> str:
 
 def render_simple_html(report_data: Dict[str, Any]) -> str:
     """
-    간단한 HTML 렌더링 (데이터 복원용)
+    간단한 HTML 렌더링 (Phase 3.5D FAIL FAST)
     
     Args:
         report_data: create_m6_centered_report() 결과
     
     Returns:
         HTML 문자열
+    
+    Raises:
+        DataBindingError: 필수 데이터 누락 또는 N/A 발견 시
     """
+    from app.services.data_contract import DataBindingError
+    
+    # 🔴 Phase 3.5D FAIL FAST: 필수 데이터 검증
+    if not report_data:
+        raise DataBindingError("report_data is empty. Cannot render HTML.")
+    
+    if 'evidence_data' not in report_data:
+        raise DataBindingError("evidence_data is missing. Cannot render HTML.")
     
     # M6 결과 추출
     m6 = report_data.get('m6_scorecard', {})
     judgement = m6.get('judgement', 'N/A')
     total_score = m6.get('total_score', 0)
     grade = m6.get('grade', 'N/A')
+    
+    # 🔴 Phase 3.5D: N/A 체크
+    if judgement == 'N/A' or grade == 'N/A':
+        raise DataBindingError(f"M6 data contains N/A: judgement={judgement}, grade={grade}")
     
     # Evidence 데이터 추출
     evidence = report_data.get('evidence_data', {})
@@ -317,6 +332,15 @@ def render_simple_html(report_data: Dict[str, Any]) -> str:
 </body>
 </html>
 """
+    
+    # 🔴 Phase 3.5D FAIL FAST: 출력물 N/A 검사
+    from app.services.data_contract import check_for_na_in_output
+    
+    try:
+        check_for_na_in_output(html)
+    except Exception as e:
+        # N/A 발견 시 즉시 실패
+        raise DataBindingError(f"HTML output contains N/A: {str(e)}")
     
     return html
 

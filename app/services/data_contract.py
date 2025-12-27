@@ -17,6 +17,35 @@ Version: 1.0 (Phase 3.5D)
 from typing import Dict, Any, TypedDict, Optional
 
 
+# ===== Phase 3.5D FAIL FAST Exceptions =====
+
+class DataBindingError(Exception):
+    """
+    데이터 바인딩 실패 예외
+    
+    발생 조건:
+    - assembled_data 구조 불완전
+    - 필수 모듈 데이터 누락
+    - 출력물에 N/A 포함
+    - 기본값 0 사용
+    
+    효과: 보고서 생성 즉시 중단
+    """
+    pass
+
+
+class DataValidationError(Exception):
+    """
+    데이터 검증 실패 예외
+    
+    발생 조건:
+    - M6 결과 없음
+    - modules 키 없음
+    - M2~M5 중 하나라도 없음
+    """
+    pass
+
+
 class M6Result(TypedDict, total=False):
     """M6 판단 결과 (Single Source of Truth)"""
     lh_score_total: float
@@ -134,26 +163,100 @@ def get_module_details(assembled_data: AssembledData, module_id: str) -> Dict[st
     return assembled_data.get("modules", {}).get(module_id, {}).get("details", {})
 
 
-def validate_assembled_data(data: Dict[str, Any]) -> bool:
+def validate_assembled_data(data: Dict[str, Any], strict: bool = True) -> bool:
     """
-    assembled_data 유효성 검증
+    assembled_data 유효성 검증 (Phase 3.5D FAIL FAST)
+    
+    Args:
+        data: 검증할 데이터
+        strict: True이면 예외 발생, False이면 Boolean 반환
+    
+    Raises:
+        DataValidationError: strict=True이고 검증 실패 시
     
     Returns:
-        True if valid, False otherwise
+        True if valid, False otherwise (strict=False일 때만)
     """
-    # M6 result 필수
+    errors = []
+    
+    # FAIL 조건 1: M6 result 없음
     if "m6_result" not in data:
-        return False
+        errors.append("M6 result is missing")
     
-    # modules 필수
+    # FAIL 조건 2: modules 없음
     if "modules" not in data:
-        return False
+        errors.append("modules key is missing")
     
-    # 최소 M2 필수
-    if "M2" not in data["modules"]:
-        return False
+    # FAIL 조건 3: M2~M5 중 하나라도 없음
+    required_modules = ["M2", "M3", "M4", "M5"]
+    modules = data.get("modules", {})
+    
+    for module_id in required_modules:
+        if module_id not in modules:
+            errors.append(f"Module {module_id} is missing")
+        else:
+            # FAIL 조건 4: summary/details/raw_data 키 중 하나라도 없음
+            module_data = modules[module_id]
+            required_keys = ["summary", "details", "raw_data"]
+            
+            for key in required_keys:
+                if key not in module_data:
+                    errors.append(f"Module {module_id} missing key: {key}")
+    
+    # 검증 결과 처리
+    if errors:
+        error_msg = "\n".join([f"  - {err}" for err in errors])
+        full_msg = f"Data validation failed:\n{error_msg}"
+        
+        if strict:
+            raise DataValidationError(full_msg)
+        else:
+            return False
     
     return True
+
+
+def check_for_na_in_output(output_str: str) -> None:
+    """
+    출력물에 N/A 포함 여부 검사 (Phase 3.5D FAIL FAST)
+    
+    Args:
+        output_str: 검사할 출력 문자열 (HTML, JSON 등)
+    
+    Raises:
+        DataBindingError: N/A 발견 시
+    """
+    if "N/A" in output_str or "n/a" in output_str:
+        raise DataBindingError(
+            "Output contains 'N/A'. This indicates missing data binding. "
+            "Report generation aborted."
+        )
+
+
+def check_for_default_zeros(data: Dict[str, Any], context: str = "") -> None:
+    """
+    숫자 0이 기본값으로 사용되는지 검사 (Phase 3.5D FAIL FAST)
+    
+    Args:
+        data: 검사할 데이터
+        context: 에러 메시지용 컨텍스트
+    
+    Raises:
+        DataBindingError: 의심스러운 0 값 발견 시
+    """
+    # 의심스러운 0 값들
+    suspicious_keys = [
+        "land_value",  # 토지가치 0은 의심
+        "total_units",  # 세대수 0은 의심
+        "npv_public_krw",  # NPV 0은 의심 (음수는 가능)
+    ]
+    
+    for key in suspicious_keys:
+        if key in data and data[key] == 0:
+            raise DataBindingError(
+                f"Suspicious default value detected: {key}=0 in {context}. "
+                "This may indicate missing data binding. Report generation aborted."
+            )
 
 
 # ===== 금지 패턴 =====

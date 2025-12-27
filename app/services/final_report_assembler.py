@@ -1377,17 +1377,19 @@ def assemble_final_report(
         }
     }
     
-    # 🔴 STEP 2.5: Data Contract 검증 (FAIL FAST)
-    from app.services.data_contract import validate_assembled_data
+    # 🔴 STEP 2.5: Data Contract 검증 (Phase 3.5D FAIL FAST)
+    from app.services.data_contract import validate_assembled_data, DataValidationError
     
-    if not validate_assembled_data(assembled_data):
-        logger.error(f"❌ assembled_data validation FAILED for context_id={context_id}")
+    try:
+        # strict=True: 실패 시 즉시 예외 발생
+        validate_assembled_data(assembled_data, strict=True)
+        logger.info("   ✅ assembled_data validated (Phase 3.5D FAIL FAST)")
+    except DataValidationError as e:
+        logger.error(f"❌ Data validation FAILED for context_id={context_id}")
+        logger.error(f"   {str(e)}")
         raise ValueError(
-            f"assembled_data validation failed. Missing or invalid module data. "
-            f"Required: m6_result + modules[M2-M5]"
+            f"Data validation failed. Missing or invalid module data.\n{str(e)}"
         )
-    
-    logger.info("   ✅ assembled_data created and validated (standard Data Contract)")
     
     # 🔴 STEP 3: M6 중심 보고서 생성
     from app.services.m6_centered_report_base import create_m6_centered_report
