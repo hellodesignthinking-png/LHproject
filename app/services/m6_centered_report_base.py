@@ -335,7 +335,7 @@ class LHTechnicalReport(M6CenteredReportBase):
             "report_type": "lh_technical",
             "report_name": "LH 기술검토 보고서",
             "m6_scorecard": {
-                "total_score": f"{self.m6_truth.lh_total_score:.1f}",
+                "total_score": self.m6_truth.lh_total_score,  # ✅ Float for consistency
                 "grade": self.m6_truth.grade.value,
                 "judgement": self.m6_truth.judgement.value,
                 "fatal_reject": self.m6_truth.fatal_reject,
