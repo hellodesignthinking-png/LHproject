@@ -113,6 +113,7 @@ class PipelineAnalysisResponse(BaseModel):
     
     parcel_id: str = Field(..., description="Parcel ID")
     analysis_id: str = Field(..., description="Unique analysis ID")
+    context_id: Optional[str] = Field(None, description="Context ID for retrieving saved data")
     status: Literal["success", "failed"] = Field(..., description="Analysis status")
     version: str = Field(default="v4.0", description="Pipeline version")
     
@@ -612,6 +613,7 @@ async def _execute_pipeline(request: PipelineAnalysisRequest, tracer: PipelineTr
         response = PipelineAnalysisResponse(
             parcel_id=request.parcel_id,
             analysis_id=generate_analysis_id(request.parcel_id),
+            context_id=context_id,  # Add context_id for data retrieval
             status="success" if result.success else "failed",
             execution_time_ms=execution_time_ms,
             modules_executed=6,
