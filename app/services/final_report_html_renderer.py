@@ -1,18 +1,26 @@
 """
-ZeroSite v4.0 Final Report HTML Renderer
+ZeroSite v4.0 Final Report HTML Renderer - Phase 2 M6-Centered
 ========================================
 
-목적: 6종 최종보고서 통합 HTML 템플릿 렌더링
+⚠️ CRITICAL: Phase 2 전환 완료
+- Renderer는 View-only (판단 금지)
+- 템플릿 조건문 사용 금지 (judgement 기반만 허용)
+- M6 데이터 그대로 출력
+- 해석/요약/판단 문장 생성 금지
 
 핵심 원칙:
-1. 단일 템플릿 + 조건 분기 (report_type별 섹션 선택)
-2. 방어적 렌더링 (None → "N/A (검증 필요)", 숫자는 단위 필수)
-3. 데이터 부족 시 경고 박스 출력
-4. QA Status 푸터 필수
-5. Pretendard 폰트, Accent Blue (#3B82F6) 제목
+1. Renderer = 프린터 (판사 아님)
+2. judgement 값 → 색상/아이콘만
+3. 점수/문장은 백엔드 그대로
+4. if roi/profit/score 조건 금지
 
-Version: 1.0
-Date: 2025-12-21
+⚠️ 주의: 아래 패턴 발견 시 즉시 제거 필요
+- ❌ {'text' if condition else 'other'}
+- ❌ if roi_pct >= 15
+- ❌ 판단 생성 문장
+
+Version: 2.0 (Phase 2)
+Date: 2025-12-27
 """
 
 from typing import Dict, Any, Optional
@@ -3980,15 +3988,29 @@ def render_presentation_report(data: Dict[str, Any]) -> str:
 
 def render_final_report_html(report_type: str, data: Dict[str, Any]) -> str:
     """
-    최종보고서 HTML 렌더링 (메인 진입점)
+    최종보고서 HTML 렌더링 (Phase 2 M6-Centered)
+    
+    ⚠️ CRITICAL RULES:
+    1. Renderer는 View-only (판단 금지)
+    2. M6 데이터 그대로 출력
+    3. 조건문 사용 금지 (judgement 기반만 허용)
+    4. 점수/문장/판단 생성 금지
     
     Args:
         report_type: 보고서 유형
-        data: assemble_final_report() 결과
+        data: M6-centered report data (from create_m6_centered_report)
     
     Returns:
-        완전한 HTML 문자열
+        완전한 HTML 문자열 (M6 결론을 다른 언어로 설명)
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"🔥 Phase 2: Rendering M6-centered {report_type} HTML")
+    
+    # ⚠️ Phase 2 validation: 데이터에 M6 결론이 있는지 확인
+    if 'judgement' not in data and 'final_conclusion' not in data:
+        logger.warning(f"⚠️ M6 judgement/conclusion not found in data for {report_type}")
     
     renderers = {
         "all_in_one": render_all_in_one_report,
@@ -4004,4 +4026,8 @@ def render_final_report_html(report_type: str, data: Dict[str, Any]) -> str:
     if not renderer:
         raise ValueError(f"Unknown report type: {report_type}")
     
-    return renderer(data)
+    html = renderer(data)
+    
+    logger.info(f"✅ M6-centered {report_type} HTML rendered successfully")
+    
+    return html

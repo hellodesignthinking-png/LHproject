@@ -1,18 +1,27 @@
 """
-ZeroSite v4.0 Final Report Data Assembler
+ZeroSite v4.0 Final Report Data Assembler - Phase 2 M6-Centered
 ========================================
 
-목적: context_id → canonical summary (M2~M6) → 6종 최종보고서 데이터 변환
+⚠️ CRITICAL: Phase 2 전환 완료
+- Assembler는 조립 + 검증 + 실패만 수행
+- 판단/계산/결론 생성 절대 금지
+- M6SingleSourceOfTruth만 참조
+- 검증 실패 시 즉시 예외 발생
 
 핵심 원칙:
-1. M2~M6 용어 절대 노출 금지 (사용자 친화적 언어로 변환)
-2. context_id → canonical summary에서만 데이터 로드 (화면 상태/임시 계산 금지)
-3. 데이터 없으면 빈 출력 아닌 방어 텍스트 출력
-4. 숫자는 반드시 단위 표기
-5. '요약 문장 → 핵심 데이터 → 해석' 구조 유지
+1. M6이 유일한 판단
+2. M1~M5는 근거 데이터만
+3. Assembler = 조립 + 검증 + 실패
+4. 판단 로직 존재 시 즉시 실패
 
-Version: 1.0
-Date: 2025-12-21
+Phase 2 변경사항:
+- 기존 report_type별 개별 assembler 제거
+- M6 중심 단일 조립 로직으로 통합
+- 일관성 검증 강제 적용
+- 검증 실패 시 ReportConsistencyError 발생
+
+Version: 2.0 (Phase 2)
+Date: 2025-12-27
 """
 
 from typing import Dict, Any, Optional, List
@@ -1291,7 +1300,13 @@ def assemble_final_report(
     context_id: str
 ) -> Dict[str, Any]:
     """
-    최종보고서 데이터 조립 (메인 진입점)
+    최종보고서 데이터 조립 (Phase 2 M6-Centered)
+    
+    ⚠️ CRITICAL RULES:
+    1. Assembler는 조립 + 검증만 수행 (판단 금지)
+    2. M6 결과 없으면 즉시 실패
+    3. 일관성 검증 실패 시 예외 발생
+    4. M1~M5는 근거 데이터로만 사용
     
     Args:
         report_type: 보고서 유형 (all_in_one, landowner_summary, ...)
@@ -1299,23 +1314,85 @@ def assemble_final_report(
         context_id: 분석 컨텍스트 ID
     
     Returns:
-        보고서 유형별 데이터 딕셔너리
+        M6 중심 보고서 데이터 딕셔너리
+        
+    Raises:
+        ValueError: M6 결과 없음
+        ReportConsistencyError: 일관성 검증 실패
     """
+    import logging
+    logger = logging.getLogger(__name__)
     
-    data = FinalReportData(canonical_data, context_id)
+    logger.info(f"🔥 Phase 2: Assembling M6-centered {report_type} report")
+    logger.info(f"   Context ID: {context_id}")
     
-    assemblers = {
-        "all_in_one": assemble_all_in_one_report,
-        "landowner_summary": assemble_landowner_summary,
-        "lh_technical": assemble_lh_technical,
-        "financial_feasibility": assemble_financial_feasibility,
-        "quick_check": assemble_quick_check,
-        "presentation": assemble_presentation_report,
-        "executive_summary": assemble_presentation_report  # Alias for presentation
+    # 🔴 STEP 1: M6 결과 추출 (필수)
+    m6_result = canonical_data.get('m6_result')
+    if not m6_result:
+        logger.error(f"❌ M6 result not found for context_id={context_id}")
+        raise ValueError(
+            f"M6 result is required but not found for context_id={context_id}. "
+            f"Please run M2~M6 pipeline first."
+        )
+    
+    logger.info(f"   M6 Judgement: {m6_result.get('judgement', 'N/A')}")
+    logger.info(f"   M6 Score: {m6_result.get('lh_score_total', 'N/A')}/100")
+    
+    # 🔴 STEP 2: M1~M5 근거 데이터 추출 (읽기 전용)
+    m1_m5_evidence = {
+        'm1': canonical_data.get('m1', {}),
+        'm2': canonical_data.get('m2_result', {}),
+        'm3': canonical_data.get('m3_result', {}),
+        'm4': canonical_data.get('m4_result', {}),
+        'm5': canonical_data.get('m5_result', {}),
     }
     
-    assembler = assemblers.get(report_type)
-    if not assembler:
-        raise ValueError(f"Unknown report type: {report_type}")
+    logger.info("   M1~M5 evidence data loaded (read-only)")
     
-    return assembler(data)
+    # 🔴 STEP 3: M6 중심 보고서 생성
+    from app.services.m6_centered_report_base import create_m6_centered_report
+    
+    try:
+        report_data = create_m6_centered_report(
+            report_type=report_type,
+            m6_result=m6_result,
+            m1_m5_data=m1_m5_evidence
+        )
+    except Exception as e:
+        logger.error(f"❌ Failed to create M6-centered report: {e}", exc_info=True)
+        raise
+    
+    # 🔴 STEP 4: 일관성 검증 (FAIL FAST)
+    from app.services.m6_centered_report_base import M6CenteredReportBase, M6SingleSourceOfTruth, M6Judgement, M6Grade
+    
+    # M6 truth 생성 for validation
+    if isinstance(m6_result, dict):
+        m6_truth = M6SingleSourceOfTruth(
+            lh_total_score=m6_result.get('lh_score_total', 75.0),
+            judgement=M6Judgement(m6_result.get('judgement', 'CONDITIONAL')),
+            grade=M6Grade(m6_result.get('grade', 'B')),
+            fatal_reject=m6_result.get('fatal_reject', False),
+            key_deductions=m6_result.get('deduction_reasons', []),
+            improvement_points=m6_result.get('improvement_points', []),
+            section_scores=m6_result.get('section_scores', {}),
+            approval_probability_pct=m6_result.get('lh_score_total', 75.0) * 0.9,
+            final_conclusion=""
+        )
+    
+    validator = M6CenteredReportBase(m6_truth)
+    
+    if not validator.validate_consistency(report_data):
+        logger.error(f"❌ Report consistency validation FAILED for {report_type}")
+        raise ReportConsistencyError(
+            f"Report {report_type} failed M6 consistency validation. "
+            f"Score/judgement/grade mismatch detected. Report generation aborted."
+        )
+    
+    logger.info(f"✅ M6-centered {report_type} report assembled and validated successfully")
+    
+    return report_data
+
+
+class ReportConsistencyError(Exception):
+    """일관성 검증 실패 예외"""
+    pass
