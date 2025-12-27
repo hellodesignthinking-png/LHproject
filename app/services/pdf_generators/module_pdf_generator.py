@@ -233,6 +233,29 @@ class ModulePDFGenerator:
         
         # Story에 추가
         story.append(Paragraph(disclaimer_text, disclaimer_style))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # 🔴 Phase 3.5E: 목적 문구 강화
+        purpose_style = ParagraphStyle(
+            'ModulePurpose',
+            parent=styles['Normal'],
+            fontName=self.font_name,
+            fontSize=9,
+            textColor=colors.HexColor('#6B7280'),  # Gray
+            backColor=colors.HexColor('#F9FAFB'),  # Light gray background
+            borderPadding=8,
+            borderWidth=1,
+            borderColor=colors.HexColor('#E5E7EB'),
+            alignment=TA_LEFT,
+            leading=12
+        )
+        
+        purpose_text = """
+본 문서는 ZeroSite 4.0 종합 판단(M6)을 구성하는 세부 근거 자료 중 하나이며,
+단독 판단 또는 결론으로 해석될 수 없습니다.
+"""
+        
+        story.append(Paragraph(purpose_text, purpose_style))
         story.append(Spacer(1, 0.3*inch))
     
     def _add_watermark_and_footer(self, canvas, doc):

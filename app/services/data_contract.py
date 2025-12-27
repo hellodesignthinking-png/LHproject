@@ -21,7 +21,7 @@ from typing import Dict, Any, TypedDict, Optional
 
 class DataBindingError(Exception):
     """
-    데이터 바인딩 실패 예외
+    데이터 바인딩 실패 예외 (Phase 3.5E: User-Friendly)
     
     발생 조건:
     - assembled_data 구조 불완전
@@ -31,19 +31,53 @@ class DataBindingError(Exception):
     
     효과: 보고서 생성 즉시 중단
     """
-    pass
+    
+    def __init__(self, technical_message: str, user_message: str = None):
+        """
+        Args:
+            technical_message: 내부 개발자용 상세 메시지
+            user_message: 외부 사용자용 요약 메시지 (optional)
+        """
+        self.technical_message = technical_message
+        self.user_message = user_message or self._get_default_user_message()
+        super().__init__(technical_message)
+    
+    def _get_default_user_message(self) -> str:
+        """기본 사용자 친화적 메시지"""
+        return (
+            "필수 분석 데이터(M2~M5) 중 일부가 누락되어 "
+            "보고서를 생성할 수 없습니다. "
+            "토지 정보 또는 입력 데이터를 다시 확인해 주세요."
+        )
 
 
 class DataValidationError(Exception):
     """
-    데이터 검증 실패 예외
+    데이터 검증 실패 예외 (Phase 3.5E: User-Friendly)
     
     발생 조건:
     - M6 결과 없음
     - modules 키 없음
     - M2~M5 중 하나라도 없음
     """
-    pass
+    
+    def __init__(self, technical_message: str, user_message: str = None):
+        """
+        Args:
+            technical_message: 내부 개발자용 상세 메시지
+            user_message: 외부 사용자용 요약 메시지 (optional)
+        """
+        self.technical_message = technical_message
+        self.user_message = user_message or self._get_default_user_message()
+        super().__init__(technical_message)
+    
+    def _get_default_user_message(self) -> str:
+        """기본 사용자 친화적 메시지"""
+        return (
+            "필수 분석 데이터(M2~M5) 중 일부가 누락되어 "
+            "보고서를 생성할 수 없습니다. "
+            "토지 정보 또는 입력 데이터를 다시 확인해 주세요."
+        )
 
 
 class M6Result(TypedDict, total=False):
@@ -205,11 +239,18 @@ def validate_assembled_data(data: Dict[str, Any], strict: bool = True) -> bool:
     
     # 검증 결과 처리
     if errors:
-        error_msg = "\n".join([f"  - {err}" for err in errors])
-        full_msg = f"Data validation failed:\n{error_msg}"
+        # 🔴 Phase 3.5E: 사용자 친화적 메시지
+        technical_msg = "\n".join([f"  - {err}" for err in errors])
+        full_technical_msg = f"Data validation failed:\n{technical_msg}"
+        
+        user_msg = (
+            "필수 분석 데이터(M2~M5) 중 일부가 누락되어 "
+            "보고서를 생성할 수 없습니다. "
+            "토지 정보 또는 입력 데이터를 다시 확인해 주세요."
+        )
         
         if strict:
-            raise DataValidationError(full_msg)
+            raise DataValidationError(full_technical_msg, user_msg)
         else:
             return False
     
@@ -218,7 +259,7 @@ def validate_assembled_data(data: Dict[str, Any], strict: bool = True) -> bool:
 
 def check_for_na_in_output(output_str: str) -> None:
     """
-    출력물에 N/A 포함 여부 검사 (Phase 3.5D FAIL FAST)
+    출력물에 N/A 포함 여부 검사 (Phase 3.5E: User-Friendly)
     
     Args:
         output_str: 검사할 출력 문자열 (HTML, JSON 등)
@@ -227,15 +268,21 @@ def check_for_na_in_output(output_str: str) -> None:
         DataBindingError: N/A 발견 시
     """
     if "N/A" in output_str or "n/a" in output_str:
-        raise DataBindingError(
+        technical_msg = (
             "Output contains 'N/A'. This indicates missing data binding. "
             "Report generation aborted."
         )
+        user_msg = (
+            "필수 분석 데이터(M2~M5) 중 일부가 누락되어 "
+            "보고서를 생성할 수 없습니다. "
+            "토지 정보 또는 입력 데이터를 다시 확인해 주세요."
+        )
+        raise DataBindingError(technical_msg, user_msg)
 
 
 def check_for_default_zeros(data: Dict[str, Any], context: str = "") -> None:
     """
-    숫자 0이 기본값으로 사용되는지 검사 (Phase 3.5D FAIL FAST)
+    숫자 0이 기본값으로 사용되는지 검사 (Phase 3.5E: User-Friendly)
     
     Args:
         data: 검사할 데이터
@@ -253,10 +300,16 @@ def check_for_default_zeros(data: Dict[str, Any], context: str = "") -> None:
     
     for key in suspicious_keys:
         if key in data and data[key] == 0:
-            raise DataBindingError(
+            technical_msg = (
                 f"Suspicious default value detected: {key}=0 in {context}. "
                 "This may indicate missing data binding. Report generation aborted."
             )
+            user_msg = (
+                "필수 분석 데이터(M2~M5) 중 일부가 누락되어 "
+                "보고서를 생성할 수 없습니다. "
+                "토지 정보 또는 입력 데이터를 다시 확인해 주세요."
+            )
+            raise DataBindingError(technical_msg, user_msg)
 
 
 # ===== 금지 패턴 =====

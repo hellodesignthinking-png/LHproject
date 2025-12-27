@@ -282,12 +282,13 @@ class AllInOneReport(M6CenteredReportBase):
 
 
 class LandownerSummaryReport(M6CenteredReportBase):
-    """토지주 요약 보고서 - "지금 팔 수 있는가?"에 대한 답변 (Phase 3.5D)"""
+    """토지주 요약 보고서 - "지금 팔 수 있는가?"에 대한 답변 (Phase 3.5E: Enhanced)"""
     
     def generate(self, assembled_data: Dict[str, Any]) -> Dict[str, Any]:
-        """토지주 요약 보고서 생성 - Phase 3.5D 표준 스키마"""
+        """토지주 요약 보고서 생성 - Phase 3.5E 정보 밀도 강화"""
         # ✅ 표준 스키마에서 데이터 추출
         from app.services.data_contract import get_module_summary
+        from app.services.format_utils import format_currency_kr, format_percentage, format_area_sqm, format_unit_count
         
         m2_summary = get_module_summary(assembled_data, "M2")
         m3_summary = get_module_summary(assembled_data, "M3")
@@ -308,12 +309,25 @@ class LandownerSummaryReport(M6CenteredReportBase):
             "what_to_do_next": self.m6_truth.improvement_points[:3],  # Top 3만
             "final_conclusion": self.get_conclusion_sentence(),  # 통일
             "color_code": self.get_color_code(),
-            # ✅ 핵심 수치 추가 (Phase 3.5D)
+            # ✅ 핵심 수치 (Phase 3.5E: 토지주 관점 강화)
             "key_numbers": {
+                # Raw values for programmatic use
                 "m2_land_value": m2_summary.get("land_value", 0),
                 "m3_recommended_type": m3_summary.get("recommended_type", "N/A"),
                 "m4_total_units": m4_summary.get("total_units", 0),
-                "m5_npv": m5_summary.get("npv_public_krw", 0)
+                "m4_gross_area_sqm": m4_summary.get("gross_area_sqm", 0),
+                "m5_npv": m5_summary.get("npv_public_krw", 0),
+                "m5_irr": m5_summary.get("irr_pct", 0),
+                "m5_roi": m5_summary.get("roi_pct", 0)
+            },
+            # 🔴 Phase 3.5E: 토지주를 위한 한눈 요약 카드
+            "landowner_summary_card": {
+                "내 땅 가치": format_currency_kr(m2_summary.get("land_value", 0)),
+                "예상 세대수": format_unit_count(m4_summary.get("total_units", 0), "세대"),
+                "건물 연면적": format_area_sqm(m4_summary.get("gross_area_sqm", 0)),
+                "사업 수익성": f"NPV {format_currency_kr(m5_summary.get('npv_public_krw', 0))}",
+                "수익률": format_percentage(m5_summary.get("irr_pct", 0)),
+                "추천 유형": m3_summary.get("recommended_type", "확인 필요")
             }
         }
 
