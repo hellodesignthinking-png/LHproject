@@ -411,30 +411,54 @@ def create_m6_centered_report(
     
     Args:
         report_type: 보고서 타입 (all_in_one, landowner_summary, etc.)
-        m6_result: M6 최종 판단 결과
+        m6_result: M6 최종 판단 결과 (M6ComprehensiveResult 객체 또는 dict)
         m1_m5_data: M1~M5 데이터 (근거로만 사용)
         
     Returns:
         생성된 보고서 데이터
     """
     # M6 결과를 SingleSourceOfTruth로 변환
-    m6_truth = M6SingleSourceOfTruth(
-        lh_total_score=getattr(m6_result, 'lh_score_total', 75.0),
-        judgement=M6Judgement(getattr(m6_result, 'judgement', 'CONDITIONAL').value),
-        grade=M6Grade(getattr(m6_result, 'grade', 'B').value),
-        fatal_reject=getattr(m6_result, 'fatal_reject', False),
-        key_deductions=getattr(m6_result, 'deduction_reasons', []),
-        improvement_points=getattr(m6_result, 'improvement_points', []),
-        section_scores={
-            "policy": getattr(m6_result.section_a_policy, 'raw_score', 0),
-            "location": getattr(m6_result.section_b_location, 'raw_score', 0),
-            "construction": getattr(m6_result.section_c_construction, 'raw_score', 0),
-            "price": getattr(m6_result.section_d_price, 'raw_score', 0),
-            "business": getattr(m6_result.section_e_business, 'raw_score', 0),
-        },
-        approval_probability_pct=getattr(m6_result, 'lh_score_total', 75.0) * 0.9,  # 근사값
-        final_conclusion=""  # Will be generated
-    )
+    # dict 형식과 객체 형식 모두 지원
+    if isinstance(m6_result, dict):
+        # Dict 형식 (파이프라인 결과에서 직접 전달된 경우)
+        m6_truth = M6SingleSourceOfTruth(
+            lh_total_score=m6_result.get('lh_score_total', 75.0),
+            judgement=M6Judgement(m6_result.get('judgement', 'CONDITIONAL')),
+            grade=M6Grade(m6_result.get('grade', 'B')),
+            fatal_reject=m6_result.get('fatal_reject', False),
+            key_deductions=m6_result.get('deduction_reasons', []),
+            improvement_points=m6_result.get('improvement_points', []),
+            section_scores=m6_result.get('section_scores', {
+                "policy": 15, "location": 18, "construction": 12,
+                "price": 10, "business": 10
+            }),
+            approval_probability_pct=m6_result.get('lh_score_total', 75.0) * 0.9,
+            final_conclusion=""  # Will be generated
+        )
+    else:
+        # 객체 형식 (M6ComprehensiveResult)
+        m6_truth = M6SingleSourceOfTruth(
+            lh_total_score=getattr(m6_result, 'lh_score_total', 75.0),
+            judgement=M6Judgement(getattr(m6_result, 'judgement', 'CONDITIONAL').value if hasattr(getattr(m6_result, 'judgement', 'CONDITIONAL'), 'value') else 'CONDITIONAL'),
+            grade=M6Grade(getattr(m6_result, 'grade', 'B').value if hasattr(getattr(m6_result, 'grade', 'B'), 'value') else 'B'),
+            fatal_reject=getattr(m6_result, 'fatal_reject', False),
+            key_deductions=getattr(m6_result, 'deduction_reasons', []),
+            improvement_points=getattr(m6_result, 'improvement_points', []),
+            section_scores={
+                "policy": getattr(m6_result.section_a_policy, 'raw_score', 0) if hasattr(m6_result, 'section_a_policy') else 0,
+                "location": getattr(m6_result.section_b_location, 'raw_score', 0) if hasattr(m6_result, 'section_b_location') else 0,
+                "construction": getattr(m6_result.section_c_construction, 'raw_score', 0) if hasattr(m6_result, 'section_c_construction') else 0,
+                "price": getattr(m6_result.section_d_price, 'raw_score', 0) if hasattr(m6_result, 'section_d_price') else 0,
+                "business": getattr(m6_result.section_e_business, 'raw_score', 0) if hasattr(m6_result, 'section_e_business') else 0,
+            },
+            approval_probability_pct=getattr(m6_result, 'lh_score_total', 75.0) * 0.9,  # 근사값
+            final_conclusion=""  # Will be generated
+        )
+    
+    logger.info(f"🔥 Creating M6-centered {report_type} report")
+    logger.info(f"   M6 Judgement: {m6_truth.judgement.value}")
+    logger.info(f"   M6 Total Score: {m6_truth.lh_total_score:.1f}/100")
+    logger.info(f"   M6 Grade: {m6_truth.grade.value}")
     
     # 보고서 타입에 따라 생성
     report_classes = {
@@ -457,6 +481,8 @@ def create_m6_centered_report(
     # 일관성 검증
     if not report_generator.validate_consistency(report_data):
         logger.warning(f"⚠️ Report consistency validation failed for {report_type}")
+    else:
+        logger.info(f"✅ Report consistency validation passed for {report_type}")
     
     logger.info(f"✅ M6-centered {report_type} report generated successfully")
     return report_data

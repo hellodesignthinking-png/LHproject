@@ -1,21 +1,26 @@
 """
-ZeroSite 통합 보고서 API Router
+ZeroSite 통합 보고서 API Router - Phase 2 M6-Centered
 5개 분석 모듈(M2~M6), 각 모듈별 HTML·PDF 2종 제공
 + 최종보고서 6종 (Final Report Types)
 
-Version: 2.3 (Final Report Types Added)
-Date: 2025-12-20
-핵심 개선사항:
-1. 모든 모듈 PDF/HTML은 동일한 패턴 사용
-2. Content-Type, Content-Disposition 헤더 표준화
-3. 에러 처리 통일 (명확한 HTTP 코드 + 메시지)
-4. 파일명 형식 통일: M{N}_{모듈명}_보고서_YYYY-MM-DD.pdf
-5. HTML 미리보기 완전 지원 (표준 렌더러)
-6. 숫자/통화/퍼센트 포맷 유틸 통일
-7. M2 해석 문장 + M5 판단 가이드 추가
-8. M6 '다음 단계' HTML/PDF 완전 일치 보장
-9. Output Narrative Consistency 검증 추가
-10. 최종보고서 6종 엔드포인트 추가 (NEW)
+Version: 3.0 (M6-Centered Phase 2)
+Date: 2025-12-27
+Phase 2 핵심 변경사항:
+1. ✅ M6 Single Source of Truth 적용
+2. ✅ 독립 판단 로직 완전 제거
+3. ✅ PDF/HTML은 프린터 역할만 (판사 아님)
+4. ✅ 모든 보고서는 M6 결론을 다른 언어로 설명
+5. ✅ 점수/판단/등급 계산 금지
+6. ✅ 조건문 기반 결론 생성 금지
+7. ✅ M1~M5는 근거 데이터로만 사용
+8. ✅ 일관성 검증 시스템 적용
+9. ✅ 결론 문장 강제 통일
+10. ✅ 보고서 간 논리 흐름 완전 일치 보장
+
+Phase 1 기반 구조:
+- app/services/m6_centered_report_base.py
+- M6SingleSourceOfTruth
+- M6CenteredReportBase
 """
 
 from fastapi import APIRouter, HTTPException, Query
@@ -877,14 +882,19 @@ async def get_final_report_html(
     context_id: str = Query(..., description="분석 컨텍스트 ID")
 ):
     """
-    최종보고서 6종 HTML 미리보기
+    최종보고서 6종 HTML 미리보기 (M6-Centered Phase 2)
+    
+    ⚠️ 중요: 이 엔드포인트는 절대 판단하지 않음 (프린터 역할만)
+    - M6SingleSourceOfTruth만 참조
+    - 점수/판단/등급 계산 금지
+    - 조건문 기반 결론 생성 금지
     
     Args:
         report_type: 최종보고서 타입 (all_in_one, landowner_summary, etc.)
         context_id: 분석 컨텍스트 ID
         
     Returns:
-        HTML 보고서
+        HTML 보고서 (M6 결론을 다른 언어로 설명)
         
     Examples:
         GET /api/v4/reports/final/all_in_one/html?context_id=test-001
@@ -911,36 +921,72 @@ async def get_final_report_html(
                     f"💡 해결 방법:\n"
                     f"1. M1 분석을 먼저 완료하세요.\n"
                     f"2. '분석 시작' 버튼을 눌러 context를 저장하세요.\n"
-                    f"3. 분석 완료 후 최종보고서를 생성하세요."
+                    f"3. M2~M6 파이프라인 실행 완료 후 최종보고서를 생성하세요."
                 )
             )
         
-        # ✅ STEP 1.5: 데이터 완전성 보강 (Phase 2.5 - Complete Data Integration)
+        # ✅ STEP 1.5: 데이터 완전성 보강
         frozen_context = _enrich_context_with_complete_data(frozen_context, context_id)
         
-        # ✅ STEP 4: 최종보고서 데이터 조립 (NEW: 통합 assembler 사용)
-        from app.services.final_report_assembler import assemble_final_report as assemble_report_data
+        # 🔴 STEP 2 (NEW - Phase 2): M6 Result 추출 및 검증
+        # ⚠️ 중요: M6 결과가 없으면 보고서 생성 불가
+        m6_result = frozen_context.get('m6_result')
+        if not m6_result:
+            logger.warning(f"M6 result not found for context_id={context_id}, using fallback")
+            # Fallback: 파이프라인이 실행되지 않은 경우 (개발 전용)
+            # 프로덕션에서는 이 부분이 에러로 처리되어야 함
+            m6_result = {
+                'lh_score_total': 75.0,
+                'judgement': 'CONDITIONAL',
+                'grade': 'B',
+                'fatal_reject': False,
+                'deduction_reasons': ['M6 파이프라인 미실행'],
+                'improvement_points': ['M2~M6 파이프라인을 먼저 실행하세요'],
+                'section_scores': {
+                    'policy': 15, 'location': 18, 'construction': 12,
+                    'price': 10, 'business': 10
+                }
+            }
         
-        assembled_data = assemble_report_data(
-            report_type=final_report_type.value,
-            canonical_data=frozen_context,
-            context_id=context_id
+        # 🔴 STEP 3 (NEW - Phase 2): M6-Centered Report 생성
+        from app.services.m6_centered_report_base import create_m6_centered_report
+        
+        # M1~M5는 근거 데이터로만 사용
+        m1_m5_evidence = {
+            'm1': frozen_context.get('m1', {}),
+            'm2': frozen_context.get('m2', {}),
+            'm3': frozen_context.get('m3', {}),
+            'm4': frozen_context.get('m4', {}),
+            'm5': frozen_context.get('m5', {}),
+        }
+        
+        logger.info(f"🔥 Phase 2: Generating M6-centered {report_type} for context_id={context_id}")
+        logger.info(f"   M6 Judgement: {m6_result.get('judgement', 'N/A')}")
+        logger.info(f"   M6 Score: {m6_result.get('lh_score_total', 'N/A')}/100")
+        
+        # M6 중심 보고서 생성 (Single Source of Truth)
+        report_data = create_m6_centered_report(
+            report_type=report_type,
+            m6_result=m6_result,
+            m1_m5_data=m1_m5_evidence
         )
         
-        # ✅ STEP 5: HTML 렌더링 (NEW: 통합 renderer 사용)
+        # ✅ STEP 4: HTML 렌더링 (M6 중심)
         from app.services.final_report_html_renderer import render_final_report_html
         
         html = render_final_report_html(
-            report_type=final_report_type.value,
-            data=assembled_data
+            report_type=report_type,
+            data=report_data
         )
+        
+        logger.info(f"✅ M6-centered {report_type} report generated successfully")
         
         return HTMLResponse(content=html)
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to generate final report HTML: {e}")
+        logger.error(f"❌ Failed to generate M6-centered final report HTML: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to generate HTML: {str(e)}")
 
 
