@@ -245,8 +245,16 @@ class M6CenteredReportBase:
 class AllInOneReport(M6CenteredReportBase):
     """종합 보고서 - M6를 가장 상세히 설명"""
     
-    def generate(self, m1_m5_data: Dict[str, Any]) -> Dict[str, Any]:
-        """종합 보고서 생성"""
+    def generate(self, assembled_data: Dict[str, Any]) -> Dict[str, Any]:
+        """종합 보고서 생성 (Phase 3.5D 표준 스키마)"""
+        # ✅ 표준 스키마에서 데이터 추출
+        from app.services.data_contract import get_module_summary
+        
+        m2_summary = get_module_summary(assembled_data, "M2")
+        m3_summary = get_module_summary(assembled_data, "M3")
+        m4_summary = get_module_summary(assembled_data, "M4")
+        m5_summary = get_module_summary(assembled_data, "M5")
+        
         return {
             "report_type": "all_in_one",
             "report_name": "ZeroSite 종합 보고서",
@@ -259,17 +267,33 @@ class AllInOneReport(M6CenteredReportBase):
                 "key_deductions": self.m6_truth.key_deductions,
                 "improvement_points": self.m6_truth.improvement_points
             },
-            "evidence_data": self.get_m1_m5_as_evidence(m1_m5_data),
+            "evidence_data": self.get_m1_m5_as_evidence(assembled_data),
             "final_conclusion": self.get_conclusion_sentence(),
-            "color_code": self.get_color_code()
+            "color_code": self.get_color_code(),
+            # ✅ 핵심 수치 추가 (Phase 3.5D)
+            "key_numbers": {
+                "m2_land_value": m2_summary.get("land_value", 0),
+                "m3_recommended_type": m3_summary.get("recommended_type", "N/A"),
+                "m4_total_units": m4_summary.get("total_units", 0),
+                "m5_npv": m5_summary.get("npv_public_krw", 0),
+                "m5_irr": m5_summary.get("irr_pct", 0)
+            }
         }
 
 
 class LandownerSummaryReport(M6CenteredReportBase):
-    """토지주 요약 보고서 - "지금 팔 수 있는가?"에 대한 답변"""
+    """토지주 요약 보고서 - "지금 팔 수 있는가?"에 대한 답변 (Phase 3.5D)"""
     
-    def generate(self, m1_m5_data: Dict[str, Any]) -> Dict[str, Any]:
-        """토지주 요약 보고서 생성 - Phase 3.5A 완전 통일"""
+    def generate(self, assembled_data: Dict[str, Any]) -> Dict[str, Any]:
+        """토지주 요약 보고서 생성 - Phase 3.5D 표준 스키마"""
+        # ✅ 표준 스키마에서 데이터 추출
+        from app.services.data_contract import get_module_summary
+        
+        m2_summary = get_module_summary(assembled_data, "M2")
+        m3_summary = get_module_summary(assembled_data, "M3")
+        m4_summary = get_module_summary(assembled_data, "M4")
+        m5_summary = get_module_summary(assembled_data, "M5")
+        
         return {
             "report_type": "landowner_summary",
             "report_name": "토지주 요약 보고서",
@@ -283,15 +307,30 @@ class LandownerSummaryReport(M6CenteredReportBase):
             },
             "what_to_do_next": self.m6_truth.improvement_points[:3],  # Top 3만
             "final_conclusion": self.get_conclusion_sentence(),  # 통일
-            "color_code": self.get_color_code()
+            "color_code": self.get_color_code(),
+            # ✅ 핵심 수치 추가 (Phase 3.5D)
+            "key_numbers": {
+                "m2_land_value": m2_summary.get("land_value", 0),
+                "m3_recommended_type": m3_summary.get("recommended_type", "N/A"),
+                "m4_total_units": m4_summary.get("total_units", 0),
+                "m5_npv": m5_summary.get("npv_public_krw", 0)
+            }
         }
 
 
 class LHTechnicalReport(M6CenteredReportBase):
     """LH 기술검토 보고서 - LH 내부 검토 문서처럼"""
     
-    def generate(self, m1_m5_data: Dict[str, Any]) -> Dict[str, Any]:
-        """LH 기술검토 보고서 생성"""
+    def generate(self, assembled_data: Dict[str, Any]) -> Dict[str, Any]:
+        """LH 기술검토 보고서 생성 - Phase 3.5D 표준 스키마"""
+        # ✅ 표준 스키마에서 데이터 추출
+        from app.services.data_contract import get_module_summary
+        
+        m2_summary = get_module_summary(assembled_data, "M2")
+        m3_summary = get_module_summary(assembled_data, "M3")
+        m4_summary = get_module_summary(assembled_data, "M4")
+        m5_summary = get_module_summary(assembled_data, "M5")
+        
         return {
             "report_type": "lh_technical",
             "report_name": "LH 기술검토 보고서",
@@ -305,16 +344,29 @@ class LHTechnicalReport(M6CenteredReportBase):
             "deduction_reasons": self.m6_truth.key_deductions,
             "compliance_status": "통과" if not self.m6_truth.fatal_reject else "미통과",
             "technical_recommendation": self.get_conclusion_sentence(),
-            "color_code": self.get_color_code()
+            "color_code": self.get_color_code(),
+            # ✅ 핵심 수치 추가 (Phase 3.5D)
+            "key_numbers": {
+                "m2_land_value": m2_summary.get("land_value", 0),
+                "m3_score": m3_summary.get("total_score", 0),
+                "m4_total_units": m4_summary.get("total_units", 0),
+                "m5_npv": m5_summary.get("npv_public_krw", 0)
+            }
         }
 
 
 class FinancialFeasibilityReport(M6CenteredReportBase):
     """사업타당성 보고서 - 재무는 M6에 종속"""
     
-    def generate(self, m1_m5_data: Dict[str, Any]) -> Dict[str, Any]:
-        """사업타당성 보고서 생성"""
-        m5_data = m1_m5_data.get("m5", {})
+    def generate(self, assembled_data: Dict[str, Any]) -> Dict[str, Any]:
+        """사업타당성 보고서 생성 - Phase 3.5D 표준 스키마"""
+        # ✅ 표준 스키마에서 데이터 추출
+        from app.services.data_contract import get_module_summary
+        
+        m2_summary = get_module_summary(assembled_data, "M2")
+        m3_summary = get_module_summary(assembled_data, "M3")
+        m4_summary = get_module_summary(assembled_data, "M4")
+        m5_summary = get_module_summary(assembled_data, "M5")
         
         # 중요: M5는 절대 독립된 결론 아님
         financial_note = (
@@ -331,17 +383,34 @@ class FinancialFeasibilityReport(M6CenteredReportBase):
                 "score": self.m6_truth.lh_total_score,
                 "grade": self.m6_truth.grade.value
             },
-            "financial_data_from_m5": m5_data,  # M5는 참고 데이터일 뿐
+            "financial_data_from_m5": m5_summary,  # ✅ 표준 스키마 사용
             "final_conclusion": self.get_conclusion_sentence(),
-            "color_code": self.get_color_code()
+            "color_code": self.get_color_code(),
+            # ✅ 핵심 수치 추가 (Phase 3.5D)
+            "key_numbers": {
+                "m2_land_value": m2_summary.get("land_value", 0),
+                "m4_total_units": m4_summary.get("total_units", 0),
+                "m5_npv": m5_summary.get("npv_public_krw", 0),
+                "m5_irr": m5_summary.get("irr_pct", 0),
+                "m5_roi": m5_summary.get("roi_pct", 0)
+            }
         }
 
 
 class QuickCheckReport(M6CenteredReportBase):
     """간편 체크 보고서 - 1분 요약"""
     
-    def generate(self, m1_m5_data: Dict[str, Any]) -> Dict[str, Any]:
-        """간편 체크 보고서 생성"""
+    def generate(self, assembled_data: Dict[str, Any]) -> Dict[str, Any]:
+        """간편 체크 보고서 생성 - Phase 3.5D 표준 스키마"""
+        # ✅ 표준 스키마에서 데이터 추출
+        from app.services.data_contract import get_module_summary
+        from app.services.format_utils import format_currency_kr, format_percentage
+        
+        m2_summary = get_module_summary(assembled_data, "M2")
+        m3_summary = get_module_summary(assembled_data, "M3")
+        m4_summary = get_module_summary(assembled_data, "M4")
+        m5_summary = get_module_summary(assembled_data, "M5")
+        
         return {
             "report_type": "quick_check",
             "report_name": "간편 체크 보고서",
@@ -354,15 +423,32 @@ class QuickCheckReport(M6CenteredReportBase):
                 "one_line_reason": self.m6_truth.key_deductions[0] if self.m6_truth.key_deductions else "해당 없음"
             },
             "final_conclusion": self.get_conclusion_sentence(),
-            "color_code": self.get_color_code()
+            "color_code": self.get_color_code(),
+            # ✅ 핵심 수치 추가 (Phase 3.5D Quick Metrics)
+            "quick_metrics": {
+                "토지가치": format_currency_kr(m2_summary.get("land_value", 0)),
+                "추천유형": m3_summary.get("recommended_type", "N/A"),
+                "세대수": f"{m4_summary.get('total_units', 0)}세대",
+                "NPV": format_currency_kr(m5_summary.get("npv_public_krw", 0)),
+                "IRR": format_percentage(m5_summary.get("irr_pct", 0))
+            }
         }
 
 
 class PresentationReport(M6CenteredReportBase):
     """프레젠테이션 보고서 - 말로 설명하기 위한 자료"""
     
-    def generate(self, m1_m5_data: Dict[str, Any]) -> Dict[str, Any]:
-        """프레젠테이션 보고서 생성"""
+    def generate(self, assembled_data: Dict[str, Any]) -> Dict[str, Any]:
+        """프레젠테이션 보고서 생성 - Phase 3.5D 표준 스키마"""
+        # ✅ 표준 스키마에서 데이터 추출
+        from app.services.data_contract import get_module_summary
+        from app.services.format_utils import format_currency_kr
+        
+        m2_summary = get_module_summary(assembled_data, "M2")
+        m3_summary = get_module_summary(assembled_data, "M3")
+        m4_summary = get_module_summary(assembled_data, "M4")
+        m5_summary = get_module_summary(assembled_data, "M5")
+        
         return {
             "report_type": "presentation",
             "report_name": "프레젠테이션 보고서",
@@ -378,20 +464,30 @@ class PresentationReport(M6CenteredReportBase):
                 },
                 {
                     "slide_number": 2,
+                    "title": "핵심 수치",
+                    "content": {
+                        "토지가치": format_currency_kr(m2_summary.get("land_value", 0)),
+                        "추천유형": m3_summary.get("recommended_type", "N/A"),
+                        "세대수": f"{m4_summary.get('total_units', 0)}세대",
+                        "NPV": format_currency_kr(m5_summary.get("npv_public_krw", 0))
+                    }
+                },
+                {
+                    "slide_number": 3,
                     "title": "왜 이 결론인가?",
                     "content": {
                         "key_deductions": self.m6_truth.key_deductions[:3]
                     }
                 },
                 {
-                    "slide_number": 3,
+                    "slide_number": 4,
                     "title": "개선 전략",
                     "content": {
                         "improvement_points": self.m6_truth.improvement_points[:3]
                     }
                 },
                 {
-                    "slide_number": 4,
+                    "slide_number": 5,
                     "title": "최종 결론",
                     "content": {
                         "conclusion": self.get_conclusion_sentence()
@@ -405,15 +501,22 @@ class PresentationReport(M6CenteredReportBase):
 def create_m6_centered_report(
     report_type: str,
     m6_result: Any,
-    m1_m5_data: Dict[str, Any]
+    assembled_data: Dict[str, Any]
 ) -> Dict[str, Any]:
     """
-    M6 중심 보고서 생성 팩토리 함수
+    M6 중심 보고서 생성 팩토리 함수 (Phase 3.5D 표준 스키마)
     
     Args:
         report_type: 보고서 타입 (all_in_one, landowner_summary, etc.)
         m6_result: M6 최종 판단 결과 (M6ComprehensiveResult 객체 또는 dict)
-        m1_m5_data: M1~M5 데이터 (근거로만 사용)
+        assembled_data: 표준 Data Contract
+            {
+                "m6_result": {...},
+                "modules": {
+                    "M2": {"summary": {...}, "details": {}, "raw_data": {}},
+                    ...
+                }
+            }
         
     Returns:
         생성된 보고서 데이터
@@ -477,7 +580,7 @@ def create_m6_centered_report(
     
     # 보고서 생성
     report_generator = report_class(m6_truth)
-    report_data = report_generator.generate(m1_m5_data)
+    report_data = report_generator.generate(assembled_data)  # ✅ 표준 스키마 전달
     
     # 일관성 검증
     if not report_generator.validate_consistency(report_data):
