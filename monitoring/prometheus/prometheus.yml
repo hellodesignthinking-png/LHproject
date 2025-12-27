@@ -1,0 +1,74 @@
+# Prometheus Configuration
+# 프로메테우스 메트릭 수집 설정
+
+global:
+  scrape_interval: 15s      # 메트릭 수집 간격
+  evaluation_interval: 15s  # 규칙 평가 간격
+  external_labels:
+    cluster: 'zerosite-production'
+    environment: 'production'
+
+# Alertmanager 설정
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+# 규칙 파일 로드
+rule_files:
+  - "alert_rules.yml"
+
+# 스크랩 설정
+scrape_configs:
+  # Prometheus 자체 모니터링
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # ZeroSite API 서버
+  - job_name: 'zerosite-api'
+    scrape_interval: 10s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['app:8000']
+        labels:
+          service: 'api-server'
+          version: '4.0.0'
+    metric_relabel_configs:
+      # 불필요한 메트릭 필터링
+      - source_labels: [__name__]
+        regex: 'go_.*'
+        action: drop
+
+  # PostgreSQL Exporter
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+        labels:
+          service: 'postgresql'
+          database: 'zerosite_db'
+
+  # Redis Exporter
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+        labels:
+          service: 'redis'
+          cache: 'primary'
+
+  # Node Exporter (시스템 메트릭)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          service: 'system'
+          node: 'zerosite-node-1'
+
+  # Nginx Exporter
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+        labels:
+          service: 'nginx'
+          proxy: 'api-gateway'

@@ -1,0 +1,218 @@
+# Prometheus Alert Rules
+# 알림 규칙 정의
+
+groups:
+  # API 서버 성능 알림
+  - name: api_performance
+    interval: 30s
+    rules:
+      # 높은 응답 시간
+      - alert: HighAPILatency
+        expr: histogram_quantile(0.95, rate(zerosite_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High API latency detected"
+          description: "95th percentile latency is {{ $value }}s (threshold: 1s)"
+
+      # 매우 높은 응답 시간
+      - alert: CriticalAPILatency
+        expr: histogram_quantile(0.95, rate(zerosite_request_duration_seconds_bucket[5m])) > 5
+        for: 2m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "Critical API latency detected"
+          description: "95th percentile latency is {{ $value }}s (threshold: 5s)"
+
+      # 높은 에러율
+      - alert: HighErrorRate
+        expr: rate(zerosite_requests_total{status=~"5.."}[5m]) / rate(zerosite_requests_total[5m]) > 0.05
+        for: 3m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+
+      # 매우 높은 에러율
+      - alert: CriticalErrorRate
+        expr: rate(zerosite_requests_total{status=~"5.."}[5m]) / rate(zerosite_requests_total[5m]) > 0.20
+        for: 1m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "Critical error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 20%)"
+
+  # 분석 작업 모니터링
+  - name: analysis_jobs
+    interval: 60s
+    rules:
+      # 분석 실패율 증가
+      - alert: HighAnalysisFailureRate
+        expr: rate(zerosite_analysis_requests_total{status="failed"}[10m]) / rate(zerosite_analysis_requests_total[10m]) > 0.10
+        for: 5m
+        labels:
+          severity: warning
+          component: analysis
+        annotations:
+          summary: "High analysis failure rate"
+          description: "Analysis failure rate is {{ $value | humanizePercentage }}"
+
+      # 분석 처리 시간 증가
+      - alert: SlowAnalysisProcessing
+        expr: histogram_quantile(0.95, rate(zerosite_analysis_duration_seconds_bucket{stage="total"}[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: analysis
+        annotations:
+          summary: "Slow analysis processing"
+          description: "Analysis duration is {{ $value }}s (threshold: 10s)"
+
+      # 활성 작업 수 과다
+      - alert: TooManyActiveJobs
+        expr: zerosite_active_jobs > 100
+        for: 5m
+        labels:
+          severity: warning
+          component: analysis
+        annotations:
+          summary: "Too many active jobs"
+          description: "Active jobs count is {{ $value }} (threshold: 100)"
+
+  # 인증 및 보안
+  - name: security
+    interval: 60s
+    rules:
+      # JWT 토큰 발급 급증
+      - alert: SuspiciousTokenIssuance
+        expr: rate(zerosite_jwt_tokens_issued_total[5m]) > 100
+        for: 2m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "Suspicious JWT token issuance rate"
+          description: "Token issuance rate is {{ $value }} per second"
+
+      # API 키 사용량 급증
+      - alert: UnusualAPIKeyUsage
+        expr: rate(zerosite_api_key_usage_total[5m]) > 500
+        for: 2m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "Unusual API key usage detected"
+          description: "API key usage rate is {{ $value }} per second"
+
+  # 데이터베이스 모니터링
+  - name: database
+    interval: 30s
+    rules:
+      # 데이터베이스 연결 부족
+      - alert: LowDatabaseConnections
+        expr: zerosite_db_pool_connections{status="idle"} < 2
+        for: 2m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Low database connection pool"
+          description: "Idle connections: {{ $value }} (threshold: 2)"
+
+      # 데이터베이스 연결 포화
+      - alert: DatabaseConnectionSaturation
+        expr: zerosite_db_pool_connections{status="active"} / zerosite_db_pool_connections{status="total"} > 0.9
+        for: 3m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "Database connection pool saturation"
+          description: "Connection utilization: {{ $value | humanizePercentage }}"
+
+  # 캐시 성능
+  - name: cache
+    interval: 60s
+    rules:
+      # 낮은 캐시 히트율
+      - alert: LowCacheHitRate
+        expr: rate(zerosite_cache_hit_total[5m]) / (rate(zerosite_cache_hit_total[5m]) + rate(zerosite_cache_miss_total[5m])) < 0.7
+        for: 5m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate is {{ $value | humanizePercentage }} (threshold: 70%)"
+
+  # 시스템 리소스
+  - name: system_resources
+    interval: 30s
+    rules:
+      # 높은 CPU 사용률
+      - alert: HighCPUUsage
+        expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value }}% (threshold: 80%)"
+
+      # 높은 메모리 사용률
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value }}% (threshold: 85%)"
+
+      # 디스크 공간 부족
+      - alert: LowDiskSpace
+        expr: (1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "Low disk space"
+          description: "Disk usage is {{ $value }}% (threshold: 85%)"
+
+  # 서비스 가용성
+  - name: availability
+    interval: 30s
+    rules:
+      # 서비스 다운
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: availability
+        annotations:
+          summary: "Service is down"
+          description: "{{ $labels.job }} on {{ $labels.instance }} is down"
+
+      # 높은 요청 처리 중 수
+      - alert: HighInProgressRequests
+        expr: zerosite_requests_inprogress > 50
+        for: 3m
+        labels:
+          severity: warning
+          component: availability
+        annotations:
+          summary: "High number of in-progress requests"
+          description: "In-progress requests: {{ $value }} (threshold: 50)"

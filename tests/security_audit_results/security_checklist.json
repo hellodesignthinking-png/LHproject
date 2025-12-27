@@ -1,0 +1,187 @@
+{
+  "audit_date": "2025-12-27T00:37:26.547560",
+  "version": "4.0.0",
+  "categories": [
+    {
+      "id": "authentication",
+      "name": "인증 및 세션 관리",
+      "checks": [
+        {
+          "description": "JWT 토큰 만료 검증",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "description": "Refresh 토큰 보안",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "description": "비밀번호 복잡도 정책",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "description": "브루트 포스 방어 (Rate Limiting)",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "description": "세션 고정 공격 방어",
+          "status": "pending",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "authorization",
+      "name": "권한 관리",
+      "checks": [
+        {
+          "description": "API 키 권한 검증",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "description": "RBAC (Role-Based Access Control)",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "description": "수평적 권한 상승 방어",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "description": "수직적 권한 상승 방어",
+          "status": "pending",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "input_validation",
+      "name": "입력 검증",
+      "checks": [
+        {
+          "description": "SQL Injection 방어",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "description": "XSS (Cross-Site Scripting) 방어",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "description": "CSRF (Cross-Site Request Forgery) 방어",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "description": "파일 업로드 검증",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "description": "JSON 입력 검증 (Pydantic)",
+          "status": "pending",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "cryptography",
+      "name": "암호화",
+      "checks": [
+        {
+          "description": "비밀번호 해싱 (bcrypt)",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "description": "JWT 서명 검증",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "description": "API 키 해싱 (SHA256)",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "description": "HTTPS 강제 사용",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "description": "민감 데이터 암호화",
+          "status": "pending",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "security_headers",
+      "name": "보안 헤더",
+      "checks": [
+        {
+          "description": "Content-Security-Policy",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "description": "X-Frame-Options",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "description": "X-Content-Type-Options",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "description": "Strict-Transport-Security",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "description": "X-XSS-Protection",
+          "status": "pending",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "api_security",
+      "name": "API 보안",
+      "checks": [
+        {
+          "description": "Rate Limiting (IP/API Key)",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "description": "CORS 설정",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "description": "API 버전 관리",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "description": "에러 메시지 정보 노출 방지",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "description": "로깅 및 모니터링",
+          "status": "pending",
+          "notes": ""
+        }
+      ]
+    }
+  ]
+}
