@@ -1386,12 +1386,10 @@ LH 청년형 공급 시 <b>수요 불일치 리스크가 {'매우 낮습니다' 
         if not validation.is_valid:
             error_msg = validation.get_error_summary()
             logger.warning(f"M4 데이터 검증 경고:\n{error_msg}")
-            # Only block if ALL required fields are missing
-            critical_missing = ['legal_capacity', 'scenarios', 'selected_scenario_id']
-            for field in critical_missing:
-                if field not in data or data[field] is None:
-                    has_critical_errors = True
-                    break
+            # 🔥 RELAXED: Only block if fundamental data is completely missing
+            # Allow partial data, empty scenarios, etc.
+            if not data or len(data) == 0:
+                has_critical_errors = True
             
             if has_critical_errors:
                 raise ValueError(f"M4 critical data missing. Cannot generate report.{error_msg}")

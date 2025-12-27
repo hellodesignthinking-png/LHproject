@@ -737,7 +737,7 @@ async def generate_comprehensive_report(request: ReportGenerationRequest):
         report_data = {
             "executive_summary": {
                 "land_value": result.appraisal.land_value,
-                "confidence_level": result.appraisal.confidence_metrics.level,
+                "confidence_level": result.appraisal.confidence_metrics.confidence_level,
                 "lh_decision": result.lh_review.decision,
                 "lh_score": result.lh_review.total_score,
                 "recommendation": result.appraisal.recommendation
@@ -773,6 +773,122 @@ async def generate_comprehensive_report(request: ReportGenerationRequest):
         raise HTTPException(
             status_code=500,
             detail=f"Report generation failed: {str(e)}"
+        )
+
+
+@router.post("/reports/pre_report", response_model=ReportGenerationResponse)
+async def generate_pre_report(request: ReportGenerationRequest):
+    """
+    Generate 2-page pre-report (executive summary)
+    
+    Requires prior pipeline execution for the parcel_id
+    """
+    try:
+        start_time = time.time()
+        
+        # Check if pipeline results exist
+        if request.parcel_id not in results_cache:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No pipeline results for {request.parcel_id}. Run /analyze first."
+            )
+        
+        result = results_cache[request.parcel_id]
+        
+        # Generate simplified 2-page pre-report data
+        report_data = {
+            "executive_summary": {
+                "land_value": result.appraisal.land_value,
+                "confidence_level": result.appraisal.confidence_metrics.confidence_level,
+                "recommended_housing_type": result.housing_type.selected_type if hasattr(result.housing_type, 'selected_type') else "N/A",
+                "recommended_units": result.capacity.unit_plan.recommended_units if hasattr(result.capacity, 'unit_plan') else 0,
+                "npv_public": result.feasibility.npv_public if hasattr(result.feasibility, 'npv_public') else 0,
+                "lh_decision": result.lh_review.decision,
+                "lh_score": result.lh_review.total_score
+            }
+        }
+        
+        generation_time_ms = (time.time() - start_time) * 1000
+        
+        response = ReportGenerationResponse(
+            report_id=f"prereport_{request.parcel_id}_{uuid.uuid4().hex[:8]}",
+            parcel_id=request.parcel_id,
+            report_type=request.report_type,
+            status="success",
+            data=report_data,
+            generation_time_ms=generation_time_ms
+        )
+        
+        logger.info(f"✅ Pre-report generated in {generation_time_ms:.0f}ms")
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Pre-report generation failed: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Pre-report generation failed: {str(e)}"
+        )
+
+
+@router.post("/reports/lh_decision", response_model=ReportGenerationResponse)
+async def generate_lh_decision_report(request: ReportGenerationRequest):
+    """
+    Generate LH decision report (focused on LH review results)
+    
+    Requires prior pipeline execution for the parcel_id
+    """
+    try:
+        start_time = time.time()
+        
+        # Check if pipeline results exist
+        if request.parcel_id not in results_cache:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No pipeline results for {request.parcel_id}. Run /analyze first."
+            )
+        
+        result = results_cache[request.parcel_id]
+        
+        # Generate LH decision-focused report data
+        report_data = {
+            "lh_review": {
+                "decision": result.lh_review.decision,
+                "total_score": result.lh_review.total_score,
+                "grade": result.lh_review.grade if hasattr(result.lh_review, 'grade') else "N/A",
+                "section_scores": result.lh_review.score_breakdown.to_dict() if hasattr(result.lh_review, 'score_breakdown') and hasattr(result.lh_review.score_breakdown, 'to_dict') else {},
+                "decision_rationale": result.lh_review.decision_rationale if hasattr(result.lh_review, 'decision_rationale') else "N/A"
+            },
+            "context": {
+                "land_value": result.appraisal.land_value,
+                "housing_type": result.housing_type.selected_type if hasattr(result.housing_type, 'selected_type') else "N/A",
+                "total_units": result.capacity.unit_plan.recommended_units if hasattr(result.capacity, 'unit_plan') else 0,
+                "npv_public": result.feasibility.npv_public if hasattr(result.feasibility, 'npv_public') else 0
+            }
+        }
+        
+        generation_time_ms = (time.time() - start_time) * 1000
+        
+        response = ReportGenerationResponse(
+            report_id=f"lhdecision_{request.parcel_id}_{uuid.uuid4().hex[:8]}",
+            parcel_id=request.parcel_id,
+            report_type=request.report_type,
+            status="success",
+            data=report_data,
+            generation_time_ms=generation_time_ms
+        )
+        
+        logger.info(f"✅ LH decision report generated in {generation_time_ms:.0f}ms")
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ LH decision report generation failed: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"LH decision report generation failed: {str(e)}"
         )
 
 
