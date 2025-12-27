@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}대시보드 - ZeroSite v4.0{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-speedometer2"></i> ZeroSite v4.0 대시보드
+        </h1>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-file-earmark-check"></i> 총 분석</h5>
+                <h2 class="card-text" id="total-analyses">-</h2>
+                <small>전체 분석 건수</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-check-circle"></i> 완료</h5>
+                <h2 class="card-text" id="completed-analyses">-</h2>
+                <small>분석 완료</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-hourglass-split"></i> 진행 중</h5>
+                <h2 class="card-text" id="processing-analyses">-</h2>
+                <small>분석 진행 중</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-graph-up"></i> 평균 점수</h5>
+                <h2 class="card-text" id="average-score">-</h2>
+                <small>LH 평균 점수</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-lightning-charge"></i> 빠른 작업</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2 d-md-flex">
+                    <a href="/analysis" class="btn btn-primary btn-lg">
+                        <i class="bi bi-plus-circle"></i> 새 분석 시작
+                    </a>
+                    <a href="/comparison" class="btn btn-success btn-lg">
+                        <i class="bi bi-layout-three-columns"></i> 다중 부지 비교
+                    </a>
+                    <a href="/map" class="btn btn-info btn-lg">
+                        <i class="bi bi-geo-alt"></i> 지도에서 보기
+                    </a>
+                    <button class="btn btn-secondary btn-lg" onclick="refreshDashboard()">
+                        <i class="bi bi-arrow-clockwise"></i> 새로고침
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Analyses -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="bi bi-clock-history"></i> 최근 분석</h5>
+                <button class="btn btn-sm btn-outline-primary" onclick="loadRecentAnalyses()">
+                    <i class="bi bi-arrow-clockwise"></i> 새로고침
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="recent-analyses-table">
+                        <thead>
+                            <tr>
+                                <th>상태</th>
+                                <th>주소</th>
+                                <th>분석 시작</th>
+                                <th>진행률</th>
+                                <th>LH 점수</th>
+                                <th>판정</th>
+                                <th>작업</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-analyses-body">
+                            <tr>
+                                <td colspan="7" class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">로딩 중...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart Section -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-bar-chart"></i> 분석 상태 분포</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="status-chart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-pie-chart"></i> 판정 결과 분포</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="judgement-chart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 대시보드 데이터 로드
+async function loadDashboardData() {
+    try {
+        const response = await fetch('/api/v1/jobs');
+        const data = await response.json();
+        
+        // 통계 업데이트
+        document.getElementById('total-analyses').textContent = data.total;
+        
+        const completed = data.jobs.filter(j => j.status === 'completed').length;
+        const processing = data.jobs.filter(j => j.status === 'processing').length;
+        
+        document.getElementById('completed-analyses').textContent = completed;
+        document.getElementById('processing-analyses').textContent = processing;
+        
+        // 최근 분석 테이블 업데이트
+        const tbody = document.getElementById('recent-analyses-body');
+        tbody.innerHTML = '';
+        
+        if (data.jobs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center">분석 내역이 없습니다.</td></tr>';
+        } else {
+            data.jobs.slice(0, 10).forEach(job => {
+                const row = createJobRow(job);
+                tbody.appendChild(row);
+            });
+        }
+        
+    } catch (error) {
+        console.error('대시보드 데이터 로드 실패:', error);
+    }
+}
+
+function createJobRow(job) {
+    const tr = document.createElement('tr');
+    
+    // 상태 배지
+    let statusBadge = '';
+    switch(job.status) {
+        case 'completed':
+            statusBadge = '<span class="badge bg-success">완료</span>';
+            break;
+        case 'processing':
+            statusBadge = '<span class="badge bg-warning">진행중</span>';
+            break;
+        case 'pending':
+            statusBadge = '<span class="badge bg-info">대기</span>';
+            break;
+        case 'failed':
+            statusBadge = '<span class="badge bg-danger">실패</span>';
+            break;
+    }
+    
+    tr.innerHTML = `
+        <td>${statusBadge}</td>
+        <td>${job.address || 'N/A'}</td>
+        <td>${new Date(job.created_at).toLocaleString('ko-KR')}</td>
+        <td>
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" style="width: ${job.progress}%">
+                    ${job.progress}%
+                </div>
+            </div>
+        </td>
+        <td id="score-${job.job_id}">-</td>
+        <td id="judgement-${job.job_id}">-</td>
+        <td>
+            <button class="btn btn-sm btn-primary" onclick="viewResult('${job.job_id}')">
+                <i class="bi bi-eye"></i>
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="deleteJob('${job.job_id}')">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>
+    `;
+    
+    // 완료된 작업이면 상세 정보 로드
+    if (job.status === 'completed') {
+        loadJobDetails(job.job_id);
+    }
+    
+    return tr;
+}
+
+async function loadJobDetails(jobId) {
+    try {
+        const response = await fetch(`/api/v1/result/${jobId}`);
+        const data = await response.json();
+        
+        const scoreEl = document.getElementById(`score-${jobId}`);
+        const judgementEl = document.getElementById(`judgement-${jobId}`);
+        
+        if (data.result && data.result.lh_review) {
+            const lhReview = data.result.lh_review;
+            scoreEl.textContent = `${lhReview.lh_score_total.toFixed(1)}/100`;
+            
+            const judgement = lhReview.judgement;
+            let judgementBadge = '';
+            
+            if (judgement === 'GO') {
+                judgementBadge = '<span class="badge bg-success">GO</span>';
+            } else if (judgement === 'CONDITIONAL_GO') {
+                judgementBadge = '<span class="badge bg-warning">조건부 GO</span>';
+            } else {
+                judgementBadge = '<span class="badge bg-danger">NO_GO</span>';
+            }
+            
+            judgementEl.innerHTML = judgementBadge;
+        }
+    } catch (error) {
+        console.error('작업 상세 정보 로드 실패:', jobId, error);
+    }
+}
+
+async function viewResult(jobId) {
+    window.location.href = `/result/${jobId}`;
+}
+
+async function deleteJob(jobId) {
+    if (!confirm('정말 이 분석을 삭제하시겠습니까?')) {
+        return;
+    }
+    
+    try {
+        await fetch(`/api/v1/job/${jobId}`, { method: 'DELETE' });
+        loadDashboardData();
+    } catch (error) {
+        console.error('작업 삭제 실패:', error);
+        alert('작업 삭제에 실패했습니다.');
+    }
+}
+
+function loadRecentAnalyses() {
+    loadDashboardData();
+}
+
+function refreshDashboard() {
+    loadDashboardData();
+}
+
+// 페이지 로드 시 대시보드 데이터 로드
+document.addEventListener('DOMContentLoaded', function() {
+    loadDashboardData();
+    
+    // 5초마다 자동 새로고침
+    setInterval(loadDashboardData, 5000);
+});
+</script>
+{% endblock %}

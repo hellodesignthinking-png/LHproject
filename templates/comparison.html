@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}다중 부지 비교 - ZeroSite v4.0{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-layout-three-columns"></i> 다중 부지 비교 분석
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-plus-square"></i> 부지 추가</h5>
+            </div>
+            <div class="card-body">
+                <form id="add-site-form">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="site_address" class="form-label">주소</label>
+                                <input type="text" class="form-control" id="site_address" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="site_area" class="form-label">면적 (㎡)</label>
+                                <input type="number" class="form-control" id="site_area" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="site_zone" class="form-label">용도지역</label>
+                                <select class="form-select" id="site_zone" required>
+                                    <option value="">선택</option>
+                                    <option value="제1종일반주거지역">제1종일반</option>
+                                    <option value="제2종일반주거지역">제2종일반</option>
+                                    <option value="제3종일반주거지역">제3종일반</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> 부지 추가
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- 추가된 부지 목록 -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5><i class="bi bi-list-check"></i> 비교 대상 부지 (<span id="site-count">0</span>개)</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="sites-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>주소</th>
+                                <th>면적 (㎡)</th>
+                                <th>용도지역</th>
+                                <th>작업</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sites-body">
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">
+                                    부지를 추가해주세요.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="d-grid gap-2 mt-3">
+                    <button class="btn btn-success btn-lg" id="compare-btn" disabled>
+                        <i class="bi bi-arrow-right-circle"></i> 비교 분석 시작 (<span id="btn-site-count">0</span>개 부지)
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearAllSites()">
+                        <i class="bi bi-trash"></i> 전체 삭제
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- 비교 진행 상황 -->
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-info-circle"></i> 비교 진행 상황</h5>
+            </div>
+            <div class="card-body" id="comparison-progress">
+                <div class="alert alert-info">
+                    <i class="bi bi-lightbulb"></i> 2개 이상의 부지를 추가한 후 "비교 분석 시작" 버튼을 클릭하세요.
+                </div>
+            </div>
+        </div>
+        
+        <!-- 예제 데이터 -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5><i class="bi bi-stars"></i> 예제 데이터</h5>
+            </div>
+            <div class="card-body">
+                <button class="btn btn-outline-primary btn-sm w-100" onclick="loadExampleSites()">
+                    <i class="bi bi-download"></i> 3개 부지 예제 불러오기
+                </button>
+                <p class="text-muted mt-2 mb-0" style="font-size: 0.85rem;">
+                    서울 강남구, 송파구, 경기 성남시 부지
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 비교 결과 모달 -->
+<div class="modal fade" id="comparisonResultModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-graph-up"></i> 비교 분석 결과</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="comparison-result-body">
+                <!-- 결과가 여기에 표시됩니다 -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="downloadComparisonReport()">
+                    <i class="bi bi-download"></i> 엑셀 보고서 다운로드
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let sites = [];
+let currentComparisonId = null;
+
+// 부지 추가 폼
+document.getElementById('add-site-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const address = document.getElementById('site_address').value;
+    const area = parseFloat(document.getElementById('site_area').value);
+    const zone = document.getElementById('site_zone').value;
+    
+    const site = {
+        id: `site_${Date.now()}`,
+        address: address,
+        area_sqm: area,
+        area_pyeong: (area / 3.3058).toFixed(2),
+        zone_type: zone
+    };
+    
+    sites.push(site);
+    updateSitesTable();
+    
+    // 폼 초기화
+    this.reset();
+});
+
+function updateSitesTable() {
+    const tbody = document.getElementById('sites-body');
+    tbody.innerHTML = '';
+    
+    if (sites.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">부지를 추가해주세요.</td></tr>';
+    } else {
+        sites.forEach((site, idx) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${idx + 1}</td>
+                <td>${site.address}</td>
+                <td>${site.area_sqm}㎡ (${site.area_pyeong}평)</td>
+                <td>${site.zone_type}</td>
+                <td>
+                    <button class="btn btn-sm btn-danger" onclick="removeSite(${idx})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+    
+    // 개수 업데이트
+    document.getElementById('site-count').textContent = sites.length;
+    document.getElementById('btn-site-count').textContent = sites.length;
+    
+    // 버튼 활성화/비활성화
+    document.getElementById('compare-btn').disabled = sites.length < 2;
+}
+
+function removeSite(index) {
+    sites.splice(index, 1);
+    updateSitesTable();
+}
+
+function clearAllSites() {
+    if (confirm('모든 부지를 삭제하시겠습니까?')) {
+        sites = [];
+        updateSitesTable();
+    }
+}
+
+// 비교 분석 시작
+document.getElementById('compare-btn').addEventListener('click', async function() {
+    if (sites.length < 2) {
+        alert('최소 2개 이상의 부지가 필요합니다.');
+        return;
+    }
+    
+    // TODO: API 연동
+    alert('비교 분석 기능은 개발 중입니다.\n\n추가된 부지:\n' + 
+          sites.map((s, idx) => `${idx+1}. ${s.address}`).join('\n'));
+});
+
+// 예제 데이터 로드
+function loadExampleSites() {
+    sites = [
+        {
+            id: 'site_1',
+            address: '서울 강남구 역삼동 648-23',
+            area_sqm: 500.0,
+            area_pyeong: '151.25',
+            zone_type: '제2종일반주거지역'
+        },
+        {
+            id: 'site_2',
+            address: '서울 송파구 잠실동 가상부지',
+            area_sqm: 600.0,
+            area_pyeong: '181.50',
+            zone_type: '제2종일반주거지역'
+        },
+        {
+            id: 'site_3',
+            address: '경기 성남시 분당구 가상부지',
+            area_sqm: 550.0,
+            area_pyeong: '166.38',
+            zone_type: '제2종일반주거지역'
+        }
+    ];
+    
+    updateSitesTable();
+}
+
+function downloadComparisonReport() {
+    alert('엑셀 보고서 다운로드 기능은 개발 중입니다.');
+}
+</script>
+{% endblock %}

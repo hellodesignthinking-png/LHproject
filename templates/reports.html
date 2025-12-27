@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}보고서 목록 - ZeroSite v4.0{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-file-earmark-text"></i> 보고서 목록
+        </h1>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-primary active" data-type="all">
+                        <i class="bi bi-grid"></i> 전체
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" data-type="single">
+                        <i class="bi bi-file-earmark"></i> 단일 분석
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" data-type="comparison">
+                        <i class="bi bi-layout-three-columns"></i> 다중 비교
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" data-type="proposal">
+                        <i class="bi bi-file-earmark-word"></i> LH 제안서
+                    </button>
+                </div>
+                
+                <div class="float-end">
+                    <button class="btn btn-outline-secondary" onclick="refreshReports()">
+                        <i class="bi bi-arrow-clockwise"></i> 새로고침
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-folder"></i> 생성된 보고서</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>유형</th>
+                                <th>보고서 ID</th>
+                                <th>주소/설명</th>
+                                <th>생성일시</th>
+                                <th>파일 형식</th>
+                                <th>작업</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reports-body">
+                            <tr>
+                                <td colspan="6" class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">로딩 중...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- HTML 보고서 -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-filetype-html"></i> HTML 보고서</h5>
+            </div>
+            <div class="card-body" id="html-reports">
+                <p class="text-muted">HTML 보고서 목록을 불러오는 중...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let allReports = [];
+
+// 보고서 목록 로드
+async function loadReports() {
+    try {
+        // TODO: API 연동
+        // 임시 테스트 데이터
+        const testReports = [
+            {
+                type: 'single',
+                id: 'LH-1168010100106480023-20251226',
+                address: '서울 강남구 역삼동 648-23',
+                created_at: '2025-12-26 23:58:31',
+                formats: ['HTML', 'PDF', 'JSON']
+            },
+            {
+                type: 'comparison',
+                id: 'M8-COMPARISON-20251226-235107',
+                address: '3개 부지 비교',
+                created_at: '2025-12-26 23:51:07',
+                formats: ['JSON', 'Excel']
+            },
+            {
+                type: 'proposal',
+                id: 'LH_Proposal_1168010100106480023_20251226-235831',
+                address: '서울 강남구 역삼동 648-23 제안서',
+                created_at: '2025-12-26 23:58:31',
+                formats: ['Word', 'PDF', 'ZIP']
+            }
+        ];
+        
+        allReports = testReports;
+        displayReports(allReports);
+        loadHTMLReports();
+        
+    } catch (error) {
+        console.error('보고서 로드 실패:', error);
+        document.getElementById('reports-body').innerHTML = 
+            '<tr><td colspan="6" class="text-center text-danger">보고서를 불러올 수 없습니다.</td></tr>';
+    }
+}
+
+function displayReports(reports) {
+    const tbody = document.getElementById('reports-body');
+    tbody.innerHTML = '';
+    
+    if (reports.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">보고서가 없습니다.</td></tr>';
+        return;
+    }
+    
+    reports.forEach(report => {
+        const tr = document.createElement('tr');
+        
+        let typeBadge = '';
+        switch(report.type) {
+            case 'single':
+                typeBadge = '<span class="badge bg-primary">단일 분석</span>';
+                break;
+            case 'comparison':
+                typeBadge = '<span class="badge bg-success">다중 비교</span>';
+                break;
+            case 'proposal':
+                typeBadge = '<span class="badge bg-info">LH 제안서</span>';
+                break;
+        }
+        
+        const formatBadges = report.formats.map(fmt => {
+            let color = 'secondary';
+            if (fmt === 'HTML') color = 'primary';
+            else if (fmt === 'PDF') color = 'danger';
+            else if (fmt === 'Excel' || fmt === 'Word') color = 'success';
+            return `<span class="badge bg-${color} me-1">${fmt}</span>`;
+        }).join('');
+        
+        tr.innerHTML = `
+            <td>${typeBadge}</td>
+            <td><code>${report.id}</code></td>
+            <td>${report.address}</td>
+            <td>${report.created_at}</td>
+            <td>${formatBadges}</td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="viewReport('${report.id}')">
+                    <i class="bi bi-eye"></i> 보기
+                </button>
+                <button class="btn btn-sm btn-success" onclick="downloadReport('${report.id}')">
+                    <i class="bi bi-download"></i> 다운로드
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteReport('${report.id}')">
+                    <i class="bi bi-trash"></i> 삭제
+                </button>
+            </td>
+        `;
+        
+        tbody.appendChild(tr);
+    });
+}
+
+function loadHTMLReports() {
+    // HTML 보고서 목록 표시
+    const htmlContainer = document.getElementById('html-reports');
+    htmlContainer.innerHTML = `
+        <div class="list-group">
+            <a href="/output/reports/LH-1168010100106480023-20251226.html" target="_blank" 
+               class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">LH-1168010100106480023-20251226</h6>
+                    <small class="text-muted">2025-12-26</small>
+                </div>
+                <p class="mb-1">서울 강남구 역삼동 648-23</p>
+                <small class="text-muted">HTML 보고서 | 20.6 KB</small>
+            </a>
+        </div>
+    `;
+}
+
+function viewReport(reportId) {
+    alert(`보기 기능 개발 중\nReport ID: ${reportId}`);
+}
+
+function downloadReport(reportId) {
+    alert(`다운로드 기능 개발 중\nReport ID: ${reportId}`);
+}
+
+function deleteReport(reportId) {
+    if (confirm(`정말 이 보고서를 삭제하시겠습니까?\n${reportId}`)) {
+        alert('삭제 기능 개발 중');
+    }
+}
+
+function refreshReports() {
+    loadReports();
+}
+
+// 필터 버튼
+document.querySelectorAll('[data-type]').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('[data-type]').forEach(b => {
+            b.classList.remove('active');
+            b.classList.add('btn-outline-primary');
+            b.classList.remove('btn-primary');
+        });
+        
+        this.classList.add('active');
+        this.classList.remove('btn-outline-primary');
+        this.classList.add('btn-primary');
+        
+        const type = this.getAttribute('data-type');
+        
+        if (type === 'all') {
+            displayReports(allReports);
+        } else {
+            const filtered = allReports.filter(r => r.type === type);
+            displayReports(filtered);
+        }
+    });
+});
+
+// 페이지 로드 시 보고서 목록 로드
+document.addEventListener('DOMContentLoaded', loadReports);
+</script>
+{% endblock %}

@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block title %}분석 결과 - ZeroSite v4.0{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1><i class="bi bi-file-earmark-check"></i> 분석 결과</h1>
+            <div>
+                <a href="/" class="btn btn-secondary">
+                    <i class="bi bi-house"></i> 대시보드
+                </a>
+                <button class="btn btn-primary" onclick="downloadReport()">
+                    <i class="bi bi-download"></i> 보고서 다운로드
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 종합 판정 -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h4><i class="bi bi-clipboard-check"></i> LH 종합 판정</h4>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h6>판정 결과</h6>
+                        <h2 id="judgement-result">-</h2>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>LH 점수</h6>
+                        <h2 id="lh-score">-</h2>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>등급</h6>
+                        <h2 id="grade">-</h2>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>치명적 결격</h6>
+                        <h2 id="fatal-reject">-</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 부지 정보 -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-geo-alt"></i> 부지 정보</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tbody>
+                        <tr>
+                            <th>주소</th>
+                            <td id="address">-</td>
+                        </tr>
+                        <tr>
+                            <th>지번</th>
+                            <td id="parcel-id">-</td>
+                        </tr>
+                        <tr>
+                            <th>면적</th>
+                            <td id="area">-</td>
+                        </tr>
+                        <tr>
+                            <th>용도지역</th>
+                            <td id="zone-type">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-currency-exchange"></i> 재무 요약</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tbody>
+                        <tr>
+                            <th>총 사업비</th>
+                            <td id="total-cost">-</td>
+                        </tr>
+                        <tr>
+                            <th>총 수익</th>
+                            <td id="total-revenue">-</td>
+                        </tr>
+                        <tr>
+                            <th>NPV</th>
+                            <td id="npv">-</td>
+                        </tr>
+                        <tr>
+                            <th>IRR</th>
+                            <td id="irr">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 차트 -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-bar-chart"></i> LH 점수표</h5>
+            </div>
+            <div class="card-body">
+                <img id="lh-scorecard-chart" class="img-fluid" alt="LH 점수표">
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-pie-chart"></i> 재무 분석</h5>
+            </div>
+            <div class="card-body">
+                <img id="financial-chart" class="img-fluid" alt="재무 분석">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 섹션별 점수 -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-list-check"></i> 섹션별 점수</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="section-chart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 개선 사항 -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-lightbulb"></i> 개선 제안</h5>
+            </div>
+            <div class="card-body">
+                <ul id="improvement-points" class="list-group">
+                    <li class="list-group-item">로딩 중...</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const jobId = '{{ job_id }}';
+let resultData = null;
+
+async function loadResult() {
+    try {
+        const response = await fetch(`/api/v1/result/${jobId}`);
+        const data = await response.json();
+        
+        resultData = data.result;
+        
+        // LH 종합 판정
+        const lhReview = resultData.lh_review;
+        
+        let judgementBadge = '';
+        if (lhReview.judgement === 'GO') {
+            judgementBadge = '<span class="badge bg-success fs-3">GO</span>';
+        } else if (lhReview.judgement === 'CONDITIONAL_GO') {
+            judgementBadge = '<span class="badge bg-warning fs-3">조건부 GO</span>';
+        } else {
+            judgementBadge = '<span class="badge bg-danger fs-3">NO_GO</span>';
+        }
+        
+        document.getElementById('judgement-result').innerHTML = judgementBadge;
+        document.getElementById('lh-score').textContent = `${lhReview.lh_score_total.toFixed(1)}/100`;
+        document.getElementById('grade').innerHTML = `<span class="badge bg-info fs-4">${lhReview.grade}</span>`;
+        document.getElementById('fatal-reject').innerHTML = lhReview.fatal_reject ? 
+            '<span class="badge bg-danger fs-4">있음</span>' : 
+            '<span class="badge bg-success fs-4">없음</span>';
+        
+        // 부지 정보
+        const landInfo = resultData.land_info;
+        document.getElementById('address').textContent = landInfo.address;
+        document.getElementById('parcel-id').textContent = landInfo.parcel_id;
+        document.getElementById('area').textContent = `${landInfo.area_sqm.toFixed(1)}㎡ (${landInfo.area_pyeong.toFixed(1)}평)`;
+        document.getElementById('zone-type').textContent = landInfo.zone_type;
+        
+        // 재무 정보
+        const feasibility = resultData.feasibility;
+        document.getElementById('total-cost').textContent = formatCurrency(feasibility.total_cost);
+        document.getElementById('total-revenue').textContent = formatCurrency(feasibility.total_revenue);
+        document.getElementById('npv').textContent = formatCurrency(feasibility.npv);
+        document.getElementById('irr').textContent = `${feasibility.irr.toFixed(2)}%`;
+        
+        // 차트 로드
+        document.getElementById('lh-scorecard-chart').src = `/api/v1/chart/${jobId}/lh_scorecard`;
+        document.getElementById('financial-chart').src = `/api/v1/chart/${jobId}/financial`;
+        
+        // 섹션 차트
+        drawSectionChart(lhReview.section_scores);
+        
+        // 개선 사항
+        const improvementList = document.getElementById('improvement-points');
+        improvementList.innerHTML = '';
+        
+        if (lhReview.improvement_points && lhReview.improvement_points.length > 0) {
+            lhReview.improvement_points.forEach(point => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.innerHTML = `<i class="bi bi-check-circle text-success"></i> ${point}`;
+                improvementList.appendChild(li);
+            });
+        } else {
+            improvementList.innerHTML = '<li class="list-group-item">개선 제안 사항이 없습니다.</li>';
+        }
+        
+    } catch (error) {
+        console.error('결과 로드 실패:', error);
+        alert('결과를 불러올 수 없습니다.');
+    }
+}
+
+function drawSectionChart(sectionScores) {
+    const ctx = document.getElementById('section-chart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['A. 정책', 'B. 입지', 'C. 건설', 'D. 가격', 'E. 사업성'],
+            datasets: [{
+                label: '점수',
+                data: [
+                    sectionScores.A,
+                    sectionScores.B,
+                    sectionScores.C,
+                    sectionScores.D,
+                    sectionScores.E
+                ],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.5)',
+                    'rgba(54, 162, 235, 0.5)',
+                    'rgba(255, 206, 86, 0.5)',
+                    'rgba(75, 192, 192, 0.5)',
+                    'rgba(153, 102, 255, 0.5)'
+                ],
+                borderColor: [
+                    'rgb(255, 99, 132)',
+                    'rgb(54, 162, 235)',
+                    'rgb(255, 206, 86)',
+                    'rgb(75, 192, 192)',
+                    'rgb(153, 102, 255)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 25
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+}
+
+function formatCurrency(value) {
+    if (value >= 1e8) {
+        return `₩${(value / 1e8).toFixed(1)}억`;
+    } else if (value >= 1e4) {
+        return `₩${(value / 1e4).toFixed(0)}만`;
+    } else {
+        return `₩${value.toLocaleString('ko-KR')}`;
+    }
+}
+
+function downloadReport() {
+    alert('보고서 다운로드 기능은 개발 중입니다.');
+}
+
+document.addEventListener('DOMContentLoaded', loadResult);
+</script>
+{% endblock %}

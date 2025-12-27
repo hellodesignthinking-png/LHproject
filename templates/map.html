@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+
+{% block title %}지도 보기 - ZeroSite v4.0{% endblock %}
+
+{% block extra_head %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-geo-alt"></i> 지도 기반 시각화
+        </h1>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-primary active" data-view="all">
+                        <i class="bi bi-geo-alt-fill"></i> 전체 부지
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" data-view="go">
+                        <i class="bi bi-check-circle"></i> GO 판정만
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" data-view="heatmap">
+                        <i class="bi bi-thermometer-half"></i> 히트맵
+                    </button>
+                </div>
+                
+                <div class="float-end">
+                    <button class="btn btn-outline-secondary" onclick="refreshMap()">
+                        <i class="bi bi-arrow-clockwise"></i> 새로고침
+                    </button>
+                    <button class="btn btn-outline-info" onclick="fitBounds()">
+                        <i class="bi bi-arrows-fullscreen"></i> 전체 보기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-9">
+        <div class="card">
+            <div class="card-body p-0">
+                <div id="map-container" style="height: 700px; position: relative;">
+                    <!-- 지도가 여기에 로드됩니다 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3">
+        <!-- 범례 -->
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-palette"></i> 범례</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <span style="display: inline-block; width: 20px; height: 20px; background-color: green; border-radius: 50%;"></span>
+                    <span class="ms-2">GO</span>
+                </div>
+                <div class="mb-2">
+                    <span style="display: inline-block; width: 20px; height: 20px; background-color: orange; border-radius: 50%;"></span>
+                    <span class="ms-2">조건부 GO</span>
+                </div>
+                <div class="mb-2">
+                    <span style="display: inline-block; width: 20px; height: 20px; background-color: red; border-radius: 50%;"></span>
+                    <span class="ms-2">NO_GO</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 통계 -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5><i class="bi bi-bar-chart"></i> 통계</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>총 부지:</strong> <span id="total-sites">0</span>개</p>
+                <p><strong>GO:</strong> <span id="go-sites">0</span>개</p>
+                <p><strong>조건부 GO:</strong> <span id="conditional-go-sites">0</span>개</p>
+                <p><strong>NO_GO:</strong> <span id="no-go-sites">0</span>개</p>
+                <hr>
+                <p><strong>평균 LH 점수:</strong> <span id="avg-score">0</span>/100</p>
+                <p><strong>평균 NPV:</strong> ₩<span id="avg-npv">0</span></p>
+            </div>
+        </div>
+        
+        <!-- 필터 -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5><i class="bi bi-funnel"></i> 필터</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">LH 점수</label>
+                    <input type="range" class="form-range" id="score-filter" min="0" max="100" value="0">
+                    <small class="text-muted"><span id="score-filter-value">0</span>점 이상</small>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">판정 결과</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="filter-go" checked>
+                        <label class="form-check-label" for="filter-go">GO</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="filter-conditional" checked>
+                        <label class="form-check-label" for="filter-conditional">조건부 GO</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="filter-nogo" checked>
+                        <label class="form-check-label" for="filter-nogo">NO_GO</label>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary w-100" onclick="applyFilters()">
+                    <i class="bi bi-check-circle"></i> 필터 적용
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+let map;
+let markers = [];
+let siteData = [];
+
+// 지도 초기화
+function initMap() {
+    map = L.map('map-container').setView([37.5665, 126.9780], 11);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+    
+    // 테스트 데이터 로드
+    loadTestData();
+}
+
+// 테스트 데이터
+function loadTestData() {
+    siteData = [
+        {
+            address: '서울 강남구 역삼동 648-23',
+            coordinates: [37.498, 127.028],
+            lh_score: 61.0,
+            judgement: 'NO_GO',
+            grade: 'D',
+            npv: 792999999,
+            irr: 7.15
+        },
+        {
+            address: '서울 송파구 잠실동 가상부지',
+            coordinates: [37.513, 127.100],
+            lh_score: 71.0,
+            judgement: 'NO_GO',
+            grade: 'C+',
+            npv: 1148800000,
+            irr: 7.36
+        },
+        {
+            address: '경기 성남시 분당구 가상부지',
+            coordinates: [37.383, 127.118],
+            lh_score: 76.0,
+            judgement: 'NO_GO',
+            grade: 'B',
+            npv: 870900000,
+            irr: 8.44
+        }
+    ];
+    
+    displayMarkers(siteData);
+    updateStatistics(siteData);
+}
+
+// 마커 표시
+function displayMarkers(sites) {
+    // 기존 마커 제거
+    markers.forEach(marker => map.removeLayer(marker));
+    markers = [];
+    
+    sites.forEach(site => {
+        let markerColor;
+        if (site.judgement === 'GO') {
+            markerColor = 'green';
+        } else if (site.judgement === 'CONDITIONAL_GO') {
+            markerColor = 'orange';
+        } else {
+            markerColor = 'red';
+        }
+        
+        const popupContent = `
+            <div style="font-family: Arial; width: 250px;">
+                <h6 style="margin: 0 0 10px 0;">${site.address}</h6>
+                <hr style="margin: 10px 0;">
+                <table style="width: 100%; font-size: 13px;">
+                    <tr>
+                        <td><b>판정:</b></td>
+                        <td style="color: ${markerColor}; font-weight: bold;">${site.judgement}</td>
+                    </tr>
+                    <tr>
+                        <td><b>LH 점수:</b></td>
+                        <td>${site.lh_score}/100</td>
+                    </tr>
+                    <tr>
+                        <td><b>등급:</b></td>
+                        <td>${site.grade}</td>
+                    </tr>
+                    <tr>
+                        <td><b>NPV:</b></td>
+                        <td>₩${formatCurrency(site.npv)}</td>
+                    </tr>
+                    <tr>
+                        <td><b>IRR:</b></td>
+                        <td>${site.irr}%</td>
+                    </tr>
+                </table>
+            </div>
+        `;
+        
+        const marker = L.circleMarker(site.coordinates, {
+            radius: 10,
+            fillColor: markerColor,
+            color: '#fff',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.8
+        }).addTo(map);
+        
+        marker.bindPopup(popupContent);
+        markers.push(marker);
+    });
+    
+    // 지도 범위 조정
+    if (sites.length > 0) {
+        const bounds = L.latLngBounds(sites.map(s => s.coordinates));
+        map.fitBounds(bounds, { padding: [50, 50] });
+    }
+}
+
+// 통계 업데이트
+function updateStatistics(sites) {
+    const total = sites.length;
+    const go = sites.filter(s => s.judgement === 'GO').length;
+    const conditional = sites.filter(s => s.judgement === 'CONDITIONAL_GO').length;
+    const nogo = sites.filter(s => s.judgement === 'NO_GO').length;
+    
+    const avgScore = sites.reduce((sum, s) => sum + s.lh_score, 0) / total;
+    const avgNpv = sites.reduce((sum, s) => sum + s.npv, 0) / total;
+    
+    document.getElementById('total-sites').textContent = total;
+    document.getElementById('go-sites').textContent = go;
+    document.getElementById('conditional-go-sites').textContent = conditional;
+    document.getElementById('no-go-sites').textContent = nogo;
+    document.getElementById('avg-score').textContent = avgScore.toFixed(1);
+    document.getElementById('avg-npv').textContent = formatCurrency(avgNpv);
+}
+
+// 필터 적용
+function applyFilters() {
+    const minScore = parseInt(document.getElementById('score-filter').value);
+    const showGo = document.getElementById('filter-go').checked;
+    const showConditional = document.getElementById('filter-conditional').checked;
+    const showNogo = document.getElementById('filter-nogo').checked;
+    
+    const filtered = siteData.filter(site => {
+        if (site.lh_score < minScore) return false;
+        if (site.judgement === 'GO' && !showGo) return false;
+        if (site.judgement === 'CONDITIONAL_GO' && !showConditional) return false;
+        if (site.judgement === 'NO_GO' && !showNogo) return false;
+        return true;
+    });
+    
+    displayMarkers(filtered);
+    updateStatistics(filtered);
+}
+
+// 점수 필터 값 표시
+document.getElementById('score-filter').addEventListener('input', function() {
+    document.getElementById('score-filter-value').textContent = this.value;
+});
+
+function refreshMap() {
+    loadTestData();
+}
+
+function fitBounds() {
+    if (siteData.length > 0) {
+        const bounds = L.latLngBounds(siteData.map(s => s.coordinates));
+        map.fitBounds(bounds, { padding: [50, 50] });
+    }
+}
+
+function formatCurrency(value) {
+    if (value >= 1e8) {
+        return `${(value / 1e8).toFixed(1)}억`;
+    } else if (value >= 1e4) {
+        return `${(value / 1e4).toFixed(0)}만`;
+    } else {
+        return value.toLocaleString('ko-KR');
+    }
+}
+
+// 페이지 로드 시 지도 초기화
+document.addEventListener('DOMContentLoaded', initMap);
+</script>
+{% endblock %}

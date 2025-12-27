@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+
+{% block title %}단일 부지 분석 - ZeroSite v4.0{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-search"></i> 단일 부지 분석
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-input-cursor-text"></i> 부지 정보 입력</h5>
+            </div>
+            <div class="card-body">
+                <form id="analysis-form">
+                    <div class="mb-3">
+                        <label for="parcel_id" class="form-label">지번 (필수)</label>
+                        <input type="text" class="form-control" id="parcel_id" name="parcel_id" 
+                               placeholder="예: 1168010100106480023" required>
+                        <div class="form-text">19자리 필지 고유번호</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="address" class="form-label">지번 주소 (필수)</label>
+                        <input type="text" class="form-control" id="address" name="address" 
+                               placeholder="예: 서울 강남구 역삼동 648-23" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="road_address" class="form-label">도로명 주소</label>
+                        <input type="text" class="form-control" id="road_address" name="road_address" 
+                               placeholder="예: 서울 강남구 테헤란로 123">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="sido" class="form-label">시도 (필수)</label>
+                                <input type="text" class="form-control" id="sido" name="sido" 
+                                       placeholder="서울" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="sigungu" class="form-label">시군구 (필수)</label>
+                                <input type="text" class="form-control" id="sigungu" name="sigungu" 
+                                       placeholder="강남구" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="dong" class="form-label">읍면동 (필수)</label>
+                                <input type="text" class="form-control" id="dong" name="dong" 
+                                       placeholder="역삼동" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="area_sqm" class="form-label">면적 (㎡) (필수)</label>
+                                <input type="number" class="form-control" id="area_sqm" name="area_sqm" 
+                                       placeholder="500.0" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="area_pyeong" class="form-label">면적 (평) (필수)</label>
+                                <input type="number" class="form-control" id="area_pyeong" name="area_pyeong" 
+                                       placeholder="151.25" step="0.01" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="zone_type" class="form-label">용도지역 (필수)</label>
+                        <select class="form-select" id="zone_type" name="zone_type" required>
+                            <option value="">선택하세요</option>
+                            <option value="제1종일반주거지역">제1종일반주거지역</option>
+                            <option value="제2종일반주거지역">제2종일반주거지역</option>
+                            <option value="제3종일반주거지역">제3종일반주거지역</option>
+                            <option value="준주거지역">준주거지역</option>
+                            <option value="상업지역">상업지역</option>
+                        </select>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="far" class="form-label">용적률 (%) (필수)</label>
+                                <input type="number" class="form-control" id="far" name="far" 
+                                       placeholder="200.0" step="0.1" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="bcr" class="form-label">건폐율 (%) (필수)</label>
+                                <input type="number" class="form-control" id="bcr" name="bcr" 
+                                       placeholder="60.0" step="0.1" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="road_width" class="form-label">접도 폭 (m) (필수)</label>
+                        <input type="number" class="form-control" id="road_width" name="road_width" 
+                               placeholder="12.0" step="0.1" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="asking_price" class="form-label">매도 희망가 (원)</label>
+                        <input type="number" class="form-control" id="asking_price" name="asking_price" 
+                               placeholder="6000000000" step="1000000">
+                        <div class="form-text">선택사항: 입력 시 비교 분석 포함</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-play-circle"></i> 분석 시작
+                        </button>
+                        <button type="reset" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> 초기화
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-info-circle"></i> 분석 진행 상황</h5>
+            </div>
+            <div class="card-body" id="progress-panel">
+                <div class="alert alert-info">
+                    <i class="bi bi-lightbulb"></i> 왼쪽 양식을 작성하고 "분석 시작" 버튼을 클릭하세요.
+                </div>
+                
+                <div id="progress-content" style="display: none;">
+                    <div class="mb-3">
+                        <h6>분석 ID: <span id="job-id" class="text-muted">-</span></h6>
+                        <h6>상태: <span id="job-status" class="badge bg-info">대기중</span></h6>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">진행률</label>
+                        <div class="progress" style="height: 30px;">
+                            <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" style="width: 0%;">
+                                0%
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">분석 단계</label>
+                        <ul class="list-group" id="analysis-steps">
+                            <li class="list-group-item">
+                                <i class="bi bi-circle text-secondary"></i> M1: 토지 정보
+                            </li>
+                            <li class="list-group-item">
+                                <i class="bi bi-circle text-secondary"></i> M2: 감정평가
+                            </li>
+                            <li class="list-group-item">
+                                <i class="bi bi-circle text-secondary"></i> M3: 세대 유형
+                            </li>
+                            <li class="list-group-item">
+                                <i class="bi bi-circle text-secondary"></i> M4: 건축 규모
+                            </li>
+                            <li class="list-group-item">
+                                <i class="bi bi-circle text-secondary"></i> M5: 사업성 분석
+                            </li>
+                            <li class="list-group-item">
+                                <i class="bi bi-circle text-secondary"></i> M6: LH 종합 평가
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success" id="view-result-btn" style="display: none;" onclick="viewResult()">
+                            <i class="bi bi-eye"></i> 결과 보기
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 예제 데이터 -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5><i class="bi bi-stars"></i> 예제 데이터</h5>
+            </div>
+            <div class="card-body">
+                <button class="btn btn-outline-primary btn-sm" onclick="loadExample()">
+                    <i class="bi bi-download"></i> 서울 강남구 역삼동 예제 불러오기
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentJobId = null;
+let pollingInterval = null;
+
+// 폼 제출
+document.getElementById('analysis-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const data = {
+        parcel_id: formData.get('parcel_id'),
+        address: formData.get('address'),
+        road_address: formData.get('road_address') || formData.get('address'),
+        sido: formData.get('sido'),
+        sigungu: formData.get('sigungu'),
+        dong: formData.get('dong'),
+        area_sqm: parseFloat(formData.get('area_sqm')),
+        area_pyeong: parseFloat(formData.get('area_pyeong')),
+        zone_type: formData.get('zone_type'),
+        far: parseFloat(formData.get('far')),
+        bcr: parseFloat(formData.get('bcr')),
+        road_width: parseFloat(formData.get('road_width')),
+        asking_price: formData.get('asking_price') ? parseFloat(formData.get('asking_price')) : null
+    };
+    
+    try {
+        const response = await fetch('/api/v1/analyze', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            currentJobId = result.job_id;
+            document.getElementById('job-id').textContent = currentJobId;
+            document.getElementById('progress-content').style.display = 'block';
+            
+            // 진행 상황 폴링 시작
+            startPolling();
+        } else {
+            alert('분석 시작 실패: ' + JSON.stringify(result));
+        }
+    } catch (error) {
+        console.error('분석 시작 오류:', error);
+        alert('분석 시작 중 오류가 발생했습니다.');
+    }
+});
+
+// 진행 상황 폴링
+function startPolling() {
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+    }
+    
+    pollingInterval = setInterval(async () => {
+        if (!currentJobId) return;
+        
+        try {
+            const response = await fetch(`/api/v1/status/${currentJobId}`);
+            const data = await response.json();
+            
+            // 진행률 업데이트
+            const progress = data.progress;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+            document.getElementById('progress-bar').textContent = `${progress}%`;
+            
+            // 상태 업데이트
+            let statusBadge = '';
+            switch(data.status) {
+                case 'completed':
+                    statusBadge = '<span class="badge bg-success">완료</span>';
+                    document.getElementById('view-result-btn').style.display = 'block';
+                    clearInterval(pollingInterval);
+                    break;
+                case 'processing':
+                    statusBadge = '<span class="badge bg-warning">진행중</span>';
+                    break;
+                case 'pending':
+                    statusBadge = '<span class="badge bg-info">대기중</span>';
+                    break;
+                case 'failed':
+                    statusBadge = '<span class="badge bg-danger">실패</span>';
+                    clearInterval(pollingInterval);
+                    alert('분석 실패: ' + data.error);
+                    break;
+            }
+            document.getElementById('job-status').innerHTML = statusBadge;
+            
+            // 단계별 아이콘 업데이트
+            updateStepIcons(progress);
+            
+        } catch (error) {
+            console.error('상태 조회 오류:', error);
+        }
+    }, 1000);
+}
+
+function updateStepIcons(progress) {
+    const steps = [
+        { threshold: 10, element: 0 },
+        { threshold: 30, element: 1 },
+        { threshold: 50, element: 2 },
+        { threshold: 70, element: 3 },
+        { threshold: 85, element: 4 },
+        { threshold: 100, element: 5 }
+    ];
+    
+    const stepElements = document.querySelectorAll('#analysis-steps li i');
+    
+    steps.forEach((step, idx) => {
+        if (progress >= step.threshold) {
+            stepElements[idx].className = 'bi bi-check-circle-fill text-success';
+        } else if (idx > 0 && progress >= steps[idx-1].threshold) {
+            stepElements[idx].className = 'bi bi-arrow-repeat text-warning';
+        }
+    });
+}
+
+function viewResult() {
+    if (currentJobId) {
+        window.location.href = `/result/${currentJobId}`;
+    }
+}
+
+// 예제 데이터 로드
+function loadExample() {
+    document.getElementById('parcel_id').value = '1168010100106480023';
+    document.getElementById('address').value = '서울 강남구 역삼동 648-23';
+    document.getElementById('road_address').value = '서울 강남구 테헤란로 123';
+    document.getElementById('sido').value = '서울';
+    document.getElementById('sigungu').value = '강남구';
+    document.getElementById('dong').value = '역삼동';
+    document.getElementById('area_sqm').value = '500.0';
+    document.getElementById('area_pyeong').value = '151.25';
+    document.getElementById('zone_type').value = '제2종일반주거지역';
+    document.getElementById('far').value = '200.0';
+    document.getElementById('bcr').value = '60.0';
+    document.getElementById('road_width').value = '12.0';
+    document.getElementById('asking_price').value = '6000000000';
+}
+
+// 평 ↔ ㎡ 자동 계산
+document.getElementById('area_sqm').addEventListener('input', function() {
+    const sqm = parseFloat(this.value);
+    if (!isNaN(sqm)) {
+        document.getElementById('area_pyeong').value = (sqm / 3.3058).toFixed(2);
+    }
+});
+
+document.getElementById('area_pyeong').addEventListener('input', function() {
+    const pyeong = parseFloat(this.value);
+    if (!isNaN(pyeong)) {
+        document.getElementById('area_sqm').value = (pyeong * 3.3058).toFixed(2);
+    }
+});
+</script>
+{% endblock %}
