@@ -2838,10 +2838,11 @@ M6는 <b>"LH가 이 사업을 승인할 것인가"</b>를 예측하며, M5와 �
         # 🔥 STEP 1: 단일 데이터 소스 정의 (SSOT)
         summary = data.get('summary', {})
         m6_score = (
-            summary.get('total_score') or  # 🔥 FIRST: canonical summary field
-            data.get('total_score') or     # FALLBACK 1: root level
-            data.get('m6_score') or        # FALLBACK 2: old format
-            data.get('scores', {}).get('total')  # FALLBACK 3: nested scores
+            data.get('lh_score_total') or      # 🔥 FIRST: Phase 3.5D canonical field
+            summary.get('total_score') or      # FALLBACK 1: canonical summary field
+            data.get('total_score') or         # FALLBACK 2: root level
+            data.get('m6_score') or            # FALLBACK 3: old format
+            data.get('scores', {}).get('total')  # FALLBACK 4: nested scores
         )
         
         # 🚨 VALIDATION: m6_score가 None이면 에러 (0이 아님!)
