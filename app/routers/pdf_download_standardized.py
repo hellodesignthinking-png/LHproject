@@ -1017,6 +1017,69 @@ async def get_final_report_html(
                 )
             )
         
+        # 🔥 CRITICAL FIX: Check if M2-M6 data exists, if not, run pipeline automatically
+        has_pipeline_data = 'modules' in frozen_context and frozen_context['modules']
+        if not has_pipeline_data:
+            logger.warning(f"⚠️ Pipeline data not found for {context_id}, running pipeline automatically...")
+            
+            # Extract parcel_id from frozen context
+            parcel_id = frozen_context.get('parcel_id') or frozen_context.get('land_info', {}).get('parcel_id')
+            
+            if parcel_id:
+                try:
+                    # Import pipeline endpoint
+                    from app.api.endpoints.pipeline_reports_v4 import run_pipeline_analysis
+                    from app.api.endpoints.pipeline_reports_v4 import PipelineAnalysisRequest
+                    
+                    # Create request
+                    pipeline_request = PipelineAnalysisRequest(
+                        parcel_id=parcel_id,
+                        context_id=context_id,
+                        use_cache=False
+                    )
+                    
+                    # Run pipeline
+                    logger.info(f"🚀 Auto-running pipeline for context_id={context_id}, parcel_id={parcel_id}")
+                    pipeline_response = await run_pipeline_analysis(pipeline_request)
+                    
+                    if pipeline_response.status == "success":
+                        logger.info(f"✅ Pipeline completed successfully, reloading context...")
+                        # Wait a bit for DB write
+                        import asyncio
+                        await asyncio.sleep(1)
+                        # Reload context
+                        frozen_context = context_storage.get_frozen_context(context_id)
+                        if not frozen_context:
+                            raise HTTPException(status_code=500, detail="Failed to reload context after pipeline")
+                    else:
+                        raise HTTPException(
+                            status_code=500,
+                            detail=f"파이프라인 자동 실행 실패. 다시 시도해주세요."
+                        )
+                except Exception as e:
+                    logger.error(f"❌ Auto-pipeline execution failed: {e}")
+                    raise HTTPException(
+                        status_code=500,
+                        detail=(
+                            f"파이프라인 자동 실행 중 오류 발생.\n\n"
+                            f"💡 해결 방법:\n"
+                            f"1. 프론트엔드에서 '분석 시작' 버튼을 눌러주세요.\n"
+                            f"2. M2~M6 파이프라인이 완료될 때까지 기다려주세요.\n"
+                            f"3. 완료 후 다시 최종보고서를 클릭해주세요.\n\n"
+                            f"오류: {str(e)}"
+                        )
+                    )
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        f"parcel_id를 찾을 수 없습니다.\n\n"
+                        f"💡 해결 방법:\n"
+                        f"1. M1 분석을 다시 실행해주세요.\n"
+                        f"2. Context ID: {context_id}"
+                    )
+                )
+        
         # ✅ STEP 1.5: 데이터 완전성 보강
         frozen_context = _enrich_context_with_complete_data(frozen_context, context_id)
         
