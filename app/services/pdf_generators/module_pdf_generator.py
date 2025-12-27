@@ -302,8 +302,32 @@ class ModulePDFGenerator:
         # Restore canvas state
         canvas.restoreState()
     
-    def generate_m2_appraisal_pdf(self, data: Dict[str, Any]) -> bytes:
-        """M2 토지가치 분석 및 사업성 검토 기준 PDF 생성 (ZeroSite 표준 디자인)"""
+    def generate_m2_appraisal_pdf(self, assembled_data: Dict[str, Any]) -> bytes:
+        """
+        M2 토지가치 분석 및 사업성 검토 기준 PDF 생성 (Phase 3.5D)
+        
+        Args:
+            assembled_data: Phase 3.5D standard schema
+                {
+                    "m6_result": {...},
+                    "modules": {
+                        "M2": {"summary": {...}, "details": {}, "raw_data": {}},
+                        ...
+                    }
+                }
+        """
+        # ✅ STEP 1: Extract M2 data from Phase 3.5D schema
+        m2_data = assembled_data.get("modules", {}).get("M2", {}).get("summary", {})
+        m6_result = assembled_data.get("m6_result", {})
+        
+        logger.info(f"🔥 M2 PDF Generator - Phase 3.5D Schema")
+        logger.info(f"   M2 keys: {list(m2_data.keys())}")
+        logger.info(f"   M6 judgement: {m6_result.get('judgement', 'N/A')}")
+        
+        # ✅ STEP 2: Fail fast if M2 data is missing
+        if not m2_data:
+            raise ValueError("M2 데이터가 없습니다. M2 파이프라인을 먼저 실행하세요.")
+        
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(
             buffer,
@@ -366,19 +390,22 @@ class ModulePDFGenerator:
         story.append(Paragraph(identity_text, styles['Normal']))
         story.append(Spacer(1, 0.2*inch))
         
-        # CRITICAL: Backend API returns nested structure
-        # data = {appraisal: {...}, official_price: {...}, ...}
-        # So we extract appraisal directly
-        appraisal = data.get('appraisal', {})
-        land_value = appraisal.get('land_value', 0)
-        unit_price_sqm = appraisal.get('unit_price_sqm', 0)
-        unit_price_pyeong = appraisal.get('unit_price_pyeong', 0)
+        # ✅ Phase 3.5D: Direct access from M2 summary
+        land_value = m2_data.get('land_value', 0)
+        land_value_per_pyeong = m2_data.get('land_value_per_pyeong', 0)
+        confidence_pct = m2_data.get('confidence_pct', 0.0)
         
-        logger.info(f"M2 PDF - Received data keys: {list(data.keys())}")
-        logger.info(f"M2 PDF - Land value: {land_value}")
+        # Calculate unit_price_sqm from pyeong if not present
+        unit_price_sqm = m2_data.get('unit_price_sqm', 0)
+        if not unit_price_sqm and land_value_per_pyeong:
+            unit_price_sqm = int(land_value_per_pyeong / 3.3058)  # 1평 = 3.3058㎡
         
-        # 가격 범위 데이터 추출
-        price_range = data.get('price_range', {})
+        logger.info(f"M2 PDF - Land value: {land_value:,.0f}")
+        logger.info(f"M2 PDF - Per pyeong: {land_value_per_pyeong:,.0f}")
+        logger.info(f"M2 PDF - Confidence: {confidence_pct}%")
+        
+        # 가격 범위 데이터 추출 (or calculate from land_value)
+        price_range = m2_data.get('price_range', {})
         low_price = price_range.get('low', land_value * 0.85)
         high_price = price_range.get('high', land_value * 1.15)
         
@@ -857,8 +884,27 @@ M4~M6 모듈의 분석을 뒷받침하는 <b>기초 데이터 엔진의 역할</
         buffer.seek(0)
         return buffer.getvalue()
     
-    def generate_m3_housing_type_pdf(self, data: Dict[str, Any]) -> bytes:
-        """M3 선호유형 구조 분석 PDF 생성 (ZeroSite 표준 디자인)"""
+    def generate_m3_housing_type_pdf(self, assembled_data: Dict[str, Any]) -> bytes:
+        """
+        M3 선호유형 구조 분석 PDF 생성 (Phase 3.5D)
+        
+        Args:
+            assembled_data: Phase 3.5D standard schema
+        """
+        # ✅ Extract M3 data from Phase 3.5D schema
+        m3_data = assembled_data.get("modules", {}).get("M3", {}).get("summary", {})
+        m6_result = assembled_data.get("m6_result", {})
+        
+        logger.info(f"🔥 M3 PDF Generator - Phase 3.5D Schema")
+        logger.info(f"   M3 keys: {list(m3_data.keys())}")
+        logger.info(f"   M6 judgement: {m6_result.get('judgement', 'N/A')}")
+        
+        if not m3_data:
+            raise ValueError("M3 데이터가 없습니다. M3 파이프라인을 먼저 실행하세요.")
+        
+        # For backwards compatibility, keep data reference
+        data = m3_data
+        
         buffer = io.BytesIO()
         # ✅ Create PDF document with theme margins
         doc = self._create_document(buffer)
@@ -1312,14 +1358,27 @@ LH 청년형 공급 시 <b>수요 불일치 리스크가 {'매우 낮습니다' 
         buffer.seek(0)
         return buffer.getvalue()
     
-    def generate_m4_capacity_pdf(self, data: Dict[str, Any]) -> bytes:
-        """M4 건축규모 결정 분석 PDF 생성 (ZeroSite 표준 디자인)
-        
-        **데이터 검증 추가 (2025-12-19)**:
-        - 필수 필드 존재 여부 확인
-        - 0값 검증 (세대수, FAR, GFA 등)
-        - M5 연동을 위한 시나리오 데이터 검증
+    def generate_m4_capacity_pdf(self, assembled_data: Dict[str, Any]) -> bytes:
         """
+        M4 건축규모 결정 분석 PDF 생성 (Phase 3.5D)
+        
+        Args:
+            assembled_data: Phase 3.5D standard schema
+        """
+        # ✅ Extract M4 data from Phase 3.5D schema
+        m4_data = assembled_data.get("modules", {}).get("M4", {}).get("summary", {})
+        m6_result = assembled_data.get("m6_result", {})
+        
+        logger.info(f"🔥 M4 PDF Generator - Phase 3.5D Schema")
+        logger.info(f"   M4 keys: {list(m4_data.keys())}")
+        logger.info(f"   M6 judgement: {m6_result.get('judgement', 'N/A')}")
+        
+        if not m4_data:
+            raise ValueError("M4 데이터가 없습니다. M4 파이프라인을 먼저 실행하세요.")
+        
+        # For backwards compatibility, keep data reference
+        data = m4_data
+        
         # 🟡 STEP 1: 데이터 검증 (Warning 모드 - 생성 허용)
         validation = DataContract.validate_m4_data(data)
         
@@ -1854,14 +1913,27 @@ M4 시나리오 A, B, C → M5 총 사업비 산정 → LH 매입가 역산 → 
         buffer.seek(0)
         return buffer.getvalue()
     
-    def generate_m5_feasibility_pdf(self, data: Dict[str, Any]) -> bytes:
-        """M5 사업성 분석 PDF 생성 (ZeroSite 표준 디자인)
-        
-        **데이터 검증 추가 (2025-12-19)**:
-        - LH 매입가 계산에 필요한 필수 필드 검증
-        - 세대수, 면적, 단가가 0이면 보고서 생성 중단
-        - M4 연동 데이터 무결성 확인
+    def generate_m5_feasibility_pdf(self, assembled_data: Dict[str, Any]) -> bytes:
         """
+        M5 사업성 분석 PDF 생성 (Phase 3.5D)
+        
+        Args:
+            assembled_data: Phase 3.5D standard schema
+        """
+        # ✅ Extract M5 data from Phase 3.5D schema
+        m5_data = assembled_data.get("modules", {}).get("M5", {}).get("summary", {})
+        m6_result = assembled_data.get("m6_result", {})
+        
+        logger.info(f"🔥 M5 PDF Generator - Phase 3.5D Schema")
+        logger.info(f"   M5 keys: {list(m5_data.keys())}")
+        logger.info(f"   M6 judgement: {m6_result.get('judgement', 'N/A')}")
+        
+        if not m5_data:
+            raise ValueError("M5 데이터가 없습니다. M5 파이프라인을 먼저 실행하세요.")
+        
+        # For backwards compatibility, keep data reference
+        data = m5_data
+        
         # 🟡 STEP 1: 데이터 검증 (Warning 모드 - 생성 허용)
         validation = DataContract.validate_m5_data(data)
         
@@ -2228,8 +2300,10 @@ M5에서 '사업성 OK' 판단을 받았으나, 최종 Go/No-Go 결정은 <b>M6 
         buffer.seek(0)
         return buffer.getvalue()
     
-    def generate_m6_lh_review_pdf(self, data: Dict[str, Any]) -> bytes:
-        """M6 LH 검토 예측 PDF 생성 (ZeroSite 표준 디자인)
+    def generate_m6_lh_review_pdf_OLD(self, data: Dict[str, Any]) -> bytes:
+        """M6 LH 검토 예측 PDF 생성 (OLD VERSION - DEPRECATED)
+        
+        ⚠️ THIS METHOD IS DEPRECATED - Use the SSOT version below
         
         **데이터 검증 추가 (2025-12-19)**:
         - 총점, 승인율, 등급, 판정 필수 필드 검증
@@ -2737,13 +2811,30 @@ M6는 <b>"LH가 이 사업을 승인할 것인가"</b>를 예측하며, M5와 �
         buffer.seek(0)
         return buffer.getvalue()
     
-    def generate_m6_lh_review_pdf(self, data: Dict[str, Any]) -> bytes:
-        """M6 LH 심사예측 PDF 생성 (전체 데이터 포함)
+    def generate_m6_lh_review_pdf(self, assembled_data: Dict[str, Any]) -> bytes:
+        """
+        M6 LH 심사예측 PDF 생성 (Phase 3.5D - Single Source of Truth)
+        
+        Args:
+            assembled_data: Phase 3.5D standard schema
         
         🔥 CRITICAL: 단일 진실 원천(SSOT) 강제 적용
         - summary.total_score를 모든 섹션에서 사용
         - 0.0/110 버그 방지
         """
+        # ✅ Extract M6 data from Phase 3.5D schema
+        m6_result = assembled_data.get("m6_result", {})
+        
+        logger.info(f"🔥 M6 PDF Generator - Phase 3.5D SSOT")
+        logger.info(f"   M6 judgement: {m6_result.get('judgement', 'N/A')}")
+        logger.info(f"   M6 score: {m6_result.get('lh_score_total', 0)}/100")
+        
+        if not m6_result:
+            raise ValueError("M6 데이터가 없습니다. M6 파이프라인을 먼저 실행하세요.")
+        
+        # For backwards compatibility, keep data reference
+        data = m6_result
+        
         # 🔥 STEP 1: 단일 데이터 소스 정의 (SSOT)
         summary = data.get('summary', {})
         m6_score = (

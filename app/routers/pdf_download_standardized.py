@@ -174,24 +174,108 @@ async def download_module_pdf(
     try:
         logger.info(f"PDF 다운로드 요청: module={module}, context_id={context_id}")
         
-        # TODO: context_id로 실제 데이터 조회
-        # 현재는 테스트 데이터 사용
-        test_data = _get_test_data_for_module(module, context_id)
+        # ✅ STEP 1: context_id로 실제 저장된 컨텍스트 조회
+        frozen_context = context_storage.get_frozen_context(context_id)
         
-        # PDF 생성기 초기화
+        if not frozen_context:
+            raise HTTPException(
+                status_code=404,
+                detail=(
+                    f"❌ 분석 데이터를 찾을 수 없습니다.\n\n"
+                    f"Context ID: {context_id}\n\n"
+                    f"💡 해결 방법:\n"
+                    f"1. M1 분석을 먼저 완료하세요.\n"
+                    f"2. '분석 시작' 버튼을 눌러 context를 저장하세요.\n"
+                    f"3. M2~M6 파이프라인 실행 완료 후 PDF를 생성하세요."
+                )
+            )
+        
+        # ✅ STEP 2: M6 Result 추출 및 검증
+        m6_result = frozen_context.get('m6_result')
+        if not m6_result:
+            logger.warning(f"M6 result not found for context_id={context_id}")
+            m6_result = {
+                'lh_score_total': 0.0,
+                'judgement': 'N/A',
+                'grade': 'N/A',
+                'fatal_reject': False,
+                'deduction_reasons': ['M6 파이프라인 미실행'],
+                'improvement_points': [],
+                'section_scores': {}
+            }
+        
+        # ✅ STEP 3: Smart key fallback (Phase 3.5F)
+        def safe_get_module(ctx, module_id):
+            """Try multiple key formats to find module data"""
+            key1 = f"{module_id.lower()}_result"
+            key2 = module_id.upper()
+            key3 = module_id.lower()
+            result = ctx.get(key1) or ctx.get(key2) or ctx.get(key3) or {}
+            logger.info(f"🔍 {module_id}: trying {key1}={bool(ctx.get(key1))}, {key2}={bool(ctx.get(key2))}, {key3}={bool(ctx.get(key3))} → result={bool(result)}")
+            return result
+        
+        # ✅ STEP 4: assembled_data 표준 스키마 생성 (Phase 3.5F)
+        assembled_data = {
+            "m6_result": m6_result,
+            "modules": {
+                "M1": {
+                    "summary": safe_get_module(frozen_context, 'M1'),
+                    "details": {},
+                    "raw_data": {}
+                },
+                "M2": {
+                    "summary": safe_get_module(frozen_context, 'M2'),
+                    "details": {},
+                    "raw_data": {}
+                },
+                "M3": {
+                    "summary": safe_get_module(frozen_context, 'M3'),
+                    "details": {},
+                    "raw_data": {}
+                },
+                "M4": {
+                    "summary": safe_get_module(frozen_context, 'M4'),
+                    "details": {},
+                    "raw_data": {}
+                },
+                "M5": {
+                    "summary": safe_get_module(frozen_context, 'M5'),
+                    "details": {},
+                    "raw_data": {}
+                }
+            }
+        }
+        
+        # 🚨 FAIL FAST: Validate requested module data exists
+        module_summary = assembled_data["modules"][module]["summary"]
+        if not module_summary:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"필수 분석 데이터가 누락되었습니다: {module}\n\n"
+                    f"💡 해결 방법:\n"
+                    f"1. {module} 파이프라인을 먼저 실행하세요\n"
+                    f"2. {module} 분석이 정상적으로 완료되었는지 확인하세요\n"
+                    f"3. Context ID: {context_id}"
+                )
+            )
+        
+        logger.info(f"✅ {module} data found: {list(module_summary.keys())}")
+        
+        # ✅ STEP 5: PDF 생성기 초기화
         generator = ModulePDFGenerator()
         
-        # 모듈별 PDF 생성
+        # ✅ STEP 6: 모듈별 PDF 생성 (assembled_data 전달)
         if module == "M2":
-            pdf_bytes = generator.generate_m2_appraisal_pdf(test_data)
+            pdf_bytes = generator.generate_m2_appraisal_pdf(assembled_data)
         elif module == "M3":
-            pdf_bytes = generator.generate_m3_housing_type_pdf(test_data)
+            pdf_bytes = generator.generate_m3_housing_type_pdf(assembled_data)
         elif module == "M4":
-            pdf_bytes = generator.generate_m4_capacity_pdf(test_data)
+            pdf_bytes = generator.generate_m4_capacity_pdf(assembled_data)
         elif module == "M5":
-            pdf_bytes = generator.generate_m5_feasibility_pdf(test_data)
+            pdf_bytes = generator.generate_m5_feasibility_pdf(assembled_data)
         elif module == "M6":
-            pdf_bytes = generator.generate_m6_lh_review_pdf(test_data)
+            pdf_bytes = generator.generate_m6_lh_review_pdf(assembled_data)
         else:
             raise HTTPException(status_code=400, detail=f"지원하지 않는 모듈: {module}")
         
@@ -951,41 +1035,78 @@ async def get_final_report_html(
         # 🔴 STEP 3 (Phase 3.5F): assembled_data 표준 스키마 생성
         from app.services.m6_centered_report_base import create_m6_centered_report
         
+        # 🚨 EMERGENCY DIAGNOSIS: Log frozen_context structure
+        logger.info(f"🔍 DIAGNOSIS: frozen_context keys: {list(frozen_context.keys())}")
+        logger.info(f"🔍 m2_result exists: {'m2_result' in frozen_context}")
+        logger.info(f"🔍 M2 (uppercase) exists: {'M2' in frozen_context}")
+        
+        # ✅ Phase 3.5F: Smart key fallback (try multiple key formats)
+        def safe_get_module(ctx, module_id):
+            """Try multiple key formats to find module data"""
+            # Try lowercase with _result suffix (e.g., m2_result)
+            key1 = f"{module_id.lower()}_result"
+            # Try uppercase (e.g., M2)
+            key2 = module_id.upper()
+            # Try lowercase (e.g., m2)
+            key3 = module_id.lower()
+            
+            result = ctx.get(key1) or ctx.get(key2) or ctx.get(key3) or {}
+            logger.info(f"🔍 {module_id}: trying {key1}={bool(ctx.get(key1))}, {key2}={bool(ctx.get(key2))}, {key3}={bool(ctx.get(key3))} → result={bool(result)}")
+            return result
+        
         # ✅ Phase 3.5F: 표준 Data Contract 구조 사용
         assembled_data = {
             "m6_result": m6_result,
             "modules": {
                 "M1": {
-                    "summary": frozen_context.get('m1', {}),
+                    "summary": safe_get_module(frozen_context, 'M1'),
                     "details": {},
                     "raw_data": {}
                 },
                 "M2": {
-                    "summary": frozen_context.get('m2_result', {}),
+                    "summary": safe_get_module(frozen_context, 'M2'),
                     "details": {},
                     "raw_data": {}
                 },
                 "M3": {
-                    "summary": frozen_context.get('m3_result', {}),
+                    "summary": safe_get_module(frozen_context, 'M3'),
                     "details": {},
                     "raw_data": {}
                 },
                 "M4": {
-                    "summary": frozen_context.get('m4_result', {}),
+                    "summary": safe_get_module(frozen_context, 'M4'),
                     "details": {},
                     "raw_data": {}
                 },
                 "M5": {
-                    "summary": frozen_context.get('m5_result', {}),
+                    "summary": safe_get_module(frozen_context, 'M5'),
                     "details": {},
                     "raw_data": {}
                 }
             }
         }
         
+        # 🚨 FAIL FAST: Validate critical module data
+        empty_modules = [mid for mid in ['M2', 'M3', 'M4', 'M5'] 
+                        if not assembled_data["modules"][mid]["summary"]]
+        
+        if empty_modules:
+            logger.error(f"❌ Empty modules detected: {empty_modules}")
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"필수 분석 데이터가 누락되었습니다: {', '.join(empty_modules)}\n\n"
+                    f"💡 해결 방법:\n"
+                    f"1. M2-M6 파이프라인을 완료해주세요\n"
+                    f"2. 각 모듈 분석이 정상적으로 완료되었는지 확인하세요\n"
+                    f"3. Context ID: {context_id}"
+                )
+            )
+        
         logger.info(f"🔥 Phase 3.5F: Generating M6-centered {report_type} for context_id={context_id}")
         logger.info(f"   M6 Judgement: {m6_result.get('judgement', 'N/A')}")
         logger.info(f"   M6 Score: {m6_result.get('lh_score_total', 'N/A')}/100")
+        logger.info(f"✅ All modules populated: M2={bool(assembled_data['modules']['M2']['summary'])}, M3={bool(assembled_data['modules']['M3']['summary'])}, M4={bool(assembled_data['modules']['M4']['summary'])}, M5={bool(assembled_data['modules']['M5']['summary'])}")
         
         # 🔴 Phase 3.5F: M6 중심 보고서 생성 (Single Parameter!)
         report_data = create_m6_centered_report(
