@@ -12,29 +12,14 @@ Date: 2025-12-27
 from typing import Dict, Any
 from datetime import datetime
 
-
-def format_currency(value: float) -> str:
-    """통화 포맷팅 - 억원 단위로 정확히 표시"""
-    if not value:
-        return "데이터 없음"
-    
-    # 1억원 = 100,000,000원
-    billions = value / 100_000_000
-    if billions >= 1:  # 1억원 이상
-        return f"{billions:.2f}억원"
-    
-    millions = value / 10_000
-    if millions >= 1:  # 1만원 이상
-        return f"{millions:.0f}만원"
-    
-    return f"{value:,.0f}원"
-
-
-def format_percentage(value: float) -> str:
-    """퍼센트 포맷팅"""
-    if value is None:
-        return "데이터 없음"
-    return f"{value:.1f}%"
+# ✅ Import unified format utilities
+from app.services.format_utils import (
+    format_currency_kr,
+    format_percentage,
+    format_area_sqm,
+    format_unit_count,
+    format_score
+)
 
 
 def get_judgement_color(judgement: str) -> str:
@@ -228,11 +213,11 @@ def render_simple_html(report_data: Dict[str, Any]) -> str:
                 <div class="data-grid">
                     <div class="data-card">
                         <div class="label">토지 가치</div>
-                        <div class="value">{format_currency(m2.get('land_value', 0))}</div>
+                        <div class="value">{format_currency_kr(m2.get('land_value', 0))}</div>
                     </div>
                     <div class="data-card">
                         <div class="label">평당 단가</div>
-                        <div class="value">{format_currency(m2.get('land_value_per_pyeong', 0))}</div>
+                        <div class="value">{format_currency_kr(m2.get('land_value_per_pyeong', 0))}</div>
                     </div>
                     <div class="data-card">
                         <div class="label">신뢰도</div>
@@ -294,7 +279,7 @@ def render_simple_html(report_data: Dict[str, Any]) -> str:
                 <div class="data-grid">
                     <div class="data-card">
                         <div class="label">NPV (순현재가치)</div>
-                        <div class="value">{format_currency(m5.get('npv_public_krw', 0))}</div>
+                        <div class="value">{format_currency_kr(m5.get('npv_public_krw', 0))}</div>
                     </div>
                     <div class="data-card">
                         <div class="label">IRR (내부수익률)</div>
