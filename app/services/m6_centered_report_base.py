@@ -518,17 +518,14 @@ class PresentationReport(M6CenteredReportBase):
 
 
 def create_m6_centered_report(
-    report_type: str,
-    m6_result: Any,
-    assembled_data: Dict[str, Any]
+    assembled_data: Dict[str, Any],
+    report_type: str = "all_in_one"
 ) -> Dict[str, Any]:
     """
-    M6 중심 보고서 생성 팩토리 함수 (Phase 3.5D 표준 스키마)
+    M6 중심 보고서 생성 팩토리 함수 (Phase 3.5F FINAL - Single Parameter)
     
     Args:
-        report_type: 보고서 타입 (all_in_one, landowner_summary, etc.)
-        m6_result: M6 최종 판단 결과 (M6ComprehensiveResult 객체 또는 dict)
-        assembled_data: 표준 Data Contract
+        assembled_data: 표준 Data Contract (ONLY PARAMETER)
             {
                 "m6_result": {...},
                 "modules": {
@@ -536,10 +533,21 @@ def create_m6_centered_report(
                     ...
                 }
             }
+        report_type: 보고서 타입 (all_in_one, landowner_summary, etc.)
+                    Default: "all_in_one"
         
     Returns:
         생성된 보고서 데이터
     """
+    # 🔴 Phase 3.5F: FAIL FAST - assembled_data 검증
+    from app.services.data_contract import validate_assembled_data
+    validate_assembled_data(assembled_data, strict=True)
+    
+    # 🔴 Phase 3.5F: Extract m6_result FROM assembled_data
+    m6_result = assembled_data.get("m6_result")
+    if not m6_result:
+        raise ValueError("assembled_data must contain 'm6_result' key")
+    
     # M6 결과를 SingleSourceOfTruth로 변환
     # dict 형식과 객체 형식 모두 지원
     if isinstance(m6_result, dict):

@@ -111,7 +111,7 @@ class TestDataRestoration:
     def test_m2_data_exists(self, sample_m6_result, sample_m1_m5_data):
         """M2 데이터가 보고서에 포함되는지 확인"""
         # Phase 3.5D: m6_result is already inside sample_m1_m5_data
-        report = create_m6_centered_report('all_in_one', sample_m1_m5_data["m6_result"], sample_m1_m5_data)
+        report = create_m6_centered_report(sample_m1_m5_data, report_type='all_in_one')
         
         evidence = report.get('evidence_data', {})
         m2 = evidence.get('m2_appraisal', {})
@@ -124,7 +124,7 @@ class TestDataRestoration:
     
     def test_m3_data_exists(self, sample_m6_result, sample_m1_m5_data):
         """M3 데이터가 보고서에 포함되는지 확인"""
-        report = create_m6_centered_report('all_in_one', sample_m1_m5_data["m6_result"], sample_m1_m5_data)
+        report = create_m6_centered_report(sample_m1_m5_data, report_type='all_in_one')
         
         evidence = report.get('evidence_data', {})
         m3 = evidence.get('m3_housing_type', {})
@@ -137,7 +137,7 @@ class TestDataRestoration:
     
     def test_m4_data_exists(self, sample_m6_result, sample_m1_m5_data):
         """M4 데이터가 보고서에 포함되는지 확인"""
-        report = create_m6_centered_report('all_in_one', sample_m1_m5_data["m6_result"], sample_m1_m5_data)
+        report = create_m6_centered_report(sample_m1_m5_data, report_type='all_in_one')
         
         evidence = report.get('evidence_data', {})
         m4 = evidence.get('m4_capacity', {})
@@ -150,7 +150,7 @@ class TestDataRestoration:
     
     def test_m5_data_exists(self, sample_m6_result, sample_m1_m5_data):
         """M5 데이터가 보고서에 포함되는지 확인"""
-        report = create_m6_centered_report('all_in_one', sample_m1_m5_data["m6_result"], sample_m1_m5_data)
+        report = create_m6_centered_report(sample_m1_m5_data, report_type='all_in_one')
         
         evidence = report.get('evidence_data', {})
         m5 = evidence.get('m5_feasibility', {})
@@ -164,7 +164,7 @@ class TestDataRestoration:
     
     def test_html_rendering_includes_data(self, sample_m6_result, sample_m1_m5_data):
         """HTML 렌더링에 데이터가 포함되는지 확인"""
-        report = create_m6_centered_report('all_in_one', sample_m1_m5_data["m6_result"], sample_m1_m5_data)
+        report = create_m6_centered_report(sample_m1_m5_data, report_type='all_in_one')
         html = render_simple_html(report)
         
         # HTML에 실제 데이터가 포함되는지 확인
@@ -178,7 +178,7 @@ class TestDataRestoration:
     
     def test_no_judgement_in_module_data(self, sample_m6_result, sample_m1_m5_data):
         """M2~M5 데이터에 판단 표현이 없는지 확인"""
-        report = create_m6_centered_report('all_in_one', sample_m1_m5_data["m6_result"], sample_m1_m5_data)
+        report = create_m6_centered_report(sample_m1_m5_data, report_type='all_in_one')
         
         evidence = report.get('evidence_data', {})
         m2 = evidence.get('m2_appraisal', {})
@@ -209,7 +209,7 @@ class TestPhase35CCompletion:
     
     def test_all_data_visible(self, sample_m6_result, sample_m1_m5_data):
         """모든 모듈 데이터가 보이는지 확인"""
-        report = create_m6_centered_report('all_in_one', sample_m1_m5_data["m6_result"], sample_m1_m5_data)
+        report = create_m6_centered_report(sample_m1_m5_data, report_type='all_in_one')
         html = render_simple_html(report)
         
         # Phase 3.5C 완료 기준
@@ -228,7 +228,7 @@ class TestPhase35CCompletion:
     
     def test_m6_only_judgement(self, sample_m6_result, sample_m1_m5_data):
         """M6만 판단하는지 확인"""
-        report = create_m6_centered_report('all_in_one', sample_m1_m5_data["m6_result"], sample_m1_m5_data)
+        report = create_m6_centered_report(sample_m1_m5_data, report_type='all_in_one')
         
         # M6 판단 확인
         assert 'final_conclusion' in report, "final_conclusion이 없음"

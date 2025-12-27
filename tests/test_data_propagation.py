@@ -53,7 +53,7 @@ def test_module_data_change_reflects_in_html():
     
     # Generate report
     m6_result = assembled_data["m6_result"]
-    report = create_m6_centered_report("all_in_one", m6_result, assembled_data)
+    report = create_m6_centered_report(assembled_data, report_type="all_in_one")
     
     # Render HTML
     html = render_simple_html(report)
@@ -122,7 +122,7 @@ def test_all_six_reports_use_same_module_data():
     reports = {}
     for report_type in report_types:
         reports[report_type] = create_m6_centered_report(
-            report_type, m6_result, assembled_data
+            assembled_data, report_type=report_type
         )
     
     # Extract key_numbers from each report (if present)
@@ -240,7 +240,7 @@ def test_data_change_propagates_to_multiple_outputs():
     m6_result = assembled_data["m6_result"]
     
     # Generate all_in_one report
-    report = create_m6_centered_report("all_in_one", m6_result, assembled_data)
+    report = create_m6_centered_report(assembled_data, report_type="all_in_one")
     
     # Verify key_numbers reflect NEW values (not original)
     kn = report['key_numbers']

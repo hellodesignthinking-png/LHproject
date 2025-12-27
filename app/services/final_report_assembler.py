@@ -1395,10 +1395,10 @@ def assemble_final_report(
     from app.services.m6_centered_report_base import create_m6_centered_report
     
     try:
+        # 🔴 Phase 3.5F FINAL: Single parameter only!
         report_data = create_m6_centered_report(
-            report_type=report_type,
-            m6_result=m6_result,
-            m1_m5_data=assembled_data  # ✅ 표준 스키마 전달
+            assembled_data=assembled_data,  # ✅ ONLY parameter
+            report_type=report_type
         )
     except Exception as e:
         logger.error(f"❌ Failed to create M6-centered report: {e}", exc_info=True)

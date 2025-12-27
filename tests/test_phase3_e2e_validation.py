@@ -42,7 +42,7 @@ class TestScenarioA_NormalFlow:
     """시나리오 A: M6 결과가 6종 보고서에 완벽히 반영되는지 검증"""
     
     def setup_method(self):
-        """테스트 데이터 준비"""
+        """테스트 데이터 준비 (Phase 3.5F Standard Schema)"""
         self.m6_result = {
             'lh_score_total': 75.0,
             'judgement': 'CONDITIONAL',
@@ -65,12 +65,31 @@ class TestScenarioA_NormalFlow:
             }
         }
         
+        # 🔴 Phase 3.5F: Standard Schema
         self.assembled_data = {
-            'm1': {'address': '서울특별시 강남구 테헤란로 123', 'area': 1000},
-            'm2': {'land_value': 6081933538},
-            'm3': {'recommended_type': 'youth'},
-            'm4': {'legal_units': 20, 'incentive_units': 26},
-            'm5': {'npv_public': 792999999}
+            "m6_result": self.m6_result,
+            "modules": {
+                "M2": {
+                    "summary": {"land_value": 6081933538, "land_value_per_pyeong": 50000000, "confidence_pct": 85.0},
+                    "details": {},
+                    "raw_data": {}
+                },
+                "M3": {
+                    "summary": {"recommended_type": "youth", "total_score": 85.5, "demand_score": 90.0},
+                    "details": {},
+                    "raw_data": {}
+                },
+                "M4": {
+                    "summary": {"total_units": 20, "incentive_units": 26, "gross_area_sqm": 1500},
+                    "details": {},
+                    "raw_data": {}
+                },
+                "M5": {
+                    "summary": {"npv_public_krw": 792999999, "irr_pct": 12.5, "roi_pct": 15.2, "financial_grade": "B"},
+                    "details": {},
+                    "raw_data": {}
+                }
+            }
         }
     
     def test_all_reports_share_same_m6_judgement(self):
@@ -91,11 +110,8 @@ class TestScenarioA_NormalFlow:
         judgements = []
         
         for report_type in report_types:
-            report = create_m6_centered_report(
-                report_type=report_type,
-                m6_result=self.m6_result,
-                assembled_data=self.assembled_data
-            )
+            report = create_m6_centered_report(self.assembled_data
+            , report_type=report_type)
             
             # Phase 3: 표준 judgement 추출
             judgement = None
@@ -135,11 +151,8 @@ class TestScenarioA_NormalFlow:
         scores = []
         
         for report_type in report_types:
-            report = create_m6_centered_report(
-                report_type=report_type,
-                m6_result=self.m6_result,
-                assembled_data=self.assembled_data
-            )
+            report = create_m6_centered_report(self.assembled_data
+            , report_type=report_type)
             
             # Phase 3: 표준 score 추출
             score = None
@@ -186,11 +199,8 @@ class TestScenarioA_NormalFlow:
         grades = []
         
         for report_type in report_types:
-            report = create_m6_centered_report(
-                report_type=report_type,
-                m6_result=self.m6_result,
-                assembled_data=self.assembled_data
-            )
+            report = create_m6_centered_report(self.assembled_data
+            , report_type=report_type)
             
             # Phase 3: 표준 grade 추출
             grade = None
@@ -227,12 +237,28 @@ class TestScenarioB_ExtremeChange:
         
         Expected: GO 상태에서 생성된 보고서와 NOGO 상태에서 생성된 보고서가 완전히 다름
         """
-        assembled_data = {
-            'm1': {'address': '서울특별시 강남구 테헤란로 123', 'area': 1000},
-            'm2': {'land_value': 6081933538},
-            'm3': {'recommended_type': 'youth'},
-            'm4': {'legal_units': 20, 'incentive_units': 26},
-            'm5': {'npv_public': 792999999}
+        # 🔴 Phase 3.5F: Base modules structure
+        base_modules = {
+            "M2": {
+                "summary": {"land_value": 6081933538, "land_value_per_pyeong": 50000000, "confidence_pct": 85.0},
+                "details": {},
+                "raw_data": {}
+            },
+            "M3": {
+                "summary": {"recommended_type": "youth", "total_score": 85.5, "demand_score": 90.0},
+                "details": {},
+                "raw_data": {}
+            },
+            "M4": {
+                "summary": {"total_units": 20, "incentive_units": 26, "gross_area_sqm": 1500},
+                "details": {},
+                "raw_data": {}
+            },
+            "M5": {
+                "summary": {"npv_public_krw": 792999999, "irr_pct": 12.5, "roi_pct": 15.2, "financial_grade": "B"},
+                "details": {},
+                "raw_data": {}
+            }
         }
         
         # GO 상태
@@ -257,18 +283,25 @@ class TestScenarioB_ExtremeChange:
             'section_scores': {'policy': 8, 'location': 10, 'construction': 8, 'price': 6, 'business': 8}
         }
         
+        # 🔴 Phase 3.5F: Standard schema with m6_result inside
+        assembled_data_go = {
+            "m6_result": m6_go,
+            "modules": base_modules
+        }
+        
+        assembled_data_nogo = {
+            "m6_result": m6_nogo,
+            "modules": base_modules
+        }
+        
         # GO 상태 보고서 생성
         report_go = create_m6_centered_report(
-            report_type="all_in_one",
-            m6_result=m6_go,
-            assembled_data=assembled_data
+            assembled_data_go, report_type="all_in_one"
         )
         
         # NOGO 상태 보고서 생성
         report_nogo = create_m6_centered_report(
-            report_type="all_in_one",
-            m6_result=m6_nogo,
-            assembled_data=assembled_data
+            assembled_data_nogo, report_type="all_in_one"
         )
         
         # Phase 3: 표준 추출 로직 사용

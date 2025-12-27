@@ -987,11 +987,10 @@ async def get_final_report_html(
         logger.info(f"   M6 Judgement: {m6_result.get('judgement', 'N/A')}")
         logger.info(f"   M6 Score: {m6_result.get('lh_score_total', 'N/A')}/100")
         
-        # M6 중심 보고서 생성 (Single Source of Truth)
+        # 🔴 Phase 3.5F: M6 중심 보고서 생성 (Single Parameter!)
         report_data = create_m6_centered_report(
-            report_type=report_type,
-            m6_result=m6_result,
-            assembled_data=assembled_data  # ✅ 표준 스키마 전달
+            assembled_data=assembled_data,  # ✅ ONLY parameter
+            report_type=report_type
         )
         
         # ✅ STEP 4: HTML 렌더링 (M6 중심)
