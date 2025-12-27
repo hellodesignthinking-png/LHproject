@@ -563,19 +563,30 @@ async def real_address_api(query: str, kakao_api_key: Optional[str] = None) -> t
                 address_info = doc.get("address", {})
                 road_address_info = doc.get("road_address", {})
                 
+                # Build road address (prefer road address, fallback to jibun)
+                road_addr = road_address_info.get("address_name", "") if road_address_info else address_info.get("address_name", "")
+                jibun_addr = address_info.get("address_name", "")
+                
+                # CRITICAL: Get coordinates from address node
+                lat = float(address_info.get("y", doc.get("y", 37.5665)))
+                lon = float(address_info.get("x", doc.get("x", 126.978)))
+                
                 suggestion = {
-                    "road_address": road_address_info.get("address_name", "") if road_address_info else "",
-                    "jibun_address": address_info.get("address_name", ""),
+                    "road_address": road_addr,
+                    "jibun_address": jibun_addr,
                     "coordinates": {
-                        "lat": float(doc.get("y", 37.5665)),
-                        "lon": float(doc.get("x", 126.978))
+                        "lat": lat,
+                        "lon": lon
                     },
                     "sido": address_info.get("region_1depth_name", ""),
                     "sigungu": address_info.get("region_2depth_name", ""),
                     "dong": address_info.get("region_3depth_name", ""),
                     "building_name": road_address_info.get("building_name", "") if road_address_info else None
                 }
-                suggestions.append(suggestion)
+                
+                # Skip empty results
+                if road_addr or jibun_addr:
+                    suggestions.append(suggestion)
             
             logger.info(f"✅ Found {len(suggestions)} REAL address suggestions for '{query}'")
             return (suggestions, False)  # Real API data
@@ -619,8 +630,17 @@ async def search_address_endpoint(
         if using_mock:
             logger.warning(f"⚠️ Returning MOCK data for '{request.query}' - {len(suggestions)} suggestions")
         
+        # Validate suggestions have coordinates before returning
+        valid_suggestions = []
+        for s in suggestions:
+            if "coordinates" not in s or not s["coordinates"]:
+                logger.warning(f"⚠️ Missing coordinates for: {s.get('jibun_address', 'unknown')}")
+                # Provide default coordinates if missing
+                s["coordinates"] = {"lat": 37.5665, "lon": 126.978}
+            valid_suggestions.append(s)
+        
         return AddressSearchResponse(
-            suggestions=suggestions,
+            suggestions=valid_suggestions,
             success=True,
             using_mock_data=using_mock
         )
