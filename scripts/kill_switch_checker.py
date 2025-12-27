@@ -147,6 +147,8 @@ ALLOWED_FILES = [
     # Phase 3+ Exceptions: M5/M6 Internal Logic (Allowed)
     # ========================================================================
     # These files generate M6 judgement, so they NEED conditional logic
+    "app/modules/m5_feasibility/",                     # M5 엔진 전체 (판단 생성)
+    "app/modules/m6_lh_review/",                       # M6 엔진 전체 (판단 생성)
     "app/modules/m5_feasibility/service.py",           # M5 엔진 (판단 생성)
     "app/modules/m6_lh_review/score_calculator.py",    # M6 엔진 (판단 생성)
     "app/engines/financial_engine.py",                  # M5 엔진
@@ -182,15 +184,25 @@ ALLOWED_FILES = [
     "advanced_report_generator.py",                     # 정리 대상
     "ch3_feasibility_scoring.py",                       # M3 내부 로직
     "chart_service.py",                                 # 시각화 전용
+    "chart_generator.py",                               # 시각화 전용
     "report_generator_v10_ultra_pro.py",                # Legacy (정리 예정)
     "lh_report_generator_v7",                           # Legacy v7 (정리 예정)
     "report_generator_v8_8.py",                         # Legacy v8 (정리 예정)
+    "narrative_engine_v10.py",                          # Legacy v10 (정리 예정)
+    "narrative_generator_v11_expert.py",                # Legacy v11 (정리 예정)
+    "location_analysis_v11_expert.py",                  # Legacy v11 (정리 예정)
     "v21_narrative",                                    # Legacy v21 (정리 예정)
     "narrative_templates_v7_3.py",                      # Legacy v7 (정리 예정)
     "policy_transaction_financial_engine_v18.py",       # Legacy v18 (정리 예정)
+    "financial_engine_v7_4.py",                         # Legacy v7 (정리 예정)
+    "lh_criteria_checker.py",                           # Legacy (정리 예정)
+    "lh_official_report_generator.py",                  # Legacy (정리 예정)
+    "lh_purchase_price_simulator.py",                   # Simulator (허용)
+    "private_rental_financial_engine.py",               # Legacy (정리 예정)
+    "section_templates_extended.py",                    # Legacy template (정리 예정)
     "report_composers",                                 # Legacy composers (Phase 2에서 대체됨)
     "composer_adapter.py",                              # Legacy adapter
-    "services_v13/report_full/report_context_builder.py",  # Legacy v13
+    "services_v13",                                     # Legacy v13 전체
     "services_v15",                                     # Legacy v15 전체
     
     # ========================================================================

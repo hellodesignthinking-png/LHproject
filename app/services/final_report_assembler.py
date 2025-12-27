@@ -476,16 +476,14 @@ LH 표준 매입가를 적용하면 총 매출액은 약 {format(int(data.m5.npv
 
 • <strong>IRR (내부수익률): {data.m5.irr_pct}%</strong><br>
   IRR은 사업의 연평균 수익률을 의미합니다. 일반적으로 부동산 개발 사업의 IRR은 10~15% 수준이 목표이며, 
-  본 사업의 IRR {data.m5.irr_pct}%는 <strong>{'우수한' if data.m5.irr_pct >= 12 else '양호한' if data.m5.irr_pct >= 10 else '보통' if data.m5.irr_pct >= 8 else '낮은'} 수준</strong>입니다.<br><br>
+  본 사업의 IRR은 {data.m5.irr_pct}%로 산출되었습니다.<br><br>
 
 • <strong>ROI (투자수익률): {data.m5.roi_pct}%</strong><br>
-  ROI는 투입 자본 대비 수익의 비율입니다. ROI {data.m5.roi_pct}%는 
-  투자금 대비 {data.m5.roi_pct}%의 수익을 얻을 수 있음을 의미하며, 
-  이는 <strong>{'매우 우수한' if data.m5.roi_pct >= 15 else '우수한' if data.m5.roi_pct >= 12 else '양호한' if data.m5.roi_pct >= 10 else '보통'} 수준</strong>입니다.<br><br>
+  ROI는 투입 자본 대비 수익의 비율입니다. 
+  본 사업의 ROI는 {data.m5.roi_pct}%로 산출되었습니다.<br><br>
 
 • <strong>사업성 등급: {financial_grade}</strong><br>
-  종합 평가 결과, 본 사업은 <strong>{financial_grade}등급</strong>으로 분류되며, 
-  이는 {'최상위 수익성' if financial_grade == 'A' else '양호한 수익성' if financial_grade == 'B' else '보통 수익성' if financial_grade == 'C' else '낮은 수익성'}을 의미합니다.""" if data.m5 and data.m5.npv_public_krw else 
+  종합 평가 결과, 본 사업은 <strong>{financial_grade}등급</strong>으로 평가되었습니다.""" if data.m5 and data.m5.npv_public_krw else 
         """<strong>LH 신축매입임대 사업의 수익 구조</strong><br><br>
 LH 신축매입임대 사업의 수익성은 'LH 매입가 - 사업비(토지비+건축비+부대비용) = 수익'의 구조로 결정됩니다. 
 LH 매입가는 표준 산정 기준에 따라 정해지므로, 사업비를 얼마나 효율적으로 관리하느냐가 수익성의 핵심입니다.<br><br>

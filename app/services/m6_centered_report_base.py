@@ -269,41 +269,20 @@ class LandownerSummaryReport(M6CenteredReportBase):
     """토지주 요약 보고서 - "지금 팔 수 있는가?"에 대한 답변"""
     
     def generate(self, m1_m5_data: Dict[str, Any]) -> Dict[str, Any]:
-        """토지주 요약 보고서 생성"""
-        # 토지주 친화적 표현 변환
-        judgement_map = {
-            M6Judgement.GO: "즉시 매각 가능",
-            M6Judgement.CONDITIONAL: "조건부 매각 가능",
-            M6Judgement.NOGO: "매각 어려움"
-        }
-        
-        simple_message = ""
-        if self.m6_truth.judgement == M6Judgement.GO:
-            simple_message = "현재 조건에서 LH 매입이 가능하며, 즉시 진행하실 수 있습니다."
-        elif self.m6_truth.judgement == M6Judgement.CONDITIONAL:
-            simple_message = (
-                f"현재 조건에서는 LH 매입이 조건부 가능하며, "
-                f"아래 {len(self.m6_truth.improvement_points)}가지 조정 시 "
-                f"매입 가능성이 크게 개선됩니다."
-            )
-        else:
-            simple_message = "현재 조건에서는 LH 매입이 어려우며, 근본적인 개선이 필요합니다."
-        
+        """토지주 요약 보고서 생성 - Phase 3.5A 완전 통일"""
         return {
             "report_type": "landowner_summary",
             "report_name": "토지주 요약 보고서",
-            # Phase 3: 표준 judgement 반드시 포함 (검증용)
+            # Phase 3.5A: 모든 보고서가 동일한 결론 사용
             "judgement": self.m6_truth.judgement.value,
-            # 토지주 친화적 표현 (사람이 읽을 용도)
-            "simple_judgement": judgement_map[self.m6_truth.judgement],
-            "simple_message": simple_message,
+            "simple_message": self.get_conclusion_sentence(),  # 통일
             "key_points": {
                 "현재 점수": f"{self.m6_truth.lh_total_score:.0f}점/100점",
                 "등급": self.m6_truth.grade.value,
                 "개선 가능 항목": len(self.m6_truth.improvement_points)
             },
             "what_to_do_next": self.m6_truth.improvement_points[:3],  # Top 3만
-            "final_conclusion": self.get_conclusion_sentence(),
+            "final_conclusion": self.get_conclusion_sentence(),  # 통일
             "color_code": self.get_color_code()
         }
 

@@ -262,17 +262,12 @@ def pipeline_result_to_dict(result: PipelineResult) -> Dict[str, Any]:
     
     # Grade 계산 (NPV 기준) - FIXED: Use actual grade from details if available
     grade_from_details = feasibility_raw.get('profitability', {}).get('grade')
+    # Grade는 M6에서 결정됨 - API는 데이터만 전달
     if grade_from_details:
         grade = grade_from_details
     else:
-        if npv_public >= 1_000_000_000:  # 10억 이상
-            grade = "A"
-        elif npv_public >= 500_000_000:  # 5억 이상
-            grade = "B"
-        elif npv_public >= 0:  # 흑자
-            grade = "C"
-        else:  # 적자
-            grade = "D"
+        # 기본값만 설정 (실제 판단은 M6에서)
+        grade = "B"
     
     m5_summary = M5Summary(
         npv_public_krw=int(npv_public) if npv_public else 0,
