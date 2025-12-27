@@ -65,14 +65,18 @@ def test_simple_e2e():
                         "low": 5169643308,
                         "high": 6994223770,
                     }
-                }
+                },
+                "details": {},
+                "raw_data": {}
             },
             "M3": {
                 "summary": {
                     "recommended_type": "youth",
                     "total_score": 85.5,
                     "demand_score": 90.0,
-                }
+                },
+                "details": {},
+                "raw_data": {}
             },
             "M4": {
                 "summary": {
@@ -81,7 +85,9 @@ def test_simple_e2e():
                     "gross_area_sqm": 1680,
                     "far_used": 2.3,
                     "bcr_used": 0.55,
-                }
+                },
+                "details": {},
+                "raw_data": {}
             },
             "M5": {
                 "summary": {
@@ -91,14 +97,18 @@ def test_simple_e2e():
                     "financial_grade": "B+",
                     "total_cost": 3964999995,
                     "total_revenue": 4757999994,
-                }
+                },
+                "details": {},
+                "raw_data": {}
             },
             "M6": {
                 "summary": {
                     "lh_score_total": 75.0,
                     "judgement": "CONDITIONAL",
                     "grade": "B+",
-                }
+                },
+                "details": {},
+                "raw_data": {}
             }
         },
         "_frozen": True,

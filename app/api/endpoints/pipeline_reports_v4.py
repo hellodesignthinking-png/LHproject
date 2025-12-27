@@ -433,7 +433,9 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
                             "low": result.appraisal.land_value * 0.85,
                             "high": result.appraisal.land_value * 1.15
                         }
-                    }
+                    },
+                    "details": {},
+                    "raw_data": {}
                 },
                 "M3": {
                     "summary": {
@@ -441,7 +443,9 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
                         "total_score": getattr(result.housing_type, 'total_score', 85.0),
                         "demand_score": getattr(result.housing_type, 'demand_score', 90.0),
                         "type_scores": getattr(result.housing_type, 'type_scores', {})
-                    }
+                    },
+                    "details": {},
+                    "raw_data": {}
                 },
                 "M4": {
                     "summary": {
@@ -450,7 +454,9 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
                         "gross_area_sqm": result.capacity.unit_summary.total_floor_area if hasattr(result.capacity.unit_summary, 'total_floor_area') else 0,
                         "far_used": getattr(result.capacity, 'far_used', 0),
                         "bcr_used": getattr(result.capacity, 'bcr_used', 0)
-                    }
+                    },
+                    "details": {},
+                    "raw_data": {}
                 },
                 "M5": {
                     "summary": {
@@ -460,14 +466,18 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
                         "financial_grade": getattr(result.feasibility, 'grade', 'B'),
                         "total_cost": getattr(result.feasibility, 'total_cost', 0),
                         "total_revenue": getattr(result.feasibility, 'total_revenue', 0)
-                    }
+                    },
+                    "details": {},
+                    "raw_data": {}
                 },
                 "M6": {
                     "summary": {
                         "lh_score_total": result.lh_review.total_score,
                         "judgement": result.lh_review.decision,
                         "grade": result.lh_review.grade if hasattr(result.lh_review, 'grade') else 'N/A'
-                    }
+                    },
+                    "details": {},
+                    "raw_data": {}
                 }
             },
             "_frozen": True,
