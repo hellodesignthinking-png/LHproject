@@ -477,7 +477,11 @@ async def _execute_pipeline(request: PipelineAnalysisRequest, tracer: PipelineTr
         try:
             # M1 is handled internally by pipeline, start tracking at M2
             tracer.set_stage(PipelineStage.M2)
-            result = pipeline.run(request.parcel_id)
+            # 🔥 FIX: Pass context_id to pipeline to load M1 frozen context
+            result = pipeline.run(
+                parcel_id=request.parcel_id,
+                context_id=request.context_id
+            )
         except TimeoutError as timeout_err:
             # External API timeout
             raise tracer.wrap(

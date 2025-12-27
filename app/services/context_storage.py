@@ -222,12 +222,17 @@ class ContextStorageService:
             logger.info(f"⚠️ [Redis] Context not found, trying DB fallback: {context_id}")
             
             try:
+                from app.database import DATABASE_URL
+                logger.info(f"🔍 [DB] Using DATABASE_URL: {DATABASE_URL}")
+                
                 db: Session = SessionLocal()
                 # 🔥 FIX: Try both context_id AND parcel_id
                 snapshot = db.query(ContextSnapshot).filter(
                     (ContextSnapshot.context_id == context_id) | 
                     (ContextSnapshot.parcel_id == context_id)
                 ).first()
+                
+                logger.info(f"🔍 [DB] Query result: {snapshot is not None}")
                 
                 if snapshot:
                     # Found in DB!

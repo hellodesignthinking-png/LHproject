@@ -100,7 +100,8 @@ class ZeroSitePipeline:
     def run(
         self,
         parcel_id: str,
-        asking_price: Optional[float] = None
+        asking_price: Optional[float] = None,
+        context_id: Optional[str] = None
     ) -> PipelineResult:
         """
         6모듈 파이프라인 실행
@@ -108,6 +109,7 @@ class ZeroSitePipeline:
         Args:
             parcel_id: 필지 ID (PNU 코드)
             asking_price: 호가 (선택)
+            context_id: Context ID (선택, M1 frozen context 로드용)
         
         Returns:
             PipelineResult: 전체 Context 포함
@@ -117,7 +119,7 @@ class ZeroSitePipeline:
         """
         
         logger.info("\n" + "="*80)
-        logger.info(f"🎯 PIPELINE START: parcel_id={parcel_id}")
+        logger.info(f"🎯 PIPELINE START: parcel_id={parcel_id}, context_id={context_id}")
         logger.info("="*80)
         
         try:
@@ -125,8 +127,33 @@ class ZeroSitePipeline:
             # M1: 토지정보 조회 (FACT)
             # ===================================================================
             logger.info("\n📍 [M1] Land Info Module - Starting...")
-            land_ctx = self._run_m1(parcel_id)
-            logger.info(f"✅ [M1] Complete: {land_ctx.address}")
+            
+            # 🔥 FIX: Try to load M1 frozen context first if context_id is provided
+            land_ctx = None
+            if context_id:
+                try:
+                    from app.services.context_storage import context_storage
+                    logger.info(f"🔍 Attempting to load M1 frozen context: {context_id}")
+                    frozen_ctx = context_storage.get_frozen_context(context_id)
+                    if frozen_ctx:
+                        # Extract land context from frozen context
+                        land_data = frozen_ctx.get('land')
+                        if land_data:
+                            from app.core.context.canonical_land import CanonicalLandContext
+                            # Reconstruct CanonicalLandContext from dict
+                            land_ctx = CanonicalLandContext(**land_data)
+                            logger.info(f"✅ Loaded M1 frozen context from: {context_id}")
+                            logger.info(f"   Address: {land_ctx.address}")
+                            logger.info(f"   Area: {land_ctx.area_sqm:,.1f}㎡")
+                except Exception as e:
+                    logger.warning(f"⚠️ Failed to load M1 frozen context: {e}")
+                    logger.info("   Falling back to fresh M1 execution")
+            
+            # If no frozen context, run M1 fresh
+            if land_ctx is None:
+                land_ctx = self._run_m1(parcel_id)
+                logger.info(f"✅ [M1] Complete (Fresh): {land_ctx.address}")
+            
             logger.info(f"   Area: {land_ctx.area_sqm:,.1f}㎡, Zone: {land_ctx.zone_type}")
             
             # ===================================================================
