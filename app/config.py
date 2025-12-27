@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     # Database Configuration
     # ============================================
     
-    database_url: str = Field(default="sqlite:///./lh_analysis.db", description="Database connection URL")
+    database_url: str = Field(default="sqlite:///./zerosite.db", description="Database connection URL")
     
     # ============================================
     # Cache & Session
