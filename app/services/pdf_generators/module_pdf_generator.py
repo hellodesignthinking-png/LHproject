@@ -362,7 +362,7 @@ class ModulePDFGenerator:
         story = []
         
         # ✅ Phase 3.5D 프롬프트③: M6 판단 헤더 (최우선)
-        self._add_m6_disclaimer_header(story, data, styles)
+        self._add_m6_disclaimer_header(story, assembled_data, styles)
         
         # 제목
         story.append(Paragraph("M2: 토지가치 분석 및 사업성 검토 기준 보고서", title_style))
@@ -445,7 +445,7 @@ class ModulePDFGenerator:
         # ========== 2. 공시지가 정보 ==========
         story.append(Paragraph("2. 공시지가 정보", heading_style))
         
-        official_price = data.get('official_price', {})
+        official_price = m2_data.get('official_price', {})
         official_total = official_price.get('total', 0)
         official_per_sqm = official_price.get('per_sqm', 0)
         
@@ -464,7 +464,7 @@ class ModulePDFGenerator:
         # ========== 3. 거래사례 분석 (핵심 비교사례 5건) ==========
         story.append(Paragraph("3. 거래사례 분석 (핵심 비교사례)", heading_style))
         
-        transactions = data.get('transactions', {})
+        transactions = m2_data.get('transactions', {})
         tx_count = transactions.get('count', 0)
         avg_price_sqm = transactions.get('avg_price_sqm', 0)
         
@@ -518,7 +518,7 @@ class ModulePDFGenerator:
         # ========== 4. 입지 경쟁력 평가 (참고 지표) ==========
         story.append(Paragraph("4. 입지 경쟁력 평가 (참고 지표)", heading_style))
         
-        premium = data.get('premium', {})
+        premium = m2_data.get('premium', {})
         scores = premium.get('scores', {})
         premiums = premium.get('premiums', {})
         
@@ -674,7 +674,7 @@ class ModulePDFGenerator:
         # ========== 5. 평가 신뢰도 분석 (논문 형식) ==========
         story.append(Paragraph("5. 평가 신뢰도 분석", heading_style))
         
-        confidence = data.get('confidence', {})
+        confidence = m2_data.get('confidence', {})
         conf_inner = confidence.get('confidence', {}) if isinstance(confidence, dict) else {}
         conf_scores = confidence.get('scores', {})
         conf_score = conf_inner.get('score', 0) if conf_inner else confidence.get('score', 0)
@@ -769,7 +769,7 @@ class ModulePDFGenerator:
         story.append(Spacer(1, 0.3*inch))
         
         # ========== 5-1. 가격 범위 분석 (추가) ==========
-        price_range = data.get('price_range', {})
+        price_range = m2_data.get('price_range', {})
         if price_range:
             story.append(Paragraph("5-1. 가격 범위 분석", heading_style))
             
@@ -788,7 +788,7 @@ class ModulePDFGenerator:
         # ========== 6. 기준가 산정 로직 (참고) ==========
         story.append(Paragraph("6. 기준가 산정 로직 (참고)", heading_style))
         
-        metadata = data.get('metadata', {})
+        metadata = m2_data.get('metadata', {})
         method = metadata.get('method', '거래사례비교법 (4-Factor Enhanced)')
         appraiser = metadata.get('appraiser', 'ZeroSite AI Engine')
         valuation_date = metadata.get('date', gen_date)
@@ -828,7 +828,7 @@ class ModulePDFGenerator:
         story.append(Spacer(1, 0.3*inch))
         
         # ========== 7. 경고사항 (있는 경우) ==========
-        warnings = data.get('warnings', {})
+        warnings = m2_data.get('warnings', {})
         if warnings and warnings.get('has_warnings'):
             story.append(Paragraph("7. 주의사항", heading_style))
             warning_items = warnings.get('items', [])
@@ -916,7 +916,7 @@ M4~M6 모듈의 분석을 뒷받침하는 <b>기초 데이터 엔진의 역할</
         story = []
         
         # ✅ Phase 3.5D 프롬프트③: M6 판단 헤더 (최우선)
-        self._add_m6_disclaimer_header(story, data, styles)
+        self._add_m6_disclaimer_header(story, assembled_data, styles)
         
         story.append(Paragraph("M3: 선호유형 구조 분석 보고서", title_style))
         story.append(Paragraph("(라이프스타일 기반 선호 분석)", ParagraphStyle('Subtitle', parent=styles['Normal'], fontName=self.font_name, fontSize=10, textColor=self.color_secondary_gray, alignment=TA_CENTER)))
@@ -1413,7 +1413,7 @@ LH 청년형 공급 시 <b>수요 불일치 리스크가 {'매우 낮습니다' 
         story = []
         
         # ✅ Phase 3.5D 프롬프트③: M6 판단 헤더 (최우선)
-        self._add_m6_disclaimer_header(story, data, styles)
+        self._add_m6_disclaimer_header(story, assembled_data, styles)
         
         story.append(Paragraph("M4: 건축규모 결정 분석 보고서", title_style))
         story.append(Paragraph("(LH 매입가·사업성 연계형 의사결정 보고서)", ParagraphStyle('Subtitle', parent=styles['Normal'], fontName=self.font_name, fontSize=10, textColor=colors.HexColor('#757575'), alignment=TA_CENTER)))
@@ -1965,7 +1965,7 @@ M4 시나리오 A, B, C → M5 총 사업비 산정 → LH 매입가 역산 → 
         story = []
         
         # ✅ Phase 3.5D 프롬프트③: M6 판단 헤더 (최우선)
-        self._add_m6_disclaimer_header(story, data, styles)
+        self._add_m6_disclaimer_header(story, assembled_data, styles)
         
         story.append(Paragraph("M5: 사업성 분석 보고서", title_style))
         story.append(Paragraph("(LH 신축 준공 후 일괄 매입 전용 구조)", ParagraphStyle('Subtitle', parent=styles['Normal'], fontName=self.font_name, fontSize=10, textColor=colors.HexColor('#757575'), alignment=TA_CENTER)))
