@@ -164,6 +164,77 @@ class ModulePDFGenerator:
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ])
     
+    def _add_m6_disclaimer_header(self, story, assembled_data: Dict[str, Any], styles):
+        """
+        M6 판단 요약 헤더 추가 (Phase 3.5D 프롬프트③)
+        
+        목적: 외부 오해 방지 — "이게 최종인가?" 질문 차단
+        
+        모든 모듈 PDF(M2~M5) 상단에 강제 삽입
+        
+        Args:
+            story: ReportLab story
+            assembled_data: 표준 Data Contract
+            styles: PDF 스타일
+        """
+        # M6 결과 추출
+        m6_result = assembled_data.get('m6_result', {})
+        judgement = m6_result.get('judgement', 'N/A')
+        total_score = m6_result.get('lh_score_total', 0)
+        
+        # 결론 문장 생성
+        from app.services.m6_centered_report_base import M6CenteredReportBase, M6SingleSourceOfTruth, M6Judgement, M6Grade
+        
+        try:
+            m6_truth = M6SingleSourceOfTruth(
+                lh_total_score=total_score,
+                judgement=M6Judgement(judgement),
+                grade=M6Grade(m6_result.get('grade', 'B')),
+                fatal_reject=m6_result.get('fatal_reject', False),
+                key_deductions=m6_result.get('deduction_reasons', []),
+                improvement_points=m6_result.get('improvement_points', []),
+                section_scores=m6_result.get('section_scores', {}),
+                approval_probability_pct=total_score * 0.9,
+                final_conclusion=""
+            )
+            base = M6CenteredReportBase(m6_truth)
+            conclusion = base.get_conclusion_sentence()
+        except Exception:
+            conclusion = "판단 정보를 불러올 수 없습니다."
+        
+        # Disclaimer 스타일
+        disclaimer_style = ParagraphStyle(
+            'M6Disclaimer',
+            parent=styles['Normal'],
+            fontName=self.font_name,
+            fontSize=10,
+            textColor=colors.HexColor('#DC2626'),  # Red
+            backColor=colors.HexColor('#FEF2F2'),  # Light red background
+            borderPadding=10,
+            borderWidth=2,
+            borderColor=colors.HexColor('#DC2626'),
+            alignment=TA_LEFT,
+            leading=14
+        )
+        
+        # Disclaimer 텍스트
+        disclaimer_text = f"""
+<b>⚠️ 본 보고서는 ZeroSite 4.0 종합 분석의 일부입니다</b><br/>
+<br/>
+본 보고서의 데이터는 최종 판단을 위한 <b>근거 자료</b>이며,
+단독으로 사업 가부를 결정할 수 없습니다.<br/>
+<br/>
+<b>최종 판단 (M6):</b> {conclusion}<br/>
+<b>LH 심사 점수:</b> {total_score:.1f}/100<br/>
+<b>판정:</b> {judgement}<br/>
+<br/>
+<i>※ 전체 분석 결과는 ZeroSite 4.0 종합 보고서를 참조하십시오.</i>
+"""
+        
+        # Story에 추가
+        story.append(Paragraph(disclaimer_text, disclaimer_style))
+        story.append(Spacer(1, 0.3*inch))
+    
     def _add_watermark_and_footer(self, canvas, doc):
         """
         모든 페이지에 ZeroSite 워터마크 + 카피라이트 추가
@@ -242,6 +313,9 @@ class ModulePDFGenerator:
         )
         
         story = []
+        
+        # ✅ Phase 3.5D 프롬프트③: M6 판단 헤더 (최우선)
+        self._add_m6_disclaimer_header(story, data, styles)
         
         # 제목
         story.append(Paragraph("M2: 토지가치 분석 및 사업성 검토 기준 보고서", title_style))
@@ -771,6 +845,10 @@ M4~M6 모듈의 분석을 뒷받침하는 <b>기초 데이터 엔진의 역할</
         heading_style = ParagraphStyle('CustomHeading', parent=styles['Heading2'], fontName=self.font_name_bold, fontSize=15, textColor=self.color_primary, spaceAfter=10, spaceBefore=15)
         
         story = []
+        
+        # ✅ Phase 3.5D 프롬프트③: M6 판단 헤더 (최우선)
+        self._add_m6_disclaimer_header(story, data, styles)
+        
         story.append(Paragraph("M3: 선호유형 구조 분석 보고서", title_style))
         story.append(Paragraph("(라이프스타일 기반 선호 분석)", ParagraphStyle('Subtitle', parent=styles['Normal'], fontName=self.font_name, fontSize=10, textColor=self.color_secondary_gray, alignment=TA_CENTER)))
         story.append(Spacer(1, 0.2*inch))
@@ -1251,6 +1329,10 @@ LH 청년형 공급 시 <b>수요 불일치 리스크가 {'매우 낮습니다' 
         heading_style = ParagraphStyle('CustomHeading', parent=styles['Heading2'], fontName=self.font_name_bold, fontSize=15, textColor=self.color_primary, spaceAfter=10, spaceBefore=15)
         
         story = []
+        
+        # ✅ Phase 3.5D 프롬프트③: M6 판단 헤더 (최우선)
+        self._add_m6_disclaimer_header(story, data, styles)
+        
         story.append(Paragraph("M4: 건축규모 결정 분석 보고서", title_style))
         story.append(Paragraph("(LH 매입가·사업성 연계형 의사결정 보고서)", ParagraphStyle('Subtitle', parent=styles['Normal'], fontName=self.font_name, fontSize=10, textColor=colors.HexColor('#757575'), alignment=TA_CENTER)))
         story.append(Spacer(1, 0.2*inch))
@@ -1786,6 +1868,10 @@ M4 시나리오 A, B, C → M5 총 사업비 산정 → LH 매입가 역산 → 
         heading_style = ParagraphStyle('CustomHeading', parent=styles['Heading2'], fontName=self.font_name_bold, fontSize=15, textColor=self.color_primary, spaceAfter=10, spaceBefore=15)
         
         story = []
+        
+        # ✅ Phase 3.5D 프롬프트③: M6 판단 헤더 (최우선)
+        self._add_m6_disclaimer_header(story, data, styles)
+        
         story.append(Paragraph("M5: 사업성 분석 보고서", title_style))
         story.append(Paragraph("(LH 신축 준공 후 일괄 매입 전용 구조)", ParagraphStyle('Subtitle', parent=styles['Normal'], fontName=self.font_name, fontSize=10, textColor=colors.HexColor('#757575'), alignment=TA_CENTER)))
         story.append(Spacer(1, 0.2*inch))
