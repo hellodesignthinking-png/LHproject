@@ -404,6 +404,70 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
         # Cache results
         results_cache[request.parcel_id] = result
         
+        # 🔥 CRITICAL FIX: Save to context_storage for PDF/HTML/Reports
+        # Import context_storage
+        from app.services.context_storage import context_storage
+        
+        # Convert PipelineResult to Phase 3.5D assembled_data format
+        context_id = request.parcel_id  # Use parcel_id as context_id
+        
+        # Build Phase 3.5D assembled_data from pipeline result
+        assembled_data = {
+            "m6_result": {
+                "lh_score_total": result.lh_review.total_score,
+                "judgement": result.lh_review.decision,
+                "grade": result.lh_review.grade if hasattr(result.lh_review, 'grade') else 'N/A',
+                "fatal_reject": False,
+                "deduction_reasons": getattr(result.lh_review, 'deduction_reasons', []),
+                "improvement_points": getattr(result.lh_review, 'improvement_suggestions', []),
+                "section_scores": getattr(result.lh_review, 'section_scores', {})
+            },
+            "m2_result": {
+                "land_value": result.appraisal.land_value,
+                "land_value_per_pyeong": result.appraisal.land_value_per_pyeong if hasattr(result.appraisal, 'land_value_per_pyeong') else result.appraisal.land_value / result.land.area_pyeong if result.land.area_pyeong > 0 else 0,
+                "confidence_pct": result.appraisal.confidence_metrics.confidence_score * 100,
+                "appraisal_method": result.appraisal.appraisal_method if hasattr(result.appraisal, 'appraisal_method') else 'standard',
+                "price_range": {
+                    "low": result.appraisal.land_value * 0.85,
+                    "high": result.appraisal.land_value * 1.15
+                }
+            },
+            "m3_result": {
+                "recommended_type": result.housing_type.selected_type,
+                "total_score": getattr(result.housing_type, 'total_score', 85.0),
+                "demand_score": getattr(result.housing_type, 'demand_score', 90.0),
+                "type_scores": getattr(result.housing_type, 'type_scores', {})
+            },
+            "m4_result": {
+                "total_units": result.capacity.unit_summary.total_units,
+                "incentive_units": getattr(result.capacity, 'incentive_units', result.capacity.unit_summary.total_units),
+                "gross_area_sqm": result.capacity.unit_summary.total_floor_area if hasattr(result.capacity.unit_summary, 'total_floor_area') else 0,
+                "far_used": getattr(result.capacity, 'far_used', 0),
+                "bcr_used": getattr(result.capacity, 'bcr_used', 0)
+            },
+            "m5_result": {
+                "npv_public_krw": result.feasibility.financial_metrics.npv_public,
+                "irr_pct": result.feasibility.financial_metrics.irr * 100 if result.feasibility.financial_metrics.irr else 0,
+                "roi_pct": getattr(result.feasibility.financial_metrics, 'roi', 0) * 100 if hasattr(result.feasibility.financial_metrics, 'roi') else 0,
+                "financial_grade": getattr(result.feasibility, 'grade', 'B'),
+                "total_cost": getattr(result.feasibility, 'total_cost', 0),
+                "total_revenue": getattr(result.feasibility, 'total_revenue', 0)
+            }
+        }
+        
+        # Store in context_storage
+        try:
+            context_storage.store_frozen_context(
+                context_id=context_id,
+                land_context=assembled_data,
+                ttl_hours=24,
+                parcel_id=request.parcel_id
+            )
+            logger.info(f"✅ Pipeline results saved to context_storage: {context_id}")
+        except Exception as storage_err:
+            logger.error(f"⚠️ Failed to save to context_storage: {storage_err}")
+            # Don't fail the request, just log the error
+        
         # Calculate execution time
         execution_time_ms = (time.time() - start_time) * 1000
         
