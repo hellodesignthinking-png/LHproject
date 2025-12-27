@@ -21,7 +21,7 @@ from typing import Dict, Any, TypedDict, Optional
 
 class DataBindingError(Exception):
     """
-    데이터 바인딩 실패 예외 (Phase 3.5E: User-Friendly)
+    데이터 바인딩 실패 예외 (Phase 3.5E: User-Friendly + Missing Paths)
     
     발생 조건:
     - assembled_data 구조 불완전
@@ -32,14 +32,21 @@ class DataBindingError(Exception):
     효과: 보고서 생성 즉시 중단
     """
     
-    def __init__(self, technical_message: str, user_message: str = None):
+    def __init__(
+        self, 
+        technical_message: str, 
+        user_message: str = None,
+        missing_paths: list = None
+    ):
         """
         Args:
             technical_message: 내부 개발자용 상세 메시지
             user_message: 외부 사용자용 요약 메시지 (optional)
+            missing_paths: 누락된 데이터 경로 리스트 (e.g., ["modules.M3.summary.preferred_type"])
         """
         self.technical_message = technical_message
         self.user_message = user_message or self._get_default_user_message()
+        self.missing_paths = missing_paths or []
         super().__init__(technical_message)
     
     def _get_default_user_message(self) -> str:
@@ -49,6 +56,15 @@ class DataBindingError(Exception):
             "보고서를 생성할 수 없습니다. "
             "토지 정보 또는 입력 데이터를 다시 확인해 주세요."
         )
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """API 응답용 딕셔너리"""
+        return {
+            "error": "DATA_BINDING_ERROR",
+            "message": self.user_message,
+            "technical_message": self.technical_message,
+            "missing_paths": self.missing_paths
+        }
 
 
 class DataValidationError(Exception):
@@ -199,7 +215,7 @@ def get_module_details(assembled_data: AssembledData, module_id: str) -> Dict[st
 
 def validate_assembled_data(data: Dict[str, Any], strict: bool = True) -> bool:
     """
-    assembled_data 유효성 검증 (Phase 3.5D FAIL FAST)
+    assembled_data 유효성 검증 (Phase 3.5D FAIL FAST + Missing Paths)
     
     Args:
         data: 검증할 데이터
@@ -212,14 +228,17 @@ def validate_assembled_data(data: Dict[str, Any], strict: bool = True) -> bool:
         True if valid, False otherwise (strict=False일 때만)
     """
     errors = []
+    missing_paths = []
     
     # FAIL 조건 1: M6 result 없음
     if "m6_result" not in data:
         errors.append("M6 result is missing")
+        missing_paths.append("m6_result")
     
     # FAIL 조건 2: modules 없음
     if "modules" not in data:
         errors.append("modules key is missing")
+        missing_paths.append("modules")
     
     # FAIL 조건 3: M2~M5 중 하나라도 없음
     required_modules = ["M2", "M3", "M4", "M5"]
@@ -228,6 +247,7 @@ def validate_assembled_data(data: Dict[str, Any], strict: bool = True) -> bool:
     for module_id in required_modules:
         if module_id not in modules:
             errors.append(f"Module {module_id} is missing")
+            missing_paths.append(f"modules.{module_id}")
         else:
             # FAIL 조건 4: summary/details/raw_data 키 중 하나라도 없음
             module_data = modules[module_id]
@@ -236,10 +256,11 @@ def validate_assembled_data(data: Dict[str, Any], strict: bool = True) -> bool:
             for key in required_keys:
                 if key not in module_data:
                     errors.append(f"Module {module_id} missing key: {key}")
+                    missing_paths.append(f"modules.{module_id}.{key}")
     
     # 검증 결과 처리
     if errors:
-        # 🔴 Phase 3.5E: 사용자 친화적 메시지
+        # 🔴 Phase 3.5E: 사용자 친화적 메시지 + Missing Paths
         technical_msg = "\n".join([f"  - {err}" for err in errors])
         full_technical_msg = f"Data validation failed:\n{technical_msg}"
         
