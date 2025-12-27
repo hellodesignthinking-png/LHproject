@@ -157,47 +157,61 @@ class MarketDataResponse(BaseModel):
 
 
 class FreezeContextRequest(BaseModel):
-    """STEP 8: Freeze context request"""
+    """
+    STEP 8: Freeze context request
     
-    # STEP 1 data
-    address: str
-    road_address: str
+    🔧 FLEXIBLE MODEL - Only essential fields are required
+    """
     
-    # STEP 2 data
-    coordinates: Dict[str, float]
-    sido: str
-    sigungu: str
-    dong: str
+    # Essential fields (REQUIRED)
+    address: str = Field(..., description="Full address")
+    coordinates: Dict[str, float] = Field(..., description="Lat/lon coordinates")
+    area: float = Field(..., description="Land area in square meters")
     
-    # STEP 3 data
-    bonbun: str
-    bubun: str = ""
-    jimok: str
-    area: float
+    # STEP 1 data (OPTIONAL)
+    road_address: Optional[str] = None
+    jibun_address: Optional[str] = None
     
-    # STEP 4 data
-    zone_type: str
-    zone_detail: str = ""
-    bcr: float
-    far: float
-    land_use: str
+    # STEP 2 data (OPTIONAL - can be extracted from address)
+    sido: Optional[str] = None
+    sigungu: Optional[str] = None
+    dong: Optional[str] = None
+    
+    # STEP 3 data (OPTIONAL)
+    bonbun: Optional[str] = None
+    bubun: Optional[str] = ""
+    jimok: Optional[str] = None
+    
+    # STEP 4 data (OPTIONAL - defaults provided)
+    zone_type: Optional[str] = "제2종일반주거지역"
+    zone_detail: Optional[str] = ""
+    bcr: Optional[float] = 60.0
+    far: Optional[float] = 250.0
+    land_use: Optional[str] = "주거용"
     regulations: List[str] = Field(default_factory=list)
     restrictions: List[str] = Field(default_factory=list)
     
-    # STEP 5 data
-    road_width: float
-    road_type: str
+    # STEP 5 data (OPTIONAL)
+    road_width: Optional[float] = 8.0
+    road_type: Optional[str] = "일반도로"
     
-    # STEP 6 data (optional)
+    # STEP 6 data (OPTIONAL)
     official_land_price: Optional[float] = None
+    recent_transactions: List[Dict[str, Any]] = Field(default_factory=list)
     
     # Data sources tracking
     data_sources: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
     
-    @validator('area', 'bcr', 'far', 'road_width')
+    @validator('area')
+    def validate_area(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError("Area must be positive")
+        return v
+    
+    @validator('bcr', 'far', 'road_width')
     def validate_positive(cls, v):
-        if v <= 0:
-            raise ValueError("Must be positive")
+        if v is not None and v <= 0:
+            return None  # Return None instead of raising error
         return v
 
 
