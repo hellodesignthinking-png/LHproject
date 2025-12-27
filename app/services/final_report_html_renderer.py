@@ -28,6 +28,50 @@ from datetime import datetime
 
 
 # ============================================================================
+# Phase 3.5: Judgement-based Helper Functions
+# ============================================================================
+
+def get_judgement_color(judgement: str) -> str:
+    """
+    M6 judgement에 따른 색상 반환
+    
+    Phase 3.5 원칙:
+    - 색상은 오직 M6 judgement에만 반응
+    - ROI/NPV/Profit 기반 색상 결정 금지
+    
+    Args:
+        judgement: "GO" / "CONDITIONAL" / "NOGO"
+    
+    Returns:
+        Hex color code
+    """
+    color_map = {
+        "GO": "#10B981",        # Green
+        "CONDITIONAL": "#F59E0B",  # Amber
+        "NOGO": "#DC2626",      # Red
+    }
+    return color_map.get(judgement, "#6B7280")  # Gray fallback
+
+
+def get_judgement_icon(judgement: str) -> str:
+    """
+    M6 judgement에 따른 아이콘 반환
+    
+    Args:
+        judgement: "GO" / "CONDITIONAL" / "NOGO"
+    
+    Returns:
+        Icon emoji
+    """
+    icon_map = {
+        "GO": "✅",
+        "CONDITIONAL": "⚠️",
+        "NOGO": "❌",
+    }
+    return icon_map.get(judgement, "❓")
+
+
+# ============================================================================
 # 공통 스타일 & 레이아웃
 # ============================================================================
 
@@ -1567,9 +1611,9 @@ def render_financial_feasibility(data: Dict[str, Any]) -> str:
                             <strong style="color: #3B82F6; font-size: 16px;">NPV {format_currency(npv_krw)}</strong>로 
                             투자 원금 대비 충분한 수익성을 확보하고 있습니다. 
                             <strong style="color: #10B981; font-size: 16px;">IRR {format_percentage(irr_pct)}</strong>는 
-                            LH 매입임대사업의 평균 수익률(10-12%)을 <strong style="color: #DC2626;">{'상회하여' if (irr_pct and irr_pct > 12) else '충족하며'}</strong>, 
+                            LH 매입임대사업의 평균 수익률(10-12%)을 <strong style="color: #DC2626;">{'상회하여' if (irr_pct and irr_pct > 12) else '기준으로'}</strong>, 
                             <strong style="color: #8B5CF6; font-size: 16px;">ROI {format_percentage(roi_pct)}</strong>는 
-                            업계 평균(12-18%) 대비 <strong style="color: #F59E0B;">{'우수한' if (roi_pct and roi_pct >= 15) else '적정한'}</strong> 수준입니다.
+                            업계 평균(12-18%) 대비 <strong style="color: #3B82F6;">산출된 수준</strong>입니다.
                             LH 승인 가능성은 <strong style="color: #F59E0B;">{format_percentage(approval_prob)}</strong>입니다.
                         </p>
                     </div>
@@ -1623,7 +1667,7 @@ def render_financial_feasibility(data: Dict[str, Any]) -> str:
                             {'목표 수익률을 달성' if irr_pct and irr_pct >= 10 else '시장 평균 수준'}을 나타냅니다.
                             투자수익률(ROI) <strong style="color: #8B5CF6;">{format_percentage(roi_pct)}</strong>는 
                             투자 원금 대비 총 수익의 비율로, LH 매입임대사업의 평균 ROI 12-18% 대비 
-                            {'경쟁력 있는' if roi_pct and roi_pct >= 12 else '검토가 필요한'} 수준입니다.
+                            산출된 수준입니다.
                         </p>
                         <p style="margin-bottom: 16px;">
                             <strong>LH 승인 전망:</strong>

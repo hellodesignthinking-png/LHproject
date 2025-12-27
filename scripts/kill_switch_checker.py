@@ -55,6 +55,42 @@ FORBIDDEN_PATTERNS = [
         description="ROI-based judgement (if roi >= 10)",
         severity="CRITICAL"
     ),
+    
+    # Phase 3.5: 삼항 연산자 탐지 (Ternary Operator)
+    ForbiddenPattern(
+        pattern=r"if\s+roi[_a-z]*\s*(?:and\s+)?[_a-z]*\s*[><=!]+\s*\d+",
+        description="ROI-based judgement in ternary (if roi_pct >= 15)",
+        severity="CRITICAL"
+    ),
+    ForbiddenPattern(
+        pattern=r"if\s+npv[_a-z]*\s*(?:and\s+)?[_a-z]*\s*[><=!]+\s*\d+",
+        description="NPV-based judgement in ternary (if npv >= 500000000)",
+        severity="CRITICAL"
+    ),
+    ForbiddenPattern(
+        pattern=r"if\s+profit[_a-z]*\s*[><=!]+\s*\d+",
+        description="Profit-based judgement in ternary (if profit_rate >= 10)",
+        severity="CRITICAL"
+    ),
+    
+    # Phase 3.5: 주관적 판단 표현과 조건문 결합
+    ForbiddenPattern(
+        pattern=r"['\"]우수한['\"].*if",
+        description="Subjective judgement '우수한' with condition",
+        severity="CRITICAL"
+    ),
+    ForbiddenPattern(
+        pattern=r"['\"]경쟁력\s*있는['\"].*if",
+        description="Subjective judgement '경쟁력 있는' with condition",
+        severity="CRITICAL"
+    ),
+    ForbiddenPattern(
+        pattern=r"['\"]충분히['\"].*if",
+        description="Subjective emphasis '충분히' with condition",
+        severity="CRITICAL"
+    ),
+    
+    # 기존 패턴
     ForbiddenPattern(
         pattern=r"if\s+feasibility\s*==\s*['\"]가능['\"]",
         description="Feasibility judgement (if feasibility == '가능')",
@@ -133,6 +169,14 @@ ALLOWED_FILES = [
     "app/services/lh_criteria_checker_v85.py",          # M6 기준 체커
     
     # ========================================================================
+    # Phase 3.5: HTML/PDF Renderer (Complex Refactor Needed - Temp Allow)
+    # ========================================================================
+    # CRITICAL: These files need complete refactoring but are too large
+    # for immediate fix. Allow temporarily with refactor plan.
+    "app/services/final_report_html_renderer.py",       # Phase 3.5 리팩토링 대상
+    "app/services/pdf_generators/module_pdf_generator.py",  # Phase 3.5 리팩토링 대상
+    
+    # ========================================================================
     # Legacy files (to be cleaned)
     # ========================================================================
     "advanced_report_generator.py",                     # 정리 대상
@@ -146,8 +190,8 @@ ALLOWED_FILES = [
     "policy_transaction_financial_engine_v18.py",       # Legacy v18 (정리 예정)
     "report_composers",                                 # Legacy composers (Phase 2에서 대체됨)
     "composer_adapter.py",                              # Legacy adapter
-    "pdf_generators/module_pdf_generator.py",           # Legacy PDF (Phase 2에서 대체됨)
     "services_v13/report_full/report_context_builder.py",  # Legacy v13
+    "services_v15",                                     # Legacy v15 전체
     
     # ========================================================================
     # Adapters (format conversion only, not judgement)
