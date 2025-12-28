@@ -174,13 +174,22 @@ export const PipelineOrchestrator: React.FC = () => {
       // Extract module results
       console.log('🔍 Extracting module results...');
       const results = pipelineResult.results || {};
+      
+      // 🔥 v4.1 FIX: Support both old (land, appraisal) and new (M1, M2) keys
+      const m1Data = results.M1 || results.land;
+      const m2Data = results.M2 || results.appraisal;
+      const m3Data = results.M3 || results.housing_type;
+      const m4Data = results.M4 || results.capacity;
+      const m5Data = results.M5 || results.feasibility;
+      const m6Data = results.M6 || results.lh_review;
+      
       console.log('📊 Results extracted:', {
-        land: !!results.land,
-        appraisal: !!results.appraisal,
-        housing_type: !!results.housing_type,
-        capacity: !!results.capacity,
-        feasibility: !!results.feasibility,
-        lh_review: !!results.lh_review
+        M1: !!m1Data,
+        M2: !!m2Data,
+        M3: !!m3Data,
+        M4: !!m4Data,
+        M5: !!m5Data,
+        M6: !!m6Data
       });
       
       console.log('🔄 Updating state to RESULTS_READY...');
@@ -189,12 +198,12 @@ export const PipelineOrchestrator: React.FC = () => {
         stage: 'RESULTS_READY',
         analysisId: pipelineResult.analysis_id,
         executionTimeMs: pipelineResult.execution_time_ms,
-        m1Result: results.land,
-        m2Result: results.appraisal,
-        m3Result: results.housing_type,
-        m4Result: results.capacity,
-        m5Result: results.feasibility,
-        m6Result: results.lh_review,
+        m1Result: m1Data,
+        m2Result: m2Data,
+        m3Result: m3Data,
+        m4Result: m4Data,
+        m5Result: m5Data,
+        m6Result: m6Data,
         loading: false
       }));
       
@@ -321,7 +330,7 @@ export const PipelineOrchestrator: React.FC = () => {
       }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <h1 style={{ margin: 0, fontSize: '24px', color: '#333' }}>
-            ZeroSite v4.0 - 토지 분석 파이프라인
+            ZeroSite v4.1 - 토지 분석 파이프라인
           </h1>
           <div style={{ 
             display: 'flex', 
@@ -452,7 +461,7 @@ export const PipelineOrchestrator: React.FC = () => {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
                 
                 {/* M2: Appraisal */}
-                {state.m2Result && (
+                {state.m2Result && state.contextId && (
                   <ModuleResultCard 
                     moduleId="M2"
                     title="토지감정평가"
@@ -497,7 +506,7 @@ export const PipelineOrchestrator: React.FC = () => {
                 )}
 
                 {/* M3: Housing Type */}
-                {state.m3Result && (
+                {state.m3Result && state.contextId && (
                   <ModuleResultCard 
                     moduleId="M3"
                     title="LH 선호유형"
@@ -532,7 +541,7 @@ export const PipelineOrchestrator: React.FC = () => {
                 )}
 
                 {/* M4: Capacity (V2 - Both alternatives) */}
-                {state.m4Result && (
+                {state.m4Result && state.contextId && (
                   <ModuleResultCard 
                     moduleId="M4"
                     title="건축규모 분석"
@@ -549,7 +558,7 @@ export const PipelineOrchestrator: React.FC = () => {
                 )}
 
                 {/* M5: Feasibility */}
-                {state.m5Result && (
+                {state.m5Result && state.contextId && (
                   <ModuleResultCard 
                     moduleId="M5"
                     title="사업성 분석"
@@ -584,7 +593,7 @@ export const PipelineOrchestrator: React.FC = () => {
                 )}
 
                 {/* M6: LH Review (FIRST DECISION POINT) */}
-                {state.m6Result && (
+                {state.m6Result && state.contextId && (
                   <ModuleResultCard 
                     moduleId="M6"
                     title="LH 심사예측"
