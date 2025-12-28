@@ -344,6 +344,92 @@ class ModulePDFGenerator:
         
         return grade, description
     
+    def _calculate_m3_stability_grade(
+        self,
+        m3_data: Dict[str, Any]
+    ) -> tuple:
+        """
+        M3 유형 안정성 등급 산출 (PHASE 2-3)
+        
+        Args:
+            m3_data: M3 summary data
+            
+        Returns:
+            (grade, description): 등급(A/B/C)과 설명 문구
+        """
+        criteria_met = 0
+        criteria_details = []
+        
+        # ① 선호유형 점수
+        selected = m3_data.get('selected', {})
+        selected_score = selected.get('total_score', 0)
+        
+        # Fallback: scores 구조에서 첫 번째 유형의 total 점수 가져오기
+        if selected_score == 0:
+            scores = m3_data.get('scores', {})
+            if scores:
+                # Get the highest scoring type
+                max_score_type = max(scores.items(), key=lambda x: x[1].get('total', 0), default=(None, {}))
+                if max_score_type[0]:
+                    selected_score = max_score_type[1].get('total', 0)
+        
+        if selected_score >= 80:
+            criteria_met += 1
+            criteria_details.append(f"선호 점수 {selected_score}점으로 높음")
+        else:
+            criteria_details.append(f"선호 점수 {selected_score}점으로 보통")
+        
+        # ② 신뢰도 수준
+        confidence = selected.get('confidence', 0)
+        if confidence >= 70:
+            criteria_met += 1
+            criteria_details.append(f"신뢰도 {confidence}%로 높음")
+        else:
+            criteria_details.append(f"신뢰도 {confidence}%로 보통")
+        
+        # ③ 수요 안정성
+        demand = m3_data.get('demand', {})
+        demand_prediction = demand.get('prediction', 0)
+        
+        if demand_prediction >= 60:
+            criteria_met += 1
+            criteria_details.append("수요 예측 안정적")
+        else:
+            criteria_details.append("수요 예측 주의 필요")
+        
+        # ④ 경쟁 리스크 (POI 및 접근성 기반)
+        location = m3_data.get('location', {})
+        poi_data = location.get('poi', {})
+        
+        # POI 거리 기반 경쟁 리스크 평가
+        # 지하철 거리가 가까울수록 경쟁이 치열할 수 있음
+        subway_dist = poi_data.get('subway', {}).get('distance', 9999)
+        commercial_dist = poi_data.get('commercial', {}).get('distance', 9999)
+        
+        # 경쟁 리스크: 지하철 500m 이내 + 상업시설 500m 이내 = 높은 경쟁
+        if subway_dist <= 500 and commercial_dist <= 500:
+            # 높은 경쟁 환경이지만 수요도 많음
+            criteria_details.append("경쟁 환경 양호")
+            criteria_met += 1
+        elif subway_dist <= 1000 or commercial_dist <= 1000:
+            criteria_details.append("경쟁 환경 보통")
+            criteria_met += 1
+        else:
+            criteria_details.append("경쟁 리스크 존재")
+        
+        # 등급 결정
+        if criteria_met >= 4:
+            grade = "A"
+            description = "선호유형 분석 신뢰도가 높은 수준입니다. " + ", ".join(criteria_details[:2])
+        elif criteria_met >= 2:
+            grade = "B"
+            description = "일부 변동 가능성이 있으나 분석 신뢰 가능합니다. " + ", ".join(criteria_details[:3])
+        else:
+            grade = "C"
+            description = "유형 변동 가능성에 유의가 필요합니다. " + ", ".join(criteria_details[:3])
+        
+        return grade, description
+    
     def _add_watermark_and_footer(self, canvas, doc):
         """
         모든 페이지에 ZeroSite 워터마크 + 카피라이트 추가
@@ -1291,9 +1377,15 @@ M3 선호유형 모델은 특정 입지가 '어떤 유형이 가능한가'를 �
         selected = data.get('selected', {})
         location = data.get('location', {})
         
+        # ✅ PHASE 2-3: 유형 안정성 등급 산출
+        stability_grade, grade_description = self._calculate_m3_stability_grade(m3_data)
+        
         # 사람 중심 요약 작성
         executive_summary = f"""
 <b>■ 본 대상지의 선호 구조 분석</b><br/>
+<br/>
+<b>🎯 유형 안정성 등급: {stability_grade}</b><br/>
+{grade_description}<br/>
 <br/>
 본 대상지는 <b>'도심 접근 + 생활 밀도 + 소비 편의'가 결합된 입지</b>입니다.<br/>
 <br/>
@@ -1908,6 +2000,54 @@ LH의 '{selected.get('name', 'N/A')}' 매입 정책은 정부 주거 정책 방�
 <b>→ 이 보완 포인트들은 M4(건축규모), M5(사업성), M6(LH 심사)에서 구체화되어야 합니다.</b><br/>
 """
         story.append(Paragraph(risk_summary, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # ========== PHASE 2-3: 유형 안정성 종합 판단 ==========
+        story.append(Paragraph("5-4. 유형 안정성 종합 판단", heading_style))
+        
+        stability_intro = f"""
+<b>■ 선호유형 분석 신뢰도 평가</b><br/>
+<br/>
+본 섹션은 앞서 분석한 선호유형({selected.get('name', 'N/A')})의 <b>안정성을 종합 평가</b>합니다.<br/>
+안정성 등급은 <b>A/B/C 3단계</b>로 구분되며, 이는 유형 변동 가능성을 의미합니다.<br/>
+<br/>
+<b>⚠️ 주의:</b> 이 등급은 '적합/부적합' 판단이 아니라, <b>분석 신뢰도 수준</b>입니다.<br/>
+"""
+        story.append(Paragraph(stability_intro, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # 등급 표시 (크고 명확하게)
+        grade_display = f"""
+<b>🎯 유형 안정성 등급: {stability_grade}</b><br/>
+<br/>
+<b>평가 근거:</b> {grade_description}<br/>
+"""
+        story.append(Paragraph(grade_display, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # 등급별 의미 설명
+        grade_meaning = """
+<b>■ 등급별 의미</b><br/>
+<br/>
+• <b>A등급:</b> 선호유형 분석 신뢰도가 높은 수준입니다. 4가지 평가 항목을 모두 충족하며, 유형 변동 가능성이 낮습니다.<br/>
+<br/>
+• <b>B등급:</b> 일부 변동 가능성이 있으나 분석 신뢰 가능합니다. 2-3개 항목을 충족하며, 보완 전략 반영 시 안정적입니다.<br/>
+<br/>
+• <b>C등급:</b> 유형 변동 가능성에 유의가 필요합니다. 1개 이하 항목 충족으로, 추가 검토가 권장됩니다.<br/>
+<br/>
+<b>■ 평가 항목 (4가지)</b><br/>
+<br/>
+본 등급은 다음 4가지 항목을 종합 평가하여 산출됩니다:<br/>
+<br/>
+① <b>선호유형 점수:</b> 80점 이상 충족 여부<br/>
+② <b>신뢰도 수준:</b> 70% 이상 충족 여부<br/>
+③ <b>수요 안정성:</b> 수요 예측 점수 60점 이상 충족 여부<br/>
+④ <b>경쟁 리스크:</b> 입지 접근성 및 POI 분석 기반 경쟁 환경 평가<br/>
+<br/>
+<b>→ M6 종합 판단 연계:</b><br/>
+본 안정성 등급은 M6의 최종 판단에서 중요한 참고 지표로 활용됩니다.<br/>
+"""
+        story.append(Paragraph(grade_meaning, styles['Normal']))
         story.append(Spacer(1, 0.3*inch))
         
         # 6. 종합 의견 및 권고사항 - LH 전략 중심 재구성
