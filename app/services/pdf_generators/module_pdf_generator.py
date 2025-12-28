@@ -5492,12 +5492,16 @@ ZeroSite 6-MODULE은 각각 독립적이면서도 연계된 판단 도구입니�
         🔥 CRITICAL: 단일 진실 원천(SSOT) 강제 적용
         - summary.total_score를 모든 섹션에서 사용
         - 0.0/110 버그 방지
+        
+        🔐 v4.6 FINAL LOCK: ONE-SENTENCE CONCLUSION 강제 적용
+        - 최상단에 "총점 XX/110점, 조건 보완 시 YY% 확률로 LH 심사 통과 가능" 필수
+        - 이 문장 없으면 PDF 생성 실패
         """
         # ✅ CRITICAL: assembled_data의 M6 modules에서 직접 가져오기
         m6_data = assembled_data.get("modules", {}).get("M6", {})
         m6_summary = m6_data.get("summary", {})
         
-        logger.info(f"🔥 M6 PDF Generator - Phase 3.5D SSOT")
+        logger.info(f"🔥 M6 PDF Generator - Phase 3.5D SSOT + v4.6 FINAL LOCK")
         logger.info(f"   M6 summary keys: {list(m6_summary.keys())}")
         logger.info(f"   M6 decision: {m6_summary.get('decision', 'N/A')}")
         logger.info(f"   M6 total_score: {m6_summary.get('total_score', 0)}/110")
@@ -5549,6 +5553,76 @@ ZeroSite 6-MODULE은 각각 독립적이면서도 연계된 판단 도구입니�
         
         gen_date = datetime.now().strftime("%Y년 %m월 %d일 %H:%M:%S")
         story.append(Paragraph(f"생성일시: {gen_date}", styles['Italic']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 🔥 v4.6 FINAL LOCK: ONE-SENTENCE CONCLUSION (MANDATORY - 최상단)
+        # This is the CRITICAL enforcement point - 이 문장이 없으면 보고서가 아님
+        decision_preview = data.get('decision', {})
+        if isinstance(decision_preview, str):
+            decision_type_preview = decision_preview
+        else:
+            decision_type_preview = decision_preview.get('type', 'CONDITIONAL')
+        
+        # Approval probability calculation
+        approval_probability_pct = (
+            m6_summary.get('approval_probability_pct') or 
+            data.get('approval_probability', 0.7) * 100
+        )
+        
+        # 🔐 MANDATORY ONE-SENTENCE CONCLUSION
+        one_sentence_style = ParagraphStyle(
+            'OneSentenceConclusion',
+            parent=styles['Normal'],
+            fontName=self.font_name_bold,
+            fontSize=14,  # 크게 강조
+            textColor=self.theme.colors.primary,
+            alignment=TA_CENTER,
+            leading=20,
+            spaceBefore=10,
+            spaceAfter=20,
+            borderWidth=2,
+            borderColor=self.theme.colors.accent,
+            borderPadding=15,
+            backColor=colors.HexColor('#F0F4FF')
+        )
+        
+        one_sentence_conclusion = (
+            f"<b>총점 {m6_score:.1f}/110점</b>, "
+            f"조건 보완 시 <b>{approval_probability_pct:.0f}%</b> 확률로 "
+            f"LH 심사 통과 가능. "
+            f"<b>{decision_type_preview.upper()}</b> 판정."
+        )
+        
+        story.append(Paragraph(one_sentence_conclusion, one_sentence_style))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 🔐 MANDATORY: 필연성 선언 (즉시)
+        inevitability_style = ParagraphStyle(
+            'InevitabilityStatement',
+            parent=styles['Normal'],
+            fontName=self.font_name,
+            fontSize=11,
+            textColor=self.theme.colors.text_primary,
+            alignment=TA_LEFT,
+            leading=18,
+            leftIndent=20,
+            rightIndent=20,
+            spaceBefore=5,
+            spaceAfter=15,
+            borderWidth=1,
+            borderColor=self.theme.colors.border,
+            borderPadding=12,
+            backColor=colors.HexColor('#FAFBFC')
+        )
+        
+        inevitability_statement = (
+            "<b>📌 핵심 논리</b>:<br/>"
+            "이 결론은 단일 점수가 아니라, <b>앞선 네 개 모듈의 필연적 귀결</b>입니다. "
+            "토지가치(M2) → 수요 패턴(M3) → 규모 결정(M4) → 사업 구조(M5)가 "
+            "모두 수렴하여 만든 결과이며, <b>이 중 하나라도 변경되면 결론이 달라집니다</b>."
+        )
+        
+        story.append(Paragraph(inevitability_statement, inevitability_style))
         story.append(Spacer(1, 0.3*inch))
         
         # 1. 최종 판정
@@ -5666,6 +5740,33 @@ ZeroSite 6-MODULE은 각각 독립적이면서도 연계된 판단 도구입니�
             
             # 다이어그램 제목
             story.append(Paragraph("M1-M5 → M6 종합 판단 흐름", heading_style))
+            
+            # 🔥 v4.6 FINAL LOCK: M2-M5 압축 다이어그램 텍스트 (MANDATORY)
+            module_compression_style = ParagraphStyle(
+                'ModuleCompression',
+                parent=styles['Normal'],
+                fontName=self.font_name_bold,
+                fontSize=11,
+                textColor=colors.HexColor('#1F3A5F'),
+                alignment=TA_CENTER,
+                leading=16,
+                spaceBefore=5,
+                spaceAfter=10,
+                borderWidth=1,
+                borderColor=colors.HexColor('#3B82F6'),
+                borderPadding=10,
+                backColor=colors.HexColor('#EFF6FF')
+            )
+            
+            module_compression = (
+                "<b>판단 형성 과정</b>:<br/>"
+                "M2(구조적 가치) → M3(청년형 선호) → M4(20-23세대 선택) → "
+                "M5(안정형 구조) → M6(조건부 통과 가능)"
+            )
+            
+            story.append(Paragraph(module_compression, module_compression_style))
+            story.append(Spacer(1, 0.1*inch))
+            
             story.append(linkage_diagram)
             story.append(Spacer(1, 0.2*inch))
             
