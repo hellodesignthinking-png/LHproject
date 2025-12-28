@@ -22,31 +22,31 @@ from typing import Dict, Any
 
 @dataclass
 class ZeroSiteColors:
-    """ZeroSite Brand Color Palette (v4.4 FINAL - McKinsey-Grade Consulting)"""
-    # Primary Colors (컨설팅 표준)
-    primary = colors.HexColor('#0A2540')  # Primary Navy (더 진한 프로페셔널 네이비)
-    primary_light = colors.HexColor('#2563EB')  # Accent Blue (더 선명한 블루)
+    """ZeroSite Brand Color Palette (v4.5 FINAL - Consulting-Grade with NO compromise)"""
+    # Primary Colors - 요구사항: Primary #1F3A5F
+    primary = colors.HexColor('#1F3A5F')  # Primary Navy (consulting standard)
+    primary_light = colors.HexColor('#3B82F6')  # Secondary (consulting standard)
     primary_dark = colors.HexColor('#071526')
     
-    # Accent Colors (핵심 수치/결론)
-    accent = colors.HexColor('#2563EB')  # Accent Blue
+    # Accent Colors (핵심 수치/결론) - 요구사항: Secondary #3B82F6
+    accent = colors.HexColor('#3B82F6')  # Secondary Blue
     accent_light = colors.HexColor('#5B8FFF')
     
-    # Status Colors (판단 상태 - 컨설팅 표준)
-    success = colors.HexColor('#16A34A')  # Positive Green (더 진한 그린)
-    warning = colors.HexColor('#F59E0B')  # Warning Amber (더 선명한 앰버)
-    danger = colors.HexColor('#DC2626')  # Risk Red (더 강한 레드)
+    # Status Colors (판단 상태) - 요구사항: Positive #16A34A, Warning #F59E0B, Risk #DC2626
+    success = colors.HexColor('#16A34A')  # Positive Green
+    warning = colors.HexColor('#F59E0B')  # Warning Amber
+    danger = colors.HexColor('#DC2626')  # Risk Red
     positive_green = success  # Alias
     risk_red = danger  # Alias
     
-    # Neutral Colors (그레이스케일)
+    # Neutral Colors (그레이스케일) - 요구사항: 회색 텍스트 #6B7280 이하
     neutral_gray = colors.HexColor('#6B7280')  # Neutral Gray
-    background = colors.HexColor('#F8FAFC')  # Light background (더 밝은 배경)
+    background = colors.HexColor('#F8FAFC')  # Light background (consulting standard)
     background_medium = colors.HexColor('#D0D4DA')  # Medium gray
     text_secondary = neutral_gray  # Body gray
     
     # Text Colors
-    text_primary = colors.HexColor('#0A2540')  # Primary Navy (제목용)
+    text_primary = colors.HexColor('#1F3A5F')  # Primary Navy (제목용)
     text_light = colors.HexColor('#9CA3AF')  # Light gray
     
     border = colors.HexColor('#E2E8F0')  # Light border
@@ -59,44 +59,68 @@ class ZeroSiteColors:
 
 @dataclass
 class ZeroSiteTypography:
-    """ZeroSite Typography System (v4.3 FINAL - 100% Professional + Data Complete)"""
+    """ZeroSite Typography System (v4.5 FINAL - Consulting-Grade NO COMPROMISE)
+    
+    요구사항: H1 24pt Bold, H2 17pt SemiBold, H3 14pt SemiBold, Body 11pt Regular, 
+    Caption 9pt, Score/Decision Badge 40pt 이상
+    """
     # Font Family (consulting-grade, 한글 호환)
-    font_regular = 'Helvetica'  # Body text (안정적, 한글 지원)
-    font_bold = 'Helvetica-Bold'  # Titles, emphasis (강조)
+    font_regular = 'Helvetica'  # Body 11pt Regular
+    font_bold = 'Helvetica-Bold'  # H1 24pt Bold
+    font_semibold = 'Helvetica-Bold'  # H2/H3 SemiBold (ReportLab에서는 Bold로 대체)
     font_light = 'Helvetica'  # Subtle text
     
     # Numeric Font (숫자 가독성 최적화)
     font_numeric = 'Helvetica-Bold'  # 숫자 전용 (Bold로 강조)
     
-    # Font Sizes (pt) - 컨설팅급 타이포그래피 (v4.3 강화)
-    size_h1 = 24  # Main title (22 → 24, 더 강한 임팩트)
-    size_h2 = 17  # Section heading (16 → 17, 가독성 향상)
-    size_h3 = 14  # Sub-section
-    size_body = 11  # Body text
-    size_caption = 9.5  # Footer, notes
+    # Font Sizes (pt) - 요구사항 정확히 반영
+    size_h1 = 24  # Main title (요구사항: 24pt Bold)
+    size_h2 = 17  # Section heading (요구사항: 17pt SemiBold)
+    size_h3 = 14  # Sub-section (요구사항: 14pt SemiBold)
+    size_body = 11  # Body text (요구사항: 11pt Regular)
+    size_caption = 9  # Footer, notes (요구사항: 9pt)
     size_small = 8.5  # Fine print
-    size_score = 40  # Large score display (36 → 40, 최강 임팩트)
+    size_score = 40  # Large score display (요구사항: 40pt 이상 - Decision Badge용)
     
     # Line Heights (multiplier) - 컨설팅급 가독성
-    leading_h1 = 1.4  # 1.35 → 1.4 (더 편안한 읽기)
-    leading_h2 = 1.5  # 1.45 → 1.5
-    leading_body = 1.7  # 1.65 → 1.7 (최상급 가독성)
+    leading_h1 = 1.4  # H1 행간
+    leading_h2 = 1.5  # H2 행간
+    leading_body = 1.7  # Body 행간 (최상급 가독성)
     leading_caption = 1.5
 
 
 @dataclass
 class ZeroSiteLayout:
-    """ZeroSite Page Layout System (v4.1 FINAL - 12-Column Grid)"""
-    # Page Margins (프롬프트: LH 내부 보고서 스타일, 좌측 여백 넓게)
-    margin_top = 25 * mm
-    margin_bottom = 25 * mm
-    margin_left = 25 * mm  # 좌측 여백 증가 (22mm → 25mm)
-    margin_right = 20 * mm  # 우측 여백 감소 (더 많은 콘텐츠 공간)
+    """ZeroSite Page Layout System (v4.5 FINAL - Consulting-Grade 12-Column Grid)
     
-    # 12-Column Grid System (A4 기준: 210mm - 좌우마진 = 165mm)
+    요구사항:
+    - A4, 12컬럼 그리드
+    - 좌측 8컬럼 핵심 내용, 우측 4컬럼 시각요소/요약 박스
+    - Executive Insight Zone 상단 고정
+    """
+    # Page Margins (A4 기준)
+    margin_top = 25 * mm  # Executive Insight Zone 포함
+    margin_bottom = 25 * mm
+    margin_left = 25 * mm
+    margin_right = 20 * mm
+    
+    # 12-Column Grid System (A4 기준: 210mm)
+    # 요구사항: 좌측 8컬럼(핵심 내용), 우측 4컬럼(시각요소/요약)
     grid_columns = 12
     grid_gutter = 3 * mm  # Column 간 간격
-    column_width = (210 * mm - margin_left - margin_right - (grid_gutter * 11)) / 12  # ~11.4mm
+    
+    # Total content width = 210mm - margin_left - margin_right = 165mm
+    content_width = 210 * mm - margin_left - margin_right  # ~165mm
+    
+    # Column width calculation: (content_width - (11 * gutter)) / 12
+    column_width = (content_width - (grid_gutter * 11)) / 12  # ~11.4mm per column
+    
+    # 8-4 Split (요구사항)
+    main_content_width = column_width * 8 + grid_gutter * 7  # 좌측 8컬럼
+    sidebar_width = column_width * 4 + grid_gutter * 3  # 우측 4컬럼
+    
+    # Executive Insight Zone (상단 고정)
+    executive_zone_height = 40 * mm  # Executive Insight Box 전용 공간
     
     # Spacing (프롬프트 기준 조정)
     space_section = 0.4  # inches between sections
@@ -105,7 +129,7 @@ class ZeroSiteLayout:
     space_tight = 0.1  # inches for tight spacing
     
     # Card/Component Padding
-    card_padding = 12  # points (증가: 10 → 12)
+    card_padding = 15  # points (Executive Insight Box용 증가)
     card_radius = 5  # points (for visual reference)
     
     # Page Header Height
