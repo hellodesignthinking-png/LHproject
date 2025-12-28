@@ -444,14 +444,27 @@ class ZeroSitePipeline:
             # 🔥 decision_rationale 생성 (최소 3개 근거)
             decision_rationale = []
             if hasattr(lh_review_ctx, 'decision_rationale') and lh_review_ctx.decision_rationale:
-                decision_rationale = [lh_review_ctx.decision_rationale]
-            else:
-                # 자동 생성: 점수 기반 근거
-                decision_rationale = [
-                    f"입지 점수: {lh_review_ctx.score_breakdown.location_score:.1f}/35점",
-                    f"사업성 점수: {lh_review_ctx.score_breakdown.feasibility_score:.1f}/40점",
-                    f"법규 적합성: {lh_review_ctx.score_breakdown.compliance_score:.1f}/15점"
+                # decision_rationale이 이미 리스트인 경우
+                if isinstance(lh_review_ctx.decision_rationale, list):
+                    decision_rationale = lh_review_ctx.decision_rationale
+                else:
+                    # 문자열인 경우 리스트로 감싸기
+                    decision_rationale = [lh_review_ctx.decision_rationale]
+            
+            # 최소 3개 보장: 부족하면 자동 생성 근거 추가
+            if len(decision_rationale) < 3:
+                auto_rationale = [
+                    f"입지 점수: {lh_review_ctx.score_breakdown.location_score:.1f}/35점 {'우수' if lh_review_ctx.score_breakdown.location_score >= 25 else '보통'}",
+                    f"규모 점수: {lh_review_ctx.score_breakdown.scale_score:.1f}/20점 {'양호' if lh_review_ctx.score_breakdown.scale_score >= 14 else '보통'}",
+                    f"사업성 점수: {lh_review_ctx.score_breakdown.feasibility_score:.1f}/40점 {'우수' if lh_review_ctx.score_breakdown.feasibility_score >= 28 else '보통'}",
+                    f"법규 적합성: {lh_review_ctx.score_breakdown.compliance_score:.1f}/15점 {'적합' if lh_review_ctx.score_breakdown.compliance_score >= 10 else '보통'}"
                 ]
+                # 부족한 개수만큼 추가
+                for rationale in auto_rationale:
+                    if rationale not in decision_rationale:
+                        decision_rationale.append(rationale)
+                        if len(decision_rationale) >= 3:
+                            break
             
             # 🔥 conclusion_text 생성 (최소 40자)
             conclusion_text = ""
