@@ -41,6 +41,29 @@ from app.services.data_contract import DataBindingError
 logger = logging.getLogger(__name__)
 
 
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Helper Functions
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+def _safe_to_dict(obj) -> dict:
+    """
+    객체를 안전하게 dict로 변환
+    
+    to_dict() 메서드가 있으면 사용, 없으면 dataclass fields 사용
+    """
+    if hasattr(obj, 'to_dict') and callable(obj.to_dict):
+        return obj.to_dict()
+    elif hasattr(obj, '__dataclass_fields__'):
+        # dataclass인 경우
+        from dataclasses import asdict
+        return asdict(obj)
+    elif isinstance(obj, dict):
+        return obj
+    else:
+        # fallback: __dict__ 사용
+        return getattr(obj, '__dict__', {})
+
+
 @dataclass(frozen=True)
 class PipelineResult:
     """
@@ -178,8 +201,8 @@ class ZeroSitePipeline:
                     "area_sqm": land_ctx.area_sqm,
                     "zone_type": land_ctx.zone_type
                 },
-                "details": land_ctx.to_dict() if hasattr(land_ctx, 'to_dict') else {},
-                "raw_data": land_ctx.to_dict() if hasattr(land_ctx, 'to_dict') else {}
+                "details": _safe_to_dict(land_ctx),
+                "raw_data": _safe_to_dict(land_ctx)
             }
             logger.info("✅ M1 데이터 assembled_data에 저장 완료")
             
@@ -200,8 +223,8 @@ class ZeroSitePipeline:
                     "confidence_score": appraisal_ctx.confidence_score,
                     "confidence_level": appraisal_ctx.confidence_level
                 },
-                "details": appraisal_ctx.to_dict() if hasattr(appraisal_ctx, 'to_dict') else {},
-                "raw_data": appraisal_ctx.to_dict() if hasattr(appraisal_ctx, 'to_dict') else {}
+                "details": _safe_to_dict(appraisal_ctx),
+                "raw_data": _safe_to_dict(appraisal_ctx)
             }
             logger.info("✅ M2 데이터 assembled_data에 저장 완료")
             
@@ -235,7 +258,7 @@ class ZeroSitePipeline:
                     "policy_alignment": getattr(housing_type_ctx, 'policy_alignment', {}),
                     "excluded_types": getattr(housing_type_ctx, 'excluded_types', [])
                 },
-                "raw_data": housing_type_ctx.to_dict() if hasattr(housing_type_ctx, 'to_dict') else {}
+                "raw_data": _safe_to_dict(housing_type_ctx)
             }
             logger.info(f"✅ M3 데이터 assembled_data에 저장 완료: {assembled_data['modules']['M3']['summary']}")
             
@@ -261,16 +284,16 @@ class ZeroSitePipeline:
             assembled_data["modules"]["M4"] = {
                 "summary": {
                     "total_units": capacity_ctx.legal_capacity.total_units,
-                    "gross_floor_area": capacity_ctx.legal_capacity.gross_floor_area,
+                    "gross_floor_area": capacity_ctx.legal_capacity.target_gfa_sqm,  # 🔥 FIX: gross_floor_area → target_gfa_sqm
                     "far_ratio": capacity_ctx.legal_capacity.applied_far,
-                    "coverage_ratio": capacity_ctx.legal_capacity.building_coverage_ratio
+                    "coverage_ratio": capacity_ctx.legal_capacity.applied_bcr  # 🔥 FIX: building_coverage_ratio → applied_bcr
                 },
                 "details": {
-                    "legal_max": capacity_ctx.legal_capacity.to_dict() if hasattr(capacity_ctx.legal_capacity, 'to_dict') else {},
-                    "incentive_capacity": capacity_ctx.incentive_capacity.to_dict() if hasattr(capacity_ctx.incentive_capacity, 'to_dict') else {},
+                    "legal_max": _safe_to_dict(capacity_ctx.legal_capacity),
+                    "incentive_capacity": _safe_to_dict(capacity_ctx.incentive_capacity),
                     "parking_solutions": {
-                        "alternative_A": capacity_ctx.far_max_alternative.to_dict() if hasattr(capacity_ctx.far_max_alternative, 'to_dict') else {},
-                        "alternative_B": capacity_ctx.parking_priority_alternative.to_dict() if hasattr(capacity_ctx.parking_priority_alternative, 'to_dict') else {}
+                        "alternative_A": _safe_to_dict(capacity_ctx.far_max_alternative),
+                        "alternative_B": _safe_to_dict(capacity_ctx.parking_priority_alternative)
                     },
                     "lh_recommended_range": {
                         "min_far": capacity_ctx.legal_capacity.applied_far * 0.9,
@@ -278,7 +301,7 @@ class ZeroSitePipeline:
                     },
                     "design_risks": []
                 },
-                "raw_data": capacity_ctx.to_dict() if hasattr(capacity_ctx, 'to_dict') else {}
+                "raw_data": _safe_to_dict(capacity_ctx)
             }
             logger.info(f"✅ M4 데이터 assembled_data에 저장 완료: {assembled_data['modules']['M4']['summary']}")
             
@@ -298,8 +321,8 @@ class ZeroSitePipeline:
                     "roi": getattr(feasibility_ctx.financial_metrics, 'roi', 0),
                     "grade": getattr(feasibility_ctx, 'grade', 'B')
                 },
-                "details": feasibility_ctx.to_dict() if hasattr(feasibility_ctx, 'to_dict') else {},
-                "raw_data": feasibility_ctx.to_dict() if hasattr(feasibility_ctx, 'to_dict') else {}
+                "details": _safe_to_dict(feasibility_ctx),
+                "raw_data": _safe_to_dict(feasibility_ctx)
             }
             logger.info("✅ M5 데이터 assembled_data에 저장 완료")
             
@@ -340,11 +363,11 @@ class ZeroSitePipeline:
                     "grade": getattr(lh_review_ctx, 'grade', 'B')
                 },
                 "details": {
-                    "scores": lh_review_ctx.scores.to_dict() if hasattr(lh_review_ctx, 'scores') and hasattr(lh_review_ctx.scores, 'to_dict') else {},
+                    "scores": _safe_to_dict(lh_review_ctx.scores) if hasattr(lh_review_ctx, 'scores') else {},
                     "rationale": getattr(lh_review_ctx, 'rationale', ''),
                     "conditions": getattr(lh_review_ctx, 'conditions', [])
                 },
-                "raw_data": lh_review_ctx.to_dict() if hasattr(lh_review_ctx, 'to_dict') else {}
+                "raw_data": _safe_to_dict(lh_review_ctx)
             }
             logger.info(f"✅ M6 데이터 assembled_data에 저장 완료: {assembled_data['modules']['M6']['summary']}")
             
