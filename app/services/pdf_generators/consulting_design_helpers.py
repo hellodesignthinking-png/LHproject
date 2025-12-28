@@ -935,6 +935,28 @@ class ConsultingDesignHelpers:
 consulting_helpers = ConsultingDesignHelpers()
 
 
+# Wrapper functions for backward compatibility
+def create_executive_insight_box(title: str = "Executive Insight", 
+                                  main_text: str = "", 
+                                  detail_text: str = "", 
+                                  box_type: str = "info"):
+    """
+    Wrapper for consulting_helpers.create_executive_insight_box
+    
+    Args:
+        title: Box title
+        main_text: Main message
+        detail_text: Additional details
+        box_type: Box type (info/success/warning/danger) - currently not used
+    """
+    # Combine main_text and detail_text
+    combined_text = main_text
+    if detail_text:
+        combined_text += f"<br/><br/>{detail_text}"
+    
+    return consulting_helpers.create_executive_insight_box(combined_text, title)
+
+
 # Export all
 __all__ = [
     'ConsultingDesignHelpers',

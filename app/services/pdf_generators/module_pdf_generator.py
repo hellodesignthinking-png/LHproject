@@ -557,7 +557,7 @@ class ModulePDFGenerator:
         )
         
         # ========== PHASE 최종: Executive Insight Box (컨설팅 디자인 적용) ==========
-        from app.services.pdf_generators.consulting_design_helpers import create_executive_insight_box
+        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers, create_executive_insight_box
         
         # 한 문장 결론
         executive_conclusion = (
@@ -693,7 +693,7 @@ class ModulePDFGenerator:
         story.append(Paragraph("1-1. 토지가치 형성 논리 분석", heading_style))
         
         # ✅ v4.2: 3단 화살표 Flow Diagram (희소성→실수요→LH)
-        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers
+        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers, create_executive_insight_box
         
         flow_stages_v42 = [
             {
@@ -1841,7 +1841,7 @@ M3 선호유형 모델은 특정 입지가 '어떤 유형이 가능한가'를 �
             selected_note = ''
         
         # ✅ PHASE 2-4: Executive Insight Box (컨설팅 디자인 적용)
-        from app.services.pdf_generators.consulting_design_helpers import create_executive_insight_box
+        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers, create_executive_insight_box
         
         # 한 문장 결론
         executive_conclusion = (
@@ -1976,7 +1976,7 @@ M4/M5/M6 종합 결과에 따라 <b>최종 실행 가능 여부가 결정</b>됩
         story.append(Spacer(1, 0.2*inch))
         
         # ✅ v4.2: Lifestyle Cards 강화 버전 (아이콘 크기 2배, 배경색 강화)
-        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers
+        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers, create_executive_insight_box
         
         # 라이프스타일 데이터 준비 (v4.2 강화)
         lifestyle_data_v42 = [
@@ -2077,7 +2077,7 @@ M4/M5/M6 종합 결과에 따라 <b>최종 실행 가능 여부가 결정</b>됩
             logger.warning(f"Housing type matrix v4.2 generation failed: {e}")
         
         # ✅ v4.2: '추천 아닌 설명' 강조 박스
-        from app.services.pdf_generators.consulting_design_helpers import create_executive_insight_box
+        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers, create_executive_insight_box
         
         explanation_box = create_executive_insight_box(
             title="⚠️ M3 분석의 의미 (추천이 아닌 설명)",
@@ -3085,7 +3085,7 @@ M4는 <b>"최종 건축규모를 결정하는 보고서"</b>가 아니라, <br/>
         story.append(Spacer(1, 0.2*inch))
         
         # Executive Insight Box 추가 (컨설팅 디자인)
-        from app.services.pdf_generators.consulting_design_helpers import create_executive_insight_box
+        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers, create_executive_insight_box
         
         executive_conclusion = (
             f"법정 용적률 {far_ratio:.0f}% 달성은 가능하나, 주차대수 제약으로 "
@@ -3152,7 +3152,7 @@ M4는 <b>"최종 건축규모를 결정하는 보고서"</b>가 아니라, <br/>
         story.append(Spacer(1, 0.2*inch))
         
         # 4-Step Diagram: 규모 결정 프로세스
-        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers
+        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers, create_executive_insight_box
         
         try:
             steps = [
@@ -4090,7 +4090,7 @@ M6에서 <b>"LH가 승인할 가능성"</b>과 결합하여 최종 Go/No-Go 결�
         story.append(Spacer(1, 0.2*inch))
         
         # Executive Insight Box 추가 (컨설팅 디자인)
-        from app.services.pdf_generators.consulting_design_helpers import create_executive_insight_box
+        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers, create_executive_insight_box
         
         # NPV 값 추출 (기본값 0)
         npv_value = m5_data.get('npv_public_krw', 0)
@@ -4206,7 +4206,7 @@ LH 일괄매입 구조가 본 사업의 최적 전략입니다.</b><br/>
         # 사업 안정성 평가 (레이더 차트 스타일)
         story.append(Paragraph("사업 안정성 종합 평가", heading_style))
         
-        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers
+        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers, create_executive_insight_box
         
         # 안정성 평가 항목 및 점수 (가상 데이터 - 실제 M5 데이터에서 추출 가능)
         stability_categories = ["수익 안정성", "자금 회전율", "리스크 통제", "정책 부합도", "시장 독립성"]
@@ -5583,7 +5583,7 @@ ZeroSite 6-MODULE은 각각 독립적이면서도 연계된 판단 도구입니�
         story.append(Spacer(1, 0.2*inch))
         
         # ✅ v4.2: Final Decision Badge 대형화 (2배 크기)
-        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers
+        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers, create_executive_insight_box
         
         # Decision 타입에 따라 badge_type 결정
         badge_type = "go"  # default
@@ -5606,7 +5606,7 @@ ZeroSite 6-MODULE은 각각 독립적이면서도 연계된 판단 도구입니�
             logger.warning(f"Final decision badge v4.2 generation failed: {e}")
         
         # Executive Insight Box 추가
-        from app.services.pdf_generators.consulting_design_helpers import create_executive_insight_box
+        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers, create_executive_insight_box
         
         executive_conclusion = (
             f"본 사업지는 LH 심사예측 결과 {decision_text} 판정을 받았습니다. "
@@ -5628,7 +5628,7 @@ ZeroSite 6-MODULE은 각각 독립적이면서도 연계된 판단 도구입니�
         story.append(Spacer(1, 0.2*inch))
         
         # 모듈 연계 다이어그램 추가
-        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers
+        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers, create_executive_insight_box
         
         try:
             # 모듈 정보 준비
