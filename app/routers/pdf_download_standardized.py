@@ -207,6 +207,14 @@ async def download_module_pdf(
         # ✅ STEP 3: Smart key fallback (Phase 3.5F)
         def safe_get_module(ctx, module_id):
             """Try multiple key formats to find module data"""
+            # 🔥 FIX: First check if data is in 'modules' structure
+            if 'modules' in ctx and isinstance(ctx['modules'], dict):
+                module_data = ctx['modules'].get(module_id.upper(), {})
+                if isinstance(module_data, dict) and module_data.get('summary'):
+                    logger.info(f"🔍 {module_id}: found in modules.{module_id.upper()}.summary")
+                    return module_data.get('summary', {})
+            
+            # Fallback: Try other key formats
             key1 = f"{module_id.lower()}_result"
             key2 = module_id.upper()
             key3 = module_id.lower()
@@ -473,31 +481,113 @@ async def preview_module_html(
     try:
         logger.info(f"📄 HTML 미리보기 요청: module={module}, context_id={context_id}")
         
-        # 테스트 데이터 생성 (실제로는 DB에서 조회)
-        test_data = _get_test_data_for_module(module, context_id)
+        # 🔥 FIX: Load actual context data instead of test data
+        frozen_context = context_storage.get_frozen_context(context_id)
         
-        if not test_data:
+        if not frozen_context:
             raise HTTPException(
-                status_code=400,
-                detail=f"지원하지 않는 모듈: {module}"
+                status_code=404,
+                detail=(
+                    f"❌ 분석 데이터를 찾을 수 없습니다.\n\n"
+                    f"Context ID: {context_id}\n\n"
+                    f"💡 해결 방법:\n"
+                    f"1. M1 분석을 먼저 완료하세요.\n"
+                    f"2. '분석 시작' 버튼을 눌러 파이프라인을 실행하세요."
+                )
             )
         
-        # PDF 생성기 초기화
-        generator = ModulePDFGenerator()
+        # Check if modules data exists
+        has_pipeline_data = 'modules' in frozen_context and frozen_context['modules']
         
-        # 모듈별 HTML 생성
-        if module == "M2":
-            html_content = generator.generate_m2_appraisal_html(test_data)
-        elif module == "M3":
-            html_content = generator.generate_m3_housing_type_html(test_data)
-        elif module == "M4":
-            html_content = generator.generate_m4_capacity_html(test_data)
-        elif module == "M5":
-            html_content = generator.generate_m5_feasibility_html(test_data)
-        elif module == "M6":
-            html_content = generator.generate_m6_lh_review_html(test_data)
-        else:
-            raise HTTPException(status_code=400, detail=f"지원하지 않는 모듈: {module}")
+        if not has_pipeline_data:
+            # Try to run pipeline automatically
+            parcel_id = frozen_context.get('parcel_id') or frozen_context.get('land_info', {}).get('parcel_id')
+            
+            if parcel_id:
+                logger.warning(f"⚠️ Pipeline data missing, auto-running for {context_id}...")
+                try:
+                    from app.api.endpoints.pipeline_reports_v4 import run_pipeline_analysis
+                    from app.api.endpoints.pipeline_reports_v4 import PipelineAnalysisRequest
+                    
+                    pipeline_request = PipelineAnalysisRequest(
+                        parcel_id=parcel_id,
+                        context_id=context_id,
+                        use_cache=False
+                    )
+                    
+                    pipeline_response = await run_pipeline_analysis(pipeline_request)
+                    
+                    if pipeline_response.status == "success":
+                        import asyncio
+                        await asyncio.sleep(1)
+                        frozen_context = context_storage.get_frozen_context(context_id)
+                except Exception as e:
+                    logger.error(f"Auto-pipeline failed: {e}")
+                    raise HTTPException(
+                        status_code=500,
+                        detail=f"파이프라인 자동 실행 실패. '분석 시작' 버튼을 먼저 클릭해주세요."
+                    )
+        
+        # ✅ Extract module data from frozen_context
+        def safe_get_module(ctx, module_id):
+            """Try multiple key formats to find module data"""
+            # 🔥 FIX: First check if data is in 'modules' structure
+            if 'modules' in ctx and isinstance(ctx['modules'], dict):
+                module_data = ctx['modules'].get(module_id.upper(), {})
+                if isinstance(module_data, dict) and module_data.get('summary'):
+                    logger.info(f"🔍 {module_id}: found in modules.{module_id.upper()}.summary")
+                    return module_data.get('summary', {})
+            
+            # Fallback
+            key1 = f"{module_id.lower()}_result"
+            key2 = module_id.upper()
+            key3 = module_id.lower()
+            result = ctx.get(key1) or ctx.get(key2) or ctx.get(key3) or {}
+            return result
+        
+        # Get M6 result
+        m6_result = frozen_context.get('m6_result', {})
+        
+        # Build assembled_data
+        assembled_data = {
+            "m6_result": m6_result,
+            "modules": {
+                "M1": {
+                    "summary": safe_get_module(frozen_context, 'M1'),
+                    "details": {},
+                    "raw_data": {}
+                },
+                "M2": {
+                    "summary": safe_get_module(frozen_context, 'M2'),
+                    "details": {},
+                    "raw_data": {}
+                },
+                "M3": {
+                    "summary": safe_get_module(frozen_context, 'M3'),
+                    "details": {},
+                    "raw_data": {}
+                },
+                "M4": {
+                    "summary": safe_get_module(frozen_context, 'M4'),
+                    "details": {},
+                    "raw_data": {}
+                },
+                "M5": {
+                    "summary": safe_get_module(frozen_context, 'M5'),
+                    "details": {},
+                    "raw_data": {}
+                },
+                "M6": {
+                    "summary": safe_get_module(frozen_context, 'M6'),
+                    "details": {},
+                    "raw_data": {}
+                }
+            }
+        }
+        
+        # 🔥 FIX: Extract module-specific data before passing to renderer
+        module_data = assembled_data.get("modules", {}).get(module, {})
+        html_content = _render_standard_report_html(module, module_data, context_id)
         
         # HTML 반환 (브라우저에서 직접 표시)
         return HTMLResponse(
@@ -518,8 +608,9 @@ async def preview_module_html(
     
     except AttributeError as e:
         logger.warning(f"HTML 생성 메서드 없음: {str(e)} - 표준 렌더러 사용")
-        # 🔥 STANDARD RENDERER: 모든 모듈 HTML 표준 렌더러 사용
-        html_content = _render_standard_report_html(module, test_data, context_id)
+        # 🔥 FIX: Extract module-specific data before passing to renderer
+        module_data = assembled_data.get("modules", {}).get(module, {})
+        html_content = _render_standard_report_html(module, module_data, context_id)
         return HTMLResponse(
             content=html_content,
             headers={
@@ -565,6 +656,70 @@ def _get_m6_next_steps_template() -> str:
             </ul>
         </div>
         """
+
+
+# ============================================================================
+# Data Formatters
+# ============================================================================
+
+def format_m2_summary(summary: dict) -> dict:
+    """Format M2 appraisal summary data"""
+    land_value = summary.get('land_value', 0)
+    land_value_per_pyeong = summary.get('land_value_per_pyeong', 0)
+    confidence_pct = summary.get('confidence_pct', 0)
+    
+    return {
+        'land_value_total': f"₩{int(land_value/100000000):,}억원" if land_value else "N/A",
+        'pyeong_price': f"₩{int(land_value_per_pyeong/10000):,}만원/평" if land_value_per_pyeong else "N/A",
+        'confidence_pct': f"{confidence_pct:.0f}%" if confidence_pct else "N/A",
+        'transaction_count': str(summary.get('transaction_count', 'N/A')),
+        'interpretation': f"본 토지의 감정평가액은 {int(land_value/100000000):,}억원이며, 평당 {int(land_value_per_pyeong/10000):,}만원으로 평가되었습니다. 신뢰도는 {confidence_pct:.0f}%입니다." if land_value else "데이터 없음"
+    }
+
+def format_m3_summary(summary: dict) -> dict:
+    """Format M3 housing type summary data"""
+    return {
+        'recommended_type': summary.get('recommended_housing_type', 'N/A'),
+        'total_score': f"{summary.get('total_score', 0):.0f}점",
+        'confidence_pct': f"{summary.get('confidence_pct', 0):.0f}%"
+    }
+
+def format_m4_summary(summary: dict) -> dict:
+    """Format M4 capacity summary data"""
+    return {
+        'legal_units': f"{summary.get('legal_capacity_units', 0):,}세대",
+        'incentive_units': f"{summary.get('incentive_capacity_units', 0):,}세대",
+        'parking_alt_a': f"{summary.get('parking_alt_a_spaces', 0):,}대",
+        'parking_alt_b': f"{summary.get('parking_alt_b_spaces', 0):,}대"
+    }
+
+def format_m5_summary(summary: dict) -> dict:
+    """Format M5 feasibility summary data"""
+    # M5 has nested structure: summary.financials.npv_public
+    financials = summary.get('financials', {})
+    profitability = summary.get('profitability', {})
+    
+    npv_public = financials.get('npv_public', 0)
+    irr = financials.get('irr_public', 0)
+    roi = financials.get('roi', 0)
+    grade = profitability.get('grade', 'N/A')
+    
+    return {
+        'npv_public_krw': f"₩{int(npv_public/100000000):,}억원" if npv_public else "N/A",
+        'irr_pct': f"{irr:.1f}%" if irr else "N/A",
+        'roi_pct': f"{roi:.1f}%" if roi else "N/A",
+        'grade': grade,
+        'judgment_guide': f"NPV {int(npv_public/100000000):,}억원, IRR {irr:.1f}%, 사업성 등급 {grade}로 평가되었습니다." if npv_public else "데이터 없음"
+    }
+
+def format_m6_summary(summary: dict) -> dict:
+    """Format M6 LH review summary data"""
+    return {
+        'decision': summary.get('lh_decision', 'N/A'),
+        'total_score': f"{summary.get('lh_score_total', 0):.0f}점",
+        'grade': summary.get('lh_grade', 'N/A'),
+        'approval_probability_pct': f"{summary.get('approval_probability', 0):.0f}%"
+    }
 
 
 def _render_standard_report_html(module: str, data: dict, context_id: str) -> str:
