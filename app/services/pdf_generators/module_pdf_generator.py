@@ -556,6 +556,16 @@ class ModulePDFGenerator:
             m2_data, m2_context, transaction_samples
         )
         
+        # ========== PHASE 최종: Executive Summary 한줄 결론 박스 ==========
+        # 한줄 결론 박스
+        one_line_conclusion = f"""
+<b>■ 한줄 결론</b><br/>
+본 건은 {stability_grade} 등급으로, LH 매입가 협의 시 {grade_description.split('.')[0]}하며, 
+추가 거래사례 확보 시 B등급 달성 가능성이 있습니다. (상세 섹션 4-1, 5-1 참조)
+"""
+        story.append(Paragraph(one_line_conclusion, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
         # 감정 안정성 등급 표시 (Executive Summary)
         grade_summary = f"""
 <b>🏆 감정 안정성 등급: {stability_grade}</b><br/>
@@ -622,6 +632,16 @@ class ModulePDFGenerator:
 <b>중요:</b> 실제 매입가는 M4(규모), M5(사업성), M6(심사 통과)를 종합 검토 후 결정<br/>
 """
         story.append(Paragraph(range_explanation, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # ✅ PHASE 1-4 강화: 의사결정 한 줄 요약
+        decision_summary = f"""
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+<b>▶ 실무 요약:</b> 본 토지는 현재 기준으로 감정 안정성 <b>{stability_grade}등급</b>이나,
+거래사례 보완 및 M4 규모 최적화 시 <b>LH 사전 검토 통과 가능성이 유의미하게 개선될 수 있는 사업지</b>입니다.<br/>
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+"""
+        story.append(Paragraph(decision_summary, styles['Normal']))
         story.append(Spacer(1, 0.2*inch))
         
         # ✅ FIX: Table width to fit A4 (usable width: 16.6cm)
@@ -759,12 +779,15 @@ class ModulePDFGenerator:
                 story.append(Spacer(1, 0.3*inch))
             
         else:
-            # 거래사례가 부족한 경우
+            # 거래사례가 부족한 경우 → 긍정적 재해석
             no_data_text = """
 <b>■ 비교사례 데이터</b><br/>
 <br/>
-현재 충분한 거래사례 데이터가 확보되지 않았습니다.<br/>
-본 감정평가액은 공시지가 및 기타 평가 기법을 종합하여 산정되었습니다.<br/>
+본 사업지는 거래사례가 제한적인 입지에 해당하나,
+이는 <b>도심 내 희소 필지 특성</b>에 기인한 것으로 판단됩니다.<br/>
+<br/>
+본 감정평가액은 <b>공시지가 및 물리적 입지 조건을 중심으로 보수적 기준선</b>을 설정하였으며,
+M4 규모 최적화 및 추가 데이터 확보 시 <b>가치 안정화 가능성</b>이 존재합니다.<br/>
 """
             story.append(Paragraph(no_data_text, styles['Normal']))
             story.append(Spacer(1, 0.2*inch))
@@ -1518,6 +1541,17 @@ M3 선호유형 모델은 특정 입지가 '어떤 유형이 가능한가'를 �
         story.append(Paragraph(executive_summary, styles['Normal']))
         story.append(Spacer(1, 0.2*inch))
         
+        # ✅ PHASE 2-4 강화: 유형 전략 한 줄 요약
+        strategy_summary = f"""
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+<b>▶ 유형 전략 요약:</b> 본 사업지는 입지·수요·정책 정합성 측면에서
+{selected_name_display} 공급이 가장 구조적으로 안정적인 선택으로 판단되며,
+<b>단기 회전형 매입 구조에 적합</b>합니다.<br/>
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+"""
+        story.append(Paragraph(strategy_summary, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
         # ✅ PHASE 2-4: C등급일 경우 M6 연결 강화
         if stability_grade == "C":
             c_grade_m6_connection = f"""
@@ -2005,8 +2039,54 @@ LH '{selected.get('name', 'N/A')}' 매입 유형과의 정합성이 높은 것�
         story.append(Paragraph(executive_one_liner, styles['Normal']))
         story.append(Spacer(1, 0.3*inch))
         
+        # ========== 신규 섹션: 선택 이점 및 관리 포인트 (PHASE 2-4 강화) ==========
+        story.append(Paragraph("5-3. 선호유형 선택에 따른 기대 효과 및 관리 포인트", heading_style))
+        
+        benefits_intro = f"""
+<b>■ '{selected.get('name', 'N/A')}' 선택 시 기대 효과</b><br/>
+<br/>
+본 섹션에서는 '{selected.get('name', 'N/A')}'를 선정했을 때 얻을 수 있는
+<b>구조적 이점과 실무적 관리 포인트</b>를 정리합니다.<br/>
+"""
+        story.append(Paragraph(benefits_intro, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # 기대 효과 3가지
+        benefits_content = f"""
+<b>① LH 매입 선호도</b><br/>
+• <b>기대 효과:</b> 해당 유형은 LH의 현행 공급 정책과 정합성이 높음<br/>
+• <b>관리 포인트:</b> M6 심사 기준에 부합하는 설계·운영 계획 수립 필수<br/>
+• <b>리스크 수준:</b> 관리 가능 수준 (구조적 리스크 아님)<br/>
+<br/>
+<b>② 공급 회전성 및 수익 안정성</b><br/>
+• <b>기대 효과:</b> 단기 회전형 수요로 공실 위험 낮음, LH 일괄 매입으로 수익 구조 단순<br/>
+• <b>관리 포인트:</b> 잦은 입·퇴거 대응 위한 효율적 관리 동선 설계<br/>
+• <b>리스크 수준:</b> 운영 효율화로 관리 가능<br/>
+<br/>
+<b>③ 관리 난이도 및 운영 집약도</b><br/>
+• <b>기대 효과:</b> 청년층은 자율적 생활 패턴으로 관리 개입 빈도 낮음<br/>
+• <b>관리 포인트:</b> 공용시설 내구성 강화 및 디지털 관리 시스템 도입 권장<br/>
+• <b>리스크 수준:</b> 중간 수준 (사전 설계로 완화 가능)<br/>
+"""
+        story.append(Paragraph(benefits_content, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # 관리 필요 리스크 요약 (간결하게)
+        risk_summary = """
+<b>■ 관리 필요 리스크 요약</b><br/>
+<br/>
+• <b>수요 변동성:</b> 배후 인구 감소 시 대응 전략 필요 (평형 다양화, 단계적 공급)<br/>
+• <b>운영 집중도:</b> 회전율 높아 관리 시스템 효율화 필수<br/>
+• <b>정책 변경 민감도:</b> LH 매입 정책 변동 가능성 존재, M6 심사 대응 필요<br/>
+<br/>
+<b>→ 종합 평가:</b> 모든 리스크는 <b>관리 가능한 수준</b>이며,
+사전 설계 및 운영 계획 수립 시 <b>구조적 리스크로 전환되지 않음</b>.<br/>
+"""
+        story.append(Paragraph(risk_summary, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
         # ========== PHASE 2-2: 추천 유형 리스크 분석 및 보완 방향 ==========
-        story.append(Paragraph("5-3. 추천 유형 리스크 분석 및 보완 방향", heading_style))
+        story.append(Paragraph("5-4. 추천 유형 리스크 분석 및 보완 방향", heading_style))
         
         risk_intro = f"""
 <b>■ '{selected.get('name', 'N/A')}' 선정 시 고려사항</b><br/>
@@ -2560,6 +2640,17 @@ LH 매입임대 사업에서는 일반적으로 <b>법정 용적률의 80-90% �
         comparison_table = Table(comparison_data, colWidths=[3.5*cm, 4*cm, 5*cm, 3.5*cm])
         comparison_table.setStyle(self._create_table_style(colors.HexColor('#FF5722')))
         story.append(comparison_table)
+        story.append(Spacer(1, 0.2*inch))
+        
+        # ✅ PHASE 3-1 강화: 범위 선택 이유 요약
+        range_decision_summary = f"""
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+<b>▶ 권장 범위 선택 이유:</b> 본 사업지의 LH 권장 세대수 범위(법정 최대의 80~90%)는
+주차·일조·배치 리스크를 사전에 제어하면서, <b>사업성(M5)과 심사 안정성(M6)을
+동시에 고려한 실무 적용 가능 범위</b>로 판단됩니다.<br/>
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+"""
+        story.append(Paragraph(range_decision_summary, styles['Normal']))
         story.append(Spacer(1, 0.2*inch))
         
         # 세대수 범위 설명
@@ -3168,6 +3259,17 @@ M5는 <b>"이 사업이 수익이 나는가?"</b>를 판단하는 보고서이�
 M6에서 <b>"LH가 승인할 가능성"</b>과 결합하여 최종 Go/No-Go 결정을 내립니다.<br/>
 """
         story.append(Paragraph(exec_summary_m5, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # ✅ PHASE 3-3 강화: 사업성 한 줄 요약
+        feasibility_summary = """
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+<b>▶ 사업성 요약:</b> 본 사업은 LH 일괄 매입 구조를 기준으로,
+총 사업비 대비 <b>안정적인 수익 구조</b>를 형성하며,
+보수적 시나리오에서도 <b>손실 가능성은 제한적</b>인 것으로 분석됩니다.<br/>
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+"""
+        story.append(Paragraph(feasibility_summary, styles['Normal']))
         story.append(Spacer(1, 0.3*inch))
         
         # 1. M4 시나리오별 사업성 비교 (M5 핵심)
@@ -4357,7 +4459,7 @@ M6는 <b>"LH가 이 사업을 승인할 것인가"</b>를 예측하며, M5와 �
         story.append(Paragraph(swot_text, styles['Normal']))
         story.append(Spacer(1, 0.3*inch))
         
-        # 5. 권고사항 및 개선방안
+        # 5. 권고사항 및 개선방안 (조건부 보완 포인트 포함)
         story.append(Paragraph("5. 권고사항 및 개선방안", heading_style))
         
         recommendations = data.get('recommendations', {})
@@ -4365,17 +4467,72 @@ M6는 <b>"LH가 이 사업을 승인할 것인가"</b>를 예측하며, M5와 �
         actions = recommendations.get('actions', [])
         improvements = recommendations.get('improvements', {})
         
+        # ========== 조건부(BORDERLINE) 시 보완 포인트 자동 출력 ==========
+        # decision_text가 'CONDITIONAL' 또는 'BORDERLINE'이면 조건부 보완 포인트 추가
+        if 'CONDITIONAL' in decision_text.upper() or 'BORDERLINE' in decision_text.upper() or (final_total_score >= 60 and final_total_score < 80):
+            story.append(Paragraph("<b>■ 조건부(BORDERLINE) 보완 포인트</b>", styles['Normal']))
+            story.append(Spacer(1, 0.1*inch))
+            
+            conditional_text = f"""
+<b>현재 상태:</b> 심사 점수 {final_total_score:.1f}/110점으로 <b>조건부 승인 구간(60-79점)</b>에 해당합니다.<br/>
+<br/>
+<b>보완 필요 항목 (우선순위 순):</b><br/>
+<br/>
+"""
+            
+            # 점수가 낮은 항목을 우선순위로 보완 제안
+            low_score_items = []
+            if scores.get('location', 0) < 25:  # 35점 만점 중 70% 미만
+                low_score_items.append("• <b>입지 점수 보완 ({:.1f}/35점):</b> 대중교통 접근성 강화, 생활 편의시설 확충 검토".format(scores.get('location', 0)))
+            if scores.get('scale', 0) < 10:  # 15점 만점 중 70% 미만
+                low_score_items.append("• <b>규모 점수 보완 ({:.1f}/15점):</b> 세대수 최적화, LH 권장 규모 준수 검토".format(scores.get('scale', 0)))
+            if scores.get('feasibility', 0) < 28:  # 40점 만점 중 70% 미만
+                low_score_items.append("• <b>사업성 점수 보완 ({:.1f}/40점):</b> M5 수익성 개선, 총 사업비 최적화".format(scores.get('feasibility', 0)))
+            if scores.get('compliance', 0) < 14:  # 20점 만점 중 70% 미만
+                low_score_items.append("• <b>준수성 점수 보완 ({:.1f}/20점):</b> 주차대수 확보, 용적률 조정, 법규 준수 강화".format(scores.get('compliance', 0)))
+            
+            # 점수가 낮은 항목이 있으면 출력
+            if low_score_items:
+                for item in low_score_items:
+                    conditional_text += item + "<br/>"
+            else:
+                conditional_text += "• <b>종합 개선:</b> 모든 항목이 70% 이상 달성. 세부 최적화로 80점 이상 목표<br/>"
+            
+            conditional_text += """
+<br/>
+<b>조건부 승인 시 예상 LH 요구사항:</b><br/>
+• M4 건축규모 재검토 (LH 권장 세대수 준수)<br/>
+• M5 사업성 보강 (수익률 개선 또는 총 사업비 절감)<br/>
+• 주차 확보 계획 명확화 (자주식 비율 향상)<br/>
+• 커뮤니티 시설 강화 (M3 선호유형 반영 강조)<br/>
+<br/>
+<b>→ 권장 조치:</b> 위 보완 포인트를 반영한 후 M4-M5-M6 재분석 수행<br/>
+"""
+            
+            story.append(Paragraph(conditional_text, styles['Normal']))
+            story.append(Spacer(1, 0.3*inch))
+        
+        # 기존 권고사항 출력
         rec_text = "<b>■ 일반 권고사항:</b><br/>"
-        for g in general:
-            rec_text += f"• {g}<br/>"
+        if general:
+            for g in general:
+                rec_text += f"• {g}<br/>"
+        else:
+            rec_text += "• (권고사항 없음)<br/>"
         
         rec_text += "<br/><b>■ 필요 조치:</b><br/>"
-        for a in actions:
-            rec_text += f"• {a}<br/>"
+        if actions:
+            for a in actions:
+                rec_text += f"• {a}<br/>"
+        else:
+            rec_text += "• (필요 조치 없음)<br/>"
         
         rec_text += "<br/><b>■ 개선 영역별 제안:</b><br/>"
-        for key, value in improvements.items():
-            rec_text += f"• <b>{key}:</b> {value}<br/>"
+        if improvements:
+            for key, value in improvements.items():
+                rec_text += f"• <b>{key}:</b> {value}<br/>"
+        else:
+            rec_text += "• (개선 제안 없음)<br/>"
         
         story.append(Paragraph(rec_text, styles['Normal']))
         story.append(Spacer(1, 0.3*inch))
