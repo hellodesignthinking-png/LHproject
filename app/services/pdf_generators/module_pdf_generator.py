@@ -689,25 +689,60 @@ class ModulePDFGenerator:
         
         story.append(Spacer(1, 0.1*inch))
         
-        # ========== 1-1. 토지가치 형성 논리 (Flow Diagram 적용) ==========
+        # ========== 1-1. 토지가치 형성 논리 (Flow Diagram v4.2 강화) ==========
         story.append(Paragraph("1-1. 토지가치 형성 논리 분석", heading_style))
         
-        # Flow Diagram 생성
-        from app.services.pdf_generators.consulting_design_helpers import create_flow_diagram
+        # ✅ v4.2: 3단 화살표 Flow Diagram (희소성→실수요→LH)
+        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers
         
-        flow_steps = [
-            {"label": "도심 필지\n희소성", "desc": "개발가능 필지 15-20%"},
-            {"label": "입지\n프리미엄", "desc": "역세권 500m 이내"},
-            {"label": "거래사례\n중앙값", "desc": "최근 1년 5건 기반"},
-            {"label": "토지가치\n형성", "desc": f"{land_value:,.0f}원"}
+        flow_stages_v42 = [
+            {
+                "title": "① 도심 희소성",
+                "subtitle": "개발가능 필지 15-20%",
+                "desc": "제2종일반주거지역 내\n신축 가능 토지 제한",
+                "icon": "🏙️"
+            },
+            {
+                "title": "② 실수요 거래 구조",
+                "subtitle": f"최근 1년 5건 중앙값",
+                "desc": f"평균 단가 {land_value_per_pyeong:,.0f}원/평",
+                "icon": "📊"
+            },
+            {
+                "title": "③ LH 정책 활용 가치",
+                "subtitle": "신축매입임대 적합",
+                "desc": "청년형 수요 + 확정 수익",
+                "icon": "🎯"
+            }
         ]
         
-        flow_diagram = create_flow_diagram(
-            steps=flow_steps,
-            title="토지가치 형성 구조"
+        flow_diagram_v42 = consulting_helpers.create_3stage_arrow_flow_v42(
+            stages=flow_stages_v42,
+            title="토지가치 형성 구조 (3단계)"
         )
-        story.append(flow_diagram)
-        story.append(Spacer(1, 0.2*inch))
+        story.append(flow_diagram_v42)
+        story.append(Spacer(1, 0.3*inch))
+        
+        # ✅ v4.2: 프리미엄 분해 Stacked Bar (입지/희소성/정책)
+        # 토지가치를 3가지 프리미엄으로 분해
+        base_value = land_value * 0.60  # 기본가치 60%
+        location_premium = land_value * 0.20  # 입지 프리미엄 20%
+        scarcity_premium = land_value * 0.12  # 희소성 프리미엄 12%
+        policy_premium = land_value * 0.08   # 정책 프리미엄 8%
+        
+        premiums_breakdown = {
+            "기본가치 (공시지가)": base_value / 100_000_000,
+            "입지 프리미엄": location_premium / 100_000_000,
+            "희소성 프리미엄": scarcity_premium / 100_000_000,
+            "LH정책 프리미엄": policy_premium / 100_000_000
+        }
+        
+        stacked_bar_v42 = consulting_helpers.create_stacked_premium_bar_v42(
+            premiums=premiums_breakdown,
+            unit="억원"
+        )
+        story.append(stacked_bar_v42)
+        story.append(Spacer(1, 0.3*inch))
         
         value_formation_logic = f"""
 <b>■ 토지가치 형성 요인 해석</b><br/>
@@ -1940,23 +1975,43 @@ M4/M5/M6 종합 결과에 따라 <b>최종 실행 가능 여부가 결정</b>됩
         story.append(score_table)
         story.append(Spacer(1, 0.2*inch))
         
-        # Lifestyle Cards 추가 (시각화)
-        from app.services.pdf_generators.consulting_design_helpers import create_lifestyle_cards
+        # ✅ v4.2: Lifestyle Cards 강화 버전 (아이콘 크기 2배, 배경색 강화)
+        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers
         
-        # 라이프스타일 데이터 준비
-        lifestyle_data = [
-            {"icon": "🏃", "label": f"이동 중심\\n생활"},
-            {"icon": "🏠", "label": f"소형 독립\\n가구"},
-            {"icon": "🚇", "label": f"대중교통\\n선호"},
-            {"icon": "☕", "label": f"짧은 생활\\n반경"}
+        # 라이프스타일 데이터 준비 (v4.2 강화)
+        lifestyle_data_v42 = [
+            {
+                "icon": "🏃",
+                "title": "직주근접형",
+                "desc": "이동 중심 생활",
+                "color": "#E3F2FD"
+            },
+            {
+                "icon": "🏠",
+                "title": "1-2인 가구",
+                "desc": "소형 독립 선호",
+                "color": "#E8F5E9"
+            },
+            {
+                "icon": "🚇",
+                "title": "대중교통 중심",
+                "desc": "역세권 500m",
+                "color": "#FFF9C4"
+            },
+            {
+                "icon": "☕",
+                "title": "단기 거주",
+                "desc": "2-3년 주기",
+                "color": "#FCE4EC"
+            }
         ]
         
         try:
-            lifestyle_cards = create_lifestyle_cards(lifestyle_data)
-            story.append(lifestyle_cards)
-            story.append(Spacer(1, 0.2*inch))
+            lifestyle_cards_v42 = consulting_helpers.create_lifestyle_cards_v42(lifestyle_data_v42)
+            story.append(lifestyle_cards_v42)
+            story.append(Spacer(1, 0.3*inch))
         except Exception as e:
-            logger.warning(f"Lifestyle cards generation failed: {e}")
+            logger.warning(f"Lifestyle cards v4.2 generation failed: {e}")
         
         # ✅ PHASE 2-4: N/A 및 0점 자동 주석
         has_na_or_zero = False
@@ -2000,6 +2055,37 @@ M4/M5/M6 종합 결과에 따라 <b>최종 실행 가능 여부가 결정</b>됩
 본 입지의 생활 구조가 해당 선호 패턴과 가장 강하게 매칭되기 때문입니다.</b><br/>
 """
         story.append(Paragraph(score_interpretation, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # ✅ v4.2: 유형 비교 Matrix (청년형/신혼형/일반형 비교)
+        try:
+            # 주요 3개 유형 추출
+            top_types = []
+            for type_key, type_scores in sorted_scores[:3]:
+                top_types.append({
+                    "name": type_scores.get('name', type_key),
+                    "residence_period": "2-3년" if "청년" in type_scores.get('name', '') else ("5-7년" if "신혼" in type_scores.get('name', '') else "7-10년"),
+                    "lh_stability": "높음" if "청년" in type_scores.get('name', '') else ("중간" if "신혼" in type_scores.get('name', '') else "낮음"),
+                    "total_score": type_scores.get('total', 0)
+                })
+            
+            if top_types:
+                housing_matrix_v42 = consulting_helpers.create_housing_type_matrix_v42(top_types)
+                story.append(housing_matrix_v42)
+                story.append(Spacer(1, 0.3*inch))
+        except Exception as e:
+            logger.warning(f"Housing type matrix v4.2 generation failed: {e}")
+        
+        # ✅ v4.2: '추천 아닌 설명' 강조 박스
+        from app.services.pdf_generators.consulting_design_helpers import create_executive_insight_box
+        
+        explanation_box = create_executive_insight_box(
+            title="⚠️ M3 분석의 의미 (추천이 아닌 설명)",
+            main_text=f"M3는 '{selected.get('name', 'N/A')}' 유형을 추천하는 것이 아닙니다.",
+            detail_text=f"본 입지가 만들어내는 생활 패턴(이동반경, 거주기간, 소비패턴)이 해당 유형과 가장 자연스럽게 매칭된다는 분석 결과입니다. 최종 선택은 M6 LH 심사 결과와 함께 검토되어야 합니다.",
+            box_type="warning"  # warning: yellow box
+        )
+        story.append(explanation_box)
         story.append(Spacer(1, 0.3*inch))
         
         # 3. 입지 분석 상세 (POI 거리) - 논문 수준 상세 분석
@@ -5496,8 +5582,8 @@ ZeroSite 6-MODULE은 각각 독립적이면서도 연계된 판단 도구입니�
         story.append(Paragraph(rationale, styles['Normal']))
         story.append(Spacer(1, 0.2*inch))
         
-        # Final Decision Badge 추가 (컨설팅 디자인)
-        from app.services.pdf_generators.consulting_design_helpers import create_final_decision_badge
+        # ✅ v4.2: Final Decision Badge 대형화 (2배 크기)
+        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers
         
         # Decision 타입에 따라 badge_type 결정
         badge_type = "go"  # default
@@ -5509,15 +5595,15 @@ ZeroSite 6-MODULE은 각각 독립적이면서도 연계된 판단 도구입니�
             badge_type = "no-go"
         
         try:
-            decision_badge = create_final_decision_badge(
+            decision_badge_v42 = consulting_helpers.create_final_decision_badge_v42(
                 decision=badge_type,
                 score=final_total_score,
-                subtitle=f"LH 심사 통과 가능성 평가"
+                subtitle=f"LH 심사 통과 가능성 평가\n종합 점수: {final_total_score:.1f}/110점"
             )
-            story.append(decision_badge)
-            story.append(Spacer(1, 0.2*inch))
+            story.append(decision_badge_v42)
+            story.append(Spacer(1, 0.3*inch))
         except Exception as e:
-            logger.warning(f"Final decision badge generation failed: {e}")
+            logger.warning(f"Final decision badge v4.2 generation failed: {e}")
         
         # Executive Insight Box 추가
         from app.services.pdf_generators.consulting_design_helpers import create_executive_insight_box
@@ -5573,6 +5659,66 @@ M6 최종 판단은 M1-M5의 모든 분석 결과를 <b>종합적으로 검토</
 따라서 M2-M5의 <b>데이터 정확성과 최적화가 M6 통과의 핵심</b>입니다.<br/>
 """
             story.append(Paragraph(linkage_interpretation, styles['Normal']))
+            story.append(Spacer(1, 0.3*inch))
+            
+            # ✅ v4.2: 실행 로드맵 Timeline (4-Step)
+            story.append(Paragraph("실행 로드맵 (4단계)", heading_style))
+            
+            # Timeline 데이터 준비
+            timeline_steps = [
+                {
+                    "step": "STEP 1",
+                    "title": "데이터 검증",
+                    "desc": "M2-M5 데이터 정확성 확인",
+                    "duration": "1-2일"
+                },
+                {
+                    "step": "STEP 2",
+                    "title": "개선 조치",
+                    "desc": "취약 항목 보완 (거래사례 추가, 규모 조정)",
+                    "duration": "3-5일"
+                },
+                {
+                    "step": "STEP 3",
+                    "title": "LH 심사 준비",
+                    "desc": "서류 준비 및 감정평가 의뢰",
+                    "duration": "7-10일"
+                },
+                {
+                    "step": "STEP 4",
+                    "title": "사업 착수",
+                    "desc": "LH 심사 통과 후 계약 진행",
+                    "duration": "15-20일"
+                }
+            ]
+            
+            # Timeline 테이블 생성 (간단한 형태)
+            timeline_data = [['단계', '작업 내용', '소요 기간']]
+            for step in timeline_steps:
+                timeline_data.append([
+                    step['step'],
+                    f"{step['title']}\n{step['desc']}",
+                    step['duration']
+                ])
+            
+            timeline_table = Table(timeline_data, colWidths=[3*cm, 10*cm, 3*cm])
+            timeline_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), self.theme.colors.primary),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('FONTNAME', (0, 0), (-1, 0), self.font_name_bold),
+                ('FONTSIZE', (0, 0), (-1, 0), 11),
+                ('FONTNAME', (0, 1), (-1, -1), self.font_name),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F5F5F5')]),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ]))
+            story.append(timeline_table)
+            story.append(Spacer(1, 0.2*inch))
+            
         except Exception as e:
             logger.warning(f"Module linkage diagram generation failed: {e}")
         

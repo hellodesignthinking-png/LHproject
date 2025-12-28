@@ -517,6 +517,418 @@ class ConsultingDesignHelpers:
         ]))
         
         return layout_table
+    
+    def create_3stage_arrow_flow_v42(self, stages: List[Dict[str, str]], title: str = "가치 형성 구조") -> Table:
+        """
+        3단 화살표 Flow Diagram (v4.2 강화판)
+        
+        프롬프트: [희소성] → [실수요 거래 구조] → [LH 정책 활용 가치]
+        각 단계에 아이콘 사용 (Map / People / Policy)
+        
+        Args:
+            stages: [{"icon": "🗺️", "title": "도심 필지 희소성", "desc": "개발가능 15-20%"}, ...]
+            title: 다이어그램 제목
+        
+        Returns:
+            Table: 3단 화살표 Flow
+        """
+        from reportlab.platypus import Spacer
+        
+        # 스타일 정의
+        icon_style = ParagraphStyle(
+            'IconStyle',
+            fontName=self.theme.typography.font_regular,
+            fontSize=32,  # 아이콘 크기 증가
+            textColor=self.theme.colors.primary,
+            alignment=TA_CENTER,
+        )
+        
+        title_style = ParagraphStyle(
+            'StageTitle',
+            fontName=self.theme.typography.font_bold,
+            fontSize=13,  # 제목 크기 증가
+            textColor=colors.white,
+            alignment=TA_CENTER,
+            leading=16,
+        )
+        
+        desc_style = ParagraphStyle(
+            'StageDesc',
+            fontName=self.theme.typography.font_regular,
+            fontSize=10,
+            textColor=colors.white,
+            alignment=TA_CENTER,
+            leading=13,
+        )
+        
+        arrow_style = ParagraphStyle(
+            'ArrowStyle',
+            fontName=self.theme.typography.font_bold,
+            fontSize=28,  # 화살표 크기 증가
+            textColor=self.theme.colors.accent,
+            alignment=TA_CENTER,
+        )
+        
+        # 단계 셀들 생성
+        stage_cells = []
+        for i, stage in enumerate(stages):
+            icon = stage.get('icon', '●')
+            stage_title = stage.get('title', '')
+            desc = stage.get('desc', '')
+            
+            # 아이콘
+            icon_para = Paragraph(icon, icon_style)
+            # 제목
+            title_para = Paragraph(f"<b>{stage_title}</b>", title_style)
+            # 설명
+            desc_para = Paragraph(desc, desc_style)
+            
+            # 단계 박스
+            stage_box = Table(
+                [[icon_para], [title_para], [desc_para]],
+                colWidths=[4.2*cm],
+                rowHeights=[1.2*cm, 0.8*cm, 0.7*cm]
+            )
+            stage_box.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('BACKGROUND', (0, 0), (-1, -1), self.theme.colors.primary),
+                ('ROUNDEDCORNERS', [8, 8, 8, 8]),  # 둥근 모서리
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ]))
+            
+            stage_cells.append(stage_box)
+            
+            # 마지막 단계가 아니면 화살표 추가
+            if i < len(stages) - 1:
+                arrow_para = Paragraph("→", arrow_style)
+                stage_cells.append(arrow_para)
+        
+        # 가로 배치
+        flow_table = Table([stage_cells], colWidths=[4.2*cm, 0.8*cm] * (len(stages) - 1) + [4.2*cm])
+        flow_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        
+        return flow_table
+    
+    def create_stacked_premium_bar_v42(self, premiums: Dict[str, float], unit: str = "억원") -> Table:
+        """
+        프리미엄 분해 Stacked Bar (v4.2 신규)
+        
+        프롬프트: 입지 / 희소성 / 정책 프리미엄을 색상 분리
+        
+        Args:
+            premiums: {"입지": 5.0, "희소성": 3.0, "정책": 2.0} (억원 단위)
+            unit: 단위 표시
+        
+        Returns:
+            Table: Stacked Bar 차트
+        """
+        # 총합 계산
+        total = sum(premiums.values())
+        
+        # 색상 매핑
+        color_map = {
+            "입지": self.theme.colors.accent,  # Blue
+            "희소성": self.theme.colors.warning,  # Amber
+            "정책": self.theme.colors.success,  # Green
+        }
+        
+        # Bar 셀 생성
+        bar_cells = []
+        label_cells = []
+        
+        for key, value in premiums.items():
+            pct = (value / total * 100) if total > 0 else 0
+            width = pct / 100 * 12  # 12cm 기준
+            
+            # Bar 조각
+            bar_cell = Table([['']], colWidths=[width*cm], rowHeights=[1*cm])
+            bar_cell.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), color_map.get(key, self.theme.colors.background_medium)),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ]))
+            bar_cells.append(bar_cell)
+            
+            # 레이블
+            label_style = ParagraphStyle(
+                'LabelStyle',
+                fontName=self.theme.typography.font_regular,
+                fontSize=9,
+                textColor=self.theme.colors.text_secondary,
+                alignment=TA_CENTER,
+            )
+            label_para = Paragraph(f"{key}<br/>{value:.1f}{unit}", label_style)
+            label_cells.append([label_para])
+        
+        # Bar 배치
+        bar_row = Table([bar_cells], colWidths=[None] * len(bar_cells))
+        bar_row.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        
+        # 레이블 배치
+        label_table = Table(label_cells, colWidths=[4*cm] * len(label_cells))
+        label_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ]))
+        
+        # 전체 조합
+        full_table = Table([[bar_row], [label_table]], colWidths=[14*cm])
+        
+        return full_table
+    
+    def create_lifestyle_cards_v42(self, cards: List[Dict[str, str]]) -> Table:
+        """
+        Lifestyle Cards (v4.2 비주얼 강화)
+        
+        프롬프트: 아이콘 크기 증가, 카드 배경색 차별화
+        
+        Args:
+            cards: [{"icon": "🏃", "title": "이동 중심", "desc": "대중교통 선호"}, ...]
+        
+        Returns:
+            Table: Lifestyle Cards (강화판)
+        """
+        icon_style = ParagraphStyle(
+            'IconBig',
+            fontName=self.theme.typography.font_regular,
+            fontSize=42,  # 아이콘 크기 대폭 증가 (32 → 42)
+            textColor=self.theme.colors.accent,
+            alignment=TA_CENTER,
+        )
+        
+        title_style = ParagraphStyle(
+            'CardTitle',
+            fontName=self.theme.typography.font_bold,
+            fontSize=11,  # 제목 크기 증가
+            textColor=self.theme.colors.primary,
+            alignment=TA_CENTER,
+            leading=14,
+        )
+        
+        desc_style = ParagraphStyle(
+            'CardDesc',
+            fontName=self.theme.typography.font_regular,
+            fontSize=9,
+            textColor=self.theme.colors.text_secondary,
+            alignment=TA_CENTER,
+            leading=12,
+        )
+        
+        # 카드 셀 생성
+        card_cells = []
+        
+        # 배경색 순환 (Blue 계열 그라데이션)
+        bg_colors = [
+            colors.HexColor('#EFF6FF'),  # 아주 연한 파랑
+            colors.HexColor('#DBEAFE'),  # 연한 파랑
+            colors.HexColor('#BFDBFE'),  # 파랑
+            colors.HexColor('#93C5FD'),  # 진한 파랑
+        ]
+        
+        for i, card in enumerate(cards):
+            icon = card.get('icon', '●')
+            card_title = card.get('title', '')
+            desc = card.get('desc', '')
+            
+            icon_para = Paragraph(icon, icon_style)
+            title_para = Paragraph(f"<b>{card_title}</b>", title_style)
+            desc_para = Paragraph(desc, desc_style)
+            
+            # 카드 박스
+            card_box = Table(
+                [[icon_para], [title_para], [desc_para]],
+                colWidths=[3.2*cm],
+                rowHeights=[1.5*cm, 0.7*cm, 0.8*cm]
+            )
+            
+            bg_color = bg_colors[i % len(bg_colors)]
+            
+            card_box.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('BACKGROUND', (0, 0), (-1, -1), bg_color),  # 차별화된 배경색
+                ('BOX', (0, 0), (-1, -1), 2, self.theme.colors.accent),
+                ('ROUNDEDCORNERS', [6, 6, 6, 6]),
+                ('TOPPADDING', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+            ]))
+            
+            card_cells.append([card_box])
+        
+        # 4개 가로 배치
+        cards_table = Table([card_cells], colWidths=[3.5*cm] * len(cards))
+        cards_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        
+        return cards_table
+    
+    def create_housing_type_matrix_v42(self, types: List[Dict[str, Any]]) -> Table:
+        """
+        유형 비교 Matrix (v4.2 신규)
+        
+        프롬프트: X축: 거주 기간, Y축: LH 운영 안정성
+        청년형 Blue, 기타 Gray 처리
+        
+        Args:
+            types: [{"name": "청년형", "duration": 2, "stability": 85, "highlight": True}, ...]
+        
+        Returns:
+            Table: Matrix 차트
+        """
+        # 간단한 테이블 매트릭스 (실제 차트는 matplotlib 필요)
+        header_style = ParagraphStyle(
+            'MatrixHeader',
+            fontName=self.theme.typography.font_bold,
+            fontSize=10,
+            textColor=colors.white,
+            alignment=TA_CENTER,
+        )
+        
+        cell_style = ParagraphStyle(
+            'MatrixCell',
+            fontName=self.theme.typography.font_regular,
+            fontSize=9,
+            textColor=self.theme.colors.text_primary,
+            alignment=TA_CENTER,
+        )
+        
+        # 데이터 준비
+        matrix_data = [
+            ['유형', '거주기간(년)', 'LH 운영안정성(%)', '권장도']
+        ]
+        
+        for type_info in types:
+            name = type_info.get('name', '')
+            duration = type_info.get('duration', 0)
+            stability = type_info.get('stability', 0)
+            highlight = type_info.get('highlight', False)
+            
+            recommend = "✅ 권장" if highlight else "ℹ️ 가능"
+            
+            matrix_data.append([
+                name,
+                f"{duration}년",
+                f"{stability}%",
+                recommend
+            ])
+        
+        matrix_table = Table(matrix_data, colWidths=[3*cm, 3*cm, 3.5*cm, 3*cm])
+        
+        # 스타일 적용
+        matrix_table.setStyle(TableStyle([
+            # 헤더
+            ('BACKGROUND', (0, 0), (-1, 0), self.theme.colors.primary),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), self.theme.typography.font_bold),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            # 전체 테두리
+            ('GRID', (0, 0), (-1, -1), 1, self.theme.colors.border),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        
+        # 청년형 행 강조 (Blue 배경)
+        for i, type_info in enumerate(types):
+            if type_info.get('highlight', False):
+                matrix_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, i+1), (-1, i+1), colors.HexColor('#DBEAFE')),
+                    ('TEXTCOLOR', (0, i+1), (-1, i+1), self.theme.colors.primary),
+                    ('FONTNAME', (0, i+1), (-1, i+1), self.theme.typography.font_bold),
+                ]))
+        
+        return matrix_table
+    
+    def create_final_decision_badge_v42(self, decision: str, score: float, subtitle: str = "") -> Table:
+        """
+        Final Decision Badge (v4.2 대형화)
+        
+        프롬프트: 현재보다 2배 크기, 색상 강화
+        
+        Args:
+            decision: "go" | "conditional" | "no-go"
+            score: 점수 (0-110)
+            subtitle: 부제목
+        
+        Returns:
+            Table: 대형 Decision Badge
+        """
+        # Decision 매핑
+        decision_info = {
+            "go": {"text": "GO", "icon": "✅", "color": self.theme.colors.success, "bg": colors.HexColor('#D4EDDA')},
+            "conditional": {"text": "CONDITIONAL", "icon": "⚠️", "color": self.theme.colors.warning, "bg": colors.HexColor('#FFF3CD')},
+            "no-go": {"text": "NO-GO", "icon": "❌", "color": self.theme.colors.danger, "bg": colors.HexColor('#F8D7DA')},
+        }
+        
+        info = decision_info.get(decision.lower(), decision_info["conditional"])
+        
+        # 스타일 (크기 2배)
+        icon_style = ParagraphStyle(
+            'BadgeIcon',
+            fontName=self.theme.typography.font_regular,
+            fontSize=80,  # 40 → 80
+            textColor=info['color'],
+            alignment=TA_CENTER,
+        )
+        
+        title_style = ParagraphStyle(
+            'BadgeTitle',
+            fontName=self.theme.typography.font_bold,
+            fontSize=32,  # 18 → 32
+            textColor=info['color'],
+            alignment=TA_CENTER,
+            spaceAfter=4,
+        )
+        
+        score_style = ParagraphStyle(
+            'BadgeScore',
+            fontName=self.theme.typography.font_bold,
+            fontSize=48,  # 24 → 48
+            textColor=self.theme.colors.primary,
+            alignment=TA_CENTER,
+            spaceAfter=4,
+        )
+        
+        subtitle_style = ParagraphStyle(
+            'BadgeSubtitle',
+            fontName=self.theme.typography.font_regular,
+            fontSize=14,  # 11 → 14
+            textColor=self.theme.colors.text_secondary,
+            alignment=TA_CENTER,
+        )
+        
+        # 배지 컨텐츠
+        icon_para = Paragraph(info['icon'], icon_style)
+        title_para = Paragraph(info['text'], title_style)
+        score_para = Paragraph(f"{score:.1f}/110", score_style)
+        subtitle_para = Paragraph(subtitle, subtitle_style) if subtitle else Paragraph("", subtitle_style)
+        
+        # 배지 테이블
+        badge_table = Table(
+            [[icon_para], [title_para], [score_para], [subtitle_para]],
+            colWidths=[15*cm],
+            rowHeights=[3*cm, 1.2*cm, 1.5*cm, 0.8*cm]  # 전체 크기 증가
+        )
+        
+        badge_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BACKGROUND', (0, 0), (-1, -1), info['bg']),
+            ('BOX', (0, 0), (-1, -1), 4, info['color']),  # 테두리 두께 증가
+            ('TOPPADDING', (0, 0), (-1, -1), 20),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 20),
+        ]))
+        
+        return badge_table
 
 
 # Singleton instance for easy import
