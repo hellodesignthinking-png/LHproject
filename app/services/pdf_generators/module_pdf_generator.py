@@ -1476,27 +1476,70 @@ M3 선호유형 모델은 특정 입지가 '어떤 유형이 가능한가'를 �
         # ✅ PHASE 2-3: 유형 안정성 등급 산출
         stability_grade, grade_description = self._calculate_m3_stability_grade(m3_data)
         
-        # 사람 중심 요약 작성
+        # ✅ PHASE 2-4: N/A 값 자동 주석 처리
+        selected_name = selected.get('name', 'N/A')
+        if selected_name == 'N/A' or selected_name == '' or not selected_name:
+            selected_name_display = '<b>[데이터 부재]</b>'
+            selected_note = '<i>(※ 유형명 누락: 데이터 수집 단계 확인 필요)</i>'
+        else:
+            selected_name_display = f"<b>'{selected_name}'</b>"
+            selected_note = ''
+        
+        # ✅ PHASE 2-4: 한줄 결론 박스 (최상단 추가)
+        decision_box = f"""
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+<b>🎯 결론:</b> 본 대상지는 {selected_name_display} 생활 패턴과 입지 특성이 구조적으로 일치하며,
+유형 안정성 등급은 <b>{stability_grade}</b>입니다. {selected_note}<br/>
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+"""
+        story.append(Paragraph(decision_box, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # 사람 중심 요약 작성 (PHASE 2-4: LH 실무 보고 톤으로 재작성)
         executive_summary = f"""
 <b>■ 본 대상지의 선호 구조 분석</b><br/>
 <br/>
 <b>🎯 유형 안정성 등급: {stability_grade}</b><br/>
 {grade_description}<br/>
 <br/>
-본 대상지는 <b>'도심 접근 + 생활 밀도 + 소비 편의'가 결합된 입지</b>입니다.<br/>
+<b>입지 특성:</b> 본 대상지는 도심 접근성, 생활 밀도, 소비 편의가 결합된 입지로 분석됩니다.<br/>
 <br/>
-이로 인해 형성되는 <b>주요 선호 라이프스타일</b>:<br/>
+<b>주요 선호 라이프스타일 (실제 거주 패턴 기준):</b><br/>
 <br/>
-• <b>① 이동·출퇴근 중심:</b> 대중교통 접근성이 우수하여 자가용 의존도가 낮음<br/>
-• <b>② 소형 가구·독립 생활:</b> 1인 가구 또는 신혼 부부가 선호하는 독립 생활 패턴<br/>
-• <b>③ 생활 반경이 짧은 일상:</b> 도보 10분 내 생활 편의시설 접근 가능<br/>
+• <b>이동 중심 생활:</b> 대중교통 중심 이동 패턴, 자가용 의존도 낮음<br/>
+• <b>소형 독립 가구:</b> 1인 가구 또는 신혼 부부 중심의 독립 생활 패턴<br/>
+• <b>짧은 생활 반경:</b> 도보 10분 내 생활편의시설 접근 중심의 일상 동선<br/>
 <br/>
-결과적으로 <b>'{selected.get('name', 'N/A')}' 수요와 구조적으로 가장 강하게 맞물림</b><br/>
+<b>분석 결과:</b> {selected_name_display} 수요와 입지 특성이 구조적으로 매칭됩니다. {selected_note}<br/>
 <br/>
-<b>주의:</b> 이는 '이 유형을 추천한다'는 의미가 아니라, <b>사람들의 실제 생활 패턴과 입지 특성이 해당 선호 구조와 자연스럽게 매칭되는 분석 결과</b>입니다.<br/>
+<b>⚠️ 중요:</b> 본 분석은 유형 추천이 아닌 생활 패턴 일치도 분석입니다.
+최종 유형 판단은 M6 LH 심사예측 결과와 함께 검토되어야 합니다.<br/>
 """
         story.append(Paragraph(executive_summary, styles['Normal']))
-        story.append(Spacer(1, 0.3*inch))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # ✅ PHASE 2-4: C등급일 경우 M6 연결 강화
+        if stability_grade == "C":
+            c_grade_m6_connection = f"""
+<b>■ 유형 안정성 C등급의 의미와 M6 연계</b><br/>
+<br/>
+<b>현재 C등급인 이유:</b> {grade_description}<br/>
+<br/>
+<b>⚠️ C등급 = 부적합이 아님:</b> C등급은 '해당 유형이 부적합하다'는 의미가 아니라,
+<b>현재 데이터 기준으로 안정성 확보를 위한 추가 검토가 필요하다</b>는 의미입니다.<br/>
+<br/>
+<b>M6 LH 심사예측에서 보완 가능:</b><br/>
+• M6에서 LH 매입 정책 및 지역 수요 트렌드를 종합 검토<br/>
+• 배후 수요 보강 데이터 확보 시 안정성 B등급 이상 달성 가능<br/>
+• M4/M5에서 규모·사업성 최적화 시 C→B 등급 개선 경로 존재<br/>
+<br/>
+<b>→ 결론:</b> C등급은 <b>'M6 심사 전 보완 검토 대상'</b>이며,
+M4/M5/M6 종합 결과에 따라 <b>최종 실행 가능 여부가 결정</b>됩니다.<br/>
+"""
+            story.append(Paragraph(c_grade_m6_connection, styles['Normal']))
+            story.append(Spacer(1, 0.2*inch))
+        
+        story.append(Spacer(1, 0.1*inch))
         
         # 2. M3 선호유형 분석 프레임 설명 (NEW SECTION)
         story.append(Paragraph("2. M3 선호유형 분석 프레임", heading_style))
@@ -1553,6 +1596,26 @@ M3 선호유형 모델은 특정 입지가 '어떤 유형이 가능한가'를 �
         score_table.setStyle(self._create_table_style(colors.HexColor('#FF9800')))
         story.append(score_table)
         story.append(Spacer(1, 0.2*inch))
+        
+        # ✅ PHASE 2-4: N/A 및 0점 자동 주석
+        has_na_or_zero = False
+        na_note = ""
+        for type_key, type_scores in sorted_scores:
+            total_score = type_scores.get('total', 0)
+            if total_score == 0:
+                has_na_or_zero = True
+                break
+        
+        if has_na_or_zero:
+            na_note = """
+<b>※ 0점 또는 N/A 데이터 주석:</b><br/>
+일부 유형의 점수가 0점으로 표시된 경우, 이는 <b>'부적합'이 아니라</b> 해당 유형에 대한
+<b>배후 수요 데이터가 현재 시점에 부재</b>하거나 <b>POI 매칭 데이터가 수집되지 않았음</b>을 의미합니다.<br/>
+추가 데이터 확보 시 점수가 업데이트될 수 있습니다.<br/>
+<br/>
+"""
+            story.append(Paragraph(na_note, ParagraphStyle('Note', parent=styles['Normal'], fontSize=9, textColor=colors.grey)))
+            story.append(Spacer(1, 0.2*inch))
         
         # 점수표 해석 전환 (CRITICAL)
         score_interpretation = f"""
