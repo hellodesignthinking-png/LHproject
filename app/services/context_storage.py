@@ -436,6 +436,182 @@ class ContextStorageService:
             return []
 
     @staticmethod
+    def save_assembled_data(
+        context_id: str,
+        assembled_data: Dict[str, Any],
+        ttl_hours: int = 24
+    ) -> bool:
+        """
+        Store assembled_data in BOTH Redis AND DB (dual-write)
+        
+        This is the CRITICAL function that was missing!
+        Saves the complete assembled_data from pipeline execution.
+        
+        Args:
+            context_id: Context ID
+            assembled_data: Complete assembled data from pipeline
+            ttl_hours: TTL in hours (default: 24)
+            
+        Returns:
+            bool: True if saved successfully (at least one succeeded)
+        """
+        redis_success = False
+        db_success = False
+        
+        try:
+            # STEP 1: Save to Redis (PRIMARY)
+            if redis_client:
+                try:
+                    key = f"assembled:{context_id}"
+                    value = json.dumps(assembled_data, ensure_ascii=False, default=str)
+                    redis_client.setex(
+                        key,
+                        timedelta(hours=ttl_hours),
+                        value
+                    )
+                    redis_success = True
+                    logger.info(f"✅ [Redis] Assembled data saved: {context_id} (TTL: {ttl_hours}h)")
+                except Exception as redis_err:
+                    logger.error(f"❌ [Redis] Failed to save assembled_data: {redis_err}")
+                    # Fallback to memory
+                    _memory_storage[f"assembled:{context_id}"] = {
+                        'data': assembled_data,
+                        'expires_at': None
+                    }
+                    redis_success = True
+                    logger.info(f"✅ [Memory] Assembled data saved (Redis failed): {context_id}")
+            else:
+                # Fallback to memory
+                _memory_storage[f"assembled:{context_id}"] = {
+                    'data': assembled_data,
+                    'expires_at': None
+                }
+                redis_success = True
+                logger.info(f"✅ [Memory] Assembled data saved: {context_id}")
+            
+            # STEP 2: Save to DB (BACKUP)
+            try:
+                db: Session = SessionLocal()
+                value = json.dumps(assembled_data, ensure_ascii=False, default=str)
+                
+                # Try to find existing snapshot
+                snapshot = db.query(ContextSnapshot).filter_by(context_id=context_id).first()
+                
+                if snapshot:
+                    # Update existing
+                    snapshot.assembled_data = value
+                    snapshot.updated_at = datetime.utcnow()
+                    logger.info(f"✅ [DB] Assembled data updated: {context_id}")
+                else:
+                    # Create new
+                    snapshot = ContextSnapshot(
+                        context_id=context_id,
+                        parcel_id=assembled_data.get('parcel_id', 'unknown'),
+                        context_data="{}",  # Placeholder
+                        assembled_data=value,
+                        context_type="ASSEMBLED",
+                        frozen=True,
+                        created_by="pipeline",
+                        redis_ttl_seconds=ttl_hours * 3600,
+                        expires_at=datetime.utcnow() + timedelta(hours=ttl_hours)
+                    )
+                    db.add(snapshot)
+                    logger.info(f"✅ [DB] Assembled data created: {context_id}")
+                
+                db.commit()
+                db_success = True
+                
+            except Exception as db_err:
+                logger.error(f"❌ [DB] Failed to save assembled_data: {db_err}")
+                if 'db' in locals():
+                    db.rollback()
+            finally:
+                if 'db' in locals():
+                    db.close()
+            
+            return redis_success or db_success
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to save assembled_data: {e}")
+            return False
+    
+    
+    @staticmethod
+    def get_assembled_data(context_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieve assembled_data from Redis or DB (with failover)
+        
+        This is the CRITICAL function that was missing!
+        Retrieves the complete assembled_data saved by pipeline.
+        
+        Strategy:
+        1. Try Redis first (fast)
+        2. If not found, try DB (permanent backup)
+        3. If found in DB, restore to Redis
+        
+        Args:
+            context_id: Context ID
+            
+        Returns:
+            Dict or None
+        """
+        try:
+            # STEP 1: Try Redis first
+            if redis_client:
+                try:
+                    key = f"assembled:{context_id}"
+                    data_str = redis_client.get(key)
+                    if data_str:
+                        logger.info(f"✅ [Redis] Assembled data found: {context_id}")
+                        return json.loads(data_str)
+                except Exception as redis_err:
+                    logger.error(f"❌ [Redis] Failed to get assembled_data: {redis_err}")
+            else:
+                # Try memory storage
+                key = f"assembled:{context_id}"
+                if key in _memory_storage:
+                    logger.info(f"✅ [Memory] Assembled data found: {context_id}")
+                    return _memory_storage[key]['data']
+            
+            # STEP 2: Fallback to DB
+            try:
+                db: Session = SessionLocal()
+                snapshot = db.query(ContextSnapshot).filter_by(context_id=context_id).first()
+                
+                if snapshot and snapshot.assembled_data:
+                    assembled_data = json.loads(snapshot.assembled_data)
+                    
+                    # STEP 3: Restore to Redis for future requests
+                    if redis_client:
+                        try:
+                            key = f"assembled:{context_id}"
+                            redis_client.setex(
+                                key,
+                                timedelta(hours=24),
+                                snapshot.assembled_data
+                            )
+                            logger.info(f"✅ [Redis] Assembled data restored from DB: {context_id}")
+                        except Exception as restore_err:
+                            logger.warning(f"⚠️ Failed to restore to Redis: {restore_err}")
+                    
+                    logger.info(f"✅ [DB] Assembled data found: {context_id}")
+                    return assembled_data
+                    
+            except Exception as db_err:
+                logger.error(f"❌ [DB] Failed to get assembled_data: {db_err}")
+            finally:
+                if 'db' in locals():
+                    db.close()
+            
+            logger.warning(f"⚠️ Assembled data not found: {context_id}")
+            return None
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to get assembled_data: {e}")
+            return None
+    
+    
+    @staticmethod
     def health_check() -> Dict[str, Any]:
         """
         Check storage health status

@@ -216,17 +216,62 @@ class ZeroSitePipeline:
             logger.info(f"   Confidence: {appraisal_ctx.confidence_level} ({appraisal_ctx.confidence_score:.0%})")
             logger.info("   ⚠️ AppraisalContext is now IMMUTABLE!")
             
-            # 🔥 NEW: M2 데이터를 assembled_data에 저장
+            # 🔥 CRITICAL: M2 데이터를 assembled_data에 저장 (프리미엄 정보 포함)
             assembled_data["modules"]["M2"] = {
                 "summary": {
-                    "land_value": appraisal_ctx.land_value,
-                    "confidence_score": appraisal_ctx.confidence_score,
-                    "confidence_level": appraisal_ctx.confidence_level
+                    "land_value": float(appraisal_ctx.land_value),
+                    "land_value_per_pyeong": float(appraisal_ctx.unit_price_pyeong) if hasattr(appraisal_ctx, 'unit_price_pyeong') else float(appraisal_ctx.land_value / (land_ctx.area_sqm / 3.3058)),
+                    "confidence_score": float(appraisal_ctx.confidence_score),
+                    "confidence_level": appraisal_ctx.confidence_level,
+                    
+                    # ✅ 프리미엄 정보 추가 (사용자 요청사항)
+                    "premium_scores": {
+                        "road": float(appraisal_ctx.premium_factors.road_score) if hasattr(appraisal_ctx, 'premium_factors') and appraisal_ctx.premium_factors else 0,
+                        "terrain": float(appraisal_ctx.premium_factors.terrain_score) if hasattr(appraisal_ctx, 'premium_factors') and appraisal_ctx.premium_factors else 0,
+                        "location": float(appraisal_ctx.premium_factors.location_score) if hasattr(appraisal_ctx, 'premium_factors') and appraisal_ctx.premium_factors else 0,
+                        "accessibility": float(appraisal_ctx.premium_factors.accessibility_score) if hasattr(appraisal_ctx, 'premium_factors') and appraisal_ctx.premium_factors else 0,
+                        "total_premium_rate": float(appraisal_ctx.premium_factors.total_premium_rate) if hasattr(appraisal_ctx, 'premium_factors') and appraisal_ctx.premium_factors else 0
+                    },
+                    
+                    # ✅ 가격 범위 추가
+                    "price_range": {
+                        "low": float(appraisal_ctx.land_value * 0.9),
+                        "avg": float(appraisal_ctx.land_value),
+                        "high": float(appraisal_ctx.land_value * 1.1)
+                    },
+                    
+                    # ✅ 거래사례 개수
+                    "transaction_count": len(appraisal_ctx.transactions) if hasattr(appraisal_ctx, 'transactions') else 0
                 },
-                "details": _safe_to_dict(appraisal_ctx),
+                "details": {
+                    "appraisal": _safe_to_dict(appraisal_ctx),
+                    
+                    # ✅ 거래사례 상세 추가 (최대 5개)
+                    "transactions": {
+                        "count": len(appraisal_ctx.transactions) if hasattr(appraisal_ctx, 'transactions') else 0,
+                        "samples": [
+                            {
+                                "address": str(t.get("address", "")),
+                                "date": str(t.get("date", "")),
+                                "price_sqm": float(t.get("price_sqm", 0)),
+                                "distance_km": float(t.get("distance_km", 0))
+                            }
+                            for t in (appraisal_ctx.transactions[:5] if hasattr(appraisal_ctx, 'transactions') else [])
+                        ]
+                    } if hasattr(appraisal_ctx, 'transactions') else {"count": 0, "samples": []},
+                    
+                    # ✅ 프리미엄 상세 추가
+                    "premium": {
+                        "factors": appraisal_ctx.premium_factors.to_dict() if hasattr(appraisal_ctx, 'premium_factors') and appraisal_ctx.premium_factors else {},
+                        "description": "도로·지형·입지·접근성 프리미엄 적용"
+                    }
+                },
                 "raw_data": _safe_to_dict(appraisal_ctx)
             }
-            logger.info("✅ M2 데이터 assembled_data에 저장 완료")
+            logger.info("✅ M2 데이터 assembled_data에 저장 완료 (프리미엄 정보 포함)")
+            logger.info(f"   Land Value: ₩{assembled_data['modules']['M2']['summary']['land_value']:,.0f}")
+            logger.info(f"   Premium Rate: {assembled_data['modules']['M2']['summary']['premium_scores']['total_premium_rate']:.1f}%")
+            logger.info(f"   Transactions: {assembled_data['modules']['M2']['summary']['transaction_count']}건")
             
             # ===================================================================
             # M3: LH 선호유형 선택 (INTERPRETATION)

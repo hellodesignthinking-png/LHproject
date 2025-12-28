@@ -39,6 +39,7 @@ class ContextSnapshot(Base):
     
     # Context Data (JSON)
     context_data = Column(Text, nullable=False)  # Serialized CanonicalLandContext
+    assembled_data = Column(Text, nullable=True)  # ✅ NEW: Complete assembled_data from pipeline
     context_type = Column(String(50), nullable=False)  # "M1_FINAL", "M2_APPRAISAL", etc.
     
     # Metadata
@@ -47,6 +48,7 @@ class ContextSnapshot(Base):
     
     # Timestamps
     created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())  # ✅ NEW: Track updates
     expires_at = Column(DateTime, nullable=True)  # NULL = never expires
     accessed_at = Column(DateTime, default=func.now(), onupdate=func.now())
     access_count = Column(Integer, default=0, nullable=False)  # Track usage

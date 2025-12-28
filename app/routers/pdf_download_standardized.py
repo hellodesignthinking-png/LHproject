@@ -222,45 +222,57 @@ async def download_module_pdf(
             logger.info(f"🔍 {module_id}: trying {key1}={bool(ctx.get(key1))}, {key2}={bool(ctx.get(key2))}, {key3}={bool(ctx.get(key3))} → result={bool(result)}")
             return result
         
-        # ✅ STEP 4: assembled_data 표준 스키마 생성 (Phase 3.5F)
-        # 🔥 CRITICAL: Use modules from frozen_context if available (Phase 3.5D format)
-        modules_data = frozen_context.get('modules', {})
+        # ✅ STEP 4: assembled_data 표준 스키마 생성 (Phase 4.0 - FINAL FIX)
+        # 🔥 CRITICAL: Try to get assembled_data from storage first (ROOT CAUSE FIX!)
+        assembled_data_from_storage = context_storage.get_assembled_data(context_id)
         
-        assembled_data = {
-            "m6_result": m6_result,
-            "modules": {
-                "M1": {
-                    "summary": modules_data.get('M1', {}).get('summary', safe_get_module(frozen_context, 'M1')),
-                    "details": {},
-                    "raw_data": {}
-                },
-                "M2": {
-                    "summary": modules_data.get('M2', {}).get('summary', safe_get_module(frozen_context, 'M2')),
-                    "details": {},
-                    "raw_data": {}
-                },
-                "M3": {
-                    "summary": modules_data.get('M3', {}).get('summary', safe_get_module(frozen_context, 'M3')),
-                    "details": {},
-                    "raw_data": {}
-                },
-                "M4": {
-                    "summary": modules_data.get('M4', {}).get('summary', safe_get_module(frozen_context, 'M4')),
-                    "details": {},
-                    "raw_data": {}
-                },
-                "M5": {
-                    "summary": modules_data.get('M5', {}).get('summary', safe_get_module(frozen_context, 'M5')),
-                    "details": {},
-                    "raw_data": {}
-                },
-                "M6": {
-                    "summary": modules_data.get('M6', {}).get('summary', safe_get_module(frozen_context, 'M6')),
-                    "details": {},
-                    "raw_data": {}
+        if assembled_data_from_storage:
+            # ✅ Use saved assembled_data directly (BEST CASE)
+            logger.info(f"✅ Using assembled_data from storage: {context_id}")
+            assembled_data = assembled_data_from_storage
+        else:
+            # ❌ Fallback: Build from frozen_context (legacy compatibility)
+            logger.warning(f"⚠️ Assembled_data not found in storage, using fallback: {context_id}")
+            logger.warning(f"   This should NOT happen if pipeline was executed correctly!")
+            
+            # 🔥 CRITICAL: Use modules from frozen_context if available (Phase 3.5D format)
+            modules_data = frozen_context.get('modules', {})
+            
+            assembled_data = {
+                "m6_result": m6_result,
+                "modules": {
+                    "M1": {
+                        "summary": modules_data.get('M1', {}).get('summary', safe_get_module(frozen_context, 'M1')),
+                        "details": {},
+                        "raw_data": {}
+                    },
+                    "M2": {
+                        "summary": modules_data.get('M2', {}).get('summary', safe_get_module(frozen_context, 'M2')),
+                        "details": {},
+                        "raw_data": {}
+                    },
+                    "M3": {
+                        "summary": modules_data.get('M3', {}).get('summary', safe_get_module(frozen_context, 'M3')),
+                        "details": {},
+                        "raw_data": {}
+                    },
+                    "M4": {
+                        "summary": modules_data.get('M4', {}).get('summary', safe_get_module(frozen_context, 'M4')),
+                        "details": {},
+                        "raw_data": {}
+                    },
+                    "M5": {
+                        "summary": modules_data.get('M5', {}).get('summary', safe_get_module(frozen_context, 'M5')),
+                        "details": {},
+                        "raw_data": {}
+                    },
+                    "M6": {
+                        "summary": modules_data.get('M6', {}).get('summary', safe_get_module(frozen_context, 'M6')),
+                        "details": {},
+                        "raw_data": {}
+                    }
                 }
             }
-        }
         
         # 🚨 FAIL FAST: Validate requested module data exists
         module_summary = assembled_data["modules"][module]["summary"]
