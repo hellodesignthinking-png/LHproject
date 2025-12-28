@@ -448,10 +448,18 @@ class ZeroSitePipeline:
             # 🔥 NEW: M5 데이터를 assembled_data에 저장
             assembled_data["modules"]["M5"] = {
                 "summary": {
-                    "npv_public": feasibility_ctx.financial_metrics.npv_public,
-                    "irr_public": feasibility_ctx.financial_metrics.irr_public,
-                    "roi": getattr(feasibility_ctx.financial_metrics, 'roi', 0),
-                    "grade": getattr(feasibility_ctx, 'grade', 'B')
+                    "npv_public": float(feasibility_ctx.financial_metrics.npv_public),
+                    "irr_public": float(feasibility_ctx.financial_metrics.irr_public),
+                    "roi": float(feasibility_ctx.financial_metrics.roi),
+                    "grade": str(getattr(feasibility_ctx, 'grade', 'B')),
+                    
+                    # ✅ M5 PDF에서 요구하는 필수 필드 추가
+                    "lh_purchase_price": float(feasibility_ctx.lh_purchase_price),
+                    "total_cost": float(feasibility_ctx.cost_breakdown.total_cost),
+                    "profit": float(feasibility_ctx.financial_metrics.npv_public),  # NPV를 profit으로 사용
+                    "profit_rate": float(feasibility_ctx.financial_metrics.irr_public),  # IRR을 profit_rate로 사용
+                    "household_count": int(capacity_ctx.legal_capacity.total_units),  # M4 세대수
+                    "avg_unit_area_m2": float(capacity_ctx.legal_capacity.target_gfa_sqm / capacity_ctx.legal_capacity.total_units) if capacity_ctx.legal_capacity.total_units > 0 else 0,
                 },
                 "details": _safe_to_dict(feasibility_ctx),
                 "raw_data": _safe_to_dict(feasibility_ctx)

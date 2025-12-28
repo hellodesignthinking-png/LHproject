@@ -1493,14 +1493,27 @@ M3 선호유형 모델은 특정 입지가 '어떤 유형이 가능한가'를 �
         
         # 1. Executive Summary (전면 수정)
         story.append(Paragraph("1. 선호유형 분석 결과 요약", heading_style))
-        selected = data.get('selected', {})
+        
+        # ✅ CRITICAL: assembled_data의 M3 summary에서 직접 가져오기
+        m3_summary = m3_data.get('summary', {})
+        selected_name = m3_summary.get('preferred_type', 'N/A')
+        confidence_score = m3_summary.get('confidence_score', 0)
+        stability_grade = m3_summary.get('stability_grade', 'C')
+        
+        # Fallback: old context에서 가져오기 (하위 호환성)
+        if selected_name == 'N/A':
+            selected = data.get('selected', {})
+            selected_name = selected.get('name', 'N/A')
+        
         location = data.get('location', {})
         
-        # ✅ PHASE 2-3: 유형 안정성 등급 산출
-        stability_grade, grade_description = self._calculate_m3_stability_grade(m3_data)
+        # ✅ PHASE 2-3: 유형 안정성 등급 산출 (summary에 없을 경우만)
+        if stability_grade == 'C' and confidence_score > 0:
+            _, grade_description = self._calculate_m3_stability_grade(m3_data)
+        else:
+            grade_description = f"신뢰도 {confidence_score}%로 안정적인 분석 결과입니다."
         
         # ✅ PHASE 2-4: N/A 값 자동 주석 처리
-        selected_name = selected.get('name', 'N/A')
         if selected_name == 'N/A' or selected_name == '' or not selected_name:
             selected_name_display = '<b>[데이터 부재]</b>'
             selected_note = '<i>(※ 유형명 누락: 데이터 수집 단계 확인 필요)</i>'
@@ -2472,14 +2485,24 @@ LH의 '{selected.get('name', 'N/A')}' 매입 정책은 정부 주거 정책 방�
         # Executive Summary (새로 추가)
         story.append(Paragraph("Executive Summary: M4의 핵심 질문", heading_style))
         
-        # 🟢 STEP 2: safe_get 사용으로 데이터 추출 (검증 완료됨)
+        # ✅ CRITICAL: assembled_data의 M4 summary에서 직접 가져오기
+        m4_summary = m4_data.get('summary', {})
+        far_ratio = m4_summary.get('far_ratio', 0) or m4_summary.get('legal_far_ratio', 0)
+        total_units = m4_summary.get('total_units', 0)
+        
+        # Fallback: old context에서 가져오기 (하위 호환성)
         legal_capacity = data.get('legal_capacity', {})
+        if far_ratio == 0:
+            far_ratio = legal_capacity.get('far_max', 0)
+        if total_units == 0:
+            total_units = legal_capacity.get('total_units', 0)
+        
         incentive_capacity = data.get('incentive_capacity', {})
         
         exec_summary = f"""
 <b>■ 이 보고서가 답하는 핵심 질문</b><br/>
 <br/>
-1. <b>"법정 용적률 {legal_capacity.get('far_max') or 'N/A'}%를 100% 달성할 수 있는가?"</b><br/>
+1. <b>"법정 용적률 {far_ratio:.0f}%를 100% 달성할 수 있는가?"</b><br/>
    → 이론적으로는 가능하지만, <b>주차대수 제약</b>이 실제 달성을 제한합니다.<br/>
 <br/>
 2. <b>"용적률 최대화 vs 주차 확보: 무엇을 선택해야 하는가?"</b><br/>
@@ -4257,27 +4280,34 @@ M6는 <b>"LH가 이 사업을 승인할 것인가"</b>를 예측하며, M5와 �
         - summary.total_score를 모든 섹션에서 사용
         - 0.0/110 버그 방지
         """
-        # ✅ Extract M6 data from Phase 3.5D schema
-        m6_result = assembled_data.get("m6_result", {})
+        # ✅ CRITICAL: assembled_data의 M6 modules에서 직접 가져오기
+        m6_data = assembled_data.get("modules", {}).get("M6", {})
+        m6_summary = m6_data.get("summary", {})
         
         logger.info(f"🔥 M6 PDF Generator - Phase 3.5D SSOT")
-        logger.info(f"   M6 judgement: {m6_result.get('judgement', 'N/A')}")
-        logger.info(f"   M6 score: {m6_result.get('lh_score_total', 0)}/100")
+        logger.info(f"   M6 summary keys: {list(m6_summary.keys())}")
+        logger.info(f"   M6 decision: {m6_summary.get('decision', 'N/A')}")
+        logger.info(f"   M6 total_score: {m6_summary.get('total_score', 0)}/110")
         
-        if not m6_result:
-            raise ValueError("M6 데이터가 없습니다. M6 파이프라인을 먼저 실행하세요.")
+        if not m6_summary:
+            # Fallback to old m6_result format
+            m6_result = assembled_data.get("m6_result", {})
+            logger.warning(f"⚠️ M6 summary not found, trying m6_result fallback")
+            if not m6_result:
+                raise ValueError("M6 데이터가 없습니다. M6 파이프라인을 먼저 실행하세요.")
+            data = m6_result
+            summary = data.get('summary', {})  # ✅ Extract summary from m6_result
+        else:
+            data = m6_summary
+            summary = m6_summary  # ✅ summary is m6_summary itself
         
-        # For backwards compatibility, keep data reference
-        data = m6_result
-        
-        # 🔥 STEP 1: 단일 데이터 소스 정의 (SSOT)
-        summary = data.get('summary', {})
+        # 🔥 STEP 1: 단일 데이터 소스 정의 (SSOT) - assembled_data 우선
         m6_score = (
-            data.get('lh_score_total') or      # 🔥 FIRST: Phase 3.5D canonical field
-            summary.get('total_score') or      # FALLBACK 1: canonical summary field
-            data.get('total_score') or         # FALLBACK 2: root level
-            data.get('m6_score') or            # FALLBACK 3: old format
-            data.get('scores', {}).get('total')  # FALLBACK 4: nested scores
+            m6_summary.get('total_score') or      # 🔥 FIRST: assembled M6 summary
+            data.get('lh_score_total') or         # FALLBACK 1: Phase 3.5D canonical field
+            data.get('total_score') or            # FALLBACK 2: root level
+            data.get('m6_score') or               # FALLBACK 3: old format
+            data.get('scores', {}).get('total')   # FALLBACK 4: nested scores
         )
         
         # 🚨 VALIDATION: m6_score가 None이면 에러 (0이 아님!)
