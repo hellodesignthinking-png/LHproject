@@ -333,6 +333,222 @@ def check_for_default_zeros(data: Dict[str, Any], context: str = "") -> None:
             raise DataBindingError(technical_msg, user_msg)
 
 
+# ===== 🔥 NEW: 필수 필드 검증 (100% 실데이터 기반) =====
+
+def validate_m3_required_fields(m3_summary: Dict[str, Any], strict: bool = True) -> bool:
+    """
+    M3 필수 필드 검증 (N/A 금지, 0점 방지)
+    
+    Required fields:
+    - preferred_type: str (NOT "N/A", NOT "", NOT None)
+    - stability_grade: str (A/B/C)
+    - confidence_score: float (0~100, NOT 0)
+    - key_reasons: list[str] (len >= 3)
+    
+    Args:
+        m3_summary: M3 summary 데이터
+        strict: True이면 예외 발생
+    
+    Raises:
+        DataBindingError: 필수 필드 누락 또는 N/A 값
+    
+    Returns:
+        True if valid
+    """
+    errors = []
+    missing_paths = []
+    
+    # preferred_type 검증
+    preferred_type = m3_summary.get("preferred_type")
+    if not preferred_type or preferred_type in ("N/A", "", "null"):
+        errors.append("M3.preferred_type is missing or N/A")
+        missing_paths.append("modules.M3.summary.preferred_type")
+    
+    # stability_grade 검증
+    stability_grade = m3_summary.get("stability_grade")
+    if not stability_grade or stability_grade not in ("A", "B", "C"):
+        errors.append(f"M3.stability_grade invalid: {stability_grade}")
+        missing_paths.append("modules.M3.summary.stability_grade")
+    
+    # confidence_score 검증
+    confidence_score = m3_summary.get("confidence_score", 0)
+    if confidence_score == 0:
+        errors.append("M3.confidence_score is 0 (must be > 0)")
+        missing_paths.append("modules.M3.summary.confidence_score")
+    
+    # key_reasons 검증
+    key_reasons = m3_summary.get("key_reasons", [])
+    if not key_reasons or len(key_reasons) < 3:
+        errors.append(f"M3.key_reasons has {len(key_reasons)} items (need >= 3)")
+        missing_paths.append("modules.M3.summary.key_reasons")
+    
+    if errors and strict:
+        technical_msg = "M3 필수 필드 검증 실패:\n" + "\n".join([f"  - {err}" for err in errors])
+        user_msg = "M3(LH 선호유형) 분석 결과가 불완전합니다. 분석을 다시 실행해 주세요."
+        raise DataBindingError(technical_msg, user_msg, missing_paths)
+    
+    return len(errors) == 0
+
+
+def validate_m4_required_fields(m4_summary: Dict[str, Any], strict: bool = True) -> bool:
+    """
+    M4 필수 필드 검증 (N/A 금지, 0% 방지)
+    
+    Required fields:
+    - total_units: int (> 0)
+    - gross_floor_area_sqm: float (> 0)
+    - far_ratio: float (> 0)
+    - coverage_ratio: float (> 0)
+    
+    Args:
+        m4_summary: M4 summary 데이터
+        strict: True이면 예외 발생
+    
+    Raises:
+        DataBindingError: 필수 필드 누락 또는 0 값
+    
+    Returns:
+        True if valid
+    """
+    errors = []
+    missing_paths = []
+    
+    # total_units 검증
+    total_units = m4_summary.get("total_units", 0)
+    if total_units <= 0:
+        errors.append(f"M4.total_units is {total_units} (must be > 0)")
+        missing_paths.append("modules.M4.summary.total_units")
+    
+    # gross_floor_area_sqm 검증
+    gross_floor_area = m4_summary.get("gross_floor_area", 0) or m4_summary.get("gross_floor_area_sqm", 0)
+    if gross_floor_area <= 0:
+        errors.append(f"M4.gross_floor_area is {gross_floor_area} (must be > 0)")
+        missing_paths.append("modules.M4.summary.gross_floor_area")
+    
+    # far_ratio 검증
+    far_ratio = m4_summary.get("far_ratio", 0)
+    if far_ratio <= 0:
+        errors.append(f"M4.far_ratio is {far_ratio}% (must be > 0)")
+        missing_paths.append("modules.M4.summary.far_ratio")
+    
+    # coverage_ratio 검증
+    coverage_ratio = m4_summary.get("coverage_ratio", 0)
+    if coverage_ratio <= 0:
+        errors.append(f"M4.coverage_ratio is {coverage_ratio}% (must be > 0)")
+        missing_paths.append("modules.M4.summary.coverage_ratio")
+    
+    if errors and strict:
+        technical_msg = "M4 필수 필드 검증 실패:\n" + "\n".join([f"  - {err}" for err in errors])
+        user_msg = "M4(건축규모 분석) 결과가 불완전합니다. 용적률, 세대수 등을 다시 확인해 주세요."
+        raise DataBindingError(technical_msg, user_msg, missing_paths)
+    
+    return len(errors) == 0
+
+
+def validate_m6_required_fields(m6_result: Dict[str, Any], strict: bool = True) -> bool:
+    """
+    M6 필수 필드 검증 (N/A 금지, narrative 필수)
+    
+    Required fields:
+    - decision: str (GO/CONDITIONAL/NO-GO, NOT "N/A")
+    - grade: str (A/B/C/D)
+    - lh_score_total: float (> 0)
+    - decision_rationale: list[str] (len >= 3)
+    - conclusion_text: str (len >= 40)
+    - approval_probability: float or None (0~100, 0 금지)
+    
+    Args:
+        m6_result: M6 result 데이터
+        strict: True이면 예외 발생
+    
+    Raises:
+        DataBindingError: 필수 필드 누락 또는 N/A 값
+    
+    Returns:
+        True if valid
+    """
+    errors = []
+    missing_paths = []
+    
+    # decision 검증
+    decision = m6_result.get("decision") or m6_result.get("judgement")
+    if not decision or decision == "N/A":
+        errors.append("M6.decision is missing or N/A")
+        missing_paths.append("m6_result.decision")
+    elif decision not in ("GO", "CONDITIONAL", "NO-GO", "NOGO"):
+        errors.append(f"M6.decision invalid: {decision}")
+        missing_paths.append("m6_result.decision")
+    
+    # grade 검증
+    grade = m6_result.get("grade")
+    if not grade or grade not in ("A", "B", "C", "D", "F"):
+        errors.append(f"M6.grade invalid: {grade}")
+        missing_paths.append("m6_result.grade")
+    
+    # lh_score_total 검증
+    lh_score_total = m6_result.get("lh_score_total", 0)
+    if lh_score_total <= 0:
+        errors.append(f"M6.lh_score_total is {lh_score_total} (must be > 0)")
+        missing_paths.append("m6_result.lh_score_total")
+    
+    # decision_rationale 검증
+    decision_rationale = m6_result.get("decision_rationale") or m6_result.get("deduction_reasons", [])
+    if not decision_rationale or len(decision_rationale) < 3:
+        errors.append(f"M6.decision_rationale has {len(decision_rationale)} items (need >= 3)")
+        missing_paths.append("m6_result.decision_rationale")
+    
+    # conclusion_text 검증
+    conclusion_text = m6_result.get("conclusion") or m6_result.get("conclusion_text", "")
+    if not conclusion_text or len(conclusion_text) < 40:
+        errors.append(f"M6.conclusion is too short: {len(conclusion_text)} chars (need >= 40)")
+        missing_paths.append("m6_result.conclusion")
+    
+    # approval_probability 검증 (0% 고정 금지, None은 허용)
+    approval_probability = m6_result.get("approval_probability")
+    if approval_probability is not None and approval_probability == 0:
+        errors.append("M6.approval_probability is 0% (not allowed, use None for '미산정')")
+        missing_paths.append("m6_result.approval_probability")
+    
+    if errors and strict:
+        technical_msg = "M6 필수 필드 검증 실패:\n" + "\n".join([f"  - {err}" for err in errors])
+        user_msg = "M6(LH 심사예측) 결과가 불완전합니다. 판정 근거, 결론 등을 다시 확인해 주세요."
+        raise DataBindingError(technical_msg, user_msg, missing_paths)
+    
+    return len(errors) == 0
+
+
+def validate_all_required_fields(assembled_data: Dict[str, Any], strict: bool = True) -> bool:
+    """
+    M3/M4/M6 모든 필수 필드 검증
+    
+    Args:
+        assembled_data: 전체 assembled_data
+        strict: True이면 예외 발생
+    
+    Raises:
+        DataBindingError: 필수 필드 누락
+    
+    Returns:
+        True if all valid
+    """
+    # M3 검증
+    m3_summary = assembled_data.get("modules", {}).get("M3", {}).get("summary", {})
+    if m3_summary:
+        validate_m3_required_fields(m3_summary, strict)
+    
+    # M4 검증
+    m4_summary = assembled_data.get("modules", {}).get("M4", {}).get("summary", {})
+    if m4_summary:
+        validate_m4_required_fields(m4_summary, strict)
+    
+    # M6 검증
+    m6_result = assembled_data.get("m6_result", {})
+    if m6_result:
+        validate_m6_required_fields(m6_result, strict)
+    
+    return True
+
+
 # ===== 금지 패턴 =====
 
 # ❌ 금지 1: 축약키
