@@ -678,19 +678,44 @@ def format_m2_summary(summary: dict) -> dict:
 
 def format_m3_summary(summary: dict) -> dict:
     """Format M3 housing type summary data"""
+    # M3 structure: summary.recommended_type = "youth", type_scores.youth.type_name = "청년형"
+    recommended_type_code = summary.get('recommended_type', 'N/A')
+    type_scores = summary.get('type_scores', {})
+    
+    # Get the full Korean name from type_scores
+    recommended_type_data = type_scores.get(recommended_type_code, {})
+    recommended_type_name = recommended_type_data.get('type_name', recommended_type_code)
+    
+    total_score = summary.get('total_score', 0)
+    
+    # Confidence is based on demand_score or can be calculated
+    confidence_pct = summary.get('demand_score', summary.get('confidence_pct', 0))
+    
     return {
-        'recommended_type': summary.get('recommended_housing_type', 'N/A'),
-        'total_score': f"{summary.get('total_score', 0):.0f}점",
-        'confidence_pct': f"{summary.get('confidence_pct', 0):.0f}%"
+        'recommended_type': recommended_type_name if recommended_type_name else 'N/A',
+        'total_score': f"{total_score:.0f}점",
+        'confidence_pct': f"{confidence_pct:.0f}%"
     }
 
 def format_m4_summary(summary: dict) -> dict:
     """Format M4 capacity summary data"""
+    # M4 V2 nested structure: summary.legal_capacity.total_units
+    legal_capacity = summary.get('legal_capacity', {})
+    incentive_capacity = summary.get('incentive_capacity', {})
+    massing_options = summary.get('massing_options', [])
+    
+    legal_units = legal_capacity.get('total_units', 0)
+    incentive_units = incentive_capacity.get('total_units', 0)
+    
+    # Parking from massing options (if available)
+    parking_a = massing_options[0].get('parking_spaces', 0) if len(massing_options) > 0 else 0
+    parking_b = massing_options[1].get('parking_spaces', 0) if len(massing_options) > 1 else 0
+    
     return {
-        'legal_units': f"{summary.get('legal_capacity_units', 0):,}세대",
-        'incentive_units': f"{summary.get('incentive_capacity_units', 0):,}세대",
-        'parking_alt_a': f"{summary.get('parking_alt_a_spaces', 0):,}대",
-        'parking_alt_b': f"{summary.get('parking_alt_b_spaces', 0):,}대"
+        'legal_units': f"{legal_units:,}세대",
+        'incentive_units': f"{incentive_units:,}세대",
+        'parking_alt_a': f"{parking_a:,}대",
+        'parking_alt_b': f"{parking_b:,}대"
     }
 
 def format_m5_summary(summary: dict) -> dict:
@@ -714,11 +739,21 @@ def format_m5_summary(summary: dict) -> dict:
 
 def format_m6_summary(summary: dict) -> dict:
     """Format M6 LH review summary data"""
+    # M6 nested structure: summary.decision.type, summary.scores.total, summary.grade
+    decision_obj = summary.get('decision', {})
+    scores_obj = summary.get('scores', {})
+    approval_obj = summary.get('approval', {})
+    
+    decision = decision_obj.get('type', 'N/A') if isinstance(decision_obj, dict) else 'N/A'
+    total_score = scores_obj.get('total', 0) if isinstance(scores_obj, dict) else 0
+    grade = summary.get('grade', 'N/A')
+    approval_probability = approval_obj.get('probability', 0) if isinstance(approval_obj, dict) else 0
+    
     return {
-        'decision': summary.get('lh_decision', 'N/A'),
-        'total_score': f"{summary.get('lh_score_total', 0):.0f}점",
-        'grade': summary.get('lh_grade', 'N/A'),
-        'approval_probability_pct': f"{summary.get('approval_probability', 0):.0f}%"
+        'decision': decision,
+        'total_score': f"{total_score:.0f}점",
+        'grade': grade,
+        'approval_probability_pct': f"{approval_probability*100:.0f}%"
     }
 
 
