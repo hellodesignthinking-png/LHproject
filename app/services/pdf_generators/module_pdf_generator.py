@@ -258,6 +258,92 @@ class ModulePDFGenerator:
         story.append(Paragraph(purpose_text, purpose_style))
         story.append(Spacer(1, 0.3*inch))
     
+    def _calculate_stability_grade(
+        self, 
+        m2_data: Dict[str, Any], 
+        m2_context: Dict[str, Any],
+        transaction_samples: List[Dict[str, Any]]
+    ) -> tuple:
+        """
+        감정 안정성 등급 산출 (PHASE 1-3)
+        
+        Args:
+            m2_data: M2 summary data
+            m2_context: M2 context data
+            transaction_samples: Transaction samples list
+            
+        Returns:
+            (grade, description): 등급(A/B/C)과 설명 문구
+        """
+        criteria_met = 0
+        criteria_details = []
+        
+        # ① 거래사례 신뢰성
+        transaction_count = m2_context.get("transaction_count", len(transaction_samples))
+        confidence_level = m2_context.get("confidence_level", "MEDIUM")
+        
+        if transaction_count >= 5 and confidence_level in ["HIGH", "MEDIUM"]:
+            criteria_met += 1
+            criteria_details.append("거래사례 충분")
+        else:
+            criteria_details.append("거래사례 부족")
+        
+        # ② 가격 일관성 (비교사례 평균 vs 적용 단가)
+        unit_price_sqm = m2_data.get('unit_price_sqm', 0)
+        if not unit_price_sqm:
+            land_value_per_pyeong = m2_data.get('land_value_per_pyeong', 0)
+            if land_value_per_pyeong:
+                unit_price_sqm = int(land_value_per_pyeong / 3.3058)
+        
+        if transaction_samples and unit_price_sqm > 0:
+            prices = [s.get('price_per_sqm', 0) for s in transaction_samples if s.get('price_per_sqm', 0) > 0]
+            if prices:
+                avg_price = sum(prices) / len(prices)
+                price_variance = abs(unit_price_sqm - avg_price) / avg_price * 100
+                
+                if price_variance <= 15:
+                    criteria_met += 1
+                    criteria_details.append("가격 일관성 양호")
+                else:
+                    criteria_details.append(f"가격 편차 {price_variance:.1f}%")
+        
+        # ③ 공시지가 대비 프리미엄
+        official_price_per_sqm = m2_data.get("official_price_per_sqm", 0)
+        if official_price_per_sqm > 0 and unit_price_sqm > 0:
+            premium_vs_official = ((unit_price_sqm - official_price_per_sqm) / official_price_per_sqm) * 100
+            
+            if premium_vs_official <= 30:
+                criteria_met += 1
+                criteria_details.append("공시지가 대비 적정")
+            else:
+                criteria_details.append(f"공시지가 대비 +{premium_vs_official:.1f}%")
+        
+        # ④ 물리적 조건 리스크
+        premium_factors = m2_context.get("premium_factors", {})
+        if isinstance(premium_factors, dict):
+            scores = premium_factors.get("scores", {})
+            road_score = scores.get("road", 5)
+            terrain_score = scores.get("terrain", 5)
+            
+            if road_score >= 4 and terrain_score >= 4:
+                criteria_met += 1
+                criteria_details.append("입지 조건 양호")
+            else:
+                criteria_details.append("입지 조건 주의")
+        
+        # 등급 결정
+        if criteria_met >= 4:
+            grade = "A"
+            description = "감정가 산정의 안정성이 높은 수준입니다. " + ", ".join(criteria_details[:2])
+        elif criteria_met >= 2:
+            grade = "B"
+            description = "일부 리스크는 있으나 감정 가능 범위입니다. " + ", ".join(criteria_details[:3])
+        else:
+            grade = "C"
+            description = "감정가 변동 가능성에 유의가 필요합니다. " + ", ".join(criteria_details[:3])
+        
+        return grade, description
+    
     def _add_watermark_and_footer(self, canvas, doc):
         """
         모든 페이지에 ZeroSite 워터마크 + 카피라이트 추가
@@ -376,6 +462,23 @@ class ModulePDFGenerator:
         # ========== 1. 토지가치 분석 요약 (LH 사전검토용 기준) ==========
         story.append(Paragraph("1. 토지가치 분석 요약 (LH 사전검토용 기준)", heading_style))
         
+        # PHASE 1-3: 감정 안정성 등급 산출을 위한 데이터 추출
+        m2_context = assembled_data.get("modules", {}).get("M2", {}).get("context", {})
+        transaction_samples = m2_context.get("transaction_samples", [])
+        
+        stability_grade, grade_description = self._calculate_stability_grade(
+            m2_data, m2_context, transaction_samples
+        )
+        
+        # 감정 안정성 등급 표시 (Executive Summary)
+        grade_summary = f"""
+<b>🏆 감정 안정성 등급: {stability_grade}</b><br/>
+<br/>
+{grade_description}<br/>
+"""
+        story.append(Paragraph(grade_summary, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
         # 보고서 정체성 명시
         identity_text = """
 <b>■ 본 보고서의 역할</b><br/>
@@ -491,10 +594,7 @@ class ModulePDFGenerator:
         # ========== 4. 비교사례 분석 (PHASE 1-1 추가) ==========
         story.append(Paragraph("4. 비교사례 분석", heading_style))
         
-        # M2 context에서 transaction_samples 추출
-        m2_context = assembled_data.get("modules", {}).get("M2", {}).get("context", {})
-        transaction_samples = m2_context.get("transaction_samples", [])
-        
+        # transaction_samples는 이미 섹션 1에서 추출됨
         if transaction_samples and len(transaction_samples) >= 5:
             # 비교사례 설명
             comparison_intro = """
@@ -704,6 +804,19 @@ LH 감정평가 시 감가 요인으로 작용할 가능성이 높습니다.
 사업 진행 전 LH 공식 감정평가를 의뢰하여 정확한 토지가치를 확인하시기 바랍니다.<br/>
 """
         story.append(Paragraph(summary_opinion, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # PHASE 1-3: 감정 안정성 종합 판단 (요약 지표)
+        stability_summary = f"""
+<b>■ 감정 안정성 종합 판단 (요약 지표)</b><br/>
+<br/>
+<b>감정 안정성 등급:</b> {stability_grade}<br/>
+<b>판단 근거:</b> {grade_description}<br/>
+<br/>
+이 등급은 거래사례 신뢰성, 가격 일관성, 공시지가 대비 프리미엄, 물리적 조건을 종합 평가한 결과입니다.<br/>
+실제 LH 감정평가 시에는 추가 요인이 반영될 수 있으며, 본 등급은 참고용입니다.<br/>
+"""
+        story.append(Paragraph(stability_summary, styles['Normal']))
         story.append(Spacer(1, 0.3*inch))
         
         # ========== 6. M4~M6 모듈 연계 안내 ==========
