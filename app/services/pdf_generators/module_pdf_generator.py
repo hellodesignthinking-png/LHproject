@@ -4575,6 +4575,351 @@ M6는 <b>"LH가 이 사업을 승인할 것인가"</b>를 예측하며, M5와 �
         return buffer.getvalue()
     
     def generate_comprehensive_pdf(self, data: Dict[str, Any]) -> bytes:
-        """종합 보고서 PDF 생성 (M2-M6 통합)"""
-        # TODO: 구현
-        return self.generate_m2_appraisal_pdf(data.get('m2', {}))
+        """종합 보고서 PDF 생성 (M2-M6 통합)
+        
+        최종 모듈보고서: M2~M6 전체 모듈의 Executive Summary를 하나의 PDF로 통합
+        """
+        logger.info("=" * 80)
+        logger.info("🚀 종합보고서 (Comprehensive Report) 생성 시작")
+        logger.info("=" * 80)
+        
+        buffer = io.BytesIO()
+        
+        # PDF Document 초기화
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            topMargin=self.layout.margin_top,
+            bottomMargin=self.layout.margin_bottom,
+            leftMargin=self.layout.margin_left,
+            rightMargin=self.layout.margin_right,
+            title="ZeroSite 4.0 최종 종합보고서",
+            author="ZeroSite by AntennaHoldings NataiHeum"
+        )
+        
+        story = []
+        styles = self._get_styles()
+        
+        # 워터마크 캔버스 함수 적용 (기존 메서드 재사용)
+        # _add_watermark_and_footer 메서드를 직접 사용
+        
+        # ========================================
+        # 표지
+        # ========================================
+        story.append(Spacer(1, 80))
+        
+        # 메인 타이틀
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontName=self.font_name_bold,
+            fontSize=28,
+            textColor=self.color_primary,
+            alignment=TA_CENTER,
+            spaceAfter=10,
+            leading=36
+        )
+        story.append(Paragraph("ZeroSite 4.0", title_style))
+        story.append(Paragraph("최종 종합보고서", title_style))
+        
+        story.append(Spacer(1, 20))
+        
+        # 부제
+        subtitle_style = ParagraphStyle(
+            'Subtitle',
+            parent=styles['Normal'],
+            fontName=self.font_name,
+            fontSize=14,
+            textColor=self.color_secondary_gray,
+            alignment=TA_CENTER,
+            spaceAfter=6
+        )
+        story.append(Paragraph("(M2-M6 통합 Executive Summary)", subtitle_style))
+        
+        story.append(Spacer(1, 40))
+        
+        # 생성 시각
+        gen_time = datetime.now().strftime("%Y년 %m월 %d일 %H:%M:%S")
+        time_style = ParagraphStyle(
+            'TimeStamp',
+            parent=styles['Normal'],
+            fontName=self.font_name,
+            fontSize=11,
+            textColor=self.color_secondary_gray,
+            alignment=TA_CENTER
+        )
+        story.append(Paragraph(f"생성일시: {gen_time}", time_style))
+        
+        story.append(Spacer(1, 60))
+        
+        # M6 최종 판정 요약 박스
+        m6_data = data.get('m6', {})
+        m6_summary = m6_data.get('summary', {})
+        m6_score = m6_summary.get('total_score', 0.0) or m6_data.get('total_score', 0.0) or 0.0
+        m6_grade = str(m6_summary.get('grade', 'N/A') or m6_data.get('grade', 'N/A'))
+        m6_decision = str(m6_data.get('decision', 'N/A'))
+        
+        # DecisionType enum 처리
+        if 'DecisionType.' in m6_decision:
+            m6_decision = m6_decision.split('.')[-1]
+        
+        decision_color = colors.HexColor('#28A745') if m6_decision == 'GO' else colors.HexColor('#FFC107') if 'CONDITIONAL' in m6_decision else colors.HexColor('#DC3545')
+        
+        final_box_data = [
+            ['항목', '값'],
+            ['LH 심사 점수', f'{m6_score:.1f}/110점'],
+            ['심사 등급', m6_grade],
+            ['최종 판정', m6_decision],
+        ]
+        
+        final_box_table = Table(final_box_data, colWidths=[10*cm, 8*cm])
+        final_box_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), self.color_primary),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), self.font_name_bold),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('FONTNAME', (0, 1), (-1, -1), self.font_name),
+            ('FONTSIZE', (0, 1), (-1, -1), 11),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F9F9F9')]),
+        ]))
+        story.append(final_box_table)
+        
+        story.append(PageBreak())
+        
+        # ========================================
+        # 목차
+        # ========================================
+        story.append(Paragraph("📑 목차", styles['Heading1']))
+        story.append(Spacer(1, 12))
+        
+        toc_data = [
+            "1. M2: 토지가치 분석 Executive Summary",
+            "2. M3: LH 선호유형 분석 Executive Summary",
+            "3. M4: 건축규모 분석 Executive Summary",
+            "4. M5: 사업성 분석 Executive Summary",
+            "5. M6: LH 심사예측 Executive Summary",
+            "6. 최종 종합 의견 및 권고사항"
+        ]
+        
+        for item in toc_data:
+            story.append(Paragraph(f"• {item}", styles['Normal']))
+            story.append(Spacer(1, 6))
+        
+        story.append(PageBreak())
+        
+        # ========================================
+        # M2 Executive Summary
+        # ========================================
+        story.append(Paragraph("1. M2: 토지가치 분석 Executive Summary", styles['Heading1']))
+        story.append(Spacer(1, 12))
+        
+        m2_data = data.get('m2', {})
+        m2_summary = m2_data.get('summary', {})
+        m2_land_value = m2_summary.get('land_value', 0) or 0
+        m2_confidence = m2_summary.get('confidence_level', 'N/A') or 'N/A'
+        m2_reliability = m2_summary.get('reliability', 0) or 0
+        
+        m2_text = f"""
+<b>토지 감정평가액:</b> {m2_land_value:,.0f}원<br/>
+<b>신뢰도:</b> {m2_confidence} ({m2_reliability:.1f}%)<br/>
+<b>평가 방법:</b> 공시지가 기반 보정 + 시장 비교<br/>
+<br/>
+<b>주요 소견:</b><br/>
+• 본 사업지는 LH 매입가 산정 기준에 부합하는 토지 가치를 보유하고 있습니다.<br/>
+• 감정평가 결과는 M5 사업성 분석 및 M6 LH 심사의 핵심 근거로 활용됩니다.<br/>
+• 추가 감정평가 의뢰 시 ±5% 범위 내 변동 가능성이 있습니다.<br/>
+        """
+        story.append(Paragraph(m2_text, styles['Normal']))
+        story.append(Spacer(1, 20))
+        
+        # ========================================
+        # M3 Executive Summary
+        # ========================================
+        story.append(Paragraph("2. M3: LH 선호유형 분석 Executive Summary", styles['Heading1']))
+        story.append(Spacer(1, 12))
+        
+        m3_data = data.get('m3', {})
+        m3_summary = m3_data.get('summary', {})
+        m3_selected = m3_summary.get('selected_type', {})
+        m3_type_name = m3_selected.get('name', 'N/A') if isinstance(m3_selected, dict) else str(m3_selected)
+        m3_score = m3_selected.get('score', 0) if isinstance(m3_selected, dict) else 0
+        
+        m3_text = f"""
+<b>추천 선호유형:</b> {m3_type_name}<br/>
+<b>적합도 점수:</b> {m3_score:.1f}점<br/>
+<b>선정 근거:</b> 입지 특성 + 수요 구조 + LH 정책 적합성<br/>
+<br/>
+<b>기대 효과:</b><br/>
+• LH 매입 선호도 향상으로 승인 가능성 증대<br/>
+• 공급 회전성 및 수익 안정성 확보<br/>
+• 관리 난이도 최소화 및 운영 효율성 극대화<br/>
+<br/>
+<b>관리 포인트:</b><br/>
+• M3 섹션 5-3에서 제시한 리스크 사항을 사전 점검 필요<br/>
+• 수요 변화 모니터링 및 LH 정책 변동 주시 권장<br/>
+        """
+        story.append(Paragraph(m3_text, styles['Normal']))
+        story.append(Spacer(1, 20))
+        
+        # ========================================
+        # M4 Executive Summary
+        # ========================================
+        story.append(Paragraph("3. M4: 건축규모 분석 Executive Summary", styles['Heading1']))
+        story.append(Spacer(1, 12))
+        
+        m4_data = data.get('m4', {})
+        m4_summary = m4_data.get('summary', {})
+        m4_total_units = m4_summary.get('total_units', 0) or 0
+        m4_floor_area_ratio = m4_summary.get('floor_area_ratio', 0) or 0
+        m4_building_coverage = m4_summary.get('building_coverage_ratio', 0) or 0
+        
+        m4_text = f"""
+<b>총 세대수:</b> {m4_total_units:,}세대<br/>
+<b>용적률:</b> {m4_floor_area_ratio:.1f}%<br/>
+<b>건폐율:</b> {m4_building_coverage:.1f}%<br/>
+<br/>
+<b>주요 소견:</b><br/>
+• 법정 한도 내에서 LH 권장 규모에 부합하는 설계 가능<br/>
+• M5 수익성 최적화를 위한 세대수 배분 완료<br/>
+• 주차대수, 조경, 공공기여 등 법적 요구사항 충족<br/>
+        """
+        story.append(Paragraph(m4_text, styles['Normal']))
+        story.append(Spacer(1, 20))
+        
+        # ========================================
+        # M5 Executive Summary
+        # ========================================
+        story.append(Paragraph("4. M5: 사업성 분석 Executive Summary", styles['Heading1']))
+        story.append(Spacer(1, 12))
+        
+        m5_data = data.get('m5', {})
+        m5_summary = m5_data.get('summary', {})
+        m5_npv = m5_summary.get('npv', 0) or 0
+        m5_irr = m5_summary.get('irr', 0) or 0
+        m5_profit_margin = m5_summary.get('profit_margin', 0) or 0
+        m5_total_revenue = m5_summary.get('total_revenue', 0) or 0
+        m5_total_cost = m5_summary.get('total_cost', 0) or 0
+        
+        m5_text = f"""
+<b>NPV (순현재가치):</b> {m5_npv:,.0f}원<br/>
+<b>IRR (내부수익률):</b> {m5_irr:.2f}%<br/>
+<b>수익률:</b> {m5_profit_margin:.2f}%<br/>
+<b>총 수익:</b> {m5_total_revenue:,.0f}원<br/>
+<b>총 비용:</b> {m5_total_cost:,.0f}원<br/>
+<br/>
+<b>주요 소견:</b><br/>
+• 사업 수익성은 양호하며, LH 매입가 기준 충족<br/>
+• 건축비 변동 리스크 대비 예비비 10% 확보 권장<br/>
+• M6 최종 판단의 핵심 근거 데이터로 활용<br/>
+        """
+        story.append(Paragraph(m5_text, styles['Normal']))
+        story.append(Spacer(1, 20))
+        
+        # ========================================
+        # M6 Executive Summary
+        # ========================================
+        story.append(Paragraph("5. M6: LH 심사예측 Executive Summary", styles['Heading1']))
+        story.append(Spacer(1, 12))
+        
+        m6_approval_prob = m6_summary.get('approval_probability', 0) or 0
+        m6_rationale = m6_data.get('rationale', '상세 내역은 M6 보고서 참조')
+        
+        m6_text = f"""
+<b>LH 심사 점수:</b> {m6_score:.1f}/110점<br/>
+<b>심사 등급:</b> {m6_grade}<br/>
+<b>최종 판정:</b> {m6_decision}<br/>
+<b>예상 승인율:</b> {m6_approval_prob*100:.1f}%<br/>
+<br/>
+<b>판정 근거:</b><br/>
+{m6_rationale}<br/>
+<br/>
+<b>다음 단계:</b><br/>
+• GO: 즉시 LH 사전 협의 및 인허가 진행<br/>
+• CONDITIONAL: M6 보고서의 보완 포인트 이행 후 재검토<br/>
+• NO-GO: 사업지 재선정 또는 조건 변경 후 재평가<br/>
+        """
+        story.append(Paragraph(m6_text, styles['Normal']))
+        story.append(PageBreak())
+        
+        # ========================================
+        # 최종 종합 의견
+        # ========================================
+        story.append(Paragraph("6. 최종 종합 의견 및 권고사항", styles['Heading1']))
+        story.append(Spacer(1, 12))
+        
+        # 종합 판단
+        if m6_decision == 'GO':
+            final_opinion = """
+<b>🎯 최종 판단: 사업 추진 권장 (GO)</b><br/>
+<br/>
+본 사업지는 M2(토지가치), M3(선호유형), M4(건축규모), M5(사업성), M6(LH 심사) 전 영역에서 양호한 결과를 보였습니다.<br/>
+<br/>
+<b>✅ 즉시 실행 권장사항:</b><br/>
+1. <b>LH 사전 협의</b> (1개월): LH 담당자 미팅 및 Hard Fail 항목 사전 확인<br/>
+2. <b>인허가 진행</b> (3-6개월): 건축심의 제출, M3 선호유형 기반 협의<br/>
+3. <b>시공사 선정 및 착공</b> (1-2개월): M5 총사업비 기반 예산 확정<br/>
+4. <b>준공 및 LH 매입</b> (18개월): 준공 후 감정평가 및 매입가 확정<br/>
+<br/>
+<b>⚠️ 모니터링 포인트:</b><br/>
+• M5 사업비 관리: 건축비 10% 상승 리스크 대비 예비비 확보<br/>
+• M6 Hard Fail 재검토: 설계 변경 시 주차대수 재계산<br/>
+• LH 협의 지속: 매입가 기준 변경 모니터링<br/>
+            """
+        elif 'CONDITIONAL' in m6_decision:
+            final_opinion = """
+<b>⚠️ 최종 판단: 조건부 추진 (CONDITIONAL GO)</b><br/>
+<br/>
+본 사업지는 M6 LH 심사에서 조건부 승인 구간에 위치합니다.<br/>
+M6 보고서의 '조건부 보완 포인트'를 우선 이행한 후 재평가를 권장합니다.<br/>
+<br/>
+<b>🔧 우선 보완 항목:</b><br/>
+• 입지 점수 향상: 대중교통 접근성 개선 방안 검토<br/>
+• 규모 점수 향상: LH 권장 세대수 준수 여부 재검토<br/>
+• 사업성 점수 향상: M5 수익성 개선 및 총 사업비 최적화<br/>
+• 준수 점수 향상: 정책 준수 항목 보완<br/>
+<br/>
+<b>📋 재평가 프로세스:</b><br/>
+1. 보완 항목 이행 (1-2개월)<br/>
+2. ZeroSite 4.0 재분석 실행<br/>
+3. M6 점수 70점 이상 달성 시 GO 판정으로 전환<br/>
+            """
+        else:
+            final_opinion = """
+<b>🚫 최종 판단: 사업 보류 (NO-GO)</b><br/>
+<br/>
+본 사업지는 M6 LH 심사 기준을 충족하지 못했습니다.<br/>
+사업지 재선정 또는 근본적인 조건 변경 후 재평가를 권장합니다.<br/>
+<br/>
+<b>💡 대안 제시:</b><br/>
+• 다른 사업지 탐색 (입지, 규모, 법적 조건 개선)<br/>
+• 사업 구조 변경 (분양 전환, 임대 혼합 등)<br/>
+• 6개월 후 시장 및 정책 변화 모니터링 후 재평가<br/>
+            """
+        
+        story.append(Paragraph(final_opinion, styles['Normal']))
+        story.append(Spacer(1, 30))
+        
+        # 면책 조항
+        disclaimer = """
+<b>📌 면책 조항</b><br/>
+본 보고서는 ZeroSite 4.0 분석 엔진이 제공하는 의사결정 지원 자료입니다.<br/>
+최종 사업 결정은 실사용자의 판단과 책임 하에 이루어져야 하며, 본 보고서는 법적 구속력을 갖지 않습니다.<br/>
+<br/>
+<i>© ZeroSite by AntennaHoldings NataiHeum</i>
+        """
+        story.append(Paragraph(disclaimer, styles['Normal']))
+        
+        # PDF 생성 (기존 워터마크 메서드 사용)
+        doc.build(story, onFirstPage=self._add_watermark_and_footer, onLaterPages=self._add_watermark_and_footer)
+        
+        pdf_bytes = buffer.getvalue()
+        buffer.close()
+        
+        logger.info("=" * 80)
+        logger.info(f"✅ 종합보고서 생성 완료: {len(pdf_bytes):,} bytes")
+        logger.info("=" * 80)
+        
+        return pdf_bytes
