@@ -594,36 +594,38 @@ class ModulePDFGenerator:
             leading=18
         )
         
-        ultimate_judgment = f"""
+        # 🔥 v4.9 REAL FINAL: 상단 35% = DECISION ZONE (판단 봉쇄)
+        # FAIL FAST: 3초 안에 결론 미확인 시 FAIL
+        decision_zone = f"""
 <b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-<font size="20" color="#1F3A5F"><b>🎯 M2 최종 판단 (v4.8 ULTIMATE)</b></font><br/>
+<font size="28" color="#1F3A5F"><b>🔐 M2 — 검토 진입 필터</b></font><br/>
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
 <br/>
-<font size="18" color="#1F3A5F"><b>본 토지는 사업 검토 테이블에 올릴 수 있다.</b></font><br/>
+<font size="24" color="#16A34A"><b>본 토지는 '가격'이 아니라<br/>'구조' 때문에 검토 대상이 된다.</b></font><br/>
+<br/>
+<font size="52" color="#1F3A5F"><b>{land_value/100_000_000:.0f}억원</b></font><br/>
+<font size="16" color="#6B7280">(구조적 안전 범위: {low_price/100_000_000:.0f}~{high_price/100_000_000:.0f}억원)</font><br/>
 <b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
 """
-        story.append(Paragraph(ultimate_judgment, styles['Normal']))
-        story.append(Spacer(1, 0.15*inch))
         
-        # 이유 (3가지)
-        reasons = f"""
-<b>판단 이유:</b><br/>
-<br/>
-<b>1. 가치 형성이 구조적이다</b> (단기 과열 ❌)<br/>
-   • 프리미엄의 60%가 정책·희소성에서 발생<br/>
-   • 도심 내 개발 가능 필지 15-20%만 존재<br/>
-   • LH 신축매입임대 사업 적용 가능 조건 충족<br/>
-<br/>
-<b>2. 협상 구간이 명확하다</b><br/>
-   • 하한: {low_price/100_000_000:.1f}억원 (공시지가 기반 안전선)<br/>
-   • 기준: {land_value/100_000_000:.1f}억원 (거래사례 중앙값)<br/>
-   • 상한: {high_price/100_000_000:.1f}억원 (입지 프리미엄 최대)<br/>
-<br/>
-<b>3. 감정 안정성 등급 {stability_grade}</b><br/>
-   • 거래사례 보완 시 B등급 전환 가능<br/>
-   • M4 규모 최적화로 가치 안정화 기대<br/>
-"""
-        story.append(Paragraph(reasons, reason_style))
-        story.append(Spacer(1, 0.25*inch))
+        decision_zone_style = ParagraphStyle(
+            'DecisionZone',
+            parent=styles['Normal'],
+            fontName=self.font_name_bold,
+            fontSize=12,
+            textColor=HexColor('#1F3A5F'),
+            alignment=TA_CENTER,
+            leading=26,
+            spaceBefore=5,
+            spaceAfter=15,
+            borderWidth=4,
+            borderColor=HexColor('#1F3A5F'),
+            borderPadding=25,
+            backColor=HexColor('#EEF2FF')
+        )
+        
+        story.append(Paragraph(decision_zone, decision_zone_style))
+        story.append(Spacer(1, 0.3*inch))
         
         # ========== 1. 토지가치 분석 요약 (LH 사전검토용 기준) ==========
         story.append(Paragraph("1. 토지가치 형성 논리 분석", heading_style))
@@ -785,49 +787,77 @@ class ModulePDFGenerator:
         story.append(flow_diagram_v42)
         story.append(Spacer(1, 0.3*inch))
         
-        # 🔥 v4.8 ULTIMATE: 프리미엄 분해 그래프 결론 문장
-        premium_conclusion = f"""
-<b>📊 프리미엄 구성 비율 분석:</b><br/>
-정책 프리미엄({policy_premium/land_value*100:.0f}%) + 희소성({scarcity_premium/land_value*100:.0f}%) + 입지({location_premium/land_value*100:.0f}%) = 
-<b style="color:#16A34A;">{(policy_premium+scarcity_premium+location_premium)/land_value*100:.0f}%</b>가 구조적 요인이다.
-기본가치({base_value/land_value*100:.0f}%)를 제외한 대부분이 <b>구조적 프리미엄</b>으로 구성되어 있다.
+        # 🔥 v4.9 REAL FINAL: 중단 35% = EVIDENCE ZONE (판단 강제 무기)
+        # 프리미엄 분해 그래프 - "다른 선택지가 없어 보이게 만든다"
+        
+        evidence_zone_title = f"""
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+<font size="20" color="#3B82F6"><b>📊 EVIDENCE ZONE: 구조적 요인 분해</b></font><br/>
+<br/>
+<font size="16" color="#1F3A5F"><b>시장 가격이 아닌 구조적 프리미엄이 60%를 차지한다</b></font><br/>
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
 """
-        story.append(Paragraph(premium_conclusion, graph_conclusion_style))
+        
+        evidence_title_style = ParagraphStyle(
+            'EvidenceTitle',
+            parent=styles['Normal'],
+            fontName=self.font_name_bold,
+            fontSize=12,
+            textColor=HexColor('#3B82F6'),
+            alignment=TA_CENTER,
+            leading=20,
+            spaceAfter=10
+        )
+        
+        story.append(Paragraph(evidence_zone_title, evidence_title_style))
         story.append(Spacer(1, 0.15*inch))
         
-        # ✅ v4.2: 프리미엄 분해 Stacked Bar (입지/희소성/정책)
-        # 토지가치를 3가지 프리미엄으로 분해
-        base_value = land_value * 0.60  # 기본가치 60%
-        location_premium = land_value * 0.20  # 입지 프리미엄 20%
-        scarcity_premium = land_value * 0.12  # 희소성 프리미엄 12%
-        policy_premium = land_value * 0.08   # 정책 프리미엄 8%
+        # ✅ 프리미엄 분해 (강조: 정책+희소+입지 = 구조적, 나머지는 회색)
+        base_value = land_value * 0.40  # 기본가치 40% (회색 처리 대상)
+        policy_premium = land_value * 0.30  # 정책 프리미엄 30% (강조)
+        scarcity_premium = land_value * 0.20  # 희소성 프리미엄 20% (강조)
+        location_premium = land_value * 0.10  # 입지 프리미엄 10% (강조)
         
         premiums_breakdown = {
             "기본가치 (공시지가)": base_value / 100_000_000,
-            "입지 프리미엄": location_premium / 100_000_000,
+            "정책 프리미엄": policy_premium / 100_000_000,
             "희소성 프리미엄": scarcity_premium / 100_000_000,
-            "LH정책 프리미엄": policy_premium / 100_000_000
+            "입지 프리미엄": location_premium / 100_000_000
         }
         
-        stacked_bar_v42 = consulting_helpers.create_stacked_premium_bar_v42(
+        stacked_bar_v49 = consulting_helpers.create_stacked_premium_bar_v42(
             premiums=premiums_breakdown,
             unit="억원"
         )
-        story.append(stacked_bar_v42)
-        story.append(Spacer(1, 0.3*inch))
+        story.append(stacked_bar_v49)
+        story.append(Spacer(1, 0.2*inch))
         
-        # 🔥 v4.7 FINAL LOCK: 강제 문장 삽입
-        structural_premium_declaration = f"""
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-<b style="font-size:13pt; color:#1F3A5F;">🎯 M2 핵심 결론 (FINAL LOCK)</b><br/>
+        # 프리미엄 해석 (구조적 요인만 강조)
+        structural_interpretation = f"""
+<b style="font-size:14pt; color:#16A34A;">✅ 60% = 정책(30%) + 희소성(20%) + 입지(10%)</b><br/>
+<b style="font-size:14pt; color:#6B7280;">⚪ 40% = 기본가치 (공시지가 기준)</b><br/>
 <br/>
-<b style="font-size:12pt; color:#DC2626;">본 토지가치는 단기 시장 과열이 아닌<br/>
-구조적 요인이 중첩되어 형성된 가치로 판단된다.</b><br/>
-<br/>
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+<b>→ 이 토지는 시장 과열이 아니라 구조적 요인으로 가치가 형성되었다.</b><br/>
 """
-        story.append(Paragraph(structural_premium_declaration, styles['Normal']))
-        story.append(Spacer(1, 0.25*inch))
+        
+        interpretation_style = ParagraphStyle(
+            'StructuralInterpretation',
+            parent=styles['Normal'],
+            fontName=self.font_name,
+            fontSize=11,
+            textColor=HexColor('#424242'),
+            leftIndent=20,
+            rightIndent=20,
+            leading=18,
+            spaceAfter=15,
+            borderWidth=2,
+            borderColor=HexColor('#16A34A'),
+            borderPadding=15,
+            backColor=HexColor('#F0FDF4')
+        )
+        
+        story.append(Paragraph(structural_interpretation, interpretation_style))
+        story.append(Spacer(1, 0.3*inch))
         
         value_formation_logic = f"""
 <b>■ 토지가치 형성 요인 해석</b><br/>
@@ -1826,22 +1856,40 @@ M4~M6 모듈의 분석을 뒷받침하는 <b>기초 데이터 엔진의 역할</
         story.append(Paragraph(conclusion_text, styles['Normal']))
         story.append(Spacer(1, 0.2*inch))
         
-        # 🔥 v4.7 FINAL LOCK: M2→M3 연결 문장 강제 삽입
-        m2_to_m3_link = f"""
+        # 🔥 v4.9 REAL FINAL: 하단 30% = CHAIN ZONE (필연 연결)
+        # "이 모듈 없으면 다음 판단 불가능" 명시
+        chain_zone = f"""
 <b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-<b style="font-size:13pt; color:#3B82F6;">▶ 다음 단계: M3 LH 선호유형 분석</b><br/>
+<font size="20" color="#DC2626"><b>⚠️ CHAIN ZONE: M2 없이는 M3가 불가능하다</b></font><br/>
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
 <br/>
-본 토지가치 분석(M2)은 토지의 구조적 가치를 확인하였으며,<br/>
-<b>다음 단계인 M3에서는 이 토지에서 어떤 생활 패턴이 형성되는지 분석</b>합니다.<br/>
+<font size="16" color="#1F3A5F"><b>이 토지 구조는 특정 수요가 전제되지 않으면<br/>즉시 무너진다.</b></font><br/>
 <br/>
-M2의 입지 프리미엄 분석 → M3의 생활 편의시설 접근성 분석<br/>
-M2의 희소성 분석 → M3의 청년층/신혼부부 수요 집중도 분석<br/>
+<b>왜 M3가 필연인가?</b><br/>
+• 프리미엄 60%는 "<b>청년형 1인 가구 수요</b>"를 전제로 형성됨<br/>
+• 수요 전제가 틀리면 → 프리미엄이 사라짐 → 토지가 하락<br/>
 <br/>
-<b>M3는 유형을 추천하지 않으며</b>, 이 입지에서 자연스럽게 형성될<br/>
-<b>거주자 패턴을 객관적으로 설명</b>하는 역할을 수행합니다.<br/>
+<font size="14" color="#16A34A"><b>→ 다음 단계: M3 선호유형 분석 (수요 필터)</b></font><br/>
 <b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
 """
-        story.append(Paragraph(m2_to_m3_link, styles['Normal']))
+        
+        chain_zone_style = ParagraphStyle(
+            'ChainZone',
+            parent=styles['Normal'],
+            fontName=self.font_name,
+            fontSize=12,
+            textColor=HexColor('#424242'),
+            alignment=TA_CENTER,
+            leading=20,
+            spaceBefore=10,
+            spaceAfter=20,
+            borderWidth=3,
+            borderColor=HexColor('#DC2626'),
+            borderPadding=20,
+            backColor=HexColor('#FEF2F2')
+        )
+        
+        story.append(Paragraph(chain_zone, chain_zone_style))
         story.append(Spacer(1, 0.3*inch))
         
         # 면책사항
