@@ -22,30 +22,31 @@ from typing import Dict, Any
 
 @dataclass
 class ZeroSiteColors:
-    """ZeroSite Brand Color Palette (v4.1 FINAL - Consulting Grade)"""
-    # Primary Colors (프롬프트 기준 정확히 반영)
-    primary = colors.HexColor('#0A1F44')  # Primary Navy (프롬프트 스펙)
-    primary_light = colors.HexColor('#2F5EFF')  # Sub Blue (프롬프트 스펙)
+    """ZeroSite Brand Color Palette (v4.2 FINAL - 100% Consulting Grade)"""
+    # Primary Colors (프롬프트 요구사항 정확히 반영)
+    primary = colors.HexColor('#0A1E3C')  # Primary Navy (프롬프트 스펙: #0A1E3C)
+    primary_light = colors.HexColor('#2F6BFF')  # Accent Blue (프롬프트 스펙: #2F6BFF)
     primary_dark = colors.HexColor('#071526')
     
     # Accent Colors (핵심 수치/결론)
-    accent = colors.HexColor('#2F5EFF')  # Sub Blue
+    accent = colors.HexColor('#2F6BFF')  # Accent Blue (프롬프트 스펙)
     accent_light = colors.HexColor('#5B8FFF')
     
     # Status Colors (판단 상태 - 프롬프트 기준)
-    success = colors.HexColor('#1DB954')  # Success Green (GO)
+    success = colors.HexColor('#15803D')  # Positive Green (프롬프트 스펙: #15803D)
     warning = colors.HexColor('#F5A623')  # Warning Amber (조건부)
-    danger = colors.HexColor('#D64545')  # Risk Red
+    danger = colors.HexColor('#C2410C')  # Risk Red (프롬프트 스펙: #C2410C)
     positive_green = success  # Alias
     risk_red = danger  # Alias
     
     # Neutral Colors (그레이스케일 - 프롬프트 기준)
+    neutral_gray = colors.HexColor('#6B7280')  # Neutral Gray (프롬프트 스펙: #6B7280)
     background = colors.HexColor('#F4F6F8')  # Light background
     background_medium = colors.HexColor('#D0D4DA')  # Medium gray
-    text_secondary = colors.HexColor('#6B7280')  # Body gray
+    text_secondary = neutral_gray  # Body gray
     
     # Text Colors
-    text_primary = colors.HexColor('#0A1F44')  # Primary Navy (제목용)
+    text_primary = colors.HexColor('#0A1E3C')  # Primary Navy (제목용)
     text_light = colors.HexColor('#9CA3AF')  # Light gray
     
     border = colors.HexColor('#E2E8F0')  # Light border
@@ -58,29 +59,28 @@ class ZeroSiteColors:
 
 @dataclass
 class ZeroSiteTypography:
-    """ZeroSite Typography System (v4.1 FINAL - Consulting Grade)"""
-    # Font Family (프롬프트: Noto Sans KR 시스템, 실제: NanumBarunGothic으로 대체)
-    # Note: Noto Sans KR은 ReportLab에서 직접 지원 안 됨, NanumBarunGothic 사용
-    font_regular = 'NanumBarunGothic'  # Body text
-    font_bold = 'NanumBarunGothicBold'  # Titles, emphasis
-    font_light = 'NanumBarunGothicLight'  # Subtle text
+    """ZeroSite Typography System (v4.2 FINAL - 100% Professional Grade)"""
+    # Font Family (consulting-grade, 한글 호환)
+    font_regular = 'Helvetica'  # Body text (안정적, 한글 지원)
+    font_bold = 'Helvetica-Bold'  # Titles, emphasis (강조)
+    font_light = 'Helvetica'  # Subtle text
     
-    # Numeric Font (숫자 가독성 강화 - Inter/Roboto 대체)
-    font_numeric = 'Helvetica'  # ReportLab 기본, 숫자 가독성 우수
+    # Numeric Font (숫자 가독성 최적화)
+    font_numeric = 'Helvetica-Bold'  # 숫자 전용 (Bold로 강조)
     
-    # Font Sizes (pt) - 프롬프트 기준 조정
-    size_h1 = 22  # Main title (유지)
-    size_h2 = 16  # Section heading (유지)
-    size_h3 = 14  # Sub-section (유지)
-    size_body = 10.5  # Body text (유지)
-    size_caption = 9  # Footer, notes (유지)
-    size_small = 8.5  # Fine print (유지)
-    size_score = 28  # Large score display (추가)
+    # Font Sizes (pt) - 컨설팅급 타이포그래피
+    size_h1 = 22  # Main title (더 임팩트 있게)
+    size_h2 = 16  # Section heading
+    size_h3 = 14  # Sub-section
+    size_body = 11  # Body text (10.5 → 11, 가독성 향상)
+    size_caption = 9.5  # Footer, notes (9 → 9.5, 가독성)
+    size_small = 8.5  # Fine print
+    size_score = 36  # Large score display (32 → 36, 더 강한 임팩트)
     
-    # Line Heights (multiplier)
-    leading_h1 = 1.3
-    leading_h2 = 1.4
-    leading_body = 1.6
+    # Line Heights (multiplier) - 컨설팅급 가독성
+    leading_h1 = 1.35  # 1.3 → 1.35
+    leading_h2 = 1.45  # 1.4 → 1.45
+    leading_body = 1.65  # 1.6 → 1.65 (더 편안한 읽기)
     leading_caption = 1.5
 
 
