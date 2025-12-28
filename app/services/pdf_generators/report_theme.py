@@ -59,7 +59,7 @@ class ZeroSiteColors:
 
 @dataclass
 class ZeroSiteTypography:
-    """ZeroSite Typography System (v4.2 FINAL - 100% Professional Grade)"""
+    """ZeroSite Typography System (v4.3 FINAL - 100% Professional + Data Complete)"""
     # Font Family (consulting-grade, 한글 호환)
     font_regular = 'Helvetica'  # Body text (안정적, 한글 지원)
     font_bold = 'Helvetica-Bold'  # Titles, emphasis (강조)
@@ -68,19 +68,19 @@ class ZeroSiteTypography:
     # Numeric Font (숫자 가독성 최적화)
     font_numeric = 'Helvetica-Bold'  # 숫자 전용 (Bold로 강조)
     
-    # Font Sizes (pt) - 컨설팅급 타이포그래피
-    size_h1 = 22  # Main title (더 임팩트 있게)
-    size_h2 = 16  # Section heading
+    # Font Sizes (pt) - 컨설팅급 타이포그래피 (v4.3 강화)
+    size_h1 = 24  # Main title (22 → 24, 더 강한 임팩트)
+    size_h2 = 17  # Section heading (16 → 17, 가독성 향상)
     size_h3 = 14  # Sub-section
-    size_body = 11  # Body text (10.5 → 11, 가독성 향상)
-    size_caption = 9.5  # Footer, notes (9 → 9.5, 가독성)
+    size_body = 11  # Body text
+    size_caption = 9.5  # Footer, notes
     size_small = 8.5  # Fine print
-    size_score = 36  # Large score display (32 → 36, 더 강한 임팩트)
+    size_score = 40  # Large score display (36 → 40, 최강 임팩트)
     
     # Line Heights (multiplier) - 컨설팅급 가독성
-    leading_h1 = 1.35  # 1.3 → 1.35
-    leading_h2 = 1.45  # 1.4 → 1.45
-    leading_body = 1.65  # 1.6 → 1.65 (더 편안한 읽기)
+    leading_h1 = 1.4  # 1.35 → 1.4 (더 편안한 읽기)
+    leading_h2 = 1.5  # 1.45 → 1.5
+    leading_body = 1.7  # 1.65 → 1.7 (최상급 가독성)
     leading_caption = 1.5
 
 

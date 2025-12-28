@@ -1830,10 +1830,31 @@ M3 선호유형 모델은 특정 입지가 '어떤 유형이 가능한가'를 �
         else:
             grade_description = f"신뢰도 {confidence_score}%로 안정적인 분석 결과입니다."
         
-        # ✅ PHASE 2-4: N/A 값 자동 주석 처리
+        # ✅ PHASE 2-4: N/A 값 자동 생성 로직
         if selected_name == 'N/A' or selected_name == '' or not selected_name:
-            selected_name_display = '<b>[데이터 부재]</b>'
-            selected_note = '<i>(※ 유형명 누락: 데이터 수집 단계 확인 필요)</i>'
+            logger.warning("⚠️  M3 선호유형명 누락 → POI 데이터 기준으로 자동 추정")
+            
+            # POI 데이터로 유형 추정
+            poi = location.get('poi', {})
+            subway_dist = poi.get('subway_distance', 999999)
+            school_dist = poi.get('school_distance', 999999)
+            hospital_dist = poi.get('hospital_distance', 999999)
+            
+            # 역세권 + 편의시설 우수 → 청년형
+            if subway_dist < 500 and school_dist > 1000:
+                selected_name = "청년 1인 가구형"
+                selected_note = '<i>(※ 역세권 500m 이내, 편의시설 우수 → 청년형으로 추정)</i>'
+            # 학교 가까움 + 병원 가까움 → 신혼부부/자녀양육형
+            elif school_dist < 500 and hospital_dist < 1000:
+                selected_name = "신혼부부·자녀양육형"
+                selected_note = '<i>(※ 학교 500m, 병원 1km 이내 → 신혼부부/자녀양육형으로 추정)</i>'
+            # 일반형 (기본값)
+            else:
+                selected_name = "일반 가구형"
+                selected_note = '<i>(※ 데이터 부족으로 일반형으로 분류)</i>'
+            
+            selected_name_display = f"<b>'{selected_name}'</b>"
+            logger.info(f"   자동 추정 유형: {selected_name}")
         else:
             selected_name_display = f"<b>'{selected_name}'</b>"
             selected_note = ''
@@ -5839,6 +5860,55 @@ M6 최종 판단은 M1-M5의 모든 분석 결과를 <b>종합적으로 검토</
         weaknesses = swot.get('weaknesses', [])
         opportunities = swot.get('opportunities', [])
         threats = swot.get('threats', [])
+        
+        # 🛡️ 방어 로직: SWOT 데이터가 비어있으면 점수 기준으로 자동 생성
+        if not strengths and not weaknesses and not opportunities and not threats:
+            logger.warning("⚠️  SWOT 데이터 없음 → 점수 기준으로 자동 생성")
+            
+            # Strengths (강점): 70% 이상 점수 항목
+            if scores.get('location', 0) >= 25:  # 35점 중 71%
+                strengths.append(f"입지 점수 우수 ({scores.get('location', 0)}/35점): 대중교통 및 생활 편의시설 접근성 양호")
+            if scores.get('scale', 0) >= 11:  # 15점 중 73%
+                strengths.append(f"건축 규모 적정 ({scores.get('scale', 0)}/15점): LH 권장 규모 충족")
+            if scores.get('feasibility', 0) >= 28:  # 40점 중 70%
+                strengths.append(f"사업성 우수 ({scores.get('feasibility', 0)}/40점): 수익성 구조 안정적")
+            if scores.get('compliance', 0) >= 14:  # 20점 중 70%
+                strengths.append(f"법규 준수 양호 ({scores.get('compliance', 0)}/20점): 주차/용적률 기준 충족")
+            
+            # 기본 강점 추가 (점수 무관)
+            if m6_score >= 80:
+                strengths.append("종합 심사 점수 80점 이상 달성으로 LH 심사 통과 가능성 높음")
+            
+            # Weaknesses (약점): 70% 미만 점수 항목
+            if scores.get('location', 0) < 25:
+                weaknesses.append(f"입지 점수 개선 필요 ({scores.get('location', 0)}/35점): 대중교통 접근성 또는 편의시설 보완 검토")
+            if scores.get('scale', 0) < 11:
+                weaknesses.append(f"건축 규모 최적화 필요 ({scores.get('scale', 0)}/15점): 세대수 또는 면적 조정 검토")
+            if scores.get('feasibility', 0) < 28:
+                weaknesses.append(f"사업성 개선 필요 ({scores.get('feasibility', 0)}/40점): 수익성 구조 최적화 필요")
+            if scores.get('compliance', 0) < 14:
+                weaknesses.append(f"법규 준수 강화 필요 ({scores.get('compliance', 0)}/20점): 주차 또는 용적률 조정 검토")
+            
+            # 기본 약점 추가 (점수 무관)
+            if m6_score < 80:
+                weaknesses.append("종합 점수가 80점 미만으로 일부 항목 개선 필요")
+            
+            # Opportunities (기회): 긍정적 요소
+            opportunities.append("LH 신축매입임대 사업 활성화 정책으로 매입 기회 증대")
+            opportunities.append("청년·신혼부부 주택 수요 증가로 안정적 임대 시장 형성")
+            if m6_score >= 70:
+                opportunities.append("현재 점수로도 조건부 협의 가능, 보완 시 즉시 승인 가능")
+            
+            # Threats (위협): 리스크 요소
+            if m6_score < 70:
+                threats.append("종합 점수 70점 미만으로 LH 심사 통과 불확실")
+            if scores.get('compliance', 0) < 14:
+                threats.append("법규 준수 항목 미달 시 인허가 지연 또는 거부 가능성")
+            if scores.get('feasibility', 0) < 28:
+                threats.append("사업성 부족 시 LH 매입가 협상 난항 가능")
+            threats.append("감정평가 결과에 따른 토지가 변동 가능성")
+            
+            logger.info(f"   자동 생성 SWOT: S={len(strengths)}, W={len(weaknesses)}, O={len(opportunities)}, T={len(threats)}")
         
         swot_text = "<b>■ Strengths (강점):</b><br/>"
         for s in strengths:

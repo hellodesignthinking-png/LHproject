@@ -42,7 +42,7 @@ class ConsultingDesignHelpers:
     
     def create_executive_insight_box(self, insight_text: str, title: str = "Executive Insight") -> Table:
         """
-        Executive Insight Box (컨설팅급 핵심 메시지 박스)
+        Executive Insight Box (컨설팅급 핵심 메시지 박스) - v4.3 강화판
         
         목표: 한 페이지를 넘기자마자 핵심 판단이 보이는 구조
         
@@ -53,40 +53,40 @@ class ConsultingDesignHelpers:
         Returns:
             ReportLab Table object
         """
-        # 제목 스타일
+        # 제목 스타일 (v4.3: 더 크고 강조)
         title_style = ParagraphStyle(
             'InsightTitle',
             fontName=self.theme.typography.font_bold,
-            fontSize=13,
+            fontSize=15,  # 13 → 15 (더 임팩트)
             textColor=self.theme.colors.primary,
             alignment=TA_LEFT,
-            leftIndent=15,
-            spaceAfter=8,
+            leftIndent=18,  # 15 → 18 (여백 증가)
+            spaceAfter=10,  # 8 → 10 (간격 증가)
         )
         
-        # 본문 스타일
+        # 본문 스타일 (v4.3: 더 명확하게)
         insight_style = ParagraphStyle(
             'ExecutiveInsight',
             fontName=self.theme.typography.font_regular,
-            fontSize=11.5,
-            leading=18,
+            fontSize=12,  # 11.5 → 12 (가독성 향상)
+            leading=20,  # 18 → 20 (행간 증가)
             textColor=self.theme.colors.text_primary,
             alignment=TA_LEFT,
-            leftIndent=15,
-            rightIndent=15,
+            leftIndent=18,  # 15 → 18
+            rightIndent=18,  # 15 → 18
         )
         
         # 텍스트 구성
         title_para = Paragraph(f"💡 {title}", title_style)
         insight_para = Paragraph(insight_text, insight_style)
         
-        # 박스 테이블
+        # 박스 테이블 (v4.3: 더 눈에 띄게)
         box_table = Table([[title_para], [insight_para]], colWidths=[16*cm])
         box_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), self.theme.colors.background),
-            ('BOX', (0, 0), (-1, -1), 2, self.theme.colors.accent),
-            ('TOPPADDING', (0, 0), (-1, -1), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('BOX', (0, 0), (-1, -1), 3, self.theme.colors.accent),  # 2 → 3 (테두리 두껍게)
+            ('TOPPADDING', (0, 0), (-1, -1), 15),  # 12 → 15
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 15),  # 12 → 15
             ('LEFTPADDING', (0, 0), (-1, -1), 0),
             ('RIGHTPADDING', (0, 0), (-1, -1), 0),
         ]))
