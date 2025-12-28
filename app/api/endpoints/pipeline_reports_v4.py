@@ -509,101 +509,71 @@ async def _execute_pipeline(request: PipelineAnalysisRequest, tracer: PipelineTr
         # 🔥 FIXED: Use context_id from request (UUID from frontend) or fallback to parcel_id
         context_id = request.context_id or request.parcel_id
         
-        # Build Phase 3.5D assembled_data from pipeline result
-        # 🔥 CRITICAL: Convert all dataclass objects to primitive dicts for JSON serialization
-        def to_serializable(obj):
-            """Recursively convert dataclass and complex objects to dict"""
-            if hasattr(obj, 'to_dict'):
-                return obj.to_dict()
-            elif hasattr(obj, '__dict__'):
-                return {k: to_serializable(v) for k, v in obj.__dict__.items()}
-            elif isinstance(obj, (list, tuple)):
-                return [to_serializable(item) for item in obj]
-            elif isinstance(obj, dict):
-                return {k: to_serializable(v) for k, v in obj.items()}
-            else:
-                return obj
+        # 🔥 CRITICAL FIX: Use result.assembled_data from pipeline directly
+        # The pipeline already builds complete assembled_data with proper structure!
+        assembled_data = result.assembled_data if hasattr(result, 'assembled_data') and result.assembled_data else {}
         
-        assembled_data = {
-            "m6_result": {
-                "lh_score_total": result.lh_review.total_score,
-                "judgement": result.lh_review.decision,
-                "grade": result.lh_review.grade if hasattr(result.lh_review, 'grade') else 'N/A',
+        # Ensure context_id and parcel_id are set
+        if not assembled_data:
+            logger.error("❌ result.assembled_data is missing from pipeline! Creating minimal version...")
+            # Fallback: minimal assembled_data
+            def to_serializable(obj):
+                """Recursively convert dataclass and complex objects to dict"""
+                if hasattr(obj, 'to_dict'):
+                    return obj.to_dict()
+                elif hasattr(obj, '__dict__'):
+                    return {k: to_serializable(v) for k, v in obj.__dict__.items()}
+                elif isinstance(obj, (list, tuple)):
+                    return [to_serializable(item) for item in obj]
+                elif isinstance(obj, dict):
+                    return {k: to_serializable(v) for k, v in obj.items()}
+                else:
+                    return obj
+            
+            assembled_data = {
+                "parcel_id": request.parcel_id,
+                "context_id": context_id,
+                "generated_at": datetime.now().isoformat(),
+                "modules": {}
+            }
+        else:
+            logger.info(f"✅ Using assembled_data from pipeline ({len(assembled_data.get('modules', {}))} modules)")
+        
+        # Set or update metadata
+        assembled_data["context_id"] = context_id
+        assembled_data["parcel_id"] = request.parcel_id
+        if "generated_at" not in assembled_data:
+            assembled_data["generated_at"] = datetime.now().isoformat()
+        
+        # Add m6_result for backward compatibility
+        if "m6_result" not in assembled_data and "modules" in assembled_data and "M6" in assembled_data["modules"]:
+            m6_summary = assembled_data["modules"]["M6"].get("summary", {})
+            assembled_data["m6_result"] = {
+                "lh_score_total": m6_summary.get("total_score", 0),
+                "judgement": m6_summary.get("decision", "N/A"),
+                "grade": m6_summary.get("grade", "N/A"),
                 "fatal_reject": False,
-                "deduction_reasons": to_serializable(getattr(result.lh_review, 'deduction_reasons', [])),
-                "improvement_points": to_serializable(getattr(result.lh_review, 'improvement_suggestions', [])),
-                "section_scores": to_serializable(getattr(result.lh_review, 'section_scores', {}))
-            },
-            "modules": {
-                "M2": {
-                    "summary": {
-                        "land_value": result.appraisal.land_value,
-                        "land_value_per_pyeong": result.appraisal.land_value_per_pyeong if hasattr(result.appraisal, 'land_value_per_pyeong') else result.appraisal.land_value / result.land.area_pyeong if result.land.area_pyeong > 0 else 0,
-                        "confidence_pct": result.appraisal.confidence_metrics.confidence_score * 100,
-                        "appraisal_method": result.appraisal.appraisal_method if hasattr(result.appraisal, 'appraisal_method') else 'standard',
-                        "price_range": {
-                            "low": result.appraisal.land_value * 0.85,
-                            "high": result.appraisal.land_value * 1.15
-                        }
-                    },
-                    "details": {},
-                    "raw_data": {}
-                },
-                "M3": {
-                    "summary": {
-                        "recommended_type": result.housing_type.selected_type,
-                        "total_score": getattr(result.housing_type, 'total_score', 85.0),
-                        "demand_score": getattr(result.housing_type, 'demand_score', 90.0),
-                        "type_scores": {
-                            type_key: {
-                                "type_name": score.type_name,
-                                "type_code": score.type_code,
-                                "total_score": score.total_score,
-                                "location_score": score.location_score,
-                                "accessibility_score": score.accessibility_score,
-                                "poi_score": score.poi_score,
-                                "demand_prediction": score.demand_prediction
-                            }
-                            for type_key, score in getattr(result.housing_type, 'type_scores', {}).items()
-                        } if hasattr(result.housing_type, 'type_scores') else {}
-                    },
-                    "details": {},
-                    "raw_data": {}
-                },
-                "M4": {
-                    "summary": to_serializable(result.capacity),
-                    "details": {},
-                    "raw_data": {}
-                },
-                "M5": {
-                    "summary": to_serializable(result.feasibility),
-                    "details": {},
-                    "raw_data": {}
-                },
-                "M6": {
-                    "summary": to_serializable(result.lh_review),
-                    "details": {},
-                    "raw_data": {}
-                }
-            },
-            "_frozen": True,
-            "_context_id": context_id
-        }
-        logger.info(f"💾 Step 5: Saving context {context_id}")
+                "deduction_reasons": m6_summary.get("deduction_reasons", []),
+                "improvement_points": m6_summary.get("improvement_suggestions", []),
+                "section_scores": m6_summary.get("section_scores", {})
+            }
+        logger.info(f"💾 Step 5: Saving assembled_data to storage {context_id}")
         
         tracer.set_stage(PipelineStage.SAVE)
         try:
-            success = context_storage.store_frozen_context(
+            # 🔥 NEW: Save assembled_data using save_assembled_data (Redis + DB)
+            from app.services.context_storage import context_storage
+            success = context_storage.save_assembled_data(
                 context_id=context_id,
-                land_context=assembled_data,
-                ttl_hours=24,
-                parcel_id=request.parcel_id
+                assembled_data=assembled_data,
+                ttl_hours=24
             )
             
             if success:
-                logger.info(f"✅ Context saved: {context_id}")
+                logger.info(f"✅ assembled_data saved to Redis + DB: {context_id}")
+                logger.info(f"   Modules saved: {list(assembled_data.get('modules', {}).keys())}")
             else:
-                logger.warning(f"⚠️ store_frozen_context returned False for: {context_id}")
+                logger.warning(f"⚠️ save_assembled_data returned False for: {context_id}")
         except Exception as storage_err:
             logger.error(f"⚠️ Failed to save to context_storage: {storage_err}", exc_info=True)
             raise tracer.wrap(
