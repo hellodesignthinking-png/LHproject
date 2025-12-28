@@ -4320,6 +4320,24 @@ M6는 <b>"LH가 이 사업을 승인할 것인가"</b>를 예측하며, M5와 �
             decision_text = decision.get('type', 'N/A')
             rationale = decision.get('rationale', 'N/A')
         
+        # 🛡️ 방어 로직: decision이 'N/A'이지만 점수가 있으면 점수 기준으로 판정 추정
+        if decision_text == 'N/A' and m6_score > 0:
+            logger.warning(f"⚠️  M6 데이터 불일치: decision='N/A'이지만 총점 {m6_score:.1f}점 존재")
+            logger.warning("⚠️  총점 기준으로 판정을 추정합니다")
+            
+            # 110점 만점 기준으로 판정 추정
+            if m6_score >= 80:
+                decision_text = "GO (추정)"
+                rationale = f"본 사업지는 종합 점수 {m6_score:.1f}/110점으로 우수한 평가를 받았습니다. (데이터 불일치로 인한 추정값)"
+            elif m6_score >= 60:
+                decision_text = "CONDITIONAL (추정)"
+                rationale = f"본 사업지는 종합 점수 {m6_score:.1f}/110점으로 조건부 승인 구간에 해당합니다. (데이터 불일치로 인한 추정값)"
+            else:
+                decision_text = "NO-GO (추정)"
+                rationale = f"본 사업지는 종합 점수 {m6_score:.1f}/110점으로 개선이 필요합니다. (데이터 불일치로 인한 추정값)"
+            
+            logger.info(f"   추정 판정: {decision_text}")
+        
         # 🟢 단일 데이터 소스: 위에서 정의한 m6_score 사용 (SSOT)
         final_total_score = m6_score
         
@@ -4346,6 +4364,24 @@ M6는 <b>"LH가 이 사업을 승인할 것인가"</b>를 예측하며, M5와 �
         # 🔥 SINGLE SOURCE: summary 필드 우선 사용
         summary = data.get('summary', {})
         scores = data.get('scores', {})
+        
+        # 🛡️ 방어 로직: 세부 점수가 모두 0이지만 총점이 있으면 역산하여 추정
+        if (scores.get('location', 0) == 0 and 
+            scores.get('scale', 0) == 0 and 
+            scores.get('feasibility', 0) == 0 and 
+            scores.get('compliance', 0) == 0 and 
+            m6_score > 0):
+            logger.warning(f"⚠️  M6 데이터 불일치: 세부 점수 모두 0이지만 총점 {m6_score:.1f}점 존재")
+            logger.warning("⚠️  세부 점수를 총점 기준으로 추정합니다 (입지 35, 규모 15, 사업성 40, 준수 20 비율)")
+            
+            # 110점 만점 기준으로 비율 계산하여 역산
+            scores = {
+                'location': round(m6_score * (35/110), 1),      # 31.8% → 27.0점
+                'scale': round(m6_score * (15/110), 1),         # 13.6% → 11.6점
+                'feasibility': round(m6_score * (40/110), 1),   # 36.4% → 30.9점
+                'compliance': round(m6_score * (20/110), 1)     # 18.2% → 15.5점
+            }
+            logger.info(f"   추정 세부 점수: 입지={scores['location']}, 규모={scores['scale']}, 사업성={scores['feasibility']}, 준수={scores['compliance']}")
         total_score = summary.get('total_score') or scores.get('total', 0)  # summary 우선
         
         scores_data = [
