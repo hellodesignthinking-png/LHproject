@@ -742,6 +742,19 @@ class ModulePDFGenerator:
         story.append(stacked_bar_v42)
         story.append(Spacer(1, 0.3*inch))
         
+        # 🔥 v4.7 FINAL LOCK: 강제 문장 삽입
+        structural_premium_declaration = f"""
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+<b style="font-size:13pt; color:#1F3A5F;">🎯 M2 핵심 결론 (FINAL LOCK)</b><br/>
+<br/>
+<b style="font-size:12pt; color:#DC2626;">본 토지가치는 단기 시장 과열이 아닌<br/>
+구조적 요인이 중첩되어 형성된 가치로 판단된다.</b><br/>
+<br/>
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+"""
+        story.append(Paragraph(structural_premium_declaration, styles['Normal']))
+        story.append(Spacer(1, 0.25*inch))
+        
         value_formation_logic = f"""
 <b>■ 토지가치 형성 요인 해석</b><br/>
 <br/>
@@ -1738,6 +1751,24 @@ M4~M6 모듈의 분석을 뒷받침하는 <b>기초 데이터 엔진의 역할</
 """
         story.append(Paragraph(conclusion_text, styles['Normal']))
         story.append(Spacer(1, 0.2*inch))
+        
+        # 🔥 v4.7 FINAL LOCK: M2→M3 연결 문장 강제 삽입
+        m2_to_m3_link = f"""
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+<b style="font-size:13pt; color:#3B82F6;">▶ 다음 단계: M3 LH 선호유형 분석</b><br/>
+<br/>
+본 토지가치 분석(M2)은 토지의 구조적 가치를 확인하였으며,<br/>
+<b>다음 단계인 M3에서는 이 토지에서 어떤 생활 패턴이 형성되는지 분석</b>합니다.<br/>
+<br/>
+M2의 입지 프리미엄 분석 → M3의 생활 편의시설 접근성 분석<br/>
+M2의 희소성 분석 → M3의 청년층/신혼부부 수요 집중도 분석<br/>
+<br/>
+<b>M3는 유형을 추천하지 않으며</b>, 이 입지에서 자연스럽게 형성될<br/>
+<b>거주자 패턴을 객관적으로 설명</b>하는 역할을 수행합니다.<br/>
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+"""
+        story.append(Paragraph(m2_to_m3_link, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
         
         # 면책사항
         story.append(Paragraph("면책사항", heading_style))
@@ -2982,6 +3013,39 @@ M6에서 본 분석 결과를 바탕으로 '유형 적합성', '배후 수요', 
         story.append(Paragraph(stability_meaning, styles['Normal']))
         story.append(Spacer(1, 0.3*inch))
         
+        # 🔥 v4.7 FINAL LOCK: 면책 선언 및 M3→M4 연결 강제 삽입
+        disclaimer_lock = f"""
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+<b style="font-size:13pt; color:#DC2626;">🚨 면책 선언 (FINAL LOCK)</b><br/>
+<br/>
+<b style="font-size:12pt; color:#DC2626;">본 분석은 유형을 추천하지 않으며,<br/>
+이 입지에서 자연스럽게 형성될 생활 패턴을 객관적으로 설명한다.</b><br/>
+<br/>
+본 M3 보고서는 LH 유형 추천서가 아니며,<br/>
+<b>유형 결정 권한은 전적으로 LH 공사와 사업 주체에 있음</b>을 명시합니다.<br/>
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+"""
+        story.append(Paragraph(disclaimer_lock, styles['Normal']))
+        story.append(Spacer(1, 0.25*inch))
+        
+        m3_to_m4_link = f"""
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+<b style="font-size:13pt; color:#3B82F6;">▶ 다음 단계: M4 건축규모 결정 분석</b><br/>
+<br/>
+본 선호유형 분석(M3)은 <b>{selected_name}</b> 패턴을 확인하였으며,<br/>
+<b>다음 단계인 M4에서는 이 패턴에 최적화된 건축 규모를 분석</b>합니다.<br/>
+<br/>
+M3의 청년형 1인 가구 → M4의 세대수/면적 최적화<br/>
+M3의 생활편의시설 접근성 → M4의 주차장 수요 조정<br/>
+M3의 유형 안정성 등급 → M4의 법정 용적률 반영 수준 결정<br/>
+<br/>
+<b>M4는 법정 최대치를 제시하지 않으며</b>,<br/>
+<b>M6 LH 심사 통과 가능성을 최우선으로 고려한 실행 가능 규모</b>를 제시합니다.<br/>
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+"""
+        story.append(Paragraph(m3_to_m4_link, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
         # 7. 메타데이터
         metadata = data.get('metadata', {})
         if metadata:
@@ -3980,6 +4044,48 @@ M4 시나리오 A, B, C → M5 총 사업비 산정 → LH 매입가 역산 → 
             logger.warning(f"Chart generation failed: {e}")
             story.append(Paragraph("차트 생성 실패", styles['Italic']))
         
+        # 🔥 v4.7 FINAL LOCK: M4 핵심 결론 강제 삽입
+        story.append(Spacer(1, 0.3*inch))
+        m4_final_conclusion = f"""
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+<b style="font-size:13pt; color:#1F3A5F;">🎯 M4 핵심 결론 (FINAL LOCK)</b><br/>
+<br/>
+<b style="font-size:12pt; color:#DC2626;">본 건축규모는 최대 수익을 추구하지 않으며,<br/>
+M6 LH 심사 Hard Fail 회피를 위한 전략적 선택이다.</b><br/>
+<br/>
+<b>선택된 규모: {legal_capacity.get('total_units', 0)}세대 (법정 용적률 기준)</b><br/>
+<br/>
+이 선택은 다음 원칙을 따른다:<br/>
+• 법정 최대를 추구하지 않는다 (과도한 밀도 회피)<br/>
+• M3 선호유형 패턴과 규모가 일치해야 한다<br/>
+• M5 사업성이 안정형 구조를 유지해야 한다<br/>
+• M6 LH 심사에서 Hard Fail 요소가 없어야 한다<br/>
+<br/>
+<b>→ 이 규모는 수익 극대화가 아닌, 실행 가능성 최적화를 목표로 한다.</b><br/>
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+"""
+        story.append(Paragraph(m4_final_conclusion, styles['Normal']))
+        story.append(Spacer(1, 0.25*inch))
+        
+        # 🔥 v4.7 FINAL LOCK: M4→M5 연결 문장
+        m4_to_m5_link = f"""
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+<b style="font-size:13pt; color:#3B82F6;">▶ 다음 단계: M5 사업성 분석</b><br/>
+<br/>
+본 건축규모 분석(M4)은 <b>{legal_capacity.get('total_units', 0)}세대</b>를 최적 규모로 제시하였으며,<br/>
+<b>다음 단계인 M5에서는 이 규모 기반 사업 수익 구조를 분석</b>합니다.<br/>
+<br/>
+M4의 세대수 → M5의 총 수익 계산<br/>
+M4의 주차 솔루션 → M5의 건축비 추정<br/>
+M4의 법정 용적률 준수 → M5의 리스크 최소화 구조<br/>
+<br/>
+<b>M5는 고수익 사업을 제시하지 않으며</b>,<br/>
+<b>예측 가능한 안정형 수익 구조</b>를 제시합니다.<br/>
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+"""
+        story.append(Paragraph(m4_to_m5_link, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
         # PDF 생성 (워터마크 + 카피라이트 적용)
         doc.build(story, onFirstPage=self._add_watermark_and_footer, onLaterPages=self._add_watermark_and_footer)
         buffer.seek(0)
@@ -4760,6 +4866,48 @@ M5에서 '사업성 OK' 판단을 받았으나, 최종 Go/No-Go 결정은 <b>M6 
 <b>→ M5 '사업성 우수' + M6 '승인 가능성 높음' = 최종 사업 추진 결정</b><br/>
 """
         story.append(Paragraph(m5_conclusion, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 🔥 v4.7 FINAL LOCK: M5 포지션 선언
+        m5_position_declaration = f"""
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+<b style="font-size:13pt; color:#1F3A5F;">📊 M5 포지션 선언 (FINAL LOCK)</b><br/>
+<br/>
+<b style="font-size:12pt; color:#16A34A;">본 모듈은 최종 결론을 내리지 않는다.</b><br/>
+<br/>
+M5 사업성 분석은 <b>재무적 실행 가능성을 확인</b>하는 역할이며,<br/>
+<b>최종 Go/No-Go 결정은 M6 LH 심사예측에서 이루어진다.</b><br/>
+<br/>
+본 사업의 특성:<br/>
+• 고수익 추구형 사업이 <b>아니다</b><br/>
+• 예측 가능한 안정형 수익 구조를 목표로 한다<br/>
+• 분양 리스크·시장 타이밍 리스크가 <b>구조적으로 제거</b>되었다<br/>
+• LH 매입 확약으로 금융 리스크가 <b>최소화</b>된다<br/>
+<br/>
+<b>→ M5는 '사업성 OK'를 확인하였으나, 최종 판단은 M6가 수행한다.</b><br/>
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+"""
+        story.append(Paragraph(m5_position_declaration, styles['Normal']))
+        story.append(Spacer(1, 0.25*inch))
+        
+        # 🔥 v4.7 FINAL LOCK: M5→M6 연결 문장
+        m5_to_m6_link = f"""
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+<b style="font-size:13pt; color:#3B82F6;">▶ 다음 단계: M6 LH 심사예측 (최종 판단)</b><br/>
+<br/>
+본 사업성 분석(M5)은 재무적 타당성을 확인하였으며,<br/>
+<b>다음 단계인 M6에서 M2→M3→M4→M5의 결과를 종합하여<br/>
+LH 심사 통과 가능성을 최종 판단</b>합니다.<br/>
+<br/>
+M5의 수익률 {scenarios[0].get('profit_margin', 0) if len(scenarios) > 0 else 0:.1f}% → M6의 사업성 점수<br/>
+M5의 안정형 구조 → M6의 리스크 평가<br/>
+M5의 진행 타당 → M6의 GO/CONDITIONAL/NO-GO 최종 결정<br/>
+<br/>
+<b>M6는 모든 모듈의 필연적 귀결을 제시하며</b>,<br/>
+<b>3초 내 LH 심사 통과 가능성을 판단</b>할 수 있도록 구성됩니다.<br/>
+<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+"""
+        story.append(Paragraph(m5_to_m6_link, styles['Normal']))
         story.append(Spacer(1, 0.3*inch))
         
         # PDF 생성 (워터마크 + 카피라이트 적용)
