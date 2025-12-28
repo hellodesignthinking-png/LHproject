@@ -308,6 +308,215 @@ class ConsultingDesignHelpers:
         ]))
         
         return badge_table
+    
+    def create_4step_diagram(self, steps: List[Dict[str, str]], title: str = "4-Step Process") -> Table:
+        """
+        4-Step Diagram (프로세스 단계 시각화)
+        
+        M4 건축규모 축소 논리 등에 사용
+        
+        Args:
+            steps: 각 단계 정보 [{"number": "1", "title": "...", "desc": "..."}, ...]
+            title: 다이어그램 제목
+        
+        Returns:
+            Table: 4단계 다이어그램 테이블
+        """
+        from reportlab.platypus import Spacer
+        
+        # 스타일 정의
+        step_title_style = ParagraphStyle(
+            'StepTitle',
+            fontName=self.theme.typography.font_bold,
+            fontSize=11,
+            textColor=self.theme.colors.primary,
+            alignment=TA_CENTER,
+            spaceAfter=3,
+        )
+        
+        step_desc_style = ParagraphStyle(
+            'StepDesc',
+            fontName=self.theme.typography.font_regular,
+            fontSize=9,
+            textColor=self.theme.colors.text_body,
+            alignment=TA_CENTER,
+            leading=12,
+        )
+        
+        step_number_style = ParagraphStyle(
+            'StepNumber',
+            fontName=self.theme.typography.font_bold,
+            fontSize=16,
+            textColor=colors.white,
+            alignment=TA_CENTER,
+        )
+        
+        # 각 단계 셀 생성
+        step_cells = []
+        for step in steps:
+            number = step.get('number', '?')
+            step_title = step.get('title', '')
+            desc = step.get('desc', '')
+            
+            # 숫자 배지
+            number_para = Paragraph(f"<b>{number}</b>", step_number_style)
+            number_cell = Table([[number_para]], colWidths=[1*cm])
+            number_cell.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('BACKGROUND', (0, 0), (-1, -1), self.theme.colors.accent),
+                ('ROUNDEDCORNERS', [0.3*cm, 0.3*cm, 0.3*cm, 0.3*cm]),
+            ]))
+            
+            title_para = Paragraph(step_title, step_title_style)
+            desc_para = Paragraph(desc, step_desc_style)
+            
+            # 단계 컨테이너
+            step_container = Table(
+                [[number_cell], [title_para], [desc_para]],
+                colWidths=[3.5*cm]
+            )
+            step_container.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ]))
+            
+            step_cells.append(step_container)
+        
+        # 4개 단계를 가로로 배치
+        main_table = Table([step_cells], colWidths=[3.5*cm] * len(steps))
+        main_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#F8FAFC')),
+            ('BOX', (0, 0), (-1, -1), 1, self.theme.colors.border),
+            ('INNERGRID', (0, 0), (-1, -1), 0.5, self.theme.colors.border),
+            ('LEFTPADDING', (0, 0), (-1, -1), 4),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        
+        return main_table
+    
+    def create_radar_chart_placeholder(self, categories: List[str], values: List[float], title: str = "Stability Analysis") -> Table:
+        """
+        레이더 차트 플레이스홀더 (간단한 테이블 형식)
+        
+        실제 matplotlib 레이더 차트는 복잡하므로, 간단한 바 형식으로 대체
+        
+        Args:
+            categories: 평가 항목 리스트
+            values: 각 항목의 값 (0-100)
+            title: 차트 제목
+        
+        Returns:
+            Table: 레이더 차트 대체 테이블
+        """
+        # 간단한 바 차트 스타일 테이블
+        data = [['항목', '점수', '평가']]
+        
+        for cat, val in zip(categories, values):
+            # 점수에 따른 평가
+            if val >= 80:
+                evaluation = "우수"
+                color_bg = colors.HexColor('#D4EDDA')
+            elif val >= 60:
+                evaluation = "양호"
+                color_bg = colors.HexColor('#FFF3CD')
+            else:
+                evaluation = "개선필요"
+                color_bg = colors.HexColor('#F8D7DA')
+            
+            data.append([cat, f"{val:.0f}점", evaluation])
+        
+        table = Table(data, colWidths=[6*cm, 3*cm, 3*cm])
+        table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BACKGROUND', (0, 0), (-1, 0), self.theme.colors.primary),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), self.theme.typography.font_bold),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 0.5, self.theme.colors.border),
+        ]))
+        
+        return table
+    
+    def create_module_linkage_diagram(self, modules: List[Dict[str, str]], final_decision: str) -> Table:
+        """
+        모듈 연계 다이어그램 (M6용)
+        
+        M1-M5가 M6로 수렴하는 구조 시각화
+        
+        Args:
+            modules: 모듈 정보 [{"name": "M2", "label": "토지가치", "status": "✅"}, ...]
+            final_decision: 최종 결정 텍스트
+        
+        Returns:
+            Table: 모듈 연계 다이어그램
+        """
+        module_style = ParagraphStyle(
+            'ModuleLabel',
+            fontName=self.theme.typography.font_regular,
+            fontSize=9,
+            textColor=self.theme.colors.text_body,
+            alignment=TA_CENTER,
+        )
+        
+        decision_style = ParagraphStyle(
+            'FinalDecision',
+            fontName=self.theme.typography.font_bold,
+            fontSize=12,
+            textColor=self.theme.colors.primary,
+            alignment=TA_CENTER,
+        )
+        
+        # 모듈 셀들
+        module_cells = []
+        for mod in modules:
+            name = mod.get('name', '')
+            label = mod.get('label', '')
+            status = mod.get('status', '')
+            
+            cell_text = f"{status}<br/><b>{name}</b><br/>{label}"
+            para = Paragraph(cell_text, module_style)
+            
+            module_cells.append([para])
+        
+        # 모듈 테이블
+        module_table = Table(module_cells, colWidths=[2.5*cm], rowHeights=[1.5*cm] * len(modules))
+        module_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#EFF6FF')),
+            ('BOX', (0, 0), (-1, -1), 1, self.theme.colors.accent),
+            ('INNERGRID', (0, 0), (-1, -1), 0.5, self.theme.colors.border),
+        ]))
+        
+        # 화살표
+        arrow_para = Paragraph("→", decision_style)
+        
+        # 최종 결정 박스
+        decision_para = Paragraph(f"<b>M6 최종 판단</b><br/>{final_decision}", decision_style)
+        decision_box = Table([[decision_para]], colWidths=[5*cm], rowHeights=[3*cm])
+        decision_box.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#DBEAFE')),
+            ('BOX', (0, 0), (-1, -1), 2, self.theme.colors.primary),
+        ]))
+        
+        # 전체 레이아웃
+        layout_table = Table([[module_table, arrow_para, decision_box]], colWidths=[3*cm, 2*cm, 5.5*cm])
+        layout_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        
+        return layout_table
 
 
 # Singleton instance for easy import
@@ -318,4 +527,10 @@ consulting_helpers = ConsultingDesignHelpers()
 __all__ = [
     'ConsultingDesignHelpers',
     'consulting_helpers',
+    'create_executive_insight_box',
+    'create_flow_diagram',
+    'create_horizontal_range_bar',
+    'create_lifestyle_cards',
+    'create_comparison_cards',
+    'create_final_decision_badge',
 ]
