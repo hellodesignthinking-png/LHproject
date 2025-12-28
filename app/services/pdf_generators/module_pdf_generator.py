@@ -2557,6 +2557,117 @@ LH 매입임대 사업에서는 일반적으로 <b>법정 용적률의 80-90% �
         story.append(parking_table)
         story.append(Spacer(1, 0.3*inch))
         
+        # ========== PHASE 3-2: 설계 리스크 요약 ==========
+        story.append(Paragraph("3-2. 설계 리스크 요약", heading_style))
+        
+        risk_intro = """
+<b>■ 법정 최대 규모 추구 시 설계 리스크</b><br/>
+<br/>
+법정 용적률을 최대한 활용하려는 경우, 다음 3가지 설계 리스크가 발생할 수 있습니다.<br/>
+각 리스크는 건축허가, 민원, 거주 쾌적성에 직접적인 영향을 미칩니다.<br/>
+"""
+        story.append(Paragraph(risk_intro, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # 리스크 항목들 (데이터 기반 조건부 출력)
+        risk_items = []
+        
+        # ① 주차 리스크
+        legal_units = legal_capacity.get('total_units', 0)
+        required_parking = int(legal_units * 1.2)  # 1.2대/세대 가정
+        
+        risk_items.append({
+            'title': '① 주차 확보 리스크',
+            'description': f"""
+법정 최대 <b>{legal_units}세대</b> 달성 시 필요 주차대수는 약 <b>{required_parking}대</b>입니다.
+지상 주차로는 부족하여 지하 주차장 추가 굴착이 필요하며,
+이는 <b>공사비 증가 + 공사 기간 연장</b>으로 이어집니다.
+""",
+            'impact': f'건축비 약 +15~20% 증가 (지하층당 약 {int(legal_capacity.get("gross_floor_area", 0) * 0.05):,}원)',
+            'mitigation': [
+                '• 기계식 주차 도입: 지하 1-2층에 2단 기계식 설치',
+                '• 주차 공유: 인근 공영주차장과 협약',
+                '• 세대수 조정: LH 권장 범위로 축소 → 주차 부담 감소'
+            ]
+        })
+        
+        # ② 일조권 리스크
+        max_floors = max([opt.get('floors', 0) for opt in data.get('massing_options', [])] or [15])
+        
+        risk_items.append({
+            'title': '② 일조권 침해 리스크',
+            'description': f"""
+법정 최대 규모를 위해 <b>{max_floors}층 이상</b>으로 계획할 경우,
+인접 대지 및 기존 건물에 대한 <b>일조권 침해 가능성</b>이 있습니다.
+특히 남측에 기존 저층 주택이 있는 경우 민원 및 소송 리스크가 높습니다.
+""",
+            'impact': '공사 지연 (민원 협의 3-6개월), 설계 변경 (층수 축소)',
+            'mitigation': [
+                '• 일조 시뮬레이션: 설계 단계에서 일조권 사전 검토',
+                '• 인접 대지 협의: 보상 또는 대안 제시',
+                '• 배치 최적화: 남측 이격 거리 확대, 동 배치 조정'
+            ]
+        })
+        
+        # ③ 배치 및 동선 리스크
+        land_area = legal_capacity.get('site_area', 0)
+        
+        risk_items.append({
+            'title': '③ 단지 배치 및 동선 리스크',
+            'description': f"""
+대지면적 <b>{land_area:,.0f}㎡</b>에 법정 최대 규모를 배치하면
+<b>건물 간 이격 거리 부족</b> 및 <b>차량 동선 간섭</b> 문제가 발생합니다.
+특히 지하 주차장 진입 램프와 단지 내 보행로가 겹치는 경우
+거주자 안전 및 편의성이 저하됩니다.
+""",
+            'impact': '거주 만족도 저하, LH 심사 시 감점 요인',
+            'mitigation': [
+                '• 동 배치 시뮬레이션: 3-5가지 배치 대안 비교',
+                '• 동선 분리: 차량 동선과 보행 동선 명확히 분리',
+                '• 조경 확보: 법정 조경률 이상 확보로 쾌적성 보완',
+                '• LH 권장 범위 적용: 세대수 축소로 배치 여유 확보'
+            ]
+        })
+        
+        # 리스크 항목 출력
+        for idx, item in enumerate(risk_items, 1):
+            # 리스크 제목
+            story.append(Paragraph(f"<b>{item['title']}</b>", styles['Normal']))
+            story.append(Spacer(1, 0.1*inch))
+            
+            # 리스크 설명
+            story.append(Paragraph(item['description'].strip(), styles['Normal']))
+            story.append(Spacer(1, 0.1*inch))
+            
+            # 예상 영향
+            impact_text = f"<b>• 예상 영향:</b> {item['impact']}"
+            story.append(Paragraph(impact_text, styles['Normal']))
+            story.append(Spacer(1, 0.1*inch))
+            
+            # 완화 방안
+            mitigation_text = "<b>• 완화 방안:</b><br/>"
+            for sol in item['mitigation']:
+                mitigation_text += f"  {sol}<br/>"
+            story.append(Paragraph(mitigation_text, styles['Normal']))
+            story.append(Spacer(1, 0.2*inch))
+        
+        # 종합 의견
+        risk_summary = f"""
+<b>■ 설계 리스크 관리 전략</b><br/>
+<br/>
+위 3가지 리스크는 <b>법정 최대 규모를 포기하고 LH 권장 범위(80-90%)로 축소</b>하면
+대부분 해결 가능합니다.<br/>
+<br/>
+<b>→ M5 사업성 분석에서 다음을 비교합니다:</b><br/>
+• <b>Option A (법정 최대):</b> 세대수 최대 → 매출 ↑, 건축비 ↑↑, 리스크 ↑↑<br/>
+• <b>Option B (LH 권장):</b> 세대수 85% → 매출 ↓, 건축비 ↓, 리스크 ↓↓<br/>
+• <b>Option C (보수적):</b> 세대수 80% → 매출 ↓↓, 건축비 ↓, LH 심사 통과율 ↑↑<br/>
+<br/>
+<b>최종 선택은 M6 LH 검토 예측과 결합하여 결정됩니다.</b><br/>
+"""
+        story.append(Paragraph(risk_summary, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
         # 4. 매싱 옵션 비교 (주차 제약 이후 배치)
         story.append(Paragraph("4. 매싱 옵션 비교 (주차 조건 반영)", heading_style))
         massing_options = data.get('massing_options', [])
