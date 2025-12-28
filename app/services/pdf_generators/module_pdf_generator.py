@@ -488,8 +488,99 @@ class ModulePDFGenerator:
         story.append(range_table)
         story.append(Spacer(1, 0.3*inch))
         
-        # ========== 4. M4~M6 모듈 연계 안내 ==========
-        story.append(Paragraph("4. 후속 모듈 연계", heading_style))
+        # ========== 4. 비교사례 분석 (PHASE 1-1 추가) ==========
+        story.append(Paragraph("4. 비교사례 분석", heading_style))
+        
+        # M2 context에서 transaction_samples 추출
+        m2_context = assembled_data.get("modules", {}).get("M2", {}).get("context", {})
+        transaction_samples = m2_context.get("transaction_samples", [])
+        
+        if transaction_samples and len(transaction_samples) >= 5:
+            # 비교사례 설명
+            comparison_intro = """
+<b>■ 토지가격 산정의 근거</b><br/>
+<br/>
+본 토지의 감정평가액은 유사한 거래사례를 분석하여 산정되었습니다.<br/>
+아래는 본 토지와 유사한 입지 조건을 가진 실거래 사례입니다.<br/>
+"""
+            story.append(Paragraph(comparison_intro, styles['Normal']))
+            story.append(Spacer(1, 0.2*inch))
+            
+            # 비교사례 테이블 생성 (최소 5건)
+            comparison_data = [
+                ['거래일자', '위치', '면적(㎡)', '거래금액(원)', '㎡당 단가(원)']
+            ]
+            
+            total_price_per_sqm = 0
+            prices_list = []
+            
+            for i, sample in enumerate(transaction_samples[:10]):  # 최대 10건
+                # 주소 마스킹 (동 단위까지만)
+                address = sample.get('address', '')
+                if ' ' in address:
+                    parts = address.split(' ')
+                    masked_address = ' '.join(parts[:3]) + ' ***'
+                else:
+                    masked_address = address[:10] + '***'
+                
+                trans_date = sample.get('transaction_date', 'N/A')
+                area_sqm = sample.get('area_sqm', 0)
+                price_total = sample.get('price_total', 0)
+                price_per_sqm = sample.get('price_per_sqm', 0)
+                
+                comparison_data.append([
+                    trans_date,
+                    masked_address,
+                    f"{area_sqm:,.1f}",
+                    f"{price_total:,.0f}",
+                    f"{price_per_sqm:,.0f}"
+                ])
+                
+                total_price_per_sqm += price_per_sqm
+                prices_list.append(price_per_sqm)
+            
+            # 테이블 생성
+            comparison_table = Table(
+                comparison_data,
+                colWidths=[2.5*cm, 4*cm, 2.5*cm, 3.5*cm, 3.5*cm]
+            )
+            comparison_table.setStyle(self._create_table_style(self.color_primary))
+            story.append(comparison_table)
+            story.append(Spacer(1, 0.3*inch))
+            
+            # 통계 요약
+            if prices_list:
+                avg_price = sum(prices_list) / len(prices_list)
+                median_price = sorted(prices_list)[len(prices_list) // 2]
+                applied_price = unit_price_sqm
+                
+                summary_text = f"""
+<b>■ 비교사례 통계 요약</b><br/>
+<br/>
+<b>분석 사례 수:</b> {len(prices_list)}건<br/>
+<b>평균 단가:</b> {avg_price:,.0f}원/㎡<br/>
+<b>중앙값 단가:</b> {median_price:,.0f}원/㎡<br/>
+<b>본 건 적용 단가:</b> {applied_price:,.0f}원/㎡<br/>
+<br/>
+본 토지의 감정평가액은 상기 거래사례의 단가를 기준으로,<br/>
+입지 조건, 거래 시점, 용도지역 등을 종합 고려하여 산정되었습니다.<br/>
+"""
+                story.append(Paragraph(summary_text, styles['Normal']))
+                story.append(Spacer(1, 0.3*inch))
+            
+        else:
+            # 거래사례가 부족한 경우
+            no_data_text = """
+<b>■ 비교사례 데이터</b><br/>
+<br/>
+현재 충분한 거래사례 데이터가 확보되지 않았습니다.<br/>
+본 감정평가액은 공시지가 및 기타 평가 기법을 종합하여 산정되었습니다.<br/>
+"""
+            story.append(Paragraph(no_data_text, styles['Normal']))
+            story.append(Spacer(1, 0.3*inch))
+        
+        # ========== 5. M4~M6 모듈 연계 안내 ==========
+        story.append(Paragraph("5. 후속 모듈 연계", heading_style))
         
         next_steps = """
 <b>■ 토지가치와 후속 분석의 연관성</b><br/>
@@ -514,8 +605,8 @@ M2~M6 종합 검토 후 사업 진행 여부 판단<br/>
         story.append(Paragraph(next_steps, styles['Normal']))
         story.append(Spacer(1, 0.3*inch))
         
-        # ========== 5. 보고서 사용 시 주의사항 ==========
-        story.append(Paragraph("5. 보고서 사용 시 주의사항", heading_style))
+        # ========== 6. 보고서 사용 시 주의사항 ==========
+        story.append(Paragraph("6. 보고서 사용 시 주의사항", heading_style))
         
         disclaimer = """
 <b>■ 본 보고서의 한계</b><br/>
