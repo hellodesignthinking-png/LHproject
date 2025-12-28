@@ -22,31 +22,31 @@ from typing import Dict, Any
 
 @dataclass
 class ZeroSiteColors:
-    """ZeroSite Brand Color Palette (v4.2 FINAL - 100% Consulting Grade)"""
-    # Primary Colors (프롬프트 요구사항 정확히 반영)
-    primary = colors.HexColor('#0A1E3C')  # Primary Navy (프롬프트 스펙: #0A1E3C)
-    primary_light = colors.HexColor('#2F6BFF')  # Accent Blue (프롬프트 스펙: #2F6BFF)
+    """ZeroSite Brand Color Palette (v4.4 FINAL - McKinsey-Grade Consulting)"""
+    # Primary Colors (컨설팅 표준)
+    primary = colors.HexColor('#0A2540')  # Primary Navy (더 진한 프로페셔널 네이비)
+    primary_light = colors.HexColor('#2563EB')  # Accent Blue (더 선명한 블루)
     primary_dark = colors.HexColor('#071526')
     
     # Accent Colors (핵심 수치/결론)
-    accent = colors.HexColor('#2F6BFF')  # Accent Blue (프롬프트 스펙)
+    accent = colors.HexColor('#2563EB')  # Accent Blue
     accent_light = colors.HexColor('#5B8FFF')
     
-    # Status Colors (판단 상태 - 프롬프트 기준)
-    success = colors.HexColor('#15803D')  # Positive Green (프롬프트 스펙: #15803D)
-    warning = colors.HexColor('#F5A623')  # Warning Amber (조건부)
-    danger = colors.HexColor('#C2410C')  # Risk Red (프롬프트 스펙: #C2410C)
+    # Status Colors (판단 상태 - 컨설팅 표준)
+    success = colors.HexColor('#16A34A')  # Positive Green (더 진한 그린)
+    warning = colors.HexColor('#F59E0B')  # Warning Amber (더 선명한 앰버)
+    danger = colors.HexColor('#DC2626')  # Risk Red (더 강한 레드)
     positive_green = success  # Alias
     risk_red = danger  # Alias
     
-    # Neutral Colors (그레이스케일 - 프롬프트 기준)
-    neutral_gray = colors.HexColor('#6B7280')  # Neutral Gray (프롬프트 스펙: #6B7280)
-    background = colors.HexColor('#F4F6F8')  # Light background
+    # Neutral Colors (그레이스케일)
+    neutral_gray = colors.HexColor('#6B7280')  # Neutral Gray
+    background = colors.HexColor('#F8FAFC')  # Light background (더 밝은 배경)
     background_medium = colors.HexColor('#D0D4DA')  # Medium gray
     text_secondary = neutral_gray  # Body gray
     
     # Text Colors
-    text_primary = colors.HexColor('#0A1E3C')  # Primary Navy (제목용)
+    text_primary = colors.HexColor('#0A2540')  # Primary Navy (제목용)
     text_light = colors.HexColor('#9CA3AF')  # Light gray
     
     border = colors.HexColor('#E2E8F0')  # Light border
