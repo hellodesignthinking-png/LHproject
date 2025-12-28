@@ -411,33 +411,28 @@ class ModulePDFGenerator:
         
         summary_data = [
             ['구분', '금액 (원)', '설명'],
-            ['하한 기준가', f"{low_price:,.0f}", '공시지가 기반 가격'],
-            ['기준가 (중앙값)', f"{land_value:,.0f}", '유사 거래사례 기반 추정 가격'],
-            ['상한 참고가', f"{high_price:,.0f}", '입지 조건 우수 시 도달 가능 범위'],
+            ['하한 기준가', f"{low_price:,.0f}", '공시지가 기반'],
+            ['기준가 (중앙값)', f"{land_value:,.0f}", '유사 거래사례 기반'],
+            ['상한 참고가', f"{high_price:,.0f}", '입지 우수 시 범위'],
         ]
         
-        # 3단 분리 구조 설명 추가
+        # 3단 분리 구조 설명 추가 (간결하게 수정)
         range_explanation = f"""
 <b>■ 토지가치 기준 범위 해석</b><br/>
 <br/>
-본 토지가치는 <b>단일 확정가가 아닌 3단 분리 구조의 기준 범위</b>로 제시됩니다:<br/>
+본 토지가치는 <b>3단 분리 구조의 기준 범위</b>로 제시됩니다:<br/>
 <br/>
-• <b>하한 기준가 ({low_price:,.0f}원):</b> 국토교통부 공시지가를 기반으로 산정한 최소 기준선입니다. 
-  이는 법적 근거가 명확한 객관적 하한가로, 이 가격 미만으로는 사업 검토가 어렵습니다.<br/>
+• <b>하한 기준가 ({low_price:,.0f}원):</b> 공시지가 기반 최소 기준선<br/>
+• <b>기준가 ({land_value:,.0f}원):</b> 유사 거래사례 5건 중앙값 (M4~M6 기준)<br/>
+• <b>상한 참고가 ({high_price:,.0f}원):</b> 입지 프리미엄 최대 반영 시<br/>
 <br/>
-• <b>기준가 ({land_value:,.0f}원):</b> 인근 유사 거래사례 5건을 직접 활용하여 산정한 중앙값입니다. 
-  본 보고서의 모든 분석은 이 기준가를 중심으로 전개되며, M4~M6 모듈에서 사업성 검토의 기준선으로 활용됩니다.<br/>
-<br/>
-• <b>상한 참고가 ({high_price:,.0f}원):</b> 입지 프리미엄 요인이 최대한 반영될 경우 도달 가능한 가격 범위입니다. 
-  이는 시장 변동성과 입지 우수성을 고려한 참고 지표로, 협상 시 참고 자료로 활용됩니다.<br/>
-<br/>
-<b>중요:</b> 본 가격 범위는 <b>사업 검토의 출발점</b>이며, 실제 매입가는 M4(건축 가능 규모), M5(사업수익성), M6(LH 심사 통과 가능성)을 
-종합 검토한 후 최종 결정되어야 합니다.<br/>
+<b>중요:</b> 실제 매입가는 M4(규모), M5(사업성), M6(심사 통과)를 종합 검토 후 결정<br/>
 """
         story.append(Paragraph(range_explanation, styles['Normal']))
         story.append(Spacer(1, 0.2*inch))
         
-        summary_table = Table(summary_data, colWidths=[7*cm, 9*cm])
+        # ✅ FIX: Table width to fit A4 (usable width: 16.6cm)
+        summary_table = Table(summary_data, colWidths=[3.5*cm, 6*cm, 6.5*cm])
         summary_table.setStyle(self._create_table_style(self.color_primary))
         story.append(summary_table)
         story.append(Spacer(1, 0.3*inch))
@@ -456,7 +451,8 @@ class ModulePDFGenerator:
             ['시세 대비 공시지가 비율', f"{(official_total / land_value * 100) if land_value > 0 else 0:.1f}%"],
         ]
         
-        official_table = Table(official_data, colWidths=[7*cm, 9*cm])
+        # ✅ FIX: Table width to fit A4
+        official_table = Table(official_data, colWidths=[6*cm, 10*cm])
         official_table.setStyle(self._create_table_style(colors.HexColor('#4CAF50')))
         story.append(official_table)
         story.append(Spacer(1, 0.3*inch))
@@ -468,46 +464,38 @@ class ModulePDFGenerator:
         tx_count = transactions.get('count', 0)
         avg_price_sqm = transactions.get('avg_price_sqm', 0)
         
-        # 핵심 비교사례 선정 설명
+        # 핵심 비교사례 선정 설명 (간결하게)
         transaction_method = f"""
 <b>■ 거래사례 활용 방법</b><br/>
 <br/>
-본 보고서에서는 수집된 전체 <b>{tx_count}건</b>의 거래사례 중, 
-대상 토지와 <b>입지·규모·용도지역 유사성이 높은 5건</b>을 가격 산정에 직접 활용하였으며, 
-나머지 사례는 시장 참고자료로만 활용하였습니다.<br/>
-<br/>
-<b>핵심 비교사례 선정 기준:</b><br/>
-• 거리: 대상지로부터 1km 이내 (공간적 유사성 확보)<br/>
-• 면적: 목표 면적의 ±50% 범위 내 (규모 유사성 확보)<br/>
-• 용도지역: 동일 또는 유사 용도지역 (법적 조건 유사성)<br/>
-• 거래시기: 최근 2년 이내 (시장 반영도 확보)<br/>
-<br/>
-<b>중요:</b> 전체 거래사례의 단순 평균값을 기준가로 사용하지 않으며, 
-대상지와 유사성이 높은 핵심 5건의 중앙값을 기준가로 활용합니다.<br/>
+전체 <b>{tx_count}건</b> 중 유사성 높은 <b>5건</b>을 가격 산정에 활용:<br/>
+• 거리: 1km 이내 | 면적: ±50% | 용도지역: 유사 | 거래시기: 2년 이내<br/>
+• 핵심 5건 중앙값 → 기준가 활용<br/>
 """
         story.append(Paragraph(transaction_method, styles['Normal']))
-        story.append(Spacer(1, 0.2*inch))
+        story.append(Spacer(1, 0.15*inch))
         
         story.append(Paragraph(f"• 수집된 전체 거래사례: <b>{tx_count}건</b>", styles['Normal']))
-        story.append(Paragraph(f"• 가격 산정에 활용한 핵심 비교사례: <b>5건</b>", styles['Normal']))
-        story.append(Paragraph(f"• 핵심 사례 평균 단가 (참고): <b>{avg_price_sqm:,.0f}원/㎡</b>", styles['Normal']))
-        story.append(Spacer(1, 0.2*inch))
+        story.append(Paragraph(f"• 핵심 비교사례: <b>5건</b>", styles['Normal']))
+        story.append(Paragraph(f"• 평균 단가: <b>{avg_price_sqm:,.0f}원/㎡</b>", styles['Normal']))
+        story.append(Spacer(1, 0.15*inch))
         
-        # 거래사례 상세 테이블 (최대 10건 - 전체 데이터 포함)
+        # 거래사례 상세 테이블 (최대 10건)
         samples = transactions.get('samples', [])
         if samples:
-            tx_data = [['번호', '주소', '거래일', '원 거래가(㎡)', '보정가(㎡)', '거리']]
+            tx_data = [['번호', '주소', '거래일', '원가(㎡)', '보정가(㎡)', '거리']]
             for idx, tx in enumerate(samples[:10], 1):
                 tx_data.append([
                     str(idx),
-                    tx.get('address', 'N/A')[:28],
-                    tx.get('date', 'N/A'),
+                    tx.get('address', 'N/A')[:20],  # 주소 짧게
+                    tx.get('date', 'N/A')[:10],  # 날짜만
                     f"{tx.get('price_sqm', 0):,.0f}",
                     f"{tx.get('adjusted_price_sqm', 0):,.0f}",
-                    f"{tx.get('distance_km', 0):.2f}km"
+                    f"{tx.get('distance_km', 0):.1f}km"
                 ])
             
-            tx_table = Table(tx_data, colWidths=[0.8*cm, 5*cm, 2*cm, 2.5*cm, 2.5*cm, 1.8*cm])
+            # ✅ FIX: Adjust column widths to fit A4 (total: 16cm)
+            tx_table = Table(tx_data, colWidths=[1*cm, 5.5*cm, 2*cm, 2.5*cm, 2.5*cm, 2*cm])
             tx_table.setStyle(self._create_table_style(colors.HexColor('#FF9800')))
             story.append(tx_table)
         else:
@@ -522,23 +510,15 @@ class ModulePDFGenerator:
         scores = premium.get('scores', {})
         premiums = premium.get('premiums', {})
         
-        # 입지 평가의 성격 재정의
+        # 입지 평가의 성격 재정의 (간결하게)
         location_redefine = f"""
 <b>■ 본 입지 평가의 성격</b><br/>
 <br/>
-본 입지 점수는 <b>토지가격을 산정하기 위한 결정값이 아니라</b>, 
-해당 토지가 동일 권역 내에서 가지는 <b>상대적 경쟁력을 설명하기 위한 참고 지표</b>입니다.<br/>
-<br/>
-토지 입지 조건은 M4(건축규모), M5(사업성), M6(LH 심사) 모듈에서 다음과 같이 활용됩니다:<br/>
-<br/>
-• <b>M4:</b> 입지 조건에 따른 건축 가능 규모 및 평면 계획 방향 결정<br/>
-• <b>M5:</b> 입지 우수성에 따른 임대료 및 공실률 추정<br/>
-• <b>M6:</b> LH 심사 기준 중 '입지 평가' 항목의 근거 자료<br/>
-<br/>
-따라서 본 점수는 <b>'가격 적용'이 아닌 '해석 지표'</b>로서의 의미를 가집니다.<br/>
+입지 점수는 가격 산정이 아닌 <b>상대적 경쟁력 참고 지표</b>입니다.<br/>
+M4(규모), M5(사업성), M6(심사)에서 활용됩니다.<br/>
 """
         story.append(Paragraph(location_redefine, styles['Normal']))
-        story.append(Spacer(1, 0.2*inch))
+        story.append(Spacer(1, 0.15*inch))
         
         # 점수 합계 계산
         total_score = scores.get('road', 0) + scores.get('terrain', 0) + scores.get('location', 0) + scores.get('accessibility', 0)
@@ -549,13 +529,13 @@ class ModulePDFGenerator:
                 '도로 조건',
                 f"{scores.get('road', 0)}/10",
                 f"{premiums.get('distance', 0)*100:.1f}%",
-                '도로 접면, 폭원, 포장상태'
+                '접면, 폭원, 포장'
             ],
             [
                 '지형 조건',
                 f"{scores.get('terrain', 0)}/10",
                 f"{premiums.get('time', 0)*100:.1f}%",
-                '평탄도, 형상, 경사도'
+                '평탄도, 형상, 경사'
             ],
             [
                 '입지 조건',
@@ -577,7 +557,8 @@ class ModulePDFGenerator:
             ],
         ]
         
-        premium_table = Table(premium_data, colWidths=[2.8*cm, 1.8*cm, 2.2*cm, 7.5*cm])
+        # ✅ FIX: Adjust column widths to fit A4 (total: 16cm)
+        premium_table = Table(premium_data, colWidths=[3*cm, 2*cm, 2.5*cm, 8*cm])
         premium_table.setStyle(self._create_table_style(colors.HexColor('#9C27B0')))
         story.append(premium_table)
         story.append(Spacer(1, 0.2*inch))
