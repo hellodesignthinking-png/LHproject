@@ -437,76 +437,111 @@ class ModulePDFGenerator:
         story.append(summary_table)
         story.append(Spacer(1, 0.3*inch))
         
-        # ========== 2. 공시지가 정보 ==========
-        story.append(Paragraph("2. 공시지가 정보", heading_style))
+        # ========== 2. 평가 방법론 ==========
+        story.append(Paragraph("2. 평가 방법론", heading_style))
         
-        official_price = m2_data.get('official_price', {})
-        official_total = official_price.get('total', 0)
-        official_per_sqm = official_price.get('per_sqm', 0)
+        appraisal_method = m2_data.get('appraisal_method', '거래사례 비교법')
         
-        official_data = [
-            ['항목', '금액'],
-            ['공시지가 총액', f"{official_total:,.0f} 원"],
-            ['제곱미터당 공시지가', f"{official_per_sqm:,.0f} 원/㎡"],
-            ['시세 대비 공시지가 비율', f"{(official_total / land_value * 100) if land_value > 0 else 0:.1f}%"],
+        method_text = f"""
+<b>■ 적용 평가 방법</b><br/>
+<br/>
+<b>방법:</b> {appraisal_method}<br/>
+<b>신뢰도:</b> {confidence_pct:.1f}%<br/>
+<br/>
+• 공시지가 기반 하한선 설정<br/>
+• 유사 거래사례 비교 분석<br/>
+• 입지 조건 반영<br/>
+• M4~M6 모듈 연계 활용<br/>
+"""
+        story.append(Paragraph(method_text, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # ========== 3. 토지가치 산정 근거 ==========
+        story.append(Paragraph("3. 토지가치 산정 근거", heading_style))
+        
+        # 기본 데이터만 사용
+        value_basis = f"""
+<b>■ 가치 산정 기준</b><br/>
+<br/>
+<b>토지 총액:</b> {land_value:,.0f}원<br/>
+<b>평당 단가:</b> {land_value_per_pyeong:,.0f}원/평<br/>
+<b>제곱미터당:</b> {unit_price_sqm:,.0f}원/㎡<br/>
+<b>신뢰도:</b> {confidence_pct:.1f}%<br/>
+<br/>
+• 공시지가 및 거래사례 종합 분석<br/>
+• 입지 조건 반영<br/>
+• LH 사업 기준 적용<br/>
+"""
+        story.append(Paragraph(value_basis, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 가격 범위 테이블
+        range_data = [
+            ['구분', '금액 (원)', '용도'],
+            ['하한 기준가', f"{low_price:,.0f}", '최소 기준선'],
+            ['기준가 (중앙값)', f"{land_value:,.0f}", '협상 기준'],
+            ['상한 참고가', f"{high_price:,.0f}", '최대 범위'],
         ]
         
-        # ✅ FIX: Table width to fit A4
-        official_table = Table(official_data, colWidths=[6*cm, 10*cm])
-        official_table.setStyle(self._create_table_style(colors.HexColor('#4CAF50')))
-        story.append(official_table)
+        range_table = Table(range_data, colWidths=[4*cm, 6*cm, 6*cm])
+        range_table.setStyle(self._create_table_style(self.color_primary))
+        story.append(range_table)
         story.append(Spacer(1, 0.3*inch))
         
-        # ========== 3. 거래사례 분석 (핵심 비교사례 5건) ==========
-        story.append(Paragraph("3. 거래사례 분석 (핵심 비교사례)", heading_style))
+        # ========== 4. M4~M6 모듈 연계 안내 ==========
+        story.append(Paragraph("4. 후속 모듈 연계", heading_style))
         
-        transactions = m2_data.get('transactions', {})
-        tx_count = transactions.get('count', 0)
-        avg_price_sqm = transactions.get('avg_price_sqm', 0)
-        
-        # 핵심 비교사례 선정 설명 (간결하게)
-        transaction_method = f"""
-<b>■ 거래사례 활용 방법</b><br/>
+        next_steps = """
+<b>■ 토지가치와 후속 분석의 연관성</b><br/>
 <br/>
-전체 <b>{tx_count}건</b> 중 유사성 높은 <b>5건</b>을 가격 산정에 활용:<br/>
-• 거리: 1km 이내 | 면적: ±50% | 용도지역: 유사 | 거래시기: 2년 이내<br/>
-• 핵심 5건 중앙값 → 기준가 활용<br/>
+본 M2 토지가치 분석 결과는 다음 모듈에서 활용됩니다:<br/>
+<br/>
+<b>M4 건축규모 분석:</b><br/>
+• 토지가치를 기반으로 적정 건축 규모 산정<br/>
+• 사업비 대비 용적률 최적화<br/>
+<br/>
+<b>M5 사업성 분석:</b><br/>
+• 토지 취득비 + 건축비 = 총 사업비<br/>
+• NPV, IRR, ROI 계산의 핵심 입력값<br/>
+<br/>
+<b>M6 LH 심사예측:</b><br/>
+• LH 매입가 기준 검토<br/>
+• 토지가치 적정성 평가<br/>
+<br/>
+<b>최종 의사결정:</b><br/>
+M2~M6 종합 검토 후 사업 진행 여부 판단<br/>
 """
-        story.append(Paragraph(transaction_method, styles['Normal']))
-        story.append(Spacer(1, 0.15*inch))
-        
-        story.append(Paragraph(f"• 수집된 전체 거래사례: <b>{tx_count}건</b>", styles['Normal']))
-        story.append(Paragraph(f"• 핵심 비교사례: <b>5건</b>", styles['Normal']))
-        story.append(Paragraph(f"• 평균 단가: <b>{avg_price_sqm:,.0f}원/㎡</b>", styles['Normal']))
-        story.append(Spacer(1, 0.15*inch))
-        
-        # 거래사례 상세 테이블 (최대 10건)
-        samples = transactions.get('samples', [])
-        if samples:
-            tx_data = [['번호', '주소', '거래일', '원가(㎡)', '보정가(㎡)', '거리']]
-            for idx, tx in enumerate(samples[:10], 1):
-                tx_data.append([
-                    str(idx),
-                    tx.get('address', 'N/A')[:20],  # 주소 짧게
-                    tx.get('date', 'N/A')[:10],  # 날짜만
-                    f"{tx.get('price_sqm', 0):,.0f}",
-                    f"{tx.get('adjusted_price_sqm', 0):,.0f}",
-                    f"{tx.get('distance_km', 0):.1f}km"
-                ])
-            
-            # ✅ FIX: Adjust column widths to fit A4 (total: 16cm)
-            tx_table = Table(tx_data, colWidths=[1*cm, 5.5*cm, 2*cm, 2.5*cm, 2.5*cm, 2*cm])
-            tx_table.setStyle(self._create_table_style(colors.HexColor('#FF9800')))
-            story.append(tx_table)
-        else:
-            story.append(Paragraph("거래사례 데이터 없음", styles['Italic']))
-        
+        story.append(Paragraph(next_steps, styles['Normal']))
         story.append(Spacer(1, 0.3*inch))
         
-        # ========== 4. 입지 경쟁력 평가 (참고 지표) ==========
-        story.append(Paragraph("4. 입지 경쟁력 평가 (참고 지표)", heading_style))
+        # ========== 5. 보고서 사용 시 주의사항 ==========
+        story.append(Paragraph("5. 보고서 사용 시 주의사항", heading_style))
         
-        premium = m2_data.get('premium', {})
+        disclaimer = """
+<b>■ 본 보고서의 한계</b><br/>
+<br/>
+1. <b>법적 효력 없음:</b> 본 보고서는 감정평가서가 아니며, 법적 분쟁 시 증빙 자료로 사용할 수 없습니다.<br/>
+<br/>
+2. <b>분석 시점 기준:</b> 분석 시점 기준 데이터로, 시장 변동에 따라 실제 가격과 차이가 있을 수 있습니다.<br/>
+<br/>
+3. <b>종합 검토 필요:</b> M2 단독이 아닌 M3~M6 종합 검토 후 최종 판단해야 합니다.<br/>
+<br/>
+4. <b>전문가 자문 권장:</b> 실제 사업 결정 전 감정평가사, 건축사, 회계사 등 전문가 자문을 받으시기 바랍니다.<br/>
+"""
+        story.append(Paragraph(disclaimer, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        
+        # Footer
+        footer_text = "본 보고서는 ZeroSite의 M2 토지가치 분석 모듈이 생성한 의사결정 보조용 문서입니다."
+        story.append(Spacer(1, 0.5*inch))
+        story.append(Paragraph(footer_text, styles['Italic']))
+        
+        # Build PDF
+        doc.build(story)
+        pdf_bytes = buffer.getvalue()
+        buffer.close()
+        return pdf_bytes
         scores = premium.get('scores', {})
         premiums = premium.get('premiums', {})
         
