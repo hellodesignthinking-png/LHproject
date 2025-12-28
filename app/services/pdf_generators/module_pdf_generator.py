@@ -3167,6 +3167,83 @@ M6에서 <b>"LH가 승인할 가능성"</b>과 결합하여 최종 Go/No-Go 결�
         story.append(costs_table)
         story.append(Spacer(1, 0.3*inch))
         
+        # ========== PHASE 3-3: 수익 구조 명확화 ==========
+        story.append(Paragraph("2-1. 수익 구조 명확화", heading_style))
+        
+        # 수익 구조 계산
+        selected_scenario = scenarios[0] if scenarios else {}
+        lh_price = selected_scenario.get('lh_price', data.get('lh_purchase_price', 0))
+        total_cost = costs.get('total', 0)
+        profit = lh_price - total_cost
+        profit_margin = (profit / total_cost * 100) if total_cost > 0 else 0
+        
+        revenue_structure = f"""
+<b>■ LH 신축 준공 후 일괄 매입 구조의 수익 흐름</b><br/>
+<br/>
+본 사업은 <b>LH가 준공된 건물을 일괄 매입</b>하는 구조이므로,
+수익은 <b>단 한 번의 거래</b>에서 발생합니다.<br/>
+<br/>
+<b>수익 = LH 매입가 - 총 사업비</b><br/>
+"""
+        story.append(Paragraph(revenue_structure, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # 수익 구조 테이블
+        revenue_data = [
+            ['구분', '금액 (억원)', '비율'],
+            ['① LH 매입가 (Revenue)', f'{lh_price:,.0f}', '100%'],
+            ['② 총 사업비 (Cost)', f'{total_cost:,.0f}', f'{(total_cost/lh_price*100) if lh_price > 0 else 0:.1f}%'],
+            ['③ 순수익 (Profit)', f'{profit:,.0f}', f'{profit_margin:.1f}%'],
+        ]
+        
+        revenue_table = Table(revenue_data, colWidths=[5*cm, 5*cm, 6*cm])
+        revenue_table.setStyle(self._create_table_style(colors.HexColor('#2196F3')))
+        story.append(revenue_table)
+        story.append(Spacer(1, 0.2*inch))
+        
+        # 수익성 해석
+        profitability_text = f"""
+<b>■ 수익성 해석</b><br/>
+<br/>
+<b>1. 순수익 규모: {profit:,.0f}억원</b><br/>
+"""
+        
+        if profit > 0:
+            profitability_text += f"""
+• <b>수익률: {profit_margin:.1f}%</b><br/>
+• 해석: 총 사업비 대비 약 <b>{profit_margin:.1f}%의 이익</b>이 예상됩니다.<br/>
+• 일반적인 건설사업 목표 수익률: 10-15%<br/>
+• 본 사업 수익률 평가: {'매우 우수' if profit_margin >= 15 else ('우수' if profit_margin >= 10 else ('보통' if profit_margin >= 5 else '낮음'))}<br/>
+"""
+        else:
+            profitability_text += f"""
+• <b>⚠️ 수익성 경고</b><br/>
+• 순수익이 <b>음수({profit:,.0f}억원)</b>로, 현재 구조로는 손실이 예상됩니다.<br/>
+• 원인: LH 매입가({lh_price:,.0f}억원)가 총 사업비({total_cost:,.0f}억원)보다 낮음<br/>
+• 해결 방안:<br/>
+  - M4 시나리오 재검토 (세대수 조정)<br/>
+  - 건축비 절감 방안 모색<br/>
+  - 토지 매입가 재협상<br/>
+"""
+        
+        profitability_text += f"""
+<br/>
+<b>2. 사업비 구성 (Cost Breakdown)</b><br/>
+• 토지비: {costs.get('land_purchase', 0):,.0f}억원 ({(costs.get('land_purchase', 0)/total_cost*100) if total_cost > 0 else 0:.1f}%)<br/>
+• 건축비: {costs.get('construction', 0):,.0f}억원 ({(costs.get('construction', 0)/total_cost*100) if total_cost > 0 else 0:.1f}%)<br/>
+• 기타비용: {costs.get('other_costs', 0):,.0f}억원 ({(costs.get('other_costs', 0)/total_cost*100) if total_cost > 0 else 0:.1f}%)<br/>
+<br/>
+<b>3. 의사결정 기준</b><br/>
+• 수익률 10% 이상: 사업 추진 적극 권장<br/>
+• 수익률 5-10%: 추가 리스크 검토 필요<br/>
+• 수익률 5% 미만: 사업 재검토 권고<br/>
+<br/>
+<b>→ 본 사업: {'추진 권장' if profit_margin >= 10 else ('추가 검토 필요' if profit_margin >= 5 else '재검토 권고')}</b><br/>
+"""
+        
+        story.append(Paragraph(profitability_text, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
         # 3. LH 매입가 산정 로직
         story.append(Paragraph("3. LH 매입가 산정 로직", heading_style))
         
@@ -3243,6 +3320,98 @@ LH 매입가는 준공 후 감정평가 기준이므로, 실제 매입가는 ±5
         m5_score_table = Table(m5_score_data, colWidths=[4*cm, 3*cm, 3*cm, 6*cm])
         m5_score_table.setStyle(self._create_table_style(colors.HexColor('#4CAF50')))
         story.append(m5_score_table)
+        story.append(Spacer(1, 0.3*inch))
+        
+        # ========== PHASE 3-3: NPV/IRR 해석 추가 ==========
+        story.append(Paragraph("4-1. NPV/IRR 해석 (장기 투자 지표 참고용)", heading_style))
+        
+        npv_irr_intro = """
+<b>⚠️ 중요: NPV/IRR은 LH 일괄 매입 사업에서 직접 사용하지 않습니다</b><br/>
+<br/>
+본 사업은 <b>준공 후 즉시 LH가 일괄 매입</b>하는 구조이므로,
+장기 투자 지표인 NPV, IRR, 회수기간 등은 <b>참고 지표</b>로만 활용됩니다.<br/>
+<br/>
+<b>이유:</b><br/>
+• NPV/IRR은 <b>장기 임대수익 흐름</b>을 전제로 계산됩니다<br/>
+• LH 일괄 매입은 <b>단발성 거래</b>이므로 장기 지표가 의미 없음<br/>
+• 대신 <b>단순 수익률 (ROI)</b>과 <b>수익 규모</b>를 사용합니다<br/>
+"""
+        story.append(Paragraph(npv_irr_intro, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # NPV/IRR 참고 계산 (있을 경우만 표시)
+        npv_value = data.get('npv', 0)
+        irr_value = data.get('irr', 0)
+        payback_period = data.get('payback_period', 0)
+        
+        if npv_value > 0 or irr_value > 0:
+            npv_irr_reference = f"""
+<b>■ 참고: 장기 투자 지표 (만약 임대 사업으로 전환 시)</b><br/>
+<br/>
+<i>※ 아래 지표는 본 사업 구조와 무관하며, 임대 사업 전환 시 참고용입니다.</i><br/>
+<br/>
+<b>1. NPV (Net Present Value)</b><br/>
+• 값: <b>{npv_value:,.0f}억원</b><br/>
+• 의미: 현재 가치로 환산한 순수익<br/>
+• 해석: {'양수이므로 투자 가치 있음 (임대 사업 시)' if npv_value > 0 else '음수이므로 투자 부적합 (임대 사업 시)'}<br/>
+<br/>
+<b>2. IRR (Internal Rate of Return)</b><br/>
+• 값: <b>{irr_value:.2f}%</b><br/>
+• 의미: 내부 수익률 (연평균 수익률)<br/>
+• 해석: {'일반 투자 대비 우수 (10% 이상)' if irr_value >= 10 else ('보통 (5-10%)' if irr_value >= 5 else '낮음 (5% 미만)')}<br/>
+<br/>
+<b>3. 회수 기간</b><br/>
+• 값: <b>{payback_period:.1f}년</b><br/>
+• 의미: 투자금을 회수하는 데 걸리는 시간<br/>
+• 해석: {'빠른 회수 (5년 이내)' if payback_period <= 5 else ('보통 (5-10년)' if payback_period <= 10 else '긴 회수 기간 (10년 초과)')}<br/>
+"""
+        else:
+            npv_irr_reference = """
+<b>■ NPV/IRR 계산 결과 없음</b><br/>
+<br/>
+본 시스템은 <b>LH 일괄 매입 전용</b>으로 설계되어,
+NPV/IRR 등 장기 투자 지표를 계산하지 않습니다.<br/>
+<br/>
+대신 다음 지표를 사용하세요:<br/>
+• <b>단순 수익률 (ROI):</b> (순수익 / 총 사업비) × 100<br/>
+• <b>순수익 규모:</b> LH 매입가 - 총 사업비<br/>
+• <b>M5 종합 점수:</b> 5가지 핵심 지표 가중 평균<br/>
+"""
+        
+        story.append(Paragraph(npv_irr_reference, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # 의사결정 가이드
+        decision_guide = f"""
+<b>■ M5에서 사용하는 핵심 지표 (NPV/IRR 대신)</b><br/>
+<br/>
+<b>1. 단순 수익률 (ROI)</b><br/>
+• 계산: (순수익 / 총 사업비) × 100<br/>
+• 본 사업: <b>{profit_margin:.1f}%</b><br/>
+• 의사결정 기준:<br/>
+  - 15% 이상: 적극 추진 권장<br/>
+  - 10-15%: 추진 권장<br/>
+  - 5-10%: 조건부 추진<br/>
+  - 5% 미만: 재검토 필요<br/>
+<br/>
+<b>2. 순수익 규모</b><br/>
+• 값: <b>{profit:,.0f}억원</b><br/>
+• 의사결정 기준:<br/>
+  - 100억 이상: 규모의 경제 확보<br/>
+  - 50-100억: 중형 사업<br/>
+  - 50억 미만: 소형 사업<br/>
+<br/>
+<b>3. M5 종합 점수</b><br/>
+• 값: <b>{data.get('m5_total_score', 80):.0f}점</b><br/>
+• 의사결정 기준:<br/>
+  - 80점 이상: 사업성 우수<br/>
+  - 60-80점: 사업성 양호<br/>
+  - 60점 미만: 사업성 검토 필요<br/>
+<br/>
+<b>→ 최종 판단: M5 결과 + M6 LH 심사 예측을 결합하여 Go/No-Go 결정</b><br/>
+"""
+        
+        story.append(Paragraph(decision_guide, styles['Normal']))
         story.append(Spacer(1, 0.3*inch))
         
         # 5. 리스크 시나리오 분석
