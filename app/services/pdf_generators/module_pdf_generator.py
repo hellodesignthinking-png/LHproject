@@ -2357,6 +2357,93 @@ M4는 <b>"최종 건축규모를 결정하는 보고서"</b>가 아니라, <br/>
         story.append(Paragraph(incentive_interpretation, styles['Normal']))
         story.append(Spacer(1, 0.3*inch))
         
+        # ========== PHASE 3-1: 법정 최대 vs LH 권장 비교 ==========
+        story.append(Paragraph("2-1. 법정 최대 vs LH 권장 비교", heading_style))
+        
+        # LH 권장 규모 (일반적으로 법정의 80-90% 수준)
+        lh_recommended_units = int(legal_capacity.get('total_units', 0) * 0.85)
+        lh_recommended_far = legal_capacity.get('far_max', 0) * 0.85
+        
+        comparison_intro = f"""
+<b>■ 법정 최대 vs 실제 적용 가능 규모</b><br/>
+<br/>
+건축법상 법정 최대 규모는 <b>{legal_capacity.get('total_units', 0)}세대</b>이지만,
+실무에서는 <b>주차·일조·배치 제약</b>으로 인해 100% 달성이 어렵습니다.<br/>
+<br/>
+LH 매입임대 사업에서는 일반적으로 <b>법정 용적률의 80-90% 수준</b>을 권장합니다.<br/>
+"""
+        story.append(Paragraph(comparison_intro, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # 비교 테이블
+        comparison_data = [
+            ['구분', '법정 최대', 'LH 권장 범위', '차이'],
+            [
+                '세대수',
+                f"{legal_capacity.get('total_units', 0)}세대",
+                f"{int(legal_capacity.get('total_units', 0) * 0.8)}-{int(legal_capacity.get('total_units', 0) * 0.9)}세대",
+                f"-{legal_capacity.get('total_units', 0) - lh_recommended_units}세대"
+            ],
+            [
+                '용적률',
+                f"{legal_capacity.get('far_max', 0):.1f}%",
+                f"{legal_capacity.get('far_max', 0) * 0.8:.1f}-{legal_capacity.get('far_max', 0) * 0.9:.1f}%",
+                f"-{legal_capacity.get('far_max', 0) - lh_recommended_far:.1f}%"
+            ],
+            [
+                '연면적',
+                f"{legal_capacity.get('gross_floor_area', 0):,.0f}㎡",
+                f"{int(legal_capacity.get('gross_floor_area', 0) * 0.8):,}-{int(legal_capacity.get('gross_floor_area', 0) * 0.9):,}㎡",
+                f"-{int(legal_capacity.get('gross_floor_area', 0) * 0.15):,}㎡"
+            ],
+        ]
+        
+        comparison_table = Table(comparison_data, colWidths=[3.5*cm, 4*cm, 5*cm, 3.5*cm])
+        comparison_table.setStyle(self._create_table_style(colors.HexColor('#FF5722')))
+        story.append(comparison_table)
+        story.append(Spacer(1, 0.2*inch))
+        
+        # 세대수 범위 설명
+        units_range_text = f"""
+<b>■ 세대수 범위 산정 근거</b><br/>
+<br/>
+<b>1. 법정 최대 ({legal_capacity.get('total_units', 0)}세대)</b><br/>
+• 건축법상 이론적 최대치<br/>
+• 주차 제약, 일조권, 인동간격 등을 고려하지 않은 수치<br/>
+• 실제 달성 확률: 매우 낮음 (~10%)<br/>
+<br/>
+<b>2. LH 권장 범위 ({int(legal_capacity.get('total_units', 0) * 0.8)}-{int(legal_capacity.get('total_units', 0) * 0.9)}세대)</b><br/>
+• 주차 1.0~1.2대/세대 확보 가능<br/>
+• 일조권 및 인동간격 준수<br/>
+• 단지 배치 효율성 확보<br/>
+• 실제 달성 확률: 높음 (~80%)<br/>
+<br/>
+<b>3. 보수적 접근 ({int(legal_capacity.get('total_units', 0) * 0.8)}세대 이하)</b><br/>
+• 주차 1.5대/세대 이상 확보<br/>
+• 여유 공간 확보 (조경, 커뮤니티 시설)<br/>
+• 설계 리스크 최소화<br/>
+• LH 심사 통과율: 매우 높음 (~95%)<br/>
+<br/>
+<b>→ M5 사업성 분석에서 3가지 시나리오를 각각 검토하여 최적 규모를 결정합니다.</b><br/>
+"""
+        story.append(Paragraph(units_range_text, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # 설계 리스크 요인 (PHASE 3-2 예고)
+        risk_preview = """
+<b>■ 규모 결정 시 고려사항 (설계 리스크)</b><br/>
+<br/>
+법정 최대 규모를 추구할 경우 다음 리스크가 발생할 수 있습니다:<br/>
+<br/>
+• <b>주차 리스크:</b> 법정 주차대수 미달 → 건축허가 불가<br/>
+• <b>일조권 리스크:</b> 인접 대지 일조권 침해 → 민원 및 소송<br/>
+• <b>배치 리스크:</b> 건물 간격 부족 → 거주 쾌적성 저하<br/>
+<br/>
+<i>※ 상세 리스크 분석은 섹션 3(주차 제약 분석)에서 다룹니다.</i><br/>
+"""
+        story.append(Paragraph(risk_preview, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
         # 1-1. GFA 상세 분해 (법정) + 구조화 설명
         legal_gfa_breakdown = legal_capacity.get('gfa_breakdown', {})
         if legal_gfa_breakdown:
