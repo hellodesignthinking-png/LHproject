@@ -670,22 +670,20 @@ class ModulePDFGenerator:
         story.append(summary_table)
         story.append(Spacer(1, 0.2*inch))
         
-        # Range Bar 차트 추가 (토지가치 범위 시각화)
-        from app.services.pdf_generators.consulting_design_helpers import create_horizontal_range_bar
+        # Range Bar 차트 추가 (토지가치 범위 시각화) - v4.2: 텍스트로 대체
+        # TODO: create_horizontal_range_bar 함수 구현 시 다시 활성화
         
-        try:
-            range_bar_img = create_horizontal_range_bar(
-                low_value=low_price / 100_000_000,  # 억원 단위로 변환
-                mid_value=land_value / 100_000_000,
-                high_value=high_price / 100_000_000,
-                lh_purchase_range=(low_price * 0.95 / 100_000_000, high_price * 0.95 / 100_000_000),
-                title="토지가치 기준 범위",
-                unit="억원"
-            )
-            story.append(range_bar_img)
-            story.append(Spacer(1, 0.2*inch))
-        except Exception as e:
-            logger.warning(f"Range bar chart generation failed: {e}")
+        range_bar_text = f"""
+<b>■ 토지가치 범위 (단위: 억원)</b><br/>
+<br/>
+하한 기준가: {low_price / 100_000_000:.1f}억원 (공시지가 기반)<br/>
+기준가 (중앙값): {land_value / 100_000_000:.1f}억원 (유사 거래사례 기반)<br/>
+상한 참고가: {high_price / 100_000_000:.1f}억원 (입지 프리미엄 반영)<br/>
+<br/>
+<i>※ 실제 매입가는 M4/M5/M6 종합 검토 후 결정</i><br/>
+"""
+        story.append(Paragraph(range_bar_text, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
         
         story.append(Spacer(1, 0.1*inch))
         
