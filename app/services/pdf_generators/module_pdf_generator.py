@@ -566,7 +566,7 @@ class ModulePDFGenerator:
         story.append(Spacer(1, 0.2*inch))
         
         # 보고서 정체성 명시
-        identity_text = """
+        identity_text = f"""
 <b>■ 본 보고서의 역할</b><br/>
 <br/>
 본 보고서는 <b>감정평가서가 아니며</b>, 법적 효력을 갖는 토지가격 확정 문서가 아닙니다. 
@@ -575,6 +575,10 @@ class ModulePDFGenerator:
 <br/>
 따라서 본 보고서에서 제시하는 토지가치는 <b>'사업 논의 가능 여부를 판단하기 위한 출발선'</b>이며, 
 실제 매입 판단은 후속 모듈 분석 결과와 종합적으로 검토되어야 합니다.<br/>
+<br/>
+<b>⚠️ 중요:</b> 본 토지가치는 <b>보완 전 기준선</b>이며,
+추가 데이터 확보 및 M4 규모 최적화 시 <b>상향 안정화 가능성</b>이 존재합니다.<br/>
+<i>(상세 개선 경로는 섹션 5-1 참조)</i><br/>
 """
         story.append(Paragraph(identity_text, styles['Normal']))
         story.append(Spacer(1, 0.2*inch))
@@ -763,6 +767,38 @@ class ModulePDFGenerator:
 본 감정평가액은 공시지가 및 기타 평가 기법을 종합하여 산정되었습니다.<br/>
 """
             story.append(Paragraph(no_data_text, styles['Normal']))
+            story.append(Spacer(1, 0.2*inch))
+            
+            # ========== PHASE 1-4: 비교사례 보완 시나리오 ==========
+            story.append(Paragraph("4-1. 비교사례 보완 시 가치 안정화 시나리오", ParagraphStyle('SubHeading', parent=heading_style, fontSize=12)))
+            
+            improvement_scenario = f"""
+<b>■ 거래사례 보완 시 기대 효과</b><br/>
+<br/>
+반경 500m 이내, 최근 6개월 내 유사 거래사례를 <b>5건 이상 확보</b>할 경우,
+다음과 같은 개선이 예상됩니다:<br/>
+<br/>
+<b>1. 신뢰도 개선</b><br/>
+• 현재: {confidence_pct:.0f}% (거래사례 부족)<br/>
+• 보완 후 예상: <b>85~90%</b> (통계적 신뢰도 확보)<br/>
+<br/>
+<b>2. 안정성 등급 개선 가능성</b><br/>
+• 현재: {stability_grade}등급<br/>
+• 보완 후 예상: <b>B등급</b> 달성 가능성 높음<br/>
+<br/>
+<b>3. LH 심사 관점</b><br/>
+• <b>사전 검토 통과 가능성 상승</b><br/>
+• 감정평가 신뢰도 향상으로 LH 매입가 협의 시 유리<br/>
+<br/>
+<b>■ 거래사례 확보 방법</b><br/>
+• 인근 부동산 중개업소 실거래 자료 수집<br/>
+• 국토교통부 실거래가 공개시스템 활용<br/>
+• 유사 용도지역 거래사례 검색 범위 확대<br/>
+<br/>
+<b>⚠️ 주의:</b> 본 시나리오는 추가 데이터 확보 시 예상치이며,<br/>
+실제 효과는 확보된 사례의 품질에 따라 달라질 수 있습니다.<br/>
+"""
+            story.append(Paragraph(improvement_scenario, styles['Normal']))
             story.append(Spacer(1, 0.3*inch))
         
         # ========== 5. 감정 리스크 분석 (PHASE 1-2 추가) ==========
@@ -904,6 +940,66 @@ LH 감정평가 시 감가 요인으로 작용할 가능성이 높습니다.
 """
         story.append(Paragraph(stability_summary, styles['Normal']))
         story.append(Spacer(1, 0.3*inch))
+        
+        # ========== PHASE 1-4: 안정성 개선 가능 경로 ==========
+        if stability_grade in ["B", "C"]:
+            story.append(Paragraph("5-1. 감정 안정성 개선 가능 경로", ParagraphStyle('SubHeading', parent=heading_style, fontSize=12)))
+            
+            # C등급일 때 더 구체적인 가이드
+            if stability_grade == "C":
+                improvement_path = f"""
+<b>■ 현재 C등급인 이유</b><br/>
+{grade_description}<br/>
+<br/>
+<b>⚠️ C등급의 의미:</b> 현재 데이터 기준으로는 감정가 변동 가능성이 높으나,
+이는 <b>"부적합한 토지"가 아니라 "추가 데이터 확보 필요"</b>를 의미합니다.<br/>
+<br/>
+<b>■ B등급으로 개선되기 위한 조건</b><br/>
+<br/>
+다음 3가지 중 <b>2개 이상</b>을 충족하면 B등급 달성 가능:<br/>
+<br/>
+<b>① 거래사례 보강</b><br/>
+• 현재: {transaction_count}건 → 목표: <b>5건 이상</b><br/>
+• 방법: 반경 500m, 최근 6개월 내 유사 거래 추가 수집<br/>
+• 효과: 통계적 신뢰도 확보, 신뢰도 {confidence_pct:.0f}% → 85% 개선<br/>
+<br/>
+<b>② 공시지가 대비 프리미엄 축소</b><br/>
+• 현재 프리미엄: {premium_vs_official:.1f}%<br/>
+• 목표: <b>30% 이하</b><br/>
+• 방법: M4에서 건축 규모 조정 → 토지 활용도 최적화<br/>
+• 효과: LH 감정평가 기준에 부합<br/>
+<br/>
+<b>③ M4 규모 조정 연계</b><br/>
+• 법정 최대 규모가 아닌 <b>LH 권장 범위(80-90%)</b> 적용<br/>
+• 효과: 주차·일조 리스크 감소 → 입지 조건 점수 개선<br/>
+<br/>
+<b>■ 실무 적용 방법</b><br/>
+<br/>
+<b>이 조치는 M4/M5에서 자동 반영 가능합니다:</b><br/>
+• M4 건축규모 분석에서 LH 권장 범위 선택 시<br/>
+• M5 사업성 분석에서 보수적 시나리오 적용 시<br/>
+• → 자동으로 토지가치 안정성 향상 효과 반영<br/>
+<br/>
+<b>→ 결론:</b> C등급은 "나쁜 토지"가 아니라 <b>"데이터 보완 및 규모 최적화로 개선 가능한 토지"</b>입니다.<br/>
+"""
+            else:  # B등급
+                improvement_path = f"""
+<b>■ 현재 B등급 상태</b><br/>
+{grade_description}<br/>
+<br/>
+<b>■ A등급으로 개선 가능 조건</b><br/>
+<br/>
+다음 중 <b>추가 1-2개 항목</b>을 충족하면 A등급 달성 가능:<br/>
+<br/>
+• 거래사례 추가 확보 (현재 {transaction_count}건 → 10건 이상)<br/>
+• 가격 일관성 개선 (비교사례 편차 ±15% 이내 유지)<br/>
+• 공시지가 대비 프리미엄 최적화 (30% 이하 유지)<br/>
+<br/>
+<b>→ 현재 B등급도 LH 사전 검토 통과에는 충분한 수준입니다.</b><br/>
+"""
+            
+            story.append(Paragraph(improvement_path, styles['Normal']))
+            story.append(Spacer(1, 0.3*inch))
         
         # ========== 6. M4~M6 모듈 연계 안내 ==========
         story.append(Paragraph("6. 후속 모듈 연계", heading_style))
