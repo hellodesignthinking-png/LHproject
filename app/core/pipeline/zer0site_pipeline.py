@@ -138,18 +138,24 @@ class ZeroSitePipeline:
         Args:
             parcel_id: 필지 ID (PNU 코드)
             asking_price: 호가 (선택)
-            context_id: Context ID (선택, M1 frozen context 로드용)
+            context_id: Context ID (REQUIRED in production, M1 frozen context 로드용)
         
         Returns:
             PipelineResult: 전체 Context 포함
         
         Raises:
+            ValueError: context_id가 없거나 frozen context 로드 실패 시
             Exception: 모듈 실행 중 오류 발생 시
         """
         
         logger.info("\n" + "="*80)
         logger.info(f"🎯 PIPELINE START: parcel_id={parcel_id}, context_id={context_id}")
         logger.info("="*80)
+        
+        # 🔥 CRITICAL: Context ID 검증 (Production 환경에서는 필수)
+        if not context_id:
+            logger.warning("⚠️ context_id is missing! This should only happen in testing.")
+            logger.warning("   Production mode requires context_id from M1 freeze.")
         
         # 🔥 NEW: assembled_data 초기화 (PDF 생성용)
         assembled_data = {
@@ -166,29 +172,47 @@ class ZeroSitePipeline:
             # ===================================================================
             logger.info("\n📍 [M1] Land Info Module - Starting...")
             
-            # 🔥 FIX: Try to load M1 frozen context first if context_id is provided
+            # 🔥 CRITICAL FIX: Context ID가 있으면 반드시 frozen context 로드
             land_ctx = None
             if context_id:
                 try:
                     from app.services.context_storage import context_storage
                     logger.info(f"🔍 Attempting to load M1 frozen context: {context_id}")
                     frozen_ctx = context_storage.get_frozen_context(context_id)
-                    if frozen_ctx:
-                        # Extract land context from frozen context
-                        land_data = frozen_ctx.get('land')
-                        if land_data:
-                            from app.core.context.canonical_land import CanonicalLandContext
-                            # Reconstruct CanonicalLandContext from dict
-                            land_ctx = CanonicalLandContext(**land_data)
-                            logger.info(f"✅ Loaded M1 frozen context from: {context_id}")
-                            logger.info(f"   Address: {land_ctx.address}")
-                            logger.info(f"   Area: {land_ctx.area_sqm:,.1f}㎡")
+                    
+                    # Frozen context 로드 실패 시 명확한 에러
+                    if not frozen_ctx:
+                        error_msg = f"Frozen context not found for context_id: {context_id}"
+                        logger.error(f"❌ {error_msg}")
+                        logger.error(f"   Available context_ids: {list(context_storage.contexts.keys())[:5]}")
+                        raise ValueError(error_msg)
+                    
+                    # Extract land context from frozen context
+                    land_data = frozen_ctx.get('land')
+                    if not land_data:
+                        error_msg = f"Land data missing in frozen context: {context_id}"
+                        logger.error(f"❌ {error_msg}")
+                        raise ValueError(error_msg)
+                    
+                    from app.core.context.canonical_land import CanonicalLandContext
+                    # Reconstruct CanonicalLandContext from dict
+                    land_ctx = CanonicalLandContext(**land_data)
+                    logger.info(f"✅ Successfully loaded M1 frozen context")
+                    logger.info(f"   Context ID: {context_id}")
+                    logger.info(f"   Address: {land_ctx.address}")
+                    logger.info(f"   Area: {land_ctx.area_sqm:,.1f}㎡")
+                    
+                except ValueError:
+                    # Re-raise ValueError (context not found)
+                    raise
                 except Exception as e:
-                    logger.warning(f"⚠️ Failed to load M1 frozen context: {e}")
-                    logger.info("   Falling back to fresh M1 execution")
+                    error_msg = f"Failed to load M1 frozen context: {e}"
+                    logger.error(f"❌ {error_msg}", exc_info=True)
+                    raise ValueError(error_msg)
             
-            # If no frozen context, run M1 fresh
+            # If no frozen context (테스트 환경에서만 허용), run M1 fresh
             if land_ctx is None:
+                logger.warning("⚠️ No frozen context - running fresh M1 (TESTING ONLY)")
                 land_ctx = self._run_m1(parcel_id)
                 logger.info(f"✅ [M1] Complete (Fresh): {land_ctx.address}")
             

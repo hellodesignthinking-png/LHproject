@@ -89,10 +89,10 @@ class PipelineAnalysisRequest(BaseModel):
     
     parcel_id: str = Field(..., description="Parcel ID (PNU code)")
     
-    # 🔥 NEW: Context ID from frontend (UUID)
+    # 🔥 FIX: Context ID is optional - if missing, parcel_id is used as fallback
     context_id: Optional[str] = Field(
         None,
-        description="Context ID from frontend (UUID). If not provided, parcel_id will be used."
+        description="Context ID from M1 freeze (optional). If not provided, parcel_id will be used."
     )
     
     # Optional: For testing with mock data
@@ -159,10 +159,10 @@ class ReportGenerationRequest(BaseModel):
     
     parcel_id: str = Field(..., description="Parcel ID (must have pipeline results)")
     
-    # 🔥 NEW: Context ID from frontend (UUID)
-    context_id: Optional[str] = Field(
-        None,
-        description="Context ID from frontend (UUID). If not provided, parcel_id will be used."
+    # 🔥 CRITICAL: Context ID is now REQUIRED (not optional)
+    context_id: str = Field(
+        ...,
+        description="Context ID from M1 freeze (REQUIRED). Must be UUID from /api/m1/context/freeze"
     )
     
     report_type: Literal["comprehensive", "pre_report", "lh_decision"] = Field(
@@ -345,13 +345,44 @@ def pipeline_result_to_dict(result: PipelineResult) -> Dict[str, Any]:
     m6_dict['html_preview_url'] = f"/api/v4/reports/M6/html?context_id={context_id}"
     m6_dict['pdf_download_url'] = f"/api/v4/reports/M6/pdf?context_id={context_id}"
     
+    # 🔥 FIX: Use M1-M6 keys for API response (matching frontend expectations)
+    m1_dict = result.land.to_dict() if hasattr(result.land, 'to_dict') else {}
+    
     return {
-        "land": result.land.to_dict() if hasattr(result.land, 'to_dict') else None,
-        "appraisal": m2_dict,
-        "housing_type": m3_dict,
-        "capacity": m4_dict,
-        "feasibility": m5_dict,
-        "lh_review": m6_dict,
+        "M1": {
+            **m1_dict,
+            "status": "success",
+            "address": m1_dict.get('address', 'N/A'),
+            "area_sqm": m1_dict.get('area_sqm', 0),
+            "zone_type": m1_dict.get('zone_type', 'N/A')
+        },
+        "M2": {
+            **m2_dict,
+            "status": "success",
+            "land_value": m2_dict.get('summary', {}).get('land_value', 0),
+            "confidence_score": m2_dict.get('summary', {}).get('confidence_score', 0)
+        },
+        "M3": {
+            **m3_dict,
+            "status": "success",
+            "selected_housing_type": m3_dict.get('summary', {}).get('preferred_type', 'N/A')
+        },
+        "M4": {
+            **m4_dict,
+            "status": "success",
+            "recommended_units": m4_dict.get('summary', {}).get('legal_units', 0)
+        },
+        "M5": {
+            **m5_dict,
+            "status": "success",
+            "npv_public": m5_dict.get('summary', {}).get('npv_public_krw', 0)
+        },
+        "M6": {
+            **m6_dict,
+            "status": "success",
+            "lh_decision": m6_dict.get('summary', {}).get('decision', 'N/A'),
+            "lh_total_score": m6_dict.get('summary', {}).get('total_score', 0)
+        }
     }
 
 
