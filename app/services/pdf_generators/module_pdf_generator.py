@@ -579,8 +579,135 @@ class ModulePDFGenerator:
             story.append(Paragraph(no_data_text, styles['Normal']))
             story.append(Spacer(1, 0.3*inch))
         
-        # ========== 5. M4~M6 모듈 연계 안내 ==========
-        story.append(Paragraph("5. 후속 모듈 연계", heading_style))
+        # ========== 5. 감정 리스크 분석 (PHASE 1-2 추가) ==========
+        story.append(Paragraph("5. 감정 리스크 분석", heading_style))
+        
+        # M2 context에서 리스크 분석에 필요한 데이터 추출
+        transaction_count = m2_context.get("transaction_count", len(transaction_samples))
+        confidence_level = m2_context.get("confidence_level", "MEDIUM")
+        premium_rate = m2_context.get("premium_rate", 0)
+        
+        # 공시지가 대비 프리미엄 계산
+        official_price_per_sqm = m2_data.get("official_price_per_sqm", 0)
+        if official_price_per_sqm > 0:
+            premium_vs_official = ((unit_price_sqm - official_price_per_sqm) / official_price_per_sqm) * 100
+        else:
+            premium_vs_official = 0
+        
+        risk_intro = """
+<b>■ 감정평가 리스크 개요</b><br/>
+<br/>
+본 감정평가액은 현재 시점의 시장 정보를 기반으로 산정되었으나,<br/>
+실제 LH 감정평가 시 아래 요인들에 의해 변동될 가능성이 있습니다.<br/>
+"""
+        story.append(Paragraph(risk_intro, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # 리스크 항목들 (조건부 출력)
+        risk_items = []
+        
+        # ① 거래사례 관련 리스크
+        if transaction_count < 5:
+            risk_items.append({
+                "title": "① 거래사례 부족 리스크",
+                "description": f"""
+본 분석에 사용된 거래사례는 {transaction_count}건으로, 통계적 신뢰도 확보에 충분하지 않을 수 있습니다.
+유사 입지의 추가 거래사례 확보 시 단가가 조정될 가능성이 있습니다.
+""",
+                "impact": "약 -3% ~ -8%",
+                "note": "LH 감정 시 최소 10건 이상의 거래사례 확보를 권장합니다."
+            })
+        
+        # ② 신뢰도 관련 리스크
+        if confidence_level in ["LOW", "MEDIUM"]:
+            confidence_desc = "낮음" if confidence_level == "LOW" else "보통"
+            risk_items.append({
+                "title": "② 평가 신뢰도 리스크",
+                "description": f"""
+현재 감정평가의 신뢰도는 '{confidence_desc}' 수준입니다.
+거래사례의 거리, 시점, 가격 편차 등이 크거나, 데이터의 최신성이 부족하여
+LH 감정평가 시 추가 보정이 이루어질 가능성이 있습니다.
+""",
+                "impact": "약 -5% ~ -10%",
+                "note": "최근 6개월 이내 반경 500m 이내 거래사례 확보 시 신뢰도가 향상됩니다."
+            })
+        
+        # ③ 공시지가 대비 프리미엄 리스크
+        if premium_vs_official > 30:
+            risk_items.append({
+                "title": "③ 공시지가 대비 프리미엄 리스크",
+                "description": f"""
+본 건의 ㎡당 단가는 공시지가 대비 약 {premium_vs_official:.1f}% 높게 산정되었습니다.
+LH 감정평가 기준에서는 공시지가의 일정 범위 내에서 평가하는 것이 일반적이므로,
+과도한 프리미엄이 인정되지 않을 가능성이 있습니다.
+""",
+                "impact": "약 -8% ~ -15%",
+                "note": "공시지가 상승 추세 및 주변 개발 계획 등의 객관적 근거 확보가 필요합니다."
+            })
+        
+        # ④ 입지 조건 리스크 (프리미엄 팩터 기반)
+        premium_factors = m2_context.get("premium_factors", {})
+        if isinstance(premium_factors, dict):
+            scores = premium_factors.get("scores", {})
+            road_score = scores.get("road", 5)
+            terrain_score = scores.get("terrain", 5)
+            
+            if road_score < 4 or terrain_score < 4:
+                risk_items.append({
+                    "title": "④ 입지·물리적 조건 리스크",
+                    "description": """
+도로 조건 또는 지형 조건이 불리한 것으로 분석되었습니다.
+자루형 토지, 도로 폭 협소, 고저차, 경사 등의 요인이 있는 경우
+LH 감정평가 시 감가 요인으로 작용할 가능성이 높습니다.
+""",
+                    "impact": "약 -5% ~ -12%",
+                    "note": "토목 공사 등 추가 비용이 예상되는 경우 사업성 검토(M5)에서 반영이 필요합니다."
+                })
+        
+        # 리스크 항목 출력
+        if risk_items:
+            for item in risk_items:
+                # 리스크 제목
+                risk_title_text = f"<b>{item['title']}</b>"
+                story.append(Paragraph(risk_title_text, styles['Normal']))
+                story.append(Spacer(1, 0.1*inch))
+                
+                # 리스크 설명
+                risk_desc_text = item['description'].strip()
+                story.append(Paragraph(risk_desc_text, styles['Normal']))
+                story.append(Spacer(1, 0.1*inch))
+                
+                # 영향 및 유의사항
+                impact_text = f"""
+<b>• 감액 가능성 범위:</b> {item['impact']}<br/>
+<b>• LH 감정 시 유의사항:</b> {item['note']}<br/>
+"""
+                story.append(Paragraph(impact_text, styles['Normal']))
+                story.append(Spacer(1, 0.2*inch))
+        else:
+            # 리스크가 없는 경우
+            no_risk_text = """
+<b>■ 리스크 분석 결과</b><br/>
+<br/>
+현재 분석 결과, 특별한 감정평가 리스크는 발견되지 않았습니다.<br/>
+다만, 실제 LH 감정평가 시 추가 조사 결과에 따라 평가액이 조정될 수 있습니다.<br/>
+"""
+            story.append(Paragraph(no_risk_text, styles['Normal']))
+            story.append(Spacer(1, 0.3*inch))
+        
+        # 종합 의견
+        summary_opinion = f"""
+<b>■ 종합 의견</b><br/>
+<br/>
+상기 리스크 요인들은 LH 공식 감정평가 시 고려될 수 있는 사항입니다.<br/>
+본 감정평가액은 현재 시점의 추정치이며, 실제 LH 감정가와 차이가 있을 수 있습니다.<br/>
+사업 진행 전 LH 공식 감정평가를 의뢰하여 정확한 토지가치를 확인하시기 바랍니다.<br/>
+"""
+        story.append(Paragraph(summary_opinion, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # ========== 6. M4~M6 모듈 연계 안내 ==========
+        story.append(Paragraph("6. 후속 모듈 연계", heading_style))
         
         next_steps = """
 <b>■ 토지가치와 후속 분석의 연관성</b><br/>
@@ -605,8 +732,8 @@ M2~M6 종합 검토 후 사업 진행 여부 판단<br/>
         story.append(Paragraph(next_steps, styles['Normal']))
         story.append(Spacer(1, 0.3*inch))
         
-        # ========== 6. 보고서 사용 시 주의사항 ==========
-        story.append(Paragraph("6. 보고서 사용 시 주의사항", heading_style))
+        # ========== 7. 보고서 사용 시 주의사항 ==========
+        story.append(Paragraph("7. 보고서 사용 시 주의사항", heading_style))
         
         disclaimer = """
 <b>■ 본 보고서의 한계</b><br/>
