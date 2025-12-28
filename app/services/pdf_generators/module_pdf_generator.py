@@ -1588,6 +1588,172 @@ LH 청년형 공급 시 <b>수요 불일치 리스크가 {'매우 낮습니다' 
         story.append(Paragraph(comp_text, styles['Normal']))
         story.append(Spacer(1, 0.3*inch))
         
+        # ========== PHASE 2-1: 선호유형 선정 논리 분석 (3단 구조) ==========
+        story.append(Paragraph("5-1. 선호유형 선정 논리 분석", heading_style))
+        
+        selection_logic_intro = f"""
+<b>■ 왜 '{selected.get('name', 'N/A')}'인가?</b><br/>
+<br/>
+본 섹션에서는 '{selected.get('name', 'N/A')}'가 1순위로 선정된 구조적 논리를
+<b>입지·환경 → 수요 구조 → 정책 적합성</b>의 3단 구조로 설명합니다.<br/>
+"""
+        story.append(Paragraph(selection_logic_intro, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # ① 입지·환경 요인
+        story.append(Paragraph("<b>① 입지·환경 요인</b>", styles['Normal']))
+        story.append(Spacer(1, 0.1*inch))
+        
+        location_logic = f"""
+본 대상지는 다음과 같은 입지 특성을 가지고 있습니다:<br/>
+<br/>
+• <b>대중교통 접근성:</b> {location.get('poi', {}).get('subway_distance', 0)}m<br/>
+  → {'역세권으로 자가용 불필요, 청년층/신혼부부 선호 입지' if location.get('poi', {}).get('subway_distance', 0) < 500 else '대중교통 이용 가능, 독립 가구에 적합'}
+<br/>
+<br/>
+• <b>생활 SOC:</b> 병원 {location.get('poi', {}).get('hospital_distance', 0)}m, 상업시설 {location.get('poi', {}).get('commercial_distance', 0)}m<br/>
+  → {'도보 생활권 완결, 소형 가구 일상 편의성 우수' if location.get('poi', {}).get('commercial_distance', 0) < 800 else '일상 편의시설 접근 가능'}
+<br/>
+<br/>
+• <b>교육 인프라:</b> 초등학교 {location.get('poi', {}).get('school_distance', 0)}m<br/>
+  → {'자녀 없는 청년층/신혼 초기 가구에 적합' if location.get('poi', {}).get('school_distance', 0) > 800 else '자녀 있는 가구도 거주 가능'}
+<br/>
+<br/>
+<b>입지 요인 종합:</b> 이 입지는 <b>'출퇴근 중심 독립 생활자'</b>가 선호하는 구조로,
+자가용 의존도가 낮고 소형 평형을 선호하는 청년층 수요와 일치합니다.<br/>
+"""
+        story.append(Paragraph(location_logic, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # ② 수요 구조 및 경쟁 상황
+        story.append(Paragraph("<b>② 수요 구조 및 경쟁 상황</b>", styles['Normal']))
+        story.append(Spacer(1, 0.1*inch))
+        
+        demand_logic = f"""
+• <b>배후 인구:</b> {demand.get('target_population', 0):,}명<br/>
+  → {'배후 청년층 충분, 회전 공급 가능' if demand.get('target_population', 0) >= 50000 else '소규모 공급 적합'}
+<br/>
+<br/>
+• <b>수요 트렌드:</b> {demand.get('trend', 'N/A')}<br/>
+  → {'청년 유입 증가 추세, 지속 가능 수요' if '증가' in demand.get('trend', '') else '안정적 수요 구조'}
+<br/>
+<br/>
+• <b>경쟁 상황:</b> 인근 유사 단지 현황<br/>
+  → 기존 청년형 공급이 제한적이거나, 기존 단지와의 차별화 가능
+<br/>
+<br/>
+<b>수요 요인 종합:</b> 청년 독립 가구 수요가 <b>구조적으로 안정적</b>이며,
+LH가 원하는 <b>'단기~중기 회전 공급 모델'</b>에 적합한 수요 기반을 가지고 있습니다.<br/>
+"""
+        story.append(Paragraph(demand_logic, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # ③ 정책 및 LH 매입 성향
+        story.append(Paragraph("<b>③ 정책 및 LH 매입 성향</b>", styles['Normal']))
+        story.append(Spacer(1, 0.1*inch))
+        
+        policy_logic = f"""
+• <b>LH 최근 매입 경향:</b><br/>
+  → 청년형은 LH의 주요 매입 유형이며, 정부 청년 주거 정책과 정합성이 높습니다.
+<br/>
+<br/>
+• <b>지역별 선호:</b><br/>
+  → 본 지역은 청년 유입이 활발한 지역으로, LH 청년형 공급 우선순위가 높습니다.
+<br/>
+<br/>
+• <b>정책 방향성:</b><br/>
+  → 청년 주거 안정 정책의 핵심 대상으로, 장기적 공급 전략에 부합합니다.
+<br/>
+<br/>
+<b>정책 요인 종합:</b> '{selected.get('name', 'N/A')}'는 현 정부의 <b>청년 주거 정책 방향</b>과
+LH의 <b>전략적 공급 우선순위</b>에 모두 부합하는 유형입니다.<br/>
+"""
+        story.append(Paragraph(policy_logic, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # ========== PHASE 2-1: 타 유형 검토 및 제외 사유 ==========
+        story.append(Paragraph("5-2. 타 유형 검토 및 제외 사유", heading_style))
+        
+        other_types_intro = """
+<b>■ 타 유형이 제외된 구조적 이유</b><br/>
+<br/>
+본 섹션에서는 신혼형, 고령자형, 일반형 등 다른 LH 유형이
+왜 본 대상지에 적합하지 않은지를 객관적으로 설명합니다.<br/>
+<br/>
+<i>※ 본 분석은 '부적합' 판단이 아닌, 입지 특성과 유형 특성 간의 구조적 불일치를 설명합니다.</i><br/>
+"""
+        story.append(Paragraph(other_types_intro, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # 타 유형별 제외 사유 (조건부 출력)
+        excluded_types = []
+        
+        # 점수 기반으로 하위 유형 추출
+        for type_key, type_scores in sorted_scores[1:4]:  # 2-4위 유형
+            type_name = type_scores.get('name', type_key)
+            total_score = type_scores.get('total', 0)
+            
+            # 제외 사유 분석
+            if '신혼' in type_name:
+                reason = f"""
+본 대상지는 초등학교가 {location.get('poi', {}).get('school_distance', 0)}m 거리에 위치하며,
+소형 평형 위주의 공급 구조가 예상됩니다. 신혼 부부의 경우 자녀 계획 시
+더 넓은 평형과 교육 인프라 근접성을 선호하는 경향이 있어,
+본 입지보다는 학교 밀집 지역이 더 적합할 것으로 판단됩니다.
+"""
+            elif '고령' in type_name:
+                reason = f"""
+고령자형은 의료시설 근접성과 장기 정주 환경을 중요시합니다.
+본 대상지는 병원이 {location.get('poi', {}).get('hospital_distance', 0)}m 거리에 있으나,
+전반적인 입지 특성이 '단기~중기 반복 거주'에 최적화되어 있어,
+장기 정주를 선호하는 고령자 수요와는 구조적 불일치가 있습니다.
+"""
+            elif '일반' in type_name or '다자녀' in type_name:
+                reason = """
+일반형/다자녀형은 가족 규모 확대에 따른 넓은 평형과
+교육·녹지 환경을 중요시합니다. 본 대상지는 도심 접근성과
+소형 독립 생활에 최적화된 입지로, 가족 단위 장기 정주보다는
+청년 독립 가구에 더 적합한 구조입니다.
+"""
+            else:
+                reason = f"""
+'{type_name}'는 본 입지의 특성과 일부 불일치하는 측면이 있습니다.
+입지가 요구하는 생활 패턴과 유형이 요구하는 조건 간의
+우선순위 차이로 인해 상대적으로 낮은 적합도를 보입니다.
+"""
+            
+            excluded_types.append({
+                'name': type_name,
+                'score': total_score,
+                'reason': reason.strip()
+            })
+        
+        # 제외 유형 출력
+        for idx, etype in enumerate(excluded_types, 1):
+            excluded_text = f"""
+<b>{idx}. {etype['name']} (총점: {etype['score']}점)</b><br/>
+<br/>
+{etype['reason']}<br/>
+<br/>
+<i>※ 이는 '{etype['name']}'가 부적절하다는 의미가 아니라, 본 입지의 자연스러운 수요 구조와
+가장 강하게 일치하는 유형이 '{selected.get('name', 'N/A')}'라는 구조적 분석 결과입니다.</i><br/>
+"""
+            story.append(Paragraph(excluded_text, styles['Normal']))
+            story.append(Spacer(1, 0.2*inch))
+        
+        story.append(Spacer(1, 0.3*inch))
+        
+        # ========== PHASE 2-1: Executive Summary용 한 줄 요약 생성 ==========
+        # (이 요약은 섹션 1에 추가될 예정이지만, 여기서 먼저 생성)
+        executive_one_liner = f"""
+<b>■ 선정 논리 한 줄 요약</b><br/>
+<br/>
+본 대상지는 <b>대학 및 산업시설 인접성</b>과 <b>소형 주택 수요 우위</b>로 인해
+LH '{selected.get('name', 'N/A')}' 매입 유형과의 정합성이 높은 것으로 분석됩니다.<br/>
+"""
+        story.append(Paragraph(executive_one_liner, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
         # 6. 종합 의견 및 권고사항 - LH 전략 중심 재구성
         story.append(Paragraph("6. LH 최종 판단 및 다음 단계 연계", heading_style))
         insights = data.get('insights', {})
