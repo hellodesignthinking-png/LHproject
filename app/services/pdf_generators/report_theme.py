@@ -23,24 +23,26 @@ from typing import Dict, Any
 @dataclass
 class ZeroSiteColors:
     """ZeroSite Brand Color Palette"""
-    # Primary Colors
-    primary = colors.HexColor('#1E3A8A')  # Deep Blue (from user requirements)
-    primary_light = colors.HexColor('#3B82F6')
-    primary_dark = colors.HexColor('#1E40AF')
+    # Primary Colors (Consulting-Grade Design System)
+    primary = colors.HexColor('#0A1E3C')  # Primary Navy
+    primary_light = colors.HexColor('#2F6BFF')  # Accent Blue
+    primary_dark = colors.HexColor('#071526')
     
-    # Accent Colors
-    accent = colors.HexColor('#06B6D4')  # Cyan (from user requirements)
-    accent_light = colors.HexColor('#22D3EE')
+    # Accent Colors (핵심 수치/결론)
+    accent = colors.HexColor('#2F6BFF')  # Accent Blue
+    accent_light = colors.HexColor('#5B8FFF')
     
-    # Status Colors
-    success = colors.HexColor('#16A34A')  # Green
-    warning = colors.HexColor('#F59E0B')  # Orange/Amber
-    danger = colors.HexColor('#DC2626')  # Red
+    # Status Colors (판단 상태)
+    positive_green = colors.HexColor('#15803D')  # Positive Green (GO)
+    risk_red = colors.HexColor('#C2410C')  # Risk Red (조건부)
+    warning = colors.HexColor('#F59E0B')  # Warning Orange
+    danger = colors.HexColor('#DC2626')  # Danger Red
+    success = positive_green  # Alias for backward compatibility
     
-    # Neutral Colors
-    text_primary = colors.HexColor('#334155')  # Dark gray
-    text_secondary = colors.HexColor('#64748B')  # Medium gray
-    text_light = colors.HexColor('#94A3B8')  # Light gray
+    # Neutral Colors (설명 텍스트)
+    text_primary = colors.HexColor('#0A1E3C')  # Primary Navy (제목용)
+    text_secondary = colors.HexColor('#6B7280')  # Neutral Gray (설명)
+    text_light = colors.HexColor('#9CA3AF')  # Light gray
     
     border = colors.HexColor('#E2E8F0')  # Light border
     background = colors.HexColor('#F8FAFC')  # Very light background

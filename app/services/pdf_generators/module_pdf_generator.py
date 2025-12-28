@@ -556,18 +556,30 @@ class ModulePDFGenerator:
             m2_data, m2_context, transaction_samples
         )
         
-        # ========== PHASE 최종: Executive Summary 한줄 결론 박스 (🔥 강화) ==========
-        # 한줄 결론 박스 - 판단형 문장으로 강화
-        one_line_conclusion = f"""
-<b>■ 한줄 결론 (컨설팅 판단)</b><br/>
-본 토지는 현재 <b>{stability_grade}등급</b>이나, 
-추가 거래사례 확보 및 M4 규모 최적화 시 
-<b>LH 사전검토 통과 가능성이 충분한 사업지</b>로 판단됩니다.<br/>
-<br/>
-{grade_description.split('.')[0]}하며, 
-보완 전략 실행 시 <b>B등급 달성 및 감정가 안정화</b>가 기대됩니다. (상세 섹션 4-1, 5-1 참조)
-"""
-        story.append(Paragraph(one_line_conclusion, styles['Normal']))
+        # ========== PHASE 최종: Executive Insight Box (컨설팅 디자인 적용) ==========
+        from app.services.pdf_generators.consulting_design_helpers import create_executive_insight_box
+        
+        # 한 문장 결론
+        executive_conclusion = (
+            f"본 토지는 현재 {stability_grade}등급이나, "
+            f"추가 거래사례 확보 및 M4 규모 최적화 시 "
+            f"LH 사전검토 통과 가능성이 충분한 사업지로 판단됩니다."
+        )
+        
+        # 상세 설명
+        executive_detail = (
+            f"{grade_description.split('.')[0]}하며, "
+            f"보완 전략 실행 시 B등급 달성 및 감정가 안정화가 기대됩니다."
+        )
+        
+        # Executive Insight Box 생성
+        insight_box = create_executive_insight_box(
+            title="M2 핵심 판단",
+            main_text=executive_conclusion,
+            detail_text=executive_detail,
+            box_type="info"  # info: blue box
+        )
+        story.append(insight_box)
         story.append(Spacer(1, 0.3*inch))
         
         # 감정 안정성 등급 표시 (Executive Summary)
@@ -656,24 +668,57 @@ class ModulePDFGenerator:
         summary_table = Table(summary_data, colWidths=[3.5*cm, 6*cm, 6.5*cm])
         summary_table.setStyle(self._create_table_style(self.color_primary))
         story.append(summary_table)
-        story.append(Spacer(1, 0.3*inch))
+        story.append(Spacer(1, 0.2*inch))
         
-        # ========== 1-1. 토지가치 형성 논리 (NEW - 핵심) ==========
+        # Range Bar 차트 추가 (토지가치 범위 시각화)
+        from app.services.pdf_generators.consulting_design_helpers import create_horizontal_range_bar
+        
+        try:
+            range_bar_img = create_horizontal_range_bar(
+                low_value=low_price / 100_000_000,  # 억원 단위로 변환
+                mid_value=land_value / 100_000_000,
+                high_value=high_price / 100_000_000,
+                lh_purchase_range=(low_price * 0.95 / 100_000_000, high_price * 0.95 / 100_000_000),
+                title="토지가치 기준 범위",
+                unit="억원"
+            )
+            story.append(range_bar_img)
+            story.append(Spacer(1, 0.2*inch))
+        except Exception as e:
+            logger.warning(f"Range bar chart generation failed: {e}")
+        
+        story.append(Spacer(1, 0.1*inch))
+        
+        # ========== 1-1. 토지가치 형성 논리 (Flow Diagram 적용) ==========
         story.append(Paragraph("1-1. 토지가치 형성 논리 분석", heading_style))
         
+        # Flow Diagram 생성
+        from app.services.pdf_generators.consulting_design_helpers import create_flow_diagram
+        
+        flow_steps = [
+            {"label": "도심 필지\n희소성", "desc": "개발가능 필지 15-20%"},
+            {"label": "입지\n프리미엄", "desc": "역세권 500m 이내"},
+            {"label": "거래사례\n중앙값", "desc": "최근 1년 5건 기반"},
+            {"label": "토지가치\n형성", "desc": f"{land_value:,.0f}원"}
+        ]
+        
+        flow_diagram = create_flow_diagram(
+            steps=flow_steps,
+            title="토지가치 형성 구조"
+        )
+        story.append(flow_diagram)
+        story.append(Spacer(1, 0.2*inch))
+        
         value_formation_logic = f"""
-<b>■ 본 대상지 토지가치의 형성 구조</b><br/>
+<b>■ 토지가치 형성 요인 해석</b><br/>
 <br/>
-본 대상지의 토지가치는 단순 평균 단가가 아닌, 다음 3가지 요인이 중첩되며 형성된 것으로 판단됩니다:<br/>
+본 대상지의 토지가치는 단순 평균 단가가 아닌, 다음 3가지 요인이 중첩되며 형성되었습니다:<br/>
 <br/>
-<b>① 도심 내 필지 희소성</b><br/>
-• 제2종일반주거지역 내 개발 가능 필지는 전체 토지 중 약 15-20%에 불과<br/>
-• 동일 용도지역 내 실거래 발생 빈도: 최근 6개월 기준 월평균 1-2건 수준<br/>
-• 희소성이 높을수록 거래가격의 하방 경직성이 강화되는 경향<br/>
+<b>① 도심 내 필지 희소성:</b> 제2종일반주거지역 내 개발 가능 필지는 전체 토지 중 약 15-20%에 불과<br/>
+<b>② 입지 프리미엄:</b> 역세권 500m 이내, 주요 생활 인프라 접근성 우수<br/>
+<b>③ 거래사례 중앙값:</b> 최근 1년 간 유사 거래 5건 기반 산정<br/>
 <br/>
-<b>② 유사 입지 대비 거래 빈도 제한</b><br/>
-• 본 대상지와 유사한 조건(면적 500㎡ 전후, 도로 접면 12m 이상)의 토지는<br/>
-  최근 1년간 반경 1km 내에서 5건 이하로 거래됨<br/>
+<i>→ 이 3가지 요인이 복합적으로 작용하여 현재 토지가치가 형성되었습니다.</i><br/>
 • 거래 빈도가 낮다는 것은 '시장 과열'이 아닌 '제한적 실수요' 시장임을 의미<br/>
 • 이는 LH 감정평가 시 <b>가격 안정성 지표로 긍정적으로 해석될 가능성</b>이 높음<br/>
 <br/>
@@ -1760,15 +1805,27 @@ M3 선호유형 모델은 특정 입지가 '어떤 유형이 가능한가'를 �
             selected_name_display = f"<b>'{selected_name}'</b>"
             selected_note = ''
         
-        # ✅ PHASE 2-4: 한줄 결론 박스 (최상단 추가)
-        decision_box = f"""
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-<b>🎯 결론:</b> 본 대상지는 {selected_name_display} 생활 패턴과 입지 특성이 구조적으로 일치하며,
-유형 안정성 등급은 <b>{stability_grade}</b>입니다. {selected_note}<br/>
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-"""
-        story.append(Paragraph(decision_box, styles['Normal']))
-        story.append(Spacer(1, 0.2*inch))
+        # ✅ PHASE 2-4: Executive Insight Box (컨설팅 디자인 적용)
+        from app.services.pdf_generators.consulting_design_helpers import create_executive_insight_box
+        
+        # 한 문장 결론
+        executive_conclusion = (
+            f"본 대상지는 {selected_name_display} 생활 패턴과 입지 특성이 "
+            f"구조적으로 일치하며, 유형 안정성 등급은 {stability_grade}입니다."
+        )
+        
+        # 상세 설명
+        executive_detail = selected_note if selected_note else "최종 유형 판단은 M6 LH 심사예측 결과와 함께 검토되어야 합니다."
+        
+        # Executive Insight Box 생성
+        insight_box = create_executive_insight_box(
+            title="M3 핵심 판단",
+            main_text=executive_conclusion,
+            detail_text=executive_detail,
+            box_type="info"  # info: blue box
+        )
+        story.append(insight_box)
+        story.append(Spacer(1, 0.3*inch))
         
         # 사람 중심 요약 작성 (PHASE 2-4: LH 실무 보고 톤으로 재작성)
         executive_summary = f"""
@@ -1882,6 +1939,24 @@ M4/M5/M6 종합 결과에 따라 <b>최종 실행 가능 여부가 결정</b>됩
         score_table.setStyle(self._create_table_style(colors.HexColor('#FF9800')))
         story.append(score_table)
         story.append(Spacer(1, 0.2*inch))
+        
+        # Lifestyle Cards 추가 (시각화)
+        from app.services.pdf_generators.consulting_design_helpers import create_lifestyle_cards
+        
+        # 라이프스타일 데이터 준비
+        lifestyle_data = [
+            {"icon": "🏃", "label": f"이동 중심\\n생활"},
+            {"icon": "🏠", "label": f"소형 독립\\n가구"},
+            {"icon": "🚇", "label": f"대중교통\\n선호"},
+            {"icon": "☕", "label": f"짧은 생활\\n반경"}
+        ]
+        
+        try:
+            lifestyle_cards = create_lifestyle_cards(lifestyle_data)
+            story.append(lifestyle_cards)
+            story.append(Spacer(1, 0.2*inch))
+        except Exception as e:
+            logger.warning(f"Lifestyle cards generation failed: {e}")
         
         # ✅ PHASE 2-4: N/A 및 0점 자동 주석
         has_na_or_zero = False
@@ -2921,6 +2996,25 @@ M4는 <b>"최종 건축규모를 결정하는 보고서"</b>가 아니라, <br/>
 → 최종 선택은 <b>M6 LH 검토 예측</b>과 결합하여 이루어집니다.<br/>
 """
         story.append(Paragraph(exec_summary, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # Executive Insight Box 추가 (컨설팅 디자인)
+        from app.services.pdf_generators.consulting_design_helpers import create_executive_insight_box
+        
+        executive_conclusion = (
+            f"법정 용적률 {far_ratio:.0f}% 달성은 가능하나, 주차대수 제약으로 "
+            f"권장 규모는 {total_units}세대입니다. 최종 선택은 M5 사업성 분석과 M6 심사예측 결과를 종합하여 결정됩니다."
+        )
+        
+        executive_detail = "M4는 최종 건축규모 결정이 아닌, M5에 필요한 3-5가지 시나리오를 제공하는 단계입니다."
+        
+        insight_box = create_executive_insight_box(
+            title="M4 핵심 판단",
+            main_text=executive_conclusion,
+            detail_text=executive_detail,
+            box_type="info"
+        )
+        story.append(insight_box)
         story.append(Spacer(1, 0.3*inch))
         
         # 1. 법적 용적률/건폐율 분석 (Logic flow 시작)
@@ -3872,6 +3966,28 @@ M6에서 <b>"LH가 승인할 가능성"</b>과 결합하여 최종 Go/No-Go 결�
 <b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
 """
         story.append(Paragraph(feasibility_summary, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # Executive Insight Box 추가 (컨설팅 디자인)
+        from app.services.pdf_generators.consulting_design_helpers import create_executive_insight_box
+        
+        # NPV 값 추출 (기본값 0)
+        npv_value = m5_data.get('npv_public_krw', 0)
+        
+        executive_conclusion = (
+            f"본 사업은 LH 일괄 매입 구조 기준, 총 사업비 대비 안정적인 수익 구조를 형성합니다. "
+            f"보수적 시나리오에서도 손실 가능성은 제한적입니다."
+        )
+        
+        executive_detail = f"예상 NPV: {npv_value:,.0f}원. 최종 판단은 M6 LH 심사예측 결과와 함께 검토됩니다."
+        
+        insight_box = create_executive_insight_box(
+            title="M5 핵심 판단",
+            main_text=executive_conclusion,
+            detail_text=executive_detail,
+            box_type="success"  # success: green box for positive outlook
+        )
+        story.append(insight_box)
         story.append(Spacer(1, 0.3*inch))
         
         # 🔥 NEW: 일반 분양 vs LH 일괄매입 비교표
@@ -5312,6 +5428,51 @@ ZeroSite 6-MODULE은 각각 독립적이면서도 연계된 판단 도구입니�
         
         story.append(Paragraph(f"<b>판정 근거:</b>", styles['Normal']))
         story.append(Paragraph(rationale, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # Final Decision Badge 추가 (컨설팅 디자인)
+        from app.services.pdf_generators.consulting_design_helpers import create_final_decision_badge
+        
+        # Decision 타입에 따라 badge_type 결정
+        badge_type = "go"  # default
+        if "GO" in decision_text.upper():
+            badge_type = "go"
+        elif "CONDITIONAL" in decision_text.upper():
+            badge_type = "conditional"
+        elif "NO-GO" in decision_text.upper() or "NO GO" in decision_text.upper():
+            badge_type = "no-go"
+        
+        try:
+            decision_badge = create_final_decision_badge(
+                decision=badge_type,
+                score=final_total_score,
+                subtitle=f"LH 심사 통과 가능성 평가"
+            )
+            story.append(decision_badge)
+            story.append(Spacer(1, 0.2*inch))
+        except Exception as e:
+            logger.warning(f"Final decision badge generation failed: {e}")
+        
+        # Executive Insight Box 추가
+        from app.services.pdf_generators.consulting_design_helpers import create_executive_insight_box
+        
+        executive_conclusion = (
+            f"본 사업지는 LH 심사예측 결과 {decision_text} 판정을 받았습니다. "
+            f"종합 점수는 {final_total_score:.1f}/110점입니다."
+        )
+        
+        executive_detail = rationale if rationale != "N/A" else "최종 판단은 M2-M5 모듈의 종합 검토 결과를 반영한 것입니다."
+        
+        # box_type 결정
+        box_type = "success" if badge_type == "go" else ("warning" if badge_type == "conditional" else "danger")
+        
+        insight_box = create_executive_insight_box(
+            title="M6 최종 판단",
+            main_text=executive_conclusion,
+            detail_text=executive_detail,
+            box_type=box_type
+        )
+        story.append(insight_box)
         story.append(Spacer(1, 0.3*inch))
         
         # 2. 세부 점수 (전체 항목)
