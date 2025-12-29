@@ -40,17 +40,16 @@ except ImportError as e:
     logger.warning(f"⚠️  Pipeline router not available: {str(e)}")
     pipeline_router_available = False
 
-# Import M1 routers (optional - needs environment configuration)
-m1_routers_available = False
-# Temporarily disabled due to missing environment configuration
-# try:
-#     from app.api.endpoints.m1_step_based import router as m1_step_router
-#     from app.api.endpoints.m1_context_freeze_v2 import router as m1_v2_router
-#     from app.api.endpoints.m1_pdf_extract import router as m1_pdf_router
-#     m1_routers_available = True
-# except ImportError as e:
-#     logger.warning(f"⚠️  M1 routers not available: {str(e)}")
-#     m1_routers_available = False
+# Import M1 routers
+try:
+    from app.api.endpoints.m1_step_based import router as m1_step_router
+    from app.api.endpoints.m1_context_freeze_v2 import router as m1_v2_router
+    from app.api.endpoints.m1_pdf_extract import router as m1_pdf_router
+    m1_routers_available = True
+    logger.info("✅ M1 routers imported successfully")
+except ImportError as e:
+    logger.warning(f"⚠️  M1 routers not available: {str(e)}")
+    m1_routers_available = False
 
 # Initialize FastAPI app
 app = FastAPI(
