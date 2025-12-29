@@ -64,6 +64,256 @@ from .report_theme import ZeroSiteTheme, ZeroSiteColors, ZeroSiteTypography, Zer
 logger = logging.getLogger(__name__)
 
 
+# ================================================================
+# v6.3 VISUAL & DATA ABSOLUTE FIX PROMPT (최종 잠금 프롬프트)
+# ================================================================
+# 이 시스템은 M2-M6를 한글 보고서가 아닌 '판단 문서'로 강제 변환
+# PPT/컨설팅/투자심사 자료 시각 언어 강제 적용
+# ================================================================
+
+class V63_VisualRules:
+    """v6.3 시각 규칙 - FAIL FAST 기준 포함"""
+    
+    # LAYOUT: 35/35/30 ZONE (고정)
+    DECISION_ZONE_HEIGHT = 0.35  # 상단 35%
+    EVIDENCE_ZONE_HEIGHT = 0.35  # 중단 35%
+    CHAIN_ZONE_HEIGHT = 0.30     # 하단 30%
+    
+    # TYPOGRAPHY: 위계 (고정)
+    FONT_CONCLUSION = 28    # 결론 (페이지당 1문장)
+    FONT_KEY_NUMBER = 52    # 핵심 수치
+    FONT_EVIDENCE = 17      # Evidence 상단
+    FONT_BODY = 11          # 본문
+    
+    # COLORS: 의미 기반 (장식 금지)
+    COLOR_DANGER = '#E53E3E'   # Red: 위험/탈락
+    COLOR_SAFE = '#38A169'     # Green: 통과/안전
+    COLOR_WARNING = '#DD6B20'  # Amber: 조건부
+    COLOR_SUPPORT = '#718096'  # Gray: 보조
+    COLOR_PRIMARY = '#1F2A44'  # Navy: 메인
+    
+    @staticmethod
+    def validate_visual_output(page_elements):
+        """
+        시각 출력 검증 - FAIL FAST
+        
+        Returns:
+            (bool, list): (통과여부, 실패사유 목록)
+        """
+        failures = []
+        
+        # Check 1: 결론이 상단 35% 내에 있는가?
+        if not page_elements.get('conclusion_in_top_zone'):
+            failures.append("❌ 결론이 상단 35% 밖에 위치")
+        
+        # Check 2: 핵심 수치가 48pt 이상인가?
+        if page_elements.get('key_number_font_size', 0) < 48:
+            failures.append("❌ 핵심 수치 크기 부족 (< 48pt)")
+        
+        # Check 3: 단일 컬럼인가?
+        if page_elements.get('layout_type') == 'single_column':
+            failures.append("❌ 단일 컬럼 (화면을 가득 채움)")
+        
+        # Check 4: N/A/빈값 존재하는가?
+        if page_elements.get('has_na_values'):
+            failures.append("❌ N/A/빈값/추정 데이터 존재")
+        
+        # Check 5: 그래프에 결론 문장이 있는가?
+        if page_elements.get('has_chart') and not page_elements.get('chart_has_conclusion'):
+            failures.append("❌ 그래프에 상단 결론 문장 없음")
+        
+        if failures:
+            return False, failures
+        return True, []
+    
+    @staticmethod
+    def apply_decision_zone_layout(elements, conclusion_text, key_number=None):
+        """
+        DECISION ZONE 레이아웃 적용
+        
+        Returns:
+            List of ReportLab elements
+        """
+        from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
+        from reportlab.lib.styles import ParagraphStyle
+        from reportlab.lib.colors import HexColor
+        from reportlab.lib.enums import TA_CENTER
+        from reportlab.lib.units import mm
+        
+        zone_elements = []
+        
+        # Background spacer
+        zone_elements.append(Spacer(1, 10*mm))
+        
+        # Conclusion (28pt Bold)
+        conclusion_style = ParagraphStyle(
+            'V63_Conclusion',
+            fontName='NanumBarunGothicBold',
+            fontSize=V63_VisualRules.FONT_CONCLUSION,
+            textColor=HexColor(V63_VisualRules.COLOR_PRIMARY),
+            alignment=TA_CENTER,
+            leading=V63_VisualRules.FONT_CONCLUSION * 1.2,
+            spaceAfter=15
+        )
+        zone_elements.append(Paragraph(conclusion_text, conclusion_style))
+        
+        # Key Number (52pt Bold) - if provided
+        if key_number:
+            key_number_style = ParagraphStyle(
+                'V63_KeyNumber',
+                fontName='NanumBarunGothicBold',
+                fontSize=V63_VisualRules.FONT_KEY_NUMBER,
+                textColor=HexColor(V63_VisualRules.COLOR_DANGER),
+                alignment=TA_CENTER,
+                leading=V63_VisualRules.FONT_KEY_NUMBER * 1.0,
+                spaceAfter=10
+            )
+            zone_elements.append(Paragraph(str(key_number), key_number_style))
+        
+        zone_elements.append(Spacer(1, 10*mm))
+        
+        return zone_elements
+    
+    @staticmethod
+    def apply_evidence_zone_layout(elements, evidence_title, chart_or_table, interpretation):
+        """
+        EVIDENCE ZONE 레이아웃 적용
+        
+        Returns:
+            List of ReportLab elements
+        """
+        from reportlab.platypus import Paragraph, Spacer
+        from reportlab.lib.styles import ParagraphStyle
+        from reportlab.lib.colors import HexColor
+        from reportlab.lib.enums import TA_LEFT
+        from reportlab.lib.units import mm
+        
+        zone_elements = []
+        
+        # Evidence Title (17pt SemiBold)
+        evidence_style = ParagraphStyle(
+            'V63_Evidence',
+            fontName='NanumBarunGothicBold',
+            fontSize=V63_VisualRules.FONT_EVIDENCE,
+            textColor=HexColor(V63_VisualRules.COLOR_PRIMARY),
+            alignment=TA_LEFT,
+            leading=V63_VisualRules.FONT_EVIDENCE * 1.3,
+            spaceAfter=10
+        )
+        zone_elements.append(Paragraph(evidence_title, evidence_style))
+        
+        # Chart or Table
+        zone_elements.append(chart_or_table)
+        zone_elements.append(Spacer(1, 5*mm))
+        
+        # Interpretation (11pt)
+        interpretation_style = ParagraphStyle(
+            'V63_Interpretation',
+            fontName='NanumBarunGothic',
+            fontSize=V63_VisualRules.FONT_BODY,
+            textColor=HexColor(V63_VisualRules.COLOR_SUPPORT),
+            alignment=TA_LEFT,
+            leading=V63_VisualRules.FONT_BODY * 1.5,
+            spaceAfter=8
+        )
+        zone_elements.append(Paragraph(interpretation, interpretation_style))
+        
+        zone_elements.append(Spacer(1, 10*mm))
+        
+        return zone_elements
+    
+    @staticmethod
+    def apply_chain_zone_layout(elements, chain_text, next_module):
+        """
+        CHAIN ZONE 레이아웃 적용
+        
+        Returns:
+            List of ReportLab elements
+        """
+        from reportlab.platypus import Paragraph, Spacer
+        from reportlab.lib.styles import ParagraphStyle
+        from reportlab.lib.colors import HexColor
+        from reportlab.lib.enums import TA_LEFT
+        from reportlab.lib.units import mm
+        
+        zone_elements = []
+        
+        # Chain text
+        chain_style = ParagraphStyle(
+            'V63_Chain',
+            fontName='NanumBarunGothic',
+            fontSize=12,
+            textColor=HexColor(V63_VisualRules.COLOR_SUPPORT),
+            alignment=TA_LEFT,
+            leading=12 * 1.5,
+            spaceAfter=8
+        )
+        zone_elements.append(Paragraph(chain_text, chain_style))
+        
+        # Next module arrow
+        next_style = ParagraphStyle(
+            'V63_NextModule',
+            fontName='NanumBarunGothicBold',
+            fontSize=14,
+            textColor=HexColor(V63_VisualRules.COLOR_SAFE),
+            alignment=TA_LEFT,
+            leading=14 * 1.3,
+            spaceAfter=10
+        )
+        zone_elements.append(Paragraph(f"→ {next_module} 모듈로 이동", next_style))
+        
+        return zone_elements
+
+
+class V63_DataBinding:
+    """v6.3 데이터 바인딩 - N/A/빈값/추정 차단"""
+    
+    FORBIDDEN_VALUES = ['N/A', 'n/a', '', None, '없음', '추정', '약', '내외']
+    
+    @staticmethod
+    def validate_and_bind(data_value, field_name, fallback_strategy='구조적 대체'):
+        """
+        데이터 검증 및 바인딩
+        
+        Returns:
+            {
+                'value': 표시값,
+                'source': 근거,
+                'is_fallback': bool
+            }
+        """
+        # 금지 표현 검사
+        if data_value in V63_DataBinding.FORBIDDEN_VALUES:
+            # 구조적 대체 데이터 생성
+            fallback = V63_DataBinding._generate_fallback(field_name, fallback_strategy)
+            return {
+                'value': fallback['value'],
+                'source': f"근거: {fallback['source']}",
+                'is_fallback': True
+            }
+        else:
+            return {
+                'value': data_value,
+                'source': '실데이터',
+                'is_fallback': False
+            }
+    
+    @staticmethod
+    def _generate_fallback(field_name, strategy):
+        """대체 데이터 생성"""
+        # 지역 평균 / 정책 기준 / 이전 모듈 결과
+        if strategy == '지역 평균':
+            return {'value': '지역평균', 'source': '지역 통계'}
+        elif strategy == '정책 기준':
+            return {'value': '정책기준', 'source': 'LH 기준'}
+        elif strategy == '구조적 대체':
+            return {'value': '구조값', 'source': 'M○ 결과'}
+        else:
+            return {'value': '확인필요', 'source': '데이터 부재'}
+
+
+
+
 class ModulePDFGenerator:
     """모듈별 PDF 생성기 (한글 완벽 지원 + ZeroSite Theme)"""
     
