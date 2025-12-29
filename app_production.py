@@ -21,7 +21,7 @@ from generate_v3_full_report import V3FullReportGenerator
 # Create logs directory
 os.makedirs("/home/user/webapp/logs", exist_ok=True)
 
-# Set up logging
+# Set up logging FIRST (before any logger usage)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -31,6 +31,26 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+# Import pipeline router
+try:
+    from app.api.endpoints.pipeline_reports_v4 import router as pipeline_router
+    pipeline_router_available = True
+except ImportError as e:
+    logger.warning(f"⚠️  Pipeline router not available: {str(e)}")
+    pipeline_router_available = False
+
+# Import M1 routers (optional - needs environment configuration)
+m1_routers_available = False
+# Temporarily disabled due to missing environment configuration
+# try:
+#     from app.api.endpoints.m1_step_based import router as m1_step_router
+#     from app.api.endpoints.m1_context_freeze_v2 import router as m1_v2_router
+#     from app.api.endpoints.m1_pdf_extract import router as m1_pdf_router
+#     m1_routers_available = True
+# except ImportError as e:
+#     logger.warning(f"⚠️  M1 routers not available: {str(e)}")
+#     m1_routers_available = False
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -68,6 +88,18 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include pipeline router if available
+if pipeline_router_available:
+    app.include_router(pipeline_router)
+    logger.info("✅ Pipeline router (v4) registered")
+
+# Include M1 routers if available
+if m1_routers_available:
+    app.include_router(m1_step_router)
+    app.include_router(m1_v2_router)
+    app.include_router(m1_pdf_router)
+    logger.info("✅ M1 routers registered (step_based, context_freeze_v2, pdf_extract)")
 
 # Request/Response Models
 class ReportRequest(BaseModel):
@@ -227,7 +259,20 @@ async def get_metrics():
         timestamp=datetime.now().isoformat()
     )
 
-@app.post("/generate-report", response_model=ReportResponse, tags=["Reports"])
+@app.get("/test-pipeline", tags=["Testing"])
+async def test_pipeline_page():
+    """
+    Pipeline Test Page - Frontend Testing Interface
+    """
+    test_page_path = "/home/user/webapp/test_pipeline_frontend.html"
+    if os.path.exists(test_page_path):
+        with open(test_page_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return HTMLResponse(content=content)
+    else:
+        raise HTTPException(status_code=404, detail="Test page not found")
+
+@app.get("/generate-report", response_model=ReportResponse, tags=["Reports"])
 async def generate_report(request: ReportRequest):
     """
     Generate ZeroSite v3 Expert Report.
