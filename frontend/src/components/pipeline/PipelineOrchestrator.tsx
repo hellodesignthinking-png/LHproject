@@ -101,9 +101,10 @@ export const PipelineOrchestrator: React.FC = () => {
       console.log('🚀 Starting automatic M2→M6 pipeline execution...');
       console.log('⏰ Time:', new Date().toLocaleTimeString());
       
-      // 🔥 CRITICAL FIX: Use centralized backend URL config
-      // Use relative URL to leverage Vite proxy
-      const apiUrl = `/api/v4/pipeline/analyze`;
+      // 🔥 CRITICAL FIX: Use absolute backend URL (not relative proxy)
+      // Import BACKEND_URL from config
+      const BACKEND_URL = 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai';
+      const apiUrl = `${BACKEND_URL}/api/v4/pipeline/analyze`;
       
       console.log(`📡 Calling pipeline API: ${apiUrl}`);
       console.log('📦 Request body:', { parcel_id: parcelId, use_cache: false });
