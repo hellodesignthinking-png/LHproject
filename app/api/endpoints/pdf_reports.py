@@ -36,54 +36,34 @@ async def generate_module_pdf(module_id: str, request: PDFGenerationRequest):
     """
     모듈별 PDF 보고서 생성
     
+    ⚠️ DEPRECATED: This endpoint now redirects to HTML generator.
+    Use /api/v4/reports/module/{module_id}/html instead.
+    
     Args:
         module_id: M2, M3, M4, M5, M6
         request: 모듈 데이터
     
     Returns:
-        PDF 파일
+        HTML report (use browser Ctrl+P to save as PDF)
     """
     try:
-        logger.info(f"📄 Generating PDF for {module_id}")
+        logger.warning(f"⚠️ [DEPRECATED] PDF endpoint called for {module_id}, redirecting to HTML generator")
         
-        # Initialize PDF generator per request to ensure latest code
-        pdf_generator = ModulePDFGenerator()
-        logger.info(f"✅ PDF Generator initialized (Korean font: {pdf_generator.korean_font_available})")
+        # 🔥 NEW: Redirect to HTML generator (REAL APPRAISAL STANDARD format)
+        # Users can use Ctrl+P in browser to save as PDF
         
-        # 모듈에 따라 적절한 생성 함수 호출
-        if module_id == "M2":
-            pdf_bytes = pdf_generator.generate_m2_appraisal_pdf(request.data)
-            filename = "M2_토지감정평가_보고서.pdf"
-        elif module_id == "M3":
-            pdf_bytes = pdf_generator.generate_m3_housing_type_pdf(request.data)
-            filename = "M3_LH선호유형_보고서.pdf"
-        elif module_id == "M4":
-            pdf_bytes = pdf_generator.generate_m4_capacity_pdf(request.data)
-            filename = "M4_건축규모분석_보고서.pdf"
-        elif module_id == "M5":
-            pdf_bytes = pdf_generator.generate_m5_feasibility_pdf(request.data)
-            filename = "M5_사업성분석_보고서.pdf"
-        elif module_id == "M6":
-            pdf_bytes = pdf_generator.generate_m6_lh_review_pdf(request.data)
-            filename = "M6_LH심사예측_보고서.pdf"
-        else:
-            raise HTTPException(status_code=400, detail=f"Invalid module_id: {module_id}")
-        
-        logger.info(f"✅ PDF generated for {module_id}: {len(pdf_bytes)} bytes")
-        
-        # URL-encode filename for proper Korean character support
-        encoded_filename = quote(filename.encode('utf-8'))
-        
-        # PDF 응답 반환
-        return Response(
-            content=pdf_bytes,
-            media_type="application/pdf",
-            headers={
-                "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}",
-                "Access-Control-Expose-Headers": "Content-Disposition"
+        raise HTTPException(
+            status_code=410,  # Gone
+            detail={
+                "message": "PDF generation is deprecated. Use HTML reports with browser print function.",
+                "html_endpoint": f"/api/v4/reports/module/{module_id}/html?context_id={{context_id}}",
+                "instruction": "Open HTML report and press Ctrl+P to save as PDF",
+                "format": "REAL APPRAISAL STANDARD v6.5"
             }
         )
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"❌ PDF generation failed for {module_id}: {e}", exc_info=True)
         raise HTTPException(

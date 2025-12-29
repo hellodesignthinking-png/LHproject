@@ -1341,7 +1341,12 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
       {/* Download and Preview Buttons */}
       <div style={{ display: 'flex', gap: '8px' }}>
         <button
-          onClick={handleDownloadPDF}
+          onClick={() => {
+            // 🔥 NEW: Open HTML report directly (REAL APPRAISAL STANDARD format)
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai';
+            const htmlUrl = `${backendUrl}/api/v4/reports/module/${moduleId}/html?context_id=${contextId}`;
+            window.open(htmlUrl, '_blank');
+          }}
           style={{
             flex: 1,
             padding: '10px',
@@ -1361,34 +1366,12 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
           onMouseOut={(e) => e.currentTarget.style.background = '#2196F3'}
         >
           <span>📄</span>
-          <span>PDF 보고서 다운로드</span>
+          <span>보고서 열기 (Ctrl+P로 PDF 저장)</span>
         </button>
-        <button
-          onClick={handleHTMLPreview}
-          disabled={!htmlPreviewAvailable}
-          title={htmlPreviewAvailable ? 'HTML 미리보기 열기' : 'HTML 미리보기 준비 중 (데이터 생성 후 활성화)'}
-          style={{
-            flex: 1,
-            padding: '10px',
-            background: htmlPreviewAvailable ? '#4CAF50' : '#CCCCCC',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: '13px',
-            fontWeight: '600',
-            cursor: htmlPreviewAvailable ? 'pointer' : 'not-allowed',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            opacity: htmlPreviewAvailable ? 1 : 0.6
-          }}
-          onMouseOver={(e) => htmlPreviewAvailable && (e.currentTarget.style.background = '#388E3C')}
-          onMouseOut={(e) => htmlPreviewAvailable && (e.currentTarget.style.background = '#4CAF50')}
-        >
-          <span>👁️</span>
-          <span>HTML 미리보기</span>
-        </button>
+      </div>
+      
+      <div style={{ fontSize: '11px', color: '#999', marginTop: '8px', textAlign: 'center' }}>
+        💡 Tip: 보고서 열린 후 Ctrl+P → "PDF로 저장" → "배경 그래픽 켜기"
       </div>
     </div>
   );
