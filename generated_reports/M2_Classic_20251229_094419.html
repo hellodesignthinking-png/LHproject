@@ -321,23 +321,23 @@
         <div class="report-info-box">
             <div class="report-info-row">
                 <div class="report-info-label">보고서 번호</div>
-                <div class="report-info-value">{{ report_id }}</div>
+                <div class="report-info-value">ZS-M2-20251229094419</div>
             </div>
             <div class="report-info-row">
                 <div class="report-info-label">평가 대상</div>
-                <div class="report-info-value">{{ address }}</div>
+                <div class="report-info-value">서울특별시 강남구 역삼동 123-45</div>
             </div>
             <div class="report-info-row">
                 <div class="report-info-label">토지면적</div>
-                <div class="report-info-value">{{ land_area_sqm | number_format }} ㎡ ({{ land_area_pyeong | number_format }} 평)</div>
+                <div class="report-info-value">660 ㎡ (199 평)</div>
             </div>
             <div class="report-info-row">
                 <div class="report-info-label">용도지역</div>
-                <div class="report-info-value">{{ zone_type }}</div>
+                <div class="report-info-value">제2종일반주거지역</div>
             </div>
             <div class="report-info-row">
                 <div class="report-info-label">평가기준일</div>
-                <div class="report-info-value">{{ appraisal_date }}</div>
+                <div class="report-info-value">2025년 12월 29일</div>
             </div>
         </div>
 
@@ -352,7 +352,7 @@
     <div class="summary-page">
         <div class="final-value-box">
             <div class="final-value-label">최종 평가액</div>
-            <div class="final-value-amount">{{ price_per_sqm | number_format }}</div>
+            <div class="final-value-amount">7,400,334</div>
             <div class="final-value-unit">㎡당 원</div>
         </div>
 
@@ -365,23 +365,23 @@
                 </tr>
                 <tr>
                     <td>총 평가액</td>
-                    <td class="value-highlight">{{ total_value | number_format }} 원</td>
+                    <td class="value-highlight">4,884,220,762 원</td>
                 </tr>
                 <tr>
                     <td>㎡당 단가</td>
-                    <td class="value-highlight">{{ price_per_sqm | number_format }} 원/㎡</td>
+                    <td class="value-highlight">7,400,334 원/㎡</td>
                 </tr>
                 <tr>
                     <td>평당 단가</td>
-                    <td>{{ price_per_pyeong | number_format }} 원/평</td>
+                    <td>24,464,025 원/평</td>
                 </tr>
                 <tr>
                     <td>토지면적</td>
-                    <td>{{ land_area_sqm | number_format }} ㎡ ({{ land_area_pyeong | number_format }} 평)</td>
+                    <td>660 ㎡ (199 평)</td>
                 </tr>
                 <tr>
                     <td>신뢰도</td>
-                    <td>{{ confidence_level }} ({{ confidence_score | percentage }})</td>
+                    <td>높음 (85.0%)</td>
                 </tr>
             </table>
         </div>
@@ -405,19 +405,19 @@
                 </tr>
                 <tr>
                     <td>공시지가 (원/㎡)</td>
-                    <td class="value-highlight">{{ official_price_per_sqm | number_format }}</td>
+                    <td class="value-highlight">8,500,000</td>
                 </tr>
                 <tr>
                     <td>공시기준일</td>
-                    <td>{{ official_price_date }}</td>
+                    <td>2025.12.29</td>
                 </tr>
                 <tr>
                     <td>토지면적</td>
-                    <td>{{ land_area_sqm | number_format }} ㎡</td>
+                    <td>660 ㎡</td>
                 </tr>
                 <tr class="highlight-row">
                     <td>공시지가 기준 토지가액</td>
-                    <td>{{ official_land_value | number_format }} 원</td>
+                    <td>5,610,000,000 원</td>
                 </tr>
             </table>
 
@@ -425,8 +425,8 @@
                 <div class="formula-title">계산식 (토지만 평가):</div>
                 <div class="formula-content">
                     토지가액 = 개별공시지가(원/㎡) × 토지면적(㎡)<br>
-                    = {{ official_price_per_sqm | number_format }} × {{ land_area_sqm | number_format }}<br>
-                    = {{ official_land_value | number_format }} 원
+                    = 8,500,000 × 660<br>
+                    = 5,610,000,000 원
                 </div>
             </div>
 
@@ -460,17 +460,37 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for transaction in transactions %}
+                    
                     <tr>
-                        <td>{{ loop.index }}</td>
-                        <td>{{ transaction.date }}</td>
-                        <td style="font-size: 10pt;">{{ transaction.address | default('서울특별시 강남구 역삼동') }}</td>
-                        <td>{{ transaction.price | number_format }}</td>
-                        <td>{{ transaction.area | number_format }}</td>
-                        <td class="value-highlight">{{ transaction.price_per_sqm | number_format }}</td>
-                        <td>{{ transaction.distance }}</td>
+                        <td>1</td>
+                        <td>2024.11.15</td>
+                        <td style="font-size: 10pt;">서울특별시 강남구 역삼동 123-12</td>
+                        <td>6,800,000,000</td>
+                        <td>720</td>
+                        <td class="value-highlight">9,444,444</td>
+                        <td>250</td>
                     </tr>
-                    {% endfor %}
+                    
+                    <tr>
+                        <td>2</td>
+                        <td>2024.10.22</td>
+                        <td style="font-size: 10pt;">서울특별시 강남구 역삼동 128-5</td>
+                        <td>5,500,000,000</td>
+                        <td>600</td>
+                        <td class="value-highlight">9,166,667</td>
+                        <td>380</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>3</td>
+                        <td>2024.09.18</td>
+                        <td style="font-size: 10pt;">서울특별시 강남구 역삼동 135-8</td>
+                        <td>7,200,000,000</td>
+                        <td>750</td>
+                        <td class="value-highlight">9,600,000</td>
+                        <td>420</td>
+                    </tr>
+                    
                 </tbody>
             </table>
         </div>
@@ -498,27 +518,47 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for adj in transaction_adjustments %}
+                    
                     <tr>
-                        <td>사례 {{ loop.index }}</td>
-                        <td>{{ adj.original_price | number_format }}</td>
-                        <td>{{ adj.time_adjustment | percentage }}</td>
-                        <td>{{ adj.location_adjustment | percentage }}</td>
-                        <td>{{ adj.individual_adjustment | percentage }}</td>
-                        <td>{{ adj.weight }}</td>
-                        <td class="value-highlight">{{ adj.adjusted_price | number_format }}</td>
+                        <td>사례 1</td>
+                        <td>9,444,444</td>
+                        <td>102.0%</td>
+                        <td>98.0%</td>
+                        <td>100.0%</td>
+                        <td>0.4</td>
+                        <td class="value-highlight">9,440,666</td>
                     </tr>
-                    {% endfor %}
+                    
+                    <tr>
+                        <td>사례 2</td>
+                        <td>9,166,667</td>
+                        <td>102.0%</td>
+                        <td>98.0%</td>
+                        <td>100.0%</td>
+                        <td>0.2631578947368421</td>
+                        <td class="value-highlight">9,163,000</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>사례 3</td>
+                        <td>9,600,000</td>
+                        <td>102.0%</td>
+                        <td>98.0%</td>
+                        <td>100.0%</td>
+                        <td>0.23809523809523808</td>
+                        <td class="value-highlight">9,596,160</td>
+                    </tr>
+                    
                     <tr class="highlight-row">
                         <td colspan="6">가중평균 단가</td>
-                        <td>{{ weighted_avg_price | number_format }} 원/㎡</td>
+                        <td>9,400,668 원/㎡</td>
                     </tr>
                 </tbody>
             </table>
 
             <div class="calc-step">
                 <span class="calc-label">거래사례 기준 평가액:</span>
-                <span class="calc-value value-highlight">{{ transaction_based_value | number_format }} 원</span>
+                <span class="calc-value value-highlight">6,204,441,524 원</span>
             </div>
         </div>
     </div>
@@ -550,27 +590,27 @@
                 </tr>
                 <tr>
                     <td>예상 총수익 (연간)</td>
-                    <td>{{ annual_gross_income | number_format }}</td>
+                    <td>33,000,000</td>
                 </tr>
                 <tr>
                     <td>운영비용</td>
-                    <td>{{ operating_expenses | number_format }}</td>
+                    <td>6,600,000</td>
                 </tr>
                 <tr>
                     <td>제세공과금</td>
-                    <td>{{ taxes | number_format }}</td>
+                    <td>1,650,000</td>
                 </tr>
                 <tr class="highlight-row">
                     <td>연간 순수익</td>
-                    <td class="value-highlight">{{ annual_net_income | number_format }}</td>
+                    <td class="value-highlight">24,750,000</td>
                 </tr>
                 <tr>
                     <td>적용 환원율</td>
-                    <td>{{ capitalization_rate | percentage }}</td>
+                    <td>5.0%</td>
                 </tr>
                 <tr class="highlight-row">
                     <td><strong>수익환원가</strong></td>
-                    <td class="value-highlight"><strong>{{ income_approach_value | number_format }}</strong></td>
+                    <td class="value-highlight"><strong>495,000,000</strong></td>
                 </tr>
             </table>
         </div>
@@ -594,26 +634,26 @@
                 <tbody>
                     <tr>
                         <td>개별공시지가 기준</td>
-                        <td>{{ official_land_value | number_format }}</td>
-                        <td>{{ official_price_per_sqm | number_format }}</td>
-                        <td>{{ official_weight | percentage }}</td>
+                        <td>5,610,000,000</td>
+                        <td>8,500,000</td>
+                        <td>30.0%</td>
                     </tr>
                     <tr>
                         <td>거래사례 비교방식</td>
-                        <td>{{ transaction_based_value | number_format }}</td>
-                        <td>{{ weighted_avg_price | number_format }}</td>
-                        <td>{{ transaction_weight | percentage }}</td>
+                        <td>6,204,441,524</td>
+                        <td>9,400,668</td>
+                        <td>50.0%</td>
                     </tr>
                     <tr>
                         <td>수익환원법</td>
-                        <td>{{ income_approach_value | number_format }}</td>
-                        <td>{{ income_price_per_sqm | number_format }}</td>
-                        <td>{{ income_weight | percentage }}</td>
+                        <td>495,000,000</td>
+                        <td>750,000</td>
+                        <td>20.0%</td>
                     </tr>
                     <tr class="highlight-row">
                         <td><strong>최종 평가액</strong></td>
-                        <td class="value-highlight"><strong>{{ total_value | number_format }}</strong></td>
-                        <td class="value-highlight"><strong>{{ price_per_sqm | number_format }}</strong></td>
+                        <td class="value-highlight"><strong>4,884,220,762</strong></td>
+                        <td class="value-highlight"><strong>7,400,334</strong></td>
                         <td><strong>100%</strong></td>
                     </tr>
                 </tbody>
@@ -622,11 +662,11 @@
             <div class="formula-box">
                 <div class="formula-title">최종 산정식:</div>
                 <div class="formula-content">
-                    최종평가액 = (공시지가기준 × {{ official_weight | percentage }}) + 
-                                (거래사례기준 × {{ transaction_weight | percentage }}) + 
-                                (수익환원 × {{ income_weight | percentage }})<br>
+                    최종평가액 = (공시지가기준 × 30.0%) + 
+                                (거래사례기준 × 50.0%) + 
+                                (수익환원 × 20.0%)<br>
                     <br>
-                    = {{ total_value | number_format }} 원
+                    = 4,884,220,762 원
                 </div>
             </div>
         </div>
@@ -640,19 +680,19 @@
                 </tr>
                 <tr>
                     <td>거래사례 건수</td>
-                    <td>{{ transaction_count }}건</td>
+                    <td>3건</td>
                 </tr>
                 <tr>
                     <td>데이터 품질</td>
-                    <td>{{ data_quality }}</td>
+                    <td>양호</td>
                 </tr>
                 <tr>
                     <td>가격 범위</td>
-                    <td>최소 {{ price_range_min | number_format }} ~ 최대 {{ price_range_max | number_format }} 원/㎡</td>
+                    <td>최소 8,500,000 ~ 최대 9,600,000 원/㎡</td>
                 </tr>
                 <tr class="highlight-row">
                     <td><strong>종합 신뢰도</strong></td>
-                    <td class="value-highlight"><strong>{{ confidence_level }} ({{ confidence_score | percentage }})</strong></td>
+                    <td class="value-highlight"><strong>높음 (85.0%)</strong></td>
                 </tr>
             </table>
         </div>
@@ -660,12 +700,12 @@
         <div class="section">
             <div class="section-title">평가 의견</div>
             <div class="info-box">
-                <p>{{ appraisal_opinion }}</p>
+                <p>본 토지는 제2종일반주거지역에 위치하며, 3건의 거래사례와 개별공시지가, 수익환원법을 종합하여 평가한 결과 ㎡당 7,400,334원으로 산정되었습니다.</p>
             </div>
         </div>
 
         <div style="margin-top: 60px; text-align: right;">
-            <p style="font-size: 12pt; margin-bottom: 10px;">{{ appraisal_date }}</p>
+            <p style="font-size: 12pt; margin-bottom: 10px;">2025년 12월 29일</p>
             <p style="font-size: 13pt; font-weight: bold; color: #2c3e50;">작성 주체: ZeroSite Appraisal Engine</p>
             <p style="font-size: 12pt; color: #6c757d; margin-top: 15px;">Antenna Holdings Co., Ltd.</p>
         </div>
@@ -679,7 +719,7 @@
             <div class="section-title">평가 기준 및 제한사항</div>
             <div class="info-box">
                 <p><strong>1. 평가 목적:</strong> 본 보고서는 토지의 시장가치 평가를 목적으로 작성되었습니다.</p>
-                <p><strong>2. 평가 기준일:</strong> {{ appraisal_date }} 기준이며, 이후 시장 상황 변화는 반영되지 않습니다.</p>
+                <p><strong>2. 평가 기준일:</strong> 2025년 12월 29일 기준이며, 이후 시장 상황 변화는 반영되지 않습니다.</p>
                 <p><strong>3. 데이터 출처:</strong> 국토교통부, 한국부동산원, 실거래가 공개시스템 등 공신력 있는 기관의 자료를 활용했습니다.</p>
                 <p><strong>4. 적용 제한:</strong> 본 평가액은 참고용이며, 실제 거래가격과 다를 수 있습니다.</p>
                 <p><strong>5. 유효기간:</strong> 본 보고서는 발행일로부터 6개월간 유효합니다.</p>

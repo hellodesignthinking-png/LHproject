@@ -67,13 +67,42 @@ class M2ClassicAppraisalGenerator:
         
         # Mock transactions if not provided
         if not transactions:
+            # Extract base address for nearby locations
+            base_parts = address.split()
+            if len(base_parts) >= 3:
+                city = base_parts[0]  # 서울특별시
+                district = base_parts[1]  # 강남구
+                dong = base_parts[2]  # 역삼동
+            else:
+                city = "서울특별시"
+                district = "강남구"
+                dong = "역삼동"
+            
             transactions = [
-                {'date': '2024.11.15', 'price': 6_800_000_000, 'area': 720, 
-                 'price_per_sqm': 9_444_444, 'distance': 250},
-                {'date': '2024.10.22', 'price': 5_500_000_000, 'area': 600,
-                 'price_per_sqm': 9_166_667, 'distance': 380},
-                {'date': '2024.09.18', 'price': 7_200_000_000, 'area': 750,
-                 'price_per_sqm': 9_600_000, 'distance': 420}
+                {
+                    'date': '2024.11.15', 
+                    'address': f'{city} {district} {dong} 123-12',
+                    'price': 6_800_000_000, 
+                    'area': 720, 
+                    'price_per_sqm': 9_444_444, 
+                    'distance': 250
+                },
+                {
+                    'date': '2024.10.22', 
+                    'address': f'{city} {district} {dong} 128-5',
+                    'price': 5_500_000_000, 
+                    'area': 600,
+                    'price_per_sqm': 9_166_667, 
+                    'distance': 380
+                },
+                {
+                    'date': '2024.09.18', 
+                    'address': f'{city} {district} {dong} 135-8',
+                    'price': 7_200_000_000, 
+                    'area': 750,
+                    'price_per_sqm': 9_600_000, 
+                    'distance': 420
+                }
             ]
         
         # Calculate transaction adjustments
@@ -173,8 +202,7 @@ class M2ClassicAppraisalGenerator:
             'data_quality': data_quality,
             'price_range_min': price_range_min,
             'price_range_max': price_range_max,
-            'appraisal_opinion': f"본 토지는 {zone_type}에 위치하며, {transaction_count}건의 거래사례와 개별공시지가, 수익환원법을 종합하여 평가한 결과 ㎡당 {price_per_sqm:,.0f}원으로 산정되었습니다.",
-            'appraiser_name': "김철수 (등록번호: 제12345호)"
+            'appraisal_opinion': f"본 토지는 {zone_type}에 위치하며, {transaction_count}건의 거래사례와 개별공시지가, 수익환원법을 종합하여 평가한 결과 ㎡당 {price_per_sqm:,.0f}원으로 산정되었습니다."
         }
         
         # Render template
