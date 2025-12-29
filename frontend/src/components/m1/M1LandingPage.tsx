@@ -29,7 +29,7 @@ import { m1ApiService } from '../../services/m1.service';
 import { ProgressBar } from '../shared/ProgressBar';
 
 // Import STEP components
-import { ApiKeySetup, ApiKeys } from './ApiKeySetup'; // NEW: API Key Setup (Step -1)
+import { QuickApiKeySetup, ApiKeys } from './QuickApiKeySetup'; // NEW: Quick API Key Setup (Step -1)
 import Step0Start from './Step0Start';
 import Step1AddressInput from './Step1AddressInput';
 import Step2LocationVerification from './Step2LocationVerification';
@@ -60,7 +60,7 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
   const [collectionMethod, setCollectionMethod] = useState<DataCollectionMethod>(null);
 
   const [state, setState] = useState<M1State>({
-    currentStep: 0, // Start directly at Step 0 (skip API key setup for now)
+    currentStep: -1, // Start with Quick API Key Setup
     formData: {
       dataSources: {},
     },
@@ -248,9 +248,9 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
   const renderCurrentStep = () => {
     switch (state.currentStep) {
       case -1:
-        // NEW: API Key Setup (Step -1)
+        // NEW: Quick API Key Setup (Step -1)
         return (
-          <ApiKeySetup 
+          <QuickApiKeySetup 
             onComplete={handleApiKeySetup} 
             onSkip={handleApiKeySkip}
           />
