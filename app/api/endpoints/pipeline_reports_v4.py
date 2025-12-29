@@ -433,15 +433,7 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
             
             # Create simplified context object from mock_land_data
             try:
-                # Build nested object structure using SimpleNamespace for attribute access
-                from types import SimpleNamespace
-                
-                # Helper to convert dict to object recursively
-                def dict_to_obj(d):
-                    if isinstance(d, dict):
-                        return SimpleNamespace(**{k: dict_to_obj(v) for k, v in d.items()})
-                    return d
-                
+                # Build nested dict structure (NO SimpleNamespace for Pydantic compatibility)
                 land_info_data = {
                     "address": {
                         "road_address": mock_data.get("road_address", ""),
@@ -478,13 +470,33 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
                     }
                 }
                 
-                # Create simplified context with SimpleNamespace
-                simplified_context = SimpleNamespace(
-                    parcel_id=request.parcel_id,
-                    context_id=context_id,
-                    frozen_at=datetime.now().isoformat(),
-                    land_info=dict_to_obj(land_info_data),
-                    building_constraints=dict_to_obj({
+                # Create AttrDict-like class for attribute access (Pydantic-compatible)
+                class AttrDict(dict):
+                    """Dictionary subclass with attribute access"""
+                    def __getattr__(self, key):
+                        try:
+                            return self[key]
+                        except KeyError:
+                            raise AttributeError(key)
+                    
+                    def __setattr__(self, key, value):
+                        self[key] = value
+                
+                # Recursively convert dict to AttrDict
+                def dict_to_attrdict(d):
+                    if isinstance(d, dict):
+                        return AttrDict({k: dict_to_attrdict(v) for k, v in d.items()})
+                    elif isinstance(d, list):
+                        return [dict_to_attrdict(item) for item in d]
+                    return d
+                
+                # Create simplified context with AttrDict
+                simplified_context = AttrDict({
+                    "parcel_id": request.parcel_id,
+                    "context_id": context_id,
+                    "frozen_at": datetime.now().isoformat(),
+                    "land_info": dict_to_attrdict(land_info_data),
+                    "building_constraints": dict_to_attrdict({
                         "legal": {
                             "far_max": mock_data.get("far", 200),
                             "bcr_max": mock_data.get("bcr", 60)
@@ -492,7 +504,7 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
                         "regulations": {},
                         "restrictions": []
                     })
-                )
+                })
                 
                 frozen_contexts_v2[context_id] = simplified_context
                 
