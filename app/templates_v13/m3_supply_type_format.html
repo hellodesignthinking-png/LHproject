@@ -276,6 +276,10 @@
                 <div class="report-info-label">보고서 번호</div>
                 <div class="report-info-value">{{ report_id }}</div>
             </div>
+            <div class="report-info-row" style="background-color: #f0f8ff; border-left: 3px solid #0066cc; padding-left: 10px;">
+                <div class="report-info-label">🔒 Context ID</div>
+                <div class="report-info-value" style="font-family: monospace; font-size: 9pt;">{{ report_id.split("_M")[0] if "_M" in report_id else report_id }}</div>
+            </div>
             <div class="report-info-row">
                 <div class="report-info-label">사업지</div>
                 <div class="report-info-value">{{ project_address }}</div>

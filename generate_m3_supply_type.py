@@ -34,9 +34,11 @@ class M3SupplyTypeGenerator:
     
     def generate_report(
         self,
+        context_id: str,
         project_address: str,
         project_scale: str,
         selected_supply_type: str,
+        timestamp: datetime = None,
         supply_type_analysis: list = None,
         demographic_analysis: list = None,
         policy_target_score: float = 85.0,
@@ -48,24 +50,25 @@ class M3SupplyTypeGenerator:
         """
         M3 공급 유형 판단 보고서 생성
         
+        🔒 STATE MANAGEMENT LOCK:
         Args:
-            project_address: 사업지 주소
-            project_scale: 사업 규모 (예: "총 150세대, 30주차")
-            selected_supply_type: 선정된 공급 유형 (예: "신혼희망타운")
-            supply_type_analysis: 공급 유형별 분석 데이터
-            demographic_analysis: 인구 구성 분석 데이터
-            policy_target_score: 정책 대상 적합성 점수
-            demand_score: 입지 수요 분석 점수
-            supply_feasibility_score: 공급 가능성 점수
-            analysis_date: 분석 기준일
-            output_path: 출력 파일 경로
-            
-        Returns:
-            str: 생성된 보고서 파일 경로
+            context_id (str): REQUIRED - Unique context ID
+            timestamp (datetime): REQUIRED - Analysis timestamp
+            ... (기타 파라미터)
         """
+        # 🔒 RULE 2: context_id 필수
+        if not context_id:
+            raise ValueError("🔒 context_id is REQUIRED - no default context allowed")
+        
+        # 🔒 RULE 3: timestamp 통일
+        if not timestamp:
+            timestamp = datetime.now()
+        
         print("\n" + "="*80)
         print("🏗️ M3 SUPPLY TYPE ANALYSIS REPORT GENERATOR")
         print("="*80)
+        print(f"🔒 Context ID: {context_id}")
+        print(f"🕐 Timestamp: {timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
         print(f"📍 Project: {project_address}")
         print(f"📏 Scale: {project_scale}")
         print(f"🏘️ Selected Type: {selected_supply_type}")
@@ -73,9 +76,9 @@ class M3SupplyTypeGenerator:
         
         # 기본값 설정
         if analysis_date is None:
-            analysis_date = datetime.now().strftime("%Y년 %m월 %d일")
+            analysis_date = timestamp.strftime("%Y년 %m월 %d일")  # 🔒 Use timestamp
         
-        report_id = f"ZS-M3-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        report_id = f"{context_id}_M3"  # 🔒 Use context_id
         
         # 공급 유형별 분석 데이터 (샘플)
         if supply_type_analysis is None:
@@ -247,9 +250,15 @@ class M3SupplyTypeGenerator:
 
 def main():
     """테스트 실행"""
+    # 🔒 Generate context_id and timestamp
+    context_id = f"CTX_TEST_{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
+    timestamp = datetime.now()
+    
     generator = M3SupplyTypeGenerator()
     
     output = generator.generate_report(
+        context_id=context_id,  # 🔒 REQUIRED
+        timestamp=timestamp,     # 🔒 REQUIRED
         project_address="서울특별시 마포구 상암동 1234",
         project_scale="총 150세대 (전용면적 59㎡ 기준), 30주차",
         selected_supply_type="신혼희망타운",

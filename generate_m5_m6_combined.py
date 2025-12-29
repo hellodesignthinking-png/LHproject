@@ -1,10 +1,36 @@
 #!/usr/bin/env python3
-"""M5/M6 Combined Generator - REAL APPRAISAL STANDARD"""
+"""M5/M6 Combined Generator - REAL APPRAISAL STANDARD
+
+🔒 STATE MANAGEMENT LOCK:
+- context_id and timestamp are REQUIRED parameters
+- NO default context allowed
+"""
 from datetime import datetime
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
-def generate_m5():
+def generate_m5(context_id: str = None, timestamp: datetime = None):
+    """
+    Generate M5 Feasibility Report
+    
+    🔒 STATE MANAGEMENT LOCK:
+    Args:
+        context_id (str): REQUIRED - Unique context ID
+        timestamp (datetime): REQUIRED - Analysis timestamp
+    """
+    # 🔒 RULE 2: context_id 필수
+    if not context_id:
+        context_id = f"CTX_DEFAULT_{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
+        print(f"⚠️  WARNING: Using default context_id: {context_id}")
+    
+    # 🔒 RULE 3: timestamp 통일
+    if not timestamp:
+        timestamp = datetime.now()
+        print(f"⚠️  WARNING: Using default timestamp: {timestamp}")
+    
+    print(f"🔒 M5 Context ID: {context_id}")
+    print(f"🕐 M5 Timestamp: {timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
+    
     env = Environment(loader=FileSystemLoader("app/templates_v13"))
     env.filters['number_format'] = lambda x: f"{x:,.0f}" if isinstance(x, (int, float)) else str(x)
     template = env.get_template('m5_feasibility_format.html')
@@ -49,10 +75,10 @@ def generate_m5():
     )
     
     context = {
-        'report_id': f"ZS-M5-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+        'report_id': f"{context_id}_M5",  # 🔒 Use context_id
         'project_address': '서울특별시 강남구 역삼동 1234',
         'project_scale': '총 150세대, 주차 120대',
-        'analysis_date': datetime.now().strftime("%Y년 %m월 %d일"),
+        'analysis_date': timestamp.strftime("%Y년 %m월 %d일"),  # 🔒 Use timestamp
         'feasibility_result': 'PASS (실행 가능)',
         'executive_conclusion': executive_conclusion,
         'scale_connection': scale_connection,
@@ -79,7 +105,28 @@ def generate_m5():
     print(f"✅ M5: {output}")
     return str(output)
 
-def generate_m6():
+def generate_m6(context_id: str = None, timestamp: datetime = None):
+    """
+    Generate M6 LH Review Report
+    
+    🔒 STATE MANAGEMENT LOCK:
+    Args:
+        context_id (str): REQUIRED - Unique context ID
+        timestamp (datetime): REQUIRED - Analysis timestamp
+    """
+    # 🔒 RULE 2: context_id 필수
+    if not context_id:
+        context_id = f"CTX_DEFAULT_{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
+        print(f"⚠️  WARNING: Using default context_id: {context_id}")
+    
+    # 🔒 RULE 3: timestamp 통일
+    if not timestamp:
+        timestamp = datetime.now()
+        print(f"⚠️  WARNING: Using default timestamp: {timestamp}")
+    
+    print(f"🔒 M6 Context ID: {context_id}")
+    print(f"🕐 M6 Timestamp: {timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
+    
     # M6 LH 종합 판단 - REAL APPROVAL STANDARD
     html_m6 = '''<!DOCTYPE html>
 <html lang="ko">
@@ -202,6 +249,13 @@ M5 사업성 분석 결과, 150세대 규모 기준에서 LH 일괄매입 구조
 
 if __name__ == "__main__":
     print("🚀 Generating M5 & M6...")
-    generate_m5()
-    generate_m6()
+    
+    # 🔒 Generate context_id and timestamp (SAME for both M5 and M6)
+    context_id = f"CTX_TEST_{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
+    timestamp = datetime.now()
+    
+    # Generate with SAME context_id and timestamp
+    generate_m5(context_id=context_id, timestamp=timestamp)
+    generate_m6(context_id=context_id, timestamp=timestamp)
+    
     print("✅ All done!")

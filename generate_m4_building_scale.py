@@ -28,10 +28,12 @@ class M4BuildingScaleGenerator:
     
     def generate_report(
         self,
+        context_id: str,
         project_address: str,
         land_area: str,
         zone_type: str,
         selected_scale: str,
+        timestamp: datetime = None,
         total_units: int = 150,
         unit_composition: list = None,
         bcr_limit: float = 60.0,
@@ -45,36 +47,34 @@ class M4BuildingScaleGenerator:
         """
         M4 건축 규모 판단 보고서 생성
         
+        🔒 STATE MANAGEMENT LOCK:
         Args:
-            project_address: 사업지 주소
-            land_area: 토지면적
-            zone_type: 용도지역
-            selected_scale: 선정된 규모 (예: "총 150세대, 30주차")
-            total_units: 총 세대수
-            unit_composition: 세대 구성 데이터
-            bcr_limit: 건폐율 한도 (%)
-            far_limit: 용적률 한도 (%)
-            legal_score: 법적 제약 점수
-            review_score: 심사 기준 점수
-            stability_score: 사업 안정성 점수
-            analysis_date: 분석 기준일
-            output_path: 출력 파일 경로
-            
-        Returns:
-            str: 생성된 보고서 파일 경로
+            context_id (str): REQUIRED - Unique context ID
+            timestamp (datetime): REQUIRED - Analysis timestamp
+            ... (기타 파라미터)
         """
+        # 🔒 RULE 2: context_id 필수
+        if not context_id:
+            raise ValueError("🔒 context_id is REQUIRED - no default context allowed")
+        
+        # 🔒 RULE 3: timestamp 통일
+        if not timestamp:
+            timestamp = datetime.now()
+        
         print("\n" + "="*80)
         print("🏗️ M4 BUILDING SCALE ANALYSIS REPORT GENERATOR")
         print("="*80)
+        print(f"🔒 Context ID: {context_id}")
+        print(f"🕐 Timestamp: {timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
         print(f"📍 Project: {project_address}")
         print(f"📏 Land Area: {land_area}")
         print(f"🏗️ Selected Scale: {selected_scale}")
         print("="*80 + "\n")
         
         if analysis_date is None:
-            analysis_date = datetime.now().strftime("%Y년 %m월 %d일")
+            analysis_date = timestamp.strftime("%Y년 %m월 %d일")  # 🔒 Use timestamp
         
-        report_id = f"ZS-M4-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        report_id = f"{context_id}_M4"  # 🔒 Use context_id
         
         # 세대 구성 데이터 (샘플)
         if unit_composition is None:
@@ -201,9 +201,15 @@ class M4BuildingScaleGenerator:
 
 def main():
     """테스트 실행"""
+    # 🔒 Generate context_id and timestamp
+    context_id = f"CTX_TEST_{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
+    timestamp = datetime.now()
+    
     generator = M4BuildingScaleGenerator()
     
     output = generator.generate_report(
+        context_id=context_id,  # 🔒 REQUIRED
+        timestamp=timestamp,     # 🔒 REQUIRED
         project_address="서울특별시 강남구 역삼동 1234",
         land_area="5,800㎡ (1,754평)",
         zone_type="제2종일반주거지역",

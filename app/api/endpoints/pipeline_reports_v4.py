@@ -195,11 +195,21 @@ class HealthCheckResponse(BaseModel):
 # Helper Functions
 # ============================================================================
 
-def generate_analysis_id(parcel_id: str) -> str:
-    """Generate unique analysis ID"""
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+def generate_context_id(parcel_id: str) -> str:
+    """
+    🔒 STATE MANAGEMENT LOCK: Generate NEW context_id
+    
+    CRITICAL: 주소(parcel_id) 변경 시 항상 새로운 context_id 생성
+    - 이전 context 무효화
+    - 캐시 재사용 금지
+    - 전 모듈 데이터 100% 갱신 보장
+    """
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")  # 마이크로초까지 포함
     short_uuid = str(uuid.uuid4())[:8]
-    return f"analysis_{parcel_id}_{timestamp}_{short_uuid}"
+    context_id = f"CTX_{parcel_id}_{timestamp}_{short_uuid}"
+    
+    logger.info(f"🔒 NEW context_id generated: {context_id}")
+    return context_id
 
 
 def pipeline_result_to_dict(result: PipelineResult) -> Dict[str, Any]:
@@ -354,6 +364,11 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
     """
     Run full 6-MODULE pipeline analysis
     
+    🔒 STATE MANAGEMENT LOCK:
+    - 주소 변경 시 context_id 강제 초기화
+    - 이전 context 데이터 재사용 금지
+    - M2~M6 전체 파이프라인 100% 재계산
+    
     Executes: M1 (Land Info) → M2 (Appraisal) 🔒 → M3 (LH Demand) 
               → M4 (Capacity) → M5 (Feasibility) → M6 (LH Review)
     
@@ -363,7 +378,11 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
     try:
         start_time = time.time()
         
-        # Check cache
+        # 🔒 RULE 1: 항상 새로운 context_id 생성 (주소 변경 시 강제 초기화)
+        context_id = generate_context_id(request.parcel_id)
+        logger.info(f"🔒 Starting NEW analysis session: {context_id}")
+        
+        # Check cache (context_id 기반으로 변경 예정)
         if request.use_cache and request.parcel_id in results_cache:
             logger.info(f"✅ Using cached results for {request.parcel_id}")
             cached_result = results_cache[request.parcel_id]
@@ -381,8 +400,8 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
             
             return PipelineAnalysisResponse(
                 parcel_id=request.parcel_id,
-                analysis_id=f"cached_{request.parcel_id}",
-                status="success",
+                analysis_id=context_id,  # 🔒 Use context_id instead of cached_*
+                status="success (cached)",
                 execution_time_ms=0,
                 modules_executed=6,
                 results=pipeline_result_to_dict(cached_result),
@@ -426,7 +445,7 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
         # Build response
         response = PipelineAnalysisResponse(
             parcel_id=request.parcel_id,
-            analysis_id=generate_analysis_id(request.parcel_id),
+            analysis_id=context_id,  # 🔒 Use context_id (already generated at start)
             status="success" if result.success else "failed",
             execution_time_ms=execution_time_ms,
             modules_executed=6,

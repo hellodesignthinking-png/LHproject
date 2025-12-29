@@ -43,13 +43,31 @@ class M2ClassicAppraisalGenerator:
         except (ValueError, TypeError):
             return str(value)
     
-    def generate_report(self, address, land_area_sqm, zone_type, official_price_per_sqm, 
-                       transactions=None, appraisal_date=None, output_path=None):
-        """Generate M2 Classic Appraisal Report"""
+    def generate_report(self, context_id, address, land_area_sqm, zone_type, official_price_per_sqm, 
+                       transactions=None, appraisal_date=None, timestamp=None, output_path=None):
+        """
+        Generate M2 Classic Appraisal Report
+        
+        🔒 STATE MANAGEMENT LOCK:
+        Args:
+            context_id (str): REQUIRED - Unique context ID (주소 변경 시 새로 생성)
+            timestamp (datetime): REQUIRED - Analysis timestamp (전 모듈 통일)
+            ... (기타 파라미터)
+        """
+        
+        # 🔒 RULE 2: context_id 필수
+        if not context_id:
+            raise ValueError("🔒 context_id is REQUIRED - no default context allowed")
+        
+        # 🔒 RULE 3: timestamp 통일
+        if not timestamp:
+            timestamp = datetime.now()
         
         print("\n" + "="*80)
         print("🏗️ M2 CLASSIC APPRAISAL REPORT GENERATOR")
         print("="*80)
+        print(f"🔒 Context ID: {context_id}")
+        print(f"🕐 Timestamp: {timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
         print(f"📍 Address: {address}")
         print(f"📏 Land Area: {land_area_sqm:,.2f}㎡")
         print(f"🏘️ Zone: {zone_type}")
@@ -57,9 +75,9 @@ class M2ClassicAppraisalGenerator:
         
         # Calculate basic values
         land_area_pyeong = land_area_sqm * 0.3025
-        report_id = f"ZS-M2-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        report_id = f"{context_id}_M2"  # 🔒 Use context_id
         if not appraisal_date:
-            appraisal_date = datetime.now().strftime("%Y년 %m월 %d일")
+            appraisal_date = timestamp.strftime("%Y년 %m월 %d일")  # 🔒 Use timestamp
         
         # Official land price
         official_land_value = official_price_per_sqm * land_area_sqm
@@ -232,8 +250,14 @@ class M2ClassicAppraisalGenerator:
 
 
 if __name__ == "__main__":
+    # 🔒 Generate context_id and timestamp
+    context_id = f"CTX_TEST_{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
+    timestamp = datetime.now()
+    
     generator = M2ClassicAppraisalGenerator()
     output = generator.generate_report(
+        context_id=context_id,  # 🔒 REQUIRED
+        timestamp=timestamp,     # 🔒 REQUIRED
         address="서울특별시 강남구 역삼동 123-45",
         land_area_sqm=660.0,
         zone_type="제2종일반주거지역",
