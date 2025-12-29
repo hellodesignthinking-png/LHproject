@@ -28,6 +28,11 @@ import { M1State, M1FormData, AddressSuggestion, DataSourceInfo } from '../../ty
 import { m1ApiService } from '../../services/m1.service';
 import { ProgressBar } from '../shared/ProgressBar';
 
+// 🔒 EXECUTION LOCK & ATOMIC RELEASE
+import { useExecutionLock } from '../../hooks/useExecutionLock';
+import { useAtomicRelease } from '../../hooks/useAtomicRelease';
+import { ExecutionLockOverlay } from '../shared/ExecutionLockOverlay';
+
 // Import STEP components
 import { QuickApiKeySetup, ApiKeys } from './QuickApiKeySetup'; // NEW: Quick API Key Setup (Step -1)
 import Step0Start from './Step0Start';
@@ -52,6 +57,10 @@ interface M1LandingPageProps {
 }
 
 export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeComplete }) => {
+  // 🔒 EXECUTION LOCK & ATOMIC RELEASE Hooks
+  const executionLock = useExecutionLock();
+  const atomicRelease = useAtomicRelease();
+  
   // API Keys state (stored in SessionStorage)
   const [apiKeys, setApiKeys] = useState<ApiKeys | null>(null);
   const [apiKeysConfigured, setApiKeysConfigured] = useState<boolean>(false);
@@ -113,6 +122,25 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
   };
 
   const handleStep1Next = (address: AddressSuggestion) => {
+    // 🔒 RULE 1: Check if execution is already locked
+    if (executionLock.isLocked) {
+      alert('⚠️ 분석이 이미 진행 중입니다.\n현재 분석이 완료될 때까지 기다려주세요.');
+      console.warn('⚠️ EXECUTION BLOCKED: Analysis already in progress');
+      return;
+    }
+
+    // Generate context_id for this new analysis
+    const contextId = `CTX_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+    
+    // 🔒 RULE 1: Lock execution for new analysis
+    const locked = executionLock.lockExecution(contextId);
+    if (!locked) {
+      alert('⚠️ 실행 잠금 실패. 다시 시도해주세요.');
+      return;
+    }
+
+    console.log('🔒 EXECUTION LOCKED:', contextId);
+    
     updateFormData({
       selectedAddress: address,
       dataSources: {
@@ -233,6 +261,10 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
   const handleStep8Complete = (frozenContext: any) => {
     console.log('🎯 [M1Landing] handleStep8Complete called:', frozenContext);
     
+    // 🔒 Mark M1 as complete
+    executionLock.markModuleComplete('M1');
+    console.log('✅ M1 Complete - Module marked');
+    
     // 🔥 CRITICAL FIX: If pipeline callback is provided, call it immediately
     // Don't store frozenContext in state as it will render success screen
     if (onContextFreezeComplete && frozenContext.context_id && frozenContext.parcel_id) {
@@ -244,6 +276,7 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
       onContextFreezeComplete(frozenContext.context_id, frozenContext.parcel_id);
       
       console.log('✅ [M1Landing] Callback invoked, control passed to PipelineOrchestrator');
+      console.log('🚀 M2~M6 pipeline will now execute...');
     } else {
       // Fallback: standalone M1 usage - store state and show success screen
       console.log('ℹ️ [M1Landing] No pipeline callback, showing standalone success');
@@ -252,6 +285,9 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
         frozenContext,
       }));
       alert(`컨텍스트 확정 완료!\n컨텍스트 ID: ${frozenContext.context_id}\n\n이제 M2-M6 파이프라인으로 이동합니다.`);
+      
+      // 🔒 Unlock since pipeline won't run
+      executionLock.unlockExecution();
     }
   };
 
@@ -344,6 +380,14 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
 
   return (
     <div className="m1-landing-page" style={{ maxWidth: '900px', margin: '0 auto', padding: '20px' }}>
+      {/* 🔒 EXECUTION LOCK OVERLAY */}
+      <ExecutionLockOverlay
+        isLocked={executionLock.isLocked}
+        progress={executionLock.progress}
+        contextId={executionLock.currentContextId}
+        elapsedTime={executionLock.getElapsedTime()}
+      />
+
       <header style={{ marginBottom: '30px', textAlign: 'center' }}>
         <h1>ZeroSite M1: 토지 정보 수집</h1>
         <p style={{ color: '#666' }}>8단계 프로세스로 정확한 토지 정보를 수집합니다.</p>
