@@ -59,8 +59,18 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
   // NEW Phase 2: Data collection method
   const [collectionMethod, setCollectionMethod] = useState<DataCollectionMethod>(null);
 
+  // Auto-configure Kakao API key on component mount
+  React.useEffect(() => {
+    const autoConfiguredKeys: ApiKeys = {
+      kakao: '6ff4cfada4e33ec48b782f78858f0c39', // Pre-configured Kakao API key
+    };
+    sessionStorage.setItem('m1_api_keys', JSON.stringify(autoConfiguredKeys));
+    setApiKeys(autoConfiguredKeys);
+    setApiKeysConfigured(true);
+  }, []);
+
   const [state, setState] = useState<M1State>({
-    currentStep: -1, // Start with Quick API Key Setup
+    currentStep: 0, // Start directly at Step 0 (skip API key setup)
     formData: {
       dataSources: {},
     },
