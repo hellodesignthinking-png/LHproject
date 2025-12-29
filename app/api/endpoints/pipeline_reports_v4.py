@@ -428,16 +428,21 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
         if request.mock_land_data:
             logger.info("📝 mock_land_data provided - storing as frozen context")
             from app.api.endpoints.m1_context_freeze_v2 import frozen_contexts_v2
-            from app.core.context.m1_final import M1FinalContext
-            from app.core.context.canonical_land import (
-                AddressInfo, Coordinates, CadastralInfo, ZoningInfo, RoadAccessInfo
-            )
             
             mock_data = request.mock_land_data
             
-            # Create M1FinalContext from mock_land_data
+            # Create simplified context object from mock_land_data
             try:
-                land_info_dict = {
+                # Build nested object structure using SimpleNamespace for attribute access
+                from types import SimpleNamespace
+                
+                # Helper to convert dict to object recursively
+                def dict_to_obj(d):
+                    if isinstance(d, dict):
+                        return SimpleNamespace(**{k: dict_to_obj(v) for k, v in d.items()})
+                    return d
+                
+                land_info_data = {
                     "address": {
                         "road_address": mock_data.get("road_address", ""),
                         "jibun_address": mock_data.get("address", ""),
@@ -455,7 +460,7 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
                         "bubun": mock_data.get("bubun", ""),
                         "jimok": mock_data.get("jimok", ""),
                         "area_sqm": mock_data.get("area", 0),
-                        "area_pyeong": mock_data.get("area", 0) * 0.3025
+                        "area_pyeong": mock_data.get("area", 0) * 0.3025 if mock_data.get("area") else 0
                     },
                     "zoning": {
                         "zone_type": mock_data.get("zone_type", ""),
@@ -473,33 +478,30 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
                     }
                 }
                 
-                # Simplified M1FinalContext-like structure
-                class SimplifiedLandInfo:
-                    def __init__(self, data):
-                        self.address = type('obj', (object,), data['address'])()
-                        self.coordinates = type('obj', (object,), data['coordinates'])()
-                        self.cadastral = type('obj', (object,), data['cadastral'])()
-                        self.zoning = type('obj', (object,), data['zoning'])()
-                        self.road_access = type('obj', (object,), data['road_access'])()
-                        self.terrain = type('obj', (object,), data['terrain'])()
-                    
-                class SimplifiedM1Context:
-                    def __init__(self, parcel_id, land_info_dict):
-                        self.parcel_id = parcel_id
-                        self.land_info = SimplifiedLandInfo(land_info_dict)
-                        self.building_constraints = type('obj', (object,), {
-                            'legal': type('obj', (object,), {
-                                'far_max': mock_data.get("far", 200),
-                                'bcr_max': mock_data.get("bcr", 60)
-                            })()
-                        })()
+                # Create simplified context with SimpleNamespace
+                simplified_context = SimpleNamespace(
+                    parcel_id=request.parcel_id,
+                    context_id=context_id,
+                    frozen_at=datetime.now().isoformat(),
+                    land_info=dict_to_obj(land_info_data),
+                    building_constraints=dict_to_obj({
+                        "legal": {
+                            "far_max": mock_data.get("far", 200),
+                            "bcr_max": mock_data.get("bcr", 60)
+                        },
+                        "regulations": {},
+                        "restrictions": []
+                    })
+                )
                 
-                simplified_context = SimplifiedM1Context(request.parcel_id, land_info_dict)
                 frozen_contexts_v2[context_id] = simplified_context
                 
                 logger.info(f"✅ Stored mock_land_data as frozen context: {context_id}")
+                logger.info(f"   Parcel ID: {request.parcel_id}")
+                logger.info(f"   Address: {mock_data.get('address', 'N/A')}")
             except Exception as store_error:
                 logger.warning(f"⚠️ Failed to store mock_land_data: {store_error}")
+                logger.warning(f"   Error details: {type(store_error).__name__}: {str(store_error)}")
                 # Continue anyway - pipeline will use mock data fallback
         
         result = pipeline.run(request.parcel_id)
