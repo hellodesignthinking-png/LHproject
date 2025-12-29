@@ -91,18 +91,50 @@
                 <tr class="highlight-row"><td><strong>총 사업비</strong></td><td><strong>{{ total_cost | number_format }}</strong></td><td><strong>100%</strong></td></tr>
             </table>
         </div>
+        <div class="section">
+            <div class="section-title">1-1. 건축 규모(150세대)와 사업성의 연계 검토</div>
+            <div class="info-box">
+                <p>{{ scale_connection }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-page page-break">
+        <div class="page-title"><span class="hierarchy-badge badge-secondary">SECONDARY</span>2. 재무 지표 분석</div>
+        <div class="section">
+            <div class="section-title">주요 재무 지표</div>
+            <table class="data-table">
+                <tr><th style="width:40%;">지표</th><th>결과</th></tr>
+                <tr><td>총 사업비</td><td class="value-highlight">{{ total_cost | number_format }}백만원</td></tr>
+                <tr><td>LH 매입가</td><td class="value-highlight">{{ lh_purchase_price | number_format }}백만원</td></tr>
+                <tr><td>사업수익률</td><td class="value-highlight">{{ profit_rate }}%</td></tr>
+                <tr class="pass-row"><td><strong>실행 가능성</strong></td><td><strong>{{ feasibility_result }}</strong></td></tr>
+            </table>
+        </div>
+        <div class="section">
+            <div class="section-title">2-1. 수익률 해석</div>
+            <div class="info-box">
+                <p>{{ profit_interpretation }}</p>
+            </div>
+        </div>
     </div>
 
     <div class="content-page page-break">
         <div class="page-title">3. 최종 판단</div>
         <div class="section">
+            <div class="section-title">2-1. 주요 재무 리스크 및 대응 구조</div>
+            <div class="info-box">
+                <p>{{ risk_structure }}</p>
+            </div>
+        </div>
+        <div class="section">
             <div class="section-title">종합 평가 결과</div>
             <table class="data-table">
-                <tr><th>평가 방법</th><th>가중치</th><th>점수</th></tr>
-                <tr><td>LH 매입 구조 (PRIMARY)</td><td>50%</td><td class="value-highlight">{{ lh_structure_score }}점</td></tr>
-                <tr><td>재무 지표 (SECONDARY)</td><td>30%</td><td class="value-highlight">{{ financial_score }}점</td></tr>
-                <tr><td>리스크 분석 (REFERENCE)</td><td>20%</td><td class="value-highlight">{{ risk_score }}점</td></tr>
-                <tr class="pass-row"><td><strong>종합 점수</strong></td><td><strong>100%</strong></td><td class="value-highlight"><strong>{{ total_score }}점</strong></td></tr>
+                <tr><th style="width:40%;">평가 항목</th><th>점수</th></tr>
+                <tr><td>LH 매입 구조</td><td class="value-highlight">{{ lh_structure_score }}점</td></tr>
+                <tr><td>재무 지표</td><td class="value-highlight">{{ financial_score }}점</td></tr>
+                <tr><td>리스크 분석</td><td class="value-highlight">{{ risk_score }}점</td></tr>
+                <tr class="pass-row"><td><strong>최종 실행 가능성</strong></td><td class="value-highlight"><strong>{{ feasibility_result }}</strong></td></tr>
             </table>
         </div>
         <div class="section">
