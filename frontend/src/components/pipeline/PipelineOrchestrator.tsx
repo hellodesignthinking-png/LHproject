@@ -79,11 +79,13 @@ export const PipelineOrchestrator: React.FC = () => {
    * 
    * Actions:
    * 1. Store frozen context_id and parcel_id
-   * 2. Automatically trigger M2→M6 pipeline
-   * 3. No user interaction required until M6 decision
+   * 2. Convert M1 formData to mock_land_data format
+   * 3. Automatically trigger M2→M6 pipeline with land data
+   * 4. No user interaction required until M6 decision
    */
-  const handleM1FreezeComplete = async (contextId: string, parcelId: string) => {
+  const handleM1FreezeComplete = async (contextId: string, parcelId: string, formData?: any) => {
     console.log('🔒 M1 Context Frozen:', { contextId, parcelId });
+    console.log('📦 M1 FormData:', formData);
     console.log('⏰ Time:', new Date().toLocaleTimeString());
     
     setState(prev => ({
@@ -105,25 +107,70 @@ export const PipelineOrchestrator: React.FC = () => {
       // 🔥 CRITICAL FIX: Use centralized config
       const apiUrl = `${BACKEND_URL}/api/v4/pipeline/analyze`;
       
+      // 🆕 Convert M1 formData to mock_land_data format if provided
+      let mock_land_data = null;
+      if (formData) {
+        console.log('📝 Converting M1 formData to mock_land_data...');
+        mock_land_data = {
+          // Basic info
+          parcel_id: parcelId,
+          address: formData.selectedAddress?.jibun_address || '',
+          road_address: formData.selectedAddress?.road_address || '',
+          
+          // Location
+          sido: formData.geocodeData?.sido || formData.selectedAddress?.sido || '',
+          sigungu: formData.geocodeData?.sigungu || formData.selectedAddress?.sigungu || '',
+          dong: formData.geocodeData?.dong || formData.selectedAddress?.dong || '',
+          coordinates: {
+            lat: formData.geocodeData?.coordinates?.lat || 0,
+            lon: formData.geocodeData?.coordinates?.lon || 0
+          },
+          
+          // Cadastral
+          bonbun: formData.cadastralData?.bonbun || '',
+          bubun: formData.cadastralData?.bubun || '',
+          jimok: formData.cadastralData?.jimok || '',
+          area: formData.cadastralData?.area || 0,
+          
+          // Zoning
+          zone_type: formData.landUseData?.zone_type || '',
+          zone_detail: formData.landUseData?.zone_detail || '',
+          far: formData.landUseData?.far || 0,
+          bcr: formData.landUseData?.bcr || 0,
+          
+          // Road
+          road_width: formData.roadInfoData?.road_width || 0,
+          road_type: formData.roadInfoData?.road_type || '',
+          
+          // Market
+          official_land_price: formData.marketData?.official_land_price || 0,
+          transactions: formData.marketData?.transactions || []
+        };
+        console.log('✅ mock_land_data prepared:', mock_land_data);
+      }
+      
+      const requestBody = {
+        parcel_id: parcelId,
+        use_cache: false,
+        ...(mock_land_data && { mock_land_data })
+      };
+      
       console.log(`📡 Calling pipeline API: ${apiUrl}`);
-      console.log('📦 Request body:', { parcel_id: parcelId, use_cache: false });
+      console.log('📦 Request body:', requestBody);
       
       const fetchStartTime = Date.now();
       
-      // 🆕 Add timeout to prevent infinite waiting
+      // 🆕 Add timeout to prevent infinite waiting (increase to 120s for full pipeline)
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
-        console.error('⏰ REQUEST TIMEOUT after 30 seconds');
+        console.error('⏰ REQUEST TIMEOUT after 120 seconds');
         controller.abort();
-      }, 30000); // 30 second timeout
+      }, 120000); // 120 second timeout for full pipeline
       
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          parcel_id: parcelId,
-          use_cache: false
-        }),
+        body: JSON.stringify(requestBody),
         signal: controller.signal
       });
       
@@ -350,8 +397,8 @@ export const PipelineOrchestrator: React.FC = () => {
         {/* Stage 1: M1 Input (8 steps) */}
         {state.stage === 'M1_INPUT' && (
           <M1LandingPage 
-            onContextFreezeComplete={(contextId: string, parcelId: string) => {
-              handleM1FreezeComplete(contextId, parcelId);
+            onContextFreezeComplete={(contextId: string, parcelId: string, formData?: any) => {
+              handleM1FreezeComplete(contextId, parcelId, formData);
             }}
           />
         )}

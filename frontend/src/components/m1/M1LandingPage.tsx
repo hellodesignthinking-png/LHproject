@@ -53,7 +53,7 @@ const STEP_LABELS = [
 ];
 
 interface M1LandingPageProps {
-  onContextFreezeComplete?: (contextId: string, parcelId: string) => void;
+  onContextFreezeComplete?: (contextId: string, parcelId: string, formData?: M1FormData) => void;
 }
 
 export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeComplete }) => {
@@ -283,9 +283,10 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
       console.log('✅ [M1Landing] Calling onContextFreezeComplete callback (Pipeline Mode)');
       console.log('📦 [M1Landing] Context ID:', frozenContext.context_id);
       console.log('📦 [M1Landing] Parcel ID:', frozenContext.parcel_id);
+      console.log('📦 [M1Landing] FormData:', state.formData);
       
-      // Call pipeline callback immediately - DO NOT update local state
-      onContextFreezeComplete(frozenContext.context_id, frozenContext.parcel_id);
+      // Call pipeline callback immediately with formData - DO NOT update local state
+      onContextFreezeComplete(frozenContext.context_id, frozenContext.parcel_id, state.formData);
       
       console.log('✅ [M1Landing] Callback invoked, control passed to PipelineOrchestrator');
       console.log('🚀 M2~M6 pipeline will now execute...');
