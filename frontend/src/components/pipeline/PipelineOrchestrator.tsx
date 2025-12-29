@@ -84,8 +84,13 @@ export const PipelineOrchestrator: React.FC = () => {
    * 4. No user interaction required until M6 decision
    */
   const handleM1FreezeComplete = async (contextId: string, parcelId: string, formData?: any) => {
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🚀 [PipelineOrchestrator] handleM1FreezeComplete CALLED!');
+    console.log('═══════════════════════════════════════════════════════');
     console.log('🔒 M1 Context Frozen:', { contextId, parcelId });
-    console.log('📦 M1 FormData:', formData);
+    console.log('📦 M1 FormData received:', !!formData);
+    console.log('📦 M1 FormData keys:', formData ? Object.keys(formData) : 'null');
+    console.log('📦 M1 FormData full:', formData);
     console.log('⏰ Time:', new Date().toLocaleTimeString());
     
     setState(prev => ({

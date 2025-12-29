@@ -268,6 +268,10 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
 
   const handleStep8Complete = (frozenContext: any) => {
     console.log('🎯 [M1Landing] handleStep8Complete called:', frozenContext);
+    console.log('🔍 [M1Landing] onContextFreezeComplete exists?', !!onContextFreezeComplete);
+    console.log('🔍 [M1Landing] frozenContext.context_id:', frozenContext.context_id);
+    console.log('🔍 [M1Landing] frozenContext.parcel_id:', frozenContext.parcel_id);
+    console.log('🔍 [M1Landing] state.formData:', state.formData);
     
     const isPipelineMode = !!onContextFreezeComplete;
     
@@ -283,23 +287,28 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
       console.log('✅ [M1Landing] Calling onContextFreezeComplete callback (Pipeline Mode)');
       console.log('📦 [M1Landing] Context ID:', frozenContext.context_id);
       console.log('📦 [M1Landing] Parcel ID:', frozenContext.parcel_id);
-      console.log('📦 [M1Landing] FormData:', state.formData);
+      console.log('📦 [M1Landing] FormData keys:', Object.keys(state.formData || {}));
+      console.log('📦 [M1Landing] FormData full:', JSON.stringify(state.formData, null, 2));
       
-      // Call pipeline callback immediately with formData - DO NOT update local state
-      onContextFreezeComplete(frozenContext.context_id, frozenContext.parcel_id, state.formData);
+      // 🔥 CRITICAL: Call callback immediately - DO NOT wait or delay
+      try {
+        onContextFreezeComplete(frozenContext.context_id, frozenContext.parcel_id, state.formData);
+        console.log('✅ [M1Landing] Callback invoked successfully');
+      } catch (error) {
+        console.error('❌ [M1Landing] Callback invocation failed:', error);
+      }
       
-      console.log('✅ [M1Landing] Callback invoked, control passed to PipelineOrchestrator');
-      console.log('🚀 M2~M6 pipeline will now execute...');
+      console.log('🚀 M2~M6 pipeline should now execute...');
       
-      // 🔒 Safety: If pipeline doesn't respond in 3 seconds, unlock
+      // 🔒 Safety: If pipeline doesn't respond in 5 seconds, show warning
       setTimeout(() => {
         if (executionLock.progress <= 16) { // M1 only = 16%
-          console.warn('⚠️ Pipeline not responding - auto unlocking');
+          console.warn('⚠️ Pipeline not responding after 5 seconds - auto unlocking');
           executionLock.unlockExecution();
           alert('⚠️ 파이프라인 연결 실패\n\nM2~M6 분석이 시작되지 않았습니다.\n페이지를 새로고침 해주세요.');
           window.location.reload();
         }
-      }, 3000);
+      }, 5000);
     } else {
       // Fallback: standalone M1 usage - store state and show success screen
       console.log('ℹ️ [M1Landing] Standalone M1 mode - No pipeline callback');
