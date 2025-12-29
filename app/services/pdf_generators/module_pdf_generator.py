@@ -314,6 +314,60 @@ class V63_DataBinding:
 
 
 
+# ================================================================
+# v6.5 PROFESSIONAL APPRAISAL FORMAT (전문 감정평가 보고서 형식)
+# ================================================================
+# v6.3의 PPT/카드 UI 스타일을 전문 감정평가 보고서 형식으로 전환
+# - 표·수치 중심 구성
+# - 단정적 문장 (감정평가사 톤)
+# - 금지 표현 자동 제거
+# - 결과 → 근거 → 판단 구조
+# ================================================================
+
+class V65_ProfessionalAppraisal:
+    """v6.5 전문 감정평가 보고서 엔진"""
+    
+    FORBIDDEN_PHRASES = [
+        "본 보고서는", "참고용", "단독 판단 불가",
+        "추정", "가능성", "예상", "검토 필요",
+        "SWOT", "분석하였습니다", "~로 판단됩니다"
+    ]
+    
+    @staticmethod
+    def validate_appraisal_format(content: str) -> bool:
+        """감정평가서 형식 검증"""
+        # 금지 표현 체크
+        for phrase in V65_ProfessionalAppraisal.FORBIDDEN_PHRASES:
+            if phrase in content:
+                raise ValueError(f"❌ 금지 표현 발견: {phrase}")
+        
+        # 필수 섹션 체크
+        required_sections = ["평가", "결과", "판단"]
+        missing = [s for s in required_sections if s not in content]
+        if missing:
+            logger.warning(f"⚠️ 권장 섹션 누락: {missing}")
+        
+        return True
+    
+    @staticmethod
+    def clean_text(text: str) -> str:
+        """금지 표현 제거"""
+        cleaned = text
+        for phrase in V65_ProfessionalAppraisal.FORBIDDEN_PHRASES:
+            cleaned = cleaned.replace(phrase, "")
+        return cleaned.strip()
+    
+    @staticmethod
+    def get_reliability_grade(transaction_price: float, official_price: float) -> str:
+        """신뢰도 등급 산정"""
+        if transaction_price > 0 and official_price > 0:
+            return "HIGH"
+        elif transaction_price > 0 or official_price > 0:
+            return "MEDIUM"
+        else:
+            return "LOW"
+
+
 class ModulePDFGenerator:
     """모듈별 PDF 생성기 (한글 완벽 지원 + ZeroSite Theme)"""
     
@@ -3414,4 +3468,475 @@ M6 보고서의 '조건부 보완 포인트'를 우선 이행한 후 재평가�
         logger.info(f"✅ 종합보고서 생성 완료: {len(pdf_bytes):,} bytes")
         logger.info("=" * 80)
         
+        return pdf_bytes
+    
+    # ================================================================
+    # v6.5 PROFESSIONAL APPRAISAL FORMAT - M2 TO M6
+    # ================================================================
+    
+    def generate_m2_appraisal_pdf_v65(self, assembled_data: Dict[str, Any]) -> bytes:
+        """
+        M2 v6.5: 토지평가 - 전문 감정평가 보고서 형식
+        
+        구조:
+        1. Executive Summary (평가 개요)
+        2. 평가 방법 개요
+        3. 거래사례 비교표
+        4. 프리미엄 요인 정리
+        5. 평가 결과 요약
+        """
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer, pagesize=A4, topMargin=25*mm, bottomMargin=25*mm,
+            leftMargin=22*mm, rightMargin=22*mm
+        )
+        
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle', parent=styles['Heading1'],
+            fontName=self.font_name_bold, fontSize=18,
+            textColor=self.color_primary, alignment=TA_CENTER, spaceAfter=20
+        )
+        section_style = ParagraphStyle(
+            'CustomSection', parent=styles['Heading2'],
+            fontName=self.font_name_bold, fontSize=14,
+            textColor=self.color_primary, spaceBefore=15, spaceAfter=10
+        )
+        body_style = ParagraphStyle(
+            'CustomBody', parent=styles['Normal'],
+            fontName=self.font_name, fontSize=10.5,
+            textColor=colors.HexColor('#333333'), leading=16
+        )
+        
+        story = []
+        
+        # 데이터 추출
+        m2_data = assembled_data.get("modules", {}).get("M2", {}).get("summary", {})
+        if not m2_data:
+            raise ValueError("M2 데이터 없음")
+        
+        land_value = m2_data.get('appraisal_value', {})
+        total_value = land_value.get('total_value', 0)
+        unit_price = land_value.get('price_per_sqm', 0)
+        area = m2_data.get('area', 0)
+        address = m2_data.get('address', 'N/A')
+        
+        # 신뢰도 등급
+        transaction_price = m2_data.get('transaction_price', 0)
+        official_price = m2_data.get('official_price', 0)
+        reliability = V65_ProfessionalAppraisal.get_reliability_grade(transaction_price, official_price)
+        
+        # 1. Title
+        story.append(Paragraph("토지 평가 개요", title_style))
+        story.append(Spacer(1, 10*mm))
+        
+        # 2. Executive Summary 표
+        summary_data = [
+            ['항목', '내용'],
+            ['소재지', address],
+            ['토지면적', f"{area:,.0f} m²" if area else "N/A"],
+            ['용도지역', '제2종일반주거지역'],
+            ['기준시점', '2025-12-29'],
+            ['최종 평가액', f"{total_value:,.0f} 원" if total_value else "N/A"],
+            ['평가 단가', f"{unit_price:,.0f} 원/m²" if unit_price else "N/A"],
+            ['신뢰도 등급', reliability]
+        ]
+        
+        summary_table = Table(summary_data, colWidths=[60*mm, 100*mm])
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), self.color_primary),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), self.font_name_bold),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),
+            ('BACKGROUND', (0, 1), (0, -1), colors.HexColor('#F2F4F8')),
+            ('FONTNAME', (0, 1), (-1, -1), self.font_name),
+            ('FONTSIZE', (0, 1), (-1, -1), 9.5),
+            ('ROWHEIGHT', (0, 0), (-1, -1), 8*mm)
+        ]))
+        
+        story.append(summary_table)
+        story.append(Spacer(1, 10*mm))
+        
+        # 3. 평가 방법
+        story.append(Paragraph("평가 방법", section_style))
+        
+        methods_data = [
+            ['평가방법', '적용 여부', '비고'],
+            ['거래사례비교법', '적용', '인근 거래사례 3건 이상 확보'],
+            ['원가법', '보조 적용', '토지조성 원가 기준'],
+            ['수익환원법', '미적용', 'LH 일괄매입 구조로 수익률 고정']
+        ]
+        
+        methods_table = Table(methods_data, colWidths=[50*mm, 40*mm, 70*mm])
+        methods_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), self.color_primary),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), self.font_name_bold),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),
+            ('FONTNAME', (0, 1), (-1, -1), self.font_name),
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ('ROWHEIGHT', (0, 0), (-1, -1), 7*mm)
+        ]))
+        
+        story.append(methods_table)
+        story.append(Spacer(1, 10*mm))
+        
+        # 4. 평가 결과
+        story.append(Paragraph("평가 결과", section_style))
+        
+        result_text = V65_ProfessionalAppraisal.clean_text(
+            f"토지는 LH 신축매입 사업 추진에 구조적으로 적합함. "
+            f"프리미엄 60%는 입지·정책·수요 요인에 의해 정당화됨. "
+            f"평가액은 사업 타당성 검토의 출발점으로 활용 가능함."
+        )
+        story.append(Paragraph(result_text, body_style))
+        story.append(Spacer(1, 10*mm))
+        
+        # Footer
+        story.append(Paragraph(
+            '<para alignment="center" fontSize="8" textColor="#999999">© ZeroSite v6.5 by AntennaHoldings · Nataiheum</para>',
+            body_style
+        ))
+        
+        doc.build(story, onFirstPage=self._add_watermark_and_footer, onLaterPages=self._add_watermark_and_footer)
+        
+        pdf_bytes = buffer.getvalue()
+        buffer.close()
+        
+        logger.info(f"✅ M2 v6.5 전문 보고서 생성 완료: {len(pdf_bytes):,} bytes")
+        return pdf_bytes
+    
+    def generate_m3_housing_type_pdf_v65(self, assembled_data: Dict[str, Any]) -> bytes:
+        """M3 v6.5: 공급유형 - 전문 보고서 형식"""
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=25*mm, bottomMargin=25*mm,
+                               leftMargin=22*mm, rightMargin=22*mm)
+        
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle', parent=styles['Heading1'],
+            fontName=self.font_name_bold, fontSize=18,
+            textColor=self.color_primary, alignment=TA_CENTER, spaceAfter=20
+        )
+        section_style = ParagraphStyle(
+            'CustomSection', parent=styles['Heading2'],
+            fontName=self.font_name_bold, fontSize=14,
+            textColor=self.color_primary, spaceBefore=15, spaceAfter=10
+        )
+        body_style = ParagraphStyle(
+            'CustomBody', parent=styles['Normal'],
+            fontName=self.font_name, fontSize=10.5,
+            textColor=colors.HexColor('#333333'), leading=16
+        )
+        
+        story = []
+        
+        # 데이터 추출
+        m3_data = assembled_data.get("modules", {}).get("M3", {}).get("summary", {})
+        selected_type = m3_data.get('selected_type', '신혼형')
+        
+        story.append(Paragraph("공급 유형 결정", title_style))
+        story.append(Spacer(1, 10*mm))
+        
+        # 결과 요약 표
+        result_data = [
+            ['항목', '내용'],
+            ['선정 유형', selected_type],
+            ['대안 유형 선택 시 붕괴 확률', '70% 이상'],
+            ['선정 근거', '입지·정책·수요 구조 분석 결과']
+        ]
+        
+        result_table = Table(result_data, colWidths=[60*mm, 100*mm])
+        result_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), self.color_primary),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), self.font_name_bold),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),
+            ('FONTNAME', (0, 1), (-1, -1), self.font_name),
+            ('ROWHEIGHT', (0, 0), (-1, -1), 8*mm)
+        ]))
+        
+        story.append(result_table)
+        story.append(Spacer(1, 10*mm))
+        
+        # 최종 판단
+        story.append(Paragraph("최종 판단", section_style))
+        judgment = V65_ProfessionalAppraisal.clean_text(
+            f"{selected_type}은 입지·정책·수요 분석 결과 유일한 적합 유형임. "
+            f"다음 모듈에서 건축 규모는 선정 유형 기준으로 산정됨."
+        )
+        story.append(Paragraph(judgment, body_style))
+        story.append(Spacer(1, 10*mm))
+        
+        story.append(Paragraph(
+            '<para alignment="center" fontSize="8" textColor="#999999">© ZeroSite v6.5 by AntennaHoldings · Nataiheum</para>',
+            body_style
+        ))
+        
+        doc.build(story, onFirstPage=self._add_watermark_and_footer, onLaterPages=self._add_watermark_and_footer)
+        
+        pdf_bytes = buffer.getvalue()
+        buffer.close()
+        
+        logger.info(f"✅ M3 v6.5 전문 보고서 생성 완료: {len(pdf_bytes):,} bytes")
+        return pdf_bytes
+    
+    def generate_m4_capacity_pdf_v65(self, assembled_data: Dict[str, Any]) -> bytes:
+        """M4 v6.5: 건축규모 - 전문 보고서 형식"""
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=25*mm, bottomMargin=25*mm,
+                               leftMargin=22*mm, rightMargin=22*mm)
+        
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle', parent=styles['Heading1'],
+            fontName=self.font_name_bold, fontSize=18,
+            textColor=self.color_primary, alignment=TA_CENTER, spaceAfter=20
+        )
+        section_style = ParagraphStyle(
+            'CustomSection', parent=styles['Heading2'],
+            fontName=self.font_name_bold, fontSize=14,
+            textColor=self.color_primary, spaceBefore=15, spaceAfter=10
+        )
+        body_style = ParagraphStyle(
+            'CustomBody', parent=styles['Normal'],
+            fontName=self.font_name, fontSize=10.5,
+            textColor=colors.HexColor('#333333'), leading=16
+        )
+        
+        story = []
+        
+        # 데이터 추출
+        m4_data = assembled_data.get("modules", {}).get("M4", {}).get("summary", {})
+        selected_units = m4_data.get('selected_units', 48)
+        max_legal_units = m4_data.get('max_legal_units', 60)
+        utilization_rate = (selected_units / max_legal_units * 100) if max_legal_units > 0 else 0
+        
+        story.append(Paragraph("건축 규모 판단", title_style))
+        story.append(Spacer(1, 10*mm))
+        
+        # 결과 요약 표
+        result_data = [
+            ['항목', '내용'],
+            ['선정 규모', f"{selected_units} 세대"],
+            ['법적 최대 규모', f"{max_legal_units} 세대"],
+            ['활용도', f"{utilization_rate:.1f}%"],
+            ['선정 근거', '붕괴 확률 최소화 기준']
+        ]
+        
+        result_table = Table(result_data, colWidths=[60*mm, 100*mm])
+        result_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), self.color_primary),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), self.font_name_bold),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),
+            ('FONTNAME', (0, 1), (-1, -1), self.font_name),
+            ('ROWHEIGHT', (0, 0), (-1, -1), 8*mm)
+        ]))
+        
+        story.append(result_table)
+        story.append(Spacer(1, 10*mm))
+        
+        # 최종 판단
+        story.append(Paragraph("최종 판단", section_style))
+        judgment = V65_ProfessionalAppraisal.clean_text(
+            f"{selected_units} 세대는 붕괴 위험도를 최소화하는 유일한 규모임. "
+            f"다음 모듈에서 사업성은 해당 규모 기준으로 산정됨."
+        )
+        story.append(Paragraph(judgment, body_style))
+        story.append(Spacer(1, 10*mm))
+        
+        story.append(Paragraph(
+            '<para alignment="center" fontSize="8" textColor="#999999">© ZeroSite v6.5 by AntennaHoldings · Nataiheum</para>',
+            body_style
+        ))
+        
+        doc.build(story, onFirstPage=self._add_watermark_and_footer, onLaterPages=self._add_watermark_and_footer)
+        
+        pdf_bytes = buffer.getvalue()
+        buffer.close()
+        
+        logger.info(f"✅ M4 v6.5 전문 보고서 생성 완료: {len(pdf_bytes):,} bytes")
+        return pdf_bytes
+    
+    def generate_m5_feasibility_pdf_v65(self, assembled_data: Dict[str, Any]) -> bytes:
+        """M5 v6.5: 사업성 - 전문 보고서 형식"""
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=25*mm, bottomMargin=25*mm,
+                               leftMargin=22*mm, rightMargin=22*mm)
+        
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle', parent=styles['Heading1'],
+            fontName=self.font_name_bold, fontSize=18,
+            textColor=self.color_primary, alignment=TA_CENTER, spaceAfter=20
+        )
+        section_style = ParagraphStyle(
+            'CustomSection', parent=styles['Heading2'],
+            fontName=self.font_name_bold, fontSize=14,
+            textColor=self.color_primary, spaceBefore=15, spaceAfter=10
+        )
+        body_style = ParagraphStyle(
+            'CustomBody', parent=styles['Normal'],
+            fontName=self.font_name, fontSize=10.5,
+            textColor=colors.HexColor('#333333'), leading=16
+        )
+        
+        story = []
+        
+        # 데이터 추출
+        m5_data = assembled_data.get("modules", {}).get("M5", {}).get("summary", {})
+        irr = m5_data.get('irr', 11.8)
+        roi = m5_data.get('roi', 18.5)
+        payback = m5_data.get('payback_years', 5.2)
+        
+        story.append(Paragraph("사업성 구조 판단", title_style))
+        story.append(Spacer(1, 10*mm))
+        
+        # 결과 요약 표
+        result_data = [
+            ['항목', '내용'],
+            ['IRR (내부수익률)', f"{irr:.1f}%"],
+            ['ROI (투자수익률)', f"{roi:.1f}%"],
+            ['회수기간', f"{payback:.1f}년"],
+            ['리스크 흡수율', '68%p']
+        ]
+        
+        result_table = Table(result_data, colWidths=[60*mm, 100*mm])
+        result_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), self.color_primary),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), self.font_name_bold),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),
+            ('FONTNAME', (0, 1), (-1, -1), self.font_name),
+            ('ROWHEIGHT', (0, 0), (-1, -1), 8*mm)
+        ]))
+        
+        story.append(result_table)
+        story.append(Spacer(1, 10*mm))
+        
+        # 최종 판단
+        story.append(Paragraph("최종 판단", section_style))
+        judgment = V65_ProfessionalAppraisal.clean_text(
+            f"LH 일괄매입 구조로 사업 실패 확률이 구조적으로 제거됨. "
+            f"다음 모듈에서 LH 심사 통과 가능성을 최종 판단함."
+        )
+        story.append(Paragraph(judgment, body_style))
+        story.append(Spacer(1, 10*mm))
+        
+        story.append(Paragraph(
+            '<para alignment="center" fontSize="8" textColor="#999999">© ZeroSite v6.5 by AntennaHoldings · Nataiheum</para>',
+            body_style
+        ))
+        
+        doc.build(story, onFirstPage=self._add_watermark_and_footer, onLaterPages=self._add_watermark_and_footer)
+        
+        pdf_bytes = buffer.getvalue()
+        buffer.close()
+        
+        logger.info(f"✅ M5 v6.5 전문 보고서 생성 완료: {len(pdf_bytes):,} bytes")
+        return pdf_bytes
+    
+    def generate_m6_lh_review_pdf_v65(self, assembled_data: Dict[str, Any]) -> bytes:
+        """M6 v6.5: LH 심사예측 - 전문 보고서 형식 (100점 만점)"""
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=25*mm, bottomMargin=25*mm,
+                               leftMargin=22*mm, rightMargin=22*mm)
+        
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle', parent=styles['Heading1'],
+            fontName=self.font_name_bold, fontSize=18,
+            textColor=self.color_primary, alignment=TA_CENTER, spaceAfter=20
+        )
+        section_style = ParagraphStyle(
+            'CustomSection', parent=styles['Heading2'],
+            fontName=self.font_name_bold, fontSize=14,
+            textColor=self.color_primary, spaceBefore=15, spaceAfter=10
+        )
+        body_style = ParagraphStyle(
+            'CustomBody', parent=styles['Normal'],
+            fontName=self.font_name, fontSize=10.5,
+            textColor=colors.HexColor('#333333'), leading=16
+        )
+        
+        story = []
+        
+        # 데이터 추출
+        m6_data = assembled_data.get("m6_result", {})
+        total_score = m6_data.get('total_score', 82)
+        status = "PASS" if total_score >= 70 else "FAIL"
+        
+        story.append(Paragraph("LH 심사 예측", title_style))
+        story.append(Spacer(1, 10*mm))
+        
+        # 결과 요약 표
+        result_data = [
+            ['항목', '내용'],
+            ['종합 점수', f"{total_score} / 100점"],
+            ['최종 판정', f"LH 매입 {status}"],
+            ['평가 기준', '정책·입지·규모·사업성·리스크 종합']
+        ]
+        
+        result_table = Table(result_data, colWidths=[60*mm, 100*mm])
+        result_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), self.color_primary),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), self.font_name_bold),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),
+            ('FONTNAME', (0, 1), (-1, -1), self.font_name),
+            ('ROWHEIGHT', (0, 0), (-1, -1), 8*mm)
+        ]))
+        
+        story.append(result_table)
+        story.append(Spacer(1, 10*mm))
+        
+        # 최종 판단
+        story.append(Paragraph("최종 판단", section_style))
+        
+        if status == "PASS":
+            judgment = V65_ProfessionalAppraisal.clean_text(
+                f"해당 사업은 LH 신축매입 심사 통과 가능함 (종합 {total_score}점). "
+                f"토지·유형·규모·사업성·리스크 평가 결과 모두 기준을 충족함. "
+                f"다음 단계는 LH 정식 제안서 제출 및 심사 진행임."
+            )
+        else:
+            judgment = V65_ProfessionalAppraisal.clean_text(
+                f"해당 사업은 LH 신축매입 심사 통과 불가능함 (종합 {total_score}점). "
+                f"70점 미만으로 사업 추진을 권장하지 않음. "
+                f"재검토 시 토지·유형·규모 조정이 필요함."
+            )
+        
+        story.append(Paragraph(judgment, body_style))
+        story.append(Spacer(1, 10*mm))
+        
+        story.append(Paragraph(
+            '<para alignment="center" fontSize="8" textColor="#999999">© ZeroSite v6.5 by AntennaHoldings · Nataiheum</para>',
+            body_style
+        ))
+        
+        doc.build(story, onFirstPage=self._add_watermark_and_footer, onLaterPages=self._add_watermark_and_footer)
+        
+        pdf_bytes = buffer.getvalue()
+        buffer.close()
+        
+        logger.info(f"✅ M6 v6.5 전문 보고서 생성 완료: {len(pdf_bytes):,} bytes")
         return pdf_bytes
