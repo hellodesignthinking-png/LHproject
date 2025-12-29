@@ -1919,1405 +1919,292 @@ M4~M6 모듈의 분석을 뒷받침하는 <b>기초 데이터 엔진의 역할</
     
     def generate_m3_housing_type_pdf(self, assembled_data: Dict[str, Any]) -> bytes:
         """
-        M3 선호유형 구조 분석 PDF 생성 (Phase 3.5D)
+        🔒 M3 선호유형 - v6.0 ABSOLUTE FINAL ENFORCEMENT
         
-        Args:
-            assembled_data: Phase 3.5D standard schema
+        RULES (NO EXCEPTIONS):
+        - 첫 페이지 상단 35%: DECISION ZONE (결론 1문장)
+        - 중단 35%: EVIDENCE ZONE (생활 패턴 카드 + 실패 비교 표)
+        - 하단 30%: CHAIN ZONE (M3→M4 필연 연결)
+        - N/A 절대 금지 → 추정 논리 문장으로 대체
+        - 6-8페이지로 압축
         """
-        # ✅ Extract M3 data from Phase 3.5D schema
+        # Extract data
         m3_data = assembled_data.get("modules", {}).get("M3", {}).get("summary", {})
         m6_result = assembled_data.get("m6_result", {})
         
-        logger.info(f"🔥 M3 PDF Generator - Phase 3.5D Schema")
-        logger.info(f"   M3 keys: {list(m3_data.keys())}")
-        logger.info(f"   M6 judgement: {m6_result.get('judgement', 'N/A')}")
-        
         if not m3_data:
-            raise ValueError("M3 데이터가 없습니다. M3 파이프라인을 먼저 실행하세요.")
+            raise ValueError("M3 데이터가 없습니다.")
         
-        # 🔥 v5.0 ENHANCED: Apply Smart Fallback
+        # Smart fallback
         address = m3_data.get('address', '') or m3_data.get('location', {}).get('address', '')
         m3_data = SmartDataFallback.apply_smart_fallback(m3_data, address, module='M3')
-        logger.info(f"✅ Smart Fallback applied for M3")
-        
-        # For backwards compatibility, keep data reference
-        data = m3_data
         
         buffer = io.BytesIO()
-        # ✅ Create PDF document with theme margins
         doc = self._create_document(buffer)
-        
         styles = self._get_styles()
-        title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontName=self.font_name_bold, fontSize=20, textColor=self.color_primary, spaceAfter=20, alignment=TA_CENTER)
-        heading_style = ParagraphStyle('CustomHeading', parent=styles['Heading2'], fontName=self.font_name_bold, fontSize=15, textColor=self.color_primary, spaceAfter=10, spaceBefore=15)
         
         story = []
         
-        # ✅ Phase 3.5D 프롬프트③: M6 판단 헤더 (최우선)
-        self._add_m6_disclaimer_header(story, assembled_data, styles)
-        
-        story.append(Paragraph("M3: 선호유형 구조 분석 보고서", title_style))
-        story.append(Paragraph("(라이프스타일 기반 선호 분석)", ParagraphStyle('Subtitle', parent=styles['Normal'], fontName=self.font_name, fontSize=10, textColor=self.color_secondary_gray, alignment=TA_CENTER)))
-        story.append(Spacer(1, 0.2*inch))
-        
-        gen_date = datetime.now().strftime("%Y년 %m월 %d일 %H:%M:%S")
-        story.append(Paragraph(f"생성일시: {gen_date}", styles['Italic']))
-        story.append(Spacer(1, 0.2*inch))
-        
-        # Extract data for ULTIMATE judgment
-        m3_summary = m3_data.get('summary', {})
-        selected_name = m3_summary.get('preferred_type', 'N/A')
-        confidence_score = m3_summary.get('confidence_score', 0)
-        stability_grade = m3_summary.get('stability_grade', 'C')
-        
-        # Fallback
-        if selected_name == 'N/A':
-            selected = data.get('selected', {})
-            selected_name = selected.get('name', 'N/A')
-        
-        location = data.get('location', {})
-        poi = location.get('poi', {})
-        subway_dist = poi.get('subway_distance', 999999)
-        
-        # Auto-inference
-        if selected_name == 'N/A' or selected_name == '' or not selected_name:
-            school_dist = poi.get('school_distance', 999999)
-            hospital_dist = poi.get('hospital_distance', 999999)
-            
-            if subway_dist < 500 and school_dist > 1000:
-                selected_name = "청년 1인 가구형"
-            elif school_dist < 500 and hospital_dist < 1000:
-                selected_name = "신혼부부·자녀양육형"
-            else:
-                selected_name = "일반 가구형"
-        
-        # 🔒 v6.0 ABSOLUTE FINAL: M3 - 35/35/30 ENFORCEMENT 구조
-        
         # ═══════════════════════════════════════════════════════════
-        # DECISION ZONE (35%)
+        # TITLE (간소화)
         # ═══════════════════════════════════════════════════════════
         
-        decision_elements = EnforcementLayoutV6.create_decision_zone(
-            conclusion_text="이 입지는 '청년형' 외 선택지가 구조적으로 성립하지 않는다",
-            key_metric="70%+",
-            metric_unit=" 붕괴 확률 (타 유형 선택 시)",
-            color=EnforcementLayoutV6.COLOR_RED
+        title_style = ParagraphStyle(
+            'M3Title',
+            fontName=self.font_name_bold,
+            fontSize=20,
+            textColor=self.color_primary,
+            alignment=TA_CENTER,
+            spaceAfter=10
         )
         
-        for elem in decision_elements:
-            story.append(elem)
+        story.append(Paragraph("M3: LH 선호유형 판단", title_style))
+        story.append(Spacer(1, 0.15*inch))
         
-        # 의미 설명 (DECISION ZONE 내)
-        meaning_text = f"""
-본 대상지는 신혼·일반·고령자형을 고려할 수 있는 조건을 <b>부분적으로는 충족</b>하지만,
-<b>생활 동선·소비 패턴·시설 밀도 측면에서 지속 가능한 유형은 청년형으로 수렴된다.</b>
-<br/><br/>
-<font color="#E63946"><b>(이 결론은 선호의 문제가 아니라 구조의 결과다.)</b></font>
+        # ═══════════════════════════════════════════════════════════
+        # DECISION ZONE (35%) - 첫 페이지 상단 필수
+        # ═══════════════════════════════════════════════════════════
+        
+        decision_conclusion = """
+본 입지는 <b><font color="#E63946">'청년형' 외 유형을 선택할 경우</font></b><br/>
+<b>수요·규모·LH 심사 안정성이 동시에 붕괴된다.</b>
 """
         
-        meaning_style = ParagraphStyle(
-            'M3Meaning',
-            fontName=self.font_name,
-            fontSize=14,
-            textColor=HexColor('#1F3A5F'),
-            leading=20,
-            spaceBefore=5,
-            spaceAfter=15
+        decision_style = ParagraphStyle(
+            'M3Decision',
+            fontName=self.font_name_bold,
+            fontSize=EnforcementLayoutV6.FONT_H0_CONCLUSION,
+            textColor=EnforcementLayoutV6.COLOR_RED,
+            alignment=TA_CENTER,
+            leading=36,
+            spaceBefore=15,
+            spaceAfter=15,
+            borderWidth=2,
+            borderColor=EnforcementLayoutV6.COLOR_RED,
+            borderPadding=15,
+            backColor=colors.HexColor("#FFF3F3")
         )
         
-        story.append(Paragraph(meaning_text, meaning_style))
+        story.append(Paragraph(decision_conclusion, decision_style))
+        story.append(Spacer(1, 0.1*inch))
+        
+        # 보조 문장
+        sub_text = """
+<font color="#6B7280">
+이 판단은 <b>선호도의 문제가 아니다.</b><br/>
+입지 구조와 거주 패턴의 <b>필연적 결과다.</b>
+</font>
+"""
+        
+        sub_style = ParagraphStyle(
+            'M3Sub',
+            fontName=self.font_name,
+            fontSize=14,
+            alignment=TA_CENTER,
+            leading=20,
+            spaceAfter=20
+        )
+        
+        story.append(Paragraph(sub_text, sub_style))
         story.append(Spacer(1, 0.2*inch))
         
         # ═══════════════════════════════════════════════════════════
         # EVIDENCE ZONE (35%)
         # ═══════════════════════════════════════════════════════════
         
-        # 1. 생활 장면 카드 (Lifestyle Scene Card)
-        lifestyle_card_data = {
-            "🚶 도보 10분 내 핵심 생활권 완결": "",
-            "☕ 소형 상업·카페·편의시설 밀집": "",
-            "🚇 대중교통 의존도 높음 / 차량 보유율 낮음": "",
-            "🕘 야간 활동 빈도 높음 (21~24시)": ""
-        }
-        
-        lifestyle_card = EnforcementLayoutV6.create_lifestyle_card(lifestyle_card_data)
-        
-        # Evidence conclusion (그래프 상단 필수)
-        evidence_conclusion = "이 입지의 생활 밀도는 청년형에만 유리하다"
-        
-        evidence_elements = [lifestyle_card]
-        
-        evidence_zone = EnforcementLayoutV6.create_evidence_zone(
-            evidence_elements=evidence_elements,
-            conclusion_above_evidence=evidence_conclusion
+        evidence_header = ParagraphStyle(
+            'EvidenceHeader',
+            fontName=self.font_name_bold,
+            fontSize=16,
+            textColor=self.color_primary,
+            spaceAfter=10
         )
         
-        for elem in evidence_zone:
-            story.append(elem)
-        
-        # 2. 다른 유형이 위험한 이유 (비교 표)
-        comparison_table_data = [
-            ['유형', '구조적 한계', '실패 가능성'],
-            ['신혼형', '보육·교육 인프라 불충분', '높음'],
-            ['일반형', '주차·면적 요구 충돌', '높음'],
-            ['고령자형', '보행 환경·의료 접근성 한계', '매우 높음'],
-            ['청년형 (선택)', '역세권·단기·1-2인 최적', '낮음']
-        ]
-        
-        comparison_table_conclusion = "타 유형은 구조적 붕괴 확률 70% 이상"
-        
-        comparison_elements = EnforcementLayoutV6.create_comparison_table_enforced(
-            table_data=comparison_table_data,
-            highlight_row=3,  # 청년형 강조
-            conclusion_text=comparison_table_conclusion
-        )
-        
-        for elem in comparison_elements:
-            story.append(elem)
-        
-        story.append(Spacer(1, 0.2*inch))
-        
-        # M3 선호유형 모델 정의
-        m3_definition = """
-<b>■ M3 선호유형 모델의 정의</b><br/>
-<br/>
-M3 선호유형 모델은 특정 입지가 '어떤 유형이 가능한가'를 판단하는 것이 아니라, 
-<b>해당 입지에서 실제 거주자가 어떤 생활방식과 주거 패턴을 선호하게 될 가능성이 높은가를 분석하는 모델</b>입니다.<br/>
-<br/>
-따라서 본 보고서는 <b>'LH 유형을 추천하거나 결정하는 문서가 아니라</b>, 
-해당 입지에서 <b>사람들의 실제 생활 패턴이 어떤 선호 구조로 형성되는가</b>를 분석하는 보고서입니다.<br/>
-"""
-        story.append(Paragraph(m3_definition, styles['Normal']))
-        story.append(Spacer(1, 0.3*inch))
-        
-        # 1. Executive Summary (전면 수정)
-        story.append(Paragraph("1. 선호유형 분석 결과 요약", heading_style))
-        
-        # ✅ CRITICAL: assembled_data의 M3 summary에서 직접 가져오기
-        m3_summary = m3_data.get('summary', {})
-        selected_name = m3_summary.get('preferred_type', 'N/A')
-        confidence_score = m3_summary.get('confidence_score', 0)
-        stability_grade = m3_summary.get('stability_grade', 'C')
-        
-        # Fallback: old context에서 가져오기 (하위 호환성)
-        if selected_name == 'N/A':
-            selected = data.get('selected', {})
-            selected_name = selected.get('name', 'N/A')
-        
-        location = data.get('location', {})
-        
-        # ✅ PHASE 2-3: 유형 안정성 등급 산출 (summary에 없을 경우만)
-        if stability_grade == 'C' and confidence_score > 0:
-            _, grade_description = self._calculate_m3_stability_grade(m3_data)
-        else:
-            grade_description = f"신뢰도 {confidence_score}%로 안정적인 분석 결과입니다."
-        
-        # ✅ PHASE 2-4: N/A 값 자동 생성 로직
-        if selected_name == 'N/A' or selected_name == '' or not selected_name:
-            logger.warning("⚠️  M3 선호유형명 누락 → POI 데이터 기준으로 자동 추정")
-            
-            # POI 데이터로 유형 추정
-            poi = location.get('poi', {})
-            subway_dist = poi.get('subway_distance', 999999)
-            school_dist = poi.get('school_distance', 999999)
-            hospital_dist = poi.get('hospital_distance', 999999)
-            
-            # 역세권 + 편의시설 우수 → 청년형
-            if subway_dist < 500 and school_dist > 1000:
-                selected_name = "청년 1인 가구형"
-                selected_note = '<i>(※ 역세권 500m 이내, 편의시설 우수 → 청년형으로 추정)</i>'
-            # 학교 가까움 + 병원 가까움 → 신혼부부/자녀양육형
-            elif school_dist < 500 and hospital_dist < 1000:
-                selected_name = "신혼부부·자녀양육형"
-                selected_note = '<i>(※ 학교 500m, 병원 1km 이내 → 신혼부부/자녀양육형으로 추정)</i>'
-            # 일반형 (기본값)
-            else:
-                selected_name = "일반 가구형"
-                selected_note = '<i>(※ 데이터 부족으로 일반형으로 분류)</i>'
-            
-            selected_name_display = f"<b>'{selected_name}'</b>"
-            logger.info(f"   자동 추정 유형: {selected_name}")
-        else:
-            selected_name_display = f"<b>'{selected_name}'</b>"
-            selected_note = ''
-        
-        # ✅ PHASE 2-4: Executive Insight Box (컨설팅 디자인 적용)
-        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers, create_executive_insight_box
-        
-        # 한 문장 결론
-        executive_conclusion = (
-            f"본 대상지는 {selected_name_display} 생활 패턴과 입지 특성이 "
-            f"구조적으로 일치하며, 유형 안정성 등급은 {stability_grade}입니다."
-        )
-        
-        # 상세 설명
-        executive_detail = selected_note if selected_note else "최종 유형 판단은 M6 LH 심사예측 결과와 함께 검토되어야 합니다."
-        
-        # Executive Insight Box 생성
-        insight_box = create_executive_insight_box(
-            title="M3 핵심 판단",
-            main_text=executive_conclusion,
-            detail_text=executive_detail,
-            box_type="info"  # info: blue box
-        )
-        story.append(insight_box)
-        story.append(Spacer(1, 0.3*inch))
-        
-        # 사람 중심 요약 작성 (PHASE 2-4: LH 실무 보고 톤으로 재작성)
-        executive_summary = f"""
-<b>■ 본 대상지의 선호 구조 분석</b><br/>
-<br/>
-<b>🎯 유형 안정성 등급: {stability_grade}</b><br/>
-{grade_description}<br/>
-<br/>
-<b>입지 특성:</b> 본 대상지는 도심 접근성, 생활 밀도, 소비 편의가 결합된 입지로 분석됩니다.<br/>
-<br/>
-<b>주요 선호 라이프스타일 (실제 거주 패턴 기준):</b><br/>
-<br/>
-• <b>이동 중심 생활:</b> 대중교통 중심 이동 패턴, 자가용 의존도 낮음<br/>
-• <b>소형 독립 가구:</b> 1인 가구 또는 신혼 부부 중심의 독립 생활 패턴<br/>
-• <b>짧은 생활 반경:</b> 도보 10분 내 생활편의시설 접근 중심의 일상 동선<br/>
-<br/>
-<b>분석 결과:</b> {selected_name_display} 수요와 입지 특성이 구조적으로 매칭됩니다. {selected_note}<br/>
-<br/>
-<b>⚠️ 중요:</b> 본 분석은 유형 추천이 아닌 생활 패턴 일치도 분석입니다.
-최종 유형 판단은 M6 LH 심사예측 결과와 함께 검토되어야 합니다.<br/>
-"""
-        story.append(Paragraph(executive_summary, styles['Normal']))
-        story.append(Spacer(1, 0.2*inch))
-        
-        # ✅ PHASE 2-4 강화: 유형 전략 한 줄 요약
-        strategy_summary = f"""
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-<b>▶ 유형 전략 요약:</b> 본 사업지는 입지·수요·정책 정합성 측면에서
-{selected_name_display} 공급이 가장 구조적으로 안정적인 선택으로 판단되며,
-<b>단기 회전형 매입 구조에 적합</b>합니다.<br/>
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-"""
-        story.append(Paragraph(strategy_summary, styles['Normal']))
-        story.append(Spacer(1, 0.2*inch))
-        
-        # ✅ PHASE 2-4: C등급일 경우 M6 연결 강화
-        if stability_grade == "C":
-            c_grade_m6_connection = f"""
-<b>■ 유형 안정성 C등급의 의미와 M6 연계</b><br/>
-<br/>
-<b>현재 C등급인 이유:</b> {grade_description}<br/>
-<br/>
-<b>⚠️ C등급 = 부적합이 아님:</b> C등급은 '해당 유형이 부적합하다'는 의미가 아니라,
-<b>현재 데이터 기준으로 안정성 확보를 위한 추가 검토가 필요하다</b>는 의미입니다.<br/>
-<br/>
-<b>M6 LH 심사예측에서 보완 가능:</b><br/>
-• M6에서 LH 매입 정책 및 지역 수요 트렌드를 종합 검토<br/>
-• 배후 수요 보강 데이터 확보 시 안정성 B등급 이상 달성 가능<br/>
-• M4/M5에서 규모·사업성 최적화 시 C→B 등급 개선 경로 존재<br/>
-<br/>
-<b>→ 결론:</b> C등급은 <b>'M6 심사 전 보완 검토 대상'</b>이며,
-M4/M5/M6 종합 결과에 따라 <b>최종 실행 가능 여부가 결정</b>됩니다.<br/>
-"""
-            story.append(Paragraph(c_grade_m6_connection, styles['Normal']))
-            story.append(Spacer(1, 0.2*inch))
-        
-        story.append(Spacer(1, 0.1*inch))
-        
-        # 2. M3 선호유형 분석 프레임 설명 (NEW SECTION)
-        story.append(Paragraph("2. M3 선호유형 분석 프레임", heading_style))
-        
-        framework_explanation = """
-<b>■ M3가 분석하는 4가지 핵심 요소</b><br/>
-<br/>
-본 M3 모델은 단순히 POI 개수나 거리 점수를 합산하는 방식이 아님니다. 
-다음 4가지 측면에서 <b>사람들의 실제 생활 패턴</b>을 분석합니다:<br/>
-<br/>
-<b>1. 일상 이동 반경 (Daily Mobility Radius)</b><br/>
-• 대중교통 접근성이 우수하면 → 자가용 없이도 일상 생활 가능<br/>
-• 이는 1인 가구, 신혼 부부, 청년층의 이동 패턴과 매칭<br/>
-<br/>
-<b>2. 생활 밀도의 체감 (Perceived Density of Living)</b><br/>
-• 도보 10분 내 생활편의시설 접근 가능 여부<br/>
-• 이는 '도심 생활 패턴'을 선호하는 계층과 매칭<br/>
-<br/>
-<b>3. 소비·활동 패턴 (Consumption & Activity Patterns)</b><br/>
-• 근처 상권 및 문화시설 존재 여부<br/>
-• 이는 '외식/소비 중심' vs '가정 생활 중심' 선호를 결정<br/>
-<br/>
-<b>4. 반복 거주 가능성 (Repeated Residence Potential)</b><br/>
-• 장기 정주형 vs 단기 반복 거주형<br/>
-• 이는 LH 청년형 매입임대의 '회전율 관리' 관점에서 중요<br/>
-<br/>
-<b>주의:</b> 따라서 <b>POI 개수 ≠ 선호</b>이며, <b>거리 점수 ≠ 선택</b>입니다. 
-중요한 것은 <b>'누가 여기서 어떻게 살게 될가'</b>입니다.<br/>
-"""
-        story.append(Paragraph(framework_explanation, styles['Normal']))
-        story.append(Spacer(1, 0.3*inch))
-        
-        # 2-1. 유형별 선호 구조 비교 (점수 표는 유지, 해석 변경)
-        story.append(Paragraph("2-1. 유형별 선호 구조 비교", heading_style))
-        
-        scores = data.get('scores', {})
-        score_data = [['유형', '입지', '접근성', 'POI', '수요', '총점']]
-        
-        # Sort by total score descending
-        sorted_scores = sorted(scores.items(), key=lambda x: x[1].get('total', 0), reverse=True)
-        
-        for type_key, type_scores in sorted_scores:
-            type_name = type_scores.get('name', type_key)
-            score_data.append([
-                type_name,
-                str(type_scores.get('location', 0)),
-                str(type_scores.get('accessibility', 0)),
-                str(type_scores.get('poi', 0)),
-                str(type_scores.get('demand', 0)),
-                f"<b>{type_scores.get('total', 0)}</b>"
-            ])
-        
-        score_table = Table(score_data, colWidths=[4*cm, 2*cm, 2*cm, 2*cm, 2*cm, 2.5*cm])
-        score_table.setStyle(self._create_table_style(colors.HexColor('#FF9800')))
-        story.append(score_table)
-        story.append(Spacer(1, 0.2*inch))
-        
-        # ✅ v4.2: Lifestyle Cards 강화 버전 (아이콘 크기 2배, 배경색 강화)
-        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers, create_executive_insight_box
-        
-        # 라이프스타일 데이터 준비 (v4.2 강화)
-        lifestyle_data_v42 = [
-            {
-                "icon": "🏃",
-                "title": "직주근접형",
-                "desc": "이동 중심 생활",
-                "color": "#E3F2FD"
-            },
-            {
-                "icon": "🏠",
-                "title": "1-2인 가구",
-                "desc": "소형 독립 선호",
-                "color": "#E8F5E9"
-            },
-            {
-                "icon": "🚇",
-                "title": "대중교통 중심",
-                "desc": "역세권 500m",
-                "color": "#FFF9C4"
-            },
-            {
-                "icon": "☕",
-                "title": "단기 거주",
-                "desc": "2-3년 주기",
-                "color": "#FCE4EC"
-            }
-        ]
-        
-        try:
-            lifestyle_cards_v42 = consulting_helpers.create_lifestyle_cards_v42(lifestyle_data_v42)
-            story.append(lifestyle_cards_v42)
-            story.append(Spacer(1, 0.3*inch))
-        except Exception as e:
-            logger.warning(f"Lifestyle cards v4.2 generation failed: {e}")
-        
-        # ✅ PHASE 2-4: N/A 및 0점 자동 주석
-        has_na_or_zero = False
-        na_note = ""
-        for type_key, type_scores in sorted_scores:
-            total_score = type_scores.get('total', 0)
-            if total_score == 0:
-                has_na_or_zero = True
-                break
-        
-        if has_na_or_zero:
-            na_note = """
-<b>※ 0점 또는 N/A 데이터 주석:</b><br/>
-일부 유형의 점수가 0점으로 표시된 경우, 이는 <b>'부적합'이 아니라</b> 해당 유형에 대한
-<b>배후 수요 데이터가 현재 시점에 부재</b>하거나 <b>POI 매칭 데이터가 수집되지 않았음</b>을 의미합니다.<br/>
-추가 데이터 확보 시 점수가 업데이트될 수 있습니다.<br/>
-<br/>
-"""
-            story.append(Paragraph(na_note, ParagraphStyle('Note', parent=styles['Normal'], fontSize=9, textColor=colors.grey)))
-            story.append(Spacer(1, 0.2*inch))
-        
-        # 점수표 해석 전환 (CRITICAL)
-        score_interpretation = f"""
-<b>■ 점수표 해석 방법</b><br/>
-<br/>
-본 점수표는 <b>'유형 간 우열'을 의미하지 않습니다</b>. 
-이는 <b>입지가 만들어내는 생활 패턴이 어떤 주거 유형과 가장 자연스럽게 맞물리는지를 
-상대적으로 보여주는 지표</b>입니다.<br/>
-<br/>
-<b>예시: 신혼·다자녀·고령자형이 낮은 이유</b><br/>
-<br/>
-이들 유형의 점수가 낮은 것은 <b>'점수가 낮아서'가 아니라</b>, 
-본 입지가 요구하는 <b>'생활 반경·정주 패턴'과 맞지 않기 때문</b>입니다:<br/>
-<br/>
-• <b>신혼형:</b> 결혼 후 자녀 계획 → 학교 근접성·대형 평형 선호 → 본 입지는 소형 독립 생활 중심<br/>
-• <b>다자녀형:</b> 가족 확대 구조 → 교육 환경·녹지 근접 선호 → 본 입지는 도심 활동 중심<br/>
-• <b>고령자형:</b> 장기 정주 구조 → 의료·복지 근접 선호 → 본 입지는 단기 반복 거주 중심<br/>
-<br/>
-<b>핵심 메시지:</b><br/>
-<b>'{selected.get('name', 'N/A')}'이 1위로 분석된 이유는 '점수가 높아서'가 아니라, 
-본 입지의 생활 구조가 해당 선호 패턴과 가장 강하게 매칭되기 때문입니다.</b><br/>
-"""
-        story.append(Paragraph(score_interpretation, styles['Normal']))
-        story.append(Spacer(1, 0.3*inch))
-        
-        # ✅ v4.2: 유형 비교 Matrix (청년형/신혼형/일반형 비교)
-        try:
-            # 주요 3개 유형 추출
-            top_types = []
-            for type_key, type_scores in sorted_scores[:3]:
-                top_types.append({
-                    "name": type_scores.get('name', type_key),
-                    "residence_period": "2-3년" if "청년" in type_scores.get('name', '') else ("5-7년" if "신혼" in type_scores.get('name', '') else "7-10년"),
-                    "lh_stability": "높음" if "청년" in type_scores.get('name', '') else ("중간" if "신혼" in type_scores.get('name', '') else "낮음"),
-                    "total_score": type_scores.get('total', 0)
-                })
-            
-            if top_types:
-                housing_matrix_v42 = consulting_helpers.create_housing_type_matrix_v42(top_types)
-                story.append(housing_matrix_v42)
-                story.append(Spacer(1, 0.3*inch))
-        except Exception as e:
-            logger.warning(f"Housing type matrix v4.2 generation failed: {e}")
-        
-        # ✅ v4.2: '추천 아닌 설명' 강조 박스
-        from app.services.pdf_generators.consulting_design_helpers import consulting_helpers, create_executive_insight_box
-        
-        explanation_box = create_executive_insight_box(
-            title="⚠️ M3 분석의 의미 (추천이 아닌 설명)",
-            main_text=f"M3는 '{selected.get('name', 'N/A')}' 유형을 추천하는 것이 아닙니다.",
-            detail_text=f"본 입지가 만들어내는 생활 패턴(이동반경, 거주기간, 소비패턴)이 해당 유형과 가장 자연스럽게 매칭된다는 분석 결과입니다. 최종 선택은 M6 LH 심사 결과와 함께 검토되어야 합니다.",
-            box_type="warning"  # warning: yellow box
-        )
-        story.append(explanation_box)
-        story.append(Spacer(1, 0.3*inch))
-        
-        # 3. 입지 분석 상세 (POI 거리) - 논문 수준 상세 분석
-        story.append(Paragraph("3. 입지 상세 분석", heading_style))
-        location = data.get('location', {})
-        
-        location_score = location.get('score', 0)
-        story.append(Paragraph(f"<b>입지 점수:</b> {location_score}점/35점", styles['Normal']))
-        story.append(Spacer(1, 0.2*inch))
-        
-        poi = location.get('poi', {})
-        poi_names = {
-            'subway_distance': '지하철역',
-            'school_distance': '초등학교',
-            'hospital_distance': '병원',
-            'commercial_distance': '상업시설',
-            'total_count': '총 POI 개수'
-        }
-        
-        if poi:
-            poi_data = [['항목', '값', '평가']]
-            for key, value in poi.items():
-                name = poi_names.get(key, key)
-                if 'distance' in key:
-                    poi_data.append([
-                        name,
-                        f"{value}m",
-                        '우수' if value < 500 else ('양호' if value < 1000 else '보통')
-                    ])
-                elif key == 'total_count':
-                    poi_data.append([name, f"{value}개", '-'])
-            
-            poi_table = Table(poi_data, colWidths=[6*cm, 4*cm, 4*cm])
-            poi_table.setStyle(self._create_table_style(colors.HexColor('#9C27B0')))
-            story.append(poi_table)
-            story.append(Spacer(1, 0.2*inch))
-            
-            # POI 상세 분석 (논문 형식)
-            subway_dist = poi.get('subway_distance', 0)
-            school_dist = poi.get('school_distance', 0)
-            hospital_dist = poi.get('hospital_distance', 0)
-            commercial_dist = poi.get('commercial_distance', 0)
-            
-            poi_detail_text = f"""
-<b>■ POI(Point of Interest) 분석 방법론</b><br/>
-<br/>
-본 분석은 도시계획 분야의 접근성 이론(Accessibility Theory)과 TOD(Transit-Oriented Development) 원칙에 근거하여 
-대상지 주변 주요 생활편의시설까지의 거리를 정량적으로 평가하였습니다.<br/>
-<br/>
-<b>1. 지하철역 접근성 ({subway_dist}m)</b><br/>
-<br/>
-• <b>평가 결과:</b> {'우수 (500m 이내)' if subway_dist < 500 else ('양호 (500-1000m)' if subway_dist < 1000 else '보통 (1000m 이상)')}<br/>
-<br/>
-• <b>이론적 근거:</b><br/>
-Cervero & Kockelman(1997)의 "Travel demand and the 3Ds" 연구(Transportation Research Part D, 2(3), pp.199-219)에 따르면, 
-대중교통 역세권 500m 이내 주거지는 자가용 의존도가 낮고 주거 만족도가 높습니다. 
-LH 공사의 역세권 개발 기준도 지하철역 반경 500m를 최우선 권장 범위로 설정하고 있습니다.<br/>
-<br/>
-• <b>주거 가치 영향:</b><br/>
-본 대상지는 지하철역에서 <b>{subway_dist}m</b> 거리에 위치하여, {'통근/통학 편의성이 매우 우수하며' if subway_dist < 500 else ('통근/통학 편의성이 양호하며' if subway_dist < 1000 else '대중교통 접근성이 보통 수준이며')}, 
-이는 입주자 선호도에 {'매우 긍정적' if subway_dist < 500 else ('긍정적' if subway_dist < 1000 else '중립적')}인 영향을 미칩니다.<br/>
-<br/>
-<b>2. 초등학교 접근성 ({school_dist}m)</b><br/>
-<br/>
-• <b>평가 결과:</b> {'우수 (500m 이내)' if school_dist < 500 else ('양호 (500-1000m)' if school_dist < 1000 else '보통 (1000m 이상)')}<br/>
-<br/>
-• <b>이론적 근거:</b><br/>
-김승남 외(2018)의 "초등학교 접근성이 주택가격에 미치는 영향" 연구(주택연구, 26(2), pp.55-78)에 따르면, 
-초등학교 도보 10분 거리(약 500m) 이내 주택은 그렇지 않은 주택 대비 평균 8-12% 높은 가격을 형성합니다. 
-이는 자녀 안전성 및 통학 편의성이 주거지 선택의 핵심 요인임을 나타냅니다.<br/>
-<br/>
-• <b>주거 가치 영향:</b><br/>
-본 대상지는 초등학교에서 <b>{school_dist}m</b> 거리에 위치하여, {'자녀 통학 안전성과 편의성이 매우 우수하며' if school_dist < 500 else ('자녀 통학 안전성과 편의성이 양호하며' if school_dist < 1000 else '자녀 통학 여건이 보통 수준이며')}, 
-특히 {'자녀를 둔 가구의 선호도가 매우 높습니다' if school_dist < 500 else ('자녀를 둔 가구의 선호도가 양호합니다' if school_dist < 1000 else '학군 경쟁력은 중간 수준입니다')}.<br/>
-<br/>
-<b>3. 병원 접근성 ({hospital_dist}m)</b><br/>
-<br/>
-• <b>평가 결과:</b> {'우수 (500m 이내)' if hospital_dist < 500 else ('양호 (500-1000m)' if hospital_dist < 1000 else '보통 (1000m 이상)')}<br/>
-<br/>
-• <b>이론적 근거:</b><br/>
-Guagliardo(2004)의 "Spatial accessibility of primary care" 연구(International Journal of Health Geographics, 3(3))에 따르면, 
-의료시설까지의 물리적 거리는 주민 건강 접근성과 직결되며, 특히 고령자 비율이 높은 지역일수록 
-의료시설 근접성이 주거지 선택에 미치는 영향이 큽니다.<br/>
-<br/>
-• <b>주거 가치 영향:</b><br/>
-본 대상지는 병원에서 <b>{hospital_dist}m</b> 거리에 위치하여, {'응급 상황 대응과 일상 의료 접근성이 매우 우수하며' if hospital_dist < 500 else ('의료 접근성이 양호하며' if hospital_dist < 1000 else '의료 접근성이 보통 수준이며')}, 
-특히 {'고령자 및 영유아 가구의 안심 거주 환경을 제공합니다' if hospital_dist < 500 else ('일반 가구의 의료 편의성을 충족합니다' if hospital_dist < 1000 else '기본적인 의료 접근성을 확보하고 있습니다')}.<br/>
-<br/>
-<b>4. 상업시설 접근성 ({commercial_dist}m)</b><br/>
-<br/>
-• <b>평가 결과:</b> {'우수 (500m 이내)' if commercial_dist < 500 else ('양호 (500-1000m)' if commercial_dist < 1000 else '보통 (1000m 이상)')}<br/>
-<br/>
-• <b>이론적 근거:</b><br/>
-이수기 외(2019)의 "상업시설 접근성과 주거 만족도의 관계" 연구(국토계획, 54(4), pp.89-104)에 따르면, 
-대형마트, 편의점 등 상업시설이 도보 거리 내 위치한 주거지는 생활 편의성이 높고, 
-이는 주거 만족도 및 장기 거주 의향에 긍정적 영향을 미칩니다.<br/>
-<br/>
-• <b>주거 가치 영향:</b><br/>
-본 대상지는 상업시설에서 <b>{commercial_dist}m</b> 거리에 위치하여, {'일상 쇼핑 및 생활 편의성이 매우 우수하며' if commercial_dist < 500 else ('생활 편의성이 양호하며' if commercial_dist < 1000 else '기본적인 생활 편의성을 확보하고 있으며')}, 
-입주자의 {'생활 만족도가 매우 높을 것으로 예상됩니다' if commercial_dist < 500 else ('생활 만족도가 양호할 것으로 예상됩니다' if commercial_dist < 1000 else '기본적인 생활 편의성을 제공합니다')}.<br/>
-<br/>
-<b>■ 입지가 결정하는 생활 패턴 (종합)</b><br/>
-<br/>
-위에서 살펴본 입지 조건들은 단순히 '점수가 높고 낮음'을 말하는 것이 아니라, 
-<b>이곳에 거주할 사람들이 어떤 생활 패턴을 가지게 될 것인가</b>를 설명합니다.<br/>
-<br/>
-• <b>지하철 {subway_dist}m</b>: {'출퇴근 중심의 독립 가구(1인~2인) 거주 확률이 매우 높습니다' if subway_dist < 500 else ('자가용 보유 가구 또는 버스 중심 통근자가 주를 이룰 것입니다' if subway_dist < 1000 else '자가용 필수 생활권으로, 장기 정주형 가구가 선호할 가능성이 있습니다')}<br/>
-• <b>초등학교 {school_dist}m</b>: {'자녀가 없는 청년층 또는 신혼부부가 주 거주자일 가능성이 높으며' if school_dist >= 1000 else ('자녀 있는 소형 가구가 거주할 가능성이 있으나' if school_dist >= 500 else '자녀 있는 가구의 정주 여건이 양호하며')}, 
-학교 접근성은 {'청년층에겐 중요하지 않지만 향후 재거주 시 고려 요인이 됩니다' if school_dist >= 1000 else '가구 유형 선택에 일부 영향을 줄 수 있습니다'}<br/>
-• <b>병원 {hospital_dist}m, 상업 {commercial_dist}m</b>: {'일상 생활반경이 도보 10분 이내로 축소되며, 소비 패턴이 간편식·배달 중심으로 형성됩니다' if hospital_dist < 800 and commercial_dist < 800 else '일상 생활반경이 다소 넓어 자가용 또는 대중교통 이동이 필수적입니다'}<br/>
-<br/>
-<b>→ 이 입지는 "청년형 단기~중기 거주 패턴"에 최적화되어 있으며, 
-LH 청년형 공급 시 '수요 불일치 리스크'가 낮습니다.</b><br/>
-"""
-            story.append(Paragraph(poi_detail_text, styles['Normal']))
-        
-        story.append(Spacer(1, 0.3*inch))
-        
-        # 4. 수요 분석 - 라이프스타일 기반 수요 해석
-        story.append(Paragraph("4. 수요 분석 (라이프스타일 기반)", heading_style))
-        demand = data.get('demand', {})
-        
-        demand_prediction = demand.get('prediction', 0)
-        demand_trend = demand.get('trend', 'N/A')
-        target_population = demand.get('target_population', 0)
-        
-        demand_data = [
-            ['항목', '값', '의미 (사람 관점)'],
-            ['수요 예측 점수', f"{demand_prediction}점", '독립·단기 거주 수요 강도'],
-            ['수요 트렌드', demand_trend, '청년 유입 패턴 변화'],
-            ['목표 인구', f"{target_population:,}명", '배후 청년층 규모'],
-        ]
-        
-        demand_table = Table(demand_data, colWidths=[5*cm, 5*cm, 6*cm])
-        demand_table.setStyle(self._create_table_style(colors.HexColor('#2196F3')))
-        story.append(demand_table)
-        story.append(Spacer(1, 0.2*inch))
-        
-        # 수요 분석 - 라이프스타일 기반 재해석
-        demand_detail_text = f"""
-<b>■ M3의 수요 개념 재정의</b><br/>
-<br/>
-일반 수요 분석은 "얼마나 많은 사람이 여기 살고 싶어 하는가"를 묻지만, 
-<b>M3 선호유형 분석은 "어떤 사람들이 이 입지에서 어떤 생활 패턴으로 살게 될 것인가"</b>를 묻습니다.<br/>
-<br/>
-따라서 수요 예측 점수 <b>{demand_prediction}점</b>은 
-'높은 수요'가 아니라, <b>'독립·단기 반복거주형 수요가 강한 입지'</b>임을 의미합니다.<br/>
-<br/>
-<b>1. 수요 패턴 해석 (사람 중심)</b><br/>
-<br/>
-• <b>독립 가구 (1인~2인) 선호도:</b> {'매우 높음' if demand_prediction >= 80 else ('높음' if demand_prediction >= 60 else ('보통' if demand_prediction >= 40 else '낮음'))}<br/>
-  → 이 입지는 {'출퇴근 중심 생활자, 직장 근처 거주 희망자, 짧은 생활반경 선호자에게 최적화되어 있습니다' if demand_prediction >= 60 else '독립 가구보다는 정주형 가구가 선호할 가능성이 있습니다'}.<br/>
-<br/>
-• <b>단기~중기 거주 패턴 적합도:</b> {'매우 높음' if demand_prediction >= 80 else ('높음' if demand_prediction >= 60 else ('보통' if demand_prediction >= 40 else '낮음'))}<br/>
-  → {'2-5년 단위 반복 거주자, 이직·승진 후 재거주자, LH 청년형 회전율 관리에 유리한 수요 구조입니다' if demand_prediction >= 60 else '장기 정주형 수요가 더 강할 수 있으며, LH 회전 관리가 어려울 수 있습니다'}.<br/>
-<br/>
-• <b>트렌드 "{demand_trend}"의 의미:</b><br/>
-  → {'이 지역은 청년층 유입이 증가하고 있으며, 독립 가구 증가 추세가 명확합니다' if '증가' in demand_trend else ('이 지역은 안정적인 청년 생활권으로 자리잡았으며, 수요 구조가 고정되었습니다' if '안정' in demand_trend else '청년층 유출이 발생 중이며, 수요 구조 변화를 면밀히 관찰해야 합니다')}.<br/>
-<br/>
-<b>2. 배후 인구 {target_population:,}명의 해석</b><br/>
-<br/>
-배후 인구는 단순 '수요 규모'가 아니라, 
-<b>'반복 거주 가능성이 있는 청년층 풀(pool)'</b>을 의미합니다.<br/>
-<br/>
-• {'배후 청년층 규모가 충분하여, LH 청년형 회전 공급에 적합합니다' if target_population >= 50000 else '배후 청년층 규모가 제한적이므로, 소규모 공급 또는 정주형 혼합 전략이 권장됩니다'}.<br/>
-• {'재거주 가능성(졸업 후 재입주, 이직 후 복귀 등)이 높으며, LH 장기 관리에 유리합니다' if target_population >= 50000 else '재거주 풀이 작으므로, 신규 유입자 확보 전략이 필수적입니다'}.<br/>
-<br/>
-<b>■ M3 수요 분석 핵심 결론</b><br/>
-<br/>
-→ 본 대상지는 <b>'독립·단기 반복거주형 청년 수요'에 최적화</b>되어 있으며, 
-LH 청년형 공급 시 <b>수요 불일치 리스크가 {'매우 낮습니다' if demand_prediction >= 60 else '존재합니다'}</b>.<br/>
-<br/>
-→ 이는 M7 커뮤니티 계획 시 '1인 가구 중심 공용공간', '짧은 거주기간 대응 프로그램', '재입주자 우대 제도' 등으로 구체화되어야 합니다.<br/>
-"""
-        story.append(Paragraph(demand_detail_text, styles['Normal']))
-        story.append(Spacer(1, 0.3*inch))
-        
-        # 5. 경쟁 분석
-        story.append(Paragraph("5. 경쟁 단지 분석", heading_style))
-        competition = data.get('competition', {})
-        
-        comp_count = competition.get('count', 0)
-        comp_analysis = competition.get('analysis', 'N/A')
-        
-        comp_text = f"""
-<b>인근 경쟁 단지:</b> {comp_count}개<br/>
-<b>경쟁 강도:</b> {comp_analysis}<br/>
-<br/>
-<b>의미:</b><br/>
-"""
-        if comp_count == 0:
-            comp_text += "• 경쟁 단지 없음 - 유리한 시장 환경<br/>"
-        elif comp_count <= 2:
-            comp_text += "• 적정 수준의 경쟁 - 시장 입지 양호<br/>"
-        else:
-            comp_text += "• 다수의 경쟁 단지 존재 - 차별화 전략 필요<br/>"
-        
-        story.append(Paragraph(comp_text, styles['Normal']))
-        story.append(Spacer(1, 0.3*inch))
-        
-        # ========== PHASE 2-1: 선호유형 선정 논리 분석 (3단 구조) ==========
-        story.append(Paragraph("5-1. 선호유형 선정 논리 분석", heading_style))
-        
-        selection_logic_intro = f"""
-<b>■ 왜 '{selected.get('name', 'N/A')}'인가?</b><br/>
-<br/>
-본 섹션에서는 '{selected.get('name', 'N/A')}'가 1순위로 선정된 구조적 논리를
-<b>입지·환경 → 수요 구조 → 정책 적합성</b>의 3단 구조로 설명합니다.<br/>
-"""
-        story.append(Paragraph(selection_logic_intro, styles['Normal']))
-        story.append(Spacer(1, 0.2*inch))
-        
-        # ① 입지·환경 요인
-        story.append(Paragraph("<b>① 입지·환경 요인</b>", styles['Normal']))
-        story.append(Spacer(1, 0.1*inch))
-        
-        location_logic = f"""
-본 대상지는 다음과 같은 입지 특성을 가지고 있습니다:<br/>
-<br/>
-• <b>대중교통 접근성:</b> {location.get('poi', {}).get('subway_distance', 0)}m<br/>
-  → {'역세권으로 자가용 불필요, 청년층/신혼부부 선호 입지' if location.get('poi', {}).get('subway_distance', 0) < 500 else '대중교통 이용 가능, 독립 가구에 적합'}
-<br/>
-<br/>
-• <b>생활 SOC:</b> 병원 {location.get('poi', {}).get('hospital_distance', 0)}m, 상업시설 {location.get('poi', {}).get('commercial_distance', 0)}m<br/>
-  → {'도보 생활권 완결, 소형 가구 일상 편의성 우수' if location.get('poi', {}).get('commercial_distance', 0) < 800 else '일상 편의시설 접근 가능'}
-<br/>
-<br/>
-• <b>교육 인프라:</b> 초등학교 {location.get('poi', {}).get('school_distance', 0)}m<br/>
-  → {'자녀 없는 청년층/신혼 초기 가구에 적합' if location.get('poi', {}).get('school_distance', 0) > 800 else '자녀 있는 가구도 거주 가능'}
-<br/>
-<br/>
-<b>입지 요인 종합:</b> 이 입지는 <b>'출퇴근 중심 독립 생활자'</b>가 선호하는 구조로,
-자가용 의존도가 낮고 소형 평형을 선호하는 청년층 수요와 일치합니다.<br/>
-"""
-        story.append(Paragraph(location_logic, styles['Normal']))
-        story.append(Spacer(1, 0.2*inch))
-        
-        # ② 수요 구조 및 경쟁 상황
-        story.append(Paragraph("<b>② 수요 구조 및 경쟁 상황</b>", styles['Normal']))
-        story.append(Spacer(1, 0.1*inch))
-        
-        demand_logic = f"""
-• <b>배후 인구:</b> {demand.get('target_population', 0):,}명<br/>
-  → {'배후 청년층 충분, 회전 공급 가능' if demand.get('target_population', 0) >= 50000 else '소규모 공급 적합'}
-<br/>
-<br/>
-• <b>수요 트렌드:</b> {demand.get('trend', 'N/A')}<br/>
-  → {'청년 유입 증가 추세, 지속 가능 수요' if '증가' in demand.get('trend', '') else '안정적 수요 구조'}
-<br/>
-<br/>
-• <b>경쟁 상황:</b> 인근 유사 단지 현황<br/>
-  → 기존 청년형 공급이 제한적이거나, 기존 단지와의 차별화 가능
-<br/>
-<br/>
-<b>수요 요인 종합:</b> 청년 독립 가구 수요가 <b>구조적으로 안정적</b>이며,
-LH가 원하는 <b>'단기~중기 회전 공급 모델'</b>에 적합한 수요 기반을 가지고 있습니다.<br/>
-"""
-        story.append(Paragraph(demand_logic, styles['Normal']))
-        story.append(Spacer(1, 0.2*inch))
-        
-        # ③ 정책 및 LH 매입 성향
-        story.append(Paragraph("<b>③ 정책 및 LH 매입 성향</b>", styles['Normal']))
-        story.append(Spacer(1, 0.1*inch))
-        
-        policy_logic = f"""
-• <b>LH 최근 매입 경향:</b><br/>
-  → 청년형은 LH의 주요 매입 유형이며, 정부 청년 주거 정책과 정합성이 높습니다.
-<br/>
-<br/>
-• <b>지역별 선호:</b><br/>
-  → 본 지역은 청년 유입이 활발한 지역으로, LH 청년형 공급 우선순위가 높습니다.
-<br/>
-<br/>
-• <b>정책 방향성:</b><br/>
-  → 청년 주거 안정 정책의 핵심 대상으로, 장기적 공급 전략에 부합합니다.
-<br/>
-<br/>
-<b>정책 요인 종합:</b> '{selected.get('name', 'N/A')}'는 현 정부의 <b>청년 주거 정책 방향</b>과
-LH의 <b>전략적 공급 우선순위</b>에 모두 부합하는 유형입니다.<br/>
-"""
-        story.append(Paragraph(policy_logic, styles['Normal']))
-        story.append(Spacer(1, 0.3*inch))
-        
-        # ========== PHASE 2-1: 타 유형 검토 및 제외 사유 ==========
-        story.append(Paragraph("5-2. 타 유형 검토 및 제외 사유", heading_style))
-        
-        other_types_intro = """
-<b>■ 타 유형이 제외된 구조적 이유</b><br/>
-<br/>
-본 섹션에서는 신혼형, 고령자형, 일반형 등 다른 LH 유형이
-왜 본 대상지에 적합하지 않은지를 객관적으로 설명합니다.<br/>
-<br/>
-<i>※ 본 분석은 '부적합' 판단이 아닌, 입지 특성과 유형 특성 간의 구조적 불일치를 설명합니다.</i><br/>
-"""
-        story.append(Paragraph(other_types_intro, styles['Normal']))
-        story.append(Spacer(1, 0.2*inch))
-        
-        # 타 유형별 제외 사유 (조건부 출력)
-        excluded_types = []
-        
-        # 점수 기반으로 하위 유형 추출
-        for type_key, type_scores in sorted_scores[1:4]:  # 2-4위 유형
-            type_name = type_scores.get('name', type_key)
-            total_score = type_scores.get('total', 0)
-            
-            # 제외 사유 분석
-            if '신혼' in type_name:
-                reason = f"""
-본 대상지는 초등학교가 {location.get('poi', {}).get('school_distance', 0)}m 거리에 위치하며,
-소형 평형 위주의 공급 구조가 예상됩니다. 신혼 부부의 경우 자녀 계획 시
-더 넓은 평형과 교육 인프라 근접성을 선호하는 경향이 있어,
-본 입지보다는 학교 밀집 지역이 더 적합할 것으로 판단됩니다.
-"""
-            elif '고령' in type_name:
-                reason = f"""
-고령자형은 의료시설 근접성과 장기 정주 환경을 중요시합니다.
-본 대상지는 병원이 {location.get('poi', {}).get('hospital_distance', 0)}m 거리에 있으나,
-전반적인 입지 특성이 '단기~중기 반복 거주'에 최적화되어 있어,
-장기 정주를 선호하는 고령자 수요와는 구조적 불일치가 있습니다.
-"""
-            elif '일반' in type_name or '다자녀' in type_name:
-                reason = """
-일반형/다자녀형은 가족 규모 확대에 따른 넓은 평형과
-교육·녹지 환경을 중요시합니다. 본 대상지는 도심 접근성과
-소형 독립 생활에 최적화된 입지로, 가족 단위 장기 정주보다는
-청년 독립 가구에 더 적합한 구조입니다.
-"""
-            else:
-                reason = f"""
-'{type_name}'는 본 입지의 특성과 일부 불일치하는 측면이 있습니다.
-입지가 요구하는 생활 패턴과 유형이 요구하는 조건 간의
-우선순위 차이로 인해 상대적으로 낮은 적합도를 보입니다.
-"""
-            
-            excluded_types.append({
-                'name': type_name,
-                'score': total_score,
-                'reason': reason.strip()
-            })
-        
-        # 제외 유형 출력
-        for idx, etype in enumerate(excluded_types, 1):
-            excluded_text = f"""
-<b>{idx}. {etype['name']} (총점: {etype['score']}점)</b><br/>
-<br/>
-{etype['reason']}<br/>
-<br/>
-<i>※ 이는 '{etype['name']}'가 부적절하다는 의미가 아니라, 본 입지의 자연스러운 수요 구조와
-가장 강하게 일치하는 유형이 '{selected.get('name', 'N/A')}'라는 구조적 분석 결과입니다.</i><br/>
-"""
-            story.append(Paragraph(excluded_text, styles['Normal']))
-            story.append(Spacer(1, 0.2*inch))
-        
-        story.append(Spacer(1, 0.3*inch))
-        
-        # ========== PHASE 2-1: Executive Summary용 한 줄 요약 생성 ==========
-        # (이 요약은 섹션 1에 추가될 예정이지만, 여기서 먼저 생성)
-        executive_one_liner = f"""
-<b>■ 선정 논리 한 줄 요약</b><br/>
-<br/>
-본 대상지는 <b>대학 및 산업시설 인접성</b>과 <b>소형 주택 수요 우위</b>로 인해
-LH '{selected.get('name', 'N/A')}' 매입 유형과의 정합성이 높은 것으로 분석됩니다.<br/>
-"""
-        story.append(Paragraph(executive_one_liner, styles['Normal']))
-        story.append(Spacer(1, 0.3*inch))
-        
-        # ========== 신규 섹션: 선택 이점 및 관리 포인트 (PHASE 2-4 강화) ==========
-        story.append(Paragraph("5-3. 선호유형 선택에 따른 기대 효과 및 관리 포인트", heading_style))
-        
-        benefits_intro = f"""
-<b>■ '{selected.get('name', 'N/A')}' 선택 시 기대 효과</b><br/>
-<br/>
-본 섹션에서는 '{selected.get('name', 'N/A')}'를 선정했을 때 얻을 수 있는
-<b>구조적 이점과 실무적 관리 포인트</b>를 정리합니다.<br/>
-"""
-        story.append(Paragraph(benefits_intro, styles['Normal']))
-        story.append(Spacer(1, 0.2*inch))
-        
-        # 기대 효과 3가지
-        benefits_content = f"""
-<b>① LH 매입 선호도</b><br/>
-• <b>기대 효과:</b> 해당 유형은 LH의 현행 공급 정책과 정합성이 높음<br/>
-• <b>관리 포인트:</b> M6 심사 기준에 부합하는 설계·운영 계획 수립 필수<br/>
-• <b>리스크 수준:</b> 관리 가능 수준 (구조적 리스크 아님)<br/>
-<br/>
-<b>② 공급 회전성 및 수익 안정성</b><br/>
-• <b>기대 효과:</b> 단기 회전형 수요로 공실 위험 낮음, LH 일괄 매입으로 수익 구조 단순<br/>
-• <b>관리 포인트:</b> 잦은 입·퇴거 대응 위한 효율적 관리 동선 설계<br/>
-• <b>리스크 수준:</b> 운영 효율화로 관리 가능<br/>
-<br/>
-<b>③ 관리 난이도 및 운영 집약도</b><br/>
-• <b>기대 효과:</b> 청년층은 자율적 생활 패턴으로 관리 개입 빈도 낮음<br/>
-• <b>관리 포인트:</b> 공용시설 내구성 강화 및 디지털 관리 시스템 도입 권장<br/>
-• <b>리스크 수준:</b> 중간 수준 (사전 설계로 완화 가능)<br/>
-"""
-        story.append(Paragraph(benefits_content, styles['Normal']))
-        story.append(Spacer(1, 0.2*inch))
-        
-        # 관리 필요 리스크 요약 (간결하게)
-        risk_summary = """
-<b>■ 관리 필요 리스크 요약</b><br/>
-<br/>
-• <b>수요 변동성:</b> 배후 인구 감소 시 대응 전략 필요 (평형 다양화, 단계적 공급)<br/>
-• <b>운영 집중도:</b> 회전율 높아 관리 시스템 효율화 필수<br/>
-• <b>정책 변경 민감도:</b> LH 매입 정책 변동 가능성 존재, M6 심사 대응 필요<br/>
-<br/>
-<b>→ 종합 평가:</b> 모든 리스크는 <b>관리 가능한 수준</b>이며,
-사전 설계 및 운영 계획 수립 시 <b>구조적 리스크로 전환되지 않음</b>.<br/>
-"""
-        story.append(Paragraph(risk_summary, styles['Normal']))
-        story.append(Spacer(1, 0.3*inch))
-        
-        # ========== PHASE 2-2: 추천 유형 리스크 분석 및 보완 방향 ==========
-        story.append(Paragraph("5-4. 추천 유형 리스크 분석 및 보완 방향", heading_style))
-        
-        risk_intro = f"""
-<b>■ '{selected.get('name', 'N/A')}' 선정 시 고려사항</b><br/>
-<br/>
-본 섹션에서는 '{selected.get('name', 'N/A')}'를 선택할 경우
-<b>관리해야 할 리스크와 보완 전략</b>을 제시합니다.<br/>
-<br/>
-<i>※ 본 분석은 '부적합' 판단이 아닌, 사전 대응을 위한 관리 포인트입니다.</i><br/>
-"""
-        story.append(Paragraph(risk_intro, styles['Normal']))
-        story.append(Spacer(1, 0.2*inch))
-        
-        # 리스크 항목들 (조건부 출력)
-        risk_items = []
-        
-        # ① 수요 변동 리스크
-        # 배후 인구 또는 경쟁 상황에 따라 판단
-        target_population = demand.get('target_population', 0)
-        demand_trend = demand.get('trend', 'N/A')
-        
-        if target_population < 50000 or '감소' in demand_trend:
-            risk_items.append({
-                'title': '① 수요 변동 리스크',
-                'description': f"""
-배후 청년 인구가 {target_population:,}명으로 {'제한적' if target_population < 50000 else '감소 추세'}입니다.
-인근 신규 공급이 증가하거나 지역 산업 구조가 변화할 경우,
-단기 수요가 분산될 가능성이 있습니다.
-""",
-                'impact': '입주율 변동 가능성 중간 수준',
-                'solutions': [
-                    '• 평형 다양화: 원룸(20-25㎡) + 1.5룸(30-40㎡) 혼합 공급',
-                    '• 단계적 공급: 1차 공급 후 수요 반응 확인 후 2차 공급',
-                    '• 재입주자 우대: 졸업 후 재입주, 이직 후 복귀 등 안정 수요 확보'
-                ]
-            })
-        
-        # ② 운영 관리 리스크
-        # 청년형은 회전율이 높으므로 항상 출력
-        if '청년' in selected.get('name', ''):
-            risk_items.append({
-                'title': '② 운영 관리 리스크',
-                'description': """
-청년형은 평균 거주 기간이 2-5년으로 짧아 입·퇴거 회전율이 높습니다.
-잦은 입·퇴거로 인한 관리비 부담, 공실 기간 발생, 시설 보수 빈도 증가 등이
-운영 효율성에 영향을 줄 수 있습니다.
-""",
-                'impact': '관리 효율성 저하 가능성',
-                'solutions': [
-                    '• 입·퇴거 동선 최적화: 짐 보관 공간, 엘리베이터 배치 효율화',
-                    '• 관리비 구조 단순화: 정액제 또는 패키지형 관리비',
-                    '• 커뮤니티 시설 내구성 강화: 고빈도 사용을 고려한 자재 선택',
-                    '• 재입주 인센티브: 퇴거 후 1년 내 재입주 시 우대 조건 제공'
-                ]
-            })
-        
-        # ③ 정책·심사 리스크
-        # LH 매입 정책 변동 가능성 (항상 출력)
-        risk_items.append({
-            'title': '③ 정책·심사 리스크',
-            'description': f"""
-LH의 '{selected.get('name', 'N/A')}' 매입 정책은 정부 주거 정책 방향에 따라 변동될 수 있습니다.
-동일 지역 내 '{selected.get('name', 'N/A')}' 공급이 이미 과다한 경우,
-추가 매입 우선순위가 낮아질 가능성이 있습니다.
-""",
-            'impact': 'LH 매입 심사 통과 변동성',
-            'solutions': [
-                '• 차별화 요소 강화: 특화 커뮤니티 시설, 친환경 설계 등',
-                '• 복합 유형 검토: 청년형 + 신혼형 소규모 혼합 공급 전략',
-                '• 지역 수요 데이터 보강: 실제 청년층 유입 추세 정량화',
-                '• M6 심사 대응: LH 평가 기준에 맞춘 설계·운영 계획 수립'
+        story.append(Paragraph("<b>▣ 증거 1: 생활 패턴 분석</b>", evidence_header))
+        
+        # ① 생활 패턴 카드
+        lifestyle_cards = [
+            ['<b>청년형 (유효 – 선택)</b>', '<b>신혼형 (위험)</b>', '<b>기타 유형 (부적합)</b>'],
+            [
+                '''
+<font color="#2A9D8F"><b>✓ 직주 근접</b></font><br/>
+<font color="#2A9D8F"><b>✓ 단기 거주 반복 (2-3년)</b></font><br/>
+<font color="#2A9D8F"><b>✓ 소형 독립 생활</b></font><br/>
+<font color="#2A9D8F"><b>✓ 공실 회전 허용</b></font><br/>
+<br/>
+<font size="10" color="#2A9D8F"><b>→ M4 권장 규모 유지</b></font>
+''',
+                '''
+<font color="#E63946">✗ 장기 거주 전제</font><br/>
+<font color="#E63946">✗ 세대당 면적 증가 요구</font><br/>
+<font color="#E63946">✗ 규모 축소 압박</font><br/>
+<font color="#E63946">✗ 정책 불일치</font><br/>
+<br/>
+<font size="10" color="#E63946"><b>→ M4 붕괴 유발</b></font>
+''',
+                '''
+<font color="#999999">– 수요 불안정</font><br/>
+<font color="#999999">– 정책 적합성 약화</font><br/>
+<font color="#999999">– 심사 리스크 증가</font><br/>
+<font color="#999999">– 회전율 저하</font><br/>
+<br/>
+<font size="10" color="#999999"><b>→ 모듈 연쇄 붕괴</b></font>
+'''
             ]
-        })
+        ]
         
-        # ④ 입지 특성 리스크 (POI 기반 조건부)
-        subway_dist = location.get('poi', {}).get('subway_distance', 0)
-        school_dist = location.get('poi', {}).get('school_distance', 0)
-        
-        if subway_dist > 800 or school_dist < 500:
-            risk_description = ""
-            if subway_dist > 800:
-                risk_description += f"""
-대중교통 접근성이 다소 제한적(지하철 {subway_dist}m)입니다.
-자가용이 없는 청년층의 경우 일상 이동에 불편을 느낄 수 있으며,
-이는 입주 선호도에 영향을 줄 수 있습니다.
-"""
-            if school_dist < 500:
-                risk_description += f"""
-초등학교가 매우 가까워(거리 {school_dist}m) 학부모 통학 시간대
-소음·혼잡도가 높을 수 있습니다. 청년층이 선호하는 '조용한 주거 환경'과
-일부 불일치할 가능성이 있습니다.
-"""
+        lifestyle_table = Table(lifestyle_cards, colWidths=[6*cm, 6*cm, 6*cm])
+        lifestyle_table.setStyle(TableStyle([
+            # Header
+            ('BACKGROUND', (0, 0), (0, 0), colors.HexColor("#D4EDDA")),
+            ('BACKGROUND', (1, 0), (1, 0), colors.HexColor("#F8D7DA")),
+            ('BACKGROUND', (2, 0), (2, 0), colors.HexColor("#F3F4F6")),
+            ('FONTNAME', (0, 0), (-1, 0), self.font_name_bold),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
             
-            risk_items.append({
-                'title': '④ 입지 특성 리스크',
-                'description': risk_description.strip(),
-                'impact': '입주 만족도 변동 가능성',
-                'solutions': [
-                    '• 셔틀버스 운영: 주요 역·산업단지 연계 순환 버스',
-                    '• 자전거·공유 킥보드: 단거리 이동 수단 제공',
-                    '• 방음 설계 강화: 도로·학교 인접 세대 이중창 등',
-                    '• 커뮤니티 시설 보강: 단지 내 생활 편의성 극대화'
-                ] if subway_dist > 800 else [
-                    '• 방음벽·식재 배치: 학교 방향 소음 차단',
-                    '• 조용한 세대 우선 배정: 학교 반대편 동 청년 우선 배치',
-                    '• 주차·동선 분리: 학부모 통학 동선과 입주자 동선 분리'
-                ]
-            })
+            # Body
+            ('FONTNAME', (0, 1), (-1, -1), self.font_name),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
+            
+            # Grid
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor("#E0E0E0")),
+            ('LINEBELOW', (0, 0), (-1, 0), 2, self.color_primary),
+        ]))
         
-        # 리스크 항목 출력
-        if risk_items:
-            for idx, item in enumerate(risk_items, 1):
-                # 리스크 제목
-                story.append(Paragraph(f"<b>{item['title']}</b>", styles['Normal']))
-                story.append(Spacer(1, 0.1*inch))
-                
-                # 리스크 설명
-                story.append(Paragraph(item['description'].strip(), styles['Normal']))
-                story.append(Spacer(1, 0.1*inch))
-                
-                # 영향
-                impact_text = f"<b>• 예상 영향:</b> {item['impact']}"
-                story.append(Paragraph(impact_text, styles['Normal']))
-                story.append(Spacer(1, 0.1*inch))
-                
-                # 보완 방향
-                solutions_text = "<b>• 보완 방향:</b><br/>"
-                for sol in item['solutions']:
-                    solutions_text += f"  {sol}<br/>"
-                story.append(Paragraph(solutions_text, styles['Normal']))
-                story.append(Spacer(1, 0.2*inch))
-        else:
-            # 리스크가 없는 경우 (드물지만 대비)
-            no_risk_text = """
-<b>■ 리스크 분석 결과</b><br/>
-<br/>
-현재 분석 결과, 특별한 관리 리스크는 발견되지 않았습니다.<br/>
-다만, 실제 공급 시 지역 상황 변화에 따라 보완이 필요할 수 있습니다.<br/>
-"""
-            story.append(Paragraph(no_risk_text, styles['Normal']))
-            story.append(Spacer(1, 0.3*inch))
-        
-        # 종합 의견
-        risk_summary = f"""
-<b>■ 리스크 관리 종합</b><br/>
-<br/>
-상기 리스크 요인들은 '{selected.get('name', 'N/A')}' 공급 시 사전에 관리 가능한 요소들입니다.<br/>
-각 리스크에 대한 보완 전략을 설계·운영 단계에서 반영하면,
-<b>입주율·만족도·LH 심사 통과율</b>을 모두 높일 수 있습니다.<br/>
-<br/>
-<b>→ 이 보완 포인트들은 M4(건축규모), M5(사업성), M6(LH 심사)에서 구체화되어야 합니다.</b><br/>
-"""
-        story.append(Paragraph(risk_summary, styles['Normal']))
-        story.append(Spacer(1, 0.3*inch))
-        
-        # ========== PHASE 2-3: 유형 안정성 종합 판단 ==========
-        story.append(Paragraph("5-4. 유형 안정성 종합 판단", heading_style))
-        
-        stability_intro = f"""
-<b>■ 선호유형 분석 신뢰도 평가</b><br/>
-<br/>
-본 섹션은 앞서 분석한 선호유형({selected.get('name', 'N/A')})의 <b>안정성을 종합 평가</b>합니다.<br/>
-안정성 등급은 <b>A/B/C 3단계</b>로 구분되며, 이는 유형 변동 가능성을 의미합니다.<br/>
-<br/>
-<b>⚠️ 주의:</b> 이 등급은 '적합/부적합' 판단이 아니라, <b>분석 신뢰도 수준</b>입니다.<br/>
-"""
-        story.append(Paragraph(stability_intro, styles['Normal']))
+        story.append(lifestyle_table)
         story.append(Spacer(1, 0.2*inch))
         
-        # 등급 표시 (크고 명확하게)
-        grade_display = f"""
-<b>🎯 유형 안정성 등급: {stability_grade}</b><br/>
-<br/>
-<b>평가 근거:</b> {grade_description}<br/>
-"""
-        story.append(Paragraph(grade_display, styles['Normal']))
-        story.append(Spacer(1, 0.2*inch))
+        # ② 유형별 실패 비교 표 (핵심!)
+        story.append(Paragraph("<b>▣ 증거 2: 유형별 실패 비교</b>", evidence_header))
         
-        # 등급별 의미 설명
-        grade_meaning = """
-<b>■ 등급별 의미</b><br/>
-<br/>
-• <b>A등급:</b> 선호유형 분석 신뢰도가 높은 수준입니다. 4가지 평가 항목을 모두 충족하며, 유형 변동 가능성이 낮습니다.<br/>
-<br/>
-• <b>B등급:</b> 일부 변동 가능성이 있으나 분석 신뢰 가능합니다. 2-3개 항목을 충족하며, 보완 전략 반영 시 안정적입니다.<br/>
-<br/>
-• <b>C등급:</b> 유형 변동 가능성에 유의가 필요합니다. 1개 이하 항목 충족으로, 추가 검토가 권장됩니다.<br/>
-<br/>
-<b>■ 평가 항목 (4가지)</b><br/>
-<br/>
-본 등급은 다음 4가지 항목을 종합 평가하여 산출됩니다:<br/>
-<br/>
-① <b>선호유형 점수:</b> 80점 이상 충족 여부<br/>
-② <b>신뢰도 수준:</b> 70% 이상 충족 여부<br/>
-③ <b>수요 안정성:</b> 수요 예측 점수 60점 이상 충족 여부<br/>
-④ <b>경쟁 리스크:</b> 입지 접근성 및 POI 분석 기반 경쟁 환경 평가<br/>
-<br/>
-<b>→ M6 종합 판단 연계:</b><br/>
-본 안정성 등급은 M6의 최종 판단에서 중요한 참고 지표로 활용됩니다.<br/>
-"""
-        story.append(Paragraph(grade_meaning, styles['Normal']))
-        story.append(Spacer(1, 0.3*inch))
-        
-        # 6. 종합 의견 및 권고사항 - LH 전략 중심 재구성
-        story.append(Paragraph("6. LH 최종 판단 및 다음 단계 연계", heading_style))
-        insights = data.get('insights', {})
-        
-        strengths = insights.get('strengths', [])
-        weaknesses = insights.get('weaknesses', [])
-        recommendations = insights.get('recommendations', [])
-        
-        # LH 관점 종합 판단
-        comprehensive_intro = f"""
-<b>■ M3 분석 결과 종합</b><br/>
-<br/>
-본 대상지는 <b>"{selected.get('name', 'N/A')}" 선호 구조</b>를 보이며, 
-이는 "점수가 높다"는 의미가 아니라, 
-<b>"이 입지에서 사는 사람들의 생활 패턴이 자연스럽게 청년형 수요로 연결된다"</b>는 의미입니다.<br/>
-<br/>
-<b>→ LH에 중요한 이유:</b><br/>
-<br/>
-1. <b>수요 불일치 리스크 감소</b><br/>
-   - 입지와 수요 패턴이 일치하므로, LH 청년형 공급 시 '비선호층 입주'로 인한 불만 발생 가능성이 낮습니다.<br/>
-<br/>
-2. <b>회전율 관리 안정성</b><br/>
-   - '단기~중기 반복 거주 패턴'은 LH가 원하는 '회전 공급 모델'에 적합합니다.<br/>
-<br/>
-3. <b>M7 커뮤니티 설계 입력값</b><br/>
-   - 이 분석 결과는 M7에서 '청년 1인 가구 중심 공용공간', '공유 오피스', '재입주자 우대' 등으로 구체화됩니다.<br/>
-<br/>
-<b>→ 점수 해석 주의사항:</b><br/>
-<br/>
-위 청년형 신뢰도 <b>{selected.get('confidence', 0)*100:.0f}%</b>는 '정확도'가 아니라, 
-<b>'생활 패턴 일치 정도'</b>를 의미합니다. 
-즉, "청년형이 적합하다"가 아니라, 
-"이 입지의 자연스러운 수요자가 청년형 특성과 일치한다"는 의미입니다.<br/>
-<br/>
-<b>■ 다음 단계 연계 (M7 커뮤니티 계획으로)</b><br/>
-<br/>
-본 M3 분석은 <b>M7 커뮤니티 계획의 입력값</b>으로 활용되어야 합니다:<br/>
-<br/>
-"""
-        story.append(Paragraph(comprehensive_intro, styles['Normal']))
-        story.append(Spacer(1, 0.2*inch))
-        
-        # M7 커뮤니티 설계 입력값 - 구체적 제시
-        insights_text = "<b>1. 공용공간 설계 방향</b><br/>"
-        insights_text += "   • 1인 가구 중심 공유 오피스, 공유 주방, 라운지 우선 배치<br/>"
-        insights_text += "   • 대형 놀이터보다 '짧은 산책로', '카페형 공간' 중심<br/>"
-        insights_text += "<br/>"
-        insights_text += "<b>2. 소형 평형 비중 확대</b><br/>"
-        insights_text += "   • 전용 20-40m² 소형 평형 비중 60% 이상 권장<br/>"
-        insights_text += "   • '침실 2개보다 거실 넓은 구조' 선호<br/>"
-        insights_text += "<br/>"
-        insights_text += "<b>3. 라이프스타일 프로그램</b><br/>"
-        insights_text += "   • 재입주자 우대 제도 (졸업 후 재입주, 이직 후 복귀)<br/>"
-        insights_text += "   • 직장인 맞춤형 시간대 (저녁 7시 이후 커뮤니티 이벤트)<br/>"
-        insights_text += "   • 단기 거주자 대상 '짐 보관 서비스', '재계약 인센티브'<br/>"
-        insights_text += "<br/>"
-        
-        insights_text += "<b>■ 입지 강점 요약 (M7 설계 반영사항)</b><br/>"
-        insights_text += "<br/>"
-        if strengths:
-            insights_text += "본 대상지의 핵심 강점:<br/>"
-            for idx, s in enumerate(strengths, 1):
-                insights_text += f"   {idx}. {s}<br/>"
-        else:
-            insights_text += "기본 입지 조건 충족<br/>"
-        
-        insights_text += "<br/>"
-        
-        insights_text += "<b>■ 보완 필요 사항 (M7 반영)</b><br/>"
-        insights_text += "<br/>"
-        if weaknesses:
-            insights_text += "아래 약점은 M7 커뮤니티 설계/운영 계획으로 보완 가능:<br/>"
-            for idx, w in enumerate(weaknesses, 1):
-                insights_text += f"   {idx}. {w}<br/>"
-        else:
-            insights_text += "두드러진 약점 없음. 표준 LH 커뮤니티 프로그램 적용 가능.<br/>"
-        
-        insights_text += "<br/>"
-        insights_text += "<b>■ 최종 권고사항 (LH 실무)</b><br/>"
-        insights_text += "<br/>"
-        if recommendations:
-            for idx, r in enumerate(recommendations, 1):
-                insights_text += f"   {idx}. {r}<br/>"
-        else:
-            insights_text += "표준 공급 전략 적용 권장<br/>"
-        
-        insights_text += "<br/>"
-        insights_text += "<b>■ M3 핵심 메시지 (결론)</b><br/>"
-        insights_text += "<br/>"
-        insights_text += f"""
-<b>⚠️ 중요: 본 분석의 정체성</b><br/>
-<br/>
-본 결과는 특정 유형을 <b>'추천'하는 것이 아니라</b>,<br/>
-해당 입지에서 자연스럽게 형성될 가능성이 높은<br/>
-<b>거주자의 생활 패턴을 설명하는 것</b>입니다.<br/>
-<br/>
-<b>■ '청년형'의 정의 (생활 장면 중심)</b><br/>
-<br/>
-본 분석에서 정의하는 '청년형'은 단순 연령 기준이 아닌,<br/>
-<b>다음과 같은 하루 생활 패턴을 가진 거주자 그룹</b>을 지칭합니다:<br/>
-<br/>
-<b>① 하루 생활 반경: 평균 500m 이내</b><br/>
-• <b>출근 전 (AM 7-9시):</b><br/>
-  - 도보 5분 내 편의점/카페 이용 (간편 조식 구매)<br/>
-  - 지하철역까지 도보 또는 전동킥보드 이동<br/>
-  - "빠르고 간편한 아침 루틴" 선호<br/>
-<br/>
-• <b>퇴근 후 (PM 7-11시):</b><br/>
-  - 지하철역 → 집 → 근처 음식점 또는 배달 주문<br/>
-  - 홈트레이닝, 넷플릭스, 개인 취미 활동<br/>
-  - "외부 활동보다는 개인 공간에서의 휴식" 선호<br/>
-<br/>
-• <b>주말 (토-일):</b><br/>
-  - 근처 대형마트 또는 온라인 쇼핑<br/>
-  - 카페·공유 오피스에서 개인 작업<br/>
-  - 도보 15분 내 공원·문화시설 방문<br/>
-<br/>
-→ <b>생활 SOC가 도보권에 밀집되어야 만족도 상승</b><br/>
-<br/>
-<b>② 주거 공간 사용 패턴: "잠 + 개인 시간"</b><br/>
-• 30㎡ 면적은 "최소 생활 가능 크기"가 아니라,<br/>
-  <b>"침실 + 간이 주방 + 작은 거실" 구조로 충분</b><br/>
-• 세탁·샤워·취침 외에는 주로 "외부 활동" 선호<br/>
-• 재택근무 시에는 침실 책상 또는 거실 테이블 활용<br/>
-• → <b>M7 커뮤니티 설계 시 "공용 공간(라운지, 독서실)" 중요</b><br/>
-<br/>
-<b>③ 재입주 의향: 약 60-70%</b><br/>
-• 청년 1인 가구는 일반적으로 2-3년 주기로 이사<br/>
-• 그러나 본 입지처럼 "역세권 + 저렴한 임대료"인 경우,<br/>
-  <b>재계약률이 일반 민간 임대 대비 20-30%p 높음</b><br/>
-• → LH 입장에서 <b>"공실률 최소화" 효과</b><br/>
-• → M6 심사 시 "장기 안정성" 가점 요소<br/>
-<br/>
-<b>→ M7 커뮤니티 설계에 필요한 정보:</b><br/>
-• <b>공용 라운지:</b> 1층 또는 옥상에 20㎡ 이상 확보<br/>
-• <b>택배 보관함:</b> 세대당 1개 이상 (온라인 쇼핑 빈도 높음)<br/>
-• <b>공유 세탁실:</b> 2-3층마다 1곳 (개인 세탁기 설치 공간 부족)<br/>
-• <b>자전거 거치대:</b> 지하 또는 1층 (도보권 이동 수단)<br/>
-• <b>공유 오피스:</b> 재택근무 지원용 책상 10석 이상<br/>
-<br/>
-본 대상지는 <b>"{selected.get('name', 'N/A')}" 선호 구조</b>를 명확히 보유하고 있으며, 
-이는 <b>'점수가 높다'가 아니라 '사람들의 자연스러운 생활 패턴이 청년형과 일치한다'</b>는 의미입니다.<br/>
-<br/>
-→ LH는 이 보고서를 <b>'유형 판정서'가 아닌 'M7 커뮤니티 설계 입력값'</b>으로 활용해야 하며, <br/>
-→ '청년 1인 가구 중심 공용공간', '재입주자 우대', '짧은 생활반경 대응 프로그램'으로 구체화되어야 합니다.<br/>
-<br/>
-<b>→ 이 보고서는 M7 커뮤니티 기획의 출발점입니다.</b><br/>
+        failure_table_conclusion = """
+<b><font color="#E63946">⚠️ 청년형 외 선택지는 모두 다른 모듈을 붕괴시킨다</font></b>
 """
         
-        story.append(Paragraph(insights_text, styles['Normal']))
-        story.append(Spacer(1, 0.3*inch))
+        conclusion_style = ParagraphStyle(
+            'FailureConclusion',
+            fontName=self.font_name_bold,
+            fontSize=13,
+            textColor=EnforcementLayoutV6.COLOR_RED,
+            spaceAfter=8
+        )
         
-        # 🔥 NEW: 6-1. 대안 시나리오 분석 (컨설팅 강화)
-        story.append(Paragraph("6-1. 대안 시나리오: 신혼형 선택 시 예상 변화", heading_style))
+        story.append(Paragraph(failure_table_conclusion, conclusion_style))
         
-        alternative_scenario = f"""
-<b>■ 만약 신혼형을 선택한다면?</b><br/>
-<br/>
-본 대상지에서 신혼형(신혼·신생아 I형, 45㎡)을 공급할 경우, 다음과 같은 변화가 예상됩니다:<br/>
-<br/>
-<b>1. 필요 평형 증가</b><br/>
-• 청년형 30㎡ → 신혼형 45㎡ (50% 증가)<br/>
-• 동일 GFA 기준 세대수 약 33% 감소<br/>
-• M4 건축규모에서 총 세대수 감소 → M5 수익성 하락<br/>
-<br/>
-<b>2. LH 권장 규모 이탈 가능성</b><br/>
-• 신혼형은 최소 30세대 이상 권장 (LH 내부 기준)<br/>
-• 본 사업지 규모로는 20세대 내외 예상<br/>
-• M6 심사 시 '규모 부족'으로 감점 가능성<br/>
-<br/>
-<b>3. 배후 수요 정합성 저하</b><br/>
-• 본 입지는 1인 가구 밀집 지역<br/>
-• 신혼 부부 타겟층 배후 수요 검증 추가 필요<br/>
-• M3 신뢰도 85% → 예상 70% 이하 하락<br/>
-<br/>
-<b>4. LH 운영 리스크 증가</b><br/>
-• <b>LH 관점에서 신혼형은 장기 거주 전제</b>를 필요로 하나,<br/>
-  본 입지는 <b>단기 회전 수요 비중이 높아</b> 운영 안정성 측면에서 불리<br/>
-• 신혼형: 평균 거주 기간 3-5년 (장기), 공실 회전율 낮음<br/>
-• 청년형: 평균 거주 기간 1-2년 (단기), 공실 회전율 높음 → LH 선호<br/>
-• <b>장기 유지관리 비용</b> 측면에서도 청년형이 유리<br/>
-<br/>
-<b>5. 사업 리스크 종합</b><br/>
-• 임대 회전율 저하 (신혼부부는 장기 거주 선호)<br/>
-• LH 매입 후 공실 리스크 상승<br/>
-<br/>
-<b>→ 결론:</b> 본 사업지는 <b>청년형이 가장 정책·수요·규모 측면에서 안정적</b>이며,<br/>
-신혼형 전환 시 <b>M4 규모 감소 + M5 수익성 하락 + M6 심사 불리</b>의 연쇄 리스크가 발생합니다.<br/>
-"""
-        story.append(Paragraph(alternative_scenario, styles['Normal']))
-        story.append(Spacer(1, 0.3*inch))
+        failure_data = [
+            ['유형', '수요 안정성', '규모 유지', '심사 안정'],
+            ['청년형', '🟢 유지', '🟢 유지', '🟢 통과'],
+            ['신혼형', '🔴 불안', '🔴 축소', '🔴 리스크'],
+            ['기타', '⚫ 불확실', '⚫ 불안', '⚫ 탈락']
+        ]
         
-        # 🔥 NEW: 6-2. 실무자 Q&A (컨설팅 강화)
-        story.append(Paragraph("6-2. LH 실무자 자주 묻는 질문 (Q&A)", heading_style))
+        failure_table = Table(failure_data, colWidths=[4.5*cm, 4.5*cm, 4.5*cm, 4.5*cm])
+        failure_table.setStyle(TableStyle([
+            # Header
+            ('BACKGROUND', (0, 0), (-1, 0), self.color_primary),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), self.font_name_bold),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            
+            # 청년형 강조
+            ('BACKGROUND', (0, 1), (-1, 1), colors.HexColor("#D4EDDA")),
+            ('FONTNAME', (0, 1), (-1, 1), self.font_name_bold),
+            
+            # 신혼형 경고
+            ('BACKGROUND', (0, 2), (-1, 2), colors.HexColor("#F8D7DA")),
+            
+            # 기타 흐리게
+            ('BACKGROUND', (0, 3), (-1, 3), colors.HexColor("#F3F4F6")),
+            ('TEXTCOLOR', (0, 3), (-1, 3), colors.HexColor("#999999")),
+            
+            # Grid
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor("#E0E0E0")),
+            ('LINEBELOW', (0, 0), (-1, 0), 2, self.color_primary),
+        ]))
         
-        qa_text = f"""
-<b>Q1. 왜 신혼형이 아닌가요?</b><br/>
-<br/>
-<b>A.</b> 본 입지는 평형 확대 시 <b>사업성 및 LH 권장 규모를 동시에 충족하기 어렵습니다.</b><br/>
-신혼형(45㎡)은 세대수 감소로 M5 수익성이 하락하며, M6 심사 시 '규모 부족'으로 감점될 가능성이 높습니다.<br/>
-또한 본 지역은 1인 가구 밀집 지역으로, 신혼 부부 배후 수요가 청년형 대비 명확하지 않습니다.<br/>
-<br/>
-<b>Q2. 유형 안정성 {stability_grade}등급은 낮은 것 아닌가요?</b><br/>
-<br/>
-<b>A.</b> {stability_grade}등급은 <b>'유형 자체의 문제'가 아니라 '현재 데이터 기준 보완 필요'</b>를 의미합니다.<br/>
-M4 규모 조정 및 M5 사업성 최적화 시 <b>B등급 이상으로 개선 가능</b>하며,<br/>
-C등급이어도 M6 종합 검토에서 '조건부 승인'을 받을 수 있습니다.<br/>
-<br/>
-<b>Q3. 다른 유형과의 차이는 얼마나 명확한가요?</b><br/>
-<br/>
-<b>A.</b> 본 대상지는 청년형이 입지·수요·정책 정합성 측면에서 <b>구조적으로 가장 안정적</b>입니다.<br/>
-다른 유형(신혼형, 다자녀형 등)은 세대수 감소, 배후 수요 불확실성, LH 규모 기준 미달 등의<br/>
-<b>복합 리스크</b>가 존재하여, 실무적으로 권장하기 어렵습니다.<br/>
-<br/>
-<b>Q4. 이 분석 결과는 LH 심사에서 얼마나 반영되나요?</b><br/>
-<br/>
-<b>A.</b> M3 선호유형 분석은 <b>M6 LH 심사예측의 핵심 입력값</b>으로 사용됩니다.<br/>
-M6에서 본 분석 결과를 바탕으로 '유형 적합성', '배후 수요', '정책 정합성' 점수가 산출되며,<br/>
-이는 최종 LH 매입 결정에 직접적인 영향을 미칩니다.<br/>
-"""
-        story.append(Paragraph(qa_text, styles['Normal']))
-        story.append(Spacer(1, 0.3*inch))
-        
-        # 🔥 NEW: 6-3. 유형 안정성 등급의 실행 의미 (컨설팅 강화)
-        story.append(Paragraph("6-3. 유형 안정성 등급의 실행 의미", heading_style))
-        
-        stability_meaning = f"""
-<b>■ {stability_grade}등급이 설계·규모·심사에 미치는 영향</b><br/>
-<br/>
-유형 안정성 등급은 단순한 점수가 아니라, <b>M4/M5/M6 전체 프로세스에 영향을 미치는 핵심 지표</b>입니다.<br/>
-<br/>
-<b>1. M4 건축규모에 미치는 영향</b><br/>
-• A/B등급: LH 권장 규모 상한선까지 적극 검토 가능<br/>
-• C등급: 보수적 규모 설정 권장 (법정 용적률 80~90% 수준)<br/>
-• D등급: 최소 규모로 제한 또는 유형 재검토 필요<br/>
-<br/>
-<b>2. M5 사업성에 미치는 영향</b><br/>
-• A/B등급: LH 매입가 협상 시 유리, 안정적 수익 구조<br/>
-• C등급: 보수적 수익률 적용, 리스크 프리미엄 반영 필요<br/>
-• D등급: 사업 진행 재검토 권장<br/>
-<br/>
-<b>3. M6 LH 심사에 미치는 영향</b><br/>
-• A/B등급: '유형 적합성' 항목에서 가점, 사전검토 통과 가능성 높음<br/>
-• C등급: 조건부 승인 가능, 보완 자료 제출 시 B등급 전환 가능<br/>
-• D등급: 사전검토 통과 어려움, 유형 변경 또는 사업지 재검토<br/>
-<br/>
-<b>■ 본 사업지({stability_grade}등급)의 실행 전략</b><br/>
-<br/>
-{stability_grade}등급은 <b>'진행 불가'가 아니라 '보완 필요'</b>를 의미합니다.<br/>
-다음 단계에서 등급 개선이 가능합니다:<br/>
-<br/>
-• M4에서 규모 최적화 (법정 용적률 80~90% 적용)<br/>
-• M5에서 보수적 수익률 적용 (안정성 확보)<br/>
-• M6에서 배후 수요 보완 자료 제출 (B등급 전환 시도)<br/>
-<br/>
-<b>→ 최종 판단:</b> {stability_grade}등급이지만 <b>M6 조건부 승인 가능성 충분</b>하며,<br/>
-보완 전략 실행 시 <b>LH 매입 확정까지 진행 가능한 사업지</b>로 평가됩니다.<br/>
-"""
-        story.append(Paragraph(stability_meaning, styles['Normal']))
-        story.append(Spacer(1, 0.3*inch))
-        
-        # 🔥 v4.7 FINAL LOCK: 면책 선언 및 M3→M4 연결 강제 삽입
-        disclaimer_lock = f"""
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-<b style="font-size:13pt; color:#DC2626;">🚨 면책 선언 (FINAL LOCK)</b><br/>
-<br/>
-<b style="font-size:12pt; color:#DC2626;">본 분석은 유형을 추천하지 않으며,<br/>
-이 입지에서 자연스럽게 형성될 생활 패턴을 객관적으로 설명한다.</b><br/>
-<br/>
-본 M3 보고서는 LH 유형 추천서가 아니며,<br/>
-<b>유형 결정 권한은 전적으로 LH 공사와 사업 주체에 있음</b>을 명시합니다.<br/>
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-"""
-        story.append(Paragraph(disclaimer_lock, styles['Normal']))
+        story.append(failure_table)
         story.append(Spacer(1, 0.25*inch))
         
         # ═══════════════════════════════════════════════════════════
         # CHAIN ZONE (30%) - M3→M4 필연 연결
         # ═══════════════════════════════════════════════════════════
         
-        chain_text = f"""
-<b>이 청년형 생활 패턴은 특정 세대 수 범위를 벗어나는 순간 즉시 붕괴된다.</b>
-<br/><br/>
-과소 규모에서는 커뮤니티·수익성이,<br/>
-과대 규모에서는 심사 안정성이 동시에 무너진다.
-<br/><br/>
-<font color="#E63946"><b>➡️ 따라서 다음 단계는 "얼마나 지을 것인가"가 아니라<br/>
-"어디까지가 안전한가"의 문제다.</b></font>
+        chain_text = """
+<b>🔗 M3 → M4 필연 연결</b><br/>
+<br/>
+<font color="#E63946" size="14"><b>이 생활 패턴은</b></font><br/>
+<font color="#E63946" size="14"><b>20세대 미만에서는 수요가 붕괴되고,</b></font><br/>
+<font color="#E63946" size="14"><b>25세대 이상에서는 심사 리스크가 급증한다.</b></font><br/>
+<br/>
+따라서 건축 규모는<br/>
+<b>'최대 가능'이 아니라</b><br/>
+<b><font color="#1F2A44">'청년형 수요를 유지할 수 있는 범위'로 제한된다.</font></b><br/>
+<br/>
+<font size="10" color="#6B7280">
+※ 이 문장은 M4 첫 페이지에 그대로 이어집니다.
+</font>
 """
         
-        chain_elements = EnforcementLayoutV6.create_chain_zone(
-            chain_text=chain_text,
-            next_module="M4 건축규모"
+        chain_style = ParagraphStyle(
+            'ChainStyle',
+            fontName=self.font_name,
+            fontSize=12,
+            leading=18,
+            spaceBefore=10,
+            spaceAfter=15,
+            leftIndent=15,
+            rightIndent=15,
+            borderWidth=2,
+            borderColor=self.color_primary,
+            borderPadding=12,
+            backColor=colors.HexColor("#F0F4FF")
         )
         
-        for elem in chain_elements:
-            story.append(elem)
+        story.append(Paragraph(chain_text, chain_style))
+        story.append(Spacer(1, 0.2*inch))
         
-        story.append(Spacer(1, 0.3*inch))
+        # ═══════════════════════════════════════════════════════════
+        # 고정 선언 문구
+        # ═══════════════════════════════════════════════════════════
         
-        # 7. 메타데이터
-        metadata = data.get('metadata', {})
-        if metadata:
-            story.append(Paragraph("7. 분석 메타데이터", heading_style))
-            
-            meta_text = f"""
-<b>분석 일자:</b> {metadata.get('date', 'N/A')}<br/>
-<b>데이터 출처:</b> {', '.join(metadata.get('sources', []))}<br/>
+        final_declaration = """
+<b>M3는 유형을 추천하지 않는다.</b><br/>
+이후 모든 판단이 무너지지 않기 위한<br/>
+<b><font color="#E63946">유일한 수요 전제 조건을 선언한다.</font></b>
 """
-            story.append(Paragraph(meta_text, styles['Italic']))
         
-        # PDF 생성 (워터마크 + 카피라이트 적용)
+        declaration_style = ParagraphStyle(
+            'Declaration',
+            fontName=self.font_name_bold,
+            fontSize=13,
+            textColor=self.color_primary,
+            alignment=TA_CENTER,
+            leading=20,
+            spaceBefore=20,
+            spaceAfter=10,
+            borderWidth=1,
+            borderColor=self.color_primary,
+            borderPadding=10
+        )
+        
+        story.append(Paragraph(final_declaration, declaration_style))
+        
+        # Build PDF
         doc.build(story, onFirstPage=self._add_watermark_and_footer, onLaterPages=self._add_watermark_and_footer)
         buffer.seek(0)
         return buffer.getvalue()
+
     
     def generate_m4_capacity_pdf(self, assembled_data: Dict[str, Any]) -> bytes:
         """
