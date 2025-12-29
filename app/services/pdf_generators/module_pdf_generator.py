@@ -51,7 +51,8 @@ from .data_contract import (
 
 # 🔥 v5.0 ENHANCED: Import new systems
 from .smart_data_fallback import SmartDataFallback
-from .enhanced_design_system import EnhancedDesignSystem, LayoutHelper 
+from .enhanced_design_system import EnhancedDesignSystem, LayoutHelper
+from .advanced_chart_builder import AdvancedChartBuilder 
     ContextSnapshot, 
     safe_get
 )
@@ -4618,53 +4619,21 @@ M6 LH 심사 Hard Fail 회피를 위한 전략적 선택이다.</b><br/>
         story.append(Paragraph(stability_radar_v49, reason_style_m5))
         story.append(Spacer(1, 0.25*inch))
         
-        # 2. 리스크 제거 리스트 (v4.9 핵심: 일반 분양 대비 사라진 리스크)
-        risk_comparison_title_v49 = """
-<b style="font-size:14pt; color:#16A34A;">▣ 일반 분양 vs LH: 제거된 리스크 목록</b><br/>
-<br/>
-<b>이 표의 목적:</b> LH 방식이 '고수익'이 아닌 '리스크 제거'에 특화되어 있음을 증명한다.<br/>
-"""
-        
-        graph_conclusion_style_m5 = ParagraphStyle(
-            'GraphConclusionM5',
-            parent=styles['Normal'],
-            fontName=self.font_name_bold,
-            fontSize=14,
-            textColor=HexColor('#3B82F6'),
-            spaceAfter=10,
-            spaceBefore=5,
-            leading=20
-        )
-        
-        story.append(Paragraph(risk_comparison_title_v49, graph_conclusion_style_m5))
-        story.append(Spacer(1, 0.15*inch))
-        
-        # 리스크 제거 비교 표
-        risk_elimination_data = [
-            ['리스크 유형', '일반 분양', 'LH 방식', '제거 효과'],
-            ['분양 실패', '<font color="#DC2626">⚠️ 30%</font>', '<font color="#16A34A">✅ 0%</font>', '<font color="#16A34A"><b>-30%p</b></font>'],
-            ['시장 침체', '<font color="#DC2626">⚠️ 25%</font>', '<font color="#16A34A">✅ 0%</font>', '<font color="#16A34A"><b>-25%p</b></font>'],
-            ['금융 거절', '<font color="#F59E0B">⚠️ 15%</font>', '<font color="#16A34A">✅ 2%</font>', '<font color="#16A34A"><b>-13%p</b></font>'],
-            ['<b>총 리스크</b>', '<font color="#DC2626"><b>70%</b></font>', '<font color="#16A34A"><b>2%</b></font>', '<font color="#16A34A"><b>-68%p</b></font>'],
+        # 2. 리스크 제거 리스트 (v5.0: Advanced Chart Builder 적용)
+        risks_data = [
+            {'name': '분양 실패 리스크', 'before': 30.0, 'after': 0.0},
+            {'name': '시장 침체 리스크', 'before': 25.0, 'after': 0.0},
+            {'name': '금융 거절 리스크', 'before': 15.0, 'after': 2.0},
         ]
         
-        risk_table = Table(risk_elimination_data, colWidths=[4*cm, 3.5*cm, 3.5*cm, 3.5*cm])
-        risk_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), HexColor('#1F3A5F')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), self.font_name_bold),
-            ('FONTSIZE', (0, 0), (-1, 0), 11),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-            ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#E0E0E0')),
-            ('FONTNAME', (0, 1), (0, -1), self.font_name_bold),
-            ('FONTSIZE', (0, 1), (-1, -1), 10),
-            # Highlight total row
-            ('BACKGROUND', (0, 4), (-1, 4), HexColor('#E8F5E9')),
-            ('FONTNAME', (0, 4), (-1, 4), self.font_name_bold),
-        ]))
-        story.append(risk_table)
+        risk_chart_elements = AdvancedChartBuilder.create_risk_elimination_chart(
+            risks=risks_data,
+            conclusion="LH 방식은 총 리스크를 68%p 감소 (70% → 2%)"
+        )
+        
+        for element in risk_chart_elements:
+            story.append(element)
+        
         story.append(Spacer(1, 0.25*inch))
         
         # Executive Summary (M5 개념 명확화 + 🔥 사업 구조 설명 강화)
@@ -6263,38 +6232,24 @@ ZeroSite 6-MODULE은 각각 독립적이면서도 연계된 판단 도구입니�
         story.append(Paragraph("<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b>", styles['Normal']))
         story.append(Spacer(1, 0.3*inch))
         
-        # 🔥 v4.9 REAL FINAL: 중단 35% - EVIDENCE ZONE (MODULE COMPRESSION + Linkage)
+        # 🔥 v5.0 ENHANCED: 중단 35% - EVIDENCE ZONE (MODULE COMPRESSION + Linkage)
         
-        # 1. MODULE COMPRESSION (M2-M5를 한 줄로 압축)
-        module_compression_v49 = f"""
-<b>▣ MODULE COMPRESSION (M2→M3→M4→M5 → M6 필연성)</b><br/>
-<br/>
-<b>• M2 토지가치:</b> 구조적 프리미엄 60% (정책/희소성) → 사업 검토 대상 확정<br/>
-<b>• M3 선호유형:</b> 청년형 외 선택 시 붕괴 확률 70% 이상 → 유형 고정<br/>
-<b>• M4 건축규모:</b> {data.get('legal_capacity', {}).get('total_units', 22)}세대만이 심사 탈락 회피 → 규모 고정<br/>
-<b>• M5 사업성:</b> 리스크 제거 68%p → 망할 가능성 거의 없음 → 사업 구조 안정<br/>
-<br/>
-<b>→ M6는 M2/M3/M4/M5의 '선택'을 합산하지 않는다. '필연'을 확인한다.</b><br/>
-"""
+        # 1. MODULE COMPRESSION (Advanced Chart Builder 적용)
+        modules_summary = {
+            'M2': '구조적 프리미엄 60% (정책/희소성) → 사업 검토 대상 확정',
+            'M3': '청년형 외 선택 시 붕괴 확률 70% 이상 → 유형 고정',
+            'M4': f'{data.get("legal_capacity", {}).get("total_units", 22)}세대만이 심사 탈락 회피 → 규모 고정',
+            'M5': '리스크 제거 68%p → 망할 가능성 거의 없음 → 사업 구조 안정'
+        }
         
-        module_compression_style_v49 = ParagraphStyle(
-            'ModuleCompressionV49',
-            parent=styles['Normal'],
-            fontName=self.font_name,
-            fontSize=12,
-            textColor=HexColor('#1F3A5F'),
-            leftIndent=20,
-            rightIndent=20,
-            leading=18,
-            spaceBefore=5,
-            spaceAfter=15,
-            borderWidth=1,
-            borderColor=HexColor('#3B82F6'),
-            borderPadding=12,
-            backColor=colors.HexColor('#F0F4FF')
+        compression_elements = AdvancedChartBuilder.create_module_compression_diagram(
+            modules=modules_summary,
+            conclusion=one_sentence_conclusion_m6
         )
         
-        story.append(Paragraph(module_compression_v49, module_compression_style_v49))
+        for element in compression_elements:
+            story.append(element)
+        
         story.append(Spacer(1, 0.25*inch))
         
         # 2. Module Linkage Diagram (연결 구조 명시)
