@@ -102,7 +102,8 @@ export const PipelineOrchestrator: React.FC = () => {
       console.log('⏰ Time:', new Date().toLocaleTimeString());
       
       // 🔥 CRITICAL FIX: Use centralized backend URL config
-      const apiUrl = `${import.meta.env.VITE_BACKEND_URL || 'https://8005-iytptjlm3wjktifqay52f-2b54fc91.sandbox.novita.ai'}/api/v4/pipeline/analyze`;
+      // Use relative URL to leverage Vite proxy
+      const apiUrl = `/api/v4/pipeline/analyze`;
       
       console.log(`📡 Calling pipeline API: ${apiUrl}`);
       console.log('📦 Request body:', { parcel_id: parcelId, use_cache: false });
