@@ -423,6 +423,85 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
         
         # Run pipeline
         logger.info(f"🚀 Running 6-MODULE pipeline for {request.parcel_id}")
+        
+        # 🔥 CRITICAL FIX: If mock_land_data is provided, store it as frozen context first
+        if request.mock_land_data:
+            logger.info("📝 mock_land_data provided - storing as frozen context")
+            from app.api.endpoints.m1_context_freeze_v2 import frozen_contexts_v2
+            from app.core.context.m1_final import M1FinalContext
+            from app.core.context.canonical_land import (
+                AddressInfo, Coordinates, CadastralInfo, ZoningInfo, RoadAccessInfo
+            )
+            
+            mock_data = request.mock_land_data
+            
+            # Create M1FinalContext from mock_land_data
+            try:
+                land_info_dict = {
+                    "address": {
+                        "road_address": mock_data.get("road_address", ""),
+                        "jibun_address": mock_data.get("address", ""),
+                        "sido": mock_data.get("sido", ""),
+                        "sigungu": mock_data.get("sigungu", ""),
+                        "dong": mock_data.get("dong", ""),
+                        "beopjeong_dong": mock_data.get("dong", "")
+                    },
+                    "coordinates": {
+                        "lat": mock_data.get("coordinates", {}).get("lat", 0),
+                        "lon": mock_data.get("coordinates", {}).get("lon", 0)
+                    },
+                    "cadastral": {
+                        "bonbun": mock_data.get("bonbun", ""),
+                        "bubun": mock_data.get("bubun", ""),
+                        "jimok": mock_data.get("jimok", ""),
+                        "area_sqm": mock_data.get("area", 0),
+                        "area_pyeong": mock_data.get("area", 0) * 0.3025
+                    },
+                    "zoning": {
+                        "zone_type": mock_data.get("zone_type", ""),
+                        "zone_detail": mock_data.get("zone_detail", ""),
+                        "land_use": mock_data.get("jimok", "")  # fallback to jimok
+                    },
+                    "road_access": {
+                        "road_type": mock_data.get("road_type", ""),
+                        "road_width": mock_data.get("road_width", 0),
+                        "road_contact": "접도"
+                    },
+                    "terrain": {
+                        "height": "평지",
+                        "shape": "정형"
+                    }
+                }
+                
+                # Simplified M1FinalContext-like structure
+                class SimplifiedLandInfo:
+                    def __init__(self, data):
+                        self.address = type('obj', (object,), data['address'])()
+                        self.coordinates = type('obj', (object,), data['coordinates'])()
+                        self.cadastral = type('obj', (object,), data['cadastral'])()
+                        self.zoning = type('obj', (object,), data['zoning'])()
+                        self.road_access = type('obj', (object,), data['road_access'])()
+                        self.terrain = type('obj', (object,), data['terrain'])()
+                    
+                class SimplifiedM1Context:
+                    def __init__(self, parcel_id, land_info_dict):
+                        self.parcel_id = parcel_id
+                        self.land_info = SimplifiedLandInfo(land_info_dict)
+                        self.building_constraints = type('obj', (object,), {
+                            'legal': type('obj', (object,), {
+                                'far_max': mock_data.get("far", 200),
+                                'bcr_max': mock_data.get("bcr", 60)
+                            })()
+                        })()
+                
+                simplified_context = SimplifiedM1Context(request.parcel_id, land_info_dict)
+                frozen_contexts_v2[context_id] = simplified_context
+                
+                logger.info(f"✅ Stored mock_land_data as frozen context: {context_id}")
+            except Exception as store_error:
+                logger.warning(f"⚠️ Failed to store mock_land_data: {store_error}")
+                # Continue anyway - pipeline will use mock data fallback
+        
         result = pipeline.run(request.parcel_id)
         
         # Cache results
