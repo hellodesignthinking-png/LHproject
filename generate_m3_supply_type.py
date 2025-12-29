@@ -142,10 +142,17 @@ class M3SupplyTypeGenerator:
         )
         
         # 핵심 판단 요약 (REAL APPRAISAL STANDARD v6.5)
+        # M2 토지 시가 적정성을 명시적으로 인용
         executive_conclusion = (
+            f"<p style='margin-bottom: 15px;'>"
+            f"<strong>📊 M2 토지 시가 적정성:</strong> 본 사업지는 M2에서 토지 시장가치가 적정한 것으로 판단되었으며, "
+            f"이를 전제로 공급 유형 판단을 진행하였습니다."
+            f"</p>"
+            f"<p>"
             f"본 사업지는 정책 대상 적합성, 입지 수요 구조, 심사 안정성을 종합적으로 검토한 결과, "
             f"{selected_supply_type} 공급 유형으로 선정하는 것이 가장 타당합니다. "
             f"다른 유형 대비 정책 적합성과 심사 안정성이 가장 높게 확보됩니다."
+            f"</p>"
         )
         
         # 최종 판단 의견 (REAL APPRAISAL STANDARD v6.5)

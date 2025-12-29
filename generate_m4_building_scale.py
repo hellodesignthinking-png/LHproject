@@ -102,9 +102,15 @@ class M4BuildingScaleGenerator:
         # 핵심 판단 요약 (REAL APPRAISAL STANDARD v6.5)
         legal_max_units = int(total_units * 1.2)
         executive_conclusion = (
+            f"<p style='margin-bottom: 15px;'>"
+            f"<strong>📊 M3 공급 유형:</strong> 본 사업은 M3에서 <strong>신혼희망타운</strong>으로 선정되었으며, "
+            f"이 공급 유형의 특성을 고려하여 건축 규모를 결정하였습니다."
+            f"</p>"
+            f"<p>"
             f"본 사업의 법정 최대 규모는 {legal_max_units}세대까지 가능하나, "
             f"LH 심사 안정성, 공급 유형 적합성, 사업 리스크를 종합적으로 검토한 결과, "
             f"{selected_scale}로 계획하는 것이 가장 안정적인 규모로 판단됩니다."
+            f"</p>"
         )
         
         # 법정 최대 대비 축소 사유

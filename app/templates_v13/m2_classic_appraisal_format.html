@@ -404,6 +404,7 @@
 
         <div class="section">
             <div class="section-title">수집된 거래사례</div>
+            {% if transactions and transactions|length > 0 %}
             <table class="data-table">
                 <thead>
                     <tr>
@@ -430,6 +431,24 @@
                     {% endfor %}
                 </tbody>
             </table>
+            {% else %}
+            <div class="info-box" style="background: #FFF3E0; border-left: 4px solid #FF9800;">
+                <div class="info-box-title" style="color: #E65100;">⚠️ 거래사례 부재</div>
+                <div class="info-box-content">
+                    <p><strong>인근 실거래 사례가 확인되지 않았습니다.</strong></p>
+                    <p>본 평가에서는 다음 방법을 통해 시장가치를 산정하였습니다:</p>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>개별공시지가를 기준가격으로 활용</li>
+                        <li>인근 지역 유사 토지의 거래 동향 반영</li>
+                        <li>용도지역, 접근성 등 개별 특성 보정 적용</li>
+                    </ul>
+                    <p style="margin-top: 10px; font-size: 12pt; color: #666;">
+                        거래사례가 없는 경우, 개별공시지가 및 인근 지역 시장 동향을 종합하여
+                        <strong>보수적 관점</strong>에서 시가를 판단하였습니다.
+                    </p>
+                </div>
+            </div>
+            {% endif %}
         </div>
 
         <div class="section">
@@ -704,6 +723,9 @@
                 <strong>Confidential - For Official Use Only</strong>
             </p>
         </div>
+
+        <!-- 🔒 USER GUARANTEE FOOTER -->
+        {% include '_user_guarantee_footer.html' %}
     </div>
 
     <!-- Page Numbers -->

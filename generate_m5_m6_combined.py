@@ -58,9 +58,15 @@ def generate_m5(context_id: str = None, timestamp: datetime = None):
     
     # 핵심 판단 요약 강화
     executive_conclusion = (
+        "<p style='margin-bottom: 15px;'>"
+        "<strong>📊 M4 건축 규모:</strong> 본 사업은 M4에서 <strong>150세대</strong> 규모로 결정되었으며, "
+        "이 규모를 전제로 재무 분석을 진행하였습니다."
+        "</p>"
+        "<p>"
         "본 사업은 M4에서 도출된 150세대 규모를 기준으로 "
         "LH 일괄매입 구조에 적용한 결과, "
         "재무적 실행 가능성이 안정적으로 확보됩니다."
+        "</p>"
     )
     
     # 최종 판단 강화
