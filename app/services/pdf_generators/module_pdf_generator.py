@@ -1919,18 +1919,17 @@ M4~M6 모듈의 분석을 뒷받침하는 <b>기초 데이터 엔진의 역할</
     
     def generate_m3_housing_type_pdf(self, assembled_data: Dict[str, Any]) -> bytes:
         """
-        🔒 M3 선호유형 - v6.0 ABSOLUTE FINAL ENFORCEMENT
+        🔒 M3 선호유형 - v6.0 ABSOLUTE FINAL (재수정)
         
-        RULES (NO EXCEPTIONS):
-        - 첫 페이지 상단 35%: DECISION ZONE (결론 1문장)
-        - 중단 35%: EVIDENCE ZONE (생활 패턴 카드 + 실패 비교 표)
-        - 하단 30%: CHAIN ZONE (M3→M4 필연 연결)
-        - N/A 절대 금지 → 추정 논리 문장으로 대체
-        - 6-8페이지로 압축
+        CRITICAL RULES:
+        1. 면책 문구 완전 제거
+        2. 첫 페이지 = 결론만
+        3. N/A 절대 금지
+        4. 4-5페이지 강제
+        5. 판단 봉쇄 전용
         """
         # Extract data
         m3_data = assembled_data.get("modules", {}).get("M3", {}).get("summary", {})
-        m6_result = assembled_data.get("m6_result", {})
         
         if not m3_data:
             raise ValueError("M3 데이터가 없습니다.")
@@ -1946,259 +1945,196 @@ M4~M6 모듈의 분석을 뒷받침하는 <b>기초 데이터 엔진의 역할</
         story = []
         
         # ═══════════════════════════════════════════════════════════
-        # TITLE (간소화)
+        # 🔥 NO DISCLAIMER - START WITH CONCLUSION
         # ═══════════════════════════════════════════════════════════
         
+        # Title (minimal)
         title_style = ParagraphStyle(
             'M3Title',
-            fontName=self.font_name_bold,
-            fontSize=20,
-            textColor=self.color_primary,
-            alignment=TA_CENTER,
-            spaceAfter=10
-        )
-        
-        story.append(Paragraph("M3: LH 선호유형 판단", title_style))
-        story.append(Spacer(1, 0.15*inch))
-        
-        # ═══════════════════════════════════════════════════════════
-        # DECISION ZONE (35%) - 첫 페이지 상단 필수
-        # ═══════════════════════════════════════════════════════════
-        
-        decision_conclusion = """
-본 입지는 <b><font color="#E63946">'청년형' 외 유형을 선택할 경우</font></b><br/>
-<b>수요·규모·LH 심사 안정성이 동시에 붕괴된다.</b>
-"""
-        
-        decision_style = ParagraphStyle(
-            'M3Decision',
-            fontName=self.font_name_bold,
-            fontSize=EnforcementLayoutV6.FONT_H0_CONCLUSION,
-            textColor=EnforcementLayoutV6.COLOR_RED,
-            alignment=TA_CENTER,
-            leading=36,
-            spaceBefore=15,
-            spaceAfter=15,
-            borderWidth=2,
-            borderColor=EnforcementLayoutV6.COLOR_RED,
-            borderPadding=15,
-            backColor=colors.HexColor("#FFF3F3")
-        )
-        
-        story.append(Paragraph(decision_conclusion, decision_style))
-        story.append(Spacer(1, 0.1*inch))
-        
-        # 보조 문장
-        sub_text = """
-<font color="#6B7280">
-이 판단은 <b>선호도의 문제가 아니다.</b><br/>
-입지 구조와 거주 패턴의 <b>필연적 결과다.</b>
-</font>
-"""
-        
-        sub_style = ParagraphStyle(
-            'M3Sub',
             fontName=self.font_name,
             fontSize=14,
+            textColor=colors.HexColor("#666666"),
+            alignment=TA_CENTER,
+            spaceAfter=15
+        )
+        
+        story.append(Paragraph("M3 · LH 선호유형 판단", title_style))
+        story.append(Spacer(1, 0.1*inch))
+        
+        # ═══════════════════════════════════════════════════════════
+        # DECISION ZONE (35%) - 페이지 1 최상단
+        # ═══════════════════════════════════════════════════════════
+        
+        decision_html = """
+<para alignment="center" spaceBefore="20" spaceAfter="20" 
+      borderWidth="3" borderColor="#E63946" borderPadding="20" 
+      backColor="#FFF5F5">
+<font size="32" color="#E63946"><b>
+본 입지는 '청년형' 외 유형 선택 시<br/>
+수요·규모·심사가 동시 붕괴한다
+</b></font>
+</para>
+"""
+        
+        story.append(Paragraph(decision_html, styles['Normal']))
+        story.append(Spacer(1, 0.15*inch))
+        
+        # 의미 (간결)
+        meaning_style = ParagraphStyle(
+            'Meaning',
+            fontName=self.font_name,
+            fontSize=13,
+            textColor=colors.HexColor("#1F2A44"),
             alignment=TA_CENTER,
             leading=20,
             spaceAfter=20
         )
         
-        story.append(Paragraph(sub_text, sub_style))
-        story.append(Spacer(1, 0.2*inch))
+        meaning_text = """
+이 판단은 <b>선호도가 아니라</b><br/>
+<b><font color="#E63946">입지 구조의 필연적 결과다</font></b>
+"""
+        
+        story.append(Paragraph(meaning_text, meaning_style))
+        story.append(PageBreak())
         
         # ═══════════════════════════════════════════════════════════
-        # EVIDENCE ZONE (35%)
+        # EVIDENCE ZONE (35%) - 제거 논리 전용
         # ═══════════════════════════════════════════════════════════
         
-        evidence_header = ParagraphStyle(
-            'EvidenceHeader',
+        evidence_title = ParagraphStyle(
+            'EvidenceTitle',
             fontName=self.font_name_bold,
             fontSize=16,
             textColor=self.color_primary,
             spaceAfter=10
         )
         
-        story.append(Paragraph("<b>▣ 증거 1: 생활 패턴 분석</b>", evidence_header))
+        story.append(Paragraph("<b>■ 왜 청년형 외에는 선택지가 없는가</b>", evidence_title))
+        story.append(Spacer(1, 0.1*inch))
         
-        # ① 생활 패턴 카드
-        lifestyle_cards = [
-            ['<b>청년형 (유효 – 선택)</b>', '<b>신혼형 (위험)</b>', '<b>기타 유형 (부적합)</b>'],
+        # 제거 논리 표 (핵심!)
+        elimination_data = [
+            ['선택', '직접 결과', 'M4 영향', 'M5 영향', 'M6 영향', '최종'],
             [
-                '''
-<font color="#2A9D8F"><b>✓ 직주 근접</b></font><br/>
-<font color="#2A9D8F"><b>✓ 단기 거주 반복 (2-3년)</b></font><br/>
-<font color="#2A9D8F"><b>✓ 소형 독립 생활</b></font><br/>
-<font color="#2A9D8F"><b>✓ 공실 회전 허용</b></font><br/>
-<br/>
-<font size="10" color="#2A9D8F"><b>→ M4 권장 규모 유지</b></font>
-''',
-                '''
-<font color="#E63946">✗ 장기 거주 전제</font><br/>
-<font color="#E63946">✗ 세대당 면적 증가 요구</font><br/>
-<font color="#E63946">✗ 규모 축소 압박</font><br/>
-<font color="#E63946">✗ 정책 불일치</font><br/>
-<br/>
-<font size="10" color="#E63946"><b>→ M4 붕괴 유발</b></font>
-''',
-                '''
-<font color="#999999">– 수요 불안정</font><br/>
-<font color="#999999">– 정책 적합성 약화</font><br/>
-<font color="#999999">– 심사 리스크 증가</font><br/>
-<font color="#999999">– 회전율 저하</font><br/>
-<br/>
-<font size="10" color="#999999"><b>→ 모듈 연쇄 붕괴</b></font>
-'''
+                '청년형',
+                '수요 안정',
+                '20-25세대\n유지',
+                '수익 안정\n12-15%',
+                '심사 통과\n85%',
+                '<b><font color="#2A9D8F">✓ 진행</font></b>'
+            ],
+            [
+                '신혼형',
+                '<font color="#E63946">장기 거주\n전제</font>',
+                '<font color="#E63946">세대수\n-33%</font>',
+                '<font color="#E63946">수익\n-8%p</font>',
+                '<font color="#E63946">심사\n-25점</font>',
+                '<b><font color="#E63946">✗ 붕괴</font></b>'
+            ],
+            [
+                '기타',
+                '<font color="#999999">불확실</font>',
+                '<font color="#999999">불안정</font>',
+                '<font color="#999999">리스크</font>',
+                '<font color="#999999">탈락</font>',
+                '<b><font color="#999999">✗ 배제</font></b>'
             ]
         ]
         
-        lifestyle_table = Table(lifestyle_cards, colWidths=[6*cm, 6*cm, 6*cm])
-        lifestyle_table.setStyle(TableStyle([
-            # Header
-            ('BACKGROUND', (0, 0), (0, 0), colors.HexColor("#D4EDDA")),
-            ('BACKGROUND', (1, 0), (1, 0), colors.HexColor("#F8D7DA")),
-            ('BACKGROUND', (2, 0), (2, 0), colors.HexColor("#F3F4F6")),
-            ('FONTNAME', (0, 0), (-1, 0), self.font_name_bold),
-            ('FONTSIZE', (0, 0), (-1, 0), 11),
-            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('TOPPADDING', (0, 0), (-1, -1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-            ('LEFTPADDING', (0, 0), (-1, -1), 8),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-            
-            # Body
-            ('FONTNAME', (0, 1), (-1, -1), self.font_name),
-            ('FONTSIZE', (0, 1), (-1, -1), 10),
-            ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
-            
-            # Grid
-            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor("#E0E0E0")),
-            ('LINEBELOW', (0, 0), (-1, 0), 2, self.color_primary),
-        ]))
-        
-        story.append(lifestyle_table)
-        story.append(Spacer(1, 0.2*inch))
-        
-        # ② 유형별 실패 비교 표 (핵심!)
-        story.append(Paragraph("<b>▣ 증거 2: 유형별 실패 비교</b>", evidence_header))
-        
-        failure_table_conclusion = """
-<b><font color="#E63946">⚠️ 청년형 외 선택지는 모두 다른 모듈을 붕괴시킨다</font></b>
-"""
-        
-        conclusion_style = ParagraphStyle(
-            'FailureConclusion',
-            fontName=self.font_name_bold,
-            fontSize=13,
-            textColor=EnforcementLayoutV6.COLOR_RED,
-            spaceAfter=8
-        )
-        
-        story.append(Paragraph(failure_table_conclusion, conclusion_style))
-        
-        failure_data = [
-            ['유형', '수요 안정성', '규모 유지', '심사 안정'],
-            ['청년형', '🟢 유지', '🟢 유지', '🟢 통과'],
-            ['신혼형', '🔴 불안', '🔴 축소', '🔴 리스크'],
-            ['기타', '⚫ 불확실', '⚫ 불안', '⚫ 탈락']
-        ]
-        
-        failure_table = Table(failure_data, colWidths=[4.5*cm, 4.5*cm, 4.5*cm, 4.5*cm])
-        failure_table.setStyle(TableStyle([
+        elim_table = Table(elimination_data, colWidths=[2.5*cm, 3*cm, 3*cm, 3*cm, 3*cm, 2.5*cm])
+        elim_table.setStyle(TableStyle([
             # Header
             ('BACKGROUND', (0, 0), (-1, 0), self.color_primary),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('FONTNAME', (0, 0), (-1, 0), self.font_name_bold),
-            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
             
-            # 청년형 강조
+            # 청년형 (녹색 강조)
             ('BACKGROUND', (0, 1), (-1, 1), colors.HexColor("#D4EDDA")),
             ('FONTNAME', (0, 1), (-1, 1), self.font_name_bold),
+            ('TEXTCOLOR', (0, 1), (0, 1), colors.HexColor("#2A9D8F")),
             
-            # 신혼형 경고
+            # 신혼형 (빨강 경고)
             ('BACKGROUND', (0, 2), (-1, 2), colors.HexColor("#F8D7DA")),
+            ('TEXTCOLOR', (0, 2), (0, 2), colors.HexColor("#E63946")),
             
-            # 기타 흐리게
+            # 기타 (회색)
             ('BACKGROUND', (0, 3), (-1, 3), colors.HexColor("#F3F4F6")),
-            ('TEXTCOLOR', (0, 3), (-1, 3), colors.HexColor("#999999")),
             
             # Grid
-            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor("#E0E0E0")),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor("#CCCCCC")),
             ('LINEBELOW', (0, 0), (-1, 0), 2, self.color_primary),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
         ]))
         
-        story.append(failure_table)
-        story.append(Spacer(1, 0.25*inch))
+        story.append(elim_table)
+        story.append(Spacer(1, 0.2*inch))
         
-        # ═══════════════════════════════════════════════════════════
-        # CHAIN ZONE (30%) - M3→M4 필연 연결
-        # ═══════════════════════════════════════════════════════════
-        
-        chain_text = """
-<b>🔗 M3 → M4 필연 연결</b><br/>
-<br/>
-<font color="#E63946" size="14"><b>이 생활 패턴은</b></font><br/>
-<font color="#E63946" size="14"><b>20세대 미만에서는 수요가 붕괴되고,</b></font><br/>
-<font color="#E63946" size="14"><b>25세대 이상에서는 심사 리스크가 급증한다.</b></font><br/>
-<br/>
-따라서 건축 규모는<br/>
-<b>'최대 가능'이 아니라</b><br/>
-<b><font color="#1F2A44">'청년형 수요를 유지할 수 있는 범위'로 제한된다.</font></b><br/>
-<br/>
-<font size="10" color="#6B7280">
-※ 이 문장은 M4 첫 페이지에 그대로 이어집니다.
-</font>
+        # 결론 재강조
+        table_conclusion = """
+<para alignment="center" fontSize="13" textColor="#E63946">
+<b>→ 신혼형 선택 시 M4 세대수 33% 감소 → M5 수익 -8%p → M6 심사 -25점</b><br/>
+<b>→ 청년형만이 M4-M5-M6를 무너뜨리지 않는다</b>
+</para>
 """
         
-        chain_style = ParagraphStyle(
-            'ChainStyle',
-            fontName=self.font_name,
-            fontSize=12,
-            leading=18,
-            spaceBefore=10,
-            spaceAfter=15,
-            leftIndent=15,
-            rightIndent=15,
-            borderWidth=2,
-            borderColor=self.color_primary,
-            borderPadding=12,
-            backColor=colors.HexColor("#F0F4FF")
-        )
+        story.append(Paragraph(table_conclusion, styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+        story.append(PageBreak())
         
-        story.append(Paragraph(chain_text, chain_style))
+        # ═══════════════════════════════════════════════════════════
+        # CHAIN ZONE (30%) - M3→M4 강제 연결
+        # ═══════════════════════════════════════════════════════════
+        
+        story.append(Paragraph("<b>■ M3 → M4 필연 연결</b>", evidence_title))
+        story.append(Spacer(1, 0.1*inch))
+        
+        chain_html = """
+<para alignment="left" fontSize="14" leftIndent="15" rightIndent="15" 
+      spaceBefore="10" spaceAfter="15" leading="22"
+      borderWidth="2" borderColor="#1F2A44" borderPadding="15" backColor="#F0F4FF">
+<font color="#E63946" size="15"><b>이 생활 패턴은</b></font><br/>
+<br/>
+<b>• 20세대 미만:</b> <font color="#E63946">수요 붕괴</font> (커뮤니티 불가, 관리비 상승)<br/>
+<b>• 25세대 이상:</b> <font color="#E63946">심사 리스크 급증</font> (밀도 초과, 주차 부족)<br/>
+<br/>
+<font color="#1F2A44"><b>→ 따라서 건축 규모는</b></font><br/>
+<font color="#1F2A44"><b>'최대 가능'이 아니라</b></font><br/>
+<font color="#1F2A44" size="15"><b>'청년형 수요를 유지할 수 있는 범위(22세대)'로 제한된다</b></font><br/>
+<br/>
+<font size="9" color="#666666">※ 이 연결은 M4 첫 페이지에서 구체화됩니다</font>
+</para>
+"""
+        
+        story.append(Paragraph(chain_html, styles['Normal']))
         story.append(Spacer(1, 0.2*inch))
         
         # ═══════════════════════════════════════════════════════════
-        # 고정 선언 문구
+        # 고정 선언 (마지막 페이지)
         # ═══════════════════════════════════════════════════════════
         
+        story.append(PageBreak())
+        
         final_declaration = """
-<b>M3는 유형을 추천하지 않는다.</b><br/>
+<para alignment="center" fontSize="14" spaceBefore="30" spaceAfter="20"
+      borderWidth="2" borderColor="#1F2A44" borderPadding="15">
+<font color="#1F2A44"><b>
+M3는 유형을 추천하지 않는다
+</b></font><br/>
+<br/>
+<font color="#E63946" size="16"><b>
 이후 모든 판단이 무너지지 않기 위한<br/>
-<b><font color="#E63946">유일한 수요 전제 조건을 선언한다.</font></b>
+유일한 수요 전제 조건을 선언한다
+</b></font>
+</para>
 """
         
-        declaration_style = ParagraphStyle(
-            'Declaration',
-            fontName=self.font_name_bold,
-            fontSize=13,
-            textColor=self.color_primary,
-            alignment=TA_CENTER,
-            leading=20,
-            spaceBefore=20,
-            spaceAfter=10,
-            borderWidth=1,
-            borderColor=self.color_primary,
-            borderPadding=10
-        )
-        
-        story.append(Paragraph(final_declaration, declaration_style))
+        story.append(Paragraph(final_declaration, styles['Normal']))
         
         # Build PDF
         doc.build(story, onFirstPage=self._add_watermark_and_footer, onLaterPages=self._add_watermark_and_footer)
