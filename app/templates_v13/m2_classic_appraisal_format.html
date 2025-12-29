@@ -393,7 +393,7 @@
 
         <div class="info-box">
             <div class="info-box-title">📌 거래사례 비교방식</div>
-            <p>인근 지역의 실제 거래 사례를 수집하여 시점/위치/개별 특성을 보정한 후, 시장에서 형성된 가격 흐름을 바탕으로 대상 토지의 시장가치를 판단하는 방법입니다.</p>
+            <p>인근 지역의 실제 거래 사례를 수집하여 시점, 위치, 개별 특성을 보정한 후, 시장에서 형성된 가격 흐름을 바탕으로 대상 토지의 시장가치를 판단하였습니다.</p>
         </div>
 
         <div class="section">
@@ -476,11 +476,11 @@
 
     <!-- Page 4: Income Capitalization Approach (SECONDARY) -->
     <div class="content-page page-break">
-        <div class="page-title">2. 수익환원법 (수익성 판단)</div>
+        <div class="page-title">2. 수익환원법 (보조적 검토)</div>
 
         <div class="info-box">
             <div class="info-box-title">📌 수익환원법</div>
-            <p>토지에서 발생할 수 있는 예상 순수익을 적정 환원율로 나누어 토지의 수익가치를 산정하는 방법입니다.</p>
+            <p>수익환원법은 대상 토지의 이용 가능성과 시장 수익성을 검토하기 위한 보조적 분석으로 적용하였습니다.</p>
         </div>
 
         <div class="section">
@@ -529,7 +529,7 @@
 
     <!-- Page 5: Official Land Price (REFERENCE) -->
     <div class="content-page page-break">
-        <div class="page-title">3. 개별공시지가 (참고자료)</div>
+        <div class="page-title">3. 개별공시지가 (시장가치 판단의 참고자료)</div>
 
         <div class="info-box">
             <div class="info-box-title">📌 개별공시지가 활용</div>
@@ -579,7 +579,7 @@
                         <th>평가 방법</th>
                         <th>평가액 (원)</th>
                         <th>㎡당 단가 (원)</th>
-                        <th>적용 비중</th>
+                        <th>적용</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -587,38 +587,38 @@
                         <td>거래사례 비교방식 (PRIMARY)</td>
                         <td>{{ transaction_based_value | number_format }}</td>
                         <td>{{ weighted_avg_price | number_format }}</td>
-                        <td>{{ transaction_weight | percentage }}</td>
+                        <td>중심</td>
                     </tr>
                     <tr>
-                        <td>수익환원법 (SECONDARY)</td>
+                        <td>수익환원법 (보조 분석)</td>
                         <td>{{ income_approach_value | number_format }}</td>
                         <td>{{ income_price_per_sqm | number_format }}</td>
-                        <td>{{ income_weight | percentage }}</td>
+                        <td>참고</td>
                     </tr>
                     <tr>
-                        <td>개별공시지가 참고 (REFERENCE)</td>
+                        <td>개별공시지가 (참고자료)</td>
                         <td>{{ official_land_value | number_format }}</td>
                         <td>{{ official_price_per_sqm | number_format }}</td>
-                        <td>{{ official_weight | percentage }}</td>
+                        <td>참고</td>
                     </tr>
                     <tr class="highlight-row">
                         <td><strong>최종 시장가치</strong></td>
                         <td class="value-highlight"><strong>{{ total_value | number_format }}</strong></td>
                         <td class="value-highlight"><strong>{{ price_per_sqm | number_format }}</strong></td>
-                        <td><strong>100%</strong></td>
+                        <td><strong>확정</strong></td>
                     </tr>
                 </tbody>
             </table>
 
-            <div class="formula-box">
-                <div class="formula-title">최종 시장가치 산정:</div>
-                <div class="formula-content">
-                    거래사례 중심의 시가 판단 = (거래사례 × {{ transaction_weight | percentage }}) + 
-                                              (수익환원 × {{ income_weight | percentage }}) + 
-                                              (공시지가 참고 × {{ official_weight | percentage }})<br>
-                    <br>
-                    최종 시장가치 = {{ total_value | number_format }} 원
-                </div>
+            <div class="info-box">
+                <div class="info-box-title">최종 시장가치 산정 방법</div>
+                <p>
+                    최종 시장가치는 <strong>거래사례 분석을 중심</strong>으로 판단하였으며,<br>
+                    수익환원법 및 개별공시지가를 참고하여 합리적으로 조정·확정하였습니다.
+                </p>
+                <p style="margin-top: 10px;">
+                    <strong>최종 시장가치: {{ total_value | number_format }} 원</strong>
+                </p>
             </div>
         </div>
 
@@ -664,32 +664,29 @@
 
     <!-- Page 7: Legal Disclaimer -->
     <div class="content-page">
-        <div class="page-title">5. 법적 고지사항</div>
+        <div class="page-title">5. 평가 기준</div>
 
         <div class="section">
-            <div class="section-title">평가 기준 및 제한사항</div>
+            <div class="section-title">평가 기준일 및 조건</div>
             <div class="info-box">
-                <p><strong>1. 평가 목적:</strong> 본 보고서는 토지의 시장가치 평가를 목적으로 작성되었습니다.</p>
-                <p><strong>2. 평가 기준일:</strong> {{ appraisal_date }} 기준이며, 이후 시장 상황 변화는 반영되지 않습니다.</p>
-                <p><strong>3. 데이터 출처:</strong> 국토교통부, 한국부동산원, 실거래가 공개시스템 등 공신력 있는 기관의 자료를 활용했습니다.</p>
-                <p><strong>4. 적용 제한:</strong> 본 평가액은 참고용이며, 실제 거래가격과 다를 수 있습니다.</p>
-                <p><strong>5. 유효기간:</strong> 본 보고서는 발행일로부터 6개월간 유효합니다.</p>
+                <p><strong>평가 기준일:</strong> {{ appraisal_date }}</p>
+                <p>본 보고서는 평가기준일 현재의 시장 상황을 기준으로 작성되었습니다.</p>
             </div>
         </div>
 
         <div class="section">
-            <div class="section-title">주의사항</div>
+            <div class="section-title">데이터 출처</div>
             <ul style="padding-left: 20px; line-height: 2;">
-                <li>본 보고서의 내용을 임의로 수정하거나 일부만 발췌하여 사용할 수 없습니다.</li>
-                <li>평가액은 평가기준일 당시의 시장 상황을 반영한 것입니다.</li>
-                <li>개발계획, 인허가 사항 등 향후 변경 가능한 요소는 별도 확인이 필요합니다.</li>
-                <li>본 평가는 건물이 없는 나대지 상태를 기준으로 하였습니다.</li>
+                <li>국토교통부 실거래가 공개시스템</li>
+                <li>한국부동산원 시장 동향 자료</li>
+                <li>국토교통부 개별공시지가</li>
+                <li>지역 시장 조사 자료</li>
             </ul>
         </div>
 
         <div style="margin-top: 80px; padding: 30px; background: #f8f9fa; border: 2px solid #dee2e6;">
             <p style="text-align: center; font-size: 11pt; color: #6c757d; line-height: 1.8;">
-                본 감정평가는 감정평가에 관한 규칙 및 감정평가 실무기준에 따라 작성되었으며,<br>
+                본 보고서는 평가기준일 현재의 시장 상황을 기준으로 작성되었으며,<br>
                 평가 과정에서 취득한 정보와 자료는 엄격히 보호됩니다.<br>
                 <br>
                 <strong>Confidential - For Official Use Only</strong>
