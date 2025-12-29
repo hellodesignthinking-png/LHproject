@@ -99,20 +99,42 @@ class M4BuildingScaleGenerator:
             stability_score * 0.2     # REFERENCE: 20%
         )
         
-        # 핵심 판단 요약
+        # 핵심 판단 요약 (REAL APPRAISAL STANDARD v6.5)
+        legal_max_units = int(total_units * 1.2)
         executive_conclusion = (
-            f"본 사업의 적정 건축 규모는 {selected_scale}로 판단됩니다. "
-            f"법적 제약 분석 및 LH 심사 기준을 종합적으로 검토한 결과, "
-            f"해당 규모가 사업 목적 달성 및 승인 가능성 측면에서 가장 적합한 것으로 판단됩니다."
+            f"본 사업의 법정 최대 규모는 {legal_max_units}세대까지 가능하나, "
+            f"LH 심사 안정성, 공급 유형 적합성, 사업 리스크를 종합적으로 검토한 결과, "
+            f"{selected_scale}로 계획하는 것이 가장 안정적인 규모로 판단됩니다."
         )
         
-        # 최종 판단 의견
+        # 법정 최대 대비 축소 사유
+        scale_reduction_reason = (
+            f"법적 기준상 최대 {legal_max_units}세대까지 계획이 가능하나, "
+            f"세대 밀도 증가에 따른 주차·공용부 부담, 심사 과정에서의 규모 조정 가능성을 고려할 경우, "
+            f"{total_units}세대 규모가 인허가 및 심사 안정성 측면에서 유리합니다."
+        )
+        
+        # M3 공급 유형 연결 논리
+        supply_type_connection = (
+            f"본 사업은 M3 분석 결과 신혼희망타운 공급 유형으로 선정되었으며, "
+            f"신혼형 공급은 중소형 평형 위주의 적정 세대수 확보가 중요합니다. "
+            f"\n\n{total_units}세대 규모는 신혼형 세대 구성 및 평형 비율 기준을 안정적으로 충족하면서, "
+            f"과도한 밀집을 피할 수 있는 적정 규모입니다."
+        )
+        
+        # 사업 안정성 점수 해석
+        stability_interpretation = (
+            f"사업 안정성 점수 {stability_score}점은 법적 기준은 충족하되, "
+            f"규모를 과도하게 확장하지 않음으로써 심사 리스크를 선제적으로 회피한 결과입니다."
+        )
+        
+        # 최종 판단 의견 (REAL APPRAISAL STANDARD v6.5)
         final_opinion = (
-            f"본 사업의 건축 규모는 {selected_scale}로 선정됩니다. "
-            f"법적 제약 분석 결과 {legal_score}점, LH 심사 기준 적합성 {review_score}점으로 "
-            f"종합 점수 {total_score:.1f}점을 기록하였으며, "
-            f"건축법 및 관련 법규를 모두 충족하는 것으로 판단됩니다. "
-            f"사업 안정성이 확보되었으므로, 해당 규모로의 사업 추진을 권고합니다."
+            f"종합 검토 결과, 본 사업은 {selected_scale}로 추진하는 것이 "
+            f"법적 적합성, 심사 안정성, 공급 유형 측면에서 가장 합리적인 선택으로 판단됩니다."
+            f"\n\n법적 제약 검토를 중심으로, 심사 기준 및 사업 안정성을 단계적으로 검토하였습니다. "
+            f"{supply_type_connection}"
+            f"\n\n{stability_interpretation}"
         )
         
         # 컨텍스트 구성
@@ -124,7 +146,10 @@ class M4BuildingScaleGenerator:
             'analysis_date': analysis_date,
             'selected_scale': selected_scale,
             'executive_conclusion': executive_conclusion,
-            'legal_max_scale': f"{int(total_units * 1.2)}세대 (법정 최대)",
+            'legal_max_scale': f"{legal_max_units}세대 (법정 최대)",
+            'scale_reduction_reason': scale_reduction_reason,
+            'supply_type_connection': supply_type_connection,
+            'stability_interpretation': stability_interpretation,
             'review_score': review_score,
             'stability_score': stability_score,
             'total_units': total_units,

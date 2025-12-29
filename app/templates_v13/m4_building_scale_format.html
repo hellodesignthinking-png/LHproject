@@ -404,6 +404,13 @@
                 </tr>
             </table>
         </div>
+
+        <div class="section">
+            <div class="section-title">1-1. 법정 최대 대비 규모 조정 사유</div>
+            <div class="info-box">
+                <p>{{ scale_reduction_reason }}</p>
+            </div>
+        </div>
     </div>
 
     <!-- Page 4: Review Standards (SECONDARY) -->
@@ -463,6 +470,13 @@
                 {% endfor %}
             </table>
         </div>
+
+        <div class="section">
+            <div class="section-title">2-1. 공급 유형과의 연계성</div>
+            <div class="info-box">
+                <p>{{ supply_type_connection }}</p>
+            </div>
+        </div>
     </div>
 
     <!-- Page 5: Final Decision -->
@@ -474,35 +488,30 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>평가 방법</th>
-                        <th>가중치</th>
-                        <th>점수</th>
-                        <th>비고</th>
+                        <th style="width: 30%;">평가 항목</th>
+                        <th style="width: 20%;">점수</th>
+                        <th style="width: 50%;">비고</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>법적 제약 분석 (PRIMARY)</td>
-                        <td>50%</td>
+                        <td>법적 제약 분석</td>
                         <td class="value-highlight">{{ legal_score }}점</td>
                         <td>건축법, 용적률, 주차장법 검토</td>
                     </tr>
                     <tr>
-                        <td>심사 기준 적합성 (SECONDARY)</td>
-                        <td>30%</td>
+                        <td>심사 기준 적합성</td>
                         <td class="value-highlight">{{ review_score }}점</td>
                         <td>LH 내부 심사 기준 적용</td>
                     </tr>
                     <tr>
-                        <td>사업 안정성 (REFERENCE)</td>
-                        <td>20%</td>
+                        <td>사업 안정성</td>
                         <td class="value-highlight">{{ stability_score }}점</td>
-                        <td>사업 리스크 분석</td>
+                        <td>{{ stability_interpretation }}</td>
                     </tr>
                     <tr class="selected-row">
-                        <td><strong>종합 점수</strong></td>
-                        <td><strong>100%</strong></td>
-                        <td class="value-highlight"><strong>{{ total_score }}점</strong></td>
+                        <td><strong>최종 선정 규모</strong></td>
+                        <td colspan="2"><strong>{{ selected_scale }}</strong></td>
                         <td><strong>최종 규모: {{ selected_scale }}</strong></td>
                     </tr>
                 </tbody>
