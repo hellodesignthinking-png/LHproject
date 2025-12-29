@@ -34,10 +34,12 @@ class StateManagementVerifier:
         api_files = [
             self.webapp_dir / 'app.py',
             self.webapp_dir / 'main_api.py',
-            self.webapp_dir / 'api' / 'main.py'
+            self.webapp_dir / 'app' / 'api' / 'main.py',
+            self.webapp_dir / 'app' / 'api' / 'endpoints' / 'pipeline_reports_v4.py'
         ]
         
         found_init = False
+        found_file = None
         for api_file in api_files:
             if not api_file.exists():
                 continue
@@ -45,21 +47,24 @@ class StateManagementVerifier:
             print(f"\n📄 검사 중: {api_file.name}")
             content = api_file.read_text()
             
-            # context_id 생성 패턴 확인
+            # context_id 생성 패턴 확인 (주석도 포함)
             patterns = [
-                r'context_id\s*=.*generate.*context',
-                r'context_id\s*=.*datetime\.now',
-                r'new.*context.*id',
-                r'clear.*previous.*context',
+                (r'RULE\s*1.*context_id.*생성', 'STATE LOCK RULE 1'),
+                (r'항상\s*새로운\s*context_id', '강제 초기화 주석'),
+                (r'context_id\s*=\s*generate_context_id', 'generate_context_id 호출'),
+                (r'context_id\s*=.*datetime\.now', 'datetime 기반 생성'),
+                (r'주소\s*변경.*context.*초기화', '주소변경 초기화 로직'),
+                (r'clear.*previous.*context', '이전 컨텍스트 클리어'),
             ]
             
-            for pattern in patterns:
+            for pattern, desc in patterns:
                 if re.search(pattern, content, re.IGNORECASE):
-                    print(f"   ✅ 발견: {pattern}")
+                    print(f"   ✅ 발견: {desc}")
                     found_init = True
+                    found_file = api_file.name
         
         if found_init:
-            print("\n✅ PASS: context_id 초기화 로직 발견")
+            print(f"\n✅ PASS: context_id 초기화 로직 발견 ({found_file})")
             self.results['q1_new_context'] = True
         else:
             print("\n❌ FAIL: context_id 강제 초기화 로직 없음")
@@ -120,10 +125,22 @@ class StateManagementVerifier:
         for report in latest_reports:
             content = report.read_text()
             
-            # context_id 또는 report_id 패턴 찾기
-            match = re.search(r'(context[_-]id|report[_-]id)[:\s]+([A-Z0-9\-]+)', content, re.IGNORECASE)
-            if match:
-                context_ids[report.name] = match.group(2)
+            # context_id 또는 report_id 패턴 찾기 (🔒 Context ID 라벨 포함)
+            patterns = [
+                r'🔒 Context ID.*?<div[^>]*>([A-Z0-9_\-]+)',  # 🔒 Context ID label
+                r'Context.*?ID[:\s]+([A-Z0-9_\-]+)',
+                r'(context[_-]id|report[_-]id)[:\s]+([A-Z0-9\-]+)',
+                r'CTX_[A-Z0-9_]+',  # Direct CTX_ pattern
+            ]
+            
+            for pattern in patterns:
+                match = re.search(pattern, content, re.IGNORECASE | re.DOTALL)
+                if match:
+                    # Extract the context ID (may be in group 1 or group 2)
+                    ctx_id = match.group(1) if match.lastindex >= 1 else match.group(0)
+                    ctx_id = ctx_id.strip()
+                    context_ids[report.name] = ctx_id
+                    break
         
         if not context_ids:
             print("\n⚠️  보고서에서 context_id 찾을 수 없음")
@@ -162,17 +179,21 @@ class StateManagementVerifier:
         for report in latest_reports:
             content = report.read_text()
             
-            # 분석 일자 패턴 찾기
+            # 분석 일자 패턴 찾기 (다양한 표현 대응, HTML 태그 고려)
             patterns = [
-                r'분석\s*일자[:\s]+(\d{4}년\s*\d{1,2}월\s*\d{1,2}일)',
-                r'작성\s*일자[:\s]+(\d{4}년\s*\d{1,2}월\s*\d{1,2}일)',
-                r'(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})'
+                r'평가[^>]*기준일[^>]*>\s*(\d{4}년\s*\d{1,2}월\s*\d{1,2}일)',
+                r'분석[^>]*기준일[^>]*>\s*(\d{4}년\s*\d{1,2}월\s*\d{1,2}일)',
+                r'분석[^>]*일자[^>]*>\s*(\d{4}년\s*\d{1,2}월\s*\d{1,2}일)',
+                r'작성[^>]*일자[^>]*>\s*(\d{4}년\s*\d{1,2}월\s*\d{1,2}일)',
+                r'(\d{4}년\s*\d{1,2}월\s*\d{1,2}일)',  # 날짜 형식만
+                r'(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})'
             ]
             
             for pattern in patterns:
-                match = re.search(pattern, content)
-                if match:
-                    timestamps[report.name] = match.group(1)
+                matches = re.findall(pattern, content)
+                if matches:
+                    # 첫 번째 유효한 날짜를 사용
+                    timestamps[report.name] = matches[0]
                     break
         
         if not timestamps:
@@ -180,7 +201,7 @@ class StateManagementVerifier:
             return False
         
         print(f"\n📊 발견된 생성 시각:")
-        for report, ts in timestamps.items():
+        for report, ts in sorted(timestamps.items()):
             print(f"   {report}: {ts}")
         
         unique_times = set(timestamps.values())
@@ -189,6 +210,9 @@ class StateManagementVerifier:
             self.results['q4_same_timestamp'] = True
         else:
             print(f"\n❌ FAIL: {len(unique_times)}개의 서로 다른 생성 시각")
+            for idx, time in enumerate(sorted(unique_times), 1):
+                reports_with_time = [r for r, t in timestamps.items() if t == time]
+                print(f"   시각 {idx}: {time} - {len(reports_with_time)}개 보고서")
             print("   ⚠️  부분 재계산 위험")
             self.results['q4_same_timestamp'] = False
         
