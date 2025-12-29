@@ -100,6 +100,14 @@ if m1_routers_available:
     app.include_router(m1_pdf_router)
     logger.info("✅ M1 routers registered (step_based, context_freeze_v2, pdf_extract)")
 
+# Mount static files directory
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+    logger.info(f"✅ Static files mounted at /static from {static_dir}")
+else:
+    logger.warning(f"⚠️  Static directory not found: {static_dir}")
+
 # Request/Response Models
 class ReportRequest(BaseModel):
     """Request model for report generation"""
