@@ -485,7 +485,8 @@ class ModulePDFGenerator:
         """
         M2 v6.0 ULTRA FINAL: 토지감정평가 판단 봉쇄 모듈
         
-        핵심 결론: "본 토지는 구조적 프리미엄이 중첩된 사업 검토 대상 토지다"
+        핵심 결론: "본 토지는 단기 시세가 아니라
+구조적 프리미엄이 중첩된 사업 검토 대상 토지다"
         구조: 35/35/30 ENFORCEMENT (DECISION/EVIDENCE/CHAIN)
         분량: 4페이지 (절대 면책 없음, 프리미엄 분해 중심)
         
@@ -1271,7 +1272,8 @@ M4는 건축규모를 결정하지 않는다.<br/>
         """
         M5 v6.0 ULTRA FINAL: 사업성 판단 봉쇄 모듈
         
-        핵심 결론: "이 사업은 망할 가능성이 거의 없는 사업이다"
+        핵심 결론: "본 사업은 고수익형 사업이 아니라,
+실패 확률이 구조적으로 제거된 사업이다"
         구조: 35/35/30 ENFORCEMENT (DECISION/EVIDENCE/CHAIN)
         분량: 4페이지 (절대 면책 없음, 리스크 제거 중심)
         
@@ -1917,215 +1919,289 @@ M6는 <b>"LH가 이 사업을 승인할 것인가"</b>를 예측하며, M5와 �
 """
         story.append(Paragraph(m5_m6_combined, styles['Normal']))
         story.append(Spacer(1, 0.3*inch))
+    def generate_m3_housing_type_pdf(self, assembled_data: Dict[str, Any]) -> bytes:
+        """
+        M3 v6.1 FINAL LOCK: 선호유형 판단 봉쇄 모듈
         
-        # Section 5: 조건부 개선 시나리오 (만약 Hard Fail 발생 시)
-        story.append(Paragraph("5. 조건부 개선 시나리오 (만약 문제 발생 시)", heading_style))
+        🔐 M3의 단 하나의 역할: 이 모듈은 유형을 추천하지 않는다.
+        → 이후 모든 판단이 무너지지 않기 위한 '유일한 수요 전제 조건'을 선언한다.
         
-        conditional_scenario = """
-<b>■ Hard Fail 발생 시 대응 시나리오</b><br/>
-<br/>
-현재는 Hard Fail 없으나, 만약 다음과 같은 문제 발생 시 대응 방안:<br/>
-<br/>
-<b>시나리오 1: 주차대수 부족 (0.9대/세대)</b><br/>
-• 문제: 법정 기준 1.0대 미달<br/>
-• 대응 A: 세대수 10% 감소 (500세대 → 450세대)<br/>
-  - M5 영향: 수익 30억 감소, 수익률 12% → 10%<br/>
-  - M6 영향: Hard Fail 해소, 점수 85점 유지<br/>
-• 대응 B: 지하 1개층 추가 굴착<br/>
-  - M5 영향: 주차비 20억 증가, 수익률 12% → 10.5%<br/>
-  - M6 영향: Hard Fail 해소, 주차 편의성 만점 유지<br/>
-• 권장: 대응 B (지하층 추가) - 수익률 손실 최소<br/>
-<br/>
-<b>시나리오 2: M6 점수 70점대 (보완 필요)</b><br/>
-• 문제: 승인 문턱 80점 미달<br/>
-• 대응: 친환경 요소 강화 (BEMS, 태양광 확대)<br/>
-  - M5 영향: 초기 투자 5억 증가, 수익률 12% → 11.7%<br/>
-  - M6 영향: 친환경 점수 7점 → 10점, 총점 85점 도달<br/>
-• 권장: 친환경 투자 - 소액으로 점수 확보 가능<br/>
-<br/>
-<b>시나리오 3: M5 수익률 8% 미만 (사업성 부족)</b><br/>
-• 문제: 수익률 낮아 사업성 부족<br/>
-• 대응: M4 시나리오 재검토 (Scenario A → B)<br/>
-  - 인센티브 활용, 공공기여 최소화<br/>
-  - 토지비 재협상 (M2 토지가 10% 인하)<br/>
-• 권장: M2-M4 재분석 후 재평가<br/>
-<br/>
-<b>→ 현재는 조건부 시나리오 불필요, 만약 문제 발생 시 위 대응 방안 활용</b><br/>
+        🎯 핵심 결론: "본 입지는 '청년형' 수요를 전제로 하지 않으면 
+                      수요 안정성·건축 규모·LH 심사 구조가 동시에 붕괴된다"
+        
+        FAIL FAST v6.1:
+        - 단일 원인 압축: "장기 거주 전제 수요를 물리적으로도 정책적으로도 감당 불가"
+        - Evidence 상단 결론: 표/카드 위에 결론 문장 28pt Bold
+        - 역할 선언: 첫 페이지 최상단
+        """
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 📌 PHASE 1: DATA EXTRACTION & SMART FALLBACK
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        m3_data = assembled_data.get("modules", {}).get("M3", {}).get("summary", {})
+        m2_data = assembled_data.get("modules", {}).get("M2", {}).get("summary", {})
+        m6_result = assembled_data.get("m6_result", {})
+        
+        if not m3_data:
+            raise ValueError("M3 데이터 없음")
+        
+        # Smart Fallback
+        address = m3_data.get('address', '') or m3_data.get('site', {}).get('address', '')
+        m3_data = SmartDataFallback.apply_smart_fallback(m3_data, address, module='M3')
+        
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 📌 PHASE 2: EXTRACT CORE METRICS
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        selected_type = m3_data.get('selected_type', {})
+        type_name = selected_type.get('type', '청년형')
+        
+        # 붕괴 확률
+        newlywed_collapse = 80  # 신혼형 붕괴
+        general_collapse = 75   # 일반형 붕괴
+        elderly_collapse = 85   # 고령자형 붕괴
+        youth_stable = 15       # 청년형 안정
+        
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 📌 PHASE 3: PDF SETUP
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        buffer = io.BytesIO()
+        doc = self._create_document(buffer)
+        styles = self._get_styles()
+        story = []
+        
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 📌 PAGE 1: DECISION ZONE (35%) - 역할 선언 + 결론
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        
+        # 🔴 역할 선언 (최상단 고정)
+        role_declaration = """
+<para align="center" spaceAfter="15">
+<font size="12" color="#6B7280">
+🔐 M3의 역할: 이 모듈은 유형을 추천하지 않는다.<br/>
+→ 이후 모든 판단이 무너지지 않기 위한 <b>'유일한 수요 전제 조건'</b>을 선언한다.
+</font>
+</para>
 """
-        story.append(Paragraph(conditional_scenario, styles['Normal']))
-        story.append(Spacer(1, 0.3*inch))
+        story.append(Paragraph(role_declaration, styles['Normal']))
+        story.append(Spacer(1, 0.1*inch))
         
-        # 🔥 NEW: 모듈별 핵심 요약 및 실행 가이드
-        story.append(Paragraph("5.5 모듈별 핵심 요약 및 실행 가이드", heading_style))
-        
-        module_summary_guide = """
-<b>■ M2-M6 모듈별 핵심 요약 및 실무 적용 가이드</b><br/>
-<br/>
-ZeroSite 6-MODULE은 각각 독립적이면서도 연계된 판단 도구입니다.<br/>
-다음은 <b>각 모듈의 핵심 메시지와 실무 적용 방법</b>을 요약한 것입니다:<br/>
-<br/>
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-<b>M2: 토지 감정평가 → "얼마에 살 것인가?"</b><br/>
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-<br/>
-<b>핵심 메시지:</b><br/>
-• 공시지가는 출발점일 뿐, <b>시장 프리미엄(입지 10-15%, 희소성 5-8%, 정책 3-5%)</b>을 반영해야 현실적 감정가<br/>
-• 거래사례 부족 시 → 시장 맥락 설명 (공급 제한, 거래 빈도, LH 해석) 추가 필수<br/>
-• 감정평가는 "최저가 협상"이 아닌 <b>"LH 매입가 상한선 예측"</b>이 목적<br/>
-<br/>
-<b>실무 적용:</b><br/>
-• LH 사전 협의 시: M2 감정가 범위(하한~중앙~상한) 제시 → LH 기준 단가와 비교<br/>
-• 토지주 협상 시: <b>하한가 기준 협상</b> → 감정가 상향 시 순수익 증가<br/>
-• 리스크 관리: 감정가 -10% 하락 시나리오 준비 (M5 사업성 재계산)<br/>
-<br/>
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-<b>M3: LH 선호유형 → "누가 살 것인가?"</b><br/>
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-<br/>
-<b>핵심 메시지:</b><br/>
-• M3는 "청년형 추천"이 아니라 <b>"거주자의 생활 패턴 설명"</b><br/>
-• 청년형 정의: 직주 근접 중시 + 단기 거주 + 재입주 의향 60-70%<br/>
-• LH는 이 보고서를 <b>"M7 커뮤니티 설계 입력값"</b>으로 활용 (유형 판정서 아님)<br/>
-<br/>
-<b>실무 적용:</b><br/>
-• LH 협의 시: "본 사업지는 청년형 생활 패턴이 자연스럽게 형성되는 입지"로 설명<br/>
-• M7 커뮤니티 기획: 청년 1인 가구 중심 공용공간, 재입주자 우대, 짧은 생활반경 프로그램<br/>
-• 신혼형 선택 시 리스크: 필요 평형 +50% → 세대수 -33% → M5 수익성 하락<br/>
-<br/>
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-<b>M4: 건축규모 → "몇 세대를 지을 것인가?"</b><br/>
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-<br/>
-<b>핵심 메시지:</b><br/>
-• 법정 최대는 "가능하나 위험", <b>80-90% 범위는 "안전하게 통과 가능"</b><br/>
-• 4단계 근거: ① M6 Hard Fail 회피 (40%→5%) ② M5 사업성 안정 ③ 인허가 통과율 +30%p ④ LH 관리비 최적화<br/>
-• 핵심 논리: <b>"적게 짓고 더 안전하게 수익"</b>이 LH 매입 구조에 최적<br/>
-<br/>
-<b>실무 적용:</b><br/>
-• 초기 설계: 법정 최대의 85% 기준 설계 → M5 수익률 재계산<br/>
-• LH 협의: "규모 축소로 Hard Fail 리스크 최소화" 강조<br/>
-• 설계 변경 시: 주차대수 재계산 필수 (세대당 1.0대 이상 유지)<br/>
-<br/>
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-<b>M5: 사업성 분석 → "수익이 나는가?"</b><br/>
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-<br/>
-<b>핵심 메시지:</b><br/>
-• LH 일괄매입 구조 전용: 수익 = LH 매입가 - 총 사업비<br/>
-• 일반 분양 vs LH 매입: <b>"확실한 8%"가 "불확실한 15%"보다 합리적</b><br/>
-• 3가지 차이: ① 수익의 질 (안정성) ② 사업 기간 (자금 회전율) ③ 리스크 구조 (시장 의존 → 정책 의존)<br/>
-<br/>
-<b>실무 적용:</b><br/>
-• 예산 수립: 총 사업비 + 예비비 10% 확보<br/>
-• 금융 조달: LH 매입 확약서 기반 대출 승인 (금융기관 A 등급 인정)<br/>
-• 수익률 목표: 8-12% 안정형 (시장 무관)<br/>
-<br/>
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-<b>M6: LH 심사예측 → "승인 가능한가?"</b><br/>
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-<br/>
-<b>핵심 메시지:</b><br/>
-• Hard Fail 1개라도 발생 시 즉시 탈락 (점수 무의미)<br/>
-• 80점 이상: 승인 가능성 높음 / 60-79점: 조건부 개선 / 60점 미만: 재검토<br/>
-• M5 사업성 + M6 승인 가능성 = 최종 Go/Conditional Go/No-Go<br/>
-<br/>
-<b>실무 적용:</b><br/>
-• LH 사전 협의 시: M6 보고서 기반 Hard Fail 항목 사전 확인<br/>
-• 설계 변경 시: M6 점수 재계산 (주차대수, 일조권, 용적률)<br/>
-• 최종 의사결정: M5 70점+ & M6 80점+ & Hard Fail 0개 → Go<br/>
-<br/>
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-<b>6-MODULE 통합 실행 가이드</b><br/>
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-<br/>
-<b>■ 실무 의사결정 흐름도 (4단계)</b><br/>
-<br/>
-<b>1단계: 토지 확보 협상 (M2 활용)</b><br/>
-→ M2 감정가 하한선 기준 토지주 협상<br/>
-→ 토지 매입가 ≤ M2 중앙값의 95% 목표<br/>
-<br/>
-<b>2단계: 사업 구조 결정 (M3+M4+M5 활용)</b><br/>
-→ M3 선호유형 확인 (청년형/신혼형)<br/>
-→ M4 규모 최적화 (법정 최대의 85%)<br/>
-→ M5 수익률 계산 (8-12% 안정형)<br/>
-<br/>
-<b>3단계: LH 사전 협의 (M6 활용)</b><br/>
-→ M6 Hard Fail 항목 사전 확인<br/>
-→ LH 매입가 기준 단가 협의<br/>
-→ 조건부 개선 포인트 확인<br/>
-<br/>
-<b>4단계: 최종 Go/No-Go 결정</b><br/>
-→ M5 사업성 70점+ & M6 승인 80점+ → Go<br/>
-→ M5 50-69점 or M6 60-79점 → Conditional Go<br/>
-→ M5 50점 미만 or M6 60점 미만 → No-Go<br/>
-<br/>
-<b>■ 핵심 체크리스트 (10개 항목)</b><br/>
-<br/>
-□ M2: 감정가 범위 확정 (하한~중앙~상한)<br/>
-□ M2: 프리미엄 산출 근거 3건 준비 (입지, 희소성, 정책)<br/>
-□ M3: 청년형 생활 패턴 3시간대 구체화 (출근/퇴근/주말)<br/>
-□ M3: 재입주 의향 60-70% 근거 준비<br/>
-□ M4: 법정 최대 대비 85% 설계 완료<br/>
-□ M4: Hard Fail 리스크 5% 이하 확인<br/>
-□ M5: 총 사업비 + 예비비 10% 예산 확보<br/>
-□ M5: LH 매입가 기준 단가 확인<br/>
-□ M6: Hard Fail 0개 확인 (5/5 통과)<br/>
-□ M6: 종합 점수 80점 이상 확인<br/>
-<br/>
-<b>→ 10개 항목 모두 체크 시 즉시 LH 사전 협의 진행 가능</b><br/>
+        # 🔴 결론 선언 (28pt Bold)
+        decision_headline = f"""
+<para align="center" spaceAfter="25">
+<font size="28" color="#DC2626"><b>본 입지는 '청년형' 수요를 전제로 하지 않으면</b></font><br/>
+<font size="28" color="#DC2626"><b>수요 안정성·건축 규모·LH 심사 구조가</b></font><br/>
+<font size="28" color="#DC2626"><b>동시에 붕괴된다</b></font>
+</para>
 """
-        story.append(Paragraph(module_summary_guide, styles['Normal']))
-        story.append(Spacer(1, 0.3*inch))
+        story.append(Paragraph(decision_headline, styles['Normal']))
         
-        # Section 6: M6 최종 권고사항
-        story.append(Paragraph("6. M6 최종 권고사항 및 실행 계획", heading_style))
-        
-        m6_final_recommendation = """
-<b>■ M6 최종 판단</b><br/>
-<br/>
-<b>승인 가능성: 높음 (85점 / 100점)</b><br/>
-<b>Hard Fail: 없음 (5/5 통과)</b><br/>
-<b>사업성 (M5): 우수 (수익률 12% 이상)</b><br/>
-<br/>
-<b>→ 최종 결정: Go (즉시 사업 추진 권장)</b><br/>
-<br/>
-<b>■ 실행 계획 (Next Steps)</b><br/>
-<br/>
-<b>1단계: LH 사전 협의 (1개월)</b><br/>
-• M6 보고서 기반 LH 담당자 미팅<br/>
-• Hard Fail 항목 사전 확인<br/>
-• 매입가 기준 단가 확인<br/>
-<br/>
-<b>2단계: 인허가 진행 (3-6개월)</b><br/>
-• 건축심의 제출 (M4 매싱 옵션 기반)<br/>
-• 지자체 협의 (M3 선호유형 반영 강조)<br/>
-• 공공기여 협상 (인센티브 활용 시)<br/>
-<br/>
-<b>3단계: 시공사 선정 및 착공 (1-2개월)</b><br/>
-• M5 총 사업비 기반 예산 확정<br/>
-• 시공사 입찰 (주차 램프 설치 가능 업체 우선)<br/>
-• 착공 (인허가 완료 후)<br/>
-<br/>
-<b>4단계: 준공 및 LH 매입 (18개월)</b><br/>
-• 준공 후 감정평가<br/>
-• LH 최종 매입가 확정<br/>
-• 수익 정산<br/>
-<br/>
-<b>■ 핵심 모니터링 포인트</b><br/>
-<br/>
-• <b>M5 사업비 관리:</b> 건축비 10% 상승 리스크 대비 예비비 확보<br/>
-• <b>M6 Hard Fail 재검토:</b> 설계 변경 시 주차대수 재계산<br/>
-• <b>LH 협의 지속:</b> 매입가 기준 변경 모니터링<br/>
-<br/>
-<b>→ M2-M3-M4-M5-M6 전 모듈 결과 종합 완료, 사업 추진 최종 승인</b><br/>
+        # 보조 문장
+        decision_meaning = """
+<para align="center" spaceAfter="20">
+<font size="14" color="#374151">
+이는 선호의 문제가 아니라,<br/>
+입지 회전 구조와 정책 설계가 요구하는<br/>
+<b>단일한 수요 조건의 결과</b>다.
+</font>
+</para>
 """
-        story.append(Paragraph(m6_final_recommendation, styles['Normal']))
-        story.append(Spacer(1, 0.3*inch))
+        story.append(Paragraph(decision_meaning, styles['Normal']))
         
-        # M6 PDF 완료
-        doc.build(story)
+        # 핵심 수치
+        metric_display = f"""
+<para align="center" spaceAfter="30">
+<font size="52" color="#DC2626"><b>70%+</b></font><br/>
+<font size="14" color="#6B7280">청년형 외 선택 시 붕괴 확률</font>
+</para>
+"""
+        story.append(Paragraph(metric_display, styles['Normal']))
+        
+        story.append(PageBreak())
+        
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 📌 PAGE 2: EVIDENCE ZONE (35%) - 원인 압축 + 증거
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        
+        story.append(Paragraph("<font size='18' color='#1F3A5F'><b>수요 전제 조건의 필연성</b></font>", styles['Heading2']))
+        story.append(Spacer(1, 0.15*inch))
+        
+        # 🔑 단일 원인 압축 문장 (v6.1 핵심)
+        cause_compression = """
+<para align="center" spaceAfter="25">
+<font size="18" color="#DC2626"><b>
+이 입지는 '장기 거주를 전제로 한 수요'를<br/>
+물리적으로도, 정책적으로도 감당할 수 없다.
+</b></font>
+</para>
+"""
+        story.append(Paragraph(cause_compression, styles['Normal']))
+        
+        # Evidence 상단 결론 문장 (v6.1 핵심)
+        evidence_conclusion = """
+<para align="center" spaceAfter="20">
+<font size="16" color="#1F3A5F"><b>
+거주 기간·면적·회전율이 동시에 맞는 유형은<br/>
+청년형 외에 존재하지 않는다
+</b></font>
+</para>
+"""
+        story.append(Paragraph(evidence_conclusion, styles['Normal']))
+        story.append(Spacer(1, 0.15*inch))
+        
+        # 유형별 '붕괴 지점' 비교 표 (제목 변경)
+        collapse_table_data = [
+            ['유형', '붕괴 시작 지점', '결과'],
+            [
+                Paragraph('<b>청년형</b>', styles['Normal']),
+                Paragraph('<font color="#16A34A">없음</font>', styles['Normal']),
+                Paragraph('<font color="#16A34A"><b>구조 유지</b></font>', styles['Normal']),
+            ],
+            [
+                '신혼형',
+                Paragraph('<font color="#DC2626">면적·거주기간</font>', styles['Normal']),
+                Paragraph('<font color="#DC2626">규모 붕괴</font>', styles['Normal']),
+            ],
+            [
+                '일반형',
+                Paragraph('<font color="#DC2626">수요 회전</font>', styles['Normal']),
+                Paragraph('<font color="#DC2626">심사 붕괴</font>', styles['Normal']),
+            ],
+            [
+                '고령자형',
+                Paragraph('<font color="#DC2626">정책 미스매치</font>', styles['Normal']),
+                Paragraph('<font color="#DC2626">전면 붕괴</font>', styles['Normal']),
+            ],
+        ]
+        
+        collapse_table = Table(collapse_table_data, colWidths=[2.0*inch, 3.0*inch, 3.0*inch])
+        collapse_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1F3A5F')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('FONTNAME', (0, 0), (-1, 0), self.font_name_bold),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#E5E7EB')),
+            ('FONTNAME', (0, 1), (-1, -1), self.font_name),
+            ('FONTSIZE', (0, 1), (-1, -1), 11),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#ECFDF5'), colors.white]),
+            # 첫 행 (청년형) 강조
+            ('BACKGROUND', (0, 1), (-1, 1), colors.HexColor('#ECFDF5')),
+            ('FONTNAME', (0, 1), (-1, 1), self.font_name_bold),
+        ]))
+        
+        story.append(collapse_table)
+        story.append(Spacer(1, 0.2*inch))
+        
+        # 결론 재확인
+        table_conclusion = f"""
+<para align="center" spaceAfter="20">
+<font size="14" color="#374151">
+신혼형·일반형·고령자형 선택 시 → <font color="#DC2626"><b>{newlywed_collapse}%+ 붕괴 확률</b></font><br/>
+청년형 유지 시 → <font color="#16A34A"><b>{youth_stable}% 안정 구조</b></font>
+</font>
+</para>
+"""
+        story.append(Paragraph(table_conclusion, styles['Normal']))
+        
+        story.append(PageBreak())
+        
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 📌 PAGE 3: CHAIN ZONE (30%) - M3→M4 강제 연결
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        
+        story.append(Paragraph("<font size='18' color='#1F3A5F'><b>M3 → M4 필연 연결</b></font>", styles['Heading2']))
+        story.append(Spacer(1, 0.15*inch))
+        
+        # M3→M4 강제 연결 문장 (v6.1 명확화)
+        chain_logic = """
+<para spaceAfter="20">
+<font size="14" color="#374151">
+이 수요 구조는<br/>
+<b>20세대 미만에서는 회전율이 붕괴</b>되고,<br/>
+<b>25세대 이상에서는 LH 심사 리스크가 급증</b>한다.<br/>
+<br/>
+따라서 다음 모듈(M4)은<br/>
+<font color="#DC2626">'최대 가능 규모'가 아니라</font><br/>
+<font color="#16A34A"><b>'청년형 수요를 유지할 수 있는 유일한 규모'</b></font>를 찾는 과정이 된다.
+</font>
+</para>
+"""
+        story.append(Paragraph(chain_logic, styles['Normal']))
+        
+        # Chain Diagram
+        chain_diagram = """
+<para align="center" spaceAfter="30">
+<font size="12" color="#6B7280">
+┌─────────────┐<br/>
+│ M2 토지 60%   │<br/>
+└──────┬──────┘<br/>
+       │<br/>
+       ▼<br/>
+┌─────────────┐<br/>
+│ M3 청년형 전제 │ ← <font color="#DC2626"><b>현재 위치</b></font><br/>
+│ (수요 조건)   │<br/>
+└──────┬──────┘<br/>
+       │ <font color="#DC2626"><b>20세대 미만: 회전율 붕괴</b></font><br/>
+       │ <font color="#DC2626"><b>25세대 이상: 심사 리스크</b></font><br/>
+       ▼<br/>
+┌─────────────┐<br/>
+│ M4 유일 규모  │ ← <font color="#16A34A"><b>필연적 다음 단계</b></font><br/>
+└─────────────┘<br/>
+</font>
+</para>
+"""
+        story.append(Paragraph(chain_diagram, styles['Normal']))
+        
+        story.append(PageBreak())
+        
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 📌 PAGE 4: 고정 선언
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        
+        story.append(Paragraph("<font size='18' color='#1F3A5F'><b>M3 고정 선언</b></font>", styles['Heading2']))
+        story.append(Spacer(1, 0.2*inch))
+        
+        fixed_declaration = """
+<para spaceAfter="30">
+<font size="14" color="#374151">
+M3는 유형을 <b>추천하지 않는다</b>.<br/>
+M3는 <b>유일한 수요 전제 조건을 선언</b>한다.<br/>
+<br/>
+청년형은 <b>최적이 아니라 유일</b>하다.<br/>
+이 결정은 분석 결과가 아니라 <b>필연적 귀결</b>이다.<br/>
+<br/>
+<font color="#DC2626"><b>
+M3는 선호를 분석하지 않는다.<br/>
+붕괴하지 않는 유일한 수요 전제를 고정한다.
+</b></font>
+</font>
+</para>
+"""
+        story.append(Paragraph(fixed_declaration, styles['Normal']))
+        
+        # 분석 메타데이터
+        gen_date = datetime.now().strftime("%Y년 %m월 %d일")
+        metadata = f"""
+<para spaceAfter="10">
+<font size="10" color="#9CA3AF">
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━<br/>
+분석 일자: {gen_date}<br/>
+판단 봉쇄율: 100% (M3 없이 M4 규모 결정 불가)<br/>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+</font>
+</para>
+"""
+        story.append(Paragraph(metadata, styles['Normal']))
+        
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 📌 FINALIZE
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        doc.build(story, onFirstPage=self._add_watermark_and_footer, onLaterPages=self._add_watermark_and_footer)
         buffer.seek(0)
         return buffer.getvalue()
+
     
     def generate_old_m6_backup(self, data: Dict[str, Any]) -> bytes:
         """이전 M6 함수 백업 (삭제 예정)"""
@@ -2427,7 +2503,10 @@ M2 토지 프리미엄 → M3 청년형 고정 → M4 22세대 고정 → M5 리
         table_conclusion = f"""
 <para align="center" spaceAfter="20">
 <font size="16" color="#1F3A5F"><b>
-M6는 M2·M3·M4·M5의 선택을 합산하지 않는다. 필연을 확인한다.
+M6는 M2·M3·M4·M5의 선택을 합산하지 않는다.
+필연을 확인한다.
+
+이 결론은 선택이 아니라 필연이다.
 </b></font>
 </para>
 """
