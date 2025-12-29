@@ -45,7 +45,7 @@ export const useExecutionLock = (): ExecutionLockHook => {
     modulesCompleted: new Set(),
   });
 
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<number | null>(null);
 
   /**
    * 🔒 RULE 1: Lock execution for a new analysis
