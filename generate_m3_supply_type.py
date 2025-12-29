@@ -138,22 +138,58 @@ class M3SupplyTypeGenerator:
             supply_feasibility_score * 0.2  # REFERENCE: 20%
         )
         
-        # 핵심 판단 요약 (REAL APPRAISAL STANDARD)
+        # 핵심 판단 요약 (REAL APPRAISAL STANDARD v6.5)
         executive_conclusion = (
-            f"본 사업지는 정책 대상 적합성 및 입지 수요 분석 결과, "
-            f"{selected_supply_type} 공급 유형으로 선정하는 것이 타당합니다. "
-            f"정책 우선순위 및 지역 특성을 종합적으로 검토한 결과, "
-            f"해당 유형이 사업 목적 달성에 가장 적합한 것으로 판단됩니다."
+            f"본 사업지는 정책 대상 적합성, 입지 수요 구조, 심사 안정성을 종합적으로 검토한 결과, "
+            f"{selected_supply_type} 공급 유형으로 선정하는 것이 가장 타당합니다. "
+            f"다른 유형 대비 정책 적합성과 심사 안정성이 가장 높게 확보됩니다."
         )
         
-        # 최종 판단 의견
+        # 최종 판단 의견 (REAL APPRAISAL STANDARD v6.5)
         final_opinion = (
-            f"본 사업지는 {selected_supply_type} 공급 유형으로 선정됩니다. "
-            f"정책 대상 분석 결과 {policy_target_score}점, 입지 수요 분석 결과 {demand_score}점으로 "
-            f"종합 점수 {total_score:.1f}점을 기록하였으며, "
-            f"LH 정책 방향 및 지역 수요와 부합하는 것으로 판단됩니다. "
-            f"사업 실행 가능성이 확보되었으므로, 해당 유형으로의 사업 추진을 권고합니다."
+            f"종합 검토 결과, 본 사업은 {selected_supply_type} 공급 유형으로 추진하는 것이 가장 합리적이며, "
+            f"정책·심사·수요 측면에서 안정성이 확보됩니다. "
+            f"\n\n정책 대상 적합성을 중심으로 판단하였으며, 입지 수요 및 공급 가능성을 보조적으로 검토하였습니다. "
+            f"본 사업지 주변의 가구 구성은 신혼부부 및 자녀 1명 이하 가구 비중이 높아, "
+            f"전용 59㎡ 내외의 중소형 평형 수요가 중심을 이룹니다. "
+            f"이는 {selected_supply_type}의 세대 구성 및 평형 기준과 직접적으로 부합합니다. "
+            f"\n\n{selected_supply_type}은 LH 정책상 일괄매입 구조가 명확하고 유사 사례 축적으로 심사 안정성이 높습니다."
         )
+        
+        # 타 유형 배제 사유 데이터
+        exclusion_reasons = [
+            {
+                'supply_type': '청년주택',
+                'exclusion_reason': '청년 단일 수요 대비 신혼·소형가구 비중이 높아 정책 효율성 낮음'
+            },
+            {
+                'supply_type': '행복주택',
+                'exclusion_reason': '소득·가구 특성상 대상 범위 과다, 정책 우선순위 낮음'
+            },
+            {
+                'supply_type': selected_supply_type,
+                'exclusion_reason': '정책 우선순위 및 지역 수요 구조와 가장 부합'
+            }
+        ]
+        
+        # 심사 안정성 분석 데이터
+        review_stability_analysis = [
+            {
+                'supply_type': selected_supply_type,
+                'stability_level': '높음',
+                'reason': 'LH 정책상 일괄매입 구조가 명확하고 유사 사례 축적으로 안정성 높음'
+            },
+            {
+                'supply_type': '청년주택',
+                'stability_level': '보통',
+                'reason': '지역 수요 대비 대상 범위가 커 조정 가능성 존재'
+            },
+            {
+                'supply_type': '행복주택',
+                'stability_level': '낮음',
+                'reason': '대상 범위가 광범위하여 심사 기준 적용 시 불확실성 높음'
+            }
+        ]
         
         # 컨텍스트 구성
         context = {
@@ -169,6 +205,8 @@ class M3SupplyTypeGenerator:
             'total_score': total_score,
             'supply_type_analysis': supply_type_analysis,
             'demographic_analysis': demographic_analysis,
+            'exclusion_reasons': exclusion_reasons,
+            'review_stability_analysis': review_stability_analysis,
             'final_opinion': final_opinion,
             # 추가 정보
             'target_demographic': '20-30대 신혼부부, 결혼 7년 이내',

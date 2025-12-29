@@ -274,19 +274,19 @@
         <div class="report-info-box">
             <div class="report-info-row">
                 <div class="report-info-label">보고서 번호</div>
-                <div class="report-info-value">{{ report_id }}</div>
+                <div class="report-info-value">ZS-M3-20251229145747</div>
             </div>
             <div class="report-info-row">
                 <div class="report-info-label">사업지</div>
-                <div class="report-info-value">{{ project_address }}</div>
+                <div class="report-info-value">서울특별시 마포구 상암동 1234</div>
             </div>
             <div class="report-info-row">
                 <div class="report-info-label">사업 규모</div>
-                <div class="report-info-value">{{ project_scale }}</div>
+                <div class="report-info-value">총 150세대 (전용면적 59㎡ 기준), 30주차</div>
             </div>
             <div class="report-info-row">
                 <div class="report-info-label">분석 기준일</div>
-                <div class="report-info-value">{{ analysis_date }}</div>
+                <div class="report-info-value">2025년 12월 29일</div>
             </div>
         </div>
 
@@ -303,9 +303,9 @@
 
         <div class="executive-summary">
             <div class="executive-label">선정된 공급 유형</div>
-            <div class="executive-result">{{ selected_supply_type }}</div>
+            <div class="executive-result">신혼희망타운</div>
             <div class="executive-detail">
-                {{ executive_conclusion }}
+                본 사업지는 정책 대상 적합성, 입지 수요 구조, 심사 안정성을 종합적으로 검토한 결과, 신혼희망타운 공급 유형으로 선정하는 것이 가장 타당합니다. 다른 유형 대비 정책 적합성과 심사 안정성이 가장 높게 확보됩니다.
             </div>
         </div>
 
@@ -318,19 +318,19 @@
                 </tr>
                 <tr>
                     <td>정책 대상 적합성</td>
-                    <td class="value-highlight">{{ policy_target_score }}점 / 100점</td>
+                    <td class="value-highlight">85.0점 / 100점</td>
                 </tr>
                 <tr>
                     <td>입지 수요 분석</td>
-                    <td class="value-highlight">{{ demand_score }}점 / 100점</td>
+                    <td class="value-highlight">78.0점 / 100점</td>
                 </tr>
                 <tr>
                     <td>공급 가능성</td>
-                    <td class="value-highlight">{{ supply_feasibility_score }}점 / 100점</td>
+                    <td class="value-highlight">72.0점 / 100점</td>
                 </tr>
                 <tr class="selected-row">
                     <td><strong>최종 선정 유형</strong></td>
-                    <td><strong>{{ selected_supply_type }}</strong></td>
+                    <td><strong>신혼희망타운</strong></td>
                 </tr>
             </table>
         </div>
@@ -361,15 +361,31 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for type_data in supply_type_analysis %}
-                    <tr {% if type_data.is_selected %}class="selected-row"{% endif %}>
-                        <td>{{ type_data.supply_type }}</td>
-                        <td>{{ type_data.policy_priority }}</td>
-                        <td>{{ type_data.regional_demand }}</td>
-                        <td>{{ type_data.location_fit }}</td>
-                        <td class="value-highlight">{{ type_data.total_score }}점</td>
+                    
+                    <tr class="selected-row">
+                        <td>신혼희망타운</td>
+                        <td>최우선</td>
+                        <td>높음</td>
+                        <td>적합</td>
+                        <td class="value-highlight">85점</td>
                     </tr>
-                    {% endfor %}
+                    
+                    <tr >
+                        <td>청년주택</td>
+                        <td>우선</td>
+                        <td>보통</td>
+                        <td>보통</td>
+                        <td class="value-highlight">70점</td>
+                    </tr>
+                    
+                    <tr >
+                        <td>행복주택</td>
+                        <td>보통</td>
+                        <td>낮음</td>
+                        <td>부적합</td>
+                        <td class="value-highlight">55점</td>
+                    </tr>
+                    
                 </tbody>
             </table>
         </div>
@@ -384,16 +400,22 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for exclusion in exclusion_reasons %}
-                    <tr {% if exclusion.supply_type == selected_supply_type %}class="selected-row"{% endif %}>
-                        <td>{% if exclusion.supply_type == selected_supply_type %}<strong>{{ exclusion.supply_type }}</strong>{% else %}{{ exclusion.supply_type }}{% endif %}</td>
-                        <td>{% if exclusion.supply_type == selected_supply_type %}<strong>{{ exclusion.exclusion_reason }}</strong>{% else %}{{ exclusion.exclusion_reason }}{% endif %}</td>
+                    <tr>
+                        <td>청년주택</td>
+                        <td>청년 단일 수요 대비 신혼·소형가구 비중이 높아 정책 효율성 낮음</td>
                     </tr>
-                    {% endfor %}
+                    <tr>
+                        <td>행복주택</td>
+                        <td>소듍·가구 특성상 공급 대상 범위 과도, 정책 우선순위 낮음</td>
+                    </tr>
+                    <tr class="selected-row">
+                        <td><strong>신혼희망타운</strong></td>
+                        <td><strong>정책 우선순위 및 지역 수요 구조와 가장 부합</strong></td>
+                    </tr>
                 </tbody>
             </table>
             <div class="info-box" style="margin-top: 20px;">
-                <p><strong>→ 판단 근거:</strong> {{ selected_supply_type }}은 지역 수요 구조와 정책 방향이 가장 직접적으로 일치하며, 다른 유형 대비 심사 안정성이 확보됩니다.</p>
+                <p><strong>→ 판단 근거:</strong> 신혼희망타운은 지역 수요 구조(신혼부부 비중 높음)와 정책 방향(저출산 대응)이 가장 직접적으로 일치하며, 다른 유형 대비 심사 안정성이 확보됩니다.</p>
             </div>
         </div>
 
@@ -406,19 +428,19 @@
                 </tr>
                 <tr>
                     <td>주요 수요층</td>
-                    <td>{{ target_demographic }}</td>
+                    <td>20-30대 신혼부부, 결혼 7년 이내</td>
                 </tr>
                 <tr>
                     <td>소듍 수준</td>
-                    <td>{{ income_level }}</td>
+                    <td>도시근로자 가구 월평균 소득 100% 이하</td>
                 </tr>
                 <tr>
                     <td>가구 유형</td>
-                    <td>{{ household_type }}</td>
+                    <td>무주택 세대구성원, 1-2인 가구</td>
                 </tr>
                 <tr>
                     <td>정책 지원 사항</td>
-                    <td>{{ policy_support }}</td>
+                    <td>LH 일괄매입, 장기저리 융자 지원</td>
                 </tr>
             </table>
         </div>
@@ -444,13 +466,31 @@
                     <th style="width: 30%;">비율</th>
                     <th style="width: 40%;">분석</th>
                 </tr>
-                {% for demo_data in demographic_analysis %}
+                
                 <tr>
-                    <td>{{ demo_data.category }}</td>
-                    <td class="value-highlight">{{ demo_data.percentage }}%</td>
-                    <td>{{ demo_data.analysis }}</td>
+                    <td>20-30대 미혼</td>
+                    <td class="value-highlight">35.5%</td>
+                    <td>청년층 비중이 높아 청년주택 수요 예상</td>
                 </tr>
-                {% endfor %}
+                
+                <tr>
+                    <td>신혼부부 (결혼 7년 이내)</td>
+                    <td class="value-highlight">28.3%</td>
+                    <td>신혼희망타운 주요 수요층으로 판단</td>
+                </tr>
+                
+                <tr>
+                    <td>자녀 1명 이하 가구</td>
+                    <td class="value-highlight">22.1%</td>
+                    <td>소형 평형 선호층 다수</td>
+                </tr>
+                
+                <tr>
+                    <td>기타</td>
+                    <td class="value-highlight">14.1%</td>
+                    <td>일반 수요층</td>
+                </tr>
+                
             </table>
         </div>
 
@@ -463,19 +503,19 @@
                 </tr>
                 <tr>
                     <td>대중교통 접근성</td>
-                    <td>{{ transport_access }}</td>
+                    <td>지하철 2호선 역세권 (도보 5분), 버스 정류장 3개소</td>
                 </tr>
                 <tr>
                     <td>교육 시설</td>
-                    <td>{{ education_facilities }}</td>
+                    <td>초등학교 1개소 (도보 10분), 어린이집 5개소</td>
                 </tr>
                 <tr>
                     <td>상업 시설</td>
-                    <td>{{ commercial_facilities }}</td>
+                    <td>대형마트 1개소 (1km), 편의점 8개소</td>
                 </tr>
                 <tr>
                     <td>의료 시설</td>
-                    <td>{{ medical_facilities }}</td>
+                    <td>종합병원 1개소 (2km), 의원 12개소</td>
                 </tr>
             </table>
         </div>
@@ -487,24 +527,10 @@
 
         <div class="section">
             <div class="section-title">3-1. 공급 유형별 심사 안정성 검토</div>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th style="width: 25%;">공급 유형</th>
-                        <th style="width: 20%;">안정성</th>
-                        <th style="width: 55%;">판단 근거</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for stability_data in review_stability_analysis %}
-                    <tr {% if stability_data.supply_type == selected_supply_type %}class="selected-row"{% endif %}>
-                        <td>{{ stability_data.supply_type }}</td>
-                        <td class="{% if stability_data.stability_level == '높음' %}value-highlight{% endif %}">{{ stability_data.stability_level }}</td>
-                        <td>{{ stability_data.reason }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="info-box">
+                <p><strong>신혼희망타운</strong>은 LH 정책상 일괄매입 및 공급 구조가 명확하며, 유사 사례가 충분히 축적되어 있어 <strong>심사 안정성이 상대적으로 높습니다.</strong></p>
+                <p style="margin-top: 10px;">반면, 청년주택 및 행복주택은 지역 수요 대비 정책 대상 범위가 넓어 심사 과정에서 조정 가능성이 존재합니다.</p>
+            </div>
         </div>
 
         <div class="section">
@@ -522,26 +548,26 @@
                     <tr>
                         <td>정책 대상 적합성</td>
                         <td>중심</td>
-                        <td class="value-highlight">{{ policy_target_score }}점</td>
+                        <td class="value-highlight">85.0점</td>
                         <td>정책 방향 및 대상층 분석</td>
                     </tr>
                     <tr>
                         <td>입지 수요 분석</td>
                         <td>참고</td>
-                        <td class="value-highlight">{{ demand_score }}점</td>
+                        <td class="value-highlight">78.0점</td>
                         <td>인구 구성 및 인프라 분석</td>
                     </tr>
                     <tr>
                         <td>공급 가능성</td>
                         <td>참고</td>
-                        <td class="value-highlight">{{ supply_feasibility_score }}점</td>
+                        <td class="value-highlight">72.0점</td>
                         <td>사업 실행 가능성</td>
                     </tr>
                     <tr class="selected-row">
                         <td><strong>종합 판단</strong></td>
                         <td><strong>확정</strong></td>
-                        <td class="value-highlight"><strong>{{ total_score }}점</strong></td>
-                        <td><strong>최종 선정: {{ selected_supply_type }}</strong></td>
+                        <td class="value-highlight"><strong>80.30000000000001점</strong></td>
+                        <td><strong>최종 선정: 신혼희망타운</strong></td>
                     </tr>
                 </tbody>
             </table>
@@ -553,12 +579,16 @@
         <div class="section">
             <div class="section-title">판단 의견</div>
             <div class="info-box">
-                <p>{{ final_opinion }}</p>
+                <p>종합 검토 결과, 본 사업은 신혼희망타운 공급 유형으로 추진하는 것이 가장 합리적이며, 정책·심사·수요 측면에서 안정성이 확보됩니다. 
+
+정책 대상 적합성을 중심으로 판단하였으며, 입지 수요 및 공급 가능성을 보조적으로 검토하였습니다. 본 사업지 주변의 가구 구성은 신혼부부 및 자녀 1명 이하 가구 비중이 높아, 전용 59㎡ 내외의 중소형 평형 수요가 중심을 이룹니다. 이는 신혼희망타운의 세대 구성 및 평형 기준과 직접적으로 부합합니다. 
+
+신혼희망타운은 LH 정책상 일괄매입 구조가 명확하고 유사 사례 축적으로 심사 안정성이 높습니다.</p>
             </div>
         </div>
 
         <div style="margin-top: 60px; text-align: right;">
-            <p style="font-size: 12pt; margin-bottom: 10px;">{{ analysis_date }}</p>
+            <p style="font-size: 12pt; margin-bottom: 10px;">2025년 12월 29일</p>
             <p style="font-size: 13pt; font-weight: bold; color: #2c3e50;">작성 주체: ZeroSite Analysis Engine</p>
             <p style="font-size: 12pt; color: #6c757d; margin-top: 15px;">Antenna Holdings Co., Ltd.</p>
         </div>
@@ -572,7 +602,7 @@
             <div class="section-title">분석 기준</div>
             <div class="info-box">
                 <p><strong>1. 분석 목적:</strong> 본 보고서는 공급 유형 선정을 위한 전문 분석입니다.</p>
-                <p><strong>2. 분석 기준일:</strong> {{ analysis_date }} 기준이며, 이후 정책 변화는 반영되지 않습니다.</p>
+                <p><strong>2. 분석 기준일:</strong> 2025년 12월 29일 기준이며, 이후 정책 변화는 반영되지 않습니다.</p>
                 <p><strong>3. 데이터 출처:</strong> 통계청, 국토교통부, LH 내부 자료 등 공신력 있는 기관의 자료를 활용했습니다.</p>
                 <p><strong>4. 적용 범위:</strong> 본 판단은 분석 기준일 당시의 정책 및 시장 상황을 반영한 것입니다.</p>
             </div>
