@@ -44,6 +44,8 @@ def generate_m5():
         "\n\nLH 매입 구조를 중심으로 판단하였으며, 재무 지표와 리스크 요소를 종합적으로 검토하였습니다. "
         f"{profit_interpretation}"
         f"\n\n{risk_structure}"
+        "\n\n<strong style='color: #0066cc;'>→ 본 사업성 분석 결과를 종합하여, "
+        "LH 매입 가능 여부에 대한 최종 판단(M6)을 진행합니다.</strong>"
     )
     
     context = {
@@ -112,7 +114,7 @@ td{padding:12px;border:1px solid #ddd;font-size:12pt}
 <div class="header">
 <div class="company-logo">ANTENNA HOLDINGS</div>
 <div class="title">LH 종합 판단 보고서</div>
-<div class="subtitle">본 문서는 M2~M5 분석 결과를 종합하여<br>LH 매입 가능 여부를 판단하기 위한<br>최종 승인 검토 결과입니다.</div>
+<div class="subtitle">본 문서는 M2~M5 분석 결과를 종합하여<br>LH 매입 가능 여부를 판단하기 위한<br>최종 승인 검토 결과입니다.<br><br><em style="font-size:11pt; color:#6c757d;">💡 본 보고서는 M2(토지감정평가) → M3(공급유형) → M4(건축규모) → M5(사업성분석) 전체 분석 결과를 전제로 작성되었습니다.</em></div>
 </div>
 
 <div class="result">

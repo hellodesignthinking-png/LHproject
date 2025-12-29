@@ -135,6 +135,8 @@ class M4BuildingScaleGenerator:
             f"\n\n법적 제약 검토를 중심으로, 심사 기준 및 사업 안정성을 단계적으로 검토하였습니다. "
             f"{supply_type_connection}"
             f"\n\n{stability_interpretation}"
+            f"\n\n<strong style='color: #0066cc;'>→ 상기에서 도출된 {total_units}세대 규모를 기준으로, "
+            f"재무적 실행 가능성 분석(M5)을 진행합니다.</strong>"
         )
         
         # 컨텍스트 구성

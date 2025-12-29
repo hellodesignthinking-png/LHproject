@@ -61,7 +61,10 @@
         <div class="executive-summary">
             <div class="executive-label">사업 실행 가능성</div>
             <div class="executive-result">{{ feasibility_result }}</div>
-            <div class="executive-detail">{{ executive_conclusion }}</div>
+            <div class="executive-detail">
+                <p style="font-size: 11pt; color: #6c757d; margin-bottom: 15px;"><em>본 분석은 M4 건축 규모 판단 결과를 전제로 진행되었습니다.</em></p>
+                {{ executive_conclusion }}
+            </div>
         </div>
         <div class="section">
             <div class="section-title">재무 지표 요약</div>
