@@ -1,14 +1,16 @@
 """
-FAIL FAST Validator for ZeroSite v5.0 ENHANCED
-Purpose: Enforce 4 critical quality gates before report deployment
+FAIL FAST Validator for ZeroSite v6.0 ABSOLUTE FINAL
+Purpose: Enforce 4 critical quality gates + 35/35/30 structure
 Author: ZeroSite by AntennaHoldings NataiHeum
 Date: 2025-12-29
 
-FAIL FAST Rules:
+v6.0 ABSOLUTE RULES (NO EXCEPTIONS):
 1. 첫 페이지 결론 3초 내 미노출 시 FAIL
 2. 그래프 제거로도 결론 유지 불가 → FAIL
 3. Why/의문 남으면 FAIL
 4. M2–M6 중 하나 누락 시 결론 유지 불가 → FAIL
+5. 35/35/30 구조를 어기면 FAIL (NEW in v6.0)
+6. 한 페이지에 가장 크게 읽히는 문장이 2개 이상이면 FAIL (NEW in v6.0)
 """
 
 from typing import Dict, List, Any, Tuple
