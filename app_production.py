@@ -21,7 +21,7 @@ from generate_v3_full_report import V3FullReportGenerator
 # Create logs directory
 os.makedirs("/home/user/webapp/logs", exist_ok=True)
 
-# Set up logging
+# Set up logging FIRST (before any logger usage)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -31,6 +31,25 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+# Import pipeline router
+try:
+    from app.api.endpoints.pipeline_reports_v4 import router as pipeline_router
+    pipeline_router_available = True
+except ImportError as e:
+    logger.warning(f"⚠️  Pipeline router not available: {str(e)}")
+    pipeline_router_available = False
+
+# Import M1 routers
+try:
+    from app.api.endpoints.m1_step_based import router as m1_step_router
+    from app.api.endpoints.m1_context_freeze_v2 import router as m1_v2_router
+    from app.api.endpoints.m1_pdf_extract import router as m1_pdf_router
+    m1_routers_available = True
+    logger.info("✅ M1 routers imported successfully")
+except ImportError as e:
+    logger.warning(f"⚠️  M1 routers not available: {str(e)}")
+    m1_routers_available = False
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -68,6 +87,18 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include pipeline router if available
+if pipeline_router_available:
+    app.include_router(pipeline_router)
+    logger.info("✅ Pipeline router (v4) registered")
+
+# Include M1 routers if available
+if m1_routers_available:
+    app.include_router(m1_step_router)
+    app.include_router(m1_v2_router)
+    app.include_router(m1_pdf_router)
+    logger.info("✅ M1 routers registered (step_based, context_freeze_v2, pdf_extract)")
 
 # Request/Response Models
 class ReportRequest(BaseModel):
@@ -227,7 +258,20 @@ async def get_metrics():
         timestamp=datetime.now().isoformat()
     )
 
-@app.post("/generate-report", response_model=ReportResponse, tags=["Reports"])
+@app.get("/test-pipeline", tags=["Testing"])
+async def test_pipeline_page():
+    """
+    Pipeline Test Page - Frontend Testing Interface
+    """
+    test_page_path = "/home/user/webapp/test_pipeline_frontend.html"
+    if os.path.exists(test_page_path):
+        with open(test_page_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return HTMLResponse(content=content)
+    else:
+        raise HTTPException(status_code=404, detail="Test page not found")
+
+@app.get("/generate-report", response_model=ReportResponse, tags=["Reports"])
 async def generate_report(request: ReportRequest):
     """
     Generate ZeroSite v3 Expert Report.
@@ -443,20 +487,37 @@ async def get_demo(demo_name: str):
     Available demos:
     - gangnam_youth: 강남 청년주택 (121세대, 30주차)
     - mapo_newlywed: 마포 신혼부부주택 (194세대, 60주차)
+    - m2_classic: M2 토지감정평가 보고서
+    - m3_supply_type: M3 공급 유형 판단 보고서
+    - m4_building_scale: M4 건축 규모 판단 보고서
+    - m5_feasibility: M5 사업성 분석 보고서
+    - m6_comprehensive: M6 LH 종합 판단 보고서
     
     Args:
-        demo_name: Name of the demo (gangnam_youth or mapo_newlywed)
+        demo_name: Name of the demo (m2_classic, m3_supply_type, m4_building_scale, m5_feasibility, m6_comprehensive)
         
     Returns:
         HTML demo report
     """
-    filepath = f"/home/user/webapp/generated_reports/demo_{demo_name}.html"
+    # Special handling for REAL APPRAISAL STANDARD reports
+    if demo_name == "m2_classic":
+        filepath = "/home/user/webapp/generated_reports/M2_Classic_REAL_APPRAISAL_STANDARD.html"
+    elif demo_name == "m3_supply_type":
+        filepath = "/home/user/webapp/generated_reports/M3_SupplyType_FINAL.html"
+    elif demo_name == "m4_building_scale":
+        filepath = "/home/user/webapp/generated_reports/M4_BuildingScale_FINAL.html"
+    elif demo_name == "m5_feasibility":
+        filepath = "/home/user/webapp/generated_reports/M5_Feasibility_FINAL.html"
+    elif demo_name == "m6_comprehensive":
+        filepath = "/home/user/webapp/generated_reports/M6_Comprehensive_FINAL.html"
+    else:
+        filepath = f"/home/user/webapp/generated_reports/demo_{demo_name}.html"
     
     if not os.path.exists(filepath):
         logger.warning(f"⚠️  Demo not found: {demo_name}")
         raise HTTPException(
             status_code=404,
-            detail=f"Demo not found. Available: gangnam_youth, mapo_newlywed"
+            detail=f"Demo not found. Available: m2_classic, m3_supply_type, m4_building_scale, m5_feasibility, m6_comprehensive"
         )
     
     logger.info(f"📄 Serving demo: {demo_name}")

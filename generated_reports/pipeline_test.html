@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite Pipeline Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .result-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-item h3 {
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .result-item p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .error {
+            background: #fee;
+            border-left-color: #e53e3e;
+            color: #c53030;
+        }
+
+        .success {
+            background: #efe;
+            border-left-color: #38a169;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status-success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-failed {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏗️ ZeroSite Pipeline Test</h1>
+        <p class="subtitle">M1→M6 전체 파이프라인 테스트</p>
+
+        <form id="pipelineForm">
+            <div class="form-group">
+                <label for="parcelId">Parcel ID (PNU Code):</label>
+                <input type="text" id="parcelId" value="1168010100100010001" required>
+            </div>
+
+            <button type="submit" id="submitBtn">🚀 파이프라인 실행</button>
+        </form>
+
+        <div id="loading" class="loading" style="display: none;">
+            ⏳ 파이프라인 실행 중... (약 1-2초 소요)
+        </div>
+
+        <div id="results" class="results" style="display: none;"></div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/v4/pipeline';
+
+        document.getElementById('pipelineForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const parcelId = document.getElementById('parcelId').value;
+            const resultsDiv = document.getElementById('results');
+            const loadingDiv = document.getElementById('loading');
+            const submitBtn = document.getElementById('submitBtn');
+
+            // Reset
+            resultsDiv.style.display = 'none';
+            resultsDiv.innerHTML = '';
+            loadingDiv.style.display = 'block';
+            submitBtn.disabled = true;
+
+            try {
+                console.log('🚀 Starting pipeline analysis for:', parcelId);
+                
+                const response = await fetch(`${API_BASE}/analyze`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        parcel_id: parcelId,
+                        use_cache: false
+                    })
+                });
+
+                console.log('📥 Response status:', response.status);
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail?.error || `Request failed: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('✅ Pipeline result:', data);
+
+                // Display results
+                resultsDiv.innerHTML = `
+                    <div class="result-item success">
+                        <h3>✅ 파이프라인 실행 완료</h3>
+                        <p>
+                            <strong>분석 ID:</strong> ${data.analysis_id}<br>
+                            <strong>실행 시간:</strong> ${data.execution_time_ms.toFixed(0)}ms<br>
+                            <strong>상태:</strong> <span class="status-badge status-${data.status}">${data.status}</span>
+                        </p>
+                    </div>
+
+                    <div class="result-item">
+                        <h3>💰 M2: 토지감정평가</h3>
+                        <p>
+                            <strong>감정가:</strong> ₩${(data.land_value || 0).toLocaleString('ko-KR')}<br>
+                            <strong>신뢰도:</strong> ${((data.confidence_score || 0) * 100).toFixed(1)}%
+                        </p>
+                    </div>
+
+                    <div class="result-item">
+                        <h3>🏘️ M3: LH 선호유형</h3>
+                        <p><strong>선택 유형:</strong> ${data.selected_housing_type || 'N/A'}</p>
+                    </div>
+
+                    <div class="result-item">
+                        <h3>🏗️ M4: 건축규모</h3>
+                        <p>
+                            <strong>법정 용적률:</strong> ${data.legal_capacity_units || 'N/A'}세대<br>
+                            <strong>인센티브 용적률:</strong> ${data.incentive_capacity_units || 'N/A'}세대<br>
+                            <strong>주차 Alt A:</strong> ${data.parking_alt_a_spaces || 'N/A'}대<br>
+                            <strong>주차 Alt B:</strong> ${data.parking_alt_b_spaces || 'N/A'}대
+                        </p>
+                    </div>
+
+                    <div class="result-item">
+                        <h3>📊 M5: 사업성 검토</h3>
+                        <p>
+                            <strong>NPV (공공):</strong> ₩${(data.npv_public || 0).toLocaleString('ko-KR')}<br>
+                            <strong>추천 세대수:</strong> ${data.recommended_units || 'N/A'}세대
+                        </p>
+                    </div>
+
+                    <div class="result-item">
+                        <h3>⚖️ M6: LH 심사예측</h3>
+                        <p>
+                            <strong>최종 결정:</strong> ${data.lh_decision || 'N/A'}<br>
+                            <strong>총점:</strong> ${(data.lh_total_score || 0).toFixed(1)}/110점
+                        </p>
+                    </div>
+                `;
+                resultsDiv.style.display = 'block';
+
+            } catch (error) {
+                console.error('❌ Error:', error);
+                resultsDiv.innerHTML = `
+                    <div class="result-item error">
+                        <h3>❌ 오류 발생</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+                resultsDiv.style.display = 'block';
+            } finally {
+                loadingDiv.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

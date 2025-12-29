@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M2: 토지감정평가 보고서 - Classic Format</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            font-size: 11pt;
+            line-height: 1.6;
+            color: #333;
+            background: white;
+        }
+
+        /* Cover Page */
+        .cover-page {
+            text-align: center;
+            padding: 80px 40px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            page-break-after: always;
+        }
+
+        .main-title {
+            font-size: 36pt;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #1a1a1a;
+            letter-spacing: 2px;
+        }
+
+        .sub-title {
+            font-size: 28pt;
+            font-weight: bold;
+            margin-bottom: 60px;
+            color: #2c3e50;
+        }
+
+        .report-info-box {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            padding: 40px;
+            margin: 40px auto;
+            max-width: 600px;
+            text-align: left;
+        }
+
+        .report-info-row {
+            display: flex;
+            padding: 15px 0;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 13pt;
+        }
+
+        .report-info-row:last-child {
+            border-bottom: none;
+        }
+
+        .report-info-label {
+            font-weight: bold;
+            width: 150px;
+            color: #495057;
+        }
+
+        .report-info-value {
+            flex: 1;
+            color: #212529;
+        }
+
+        .company-name {
+            margin-top: 60px;
+            font-size: 18pt;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        /* Summary Page */
+        .summary-page {
+            padding: 60px 40px;
+            page-break-after: always;
+        }
+
+        .final-value-box {
+            background: #e8f4f8;
+            border: 3px solid #0066cc;
+            padding: 50px;
+            text-align: center;
+            margin: 80px 0;
+        }
+
+        .final-value-label {
+            font-size: 24pt;
+            font-weight: bold;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+
+        .final-value-amount {
+            font-size: 32pt;
+            font-weight: bold;
+            color: #0066cc;
+            margin-bottom: 10px;
+        }
+
+        .final-value-unit {
+            font-size: 16pt;
+            color: #6c757d;
+        }
+
+        /* Content Pages */
+        .content-page {
+            padding: 40px;
+            page-break-inside: avoid;
+        }
+
+        .page-title {
+            font-size: 20pt;
+            font-weight: bold;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #0066cc;
+            color: #2c3e50;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            page-break-inside: avoid;
+        }
+
+        .section-title {
+            font-size: 16pt;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #495057;
+            background: #f8f9fa;
+            padding: 12px 15px;
+            border-left: 5px solid #0066cc;
+        }
+
+        /* Table Styles */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 11pt;
+            background: white;
+        }
+
+        .data-table th {
+            background: #2c3e50;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #1a252f;
+        }
+
+        .data-table td {
+            padding: 10px 12px;
+            border: 1px solid #dee2e6;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .data-table tr:hover {
+            background: #e9ecef;
+        }
+
+        .highlight-row {
+            background: #fff3cd !important;
+            font-weight: bold;
+        }
+
+        /* Formula Box */
+        .formula-box {
+            background: #f8f9fa;
+            border: 2px solid #6c757d;
+            border-left: 5px solid #0066cc;
+            padding: 25px;
+            margin: 25px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12pt;
+        }
+
+        .formula-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-family: 'Malgun Gothic', sans-serif;
+            font-size: 14pt;
+        }
+
+        .formula-content {
+            line-height: 2;
+            color: #212529;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: #e7f3ff;
+            border-left: 5px solid #0066cc;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .info-box-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #0066cc;
+            font-size: 13pt;
+        }
+
+        /* Source Citation */
+        .source-citation {
+            font-size: 10pt;
+            color: #6c757d;
+            font-style: italic;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Page Number */
+        .page-number {
+            position: fixed;
+            bottom: 20px;
+            right: 40px;
+            font-size: 10pt;
+            color: #6c757d;
+        }
+
+        /* Print optimization */
+        @media print {
+            .page-break {
+                page-break-after: always;
+            }
+            
+            body {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+        }
+
+        /* Value highlight */
+        .value-highlight {
+            color: #0066cc;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        /* Calculation breakdown */
+        .calc-step {
+            padding: 10px 0;
+            border-bottom: 1px dashed #dee2e6;
+        }
+
+        .calc-step:last-child {
+            border-bottom: none;
+        }
+
+        .calc-label {
+            font-weight: bold;
+            color: #495057;
+            display: inline-block;
+            width: 200px;
+        }
+
+        .calc-value {
+            color: #212529;
+        }
+    </style>
+</head>
+<body>
+    <!-- Page 1: Cover -->
+    <div class="cover-page">
+        <div class="main-title">Professional Appraisal Report</div>
+        <div class="sub-title">Land Appraisal Report</div>
+        
+        <div class="report-info-box">
+            <div class="report-info-row">
+                <div class="report-info-label">보고서 번호</div>
+                <div class="report-info-value">ZS-M2-20251229091406</div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">평가 대상</div>
+                <div class="report-info-value">서울특별시 강남구 역삼동 123-45</div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">토지면적</div>
+                <div class="report-info-value">660 ㎡ (199 평)</div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">용도지역</div>
+                <div class="report-info-value">제2종일반주거지역</div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">평가기준일</div>
+                <div class="report-info-value">2025년 12월 29일</div>
+            </div>
+        </div>
+
+        <div class="company-name">Antenna Holdings Co., Ltd.</div>
+    </div>
+
+    <!-- Page 2: Final Value -->
+    <div class="summary-page">
+        <div class="final-value-box">
+            <div class="final-value-label">최종 평가액</div>
+            <div class="final-value-amount">7,400,334</div>
+            <div class="final-value-unit">㎡당 원</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">평가 요약</div>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 40%;">항목</th>
+                    <th style="width: 60%;">내용</th>
+                </tr>
+                <tr>
+                    <td>총 평가액</td>
+                    <td class="value-highlight">4,884,220,762 원</td>
+                </tr>
+                <tr>
+                    <td>㎡당 단가</td>
+                    <td class="value-highlight">7,400,334 원/㎡</td>
+                </tr>
+                <tr>
+                    <td>평당 단가</td>
+                    <td>24,464,025 원/평</td>
+                </tr>
+                <tr>
+                    <td>토지면적</td>
+                    <td>660 ㎡ (199 평)</td>
+                </tr>
+                <tr>
+                    <td>신뢰도</td>
+                    <td>높음 (85.0%)</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Page 3: Official Land Price -->
+    <div class="content-page page-break">
+        <div class="page-title">1. 개별공시지가 기준</div>
+
+        <div class="info-box">
+            <div class="info-box-title">📌 개별공시지가란?</div>
+            <p>국토교통부가 매년 공시하는 개별 토지의 단위면적당 가격으로, 토지 평가의 기본 기준이 됩니다.</p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">개별공시지가 정보</div>
+            <table class="data-table">
+                <tr>
+                    <th>항목</th>
+                    <th>내용</th>
+                </tr>
+                <tr>
+                    <td>공시지가 (원/㎡)</td>
+                    <td class="value-highlight">8,500,000</td>
+                </tr>
+                <tr>
+                    <td>공시기준일</td>
+                    <td>2025.12.29</td>
+                </tr>
+                <tr>
+                    <td>토지면적</td>
+                    <td>660 ㎡</td>
+                </tr>
+                <tr class="highlight-row">
+                    <td>공시지가 기준 토지가액</td>
+                    <td>5,610,000,000 원</td>
+                </tr>
+            </table>
+
+            <div class="formula-box">
+                <div class="formula-title">계산식 (토지만 평가):</div>
+                <div class="formula-content">
+                    토지가액 = 개별공시지가(원/㎡) × 토지면적(㎡)<br>
+                    = 8,500,000 × 660<br>
+                    = 5,610,000,000 원
+                </div>
+            </div>
+
+            <div class="source-citation">
+                📄 출처: 국토교통부 개별공시지가
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 4: Transaction Comparison Method -->
+    <div class="content-page page-break">
+        <div class="page-title">2. 거래사례 비교방식</div>
+
+        <div class="info-box">
+            <div class="info-box-title">📌 거래사례 비교방식이란?</div>
+            <p>인근 지역의 실제 거래 사례를 수집하여, 시점/위치/개별 특성을 보정한 후 대상 토지의 가격을 산정하는 방법입니다.</p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">수집된 거래사례</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>번호</th>
+                        <th>거래일자</th>
+                        <th>거래가격(원)</th>
+                        <th>면적(㎡)</th>
+                        <th>단가(원/㎡)</th>
+                        <th>거리(m)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td>1</td>
+                        <td>2024.11.15</td>
+                        <td>6,800,000,000</td>
+                        <td>720</td>
+                        <td class="value-highlight">9,444,444</td>
+                        <td>250</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>2</td>
+                        <td>2024.10.22</td>
+                        <td>5,500,000,000</td>
+                        <td>600</td>
+                        <td class="value-highlight">9,166,667</td>
+                        <td>380</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>3</td>
+                        <td>2024.09.18</td>
+                        <td>7,200,000,000</td>
+                        <td>750</td>
+                        <td class="value-highlight">9,600,000</td>
+                        <td>420</td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">보정 적용</div>
+            
+            <div class="formula-box">
+                <div class="formula-title">계산식:</div>
+                <div class="formula-content">
+                    평가액 = [Σ(거래사례 단가 × 시점보정 × 위치보정 × 개별보정 × 가중치) / Σ가중치] × 대상 토지면적
+                </div>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>사례번호</th>
+                        <th>원단가</th>
+                        <th>시점보정</th>
+                        <th>위치보정</th>
+                        <th>개별보정</th>
+                        <th>가중치</th>
+                        <th>보정후단가</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td>사례 1</td>
+                        <td>9,444,444</td>
+                        <td>102.0%</td>
+                        <td>98.0%</td>
+                        <td>100.0%</td>
+                        <td>0.4</td>
+                        <td class="value-highlight">9,440,666</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>사례 2</td>
+                        <td>9,166,667</td>
+                        <td>102.0%</td>
+                        <td>98.0%</td>
+                        <td>100.0%</td>
+                        <td>0.2631578947368421</td>
+                        <td class="value-highlight">9,163,000</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>사례 3</td>
+                        <td>9,600,000</td>
+                        <td>102.0%</td>
+                        <td>98.0%</td>
+                        <td>100.0%</td>
+                        <td>0.23809523809523808</td>
+                        <td class="value-highlight">9,596,160</td>
+                    </tr>
+                    
+                    <tr class="highlight-row">
+                        <td colspan="6">가중평균 단가</td>
+                        <td>9,400,668 원/㎡</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="calc-step">
+                <span class="calc-label">거래사례 기준 평가액:</span>
+                <span class="calc-value value-highlight">6,204,441,524 원</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 5: Income Capitalization Approach -->
+    <div class="content-page page-break">
+        <div class="page-title">3. 수익환원법</div>
+
+        <div class="info-box">
+            <div class="info-box-title">📌 수익환원법이란?</div>
+            <p>토지에서 발생할 수 있는 예상 순수익을 적정 환원율로 나누어 토지 가격을 산정하는 방법입니다.</p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">수익 분석</div>
+
+            <div class="formula-box">
+                <div class="formula-title">계산식 (토지 개발):</div>
+                <div class="formula-content">
+                    수익환원가 = 연간 순수익 / 환원율<br>
+                    연간 순수익 = 총수익 - 운영비용 - 제세공과금
+                </div>
+            </div>
+
+            <table class="data-table">
+                <tr>
+                    <th style="width: 40%;">항목</th>
+                    <th style="width: 60%;">금액 (원)</th>
+                </tr>
+                <tr>
+                    <td>예상 총수익 (연간)</td>
+                    <td>33,000,000</td>
+                </tr>
+                <tr>
+                    <td>운영비용</td>
+                    <td>6,600,000</td>
+                </tr>
+                <tr>
+                    <td>제세공과금</td>
+                    <td>1,650,000</td>
+                </tr>
+                <tr class="highlight-row">
+                    <td>연간 순수익</td>
+                    <td class="value-highlight">24,750,000</td>
+                </tr>
+                <tr>
+                    <td>적용 환원율</td>
+                    <td>5.0%</td>
+                </tr>
+                <tr class="highlight-row">
+                    <td><strong>수익환원가</strong></td>
+                    <td class="value-highlight"><strong>495,000,000</strong></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Page 6: Final Conclusion -->
+    <div class="content-page page-break">
+        <div class="page-title">4. 최종 평가액 산정</div>
+
+        <div class="section">
+            <div class="section-title">평가 방법별 결과</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>평가 방법</th>
+                        <th>평가액 (원)</th>
+                        <th>㎡당 단가 (원)</th>
+                        <th>적용 비중</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>개별공시지가 기준</td>
+                        <td>5,610,000,000</td>
+                        <td>8,500,000</td>
+                        <td>30.0%</td>
+                    </tr>
+                    <tr>
+                        <td>거래사례 비교방식</td>
+                        <td>6,204,441,524</td>
+                        <td>9,400,668</td>
+                        <td>50.0%</td>
+                    </tr>
+                    <tr>
+                        <td>수익환원법</td>
+                        <td>495,000,000</td>
+                        <td>750,000</td>
+                        <td>20.0%</td>
+                    </tr>
+                    <tr class="highlight-row">
+                        <td><strong>최종 평가액</strong></td>
+                        <td class="value-highlight"><strong>4,884,220,762</strong></td>
+                        <td class="value-highlight"><strong>7,400,334</strong></td>
+                        <td><strong>100%</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="formula-box">
+                <div class="formula-title">최종 산정식:</div>
+                <div class="formula-content">
+                    최종평가액 = (공시지가기준 × 30.0%) + 
+                                (거래사례기준 × 50.0%) + 
+                                (수익환원 × 20.0%)<br>
+                    <br>
+                    = 4,884,220,762 원
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">신뢰도 평가</div>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 30%;">평가 항목</th>
+                    <th style="width: 70%;">결과</th>
+                </tr>
+                <tr>
+                    <td>거래사례 건수</td>
+                    <td>3건</td>
+                </tr>
+                <tr>
+                    <td>데이터 품질</td>
+                    <td>양호</td>
+                </tr>
+                <tr>
+                    <td>가격 범위</td>
+                    <td>최소 8,500,000 ~ 최대 9,600,000 원/㎡</td>
+                </tr>
+                <tr class="highlight-row">
+                    <td><strong>종합 신뢰도</strong></td>
+                    <td class="value-highlight"><strong>높음 (85.0%)</strong></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">평가 의견</div>
+            <div class="info-box">
+                <p>본 토지는 제2종일반주거지역에 위치하며, 3건의 거래사례와 개별공시지가, 수익환원법을 종합하여 평가한 결과 ㎡당 7,400,334원으로 산정되었습니다.</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 60px; text-align: right;">
+            <p style="font-size: 12pt; margin-bottom: 10px;">2025년 12월 29일</p>
+            <p style="font-size: 14pt; font-weight: bold;">감정평가사: 김철수 (등록번호: 제12345호)</p>
+            <p style="font-size: 12pt; color: #6c757d; margin-top: 20px;">Antenna Holdings Co., Ltd.</p>
+        </div>
+    </div>
+
+    <!-- Page 7: Legal Disclaimer -->
+    <div class="content-page">
+        <div class="page-title">5. 법적 고지사항</div>
+
+        <div class="section">
+            <div class="section-title">평가 기준 및 제한사항</div>
+            <div class="info-box">
+                <p><strong>1. 평가 목적:</strong> 본 보고서는 토지의 시장가치 평가를 목적으로 작성되었습니다.</p>
+                <p><strong>2. 평가 기준일:</strong> 2025년 12월 29일 기준이며, 이후 시장 상황 변화는 반영되지 않습니다.</p>
+                <p><strong>3. 데이터 출처:</strong> 국토교통부, 한국부동산원, 실거래가 공개시스템 등 공신력 있는 기관의 자료를 활용했습니다.</p>
+                <p><strong>4. 적용 제한:</strong> 본 평가액은 참고용이며, 실제 거래가격과 다를 수 있습니다.</p>
+                <p><strong>5. 유효기간:</strong> 본 보고서는 발행일로부터 6개월간 유효합니다.</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">주의사항</div>
+            <ul style="padding-left: 20px; line-height: 2;">
+                <li>본 보고서의 내용을 임의로 수정하거나 일부만 발췌하여 사용할 수 없습니다.</li>
+                <li>평가액은 평가기준일 당시의 시장 상황을 반영한 것입니다.</li>
+                <li>개발계획, 인허가 사항 등 향후 변경 가능한 요소는 별도 확인이 필요합니다.</li>
+                <li>본 평가는 건물이 없는 나대지 상태를 기준으로 하였습니다.</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 80px; padding: 30px; background: #f8f9fa; border: 2px solid #dee2e6;">
+            <p style="text-align: center; font-size: 11pt; color: #6c757d; line-height: 1.8;">
+                본 감정평가는 감정평가에 관한 규칙 및 감정평가 실무기준에 따라 작성되었으며,<br>
+                평가 과정에서 취득한 정보와 자료는 엄격히 보호됩니다.<br>
+                <br>
+                <strong>Confidential - For Official Use Only</strong>
+            </p>
+        </div>
+    </div>
+
+    <!-- Page Numbers -->
+    <script>
+        // Add page numbers in print
+        let pageCount = 1;
+        document.querySelectorAll('.page-break, .content-page:last-child').forEach(function(element, index) {
+            const pageNum = document.createElement('div');
+            pageNum.className = 'page-number';
+            pageNum.textContent = 'Page ' + (index + 1) + ' of 24';
+            element.appendChild(pageNum);
+        });
+    </script>
+</body>
+</html>

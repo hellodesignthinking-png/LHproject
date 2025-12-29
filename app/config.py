@@ -23,21 +23,21 @@ class Settings(BaseSettings):
     """
     
     # ============================================
-    # API Keys (REQUIRED)
+    # API Keys (OPTIONAL for Development with Mock Data)
     # ============================================
     
-    kakao_rest_api_key: str = Field(..., description="Kakao REST API Key")
+    kakao_rest_api_key: str = Field(default="mock_kakao_api_key", description="Kakao REST API Key")
     kakao_javascript_key: Optional[str] = Field(default=None, description="Kakao JavaScript API Key (optional)")
     kakao_admin_key: Optional[str] = Field(default=None, description="Kakao Admin API Key (optional)")
     kakao_native_app_key: Optional[str] = Field(default=None, description="Kakao Native App Key (optional)")
     
-    land_regulation_api_key: str = Field(..., description="VWorld Land Regulation API Key")
+    land_regulation_api_key: str = Field(default="mock_land_regulation_api_key", description="VWorld Land Regulation API Key")
     vworld_api_key: Optional[str] = Field(default=None, description="VWorld API Key (optional, alias for land_regulation_api_key)")
     land_use_regulation_api_key: Optional[str] = Field(default=None, description="Land Use Regulation API Key (optional)")
     building_registry_api_key: Optional[str] = Field(default=None, description="Building Registry API Key (optional)")
     building_register_api_key: Optional[str] = Field(default=None, description="Building Register API Key (optional, alias)")
     
-    mois_api_key: str = Field(..., description="MOIS Demographics API Key")
+    mois_api_key: str = Field(default="mock_mois_api_key", description="MOIS Demographics API Key")
     data_go_kr_api_key: Optional[str] = Field(default=None, description="Data.go.kr API Key (optional, alias for mois_api_key)")
     
     # Optional API Keys
@@ -195,6 +195,7 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
+        extra = "ignore"  # Ignore extra fields in .env file
         
     # ============================================
     # Helper Methods
