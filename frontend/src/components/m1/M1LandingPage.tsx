@@ -60,7 +60,7 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
   const [collectionMethod, setCollectionMethod] = useState<DataCollectionMethod>(null);
 
   const [state, setState] = useState<M1State>({
-    currentStep: -1, // Start with API Key Setup
+    currentStep: 0, // Start directly at Step 0 (skip API key setup for now)
     formData: {
       dataSources: {},
     },
