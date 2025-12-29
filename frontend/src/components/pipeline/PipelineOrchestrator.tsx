@@ -641,7 +641,7 @@ export const PipelineOrchestrator: React.FC = () => {
                     ⭐ 최신 REAL APPRAISAL STANDARD 보고서
                   </h3>
                   <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', marginTop: '8px' }}>
-                    전문 감정평가 문서 형식 | M2-M6 전체 포함
+                    전문 감정평가 문서 형식 | M2-M6 전체 포함 | 실시간 데이터 생성
                   </p>
                 </div>
                 
@@ -652,7 +652,7 @@ export const PipelineOrchestrator: React.FC = () => {
                   marginBottom: '20px'
                 }}>
                   <a
-                    href="https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/static/latest_reports/M2_토지감정평가_최신_2025-12-29.html"
+                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/reports/module/M2/html?context_id=${state.contextId}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -681,7 +681,7 @@ export const PipelineOrchestrator: React.FC = () => {
                   </a>
                   
                   <a
-                    href="https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/static/latest_reports/M3_공급유형_최신_2025-12-29.html"
+                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/reports/module/M3/html?context_id=${state.contextId}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -710,7 +710,7 @@ export const PipelineOrchestrator: React.FC = () => {
                   </a>
                   
                   <a
-                    href="https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/static/latest_reports/M4_건축규모_최신_2025-12-29.html"
+                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/reports/module/M4/html?context_id=${state.contextId}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -739,7 +739,7 @@ export const PipelineOrchestrator: React.FC = () => {
                   </a>
                   
                   <a
-                    href="https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/static/latest_reports/M5_사업성분석_최신_2025-12-29.html"
+                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/reports/module/M5/html?context_id=${state.contextId}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -768,7 +768,7 @@ export const PipelineOrchestrator: React.FC = () => {
                   </a>
                   
                   <a
-                    href="https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/static/latest_reports/M6_종합판단_최신_2025-12-29.html"
+                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/reports/module/M6/html?context_id=${state.contextId}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{

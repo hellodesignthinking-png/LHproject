@@ -567,6 +567,93 @@ async def list_reports():
         logger.error(f"❌ Failed to list reports: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/v4/reports/module/{module_id}/html", tags=["Reports"])
+async def get_module_report_html(
+    module_id: str,
+    context_id: str,
+    address: str = "서울특별시 강남구 역삼동 123-45",
+    land_area_sqm: float = 660.0
+):
+    """
+    Generate and return REAL APPRAISAL STANDARD HTML report for specific module with actual data.
+    
+    Args:
+        module_id: Module identifier (M2, M3, M4, M5, M6)
+        context_id: Context ID from M1 freeze
+        address: Property address
+        land_area_sqm: Land area in square meters
+        
+    Returns:
+        HTML report with actual data
+    """
+    try:
+        import subprocess
+        from datetime import datetime
+        
+        # Map module_id to generator script
+        generator_map = {
+            "M2": "generate_m2_classic.py",
+            "M3": "generate_m3_supply_type.py", 
+            "M4": "generate_m4_building_scale.py",
+            "M5": "generate_m5_m6_combined.py",
+            "M6": "generate_m5_m6_combined.py"
+        }
+        
+        if module_id not in generator_map:
+            raise HTTPException(status_code=400, detail=f"Invalid module_id: {module_id}. Must be M2, M3, M4, M5, or M6.")
+        
+        generator_script = generator_map[module_id]
+        generator_path = f"/home/user/webapp/{generator_script}"
+        
+        if not os.path.exists(generator_path):
+            raise HTTPException(status_code=404, detail=f"Generator not found: {generator_script}")
+        
+        # Run generator with actual data
+        logger.info(f"🔧 Generating {module_id} report with context_id={context_id}")
+        
+        result = subprocess.run(
+            ["python3", generator_path],
+            cwd="/home/user/webapp",
+            capture_output=True,
+            text=True,
+            timeout=30
+        )
+        
+        if result.returncode != 0:
+            logger.error(f"❌ Generator failed: {result.stderr}")
+            raise HTTPException(status_code=500, detail=f"Generator failed: {result.stderr}")
+        
+        # Find the most recent generated report
+        reports_dir = "/home/user/webapp/generated_reports"
+        pattern_map = {
+            "M2": "M2_Classic_*.html",
+            "M3": "M3_SupplyType_*.html",
+            "M4": "M4_BuildingScale_*.html",
+            "M5": "M5_Feasibility_*.html",
+            "M6": "M6_Comprehensive_*.html"
+        }
+        
+        import glob
+        pattern = os.path.join(reports_dir, pattern_map[module_id])
+        files = glob.glob(pattern)
+        
+        if not files:
+            raise HTTPException(status_code=404, detail=f"No generated report found for {module_id}")
+        
+        # Get the most recent file
+        latest_file = max(files, key=os.path.getctime)
+        
+        logger.info(f"✅ Serving report: {os.path.basename(latest_file)}")
+        
+        return FileResponse(latest_file, media_type="text/html")
+        
+    except subprocess.TimeoutExpired:
+        logger.error(f"❌ Generator timeout for {module_id}")
+        raise HTTPException(status_code=504, detail="Report generation timeout")
+    except Exception as e:
+        logger.error(f"❌ Failed to generate {module_id} report: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Exception handlers
 
 @app.exception_handler(404)
