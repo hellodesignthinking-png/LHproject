@@ -35,7 +35,7 @@ export interface ExecutionLockHook {
 }
 
 const REQUIRED_MODULES = ['M1', 'M2', 'M3', 'M4', 'M5', 'M6'];
-const TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes safety timeout
+const TIMEOUT_MS = 30 * 1000; // 30 seconds timeout (reduced for better UX)
 
 export const useExecutionLock = (): ExecutionLockHook => {
   const [lockState, setLockState] = useState<ExecutionLockState>({
@@ -67,9 +67,10 @@ export const useExecutionLock = (): ExecutionLockHook => {
       modulesCompleted: new Set(),
     });
 
-    // Safety timeout - auto-unlock after 5 minutes
+    // Safety timeout - auto-unlock after 30 seconds
     timeoutRef.current = setTimeout(() => {
-      console.error('⚠️ EXECUTION TIMEOUT: Auto-unlocking after 5 minutes');
+      console.error('⚠️ EXECUTION TIMEOUT: Auto-unlocking after 30 seconds');
+      console.error('   This may indicate that the pipeline failed to complete.');
       unlockExecution();
     }, TIMEOUT_MS);
 

@@ -122,24 +122,32 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
   };
 
   const handleStep1Next = (address: AddressSuggestion) => {
-    // 🔒 RULE 1: Check if execution is already locked
-    if (executionLock.isLocked) {
-      alert('⚠️ 분석이 이미 진행 중입니다.\n현재 분석이 완료될 때까지 기다려주세요.');
-      console.warn('⚠️ EXECUTION BLOCKED: Analysis already in progress');
-      return;
-    }
-
-    // Generate context_id for this new analysis
-    const contextId = `CTX_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+    // 🔒 EXECUTION LOCK: Only apply if pipeline callback exists
+    // Standalone M1 doesn't need execution lock
+    const isPipelineMode = !!onContextFreezeComplete;
     
-    // 🔒 RULE 1: Lock execution for new analysis
-    const locked = executionLock.lockExecution(contextId);
-    if (!locked) {
-      alert('⚠️ 실행 잠금 실패. 다시 시도해주세요.');
-      return;
-    }
+    if (isPipelineMode) {
+      // 🔒 RULE 1: Check if execution is already locked
+      if (executionLock.isLocked) {
+        alert('⚠️ 분석이 이미 진행 중입니다.\n현재 분석이 완료될 때까지 기다려주세요.');
+        console.warn('⚠️ EXECUTION BLOCKED: Analysis already in progress');
+        return;
+      }
 
-    console.log('🔒 EXECUTION LOCKED:', contextId);
+      // Generate context_id for this new analysis
+      const contextId = `CTX_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+      
+      // 🔒 RULE 1: Lock execution for new analysis
+      const locked = executionLock.lockExecution(contextId);
+      if (!locked) {
+        alert('⚠️ 실행 잠금 실패. 다시 시도해주세요.');
+        return;
+      }
+
+      console.log('🔒 EXECUTION LOCKED (Pipeline Mode):', contextId);
+    } else {
+      console.log('ℹ️ Standalone M1 mode - Execution lock skipped');
+    }
     
     updateFormData({
       selectedAddress: address,
@@ -261,14 +269,18 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
   const handleStep8Complete = (frozenContext: any) => {
     console.log('🎯 [M1Landing] handleStep8Complete called:', frozenContext);
     
-    // 🔒 Mark M1 as complete
-    executionLock.markModuleComplete('M1');
-    console.log('✅ M1 Complete - Module marked');
+    const isPipelineMode = !!onContextFreezeComplete;
+    
+    // 🔒 Mark M1 as complete (only in pipeline mode)
+    if (isPipelineMode) {
+      executionLock.markModuleComplete('M1');
+      console.log('✅ M1 Complete - Module marked');
+    }
     
     // 🔥 CRITICAL FIX: If pipeline callback is provided, call it immediately
     // Don't store frozenContext in state as it will render success screen
     if (onContextFreezeComplete && frozenContext.context_id && frozenContext.parcel_id) {
-      console.log('✅ [M1Landing] Calling onContextFreezeComplete callback');
+      console.log('✅ [M1Landing] Calling onContextFreezeComplete callback (Pipeline Mode)');
       console.log('📦 [M1Landing] Context ID:', frozenContext.context_id);
       console.log('📦 [M1Landing] Parcel ID:', frozenContext.parcel_id);
       
@@ -279,15 +291,15 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
       console.log('🚀 M2~M6 pipeline will now execute...');
     } else {
       // Fallback: standalone M1 usage - store state and show success screen
-      console.log('ℹ️ [M1Landing] No pipeline callback, showing standalone success');
+      console.log('ℹ️ [M1Landing] Standalone M1 mode - No pipeline callback');
       setState((prev) => ({
         ...prev,
         frozenContext,
       }));
       alert(`컨텍스트 확정 완료!\n컨텍스트 ID: ${frozenContext.context_id}\n\n이제 M2-M6 파이프라인으로 이동합니다.`);
       
-      // 🔒 Unlock since pipeline won't run
-      executionLock.unlockExecution();
+      // 🔒 No execution lock in standalone mode, nothing to unlock
+      console.log('ℹ️ Standalone mode - No execution lock was applied');
     }
   };
 
