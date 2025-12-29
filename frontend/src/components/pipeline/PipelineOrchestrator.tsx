@@ -628,18 +628,201 @@ export const PipelineOrchestrator: React.FC = () => {
                 )}
               </div>
 
-              {/* Final Report 6 Types Buttons - NEW */}
+              {/* Latest REAL APPRAISAL STANDARD Reports - NEW */}
               <div style={{ 
                 marginTop: '40px', 
+                padding: '30px', 
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+                borderRadius: '12px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+              }}>
+                <div style={{ textAlign: 'center', marginBottom: '25px' }}>
+                  <h3 style={{ margin: 0, fontSize: '22px', color: 'white', fontWeight: 'bold' }}>
+                    ⭐ 최신 REAL APPRAISAL STANDARD 보고서
+                  </h3>
+                  <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', marginTop: '8px' }}>
+                    전문 감정평가 문서 형식 | M2-M6 전체 포함
+                  </p>
+                </div>
+                
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                  gap: '15px',
+                  marginBottom: '20px'
+                }}>
+                  <a
+                    href="https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/static/latest_reports/M2_토지감정평가_최신_2025-12-29.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      padding: '18px',
+                      background: 'white',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      color: '#333',
+                      textAlign: 'center',
+                      transition: 'transform 0.2s, box-shadow 0.2s',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      display: 'block'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    }}
+                  >
+                    <div style={{ fontSize: '32px', marginBottom: '8px' }}>💰</div>
+                    <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '4px' }}>M2 토지감정평가</div>
+                    <div style={{ fontSize: '11px', color: '#666' }}>거래사례 중심</div>
+                  </a>
+                  
+                  <a
+                    href="https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/static/latest_reports/M3_공급유형_최신_2025-12-29.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      padding: '18px',
+                      background: 'white',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      color: '#333',
+                      textAlign: 'center',
+                      transition: 'transform 0.2s, box-shadow 0.2s',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      display: 'block'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    }}
+                  >
+                    <div style={{ fontSize: '32px', marginBottom: '8px' }}>🏘️</div>
+                    <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '4px' }}>M3 공급 유형</div>
+                    <div style={{ fontSize: '11px', color: '#666' }}>단일 결정</div>
+                  </a>
+                  
+                  <a
+                    href="https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/static/latest_reports/M4_건축규모_최신_2025-12-29.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      padding: '18px',
+                      background: 'white',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      color: '#333',
+                      textAlign: 'center',
+                      transition: 'transform 0.2s, box-shadow 0.2s',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      display: 'block'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    }}
+                  >
+                    <div style={{ fontSize: '32px', marginBottom: '8px' }}>🏗️</div>
+                    <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '4px' }}>M4 건축 규모</div>
+                    <div style={{ fontSize: '11px', color: '#666' }}>최적 규모</div>
+                  </a>
+                  
+                  <a
+                    href="https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/static/latest_reports/M5_사업성분석_최신_2025-12-29.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      padding: '18px',
+                      background: 'white',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      color: '#333',
+                      textAlign: 'center',
+                      transition: 'transform 0.2s, box-shadow 0.2s',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      display: 'block'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    }}
+                  >
+                    <div style={{ fontSize: '32px', marginBottom: '8px' }}>📊</div>
+                    <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '4px' }}>M5 사업성 분석</div>
+                    <div style={{ fontSize: '11px', color: '#666' }}>LH 매입 모델</div>
+                  </a>
+                  
+                  <a
+                    href="https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/static/latest_reports/M6_종합판단_최신_2025-12-29.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      padding: '18px',
+                      background: 'white',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      color: '#333',
+                      textAlign: 'center',
+                      transition: 'transform 0.2s, box-shadow 0.2s',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      display: 'block'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    }}
+                  >
+                    <div style={{ fontSize: '32px', marginBottom: '8px' }}>✅</div>
+                    <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '4px' }}>M6 종합 판단</div>
+                    <div style={{ fontSize: '11px', color: '#666' }}>LH 심사</div>
+                  </a>
+                </div>
+                
+                <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                  <div style={{ 
+                    display: 'inline-block',
+                    padding: '12px 24px',
+                    background: 'rgba(255,255,255,0.2)',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    color: 'white'
+                  }}>
+                    💡 Tip: 브라우저에서 Ctrl+P → "PDF로 저장" → "배경 그래픽 켜기"
+                  </div>
+                </div>
+              </div>
+
+              {/* Final Report 6 Types Buttons - Original */}
+              <div style={{ 
+                marginTop: '20px', 
                 padding: '30px', 
                 background: '#f8f9fa', 
                 borderRadius: '12px',
                 border: '2px solid #e0e0e0'
               }}>
                 <div style={{ textAlign: 'center', marginBottom: '25px' }}>
-                  <h3 style={{ margin: 0, fontSize: '20px', color: '#1976d2' }}>📊 최종보고서 6종</h3>
+                  <h3 style={{ margin: 0, fontSize: '20px', color: '#1976d2' }}>📊 실시간 생성 보고서</h3>
                   <p style={{ fontSize: '14px', color: '#666', marginTop: '8px' }}>
-                    분석 결과를 용도별로 확인하세요 (새 탭에서 열림)
+                    현재 분석 데이터 기반 (새 탭에서 열림)
                   </p>
                   {!state.contextId && (
                     <div style={{ 
