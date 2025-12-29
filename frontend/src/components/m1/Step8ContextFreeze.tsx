@@ -9,6 +9,7 @@
 
 import React, { useState } from 'react';
 import { M1FormData } from '../../types/m1.types';
+import { BACKEND_URL } from '../../config';
 
 interface Step8Props {
   formData: M1FormData;
@@ -204,8 +205,8 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
         data_sources: formData.dataSources
       };
 
-      // 🔥 CRITICAL FIX: Hardcoded backend URL (env vars don't work reliably in sandbox)
-      const apiUrl = `${import.meta.env.VITE_BACKEND_URL || 'https://8005-iytptjlm3wjktifqay52f-2b54fc91.sandbox.novita.ai'}/api/m1/freeze-context-v2`;
+      // 🔥 CRITICAL FIX: Use centralized config
+      const apiUrl = `${BACKEND_URL}/api/m1/freeze-context-v2`;
       
       const response = await fetch(apiUrl, {
         method: 'POST',

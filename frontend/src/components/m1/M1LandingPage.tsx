@@ -289,6 +289,16 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
       
       console.log('✅ [M1Landing] Callback invoked, control passed to PipelineOrchestrator');
       console.log('🚀 M2~M6 pipeline will now execute...');
+      
+      // 🔒 Safety: If pipeline doesn't respond in 3 seconds, unlock
+      setTimeout(() => {
+        if (executionLock.progress <= 16) { // M1 only = 16%
+          console.warn('⚠️ Pipeline not responding - auto unlocking');
+          executionLock.unlockExecution();
+          alert('⚠️ 파이프라인 연결 실패\n\nM2~M6 분석이 시작되지 않았습니다.\n페이지를 새로고침 해주세요.');
+          window.location.reload();
+        }
+      }, 3000);
     } else {
       // Fallback: standalone M1 usage - store state and show success screen
       console.log('ℹ️ [M1Landing] Standalone M1 mode - No pipeline callback');

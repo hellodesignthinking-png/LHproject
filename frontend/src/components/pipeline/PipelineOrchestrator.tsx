@@ -23,6 +23,7 @@
 
 import React, { useState } from 'react';
 import { M1LandingPage } from '../m1/M1LandingPage';
+import { BACKEND_URL } from '../../config';
 import './PipelineOrchestrator.css';
 
 type PipelineStage = 
@@ -101,9 +102,7 @@ export const PipelineOrchestrator: React.FC = () => {
       console.log('🚀 Starting automatic M2→M6 pipeline execution...');
       console.log('⏰ Time:', new Date().toLocaleTimeString());
       
-      // 🔥 CRITICAL FIX: Use absolute backend URL (not relative proxy)
-      // Import BACKEND_URL from config
-      const BACKEND_URL = 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai';
+      // 🔥 CRITICAL FIX: Use centralized config
       const apiUrl = `${BACKEND_URL}/api/v4/pipeline/analyze`;
       
       console.log(`📡 Calling pipeline API: ${apiUrl}`);
@@ -242,8 +241,8 @@ export const PipelineOrchestrator: React.FC = () => {
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      // 🔥 CRITICAL FIX: Hardcoded backend URL
-      const apiUrl = `${import.meta.env.VITE_BACKEND_URL || 'https://8005-iytptjlm3wjktifqay52f-2b54fc91.sandbox.novita.ai'}/api/v4/pipeline/reports/comprehensive`;
+      // 🔥 CRITICAL FIX: Use centralized config
+      const apiUrl = `${BACKEND_URL}/api/v4/pipeline/reports/comprehensive`;
       
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -851,7 +850,7 @@ export const PipelineOrchestrator: React.FC = () => {
                         alert('⚠️ M1 분석을 먼저 완료해주세요.');
                         return;
                       }
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/all_in_one/html?context_id=${state.contextId}`;
+                      const url = `${BACKEND_URL}/api/v4/reports/final/all_in_one/html?context_id=${state.contextId}`;
                       window.open(url, '_blank');
                     }}
                     disabled={!state.contextId}
@@ -884,7 +883,7 @@ export const PipelineOrchestrator: React.FC = () => {
                         alert('⚠️ M1 분석을 먼저 완료해주세요.');
                         return;
                       }
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/landowner_summary/html?context_id=${state.contextId}`;
+                      const url = `${BACKEND_URL}/api/v4/reports/final/landowner_summary/html?context_id=${state.contextId}`;
                       window.open(url, '_blank');
                     }}
                     disabled={!state.contextId}
@@ -917,7 +916,7 @@ export const PipelineOrchestrator: React.FC = () => {
                         alert('⚠️ M1 분석을 먼저 완료해주세요.');
                         return;
                       }
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/lh_technical/html?context_id=${state.contextId}`;
+                      const url = `${BACKEND_URL}/api/v4/reports/final/lh_technical/html?context_id=${state.contextId}`;
                       window.open(url, '_blank');
                     }}
                     disabled={!state.contextId}
@@ -946,7 +945,7 @@ export const PipelineOrchestrator: React.FC = () => {
                   {/* 4. 사업성·투자 검토 보고서 */}
                   <button
                     onClick={() => {
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/financial_feasibility/html?context_id=${state.contextId}`;
+                      const url = `${BACKEND_URL}/api/v4/reports/final/financial_feasibility/html?context_id=${state.contextId}`;
                       window.open(url, '_blank');
                     }}
                     style={{
@@ -973,7 +972,7 @@ export const PipelineOrchestrator: React.FC = () => {
                   {/* 5. 사전 검토 리포트 */}
                   <button
                     onClick={() => {
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/quick_check/html?context_id=${state.contextId}`;
+                      const url = `${BACKEND_URL}/api/v4/reports/final/quick_check/html?context_id=${state.contextId}`;
                       window.open(url, '_blank');
                     }}
                     style={{
@@ -1004,7 +1003,7 @@ export const PipelineOrchestrator: React.FC = () => {
                         alert('⚠️ M1 분석을 먼저 완료해주세요.');
                         return;
                       }
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/presentation/html?context_id=${state.contextId}`;
+                      const url = `${BACKEND_URL}/api/v4/reports/final/presentation/html?context_id=${state.contextId}`;
                       window.open(url, '_blank');
                     }}
                     disabled={!state.contextId}
@@ -1171,7 +1170,7 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
       
       // 🔥 FIX: Use pdf_download_url from data if available
       const pdfUrl = data?.pdf_download_url;
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://8005-iytptjlm3wjktifqay52f-2b54fc91.sandbox.novita.ai';
+      const backendUrl = BACKEND_URL || 'https://8005-iytptjlm3wjktifqay52f-2b54fc91.sandbox.novita.ai';
       
       // ✅ USE: contextId from props (passed from parent state)
       const finalUrl = pdfUrl 
@@ -1255,7 +1254,7 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
   const handleHTMLPreview = () => {
     try {
       const htmlUrl = data?.html_preview_url;
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://8005-iytptjlm3wjktifqay52f-2b54fc91.sandbox.novita.ai';
+      const backendUrl = BACKEND_URL || 'https://8005-iytptjlm3wjktifqay52f-2b54fc91.sandbox.novita.ai';
       
       const finalUrl = htmlUrl 
         ? `${backendUrl}${htmlUrl}`
@@ -1343,7 +1342,7 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
         <button
           onClick={() => {
             // 🔥 NEW: Open HTML report directly (REAL APPRAISAL STANDARD format)
-            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai';
+            const backendUrl = BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai';
             const htmlUrl = `${backendUrl}/api/v4/reports/module/${moduleId}/html?context_id=${contextId}`;
             window.open(htmlUrl, '_blank');
           }}
