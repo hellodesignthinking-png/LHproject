@@ -1,0 +1,10 @@
+{
+  "timestamp": "2025-12-29T15:31:29.347185",
+  "results": {
+    "q1_new_context": false,
+    "q2_no_cache_reuse": true,
+    "q3_same_context_id": false,
+    "q4_same_timestamp": false,
+    "overall": false
+  }
+}
