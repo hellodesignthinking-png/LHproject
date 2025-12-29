@@ -52,7 +52,8 @@ from .data_contract import (
 # 🔥 v5.0 ENHANCED: Import new systems
 from .smart_data_fallback import SmartDataFallback
 from .enhanced_design_system import EnhancedDesignSystem, LayoutHelper
-from .advanced_chart_builder import AdvancedChartBuilder 
+from .advanced_chart_builder import AdvancedChartBuilder
+from .enforcement_layout_v6 import EnforcementLayoutV6 
     ContextSnapshot, 
     safe_get
 )
@@ -1990,81 +1991,91 @@ M4~M6 모듈의 분석을 뒷받침하는 <b>기초 데이터 엔진의 역할</
             else:
                 selected_name = "일반 가구형"
         
-        # 🔥 v4.9 REAL FINAL: M3 최상단 35% - DECISION ZONE
-        # 단일 결론 문장 (26pt Bold)
-        m3_v49_decision = f"""
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-<font size="28" color="#1F3A5F"><b>이 입지는 청년형 외 선택 시 운영 리스크가 구조적으로 증가한다</b></font><br/>
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-<br/>
-<font size="14" color="#6B7280">
-이 판단의 의미: 본 입지는 '{selected_name}' 생활 패턴(지하철 {subway_dist}m, 단기거주 2-3년)에 구조적으로 매칭되며, 
-다른 유형 선택 시 <b>학군 부재</b>(신혼형), <b>주차 부족</b>(일반형), <b>병원 거리</b>(고령자형) 리스크가 즉시 발생한다.
-</font><br/>
-<br/>
-<font size="14" color="#DC2626"><b>배제 문장: 신혼형/일반형/고령자형은 이 입지에서 붕괴 확률이 70% 이상이다.</b></font><br/>
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-"""
-        story.append(Paragraph(m3_v49_decision, styles['Normal']))
-        story.append(Spacer(1, 0.25*inch))
+        # 🔒 v6.0 ABSOLUTE FINAL: M3 - 35/35/30 ENFORCEMENT 구조
         
-        # 🔥 v4.9 REAL FINAL: 중단 35% - EVIDENCE ZONE
-        # 1. 생활 장면 카드 (실제 생활 + 붕괴 조건)
-        lifestyle_scene_v49 = f"""
-<b>■ 청년형 생활 장면 (붕괴 조건 포함)</b><br/>
-<br/>
-<b>✅ 정상 작동 조건:</b><br/>
-• 지하철역 {subway_dist}m (도보 7분) → 자가용 불필요<br/>
-• 편의점/카페 도보 5분 → 외식·배달 중심 생활<br/>
-• 1-2인 가구, 단기 거주 2-3년 → LH 회전율 관리 용이<br/>
-<br/>
-<b>🚨 붕괴 조건 (타 유형 선택 시):</b><br/>
-• <b>신혼부부형 선택 시:</b> 학교 거리 1.5km → 자녀 통학 불가 → 2년 후 이탈률 80%<br/>
-• <b>일반형 선택 시:</b> 주차 부족 (0.8대/세대) → 자가용 필수 가구 불만 급증<br/>
-• <b>고령자형 선택 시:</b> 병원 거리 1.2km → 도보 20분 이상 → 의료 접근성 리스크<br/>
-<br/>
-<b>→ 청년형 외 선택은 '적합하지 않음'이 아니라 '구조적으로 작동하지 않음'이다.</b><br/>
-"""
+        # ═══════════════════════════════════════════════════════════
+        # DECISION ZONE (35%)
+        # ═══════════════════════════════════════════════════════════
         
-        reason_style_m3 = ParagraphStyle(
-            'ReasonStyleM3',
-            parent=styles['Normal'],
-            fontName=self.font_name,
-            fontSize=12,
-            textColor=HexColor('#1F3A5F'),
-            leftIndent=20,
-            rightIndent=20,
-            spaceAfter=8,
-            leading=18
+        decision_elements = EnforcementLayoutV6.create_decision_zone(
+            conclusion_text="이 입지는 '청년형' 외 선택지가 구조적으로 성립하지 않는다",
+            key_metric="70%+",
+            metric_unit=" 붕괴 확률 (타 유형 선택 시)",
+            color=EnforcementLayoutV6.COLOR_RED
         )
         
-        story.append(Paragraph(lifestyle_scene, reason_style_m3))
+        for elem in decision_elements:
+            story.append(elem)
+        
+        # 의미 설명 (DECISION ZONE 내)
+        meaning_text = f"""
+본 대상지는 신혼·일반·고령자형을 고려할 수 있는 조건을 <b>부분적으로는 충족</b>하지만,
+<b>생활 동선·소비 패턴·시설 밀도 측면에서 지속 가능한 유형은 청년형으로 수렴된다.</b>
+<br/><br/>
+<font color="#E63946"><b>(이 결론은 선호의 문제가 아니라 구조의 결과다.)</b></font>
+"""
+        
+        meaning_style = ParagraphStyle(
+            'M3Meaning',
+            fontName=self.font_name,
+            fontSize=14,
+            textColor=HexColor('#1F3A5F'),
+            leading=20,
+            spaceBefore=5,
+            spaceAfter=15
+        )
+        
+        story.append(Paragraph(meaning_text, meaning_style))
         story.append(Spacer(1, 0.2*inch))
         
-        # 🔥 v4.9 REAL FINAL: 타 유형 배제표 (회색 처리)
-        other_type_exclusion_table_data = [
-            ['유형', '배제 이유', '붕괴 확률'],
-            ['신혼부부형', '학교 거리 1.5km → 통학 불가', '<b><font color="#DC2626">80%</font></b>'],
-            ['일반형', '주차 0.8대/세대 → 불만 급증', '<b><font color="#DC2626">75%</font></b>'],
-            ['고령자형', '병원 거리 1.2km → 의료 리스크', '<b><font color="#DC2626">85%</font></b>'],
-            ['<b>청년형 (선택안)</b>', '<b>역세권·단기·1-2인 최적</b>', '<b><font color="#16A34A">15%</font></b>']
+        # ═══════════════════════════════════════════════════════════
+        # EVIDENCE ZONE (35%)
+        # ═══════════════════════════════════════════════════════════
+        
+        # 1. 생활 장면 카드 (Lifestyle Scene Card)
+        lifestyle_card_data = {
+            "🚶 도보 10분 내 핵심 생활권 완결": "",
+            "☕ 소형 상업·카페·편의시설 밀집": "",
+            "🚇 대중교통 의존도 높음 / 차량 보유율 낮음": "",
+            "🕘 야간 활동 빈도 높음 (21~24시)": ""
+        }
+        
+        lifestyle_card = EnforcementLayoutV6.create_lifestyle_card(lifestyle_card_data)
+        
+        # Evidence conclusion (그래프 상단 필수)
+        evidence_conclusion = "이 입지의 생활 밀도는 청년형에만 유리하다"
+        
+        evidence_elements = [lifestyle_card]
+        
+        evidence_zone = EnforcementLayoutV6.create_evidence_zone(
+            evidence_elements=evidence_elements,
+            conclusion_above_evidence=evidence_conclusion
+        )
+        
+        for elem in evidence_zone:
+            story.append(elem)
+        
+        # 2. 다른 유형이 위험한 이유 (비교 표)
+        comparison_table_data = [
+            ['유형', '구조적 한계', '실패 가능성'],
+            ['신혼형', '보육·교육 인프라 불충분', '높음'],
+            ['일반형', '주차·면적 요구 충돌', '높음'],
+            ['고령자형', '보행 환경·의료 접근성 한계', '매우 높음'],
+            ['청년형 (선택)', '역세권·단기·1-2인 최적', '낮음']
         ]
         
-        other_type_exclusion_table = Table(other_type_exclusion_table_data, colWidths=[4*cm, 8*cm, 4*cm])
-        other_type_exclusion_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), HexColor('#1F3A5F')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), self.font_name_bold),
-            ('FONTSIZE', (0, 0), (-1, 0), 11),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -2), colors.HexColor('#F3F4F6')),  # 회색 처리
-            ('TEXTCOLOR', (0, 1), (-1, -2), colors.HexColor('#6B7280')),  # 회색 텍스트
-            ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#E8F5E9')),  # 청년형 강조
-            ('GRID', (0, 0), (-1, -1), 1, colors.grey)
-        ]))
-        story.append(other_type_exclusion_table)
-        story.append(Spacer(1, 0.25*inch))
+        comparison_table_conclusion = "타 유형은 구조적 붕괴 확률 70% 이상"
+        
+        comparison_elements = EnforcementLayoutV6.create_comparison_table_enforced(
+            table_data=comparison_table_data,
+            highlight_row=3,  # 청년형 강조
+            conclusion_text=comparison_table_conclusion
+        )
+        
+        for elem in comparison_elements:
+            story.append(elem)
+        
+        story.append(Spacer(1, 0.2*inch))
         
         # M3 선호유형 모델 정의
         m3_definition = """
@@ -3268,25 +3279,28 @@ M6에서 본 분석 결과를 바탕으로 '유형 적합성', '배후 수요', 
         story.append(Paragraph(disclaimer_lock, styles['Normal']))
         story.append(Spacer(1, 0.25*inch))
         
-        # 🔥 v4.9 REAL FINAL: 하단 30% - CHAIN ZONE (M3→M4 필연 연결)
-        m3_to_m4_chain_v49 = f"""
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
-<font size="22" color="#1F3A5F"><b>🔗 M3→M4 필연성 선언</b></font><br/>
-<br/>
-<font size="16" color="#DC2626"><b>이 생활 패턴은 규모가 어긋나는 순간 즉시 붕괴된다.</b></font><br/>
-<br/>
-<b>왜 M4가 필연적인가:</b><br/>
-<br/>
-• '{selected_name}' 생활 패턴 → <b>20-30세대 규모</b>만 지원 가능<br/>
-• 35세대 이상 → 주차 부족 (0.8대/세대 기준 초과) → 입주자 불만<br/>
-• 15세대 이하 → 관리비 상승 (규모의 경제 붕괴) → 사업성 악화<br/>
-<br/>
-<b>→ M4는 '최적'이 아니라 '유일한 선택지'를 제시한다.</b><br/>
-<br/>
-<b>M4 건축규모 분석은 세대수 극대화가 아니라, 붕괴 확률 최소화를 목표로 한다.</b><br/>
-<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b><br/>
+        # ═══════════════════════════════════════════════════════════
+        # CHAIN ZONE (30%) - M3→M4 필연 연결
+        # ═══════════════════════════════════════════════════════════
+        
+        chain_text = f"""
+<b>이 청년형 생활 패턴은 특정 세대 수 범위를 벗어나는 순간 즉시 붕괴된다.</b>
+<br/><br/>
+과소 규모에서는 커뮤니티·수익성이,<br/>
+과대 규모에서는 심사 안정성이 동시에 무너진다.
+<br/><br/>
+<font color="#E63946"><b>➡️ 따라서 다음 단계는 "얼마나 지을 것인가"가 아니라<br/>
+"어디까지가 안전한가"의 문제다.</b></font>
 """
-        story.append(Paragraph(m3_to_m4_chain_v49, styles['Normal']))
+        
+        chain_elements = EnforcementLayoutV6.create_chain_zone(
+            chain_text=chain_text,
+            next_module="M4 건축규모"
+        )
+        
+        for elem in chain_elements:
+            story.append(elem)
+        
         story.append(Spacer(1, 0.3*inch))
         
         # 7. 메타데이터
