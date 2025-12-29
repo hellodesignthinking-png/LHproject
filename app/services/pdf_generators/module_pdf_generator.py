@@ -47,7 +47,11 @@ matplotlib.use('Agg')  # Non-interactive backend
 # Import data contract validation system
 from .data_contract import (
     DataContract, 
-    ValidationResult, 
+    ValidationResult,
+
+# 🔥 v5.0 ENHANCED: Import new systems
+from .smart_data_fallback import SmartDataFallback
+from .enhanced_design_system import EnhancedDesignSystem, LayoutHelper 
     ContextSnapshot, 
     safe_get
 )
@@ -500,6 +504,11 @@ class ModulePDFGenerator:
         # ✅ STEP 2: Fail fast if M2 data is missing
         if not m2_data:
             raise ValueError("M2 데이터가 없습니다. M2 파이프라인을 먼저 실행하세요.")
+        
+        # 🔥 v5.0 ENHANCED: Apply Smart Fallback to eliminate N/A
+        address = m2_data.get('address', '') or m2_data.get('location', {}).get('address', '')
+        m2_data = SmartDataFallback.apply_smart_fallback(m2_data, address, module='M2')
+        logger.info(f"✅ Smart Fallback applied for M2")
         
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(
@@ -1924,6 +1933,11 @@ M4~M6 모듈의 분석을 뒷받침하는 <b>기초 데이터 엔진의 역할</
         if not m3_data:
             raise ValueError("M3 데이터가 없습니다. M3 파이프라인을 먼저 실행하세요.")
         
+        # 🔥 v5.0 ENHANCED: Apply Smart Fallback
+        address = m3_data.get('address', '') or m3_data.get('location', {}).get('address', '')
+        m3_data = SmartDataFallback.apply_smart_fallback(m3_data, address, module='M3')
+        logger.info(f"✅ Smart Fallback applied for M3")
+        
         # For backwards compatibility, keep data reference
         data = m3_data
         
@@ -3308,6 +3322,11 @@ M6에서 본 분석 결과를 바탕으로 '유형 적합성', '배후 수요', 
         if not m4_data:
             raise ValueError("M4 데이터가 없습니다. M4 파이프라인을 먼저 실행하세요.")
         
+        # 🔥 v5.0 ENHANCED: Apply Smart Fallback
+        address = m4_data.get('address', '') or m4_data.get('site', {}).get('address', '')
+        m4_data = SmartDataFallback.apply_smart_fallback(m4_data, address, module='M4')
+        logger.info(f"✅ Smart Fallback applied for M4")
+        
         # For backwards compatibility, keep data reference
         data = m4_data
         
@@ -4474,6 +4493,11 @@ M6 LH 심사 Hard Fail 회피를 위한 전략적 선택이다.</b><br/>
         
         if not m5_data:
             raise ValueError("M5 데이터가 없습니다. M5 파이프라인을 먼저 실행하세요.")
+        
+        # 🔥 v5.0 ENHANCED: Apply Smart Fallback
+        address = m5_data.get('address', '')
+        m5_data = SmartDataFallback.apply_smart_fallback(m5_data, address, module='M5')
+        logger.info(f"✅ Smart Fallback applied for M5")
         
         # For backwards compatibility, keep data reference
         data = m5_data
