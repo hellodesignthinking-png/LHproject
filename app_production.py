@@ -497,7 +497,7 @@ async def get_demo(demo_name: str):
     """
     # Special handling for M2 Classic
     if demo_name == "m2_classic":
-        filepath = "/home/user/webapp/generated_reports/M2_Classic_Format_Updated.html"
+        filepath = "/home/user/webapp/generated_reports/M2_Classic_FINAL.html"
     else:
         filepath = f"/home/user/webapp/generated_reports/demo_{demo_name}.html"
     

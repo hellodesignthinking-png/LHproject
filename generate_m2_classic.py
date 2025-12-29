@@ -141,15 +141,18 @@ class M2ClassicAppraisalGenerator:
         income_approach_value = annual_net_income / capitalization_rate if capitalization_rate > 0 else 0
         income_price_per_sqm = income_approach_value / land_area_sqm if land_area_sqm > 0 else 0
         
-        # Final valuation
-        official_weight = 0.30
-        transaction_weight = 0.50
-        income_weight = 0.20
+        # Final valuation - Market Value Based (시가 기준)
+        # Transaction Comparison (PRIMARY): 50%
+        # Income Approach (SECONDARY): 30%
+        # Official Land Price (REFERENCE): 20%
+        transaction_weight = 0.50  # Market transaction is PRIMARY
+        income_weight = 0.30       # Income potential is SECONDARY
+        official_weight = 0.20     # Official price is REFERENCE only
         
         total_value = (
-            official_land_value * official_weight +
             transaction_based_value * transaction_weight +
-            income_approach_value * income_weight
+            income_approach_value * income_weight +
+            official_land_value * official_weight
         )
         price_per_sqm = total_value / land_area_sqm if land_area_sqm > 0 else 0
         price_per_pyeong = price_per_sqm * 3.3058
@@ -202,7 +205,7 @@ class M2ClassicAppraisalGenerator:
             'data_quality': data_quality,
             'price_range_min': price_range_min,
             'price_range_max': price_range_max,
-            'appraisal_opinion': f"본 토지는 {zone_type}에 위치하며, {transaction_count}건의 거래사례와 개별공시지가, 수익환원법을 종합하여 평가한 결과 ㎡당 {price_per_sqm:,.0f}원으로 산정되었습니다."
+            'appraisal_opinion': f"본 토지는 {zone_type}에 위치하며, 인근 {transaction_count}건의 실거래 사례를 중심으로 시장가치를 판단하였습니다. 거래사례 비교분석을 주된 근거로 하고, 수익환원법으로 개발가치를 보완하였으며, 개별공시지가는 합리성 검증을 위한 참고자료로 활용하였습니다. 종합적인 시장분석 결과, 대상 토지의 시장가치는 ㎡당 {price_per_sqm:,.0f}원으로 판단됩니다."
         }
         
         # Render template
