@@ -488,9 +488,10 @@ async def get_demo(demo_name: str):
     - gangnam_youth: 강남 청년주택 (121세대, 30주차)
     - mapo_newlywed: 마포 신혼부부주택 (194세대, 60주차)
     - m2_classic: M2 토지감정평가 보고서 (Classic Format)
+    - m3_supply_type: M3 공급 유형 판단 보고서
     
     Args:
-        demo_name: Name of the demo (gangnam_youth, mapo_newlywed, m2_classic)
+        demo_name: Name of the demo (gangnam_youth, mapo_newlywed, m2_classic, m3_supply_type)
         
     Returns:
         HTML demo report
@@ -498,6 +499,9 @@ async def get_demo(demo_name: str):
     # Special handling for M2 Classic - REAL APPRAISAL STANDARD
     if demo_name == "m2_classic":
         filepath = "/home/user/webapp/generated_reports/M2_Classic_REAL_APPRAISAL_STANDARD.html"
+    # Special handling for M3 Supply Type
+    elif demo_name == "m3_supply_type":
+        filepath = "/home/user/webapp/generated_reports/M3_SupplyType_FINAL.html"
     else:
         filepath = f"/home/user/webapp/generated_reports/demo_{demo_name}.html"
     
@@ -505,7 +509,7 @@ async def get_demo(demo_name: str):
         logger.warning(f"⚠️  Demo not found: {demo_name}")
         raise HTTPException(
             status_code=404,
-            detail=f"Demo not found. Available: gangnam_youth, mapo_newlywed, m2_classic"
+            detail=f"Demo not found. Available: gangnam_youth, mapo_newlywed, m2_classic, m3_supply_type"
         )
     
     logger.info(f"📄 Serving demo: {demo_name}")
