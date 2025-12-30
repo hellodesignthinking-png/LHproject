@@ -162,6 +162,60 @@ async def download_module_pdf(
         )
 
 
+def _convert_pipeline_result_to_module_data(pipeline_result, module: str) -> dict:
+    """
+    Convert PipelineResult to module-specific test_data format
+    
+    어제(12-29) 버전의 풍부한 데이터 구조를 유지합니다!
+    """
+    if module == "M2":
+        appraisal = pipeline_result.appraisal
+        return {
+            "appraisal": {
+                "land_value": appraisal.land_value_total_krw if hasattr(appraisal, 'land_value_total_krw') else 0,
+                "unit_price_sqm": appraisal.unit_price_per_sqm if hasattr(appraisal, 'unit_price_per_sqm') else 0,
+                "unit_price_pyeong": appraisal.unit_price_per_pyeong if hasattr(appraisal, 'unit_price_per_pyeong') else 0
+            },
+            "official_price": {
+                "total": appraisal.official_land_price_total if hasattr(appraisal, 'official_land_price_total') else 0,
+                "per_sqm": appraisal.official_price_per_sqm if hasattr(appraisal, 'official_price_per_sqm') else 0
+            },
+            "transactions": {
+                "count": len(appraisal.comparable_transactions) if hasattr(appraisal, 'comparable_transactions') else 0,
+                "avg_price_sqm": appraisal.unit_price_per_sqm if hasattr(appraisal, 'unit_price_per_sqm') else 0
+            },
+            "confidence": {
+                "score": appraisal.confidence_score if hasattr(appraisal, 'confidence_score') else 0.8
+            }
+        }
+    elif module == "M3":
+        demand = pipeline_result.demand
+        return {
+            "recommended_type": demand.recommended_type if hasattr(demand, 'recommended_type') else "신혼부부",
+            "demand_score": demand.demand_score if hasattr(demand, 'demand_score') else 0.75
+        }
+    elif module == "M4":
+        capacity = pipeline_result.capacity
+        return {
+            "legal_units": capacity.legal_capacity.total_units if hasattr(capacity.legal_capacity, 'total_units') else 0,
+            "incentive_units": capacity.incentive_capacity.total_units if hasattr(capacity.incentive_capacity, 'total_units') else 0
+        }
+    elif module == "M5":
+        feasibility = pipeline_result.feasibility
+        return {
+            "decision": feasibility.decision if hasattr(feasibility, 'decision') else "GO",
+            "total_score": feasibility.total_score if hasattr(feasibility, 'total_score') else 75
+        }
+    elif module == "M6":
+        lh_review = pipeline_result.lh_review
+        return {
+            "final_decision": lh_review.decision if hasattr(lh_review, 'decision') else "승인",
+            "total_score": lh_review.total_score if hasattr(lh_review, 'total_score') else 85
+        }
+    else:
+        return {}
+
+
 def _get_test_data_for_module(module: str, context_id: str) -> dict:
     """테스트용 데이터 생성 (실제로는 DB에서 조회)"""
     
@@ -303,11 +357,44 @@ async def preview_module_html(
     
     PDF 다운로드 전 브라우저에서 내용을 확인할 수 있습니다.
     """
+    return await _generate_module_html(module, context_id)
+
+
+@router.get("/module/{module_id}/html", response_class=HTMLResponse, summary="모듈 HTML 미리보기 (Alternative Path)")
+async def preview_module_html_alt(
+    module_id: Literal["M2", "M3", "M4", "M5", "M6"],
+    context_id: str = Query(..., description="컨텍스트 ID"),
+):
+    """
+    모듈별 HTML 보고서 미리보기 (Alternative Path for compatibility)
+    
+    Same as /{module}/html but with /module/ prefix for backward compatibility
+    """
+    return await _generate_module_html(module_id, context_id)
+
+
+async def _generate_module_html(module: str, context_id: str):
+    """
+    Internal function to generate module HTML
+    """
     try:
         logger.info(f"📄 HTML 미리보기 요청: module={module}, context_id={context_id}")
         
-        # 테스트 데이터 생성 (실제로는 DB에서 조회)
-        test_data = _get_test_data_for_module(module, context_id)
+        # ✅ Load real pipeline results from cache
+        from app.api.endpoints.pipeline_reports_v4 import results_cache
+        
+        if context_id not in results_cache:
+            logger.error(f"❌ No pipeline results for context_id={context_id}")
+            raise HTTPException(
+                status_code=404,
+                detail=f"Pipeline 결과를 찾을 수 없습니다: {context_id}"
+            )
+        
+        pipeline_result = results_cache[context_id]
+        logger.info(f"✅ Found pipeline results for context_id={context_id}")
+        
+        # Convert pipeline result to test_data format
+        test_data = _convert_pipeline_result_to_module_data(pipeline_result, module)
         
         if not test_data:
             raise HTTPException(
