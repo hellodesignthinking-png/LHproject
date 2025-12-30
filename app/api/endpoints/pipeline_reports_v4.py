@@ -406,8 +406,15 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
         logger.info(f"🚀 Running 6-MODULE pipeline for {request.parcel_id}")
         result = pipeline.run(request.parcel_id)
         
-        # Cache results
+        # Cache results with BOTH keys for compatibility
+        # Key 1: request.parcel_id (for pipeline lookup)
         results_cache[request.parcel_id] = result
+        
+        # Key 2: result.land.parcel_id (for HTML/PDF report lookup)
+        # This ensures context_id in URLs matches the cache key
+        if hasattr(result, 'land') and hasattr(result.land, 'parcel_id'):
+            results_cache[result.land.parcel_id] = result
+            logger.info(f"✅ Cached with both keys: {request.parcel_id} and {result.land.parcel_id}")
         
         # Calculate execution time
         execution_time_ms = (time.time() - start_time) * 1000
