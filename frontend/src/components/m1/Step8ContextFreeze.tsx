@@ -103,8 +103,13 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
   };
 
   const startAnalysis = async () => {
+    console.log('🚀🚀🚀 [Step8] startAnalysis CALLED! 🚀🚀🚀');
+    console.log('🔍 [Step8] onComplete callback exists?', !!onComplete);
+    console.log('🔍 [Step8] formData:', formData);
+    
     try {
       setLoading(true);
+      console.log('⏳ [Step8] Loading set to true');
       
       // V2 API 호출 (6-category structure)
       // CRITICAL FIX: Use coordinates from geocodeData first, fallback to selectedAddress
@@ -220,6 +225,9 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
 
       const data = await response.json();
       console.log('📥 [Step8] Backend response:', data);
+      console.log('🔍 [Step8] onComplete callback provided?', !!onComplete);
+      console.log('🔍 [Step8] context_id:', data.context_id);
+      console.log('🔍 [Step8] parcel_id:', data.parcel_id);
       
       // 🔥 CRITICAL FIX: Call onComplete callback BEFORE setting result
       // This ensures PipelineOrchestrator receives notification immediately
@@ -227,15 +235,19 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
         console.log('✅ [Step8] Context frozen, calling onComplete callback');
         console.log('📦 [Step8] Context ID:', data.context_id);
         console.log('📦 [Step8] Parcel ID:', data.parcel_id);
-        console.log('📞 [Step8] Calling onComplete...');
+        console.log('📞 [Step8] Calling onComplete NOW...');
         
-        // Call onComplete first to trigger pipeline
-        onComplete({
-          context_id: data.context_id,
-          parcel_id: data.parcel_id
-        });
+        try {
+          // Call onComplete first to trigger pipeline
+          onComplete({
+            context_id: data.context_id,
+            parcel_id: data.parcel_id
+          });
+          console.log('✅ [Step8] onComplete called successfully!');
+        } catch (callbackError) {
+          console.error('❌ [Step8] onComplete callback threw error:', callbackError);
+        }
         
-        console.log('✅ [Step8] onComplete called successfully');
       } else {
         console.warn('⚠️ [Step8] onComplete callback not provided or data incomplete');
         console.log('🔍 [Step8] Debug - onComplete:', !!onComplete);
