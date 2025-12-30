@@ -380,15 +380,15 @@ async def _generate_module_html(module: str, context_id: str):
     try:
         logger.info(f"📄 HTML 미리보기 요청: module={module}, context_id={context_id}")
         
-        # 🚫 UUID 차단 - context_id는 반드시 parcel_id(PNU)여야 함
-        if "-" in context_id:
+        # 🚫 UUID 차단 - context_id는 반드시 parcel_id(PNU) 또는 RUN_* 형식이어야 함
+        if "-" in context_id and not context_id.startswith("RUN_"):
             logger.critical(f"❌ INVALID CONTEXT_ID (UUID detected): {context_id}")
-            logger.critical(f"   Frontend is sending UUID instead of parcel_id(PNU)")
-            logger.critical(f"   Fix frontend code to use analysisId (parcel_id) only!")
+            logger.critical(f"   Frontend is sending UUID instead of parcel_id(PNU) or run_id")
+            logger.critical(f"   Fix frontend code to use analysisId (run_id or parcel_id) only!")
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid context_id format. Expected parcel_id (PNU number), got UUID: {context_id}. "
-                       f"Frontend must use analysisId (parcel_id) for reports, not contextId."
+                detail=f"Invalid context_id format. Expected run_id (RUN_*) or parcel_id (PNU number), got UUID: {context_id}. "
+                       f"Frontend must use analysisId from pipeline response for reports."
             )
         
         # ✅ Load real pipeline results from cache

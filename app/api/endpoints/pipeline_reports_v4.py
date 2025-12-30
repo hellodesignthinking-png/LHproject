@@ -198,14 +198,26 @@ class HealthCheckResponse(BaseModel):
 # Helper Functions
 # ============================================================================
 
-def generate_analysis_id(parcel_id: str) -> str:
-    """Generate unique analysis ID"""
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    short_uuid = str(uuid.uuid4())[:8]
-    return f"analysis_{parcel_id}_{timestamp}_{short_uuid}"
+def generate_run_id(parcel_id: str) -> str:
+    """
+    Generate unique RUN_ID for each pipeline execution
+    
+    🔥 CRITICAL: This ensures each pipeline run is uniquely identifiable
+    Format: RUN_{parcel_id}_{timestamp_ms}
+    
+    Why milliseconds?
+    - Prevents collisions from rapid re-runs
+    - Allows precise ordering of runs
+    - Makes reports traceable to exact execution
+    
+    Returns:
+        str: Unique run ID (e.g., "RUN_116801010001230045_1735518123456")
+    """
+    timestamp_ms = int(time.time() * 1000)
+    return f"RUN_{parcel_id}_{timestamp_ms}"
 
 
-def pipeline_result_to_dict(result: PipelineResult, request_parcel_id: str = None) -> Dict[str, Any]:
+def pipeline_result_to_dict(result: PipelineResult, request_parcel_id: str = None, run_id: str = None) -> Dict[str, Any]:
     """Convert PipelineResult to dictionary with canonical data contract
     
     🔥 CRITICAL: 모든 모듈은 summary + details 구조로 변환
@@ -215,6 +227,7 @@ def pipeline_result_to_dict(result: PipelineResult, request_parcel_id: str = Non
     Args:
         result: PipelineResult object
         request_parcel_id: Fallback parcel_id from request (optional)
+        run_id: Unique run identifier for report URLs (optional but recommended)
     """
     
     # 🔥 Get parcel_id with fallback chain
@@ -317,10 +330,11 @@ def pipeline_result_to_dict(result: PipelineResult, request_parcel_id: str = Non
     m6_canonical = convert_m6_to_standard(m6_raw, parcel_id)
     
     # 🔥 FIX: Add html_preview_url and pdf_download_url to each module
-    # Use parcel_id determined above (with fallback chain)
-    context_id = parcel_id
+    # Use run_id (if provided) for unique execution tracking, fallback to parcel_id
+    context_id = run_id if run_id else parcel_id
     print(f"\n🔍 IMPORTANT: Setting context_id for URLs: {context_id}")
-    print(f"   This should match the cache keys: {parcel_id}\n")
+    print(f"   Using run_id: {run_id is not None}")
+    print(f"   Parcel ID: {parcel_id}\n")
     
     # Add URLs to each module's response
     m2_dict = m2_canonical.dict()
@@ -449,50 +463,26 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
         result = pipeline.run(request.parcel_id)
         print(f"🔥 Step 5: Pipeline execution completed!")
         
-        # Cache results with BOTH keys for compatibility
-        # Key 1: request.parcel_id (for pipeline lookup)
-        print(f"🔥 Step 6: Caching result with key 1: {request.parcel_id}")
-        results_cache[request.parcel_id] = result  # 🔥 Always overwrite (latest wins)
+        # 🔥 CRITICAL: Generate unique run_id for this execution
+        run_id = generate_run_id(request.parcel_id)
+        print(f"🔥 Generated run_id: {run_id}")
+        logger.info(f"🆔 Generated run_id: {run_id}")
         
-        # 🔥 NEW: Store metadata for freshness tracking
-        results_meta[request.parcel_id] = {
+        # Cache results with run_id as primary key
+        results_cache[run_id] = result  # 🔥 Primary key: run_id
+        
+        # 🔥 Store metadata for freshness tracking
+        results_meta[run_id] = {
+            "run_id": run_id,
+            "parcel_id": request.parcel_id,
             "generated_at": datetime.now(),
             "pipeline_version": "v6.5",
-            "source": "pipeline_execute",
-            "parcel_id": request.parcel_id
+            "source": "pipeline_execute"
         }
         
-        print(f"✅ Step 6 complete: Cached with key 1")
-        logger.info(f"✅ Cached with key 1: {request.parcel_id} at {results_meta[request.parcel_id]['generated_at']}")
-        logger.info(f"📅 Cache freshness: {results_meta[request.parcel_id]}")
-        
-        # Key 2: result.land.parcel_id (for HTML/PDF report lookup)
-        # This ensures context_id in URLs matches the cache key
-        print(f"🔥 Step 7: Checking if result has 'land' attribute...")
-        print(f"   result has 'land'? {hasattr(result, 'land')}")
-        logger.info(f"🔍 DEBUG: result has 'land'? {hasattr(result, 'land')}")
-        if hasattr(result, 'land'):
-            print(f"   result.land type: {type(result.land)}")
-            print(f"   result.land has 'parcel_id'? {hasattr(result.land, 'parcel_id')}")
-            logger.info(f"🔍 DEBUG: result.land type: {type(result.land)}")
-            logger.info(f"🔍 DEBUG: result.land has 'parcel_id'? {hasattr(result.land, 'parcel_id')}")
-            if hasattr(result.land, 'parcel_id'):
-                land_parcel_id = result.land.parcel_id
-                print(f"   result.land.parcel_id = {land_parcel_id}")
-                logger.info(f"🔍 DEBUG: result.land.parcel_id = {land_parcel_id}")
-                results_cache[land_parcel_id] = result  # 🔥 Always overwrite
-                
-                # 🔥 NEW: Sync metadata to second key
-                results_meta[land_parcel_id] = results_meta[request.parcel_id].copy()
-                
-                print(f"✅ Cached with BOTH keys: {request.parcel_id} and {land_parcel_id}")
-                logger.info(f"✅ Cached with both keys: {request.parcel_id} and {land_parcel_id}")
-            else:
-                print(f"⚠️ result.land exists but has NO parcel_id attribute!")
-                logger.warning(f"⚠️ result.land exists but has no parcel_id attribute!")
-        else:
-            print(f"⚠️ result has NO 'land' attribute! Using only request.parcel_id")
-            logger.warning(f"⚠️ result has no 'land' attribute! Using only request.parcel_id as cache key")
+        print(f"✅ Cached with run_id: {run_id}")
+        logger.info(f"✅ Cached with run_id: {run_id} at {results_meta[run_id]['generated_at']}")
+        logger.info(f"📅 Run metadata: {results_meta[run_id]}")
         
         # Calculate execution time
         execution_time_ms = (time.time() - start_time) * 1000
@@ -509,15 +499,15 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
         schematics_available = bool(capacity_v2.schematic_drawing_paths) if hasattr(capacity_v2, 'schematic_drawing_paths') else False
         
         # Build response
-        # 🚨 CRITICAL: analysis_id MUST be parcel_id (PNU) for report URLs
-        # DO NOT generate "analysis_*" strings - they break report URL matching
+        # 🚨 CRITICAL: Use run_id as analysis_id for unique execution tracking
+        # This ensures reports always load the correct (latest) run result
         response = PipelineAnalysisResponse(
             parcel_id=request.parcel_id,
-            analysis_id=request.parcel_id,  # ✅ Use PNU directly, NOT generate_analysis_id()
+            analysis_id=run_id,  # ✅ Use run_id to ensure freshness
             status="success" if result.success else "failed",
             execution_time_ms=execution_time_ms,
             modules_executed=6,
-            results=pipeline_result_to_dict(result, request.parcel_id),
+            results=pipeline_result_to_dict(result, request.parcel_id, run_id),  # Pass run_id
             land_value=result.appraisal.land_value,
             confidence_score=result.appraisal.confidence_metrics.confidence_score,
             selected_housing_type=result.housing_type.selected_type,
