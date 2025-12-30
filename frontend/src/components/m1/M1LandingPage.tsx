@@ -188,7 +188,12 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
       });
       
       console.log('✅ [M1Landing] Auto geocode complete, jumping to Step 2.5');
-      goToStep(2.5); // Skip Step2, go directly to Data Collection Method
+      
+      // 🔥 CRITICAL FIX: In Pipeline mode, also auto-select API collection method
+      setCollectionMethod('api');
+      console.log('🚀 [M1Landing] Pipeline mode - auto-selecting API collection method');
+      console.log('✅ [M1Landing] Collection method set to API, jumping to Step 3');
+      goToStep(3); // Skip Step2.5 as well, go directly to ReviewScreen
     } else {
       goToStep(2); // Normal flow for standalone mode
     }
