@@ -1235,6 +1235,7 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
   contextId, // ✅ ADD
   keyMetrics 
 }) => {
+  const [expanded, setExpanded] = React.useState(false);
   const handleDownloadPDF = async () => {
     try {
       console.log(`📄 [PDF DOWNLOAD] Starting download for ${moduleId}...`);
@@ -1408,13 +1409,122 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
         ))}
       </div>
       
-      {/* Download and Preview Buttons */}
-      <div style={{ display: 'flex', gap: '8px' }}>
+      {/* Detailed Report Section (Expandable) */}
+      {expanded && data && (
+        <div style={{
+          marginTop: '20px',
+          padding: '20px',
+          background: 'white',
+          border: '1px solid #ddd',
+          borderRadius: '8px',
+          maxHeight: '600px',
+          overflowY: 'auto'
+        }}>
+          <h4 style={{ marginTop: 0, marginBottom: '15px', color: '#333' }}>📊 상세 분석 결과</h4>
+          
+          {/* Summary Section */}
+          {data.summary && (
+            <div style={{ marginBottom: '20px' }}>
+              <h5 style={{ color: '#555', marginBottom: '10px' }}>📋 요약</h5>
+              <div style={{ background: '#f5f5f5', padding: '15px', borderRadius: '6px' }}>
+                {Object.entries(data.summary).map(([key, value]: [string, any]) => (
+                  <div key={key} style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#666', fontSize: '13px' }}>{key}:</span>
+                    <span style={{ fontWeight: 'bold', fontSize: '13px' }}>
+                      {typeof value === 'number' ? value.toLocaleString() : String(value)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Details Section */}
+          {data.details && (
+            <div style={{ marginBottom: '20px' }}>
+              <h5 style={{ color: '#555', marginBottom: '10px' }}>🔍 세부 정보</h5>
+              <div style={{ background: '#f9f9f9', padding: '15px', borderRadius: '6px' }}>
+                {Object.entries(data.details).map(([category, content]: [string, any]) => (
+                  <div key={category} style={{ marginBottom: '15px' }}>
+                    <div style={{ fontWeight: 'bold', color: '#333', marginBottom: '8px', fontSize: '14px' }}>
+                      {category}
+                    </div>
+                    {typeof content === 'object' && content !== null ? (
+                      <div style={{ paddingLeft: '15px', fontSize: '13px' }}>
+                        {Object.entries(content).map(([key, value]: [string, any]) => (
+                          <div key={key} style={{ marginBottom: '5px', color: '#666' }}>
+                            <span style={{ color: '#888' }}>{key}:</span>{' '}
+                            <span style={{ color: '#333' }}>
+                              {typeof value === 'number' ? value.toLocaleString() : 
+                               typeof value === 'object' ? JSON.stringify(value, null, 2) : 
+                               String(value)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ paddingLeft: '15px', color: '#666', fontSize: '13px' }}>
+                        {String(content)}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Raw Data (for debugging) */}
+          {process.env.NODE_ENV === 'development' && (
+            <details style={{ marginTop: '15px' }}>
+              <summary style={{ cursor: 'pointer', color: '#999', fontSize: '12px' }}>🔧 디버그: Raw Data</summary>
+              <pre style={{ 
+                background: '#f0f0f0', 
+                padding: '10px', 
+                borderRadius: '4px', 
+                fontSize: '11px',
+                maxHeight: '300px',
+                overflowY: 'auto'
+              }}>
+                {JSON.stringify(data, null, 2)}
+              </pre>
+            </details>
+          )}
+        </div>
+      )}
+      
+      {/* Action Buttons */}
+      <div style={{ display: 'flex', gap: '8px', marginTop: '15px' }}>
+        {/* Toggle Detailed View Button */}
+        <button
+          onClick={() => setExpanded(!expanded)}
+          style={{
+            flex: 1,
+            padding: '10px',
+            background: expanded ? '#FF9800' : '#4CAF50',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            fontSize: '13px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.background = expanded ? '#F57C00' : '#388E3C'}
+          onMouseOut={(e) => e.currentTarget.style.background = expanded ? '#FF9800' : '#4CAF50'}
+        >
+          <span>{expanded ? '🔼' : '🔽'}</span>
+          <span>{expanded ? '상세 보고서 닫기' : '상세 보고서 보기'}</span>
+        </button>
+        
+        {/* Open HTML Report in New Tab */}
         <button
           onClick={() => {
-            // 🔥 NEW: Open HTML report directly (REAL APPRAISAL STANDARD format)
             const backendUrl = BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai';
             const htmlUrl = `${backendUrl}/api/v4/pipeline/reports/module/${moduleId}/html?context_id=${contextId}`;
+            console.log(`📄 [HTML REPORT] Opening: ${htmlUrl}`);
             window.open(htmlUrl, '_blank');
           }}
           style={{
@@ -1436,12 +1546,12 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
           onMouseOut={(e) => e.currentTarget.style.background = '#2196F3'}
         >
           <span>📄</span>
-          <span>보고서 열기 (Ctrl+P로 PDF 저장)</span>
+          <span>새 탭에서 열기</span>
         </button>
       </div>
       
       <div style={{ fontSize: '11px', color: '#999', marginTop: '8px', textAlign: 'center' }}>
-        💡 Tip: 보고서 열린 후 Ctrl+P → "PDF로 저장" → "배경 그래픽 켜기"
+        💡 Tip: 새 탭 보고서에서 Ctrl+P → "PDF로 저장" → "배경 그래픽 켜기"
       </div>
     </div>
   );
