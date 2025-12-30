@@ -65,6 +65,9 @@ pipeline = ZeroSitePipeline()
 # In-memory cache for pipeline results (replace with Redis in production)
 results_cache: Dict[str, PipelineResult] = {}
 
+# 🔥 NEW: Cache metadata for tracking freshness
+results_meta: Dict[str, Dict[str, Any]] = {}
+
 
 # ============================================================================
 # Request/Response Models
@@ -449,9 +452,19 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
         # Cache results with BOTH keys for compatibility
         # Key 1: request.parcel_id (for pipeline lookup)
         print(f"🔥 Step 6: Caching result with key 1: {request.parcel_id}")
-        results_cache[request.parcel_id] = result
+        results_cache[request.parcel_id] = result  # 🔥 Always overwrite (latest wins)
+        
+        # 🔥 NEW: Store metadata for freshness tracking
+        results_meta[request.parcel_id] = {
+            "generated_at": datetime.now(),
+            "pipeline_version": "v6.5",
+            "source": "pipeline_execute",
+            "parcel_id": request.parcel_id
+        }
+        
         print(f"✅ Step 6 complete: Cached with key 1")
-        logger.info(f"✅ Cached with key 1: {request.parcel_id}")
+        logger.info(f"✅ Cached with key 1: {request.parcel_id} at {results_meta[request.parcel_id]['generated_at']}")
+        logger.info(f"📅 Cache freshness: {results_meta[request.parcel_id]}")
         
         # Key 2: result.land.parcel_id (for HTML/PDF report lookup)
         # This ensures context_id in URLs matches the cache key
@@ -467,7 +480,11 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
                 land_parcel_id = result.land.parcel_id
                 print(f"   result.land.parcel_id = {land_parcel_id}")
                 logger.info(f"🔍 DEBUG: result.land.parcel_id = {land_parcel_id}")
-                results_cache[land_parcel_id] = result
+                results_cache[land_parcel_id] = result  # 🔥 Always overwrite
+                
+                # 🔥 NEW: Sync metadata to second key
+                results_meta[land_parcel_id] = results_meta[request.parcel_id].copy()
+                
                 print(f"✅ Cached with BOTH keys: {request.parcel_id} and {land_parcel_id}")
                 logger.info(f"✅ Cached with both keys: {request.parcel_id} and {land_parcel_id}")
             else:

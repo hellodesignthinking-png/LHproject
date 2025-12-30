@@ -392,7 +392,7 @@ async def _generate_module_html(module: str, context_id: str):
             )
         
         # ✅ Load real pipeline results from cache
-        from app.api.endpoints.pipeline_reports_v4 import results_cache
+        from app.api.endpoints.pipeline_reports_v4 import results_cache, results_meta
         
         if context_id not in results_cache:
             logger.error(f"❌ No pipeline results for parcel_id={context_id}")
@@ -405,6 +405,20 @@ async def _generate_module_html(module: str, context_id: str):
         
         pipeline_result = results_cache[context_id]
         logger.info(f"✅ Found pipeline results for context_id={context_id}")
+        
+        # 🔥 NEW: Log cache freshness
+        meta = results_meta.get(context_id)
+        if meta:
+            logger.info(f"""
+📅 [REPORT GENERATION - Cache Metadata]
+   parcel_id: {context_id}
+   generated_at: {meta['generated_at']}
+   pipeline_version: {meta['pipeline_version']}
+   source: {meta['source']}
+   age: {(datetime.now() - meta['generated_at']).total_seconds():.1f}s
+""")
+        else:
+            logger.warning(f"⚠️ No metadata found for parcel_id={context_id} (old cache entry?)")
         
         # Convert pipeline result to test_data format
         test_data = _convert_pipeline_result_to_module_data(pipeline_result, module)
