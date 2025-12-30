@@ -419,7 +419,7 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
             
             return PipelineAnalysisResponse(
                 parcel_id=request.parcel_id,
-                analysis_id=f"cached_{request.parcel_id}",
+                analysis_id=request.parcel_id,  # ✅ Use PNU directly, NOT "cached_*"
                 status="success",
                 execution_time_ms=0,
                 modules_executed=6,
@@ -492,9 +492,11 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
         schematics_available = bool(capacity_v2.schematic_drawing_paths) if hasattr(capacity_v2, 'schematic_drawing_paths') else False
         
         # Build response
+        # 🚨 CRITICAL: analysis_id MUST be parcel_id (PNU) for report URLs
+        # DO NOT generate "analysis_*" strings - they break report URL matching
         response = PipelineAnalysisResponse(
             parcel_id=request.parcel_id,
-            analysis_id=generate_analysis_id(request.parcel_id),
+            analysis_id=request.parcel_id,  # ✅ Use PNU directly, NOT generate_analysis_id()
             status="success" if result.success else "failed",
             execution_time_ms=execution_time_ms,
             modules_executed=6,
