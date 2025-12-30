@@ -162,7 +162,36 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
         },
       },
     });
-    goToStep(2);
+    
+    // 🔥 CRITICAL FIX: In Pipeline mode, skip Step2 (auto-populate geocode)
+    if (isPipelineMode && address.coordinates) {
+      console.log('🚀 [M1Landing] Pipeline mode - auto-populating geocode data');
+      const autoGeocodeData = {
+        coordinates: address.coordinates,
+        sido: address.sido,
+        sigungu: address.sigungu,
+        dong: address.dong,
+        beopjeong_dong: address.dong,
+        success: true
+      };
+      
+      updateFormData({
+        geocodeData: autoGeocodeData,
+        dataSources: {
+          ...state.formData.dataSources,
+          geocode: {
+            source: 'api',
+            apiName: 'Kakao Geocoding API (auto)',
+            timestamp: new Date().toISOString(),
+          },
+        },
+      });
+      
+      console.log('✅ [M1Landing] Auto geocode complete, jumping to Step 2.5');
+      goToStep(2.5); // Skip Step2, go directly to Data Collection Method
+    } else {
+      goToStep(2); // Normal flow for standalone mode
+    }
   };
 
   const handleStep2Next = (geocodeData: any) => {
