@@ -193,7 +193,38 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
       setCollectionMethod('api');
       console.log('🚀 [M1Landing] Pipeline mode - auto-selecting API collection method');
       console.log('✅ [M1Landing] Collection method set to API, jumping to Step 3');
-      goToStep(3); // Skip Step2.5 as well, go directly to ReviewScreen
+      
+      // 🔥 ULTRA FIX: In Pipeline mode, skip ReviewScreen (Step3) entirely
+      // Go directly to Step4 (Context Freeze) with minimal required data
+      console.log('🚀 [M1Landing] Pipeline mode - skipping ReviewScreen, jumping to Step 4');
+      
+      // Prepare minimal formData for Step4
+      updateFormData({
+        geocodeData: autoGeocodeData,
+        cadastralData: {
+          bonbun: address.bonbun || '',
+          bubun: address.bubun || '0',
+          area: 0, // Will be filled in Step4 or use mock
+          jimok: '대', // Default
+        } as any,
+        landUseData: {
+          zone_type: '제2종일반주거지역', // Default
+          land_use: '주거용',
+          far: 200,
+          bcr: 60,
+        } as any,
+        roadInfoData: {
+          road_width: 12,
+          road_type: '일반도로',
+        } as any,
+        marketData: {
+          official_land_price: null,
+          transactions: [],
+        } as any,
+      });
+      
+      console.log('✅ [M1Landing] Minimal formData prepared, jumping to Step 4');
+      goToStep(4); // Skip Step3, go directly to Context Freeze
     } else {
       goToStep(2); // Normal flow for standalone mode
     }
