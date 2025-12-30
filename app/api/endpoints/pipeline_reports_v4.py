@@ -202,21 +202,35 @@ def generate_analysis_id(parcel_id: str) -> str:
     return f"analysis_{parcel_id}_{timestamp}_{short_uuid}"
 
 
-def pipeline_result_to_dict(result: PipelineResult) -> Dict[str, Any]:
+def pipeline_result_to_dict(result: PipelineResult, request_parcel_id: str = None) -> Dict[str, Any]:
     """Convert PipelineResult to dictionary with canonical data contract
     
     🔥 CRITICAL: 모든 모듈은 summary + details 구조로 변환
     프론트엔드 카드는 summary만 읽는다
     PDF는 details를 사용하되, 표지/요약은 summary를 사용한다
+    
+    Args:
+        result: PipelineResult object
+        request_parcel_id: Fallback parcel_id from request (optional)
     """
+    
+    # 🔥 Get parcel_id with fallback chain
+    if hasattr(result, 'land') and result.land and hasattr(result.land, 'parcel_id'):
+        parcel_id = result.land.parcel_id
+    elif request_parcel_id:
+        parcel_id = request_parcel_id
+        logger.warning(f"⚠️ Using request_parcel_id as fallback: {request_parcel_id}")
+    else:
+        parcel_id = "unknown"
+        logger.error(f"❌ No parcel_id available! result.land exists: {hasattr(result, 'land')}")
     
     # 🔥 M2: Appraisal - canonical 형식으로 변환
     m2_raw = result.appraisal.to_dict() if hasattr(result.appraisal, 'to_dict') else {}
-    m2_canonical = convert_m2_to_standard(m2_raw, result.land.parcel_id)
+    m2_canonical = convert_m2_to_standard(m2_raw, parcel_id)
     
     # 🔥 M3: Housing Type - canonical 형식으로 변환
     m3_raw = result.housing_type.to_dict() if hasattr(result.housing_type, 'to_dict') else {}
-    m3_canonical = convert_m3_to_standard(m3_raw, result.land.parcel_id)
+    m3_canonical = convert_m3_to_standard(m3_raw, parcel_id)
     
     # 🔥 M4: Capacity - summary + details 구조로 변환
     capacity_raw = result.capacity.to_dict() if hasattr(result.capacity, 'to_dict') else {}
@@ -297,10 +311,11 @@ def pipeline_result_to_dict(result: PipelineResult) -> Dict[str, Any]:
     
     # 🔥 M6: LH Review - canonical 형식으로 변환
     m6_raw = result.lh_review.to_dict() if hasattr(result.lh_review, 'to_dict') else {}
-    m6_canonical = convert_m6_to_standard(m6_raw, result.land.parcel_id)
+    m6_canonical = convert_m6_to_standard(m6_raw, parcel_id)
     
     # 🔥 FIX: Add html_preview_url and pdf_download_url to each module
-    context_id = result.land.parcel_id
+    # Use parcel_id determined above (with fallback chain)
+    context_id = parcel_id
     
     # Add URLs to each module's response
     m2_dict = m2_canonical.dict()
@@ -385,7 +400,7 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
                 status="success",
                 execution_time_ms=0,
                 modules_executed=6,
-                results=pipeline_result_to_dict(cached_result),
+                results=pipeline_result_to_dict(cached_result, request.parcel_id),
                 land_value=cached_result.appraisal.land_value,
                 confidence_score=cached_result.appraisal.confidence_metrics.confidence_score,
                 selected_housing_type=cached_result.housing_type.selected_type,
@@ -409,12 +424,23 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
         # Cache results with BOTH keys for compatibility
         # Key 1: request.parcel_id (for pipeline lookup)
         results_cache[request.parcel_id] = result
+        logger.info(f"✅ Cached with key 1: {request.parcel_id}")
         
         # Key 2: result.land.parcel_id (for HTML/PDF report lookup)
         # This ensures context_id in URLs matches the cache key
-        if hasattr(result, 'land') and hasattr(result.land, 'parcel_id'):
-            results_cache[result.land.parcel_id] = result
-            logger.info(f"✅ Cached with both keys: {request.parcel_id} and {result.land.parcel_id}")
+        logger.info(f"🔍 DEBUG: result has 'land'? {hasattr(result, 'land')}")
+        if hasattr(result, 'land'):
+            logger.info(f"🔍 DEBUG: result.land type: {type(result.land)}")
+            logger.info(f"🔍 DEBUG: result.land has 'parcel_id'? {hasattr(result.land, 'parcel_id')}")
+            if hasattr(result.land, 'parcel_id'):
+                land_parcel_id = result.land.parcel_id
+                logger.info(f"🔍 DEBUG: result.land.parcel_id = {land_parcel_id}")
+                results_cache[land_parcel_id] = result
+                logger.info(f"✅ Cached with both keys: {request.parcel_id} and {land_parcel_id}")
+            else:
+                logger.warning(f"⚠️ result.land exists but has no parcel_id attribute!")
+        else:
+            logger.warning(f"⚠️ result has no 'land' attribute! Using only request.parcel_id as cache key")
         
         # Calculate execution time
         execution_time_ms = (time.time() - start_time) * 1000
@@ -437,7 +463,7 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
             status="success" if result.success else "failed",
             execution_time_ms=execution_time_ms,
             modules_executed=6,
-            results=pipeline_result_to_dict(result),
+            results=pipeline_result_to_dict(result, request.parcel_id),
             land_value=result.appraisal.land_value,
             confidence_score=result.appraisal.confidence_metrics.confidence_score,
             selected_housing_type=result.housing_type.selected_type,
@@ -515,7 +541,7 @@ async def get_pipeline_results(parcel_id: str):
     return JSONResponse(content={
         "parcel_id": parcel_id,
         "status": "success",
-        "results": pipeline_result_to_dict(result),
+        "results": pipeline_result_to_dict(result, parcel_id),
         "cached_at": datetime.now().isoformat()
     })
 
