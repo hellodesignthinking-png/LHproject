@@ -194,6 +194,14 @@ def _get_real_data_for_module(module: str, context_id: str) -> dict:
         # 2. CTX_{parcel_id}_{timestamp}_{uuid} format
         # 3. UUID format (from frontend contextId)
         
+        # 🔥 UUID BLOCKER: Reject UUID format immediately
+        if "-" in context_id:
+            logger.critical(f"❌ UUID 전달됨 - 보고서 차단: {context_id}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"잘못된 context_id (UUID). analysis_id(PNU)만 허용됩니다. 받은 값: {context_id}"
+            )
+        
         # Try direct lookup first
         parcel_id = context_id
         

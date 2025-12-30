@@ -1455,18 +1455,51 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
           
           {/* Embedded HTML Report via iframe */}
           <div style={{ position: 'relative', height: '800px', background: 'white' }}>
-            <iframe
-              src={`${BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai'}/api/v4/reports/${moduleId}/html?context_id=${contextId}`}
-              style={{
-                width: '100%',
-                height: '100%',
-                border: 'none',
-                display: 'block'
-              }}
-              title={`${moduleId} 상세 보고서`}
-              onLoad={() => console.log(`✅ [Embedded Report] ${moduleId} loaded successfully`)}
-              onError={() => console.error(`❌ [Embedded Report] ${moduleId} failed to load`)}
-            />
+            {/* 🔥 CRITICAL FIX: Use state.analysisId (parcel_id) instead of contextId (UUID) */}
+            {(() => {
+              const reportKey = state.analysisId || state.parcelId;
+              if (!reportKey) {
+                console.error('❌ analysisId 없음 - 보고서 열기 차단');
+                return (
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    height: '100%',
+                    fontSize: '16px',
+                    color: '#666'
+                  }}>
+                    ⚠️ Pipeline 실행이 완료되지 않았습니다.
+                  </div>
+                );
+              }
+              
+              const iframeUrl = `${BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai'}/api/v4/reports/${moduleId}/html?context_id=${reportKey}`;
+              
+              console.log('📌 REPORT DEBUG', {
+                moduleId,
+                contextId,
+                analysisId: state.analysisId,
+                parcelId: state.parcelId,
+                reportKey,
+                iframeUrl
+              });
+              
+              return (
+                <iframe
+                  src={iframeUrl}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                    display: 'block'
+                  }}
+                  title={`${moduleId} 상세 보고서`}
+                  onLoad={() => console.log(`✅ [Embedded Report] ${moduleId} loaded successfully with reportKey=${reportKey}`)}
+                  onError={() => console.error(`❌ [Embedded Report] ${moduleId} failed to load with reportKey=${reportKey}`)}
+                />
+              );
+            })()}
           </div>
           
           {/* Footer with Action Buttons */}
