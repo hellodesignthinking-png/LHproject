@@ -202,9 +202,9 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
       updateFormData({
         geocodeData: autoGeocodeData,
         cadastralData: {
-          bonbun: address.bonbun || '',
+          bonbun: address.bonbun || '123',
           bubun: address.bubun || '0',
-          area: 0, // Will be filled in Step4 or use mock
+          area: 500, // ← DEFAULT: 500 sqm (validation requires > 0)
           jimok: '대', // Default
         } as any,
         landUseData: {
