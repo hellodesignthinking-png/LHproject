@@ -460,6 +460,14 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
   const missingFields = getMissingFields();
   const qualityWarnings = getDataQualityWarnings();
 
+  // 🔥 DEBUG: Log button state
+  console.log('🔍 [Step8] Button state check:');
+  console.log('  lockEnabled:', lockEnabled);
+  console.log('  missingFields:', missingFields);
+  console.log('  formData.cadastralData:', formData.cadastralData);
+  console.log('  formData.landUseData:', formData.landUseData);
+  console.log('  formData.roadInfoData:', formData.roadInfoData);
+
   return (
     <div className="step-container step8-confirm">
       <h2>📋 최종 검토 및 분석 시작</h2>
