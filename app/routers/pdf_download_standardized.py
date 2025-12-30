@@ -489,6 +489,26 @@ async def preview_module_html(
                 detail=f"Pipeline 결과 없음: {module}"
             )
         
+        # 🔥 STEP 2: Type safety - ensure summary/details are dicts
+        summary = real_data.get('summary', {})
+        details = real_data.get('details', {})
+        
+        if not isinstance(summary, dict):
+            logger.warning(f"⚠️ summary is not dict, converting: {type(summary)}")
+            summary = {}
+        
+        if not isinstance(details, dict):
+            logger.warning(f"⚠️ details is not dict, converting: {type(details)}")
+            details = {}
+        
+        # Rebuild real_data with safe types
+        real_data = {
+            'summary': summary,
+            'details': details
+        }
+        
+        logger.info(f"✅ Data type check passed: summary keys={list(summary.keys())}, details keys={list(details.keys())}")
+        
         # PDF 생성기 초기화
         generator = ModulePDFGenerator()
         
@@ -536,11 +556,21 @@ async def preview_module_html(
             }
         )
     
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    
     except Exception as e:
-        logger.error(f"HTML 생성 중 예상치 못한 오류: {str(e)}", exc_info=True)
+        # 🔥 DEBUG MODE: Expose exact error for debugging
+        import traceback
+        error_trace = traceback.format_exc()
+        logger.error(f"❌ [HTML_RENDER_ERROR][{module}] {str(e)}")
+        logger.error(f"❌ Full traceback:\n{error_trace}")
+        
+        # Return detailed error for debugging
         raise HTTPException(
             status_code=500,
-            detail=f"HTML 생성 중 오류가 발생했습니다. (오류 ID: {context_id})"
+            detail=f"HTML 생성 오류: {str(e)}\n\nModule: {module}\nContext: {context_id}\n\nTraceback:\n{error_trace}"
         )
 
 
