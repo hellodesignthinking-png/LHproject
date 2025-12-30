@@ -35,7 +35,7 @@ export interface ExecutionLockHook {
 }
 
 const REQUIRED_MODULES = ['M1', 'M2', 'M3', 'M4', 'M5', 'M6'];
-const TIMEOUT_MS = 5 * 1000; // 5 seconds timeout for quick recovery
+const TIMEOUT_MS = 180 * 1000; // 180 seconds (3 minutes) timeout to allow pipeline completion
 
 export const useExecutionLock = (): ExecutionLockHook => {
   const [lockState, setLockState] = useState<ExecutionLockState>({
@@ -67,10 +67,10 @@ export const useExecutionLock = (): ExecutionLockHook => {
       modulesCompleted: new Set(),
     });
 
-    // Safety timeout - auto-unlock after 5 seconds
+    // Safety timeout - auto-unlock after 180 seconds (3 minutes)
     timeoutRef.current = window.setTimeout(() => {
-      console.error('⚠️ EXECUTION TIMEOUT: Auto-unlocking after 5 seconds');
-      console.error('   Pipeline may not be connected. Releasing lock...');
+      console.error('⚠️ EXECUTION TIMEOUT: Auto-unlocking after 3 minutes');
+      console.error('   Pipeline execution exceeded time limit. Releasing lock...');
       
       // Clear timeout ref
       if (timeoutRef.current) {
@@ -87,7 +87,7 @@ export const useExecutionLock = (): ExecutionLockHook => {
       });
       
       // Show alert and reload
-      alert('⚠️ 분석 시간 초과\n\n파이프라인 연결이 끊어졌거나 분석이 완료되지 않았습니다.\n페이지를 새로고침 해주세요.');
+      alert('⚠️ 분석 시간 초과 (3분)\n\n파이프라인 실행이 3분을 초과했습니다.\n페이지를 새로고침 해주세요.');
       window.location.reload();
     }, TIMEOUT_MS);
 

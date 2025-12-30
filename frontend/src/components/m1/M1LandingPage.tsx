@@ -367,15 +367,18 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
       
       console.log('🚀 M2~M6 pipeline should now execute...');
       
-      // 🔒 Safety: If pipeline doesn't respond in 5 seconds, show warning
+      // 🔒 Safety: If pipeline doesn't respond in 10 seconds, show warning
+      // Note: This is just a safety check. The main timeout is in useExecutionLock (3 minutes)
       setTimeout(() => {
-        if (executionLock.progress <= 16) { // M1 only = 16%
-          console.warn('⚠️ Pipeline not responding after 5 seconds - auto unlocking');
+        if (executionLock.progress <= 16 && executionLock.isLocked) { // M1 only = 16% AND still locked
+          console.warn('⚠️ Pipeline not responding after 10 seconds - will auto unlock after 3 min');
+          // Don't unlock or reload here - let the main timeout in useExecutionLock handle it
+        } else if (executionLock.isLocked) {
+          // Pipeline is progressing, unlock it
+          console.log('✅ Pipeline is progressing, unlocking execution lock');
           executionLock.unlockExecution();
-          alert('⚠️ 파이프라인 연결 실패\n\nM2~M6 분석이 시작되지 않았습니다.\n페이지를 새로고침 해주세요.');
-          window.location.reload();
         }
-      }, 5000);
+      }, 10000); // Check after 10 seconds
     } else {
       // Fallback: standalone M1 usage - store state and show success screen
       console.log('ℹ️ [M1Landing] Standalone M1 mode - No pipeline callback');
