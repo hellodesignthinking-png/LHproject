@@ -713,11 +713,14 @@ async def _generate_module_html(module: str, context_id: str):
                 'final_opinion': f"이에 따라 본 보고서는 본 대상지의 최적 공급유형으로 '{recommended_type} 매입임대'를 제안한다."
             }
             
-            # Render Classic template
-            template = env.get_template('m3_supply_type_format.html')
-            html_content = template.render(**context)
+            # Render Classic template (NEW)
+            template = env.get_template('m3_classic_supply_type.html')
             
-            logger.info(f"✅ Generated Classic M3 Report: {context['report_id']}, Type: {recommended_type}")
+            # Use the structured data from mapping function
+            classic_data = test_data
+            html_content = template.render(**classic_data)
+            
+            logger.info(f"✅ Generated Classic M3 Report: {classic_data['meta']['report_id']}, Type: {classic_data['summary']['kpi_cards'][0]['value']}")
             
         elif module == "M4":
             # 🔥 CRITICAL: Use Classic Capacity Format for M4
