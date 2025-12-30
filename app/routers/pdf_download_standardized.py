@@ -1135,10 +1135,6 @@ async def _generate_module_html(module: str, context_id: str):
             # 🔥 CRITICAL: Use Classic Capacity Format for M4
             logger.info("🏛️ Using Classic Building Capacity Format for M4 (Rich Data)")
             
-            # Extract data from pipeline result
-            land = pipeline_result.land
-            capacity = pipeline_result.capacity if hasattr(pipeline_result, 'capacity') else None
-            
             # Initialize template environment
             from jinja2 import Environment, FileSystemLoader
             from pathlib import Path
@@ -1148,63 +1144,17 @@ async def _generate_module_html(module: str, context_id: str):
             env.filters['number_format'] = lambda v: f"{int(v):,}" if v else "N/A"
             env.filters['percentage'] = lambda v: f"{float(v)*100:.1f}%" if v else "N/A"
             
-            # Extract capacity data
-            land_area = land.area_sqm if hasattr(land, 'area_sqm') else 660
-            legal_far = 250  # 법정 용적률 250%
-            legal_bcr = 60   # 법정 건폐율 60%
+            # Render Classic template - Use structured data from mapping
+            template = env.get_template('m4_classic_capacity.html')
+            classic_data = test_data
+            html_content = template.render(**classic_data)
             
-            # Calculate theoretical maximum
-            max_area_theory = land_area * (legal_far / 100)  # 3200㎡ 수준
-            max_area_real = max_area_theory * 0.86  # 구조/주차 고려 2750㎡
-            optimal_area = max_area_theory * 0.79  # 사업 최적 2520㎡
-            
-            # Development alternatives
-            alternatives = [
-                {"name": "A안", "units": 38, "area": 2800, "assessment": "과밀", "is_optimal": False},
-                {"name": "B안", "units": 34, "area": 2520, "assessment": "최적", "is_optimal": True},
-                {"name": "C안", "units": 30, "area": 2200, "assessment": "보수", "is_optimal": False}
-            ]
-            
-            # Parking & common area
-            parking_required = 34  # 법정 주차대수
-            core_ratio = 0.18  # 코어 비율
-            efficiency = 0.82  # 효율률
-            
-            # Build template context
-            context = {
-                'report_id': f"ZS-M4-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-                'address': land.address if hasattr(land, 'address') else "서울특별시 강남구",
-                'analysis_date': datetime.now().strftime("%Y년 %m월 %d일"),
-                'land_area': land_area,
-                'legal_far': legal_far,
-                'legal_bcr': legal_bcr,
-                'max_area_theory': max_area_theory,
-                'max_area_real': max_area_real,
-                'optimal_area': optimal_area,
-                'recommended_units': 34,
-                'recommended_area': 2520,
-                'alternatives': alternatives,
-                'parking_required': parking_required,
-                'core_ratio': core_ratio,
-                'efficiency': efficiency,
-                'summary': "본 대상지는 법적 기준, 물리적 조건, 사업 효율성을 종합적으로 고려할 때 중간 규모의 효율적 개발이 가장 합리적인 대안으로 판단된다.",
-                'final_opinion': "본 대상지는 B안(34세대, 연면적 2,520㎡)이 법적 안정성, 운영 효율성, LH 매입 기준 측면에서 가장 합리적인 안으로 판단된다."
-            }
-            
-            # Render Classic template
-            template = env.get_template('m4_capacity_format.html')
-            html_content = template.render(**context)
-            
-            logger.info(f"✅ Generated Classic M4 Report: {context['report_id']}, Units: 34")
+            logger.info(f"✅ Generated Classic M4 Report: {classic_data['meta']['report_id']}, Units: {classic_data['summary']['kpi_cards'][0]['value']}")
             
         elif module == "M5":
             # 🔥 CRITICAL: Use Classic Feasibility Format for M5
             logger.info("🏛️ Using Classic Financial Feasibility Format for M5 (Rich Data)")
             
-            # Extract data from pipeline result
-            land = pipeline_result.land
-            feasibility = pipeline_result.feasibility if hasattr(pipeline_result, 'feasibility') else None
-            
             # Initialize template environment
             from jinja2 import Environment, FileSystemLoader
             from pathlib import Path
@@ -1214,66 +1164,17 @@ async def _generate_module_html(module: str, context_id: str):
             env.filters['number_format'] = lambda v: f"{int(v):,}" if v else "N/A"
             env.filters['percentage'] = lambda v: f"{float(v)*100:.1f}%" if v else "N/A"
             
-            # Cost structure (보수적 산정)
-            land_cost = 4400000000  # 토지비 44억
-            construction_cost = 1200000000  # 공사비 12억
-            design_supervision = 150000000  # 설계감리 1.5억
-            financial_cost = 100000000  # 금융비용 1억
-            total_cost = land_cost + construction_cost + design_supervision + financial_cost
+            # Render Classic template - Use structured data from mapping
+            template = env.get_template('m5_classic_feasibility.html')
+            classic_data = test_data
+            html_content = template.render(**classic_data)
             
-            # Revenue analysis
-            avg_rent_per_unit = 800000  # 월 평균 임대료 80만원
-            annual_revenue = avg_rent_per_unit * 12 * 34  # 34세대
-            vacancy_rate = 0.05  # 공실률 5%
-            net_revenue = annual_revenue * (1 - vacancy_rate)
-            
-            # Scenario analysis
-            scenarios = [
-                {"name": "보수", "irr": 3.2, "npv": "+", "assessment": "기준 충족"},
-                {"name": "기준", "irr": 4.8, "npv": "++", "assessment": "양호"},
-                {"name": "낙관", "irr": 6.1, "npv": "+++", "assessment": "우수"}
-            ]
-            
-            # LH criteria
-            lh_min_irr = 3.5  # LH 최소 기준
-            status = "조건부 적정" if scenarios[1]["irr"] >= lh_min_irr else "검토 필요"
-            
-            # Build template context
-            context = {
-                'report_id': f"ZS-M5-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-                'address': land.address if hasattr(land, 'address') else "서울특별시 강남구",
-                'analysis_date': datetime.now().strftime("%Y년 %m월 %d일"),
-                'land_cost': land_cost,
-                'construction_cost': construction_cost,
-                'design_supervision': design_supervision,
-                'financial_cost': financial_cost,
-                'total_cost': total_cost,
-                'avg_rent_per_unit': avg_rent_per_unit,
-                'annual_revenue': annual_revenue,
-                'vacancy_rate': vacancy_rate * 100,
-                'net_revenue': net_revenue,
-                'scenarios': scenarios,
-                'lh_min_irr': lh_min_irr,
-                'status': status,
-                'base_irr': scenarios[1]["irr"],
-                'summary': "본 사업은 보수적인 가정 하에서도 LH 매입임대 사업 기준을 충족하는 수준의 사업성을 확보하는 것으로 분석된다.",
-                'final_opinion': "본 사업은 장기 안정성과 공공성 측면에서 LH 매입임대 사업으로서 적합하다고 판단된다."
-            }
-            
-            # Render Classic template
-            template = env.get_template('m5_feasibility_format.html')
-            html_content = template.render(**context)
-            
-            logger.info(f"✅ Generated Classic M5 Report: {context['report_id']}, IRR: 4.8%")
+            logger.info(f"✅ Generated Classic M5 Report: {classic_data['meta']['report_id']}, Decision: {classic_data['summary']['kpi_cards'][5]['value']}")
             
         elif module == "M6":
             # 🔥 CRITICAL: Use Classic LH Review Format for M6
             logger.info("🏛️ Using Classic LH Final Decision Format for M6 (Rich Data)")
             
-            # Extract data from pipeline result
-            land = pipeline_result.land
-            lh_review = pipeline_result.lh_review if hasattr(pipeline_result, 'lh_review') else None
-            
             # Initialize template environment
             from jinja2 import Environment, FileSystemLoader
             from pathlib import Path
@@ -1283,46 +1184,12 @@ async def _generate_module_html(module: str, context_id: str):
             env.filters['number_format'] = lambda v: f"{int(v):,}" if v else "N/A"
             env.filters['percentage'] = lambda v: f"{float(v)*100:.1f}%" if v else "N/A"
             
-            # Module summary
-            module_summary = [
-                {"module": "M2", "title": "토지감정평가", "conclusion": "토지가치 적정", "score": 85},
-                {"module": "M3", "title": "공급유형 판단", "conclusion": "청년형 최적", "score": 82},
-                {"module": "M4", "title": "건축규모 판단", "conclusion": "규모 합리", "score": 86},
-                {"module": "M5", "title": "사업성 분석", "conclusion": "사업성 확보", "score": 83}
-            ]
+            # Render Classic template - Use structured data from mapping
+            template = env.get_template('m6_classic_lh_review.html')
+            classic_data = test_data
+            html_content = template.render(**classic_data)
             
-            # Risk assessment
-            risks = [
-                {"category": "법적 리스크", "level": "낮음", "detail": "법적 검토 완료, 이슈 없음"},
-                {"category": "시장 리스크", "level": "관리 가능", "detail": "수요 안정적, 경쟁 관리 필요"},
-                {"category": "운영 리스크", "level": "낮음", "detail": "운영 경험 풍부, 안정적"}
-            ]
-            
-            # Final decision
-            total_score = 84
-            decision = "매입 권고"
-            decision_level = "적정"
-            
-            # Build template context
-            context = {
-                'report_id': f"ZS-M6-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-                'address': land.address if hasattr(land, 'address') else "서울특별시 강남구",
-                'analysis_date': datetime.now().strftime("%Y년 %m월 %d일"),
-                'module_summary': module_summary,
-                'risks': risks,
-                'total_score': total_score,
-                'decision': decision,
-                'decision_level': decision_level,
-                'summary': "본 대상지는 토지가치, 공급유형, 건축규모, 사업성 분석 결과를 종합할 때 LH 매입임대 사업 대상으로서 매입이 적정한 대상지로 판단된다.",
-                'final_opinion': "본 대상지는 LH의 공공임대 공급 목적, 재무 안정성, 정책 방향에 부합하며, 종합적으로 매입을 권고할 수 있는 대상지로 판단된다.",
-                'approval_text': "본 대상지는 공공임대주택 공급 목적에 부합하며, 종합 분석 결과 LH 매입임대 사업으로 추진함이 타당하다고 판단됨."
-            }
-            
-            # Render Classic template
-            template = env.get_template('m6_lh_review_format.html')
-            html_content = template.render(**context)
-            
-            logger.info(f"✅ Generated Classic M6 Report: {context['report_id']}, Score: 84/100, Decision: {decision}")
+            logger.info(f"✅ Generated Classic M6 Report: {classic_data['meta']['report_id']}, Decision: {classic_data['summary']['kpi_cards'][5]['value']}")
             
         else:
             raise HTTPException(status_code=400, detail=f"지원하지 않는 모듈: {module}")
