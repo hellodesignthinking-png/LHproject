@@ -51,6 +51,10 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v4/reports", tags=["PDF Reports"])
 
+# 🔥 CRITICAL: Import pipeline results_cache for REAL data
+# This is the ONLY source of truth for M2-M6 reports
+from app.api.endpoints.pipeline_reports_v4 import results_cache
+
 
 # 모듈별 한글 이름 매핑
 MODULE_NAMES = {
@@ -162,9 +166,172 @@ async def download_module_pdf(
         )
 
 
-def _get_test_data_for_module(module: str, context_id: str) -> dict:
-    """테스트용 데이터 생성 (실제로는 DB에서 조회)"""
+def _get_real_data_for_module(module: str, context_id: str) -> dict:
+    """
+    🔥 REAL DATA LOADER: pipeline results_cache에서 실제 데이터 로드
     
+    데이터 소스 원칙:
+    1. context_id로 parcel_id 추출 (context_id 형식: {parcel_id}_{timestamp})
+    2. results_cache[parcel_id]에서 PipelineResult 로드
+    3. 모듈별 summary/details 데이터 추출
+    4. 데이터 없으면 예외 발생 (mock/test 데이터 금지)
+    
+    Args:
+        module: 모듈 ID (M2-M6)
+        context_id: 컨텍스트 ID (parcel_id 포함)
+        
+    Returns:
+        모듈 데이터 dict (summary + details)
+        
+    Raises:
+        HTTPException(404): Pipeline 결과 없음
+        HTTPException(400): 데이터 값이 0/N/A/비어있음
+    """
+    try:
+        # Extract parcel_id from context_id
+        # context_id format: {parcel_id}_{timestamp} or just {parcel_id}
+        parcel_id = context_id.split('_')[0] if '_' in context_id else context_id
+        
+        logger.info(f"🔍 Real data lookup: module={module}, context_id={context_id}, parcel_id={parcel_id}")
+        
+        # Load from results_cache
+        if parcel_id not in results_cache:
+            logger.error(f"❌ No pipeline results for parcel_id={parcel_id}")
+            raise HTTPException(
+                status_code=404,
+                detail=f"Pipeline 결과 없음. 먼저 /api/v4/pipeline/analyze를 실행하세요. (parcel_id: {parcel_id})"
+            )
+        
+        result = results_cache[parcel_id]
+        logger.info(f"✅ Found pipeline result for parcel_id={parcel_id}")
+        
+        # 🔥 Extract module-specific data from PipelineResult
+        if module == "M2":
+            appraisal = result.appraisal
+            data = {
+                "summary": {
+                    "land_value_total_krw": appraisal.land_value,
+                    "pyeong_price_krw": appraisal.unit_price_pyeong if hasattr(appraisal, 'unit_price_pyeong') else 0,
+                    "confidence_pct": appraisal.confidence_metrics.confidence_score * 100,
+                    "transaction_count": appraisal.transaction_count if hasattr(appraisal, 'transaction_count') else 0
+                },
+                "details": {
+                    "appraisal": {
+                        "land_value": appraisal.land_value,
+                        "unit_price_sqm": appraisal.unit_price_sqm if hasattr(appraisal, 'unit_price_sqm') else 0,
+                        "unit_price_pyeong": appraisal.unit_price_pyeong if hasattr(appraisal, 'unit_price_pyeong') else 0
+                    },
+                    "confidence": {
+                        "score": appraisal.confidence_metrics.confidence_score
+                    }
+                }
+            }
+        
+        elif module == "M3":
+            housing_type = result.housing_type
+            data = {
+                "summary": {
+                    "recommended_type": housing_type.selected_type,
+                    "total_score": housing_type.score if hasattr(housing_type, 'score') else 0,
+                    "confidence_pct": housing_type.confidence_score * 100 if hasattr(housing_type, 'confidence_score') else 0
+                },
+                "details": {
+                    "recommended_type": housing_type.selected_type,
+                    "total_score": housing_type.score if hasattr(housing_type, 'score') else 0
+                }
+            }
+        
+        elif module == "M4":
+            capacity = result.capacity
+            data = {
+                "summary": {
+                    "legal_units": capacity.legal_capacity.total_units if hasattr(capacity, 'legal_capacity') else 0,
+                    "incentive_units": capacity.incentive_capacity.total_units if hasattr(capacity, 'incentive_capacity') else 0,
+                    "parking_alt_a": capacity.parking_solutions.get('alternative_A', {}).get('total_parking_spaces', 0) if hasattr(capacity, 'parking_solutions') else 0,
+                    "parking_alt_b": capacity.parking_solutions.get('alternative_B', {}).get('total_parking_spaces', 0) if hasattr(capacity, 'parking_solutions') else 0
+                },
+                "details": {
+                    "legal_capacity": {
+                        "total_units": capacity.legal_capacity.total_units if hasattr(capacity, 'legal_capacity') else 0
+                    },
+                    "incentive_capacity": {
+                        "total_units": capacity.incentive_capacity.total_units if hasattr(capacity, 'incentive_capacity') else 0
+                    }
+                }
+            }
+        
+        elif module == "M5":
+            feasibility = result.feasibility
+            data = {
+                "summary": {
+                    "npv_public_krw": feasibility.financial_metrics.npv_public,
+                    "irr_pct": feasibility.financial_metrics.irr * 100 if hasattr(feasibility.financial_metrics, 'irr') else 0,
+                    "roi_pct": feasibility.financial_metrics.roi * 100 if hasattr(feasibility.financial_metrics, 'roi') else 0,
+                    "grade": feasibility.grade if hasattr(feasibility, 'grade') else "N/A"
+                },
+                "details": {
+                    "financial_metrics": {
+                        "npv_public": feasibility.financial_metrics.npv_public,
+                        "irr": feasibility.financial_metrics.irr if hasattr(feasibility.financial_metrics, 'irr') else 0,
+                        "roi": feasibility.financial_metrics.roi if hasattr(feasibility.financial_metrics, 'roi') else 0
+                    }
+                }
+            }
+        
+        elif module == "M6":
+            lh_review = result.lh_review
+            data = {
+                "summary": {
+                    "decision": lh_review.decision,
+                    "total_score": lh_review.total_score,
+                    "grade": lh_review.grade if hasattr(lh_review, 'grade') else "N/A",
+                    "approval_probability_pct": lh_review.approval_probability * 100 if hasattr(lh_review, 'approval_probability') else 0
+                },
+                "details": {
+                    "decision": lh_review.decision,
+                    "total_score": lh_review.total_score
+                }
+            }
+        
+        else:
+            raise HTTPException(status_code=400, detail=f"지원하지 않는 모듈: {module}")
+        
+        # 🔥 0/N/A 방지 하드 체크
+        summary = data.get('summary', {})
+        if not summary:
+            logger.error(f"❌ Empty summary for module={module}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"{module} 모듈 데이터가 비어있습니다. Pipeline 재실행 필요."
+            )
+        
+        logger.info(f"✅ Real data loaded: module={module}, summary keys={list(summary.keys())}")
+        return data
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Real data load failed: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"데이터 로드 실패: {str(e)}"
+        )
+
+
+def _get_test_data_for_module(module: str, context_id: str) -> dict:
+    """
+    ⚠️ DEPRECATED: 테스트 데이터 생성 (더 이상 사용하지 않음)
+    
+    이 함수는 _get_real_data_for_module()로 대체되었습니다.
+    실제 pipeline 데이터만 사용해야 합니다.
+    """
+    logger.warning(f"⚠️ DEPRECATED: _get_test_data_for_module called for module={module}")
+    raise HTTPException(
+        status_code=500,
+        detail="테스트 데이터 함수는 더 이상 사용되지 않습니다. 실제 pipeline 실행이 필요합니다."
+    )
+    
+    # Legacy test data (NEVER REACHED)
     if module == "M2":
         return {
             "appraisal": {
@@ -301,34 +468,35 @@ async def preview_module_html(
     """
     모듈별 HTML 보고서 미리보기
     
+    🔥 REAL DATA ONLY: pipeline results_cache에서 실제 데이터 로드
     PDF 다운로드 전 브라우저에서 내용을 확인할 수 있습니다.
     """
     try:
         logger.info(f"📄 HTML 미리보기 요청: module={module}, context_id={context_id}")
         
-        # 테스트 데이터 생성 (실제로는 DB에서 조회)
-        test_data = _get_test_data_for_module(module, context_id)
+        # 🔥 REAL DATA LOADER: 실제 pipeline 데이터 로드
+        real_data = _get_real_data_for_module(module, context_id)
         
-        if not test_data:
+        if not real_data:
             raise HTTPException(
-                status_code=400,
-                detail=f"지원하지 않는 모듈: {module}"
+                status_code=404,
+                detail=f"Pipeline 결과 없음: {module}"
             )
         
         # PDF 생성기 초기화
         generator = ModulePDFGenerator()
         
-        # 모듈별 HTML 생성
+        # 모듈별 HTML 생성 (REAL DATA)
         if module == "M2":
-            html_content = generator.generate_m2_appraisal_html(test_data)
+            html_content = generator.generate_m2_appraisal_html(real_data)
         elif module == "M3":
-            html_content = generator.generate_m3_housing_type_html(test_data)
+            html_content = generator.generate_m3_housing_type_html(real_data)
         elif module == "M4":
-            html_content = generator.generate_m4_capacity_html(test_data)
+            html_content = generator.generate_m4_capacity_html(real_data)
         elif module == "M5":
-            html_content = generator.generate_m5_feasibility_html(test_data)
+            html_content = generator.generate_m5_feasibility_html(real_data)
         elif module == "M6":
-            html_content = generator.generate_m6_lh_review_html(test_data)
+            html_content = generator.generate_m6_lh_review_html(real_data)
         else:
             raise HTTPException(status_code=400, detail=f"지원하지 않는 모듈: {module}")
         
@@ -351,8 +519,8 @@ async def preview_module_html(
     
     except AttributeError as e:
         logger.warning(f"HTML 생성 메서드 없음: {str(e)} - 표준 렌더러 사용")
-        # 🔥 STANDARD RENDERER: 모든 모듈 HTML 표준 렌더러 사용
-        html_content = _render_standard_report_html(module, test_data, context_id)
+        # 🔥 STANDARD RENDERER: 모든 모듈 HTML 표준 렌더러 사용 (REAL DATA)
+        html_content = _render_standard_report_html(module, real_data, context_id)
         return HTMLResponse(
             content=html_content,
             headers={
