@@ -27,6 +27,7 @@ from datetime import datetime
 from urllib.parse import quote
 
 from app.services.pdf_generators.module_pdf_generator import ModulePDFGenerator
+from app.utils.professional_report_html import generate_module_report_html  # ✅ ADD: Professional HTML generator
 from app.core.canonical_data_contract import (
     convert_m2_to_standard,
     convert_m3_to_standard,
@@ -517,22 +518,14 @@ async def preview_module_html(
         
         logger.info(f"✅ Data type check passed: summary keys={list(summary.keys())}, details keys={list(details.keys())}")
         
-        # PDF 생성기 초기화
-        generator = ModulePDFGenerator()
-        
-        # 모듈별 HTML 생성 (REAL DATA)
-        if module == "M2":
-            html_content = generator.generate_m2_appraisal_html(real_data)
-        elif module == "M3":
-            html_content = generator.generate_m3_housing_type_html(real_data)
-        elif module == "M4":
-            html_content = generator.generate_m4_capacity_html(real_data)
-        elif module == "M5":
-            html_content = generator.generate_m5_feasibility_html(real_data)
-        elif module == "M6":
-            html_content = generator.generate_m6_lh_review_html(real_data)
-        else:
-            raise HTTPException(status_code=400, detail=f"지원하지 않는 모듈: {module}")
+        # 🔥 PROFESSIONAL HTML GENERATOR: Use professional report HTML (matching uploaded PDF format)
+        logger.info(f"📄 Generating professional HTML report for {module}")
+        html_content = generate_module_report_html(
+            module_id=module,
+            context_id=context_id,
+            module_data=real_data
+        )
+        logger.info(f"✅ Professional HTML report generated: {len(html_content)} chars")
         
         # HTML 반환 (브라우저에서 직접 표시)
         return HTMLResponse(
