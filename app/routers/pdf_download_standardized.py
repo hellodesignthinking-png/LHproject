@@ -189,8 +189,9 @@ def _get_real_data_for_module(module: str, context_id: str) -> dict:
     """
     try:
         # Extract parcel_id from context_id
-        # context_id format: {parcel_id}_{timestamp} or just {parcel_id}
-        parcel_id = context_id.split('_')[0] if '_' in context_id else context_id
+        # In pipeline_reports_v4.py: context_id = result.land.parcel_id
+        # So context_id IS parcel_id in URLs
+        parcel_id = context_id
         
         logger.info(f"🔍 Real data lookup: module={module}, context_id={context_id}, parcel_id={parcel_id}")
         
