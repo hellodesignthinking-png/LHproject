@@ -1456,7 +1456,7 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
           {/* Embedded HTML Report via iframe */}
           <div style={{ position: 'relative', height: '800px', background: 'white' }}>
             <iframe
-              src={`${BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai'}/api/v4/pipeline/reports/module/${moduleId}/html?context_id=${contextId}`}
+              src={`${BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai'}/api/v4/reports/${moduleId}/html?context_id=${contextId}`}
               style={{
                 width: '100%',
                 height: '100%',
@@ -1484,7 +1484,7 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
             <div style={{ display: 'flex', gap: '10px' }}>
               <button
                 onClick={() => {
-                  const htmlUrl = `${BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai'}/api/v4/pipeline/reports/module/${moduleId}/html?context_id=${contextId}`;
+                  const htmlUrl = `${BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai'}/api/v4/reports/${moduleId}/html?context_id=${contextId}`;
                   window.open(htmlUrl, '_blank');
                 }}
                 style={{
@@ -1555,7 +1555,7 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
         <button
           onClick={() => {
             const backendUrl = BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai';
-            const htmlUrl = `${backendUrl}/api/v4/pipeline/reports/module/${moduleId}/html?context_id=${contextId}`;
+            const htmlUrl = `${backendUrl}/api/v4/reports/${moduleId}/html?context_id=${contextId}`;
             console.log(`🔗 [HTML REPORT] Opening in new tab: ${htmlUrl}`);
             window.open(htmlUrl, '_blank');
           }}
