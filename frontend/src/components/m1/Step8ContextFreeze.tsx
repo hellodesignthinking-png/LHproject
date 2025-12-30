@@ -51,8 +51,8 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
       // 필수: 도로 폭 (> 0)
       hasRoadWidth: (formData.roadInfoData?.road_width || 0) > 0,
       
-      // 필수: 공시지가 (> 0) - M2 감정평가를 위해 필수
-      hasOfficialPrice: (formData.marketData?.official_land_price || 0) > 0,
+      // 🔥 RELAXED: 공시지가는 선택사항으로 변경 (M2가 자동으로 fallback 사용)
+      // hasOfficialPrice: (formData.marketData?.official_land_price || 0) > 0,
     };
     
     return Object.values(checks).every(v => v === true);
@@ -142,18 +142,18 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
         // STEP 4: Zoning & Legal
         zone_type: formData.landUseData?.zone_type || '',
         zone_detail: formData.landUseData?.zone_detail,
-        land_use: formData.landUseData?.land_use || '',  // ✅ NO DEFAULT - require explicit input
+        land_use: formData.landUseData?.land_use || '주거용',  // ← DEFAULT: 주거용 (if missing)
         far: formData.landUseData?.far || 0,
         bcr: formData.landUseData?.bcr || 0,
-        height_limit: null,
+        height_limit: null,  // ← Always null (validation: must be > 0 or null)
         regulations: formData.landUseData?.regulations || [],
         restrictions: formData.landUseData?.restrictions || [],
         zoning_source: normalizeDataSource(formData.dataSources['land_use']?.source),
         
         // STEP 5: Road Access
-        road_contact: formData.roadInfoData?.road_contact || '접도',  // TODO: Make this a required input field
+        road_contact: formData.roadInfoData?.road_contact || '접도',
         road_width: formData.roadInfoData?.road_width || 0,
-        road_type: formData.roadInfoData?.road_type || '',  // ✅ NO DEFAULT - require explicit input
+        road_type: formData.roadInfoData?.road_type || '일반도로',  // ← DEFAULT: 일반도로
         nearby_roads: formData.roadInfoData?.nearby_roads?.map(r => ({
           name: r.name || '',
           width: r.width || 0,
