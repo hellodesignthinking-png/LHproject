@@ -72,6 +72,56 @@ export const PipelineOrchestrator: React.FC = () => {
   });
 
   /**
+   * 🚨 CRITICAL: Get Report Key (PNU only, no UUID)
+   * 
+   * Returns parcel_id (PNU) for report URLs
+   * Validates that the key is NOT a UUID
+   * 
+   * Priority: analysisId → parcelId
+   */
+  const getReportKey = (): string | null => {
+    const key = state.analysisId || state.parcelId;
+    
+    // 🚫 Reject UUIDs (contain '-')
+    if (key && key.includes('-')) {
+      console.error('❌ INVALID REPORT KEY (UUID detected):', key);
+      console.error('   Report keys must be parcel_id (PNU), not UUID');
+      return null;
+    }
+    
+    return key;
+  };
+
+  /**
+   * 🚨 CRITICAL: Build Report URL (PNU only)
+   * 
+   * Generates report URL using parcel_id (PNU)
+   * Throws error if key is invalid or UUID
+   */
+  const buildReportUrl = (module: string, type: 'html' | 'pdf' = 'html'): string => {
+    const key = getReportKey();
+    
+    if (!key) {
+      const error = `Cannot build report URL: No valid parcel_id. analysisId=${state.analysisId}, parcelId=${state.parcelId}`;
+      console.error('❌', error);
+      throw new Error(error);
+    }
+    
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai';
+    const url = `${backendUrl}/api/v4/reports/${module}/${type}?context_id=${key}`;
+    
+    console.log(`📌 REPORT URL (${module}/${type}):`, {
+      analysisId: state.analysisId,
+      parcelId: state.parcelId,
+      contextId: state.contextId,
+      used: key,
+      url
+    });
+    
+    return url;
+  };
+
+  /**
    * Handler: M1 Context Freeze Complete
    * 
    * Triggered when user clicks "분석 시작 (M1 Lock)" in Step 8
@@ -896,7 +946,7 @@ export const PipelineOrchestrator: React.FC = () => {
                         alert('⚠️ M1 분석을 먼저 완료해주세요.');
                         return;
                       }
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/landowner_summary/html?context_id=${state.contextId}`;
+                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/landowner_summary/html?context_id=${state.analysisId}`;
                       window.open(url, '_blank');
                     }}
                     disabled={!state.contextId}
@@ -929,7 +979,7 @@ export const PipelineOrchestrator: React.FC = () => {
                         alert('⚠️ M1 분석을 먼저 완료해주세요.');
                         return;
                       }
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/lh_technical/html?context_id=${state.contextId}`;
+                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/lh_technical/html?context_id=${state.analysisId}`;
                       window.open(url, '_blank');
                     }}
                     disabled={!state.contextId}
@@ -958,7 +1008,7 @@ export const PipelineOrchestrator: React.FC = () => {
                   {/* 4. 사업성·투자 검토 보고서 */}
                   <button
                     onClick={() => {
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/financial_feasibility/html?context_id=${state.contextId}`;
+                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/financial_feasibility/html?context_id=${state.analysisId}`;
                       window.open(url, '_blank');
                     }}
                     style={{
@@ -985,7 +1035,7 @@ export const PipelineOrchestrator: React.FC = () => {
                   {/* 5. 사전 검토 리포트 */}
                   <button
                     onClick={() => {
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/quick_check/html?context_id=${state.contextId}`;
+                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/quick_check/html?context_id=${state.analysisId}`;
                       window.open(url, '_blank');
                     }}
                     style={{
@@ -1016,7 +1066,7 @@ export const PipelineOrchestrator: React.FC = () => {
                         alert('⚠️ M1 분석을 먼저 완료해주세요.');
                         return;
                       }
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/presentation/html?context_id=${state.contextId}`;
+                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/presentation/html?context_id=${state.analysisId}`;
                       window.open(url, '_blank');
                     }}
                     disabled={!state.contextId}
@@ -1188,7 +1238,7 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
       // ✅ USE: contextId from props (passed from parent state)
       const finalUrl = pdfUrl 
         ? `${backendUrl}${pdfUrl}`
-        : `${backendUrl}/api/v4/reports/${moduleId}/pdf?context_id=${contextId}`;
+        : `${backendUrl}/api/v4/reports/${moduleId}/pdf?context_id=${analysisId}`;
       
       console.log(`📄 [PDF DOWNLOAD] Using context_id: ${contextId}`);
       console.log(`📄 [PDF DOWNLOAD] Fetching from: ${finalUrl}`);
@@ -1271,7 +1321,7 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
       
       const finalUrl = htmlUrl 
         ? `${backendUrl}${htmlUrl}`
-        : `${backendUrl}/api/v4/reports/${moduleId}/html?context_id=${contextId}`;
+        : `${backendUrl}/api/v4/reports/${moduleId}/html?context_id=${analysisId}`;
       
       console.log(`👁️ [HTML PREVIEW] Opening: ${finalUrl}`);
       window.open(finalUrl, '_blank', 'noopener,noreferrer');
@@ -1282,7 +1332,7 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
   };
   
   // Check if HTML preview is available
-  const htmlPreviewAvailable = data?.html_preview_url || contextId;
+  const htmlPreviewAvailable = data?.html_preview_url || analysisId;
 
   return (
     <div style={{ 
@@ -1356,7 +1406,7 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
           onClick={() => {
             // 🔥 NEW: Open HTML report directly (REAL APPRAISAL STANDARD format)
             const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai';
-            const htmlUrl = `${backendUrl}/api/v4/reports/module/${moduleId}/html?context_id=${contextId}`;
+            const htmlUrl = `${backendUrl}/api/v4/reports/module/${moduleId}/html?context_id=${analysisId}`;
             window.open(htmlUrl, '_blank');
           }}
           style={{
