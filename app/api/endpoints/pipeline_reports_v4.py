@@ -400,7 +400,7 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
             
             return PipelineAnalysisResponse(
                 parcel_id=request.parcel_id,
-                analysis_id=context_id,  # 🔒 Use context_id instead of cached_*
+                analysis_id=request.parcel_id,  # 🔥 FIX: Use parcel_id as analysis_id (data key)
                 status="success (cached)",
                 execution_time_ms=0,
                 modules_executed=6,
@@ -538,7 +538,7 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
         # Build response
         response = PipelineAnalysisResponse(
             parcel_id=request.parcel_id,
-            analysis_id=context_id,  # 🔒 Use context_id (already generated at start)
+            analysis_id=request.parcel_id,  # 🔥 FIX: Use parcel_id as analysis_id (SINGLE SOURCE OF TRUTH)
             status="success" if result.success else "failed",
             execution_time_ms=execution_time_ms,
             modules_executed=6,
