@@ -117,12 +117,9 @@ export const PipelineOrchestrator: React.FC = () => {
       if (formData) {
         console.log('📝 Converting M1 formData to mock_land_data...');
         mock_land_data = {
-          // Basic info
-          parcel_id: parcelId,
+          // STEP 1-2: Address & Coordinates
           address: formData.selectedAddress?.jibun_address || '',
           road_address: formData.selectedAddress?.road_address || '',
-          
-          // Location
           sido: formData.geocodeData?.sido || formData.selectedAddress?.sido || '',
           sigungu: formData.geocodeData?.sigungu || formData.selectedAddress?.sigungu || '',
           dong: formData.geocodeData?.dong || formData.selectedAddress?.dong || '',
@@ -130,26 +127,48 @@ export const PipelineOrchestrator: React.FC = () => {
             lat: formData.geocodeData?.coordinates?.lat || 0,
             lon: formData.geocodeData?.coordinates?.lon || 0
           },
+          coordinates_verified: true,
+          address_source: formData.dataSources?.address || 'API',
+          coordinates_source: formData.dataSources?.geocode || 'API',
           
-          // Cadastral
+          // STEP 3: Cadastral
           bonbun: formData.cadastralData?.bonbun || '',
-          bubun: formData.cadastralData?.bubun || '',
+          bubun: formData.cadastralData?.bubun || '0',
           jimok: formData.cadastralData?.jimok || '',
           area: formData.cadastralData?.area || 0,
+          cadastral_source: formData.dataSources?.cadastral || 'API',
           
-          // Zoning
+          // STEP 4: Zoning & Legal (🔥 CRITICAL: All required fields)
           zone_type: formData.landUseData?.zone_type || '',
-          zone_detail: formData.landUseData?.zone_detail || '',
+          zone_detail: formData.landUseData?.zone_detail || null,
+          land_use: formData.landUseData?.land_use || '주거용',  // ← 필수!
           far: formData.landUseData?.far || 0,
           bcr: formData.landUseData?.bcr || 0,
+          height_limit: formData.landUseData?.height_limit || null,  // ← null (not 0!)
+          regulations: formData.landUseData?.regulations || [],
+          restrictions: formData.landUseData?.restrictions || [],
+          zoning_source: formData.dataSources?.landUse || 'API',
           
-          // Road
+          // STEP 5: Road Access
+          road_contact: '접도',
           road_width: formData.roadInfoData?.road_width || 0,
           road_type: formData.roadInfoData?.road_type || '',
+          nearby_roads: formData.roadInfoData?.nearby_roads || [],
+          road_source: formData.dataSources?.roadInfo || 'API',
           
-          // Market
-          official_land_price: formData.marketData?.official_land_price || 0,
-          transactions: formData.marketData?.transactions || []
+          // STEP 6: Market Data
+          official_land_price: formData.marketData?.official_land_price || null,
+          official_land_price_date: formData.marketData?.official_land_price_date || null,
+          official_price_source: formData.dataSources?.marketData || 'API',
+          transaction_cases_appraisal: formData.marketData?.transactions?.slice(0, 5) || [],
+          transaction_cases_reference: formData.marketData?.transactions || [],
+          
+          // Premium factors
+          corner_lot: false,
+          wide_road: false,
+          
+          // Metadata
+          created_by: 'pipeline_user'
         };
         console.log('✅ mock_land_data prepared:', mock_land_data);
       }
