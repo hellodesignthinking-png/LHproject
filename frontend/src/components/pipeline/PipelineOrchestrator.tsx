@@ -722,7 +722,7 @@ export const PipelineOrchestrator: React.FC = () => {
                   marginBottom: '20px'
                 }}>
                   <a
-                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/reports/module/M2/html?context_id=${state.contextId}`}
+                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/pipeline/reports/module/M2/html?context_id=${state.contextId}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -751,7 +751,7 @@ export const PipelineOrchestrator: React.FC = () => {
                   </a>
                   
                   <a
-                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/reports/module/M3/html?context_id=${state.contextId}`}
+                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/pipeline/reports/module/M3/html?context_id=${state.contextId}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -780,7 +780,7 @@ export const PipelineOrchestrator: React.FC = () => {
                   </a>
                   
                   <a
-                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/reports/module/M4/html?context_id=${state.contextId}`}
+                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/pipeline/reports/module/M4/html?context_id=${state.contextId}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -809,7 +809,7 @@ export const PipelineOrchestrator: React.FC = () => {
                   </a>
                   
                   <a
-                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/reports/module/M5/html?context_id=${state.contextId}`}
+                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/pipeline/reports/module/M5/html?context_id=${state.contextId}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -838,7 +838,7 @@ export const PipelineOrchestrator: React.FC = () => {
                   </a>
                   
                   <a
-                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/reports/module/M6/html?context_id=${state.contextId}`}
+                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/pipeline/reports/module/M6/html?context_id=${state.contextId}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -1414,7 +1414,7 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
           onClick={() => {
             // 🔥 NEW: Open HTML report directly (REAL APPRAISAL STANDARD format)
             const backendUrl = BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai';
-            const htmlUrl = `${backendUrl}/api/v4/reports/module/${moduleId}/html?context_id=${contextId}`;
+            const htmlUrl = `${backendUrl}/api/v4/pipeline/reports/module/${moduleId}/html?context_id=${contextId}`;
             window.open(htmlUrl, '_blank');
           }}
           style={{

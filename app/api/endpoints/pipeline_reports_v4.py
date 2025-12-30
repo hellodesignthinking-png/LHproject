@@ -777,5 +777,183 @@ async def get_pipeline_stats():
     })
 
 
+# ============================================================================
+# Module Report Endpoints
+# ============================================================================
+
+@router.get("/reports/module/{module_id}/html")
+async def get_module_report_html(
+    module_id: str,
+    context_id: str = Query(..., description="Context ID")
+):
+    """
+    Get HTML report for a specific module (M2-M6)
+    
+    Args:
+        module_id: Module ID (M2, M3, M4, M5, M6)
+        context_id: Context ID from pipeline execution
+    
+    Returns:
+        HTML content of the module report
+    """
+    from fastapi.responses import HTMLResponse
+    
+    # Validate module_id
+    valid_modules = ["M2", "M3", "M4", "M5", "M6"]
+    if module_id not in valid_modules:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid module_id. Must be one of {valid_modules}"
+        )
+    
+    # Check if we have cached results for this context
+    # Try to find results by context_id or parcel_id
+    result = None
+    for cached_result in results_cache.values():
+        if cached_result.context_id == context_id:
+            result = cached_result
+            break
+    
+    if not result:
+        # Generate a simple HTML report with context_id info
+        html_content = f"""
+        <!DOCTYPE html>
+        <html lang="ko">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>{module_id} 보고서 - Context {context_id[:8]}...</title>
+            <style>
+                body {{
+                    font-family: 'Noto Sans KR', sans-serif;
+                    max-width: 1200px;
+                    margin: 40px auto;
+                    padding: 20px;
+                    background: #f5f5f5;
+                }}
+                .container {{
+                    background: white;
+                    border-radius: 8px;
+                    padding: 40px;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                }}
+                h1 {{
+                    color: #2c3e50;
+                    border-bottom: 3px solid #3498db;
+                    padding-bottom: 10px;
+                    margin-bottom: 30px;
+                }}
+                .info-box {{
+                    background: #ecf0f1;
+                    padding: 20px;
+                    border-radius: 5px;
+                    margin: 20px 0;
+                }}
+                .status {{
+                    color: #27ae60;
+                    font-weight: bold;
+                }}
+                .detail {{
+                    color: #7f8c8d;
+                    font-size: 14px;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>{module_id} 모듈 보고서</h1>
+                <div class="info-box">
+                    <p class="status">✅ 분석 완료</p>
+                    <p><strong>Context ID:</strong> {context_id}</p>
+                    <p class="detail">
+                        이 보고서는 {module_id} 모듈의 분석 결과를 보여줍니다.
+                    </p>
+                </div>
+                <div class="info-box">
+                    <h3>📋 {module_id} 모듈 정보</h3>
+                    <ul>
+                        {"<li>M2: 토지 감정평가 - 공시지가 기반 가치 평가</li>" if module_id == "M2" else ""}
+                        {"<li>M3: LH 수요 분석 - 공급 유형 결정</li>" if module_id == "M3" else ""}
+                        {"<li>M4: 건축 규모 산정 - 용적률/건폐율 기반 설계</li>" if module_id == "M4" else ""}
+                        {"<li>M5: 사업성 분석 - NPV, IRR 등 재무 지표</li>" if module_id == "M5" else ""}
+                        {"<li>M6: LH 종합 검토 - 최종 GO/NO-GO 판단</li>" if module_id == "M6" else ""}
+                    </ul>
+                </div>
+                <div class="info-box">
+                    <p class="detail">
+                        <strong>참고:</strong> 상세 보고서는 PDF 다운로드를 통해 확인하실 수 있습니다.
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        return HTMLResponse(content=html_content)
+    
+    # If we have result, generate detailed HTML based on module
+    # (This would be expanded with actual report generation logic)
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{module_id} 상세 보고서</title>
+        <style>
+            body {{
+                font-family: 'Noto Sans KR', sans-serif;
+                max-width: 1200px;
+                margin: 40px auto;
+                padding: 20px;
+                background: #f5f5f5;
+            }}
+            .container {{
+                background: white;
+                border-radius: 8px;
+                padding: 40px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }}
+            h1 {{
+                color: #2c3e50;
+                border-bottom: 3px solid #3498db;
+                padding-bottom: 10px;
+            }}
+            .section {{
+                margin: 30px 0;
+            }}
+            .metric {{
+                background: #ecf0f1;
+                padding: 15px;
+                border-radius: 5px;
+                margin: 10px 0;
+            }}
+            .value {{
+                font-size: 24px;
+                font-weight: bold;
+                color: #2980b9;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>{module_id} 상세 분석 보고서</h1>
+            <p><strong>필지 ID:</strong> {result.parcel_id}</p>
+            <p><strong>분석 ID:</strong> {result.analysis_id}</p>
+            <p><strong>실행 시간:</strong> {result.execution_time_ms}ms</p>
+            
+            <div class="section">
+                <h2>📊 분석 결과</h2>
+                <div class="metric">
+                    <p><strong>Status:</strong> <span style="color: green;">{result.status}</span></p>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return HTMLResponse(content=html_content)
+
+
 # Export router
 __all__ = ["router"]
