@@ -780,68 +780,22 @@ async def get_pipeline_stats():
 # ============================================================================
 # Module Report Endpoints
 # ============================================================================
-
-@router.get("/reports/module/{module_id}/html")
-async def get_module_report_html(
-    module_id: str,
-    context_id: str = Query(..., description="Context ID")
-):
-    """
-    Get detailed HTML report for a specific module (M2-M6)
-    
-    Args:
-        module_id: Module ID (M2, M3, M4, M5, M6)
-        context_id: Context ID from pipeline execution
-    
-    Returns:
-        Professional appraisal-style HTML report
-    """
-    from fastapi.responses import HTMLResponse
-    
-    # Validate module_id
-    valid_modules = ["M2", "M3", "M4", "M5", "M6"]
-    if module_id not in valid_modules:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid module_id. Must be one of {valid_modules}"
-        )
-    
-    # Get module data from cache or context
-    module_data = None
-    try:
-        # Try to find the parcel_id from context_id
-        # context_id format: CTX_{parcel_id}_{timestamp}_{uuid}
-        parcel_id = context_id.split("_")[1] if "_" in context_id else None
-        
-        if parcel_id and parcel_id in results_cache:
-            result = results_cache[parcel_id]
-            result_dict = pipeline_result_to_dict(result)
-            
-            # Get specific module data
-            module_key = {
-                "M2": "appraisal",
-                "M3": "housing_type",
-                "M4": "capacity",
-                "M5": "feasibility",
-                "M6": "lh_review"
-            }.get(module_id)
-            
-            if module_key:
-                module_data = result_dict.get(module_key, {})
-    except Exception as e:
-        logger.warning(f"Could not load module data: {e}")
-    
-    # Import professional report HTML generator
-    from app.utils.professional_report_html import generate_module_report_html
-    
-    # Generate professional HTML report
-    html_content = generate_module_report_html(
-        module_id=module_id,
-        context_id=context_id,
-        module_data=module_data
-    )
-    
-    return HTMLResponse(content=html_content)
+# 
+# NOTE: Module reports (M2-M6 HTML/PDF) are now handled by:
+#   /app/routers/pdf_download_standardized.py
+# 
+# Endpoints:
+#   GET /api/v4/reports/M2/html?context_id=xxx
+#   GET /api/v4/reports/M2/pdf?context_id=xxx
+#   ... (M3, M4, M5, M6)
+# 
+# This router (pipeline_reports_v4) focuses on:
+#   - POST /api/v4/pipeline/analyze (run full pipeline)
+#   - POST /api/v4/pipeline/reports/comprehensive (generate comprehensive report)
+#   - GET /api/v4/pipeline/health (health check)
+# 
+# No conflicting endpoints with pdf_download_standardized.py
+# ============================================================================
 
 
 # Export router
