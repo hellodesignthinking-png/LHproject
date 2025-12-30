@@ -375,13 +375,26 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
     Returns:
         Comprehensive analysis results with all Context data
     """
+    print(f"\n{'='*80}")
+    print(f"🔥🔥🔥 ENDPOINT CALLED: run_pipeline_analysis")
+    print(f"parcel_id: {request.parcel_id}")
+    print(f"use_cache: {request.use_cache}")
+    print(f"{'='*80}\n")
+    logger.info(f"🔥🔥🔥 ENDPOINT CALLED: run_pipeline_analysis with parcel_id={request.parcel_id}")
     try:
         start_time = time.time()
         
+        print(f"🔥 Step 1: Check if parcel_id in cache: {request.parcel_id in results_cache}")
+        logger.info(f"🔥 Step 1: Check if parcel_id in cache: {request.parcel_id in results_cache}")
+        
         # 🔥 FORCE CACHE CLEAR FOR DEBUGGING
         if request.parcel_id in results_cache:
+            print(f"⚠️ CLEARING OLD CACHE for {request.parcel_id}")
             logger.warning(f"⚠️ CLEARING OLD CACHE for {request.parcel_id}")
             del results_cache[request.parcel_id]
+        
+        print(f"🔥 Step 2: After clear, parcel_id in cache: {request.parcel_id in results_cache}")
+        logger.info(f"🔥 Step 2: After clear, parcel_id in cache: {request.parcel_id in results_cache}")
         
         # Check cache
         if request.use_cache and request.parcel_id in results_cache:
