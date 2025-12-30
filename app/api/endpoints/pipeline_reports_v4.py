@@ -316,11 +316,14 @@ def pipeline_result_to_dict(result: PipelineResult, request_parcel_id: str = Non
     # 🔥 FIX: Add html_preview_url and pdf_download_url to each module
     # Use parcel_id determined above (with fallback chain)
     context_id = parcel_id
+    print(f"\n🔍 IMPORTANT: Setting context_id for URLs: {context_id}")
+    print(f"   This should match the cache keys: {parcel_id}\n")
     
     # Add URLs to each module's response
     m2_dict = m2_canonical.dict()
     m2_dict['html_preview_url'] = f"/api/v4/reports/M2/html?context_id={context_id}"
     m2_dict['pdf_download_url'] = f"/api/v4/reports/M2/pdf?context_id={context_id}"
+    print(f"   M2 HTML URL: {m2_dict['html_preview_url']}")
     
     m3_dict = m3_canonical.dict()
     m3_dict['html_preview_url'] = f"/api/v4/reports/M3/html?context_id={context_id}"
@@ -397,7 +400,9 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
         logger.info(f"🔥 Step 2: After clear, parcel_id in cache: {request.parcel_id in results_cache}")
         
         # Check cache
+        print(f"🔥 Step 3: Checking cache condition: use_cache={request.use_cache}, in_cache={request.parcel_id in results_cache}")
         if request.use_cache and request.parcel_id in results_cache:
+            print(f"✅ USING CACHED RESULTS - Should not happen!")
             logger.info(f"✅ Using cached results for {request.parcel_id}")
             cached_result = results_cache[request.parcel_id]
             
@@ -436,28 +441,40 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
             )
         
         # Run pipeline
+        print(f"🔥 Step 4: About to run pipeline for {request.parcel_id}")
         logger.info(f"🚀 Running 6-MODULE pipeline for {request.parcel_id}")
         result = pipeline.run(request.parcel_id)
+        print(f"🔥 Step 5: Pipeline execution completed!")
         
         # Cache results with BOTH keys for compatibility
         # Key 1: request.parcel_id (for pipeline lookup)
+        print(f"🔥 Step 6: Caching result with key 1: {request.parcel_id}")
         results_cache[request.parcel_id] = result
+        print(f"✅ Step 6 complete: Cached with key 1")
         logger.info(f"✅ Cached with key 1: {request.parcel_id}")
         
         # Key 2: result.land.parcel_id (for HTML/PDF report lookup)
         # This ensures context_id in URLs matches the cache key
+        print(f"🔥 Step 7: Checking if result has 'land' attribute...")
+        print(f"   result has 'land'? {hasattr(result, 'land')}")
         logger.info(f"🔍 DEBUG: result has 'land'? {hasattr(result, 'land')}")
         if hasattr(result, 'land'):
+            print(f"   result.land type: {type(result.land)}")
+            print(f"   result.land has 'parcel_id'? {hasattr(result.land, 'parcel_id')}")
             logger.info(f"🔍 DEBUG: result.land type: {type(result.land)}")
             logger.info(f"🔍 DEBUG: result.land has 'parcel_id'? {hasattr(result.land, 'parcel_id')}")
             if hasattr(result.land, 'parcel_id'):
                 land_parcel_id = result.land.parcel_id
+                print(f"   result.land.parcel_id = {land_parcel_id}")
                 logger.info(f"🔍 DEBUG: result.land.parcel_id = {land_parcel_id}")
                 results_cache[land_parcel_id] = result
+                print(f"✅ Cached with BOTH keys: {request.parcel_id} and {land_parcel_id}")
                 logger.info(f"✅ Cached with both keys: {request.parcel_id} and {land_parcel_id}")
             else:
+                print(f"⚠️ result.land exists but has NO parcel_id attribute!")
                 logger.warning(f"⚠️ result.land exists but has no parcel_id attribute!")
         else:
+            print(f"⚠️ result has NO 'land' attribute! Using only request.parcel_id")
             logger.warning(f"⚠️ result has no 'land' attribute! Using only request.parcel_id as cache key")
         
         # Calculate execution time

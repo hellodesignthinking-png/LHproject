@@ -380,14 +380,27 @@ async def _generate_module_html(module: str, context_id: str):
     try:
         logger.info(f"📄 HTML 미리보기 요청: module={module}, context_id={context_id}")
         
+        # 🚫 UUID 차단 - context_id는 반드시 parcel_id(PNU)여야 함
+        if "-" in context_id:
+            logger.critical(f"❌ INVALID CONTEXT_ID (UUID detected): {context_id}")
+            logger.critical(f"   Frontend is sending UUID instead of parcel_id(PNU)")
+            logger.critical(f"   Fix frontend code to use analysisId (parcel_id) only!")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid context_id format. Expected parcel_id (PNU number), got UUID: {context_id}. "
+                       f"Frontend must use analysisId (parcel_id) for reports, not contextId."
+            )
+        
         # ✅ Load real pipeline results from cache
         from app.api.endpoints.pipeline_reports_v4 import results_cache
         
         if context_id not in results_cache:
-            logger.error(f"❌ No pipeline results for context_id={context_id}")
+            logger.error(f"❌ No pipeline results for parcel_id={context_id}")
+            logger.error(f"   Available keys in cache: {list(results_cache.keys())}")
             raise HTTPException(
                 status_code=404,
-                detail=f"Pipeline 결과를 찾을 수 없습니다: {context_id}"
+                detail=f"Pipeline result not found for parcel_id={context_id}. "
+                       f"This usually means frontend sent an invalid context_id or pipeline hasn't run yet."
             )
         
         pipeline_result = results_cache[context_id]

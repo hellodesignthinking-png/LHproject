@@ -652,9 +652,21 @@ export const PipelineOrchestrator: React.FC = () => {
                   marginBottom: '20px'
                 }}>
                   <a
-                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/reports/module/M2/html?context_id=${state.contextId}`}
+                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/reports/module/M2/html?context_id=${state.analysisId}`}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => {
+                      console.log("📌 REPORT OPEN M2", {
+                        analysisId: state.analysisId,   // 숫자 PNU (사용됨)
+                        contextId: state.contextId,     // UUID (무시됨)
+                        used: state.analysisId          // 실제 사용된 값
+                      });
+                      if (!state.analysisId || String(state.analysisId).includes("-")) {
+                        console.error("❌ INVALID context_id for report", state.analysisId);
+                        alert("오류: 잘못된 분석 ID입니다. 다시 분석을 실행해주세요.");
+                        return false;
+                      }
+                    }}
                     style={{
                       padding: '18px',
                       background: 'white',
@@ -681,7 +693,7 @@ export const PipelineOrchestrator: React.FC = () => {
                   </a>
                   
                   <a
-                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/reports/module/M3/html?context_id=${state.contextId}`}
+                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/reports/module/M3/html?context_id=${state.analysisId}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -710,7 +722,7 @@ export const PipelineOrchestrator: React.FC = () => {
                   </a>
                   
                   <a
-                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/reports/module/M4/html?context_id=${state.contextId}`}
+                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/reports/module/M4/html?context_id=${state.analysisId}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -739,7 +751,7 @@ export const PipelineOrchestrator: React.FC = () => {
                   </a>
                   
                   <a
-                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/reports/module/M5/html?context_id=${state.contextId}`}
+                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/reports/module/M5/html?context_id=${state.analysisId}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -768,7 +780,7 @@ export const PipelineOrchestrator: React.FC = () => {
                   </a>
                   
                   <a
-                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/reports/module/M6/html?context_id=${state.contextId}`}
+                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/reports/module/M6/html?context_id=${state.analysisId}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -851,7 +863,7 @@ export const PipelineOrchestrator: React.FC = () => {
                         alert('⚠️ M1 분석을 먼저 완료해주세요.');
                         return;
                       }
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/all_in_one/html?context_id=${state.contextId}`;
+                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/all_in_one/html?context_id=${state.analysisId}`;
                       window.open(url, '_blank');
                     }}
                     disabled={!state.contextId}
