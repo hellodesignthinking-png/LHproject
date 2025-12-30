@@ -1409,127 +1409,158 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
         ))}
       </div>
       
-      {/* Detailed Report Section (Expandable) */}
-      {expanded && data && (
+      {/* Detailed Report Section (Expandable - Embedded HTML Report) */}
+      {expanded && (
         <div style={{
           marginTop: '20px',
-          padding: '20px',
-          background: 'white',
-          border: '1px solid #ddd',
+          border: '2px solid #2196F3',
           borderRadius: '8px',
-          maxHeight: '600px',
-          overflowY: 'auto'
+          overflow: 'hidden',
+          background: 'white'
         }}>
-          <h4 style={{ marginTop: 0, marginBottom: '15px', color: '#333' }}>📊 상세 분석 결과</h4>
-          
-          {/* Summary Section */}
-          {data.summary && (
-            <div style={{ marginBottom: '20px' }}>
-              <h5 style={{ color: '#555', marginBottom: '10px' }}>📋 요약</h5>
-              <div style={{ background: '#f5f5f5', padding: '15px', borderRadius: '6px' }}>
-                {Object.entries(data.summary).map(([key, value]: [string, any]) => (
-                  <div key={key} style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#666', fontSize: '13px' }}>{key}:</span>
-                    <span style={{ fontWeight: 'bold', fontSize: '13px' }}>
-                      {typeof value === 'number' ? value.toLocaleString() : String(value)}
-                    </span>
-                  </div>
-                ))}
+          {/* Report Header */}
+          <div style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            padding: '15px 20px',
+            color: 'white',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '24px' }}>{icon}</span>
+              <div>
+                <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{moduleId}: {title}</div>
+                <div style={{ fontSize: '12px', opacity: 0.9 }}>전문 감정평가 보고서</div>
               </div>
             </div>
-          )}
+            <button
+              onClick={() => setExpanded(false)}
+              style={{
+                background: 'rgba(255,255,255,0.2)',
+                border: '1px solid rgba(255,255,255,0.3)',
+                color: 'white',
+                padding: '8px 15px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: '600'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.3)'}
+              onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+            >
+              ✕ 닫기
+            </button>
+          </div>
           
-          {/* Details Section */}
-          {data.details && (
-            <div style={{ marginBottom: '20px' }}>
-              <h5 style={{ color: '#555', marginBottom: '10px' }}>🔍 세부 정보</h5>
-              <div style={{ background: '#f9f9f9', padding: '15px', borderRadius: '6px' }}>
-                {Object.entries(data.details).map(([category, content]: [string, any]) => (
-                  <div key={category} style={{ marginBottom: '15px' }}>
-                    <div style={{ fontWeight: 'bold', color: '#333', marginBottom: '8px', fontSize: '14px' }}>
-                      {category}
-                    </div>
-                    {typeof content === 'object' && content !== null ? (
-                      <div style={{ paddingLeft: '15px', fontSize: '13px' }}>
-                        {Object.entries(content).map(([key, value]: [string, any]) => (
-                          <div key={key} style={{ marginBottom: '5px', color: '#666' }}>
-                            <span style={{ color: '#888' }}>{key}:</span>{' '}
-                            <span style={{ color: '#333' }}>
-                              {typeof value === 'number' ? value.toLocaleString() : 
-                               typeof value === 'object' ? JSON.stringify(value, null, 2) : 
-                               String(value)}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div style={{ paddingLeft: '15px', color: '#666', fontSize: '13px' }}>
-                        {String(content)}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+          {/* Embedded HTML Report via iframe */}
+          <div style={{ position: 'relative', height: '800px', background: 'white' }}>
+            <iframe
+              src={`${BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai'}/api/v4/pipeline/reports/module/${moduleId}/html?context_id=${contextId}`}
+              style={{
+                width: '100%',
+                height: '100%',
+                border: 'none',
+                display: 'block'
+              }}
+              title={`${moduleId} 상세 보고서`}
+              onLoad={() => console.log(`✅ [Embedded Report] ${moduleId} loaded successfully`)}
+              onError={() => console.error(`❌ [Embedded Report] ${moduleId} failed to load`)}
+            />
+          </div>
+          
+          {/* Footer with Action Buttons */}
+          <div style={{
+            background: '#f5f5f5',
+            padding: '15px 20px',
+            borderTop: '1px solid #ddd',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <div style={{ fontSize: '13px', color: '#666' }}>
+              💡 <strong>Tip:</strong> Ctrl+P를 눌러 PDF로 저장할 수 있습니다 (배경 그래픽 켜기)
             </div>
-          )}
-          
-          {/* Raw Data (for debugging) */}
-          {process.env.NODE_ENV === 'development' && (
-            <details style={{ marginTop: '15px' }}>
-              <summary style={{ cursor: 'pointer', color: '#999', fontSize: '12px' }}>🔧 디버그: Raw Data</summary>
-              <pre style={{ 
-                background: '#f0f0f0', 
-                padding: '10px', 
-                borderRadius: '4px', 
-                fontSize: '11px',
-                maxHeight: '300px',
-                overflowY: 'auto'
-              }}>
-                {JSON.stringify(data, null, 2)}
-              </pre>
-            </details>
-          )}
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => {
+                  const htmlUrl = `${BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai'}/api/v4/pipeline/reports/module/${moduleId}/html?context_id=${contextId}`;
+                  window.open(htmlUrl, '_blank');
+                }}
+                style={{
+                  padding: '10px 20px',
+                  background: '#2196F3',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = '#1976D2'}
+                onMouseOut={(e) => e.currentTarget.style.background = '#2196F3'}
+              >
+                <span>🔗</span>
+                <span>새 탭에서 열기</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
       
       {/* Action Buttons */}
       <div style={{ display: 'flex', gap: '8px', marginTop: '15px' }}>
-        {/* Toggle Detailed View Button */}
+        {/* Toggle Detailed View Button - Primary Action */}
         <button
-          onClick={() => setExpanded(!expanded)}
+          onClick={() => {
+            console.log(`📊 [ModuleResultCard] Toggling detailed view for ${moduleId}, expanded: ${!expanded}`);
+            setExpanded(!expanded);
+          }}
           style={{
             flex: 1,
-            padding: '10px',
-            background: expanded ? '#FF9800' : '#4CAF50',
+            padding: '12px',
+            background: expanded ? '#FF5722' : '#4CAF50',
             color: 'white',
             border: 'none',
             borderRadius: '6px',
-            fontSize: '13px',
-            fontWeight: '600',
+            fontSize: '14px',
+            fontWeight: '700',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '8px'
+            gap: '10px',
+            transition: 'all 0.3s ease',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
           }}
-          onMouseOver={(e) => e.currentTarget.style.background = expanded ? '#F57C00' : '#388E3C'}
-          onMouseOut={(e) => e.currentTarget.style.background = expanded ? '#FF9800' : '#4CAF50'}
+          onMouseOver={(e) => {
+            e.currentTarget.style.background = expanded ? '#E64A19' : '#388E3C';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.background = expanded ? '#FF5722' : '#4CAF50';
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+          }}
         >
-          <span>{expanded ? '🔼' : '🔽'}</span>
+          <span style={{ fontSize: '18px' }}>{expanded ? '🔼' : '📊'}</span>
           <span>{expanded ? '상세 보고서 닫기' : '상세 보고서 보기'}</span>
         </button>
         
-        {/* Open HTML Report in New Tab */}
+        {/* Secondary Action - Open in New Tab */}
         <button
           onClick={() => {
             const backendUrl = BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai';
             const htmlUrl = `${backendUrl}/api/v4/pipeline/reports/module/${moduleId}/html?context_id=${contextId}`;
-            console.log(`📄 [HTML REPORT] Opening: ${htmlUrl}`);
+            console.log(`🔗 [HTML REPORT] Opening in new tab: ${htmlUrl}`);
             window.open(htmlUrl, '_blank');
           }}
           style={{
-            flex: 1,
-            padding: '10px',
+            padding: '12px 20px',
             background: '#2196F3',
             color: 'white',
             border: 'none',
@@ -1540,19 +1571,31 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '8px'
+            gap: '8px',
+            transition: 'all 0.3s ease',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
           }}
-          onMouseOver={(e) => e.currentTarget.style.background = '#1976D2'}
-          onMouseOut={(e) => e.currentTarget.style.background = '#2196F3'}
+          onMouseOver={(e) => {
+            e.currentTarget.style.background = '#1976D2';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.background = '#2196F3';
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+          }}
         >
-          <span>📄</span>
-          <span>새 탭에서 열기</span>
+          <span>🔗</span>
+          <span>새 탭</span>
         </button>
       </div>
       
-      <div style={{ fontSize: '11px', color: '#999', marginTop: '8px', textAlign: 'center' }}>
-        💡 Tip: 새 탭 보고서에서 Ctrl+P → "PDF로 저장" → "배경 그래픽 켜기"
-      </div>
+      {!expanded && (
+        <div style={{ fontSize: '11px', color: '#999', marginTop: '8px', textAlign: 'center' }}>
+          💡 <strong>상세 보고서 보기</strong>를 클릭하면 전문 감정평가 보고서가 표시됩니다
+        </div>
+      )}
     </div>
   );
 };
