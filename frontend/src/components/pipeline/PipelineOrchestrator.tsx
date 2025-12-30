@@ -1484,7 +1484,10 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
             <div style={{ display: 'flex', gap: '10px' }}>
               <button
                 onClick={() => {
-                  const htmlUrl = `${BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai'}/api/v4/reports/${moduleId}/html?context_id=${contextId}`;
+                  // 🔥 CRITICAL FIX: Use state.analysisId (parcel_id) instead of contextId (UUID)
+                  const actualContextId = state.analysisId || state.parcelId || contextId;
+                  const htmlUrl = `${BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai'}/api/v4/reports/${moduleId}/html?context_id=${actualContextId}`;
+                  console.log(`🔍 [Report URL] moduleId=${moduleId}, contextId=${contextId}, analysisId=${state.analysisId}, parcelId=${state.parcelId}, actualContextId=${actualContextId}`);
                   window.open(htmlUrl, '_blank');
                 }}
                 style={{
@@ -1555,7 +1558,10 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
         <button
           onClick={() => {
             const backendUrl = BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai';
-            const htmlUrl = `${backendUrl}/api/v4/reports/${moduleId}/html?context_id=${contextId}`;
+            // 🔥 CRITICAL FIX: Use state.analysisId (parcel_id) instead of contextId (UUID)
+            const actualContextId = state.analysisId || state.parcelId || contextId;
+            const htmlUrl = `${backendUrl}/api/v4/reports/${moduleId}/html?context_id=${actualContextId}`;
+            console.log(`🔍 [New Tab] moduleId=${moduleId}, actualContextId=${actualContextId}`);
             console.log(`🔗 [HTML REPORT] Opening in new tab: ${htmlUrl}`);
             window.open(htmlUrl, '_blank');
           }}

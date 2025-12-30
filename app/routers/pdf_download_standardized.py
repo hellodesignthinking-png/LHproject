@@ -189,11 +189,16 @@ def _get_real_data_for_module(module: str, context_id: str) -> dict:
     """
     try:
         # Extract parcel_id from context_id
-        # In pipeline_reports_v4.py: context_id = result.land.parcel_id
-        # So context_id IS parcel_id in URLs
+        # In pipeline_reports_v4.py: context_id could be:
+        # 1. parcel_id directly (from result.land.parcel_id)
+        # 2. CTX_{parcel_id}_{timestamp}_{uuid} format
+        # 3. UUID format (from frontend contextId)
+        
+        # Try direct lookup first
         parcel_id = context_id
         
-        logger.info(f"🔍 Real data lookup: module={module}, context_id={context_id}, parcel_id={parcel_id}")
+        logger.info(f"🔍 Real data lookup: module={module}, context_id={context_id}")
+        logger.info(f"🔍 Available parcel_ids in cache: {list(results_cache.keys())}")
         
         # Load from results_cache
         if parcel_id not in results_cache:
