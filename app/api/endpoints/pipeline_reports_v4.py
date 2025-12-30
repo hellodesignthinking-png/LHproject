@@ -787,14 +787,14 @@ async def get_module_report_html(
     context_id: str = Query(..., description="Context ID")
 ):
     """
-    Get HTML report for a specific module (M2-M6)
+    Get detailed HTML report for a specific module (M2-M6)
     
     Args:
         module_id: Module ID (M2, M3, M4, M5, M6)
         context_id: Context ID from pipeline execution
     
     Returns:
-        HTML content of the module report
+        Professional appraisal-style HTML report
     """
     from fastapi.responses import HTMLResponse
     
@@ -806,80 +806,41 @@ async def get_module_report_html(
             detail=f"Invalid module_id. Must be one of {valid_modules}"
         )
     
-    # Generate a simple HTML report with context_id info
-    # Note: We don't need to find cached results - just display the report UI
-    html_content = f"""
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{module_id} 보고서 - Context {context_id[:8]}...</title>
-    <style>
-        body {{
-            font-family: 'Noto Sans KR', sans-serif;
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 20px;
-            background: #f5f5f5;
-        }}
-        .container {{
-            background: white;
-            border-radius: 8px;
-            padding: 40px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }}
-        h1 {{
-            color: #2c3e50;
-            border-bottom: 3px solid #3498db;
-            padding-bottom: 10px;
-            margin-bottom: 30px;
-        }}
-        .info-box {{
-            background: #ecf0f1;
-            padding: 20px;
-            border-radius: 5px;
-            margin: 20px 0;
-        }}
-        .status {{
-            color: #27ae60;
-            font-weight: bold;
-        }}
-        .detail {{
-            color: #7f8c8d;
-            font-size: 14px;
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>{module_id} 모듈 보고서</h1>
-        <div class="info-box">
-            <p class="status">✅ 분석 완료</p>
-            <p><strong>Context ID:</strong> {context_id}</p>
-            <p class="detail">
-                이 보고서는 {module_id} 모듈의 분석 결과를 보여줍니다.
-            </p>
-        </div>
-        <div class="info-box">
-            <h3>📋 {module_id} 모듈 정보</h3>
-            <ul>
-                {"<li>M2: 토지 감정평가 - 공시지가 기반 가치 평가</li>" if module_id == "M2" else ""}
-                {"<li>M3: LH 수요 분석 - 공급 유형 결정</li>" if module_id == "M3" else ""}
-                {"<li>M4: 건축 규모 산정 - 용적률/건폐율 기반 설계</li>" if module_id == "M4" else ""}
-                {"<li>M5: 사업성 분석 - NPV, IRR 등 재무 지표</li>" if module_id == "M5" else ""}
-                {"<li>M6: LH 종합 검토 - 최종 GO/NO-GO 판단</li>" if module_id == "M6" else ""}
-            </ul>
-        </div>
-        <div class="info-box">
-            <p class="detail">
-                <strong>참고:</strong> 상세 보고서는 PDF 다운로드를 통해 확인하실 수 있습니다.
-            </p>
-        </div>
-    </div>
-</body>
-</html>
-"""
+    # Get module data from cache or context
+    module_data = None
+    try:
+        # Try to find the parcel_id from context_id
+        # context_id format: CTX_{parcel_id}_{timestamp}_{uuid}
+        parcel_id = context_id.split("_")[1] if "_" in context_id else None
+        
+        if parcel_id and parcel_id in results_cache:
+            result = results_cache[parcel_id]
+            result_dict = pipeline_result_to_dict(result)
+            
+            # Get specific module data
+            module_key = {
+                "M2": "appraisal",
+                "M3": "housing_type",
+                "M4": "capacity",
+                "M5": "feasibility",
+                "M6": "lh_review"
+            }.get(module_id)
+            
+            if module_key:
+                module_data = result_dict.get(module_key, {})
+    except Exception as e:
+        logger.warning(f"Could not load module data: {e}")
+    
+    # Import professional report HTML generator
+    from app.utils.professional_report_html import generate_module_report_html
+    
+    # Generate professional HTML report
+    html_content = generate_module_report_html(
+        module_id=module_id,
+        context_id=context_id,
+        module_data=module_data
+    )
+    
     return HTMLResponse(content=html_content)
 
 
