@@ -530,7 +530,8 @@ export const PipelineOrchestrator: React.FC = () => {
                     title="토지감정평가"
                     icon="💰"
                     data={state.m2Result}
-                    contextId={state.contextId} 
+                    contextId={state.contextId || ''}
+                    analysisId={state.analysisId} 
                     keyMetrics={[
                       { 
                         label: '토지가치', 
@@ -575,7 +576,8 @@ export const PipelineOrchestrator: React.FC = () => {
                     title="LH 선호유형"
                     icon="🏠"
                     data={state.m3Result}
-                    contextId={state.contextId} 
+                    contextId={state.contextId || ''}
+                    analysisId={state.analysisId}
                     keyMetrics={[
                       { 
                         label: '선호 구조', 
@@ -610,7 +612,8 @@ export const PipelineOrchestrator: React.FC = () => {
                     title="건축규모 분석"
                     icon="📐"
                     data={state.m4Result}
-                    contextId={state.contextId} 
+                    contextId={state.contextId || ''}
+                    analysisId={state.analysisId}
                     keyMetrics={[
                       { label: '법정 세대수', value: (state.m4Result.summary?.legal_units !== undefined && state.m4Result.summary?.legal_units !== null) ? `${state.m4Result.summary.legal_units}세대` : (state.m4Result.details?.legal_capacity?.total_units !== undefined) ? `${state.m4Result.details.legal_capacity.total_units}세대` : '분석 필요' },
                       { label: '인센티브 세대수', value: (state.m4Result.summary?.incentive_units !== undefined && state.m4Result.summary?.incentive_units !== null) ? `${state.m4Result.summary.incentive_units}세대` : (state.m4Result.details?.incentive_capacity?.total_units !== undefined) ? `${state.m4Result.details.incentive_capacity.total_units}세대` : '분석 필요' },
@@ -627,7 +630,8 @@ export const PipelineOrchestrator: React.FC = () => {
                     title="사업성 분석"
                     icon="💼"
                     data={state.m5Result}
-                    contextId={state.contextId} 
+                    contextId={state.contextId || ''}
+                    analysisId={state.analysisId}
                     keyMetrics={[
                       { 
                         label: 'NPV (Public)', 
@@ -662,7 +666,8 @@ export const PipelineOrchestrator: React.FC = () => {
                     title="LH 심사예측"
                     icon="⚖️"
                     data={state.m6Result}
-                    contextId={state.contextId} 
+                    contextId={state.contextId || ''}
+                    analysisId={state.analysisId}
                     keyMetrics={[
                       { 
                         label: '최종 결정', 
@@ -1223,7 +1228,8 @@ interface ModuleResultCardProps {
   title: string;
   icon: string;
   data: any;
-  contextId: string; // ✅ ADD: Pass contextId from parent
+  contextId: string; // ✅ UUID (for UI session)
+  analysisId: string | null; // ✅ ADD: PNU for data queries
   keyMetrics: { label: string; value: string; highlight?: boolean }[];
 }
 
@@ -1232,7 +1238,8 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
   title, 
   icon, 
   data,
-  contextId, // ✅ ADD
+  contextId, // UUID (for UI session)
+  analysisId, // PNU (for data queries) ✅
   keyMetrics 
 }) => {
   const [expanded, setExpanded] = React.useState(false);
@@ -1455,9 +1462,9 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
           
           {/* Embedded HTML Report via iframe */}
           <div style={{ position: 'relative', height: '800px', background: 'white' }}>
-            {/* 🔥 CRITICAL FIX: Use state.analysisId (parcel_id) instead of contextId (UUID) */}
+            {/* 🔥 CRITICAL FIX: Use analysisId prop (PNU) instead of contextId (UUID) */}
             {(() => {
-              const reportKey = state.analysisId || state.parcelId;
+              const reportKey = analysisId;
               if (!reportKey) {
                 console.error('❌ analysisId 없음 - 보고서 열기 차단');
                 return (
@@ -1479,8 +1486,7 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
               console.log('📌 REPORT DEBUG', {
                 moduleId,
                 contextId,
-                analysisId: state.analysisId,
-                parcelId: state.parcelId,
+                analysisId,
                 reportKey,
                 iframeUrl
               });
@@ -1517,10 +1523,10 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
             <div style={{ display: 'flex', gap: '10px' }}>
               <button
                 onClick={() => {
-                  // 🔥 CRITICAL FIX: Use state.analysisId (parcel_id) instead of contextId (UUID)
-                  const actualContextId = state.analysisId || state.parcelId || contextId;
-                  const htmlUrl = `${BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai'}/api/v4/reports/${moduleId}/html?context_id=${actualContextId}`;
-                  console.log(`🔍 [Report URL] moduleId=${moduleId}, contextId=${contextId}, analysisId=${state.analysisId}, parcelId=${state.parcelId}, actualContextId=${actualContextId}`);
+                  // 🔥 CRITICAL FIX: Use analysisId prop (PNU) instead of contextId (UUID)
+                  const reportKey = analysisId || contextId;
+                  const htmlUrl = `${BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai'}/api/v4/reports/${moduleId}/html?context_id=${reportKey}`;
+                  console.log(`🔍 [Report URL] moduleId=${moduleId}, contextId=${contextId}, analysisId=${analysisId}, reportKey=${reportKey}`);
                   window.open(htmlUrl, '_blank');
                 }}
                 style={{
@@ -1591,10 +1597,10 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
         <button
           onClick={() => {
             const backendUrl = BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai';
-            // 🔥 CRITICAL FIX: Use state.analysisId (parcel_id) instead of contextId (UUID)
-            const actualContextId = state.analysisId || state.parcelId || contextId;
-            const htmlUrl = `${backendUrl}/api/v4/reports/${moduleId}/html?context_id=${actualContextId}`;
-            console.log(`🔍 [New Tab] moduleId=${moduleId}, actualContextId=${actualContextId}`);
+            // 🔥 CRITICAL FIX: Use analysisId prop (PNU) instead of contextId (UUID)
+            const reportKey = analysisId || contextId;
+            const htmlUrl = `${backendUrl}/api/v4/reports/${moduleId}/html?context_id=${reportKey}`;
+            console.log(`🔍 [New Tab] moduleId=${moduleId}, analysisId=${analysisId}, reportKey=${reportKey}`);
             console.log(`🔗 [HTML REPORT] Opening in new tab: ${htmlUrl}`);
             window.open(htmlUrl, '_blank');
           }}
