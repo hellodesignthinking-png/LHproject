@@ -503,41 +503,49 @@ def generate_module_report_html(
     <!-- Cover Page -->
     <div class="cover-page">
         <div class="company-logo">
-            <div class="logo-main">ANTENNA HOLDINGS</div>
-            <div class="logo-sub">Real Estate Intelligence</div>
+            <div class="logo-main">A N T E N N A &nbsp; H O L D I N G S</div>
         </div>
         
-        <div class="cover-title">
-            {config['icon']} {config['title']}
+        <div class="logo-sub" style="margin-top: 40px; margin-bottom: 60px; font-size: 20px; letter-spacing: 4px;">
+            {config.get('english_title', config['subtitle'])}
         </div>
         
-        <div class="cover-subtitle">
-            {config['subtitle']}
+        <div class="cover-title" style="font-size: 40px; margin-bottom: 80px;">
+            {config['title']}
         </div>
         
-        <div class="report-info">
-            <div class="report-info-item">
-                <span class="report-info-label">보고서 번호</span>
-                <span class="report-info-value">{report_number}</span>
+        <div class="report-info" style="background: transparent; border: none; box-shadow: none; padding: 0;">
+            <div class="report-info-item" style="margin: 24px 0;">
+                <span class="report-info-label">보고서 번호</span><br/>
+                <span style="font-size: 16px; font-weight: 400;">{report_number}</span>
             </div>
-            <div class="report-info-item">
-                <span class="report-info-label">발행일</span>
-                <span class="report-info-value">{report_date}</span>
+            <div class="report-info-item" style="margin: 24px 0;">
+                <span class="report-info-label">사업지</span><br/>
+                <span style="font-size: 16px; font-weight: 400;">{summary.get('address', '서울특별시 강남구 역삼동 1234')}</span>
             </div>
-            <div class="report-info-item">
-                <span class="report-info-label">Context ID</span>
-                <span class="report-info-value">{context_id}</span>
-            </div>
-            <div class="report-info-item">
-                <span class="report-info-label">페이지 수</span>
-                <span class="report-info-value">{config.get('pages', '10')}페이지</span>
+            <div class="report-info-item" style="margin: 24px 0;">
+                <span class="report-info-label">분석 기준일</span><br/>
+                <span style="font-size: 16px; font-weight: 400;">{report_date}</span>
             </div>
         </div>
         
-        <div class="company-info">
-            <div class="company-name">ⓒ ANTENNA HOLDINGS</div>
-            <div>ZeroSite by AntennaHoldings · Real Estate Appraisal Platform</div>
-            <div style="margin-top: 12px; font-size: 13px;">본 보고서의 모든 내용은 저작권법에 의해 보호됩니다</div>
+        <div class="company-info" style="margin-top: 100px;">
+            <div class="company-name" style="font-size: 16px; font-weight: 400;">Antenna Holdings Co., Ltd.</div>
+        </div>
+    </div>
+    
+    <div class="page-break"></div>
+    
+    <!-- Page 2: Company Information -->
+    <div class="content-container">
+        <div class="content-page" style="display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; text-align: center;">
+            <div style="margin-bottom: 60px;">
+                <h2 style="font-size: 24px; font-weight: 700; color: #1a1a2e; margin-bottom: 40px; letter-spacing: 2px;">Antenna Holdings Co., Ltd.</h2>
+                <div style="font-size: 16px; line-height: 2.2; color: #2c3e50;">
+                    <p style="margin: 10px 0;">서울시 강남구 테헤란로 427 위워크타워</p>
+                    <p style="margin: 10px 0;">Tel: 02-3789-2000 | Email: analysis@antennaholdings.com</p>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -554,16 +562,9 @@ def generate_module_report_html(
             {content_sections}
             
             <div class="page-footer">
-                <p><strong>ⓒ ANTENNA HOLDINGS</strong></p>
-                <p>ZeroSite by AntennaHoldings · Real Estate Intelligence Platform</p>
-                <p style="margin-top: 10px; font-size: 12px;">본 보고서는 {report_date} 기준으로 작성되었습니다</p>
+                <p style="font-size: 12px; color: #999;">본 보고서는 {report_date} 기준으로 작성되었습니다</p>
             </div>
         </div>
-    </div>
-    
-    <div class="watermark">
-        ANTENNA HOLDINGS<br/>
-        {report_number}
     </div>
 </body>
 </html>

@@ -62,6 +62,59 @@ router = APIRouter(prefix="/api/v4/pipeline", tags=["ZeroSite v4.0 Pipeline"])
 # Pipeline instance (singleton)
 pipeline = ZeroSitePipeline()
 
+# 🔥 CRITICAL FIX: File-based persistent cache (survives backend restarts)
+import json
+import os
+from pathlib import Path
+
+CACHE_DIR = Path("/home/user/webapp/.cache/pipeline")
+CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+def _save_to_cache_file(parcel_id: str, result: "PipelineResult"):
+    """Save pipeline result to file for persistence"""
+    try:
+        cache_file = CACHE_DIR / f"{parcel_id}.json"
+        result_dict = {
+            "land": result.land.model_dump() if result.land else None,
+            "appraisal": result.appraisal.model_dump() if result.appraisal else None,
+            "housing_type": result.housing_type.model_dump() if result.housing_type else None,
+            "capacity": result.capacity.model_dump() if result.capacity else None,
+            "feasibility": result.feasibility.model_dump() if result.feasibility else None,
+            "lh_review": result.lh_review.model_dump() if result.lh_review else None,
+        }
+        with open(cache_file, 'w', encoding='utf-8') as f:
+            json.dump(result_dict, f, ensure_ascii=False, indent=2, default=str)
+        logger.info(f"💾 Saved to persistent cache: {parcel_id}")
+    except Exception as e:
+        logger.error(f"❌ Cache save failed: {e}")
+
+def _load_from_cache_file(parcel_id: str) -> Optional["PipelineResult"]:
+    """Load pipeline result from file"""
+    try:
+        cache_file = CACHE_DIR / f"{parcel_id}.json"
+        if not cache_file.exists():
+            return None
+        
+        with open(cache_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        from app.schemas.pipeline_report import PipelineResult, LandContext, AppraisalContext, HousingTypeResult, CapacityResult, FeasibilityResult, LHReviewResult
+        
+        result = PipelineResult(
+            land=LandContext(**data["land"]) if data.get("land") else None,
+            appraisal=AppraisalContext(**data["appraisal"]) if data.get("appraisal") else None,
+            housing_type=HousingTypeResult(**data["housing_type"]) if data.get("housing_type") else None,
+            capacity=CapacityResult(**data["capacity"]) if data.get("capacity") else None,
+            feasibility=FeasibilityResult(**data["feasibility"]) if data.get("feasibility") else None,
+            lh_review=LHReviewResult(**data["lh_review"]) if data.get("lh_review") else None,
+        )
+        
+        logger.info(f"📂 Loaded from persistent cache: {parcel_id}")
+        return result
+    except Exception as e:
+        logger.error(f"❌ Cache load failed: {e}")
+        return None
+
 # In-memory cache for pipeline results (replace with Redis in production)
 results_cache: Dict[str, PipelineResult] = {}
 
@@ -382,10 +435,22 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
         context_id = generate_context_id(request.parcel_id)
         logger.info(f"🔒 Starting NEW analysis session: {context_id}")
         
-        # Check cache (context_id 기반으로 변경 예정)
-        if request.use_cache and request.parcel_id in results_cache:
-            logger.info(f"✅ Using cached results for {request.parcel_id}")
-            cached_result = results_cache[request.parcel_id]
+        # Check cache (in-memory first, then file)
+        cached_result = None
+        if request.use_cache:
+            # Try in-memory cache first
+            if request.parcel_id in results_cache:
+                logger.info(f"✅ Using in-memory cached results for {request.parcel_id}")
+                cached_result = results_cache[request.parcel_id]
+            else:
+                # Try loading from persistent file cache
+                cached_result = _load_from_cache_file(request.parcel_id)
+                if cached_result:
+                    # Restore to in-memory cache
+                    results_cache[request.parcel_id] = cached_result
+                    logger.info(f"📂 Restored to in-memory cache from file: {request.parcel_id}")
+        
+        if cached_result:
             
             # Extract M4 V2 data from cached result
             capacity_v2 = cached_result.capacity
@@ -518,8 +583,9 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
         
         result = pipeline.run(request.parcel_id)
         
-        # Cache results
+        # Cache results (in-memory + persistent file)
         results_cache[request.parcel_id] = result
+        _save_to_cache_file(request.parcel_id, result)  # 💾 Save to file for persistence
         
         # Calculate execution time
         execution_time_ms = (time.time() - start_time) * 1000
