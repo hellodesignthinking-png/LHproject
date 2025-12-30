@@ -378,6 +378,11 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
     try:
         start_time = time.time()
         
+        # 🔥 FORCE CACHE CLEAR FOR DEBUGGING
+        if request.parcel_id in results_cache:
+            logger.warning(f"⚠️ CLEARING OLD CACHE for {request.parcel_id}")
+            del results_cache[request.parcel_id]
+        
         # Check cache
         if request.use_cache and request.parcel_id in results_cache:
             logger.info(f"✅ Using cached results for {request.parcel_id}")
