@@ -98,6 +98,8 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
   };
 
   const goToStep = (step: number) => {
+    console.log('➡️ [M1Landing] goToStep called:', step);
+    console.log('📍 [M1Landing] Current step:', state.currentStep);
     setState((prev) => ({ ...prev, currentStep: step }));
   };
 
@@ -324,6 +326,9 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
   };
 
   const renderCurrentStep = () => {
+    console.log('🎬 [M1Landing] Rendering step:', state.currentStep);
+    console.log('🎬 [M1Landing] Pipeline mode?', !!onContextFreezeComplete);
+    
     switch (state.currentStep) {
       case -1:
         // NEW: Quick API Key Setup (Step -1)
@@ -397,6 +402,9 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
 
       case 4:
         // Context Freeze (was Step 8 in v1.0)
+        console.log('🔒 [M1Landing] Rendering Step8ContextFreeze');
+        console.log('🔒 [M1Landing] handleStep8Complete exists?', !!handleStep8Complete);
+        console.log('🔒 [M1Landing] formData:', state.formData);
         return (
           <Step8ContextFreeze
             formData={state.formData}
