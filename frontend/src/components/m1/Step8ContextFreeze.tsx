@@ -7,7 +7,7 @@
  * - "분석 시작 (M1 Lock)" 개념 명확화
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { M1FormData } from '../../types/m1.types';
 import { BACKEND_URL } from '../../config';
 
@@ -15,12 +15,44 @@ interface Step8Props {
   formData: M1FormData;
   onComplete: (frozenContext: { context_id: string; parcel_id: string }) => void;
   onBack: () => void;
+  autoProceed?: boolean; // 🆕 Pipeline mode auto-click
 }
 
-export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete, onBack }) => {
+export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete, onBack, autoProceed = false }) => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [autoClicked, setAutoClicked] = useState(false);
+
+  // 🔥 CRITICAL: Auto-click in Pipeline mode
+  useEffect(() => {
+    console.log('🔍 [Step8] useEffect triggered');
+    console.log('  autoProceed:', autoProceed);
+    console.log('  autoClicked:', autoClicked);
+    console.log('  loading:', loading);
+    console.log('  result:', result);
+    console.log('  error:', error);
+    
+    if (autoProceed && !autoClicked && !loading && !result && !error) {
+      const lockEnabled = canLock();
+      console.log('🚀 [Step8] Auto-proceed triggered');
+      console.log('  lockEnabled:', lockEnabled);
+      console.log('  formData:', formData);
+      
+      if (lockEnabled) {
+        console.log('✅ [Step8] Auto-clicking "분석 시작" button in 1 second...');
+        setAutoClicked(true);
+        setTimeout(() => {
+          console.log('🚀 [Step8] AUTO-CLICKING NOW!');
+          startAnalysis();
+        }, 1000); // 1 second delay for UI to render
+      } else {
+        console.error('❌ [Step8] Auto-click failed: button not enabled');
+        console.error('  Missing fields:', getMissingFields());
+        console.error('  formData:', formData);
+      }
+    }
+  }, [autoProceed, autoClicked, loading, result, error, formData]);
 
   // 🔒 VALIDATION: M1 Lock 최소 조건 체크
   const canLock = (): boolean => {

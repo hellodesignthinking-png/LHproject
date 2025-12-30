@@ -470,11 +470,17 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
         console.log('🔒 [M1Landing] Rendering Step8ContextFreeze');
         console.log('🔒 [M1Landing] handleStep8Complete exists?', !!handleStep8Complete);
         console.log('🔒 [M1Landing] formData:', state.formData);
+        
+        const isPipelineMode = !!onContextFreezeComplete;
+        console.log('🔒 [M1Landing] Pipeline mode?', isPipelineMode);
+        console.log('🔒 [M1Landing] Auto-proceed?', isPipelineMode);
+        
         return (
           <Step8ContextFreeze
             formData={state.formData}
             onComplete={handleStep8Complete}
             onBack={() => goToStep(3)}
+            autoProceed={isPipelineMode}  // 🔥 Auto-click in Pipeline mode
           />
         );
 
