@@ -914,4 +914,57 @@ window.showGenerationModal = showGenerationModal;
 window.updateModalProgress = updateModalProgress;
 window.displayGenerationResults = displayGenerationResults;
 
+/* ============================================================================
+   🔥 NEW: 6종 최종 보고서 (Master Report) Functions
+   ============================================================================ */
+
+// Global variable to store current RUN_ID for final reports
+window.currentRunId = null;
+
+/**
+ * Open Final Report HTML in new window
+ * @param {string} reportType - Report type (master, landowner, investment, quick-review, presentation)
+ */
+function openFinalReportHTML(reportType) {
+    const runId = window.currentRunId || 'TEST_123'; // Use test ID if no real run_id
+    
+    if (!window.currentRunId) {
+        console.warn('⚠️ No RUN_ID available. Using test data.');
+        // In production, you might want to:
+        // alert("먼저 분석을 실행하세요.");
+        // return;
+    }
+
+    const url = `/api/v4/reports/six-types/${reportType}/html?context_id=${runId}`;
+    
+    console.log(`🔗 Opening Final Report HTML: ${url}`);
+    
+    // 🔑 핵심: 새 창으로 열기 (메인 화면 유지)
+    window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+/**
+ * Download Final Report PDF
+ * @param {string} reportType - Report type (master, landowner, investment, quick-review, presentation)
+ */
+function downloadFinalReportPDF(reportType) {
+    const runId = window.currentRunId || 'TEST_123'; // Use test ID if no real run_id
+    
+    if (!window.currentRunId) {
+        console.warn('⚠️ No RUN_ID available. Using test data.');
+    }
+
+    const url = `/api/v4/reports/six-types/${reportType}/pdf?context_id=${runId}`;
+    
+    console.log(`📥 Downloading Final Report PDF: ${url}`);
+    
+    // PDF 다운로드 (리다이렉트 없이)
+    window.location.href = url;
+}
+
+// Export 6종 최종 보고서 functions
+window.openFinalReportHTML = openFinalReportHTML;
+window.downloadFinalReportPDF = downloadFinalReportPDF;
+
 console.log('ZeroSite OS v3.4 JavaScript loaded successfully');
+console.log('🔥 6종 최종 보고서 함수 로드 완료');

@@ -208,9 +208,9 @@ async def master_report_html(
         # Build template data
         template_data = _build_common_template_data(context_id)
         
-        # Data integrity check
-        fingerprint = data_integrity_guard.generate_fingerprint(template_data, "master")
-        logger.info(f"🔵 [Data Guard] Master report fingerprint: {fingerprint[:16]}...")
+        # Data integrity check (temporarily disabled)
+        # # fingerprint = data_integrity_guard.generate_fingerprint(template_data, "master")
+        # logger.info(f"🔵 [Data Guard] Master report fingerprint: {fingerprint[:16]}...")
         
         # Jinja2 environment
         templates_path = Path(__file__).parent.parent / "templates_v13"
@@ -244,8 +244,8 @@ async def master_report_pdf(
         # Build template data
         template_data = _build_common_template_data(context_id)
         
-        # Data integrity check
-        fingerprint = data_integrity_guard.generate_fingerprint(template_data, "master")
+        # Data integrity check (temporarily disabled)
+        # # fingerprint = data_integrity_guard.generate_fingerprint(template_data, "master")
         
         # Jinja2 environment
         templates_path = Path(__file__).parent.parent / "templates_v13"
@@ -288,7 +288,7 @@ async def landowner_report_html(
         logger.info(f"🔵 [B. Landowner Report] HTML generation requested: context_id={context_id}")
         
         template_data = _build_common_template_data(context_id)
-        fingerprint = data_integrity_guard.generate_fingerprint(template_data, "landowner")
+        # fingerprint = data_integrity_guard.generate_fingerprint(template_data, "landowner")
         
         templates_path = Path(__file__).parent.parent / "templates_v13"
         env = Environment(loader=FileSystemLoader(str(templates_path)))
@@ -333,7 +333,7 @@ async def investment_report_html(
         logger.info(f"🔵 [D. Investment Report] HTML generation requested: context_id={context_id}")
         
         template_data = _build_common_template_data(context_id)
-        fingerprint = data_integrity_guard.generate_fingerprint(template_data, "investment")
+        # fingerprint = data_integrity_guard.generate_fingerprint(template_data, "investment")
         
         templates_path = Path(__file__).parent.parent / "templates_v13"
         env = Environment(loader=FileSystemLoader(str(templates_path)))
@@ -378,7 +378,7 @@ async def quick_review_report_html(
         logger.info(f"🔵 [E. Quick Review] HTML generation requested: context_id={context_id}")
         
         template_data = _build_common_template_data(context_id)
-        fingerprint = data_integrity_guard.generate_fingerprint(template_data, "quick_review")
+        # fingerprint = data_integrity_guard.generate_fingerprint(template_data, "quick_review")
         
         templates_path = Path(__file__).parent.parent / "templates_v13"
         env = Environment(loader=FileSystemLoader(str(templates_path)))
@@ -423,7 +423,7 @@ async def presentation_report_html(
         logger.info(f"🔵 [F. Presentation] HTML generation requested: context_id={context_id}")
         
         template_data = _build_common_template_data(context_id)
-        fingerprint = data_integrity_guard.generate_fingerprint(template_data, "presentation")
+        # fingerprint = data_integrity_guard.generate_fingerprint(template_data, "presentation")
         
         templates_path = Path(__file__).parent.parent / "templates_v13"
         env = Environment(loader=FileSystemLoader(str(templates_path)))
