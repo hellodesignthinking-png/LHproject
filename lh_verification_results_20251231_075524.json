@@ -1,0 +1,90 @@
+{
+  "timestamp": "2025-12-31T07:55:24.659612",
+  "test_run_ids": [
+    "RUN_116801010001230045_1767167669855",
+    "RUN_116801010001230045_1767167675689",
+    "RUN_116801010001230045_1767167682325"
+  ],
+  "results": [
+    {
+      "run_id": "RUN_116801010001230045_1767167669855",
+      "html": {
+        "status": "success",
+        "checks": {
+          "주소 포함": true,
+          "PNU 포함": true,
+          "제목 포함": true,
+          "RUN_ID 포함": true,
+          "대상지 식별정보": true
+        },
+        "content_length": 31851,
+        "content_hash": "ee2818a7",
+        "error": null
+      },
+      "pdf": {
+        "status": "error",
+        "error": "HTTP 500",
+        "is_pdf": false,
+        "size": 0,
+        "content_hash": null
+      }
+    },
+    {
+      "run_id": "RUN_116801010001230045_1767167675689",
+      "html": {
+        "status": "success",
+        "checks": {
+          "주소 포함": true,
+          "PNU 포함": true,
+          "제목 포함": true,
+          "RUN_ID 포함": true,
+          "대상지 식별정보": true
+        },
+        "content_length": 31851,
+        "content_hash": "7c2e4816",
+        "error": null
+      },
+      "pdf": {
+        "status": "error",
+        "error": "HTTP 500",
+        "is_pdf": false,
+        "size": 0,
+        "content_hash": null
+      }
+    },
+    {
+      "run_id": "RUN_116801010001230045_1767167682325",
+      "html": {
+        "status": "success",
+        "checks": {
+          "주소 포함": true,
+          "PNU 포함": true,
+          "제목 포함": true,
+          "RUN_ID 포함": true,
+          "대상지 식별정보": true
+        },
+        "content_length": 31851,
+        "content_hash": "73429a56",
+        "error": null
+      },
+      "pdf": {
+        "status": "error",
+        "error": "HTTP 500",
+        "is_pdf": false,
+        "size": 0,
+        "content_hash": null
+      }
+    }
+  ],
+  "consistency": {
+    "all_passed": false,
+    "checks": {
+      "HTML 생성 성공률": true,
+      "PDF 생성 성공률": false,
+      "주소 일관성": true,
+      "PNU 일관성": true
+    },
+    "html_success_rate": "3/3",
+    "pdf_success_rate": "0/3"
+  }
+}

@@ -338,39 +338,7 @@
     <div class="content-page page-break">
         <h1 class="page-title">2. 대상지 개요</h1>
 
-        <div class="section">
-            <div class="section-title">2.1 대상지 식별정보</div>
-            <table class="data-table">
-                <tr>
-                    <th style="width: 30%;">항목</th>
-                    <th style="width: 70%;">내용</th>
-                </tr>
-                <tr>
-                    <td><strong>대상지 주소</strong></td>
-                    <td>{{ address }}</td>
-                </tr>
-                <tr>
-                    <td><strong>필지번호 (PNU)</strong></td>
-                    <td>{{ parcel_id }}</td>
-                </tr>
-                <tr>
-                    <td><strong>대지면적</strong></td>
-                    <td>{{ land_area_sqm | number_format }} ㎡ ({{ land_area_pyeong | number_format }} 평)</td>
-                </tr>
-                <tr>
-                    <td><strong>용도지역</strong></td>
-                    <td>{{ zone_type | default('데이터 확인 필요') }}</td>
-                </tr>
-                <tr>
-                    <td><strong>분석 기준일</strong></td>
-                    <td>{{ appraisal_date }}</td>
-                </tr>
-                <tr>
-                    <td><strong>분석 실행 ID</strong></td>
-                    <td style="font-family: monospace; font-size: 9pt;">{{ run_id | default(report_id) }}</td>
-                </tr>
-            </table>
-        </div>
+        {% include "components/site_identity_block.html" %}
 
         <div class="section">
             <div class="section-title">2.2 입지 특성</div>

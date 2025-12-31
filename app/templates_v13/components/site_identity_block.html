@@ -1,0 +1,64 @@
+{# 
+  Site Identity Block - 공통 컴포넌트
+  모든 보고서(M2-M6 + 6종 변형)에서 재사용
+  
+  Required variables:
+  - address: 대상지 주소
+  - parcel_id (or PNU): 필지번호  
+  - land_area_sqm: 대지면적 (㎡)
+  - land_area_pyeong: 대지면적 (평)
+  - zone_type: 용도지역
+  - appraisal_date (or analysis_date): 분석 기준일
+  - run_id (or report_id): 분석 실행 ID
+#}
+
+<div class="section">
+    <div class="section-title">대상지 식별정보</div>
+    <table class="data-table">
+        <tr>
+            <th style="width: 30%;">항목</th>
+            <th style="width: 70%;">내용</th>
+        </tr>
+        <tr>
+            <td><strong>대상지 주소</strong></td>
+            <td>{{ address }}</td>
+        </tr>
+        <tr>
+            <td><strong>필지번호 (PNU)</strong></td>
+            <td>{{ parcel_id | default(PNU) }}</td>
+        </tr>
+        <tr>
+            <td><strong>대지면적</strong></td>
+            <td>{{ land_area_sqm | number_format }} ㎡ ({{ land_area_pyeong | number_format }} 평)</td>
+        </tr>
+        <tr>
+            <td><strong>용도지역</strong></td>
+            <td>{{ zone_type | default('데이터 확인 필요') }}</td>
+        </tr>
+        <tr>
+            <td><strong>분석 기준일</strong></td>
+            <td>{{ appraisal_date | default(analysis_date) }}</td>
+        </tr>
+        <tr>
+            <td><strong>분석 실행 ID</strong></td>
+            <td style="font-family: monospace; font-size: 9pt;">{{ run_id | default(report_id) }}</td>
+        </tr>
+        <tr>
+            <td><strong>적용 기준</strong></td>
+            <td>{{ criteria | default('LH 신축매입임대 운영 기준 / 공공주택 사업 기준') }}</td>
+        </tr>
+    </table>
+</div>
+
+{# 
+  데이터 정합성 보호 메모 (개발자용)
+  
+  ⚠️ CRITICAL: 이 컴포넌트는 모든 보고서에서 동일한 데이터를 표시해야 합니다.
+  
+  - 주소, PNU, 면적은 절대 변경 금지
+  - 동일한 run_id에서는 항상 동일한 값이 출력되어야 함
+  - 만약 값이 다르다면 → 데이터 정합성 위반 → 시스템 오류
+  
+  사용 예시:
+  {% include "components/site_identity_block.html" %}
+#}

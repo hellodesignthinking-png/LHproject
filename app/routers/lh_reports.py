@@ -21,7 +21,7 @@ from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 
 from app.services.context_storage import context_storage
-from app.services.pdf_generators.module_pdf_generator import ModulePDFGenerator
+from app.services.data_integrity_guard import data_integrity_guard
 
 logger = logging.getLogger(__name__)
 
@@ -247,6 +247,26 @@ async def lh_technical_report_html(
         m5_result = _get_test_m5_data()
         m6_result = _get_test_m6_data()
         
+        # 🔒 DATA INTEGRITY CHECK
+        # Verify M2 data consistency
+        is_valid, m2_hash = data_integrity_guard.verify_m2_data(m2_result)
+        if not is_valid:
+            logger.error(f"❌ M2 data validation failed for {context_id}")
+            raise HTTPException(
+                status_code=500,
+                detail="DATA_INTEGRITY_VIOLATION: M2 토지평가 데이터가 유효하지 않습니다."
+            )
+        
+        # Generate report fingerprint
+        fingerprint = data_integrity_guard.generate_report_fingerprint(
+            address=report_context["address"],
+            pnu=report_context["PNU"],
+            run_id=context_id,
+            m2_data=m2_result
+        )
+        
+        logger.info(f"✅ LH Report integrity verified. Fingerprint: {fingerprint}, M2 hash: {m2_hash}")
+        
         # Prepare template data (M2-M6 results passed as-is)
         template_data = {
             "meta": report_context,
@@ -359,6 +379,26 @@ async def lh_technical_report_pdf(
         m5_result = _get_test_m5_data()
         m6_result = _get_test_m6_data()
         
+        # 🔒 DATA INTEGRITY CHECK
+        # Verify M2 data consistency
+        is_valid, m2_hash = data_integrity_guard.verify_m2_data(m2_result)
+        if not is_valid:
+            logger.error(f"❌ M2 data validation failed for {context_id}")
+            raise HTTPException(
+                status_code=500,
+                detail="DATA_INTEGRITY_VIOLATION: M2 토지평가 데이터가 유효하지 않습니다."
+            )
+        
+        # Generate report fingerprint
+        fingerprint = data_integrity_guard.generate_report_fingerprint(
+            address=report_context["address"],
+            pnu=report_context["PNU"],
+            run_id=context_id,
+            m2_data=m2_result
+        )
+        
+        logger.info(f"✅ LH Report integrity verified. Fingerprint: {fingerprint}, M2 hash: {m2_hash}")
+        
         # Prepare template data
         template_data = {
             "meta": report_context,
@@ -410,9 +450,9 @@ async def lh_technical_report_pdf(
         # Render HTML
         html_content = template.render(**template_data)
         
-        # Generate PDF using ModulePDFGenerator
-        pdf_generator = ModulePDFGenerator()
-        pdf_bytes = pdf_generator.html_to_pdf(html_content)
+        # Generate PDF from HTML using weasyprint
+        from weasyprint import HTML
+        pdf_bytes = HTML(string=html_content).write_pdf()
         
         # Generate filename
         date_str = datetime.now().strftime("%Y-%m-%d")
