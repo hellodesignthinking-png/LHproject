@@ -240,10 +240,10 @@ def _map_m6_classic(lh_review_result, meta: dict, upstream_summaries: dict = Non
                 "title": "M2~M5 모듈별 요약",
                 "headers": ["모듈", "핵심 지표", "평가 결과", "비고"],
                 "rows": [
-                    ["M2 토지평가", "평가액 43억원", "적정", "감정 기준 부합"],
-                    ["M3 공급유형", "청년형 추천", "적합", "정책 부합도 높음"],
-                    ["M4 건축규모", "34세대 권장", "최적", "B안 선택"],
-                    ["M5 사업성", "IRR 4.8%", "조건부 적정", "기준 시나리오 기준"]
+                    ["M2 토지평가", f"평가액 {int(m2_value/100000000)}억원", "적정", "감정 기준 부합"],
+                    ["M3 공급유형", f"{m3_type} 추천", "적합", "정책 부합도 높음"],
+                    ["M4 건축규모", f"{m4_units}세대 권장", "최적", "B안 선택"],
+                    ["M5 사업성", f"IRR {m5_irr*100:.1f}%", "조건부 적정", "기준 시나리오 기준"]
                 ]
             },
             {
@@ -303,11 +303,18 @@ def _map_m5_classic(feasibility_result, meta: dict) -> dict:
     # 기본 메타 정보
     report_id = meta.get("report_id", f"ZS-M5-{datetime.now().strftime('%Y%m%d%H%M%S')}")
     
-    # 재무 지표 추출
+    # 🔥 CRITICAL: Extract actual financial data from feasibility_result
     total_cost = feasibility_result.total_cost if hasattr(feasibility_result, 'total_cost') else 5850000000
     npv = feasibility_result.npv_public if hasattr(feasibility_result, 'npv_public') else 280000000
     irr = feasibility_result.irr if hasattr(feasibility_result, 'irr') else 0.048  # 4.8%
     decision = feasibility_result.decision if hasattr(feasibility_result, 'decision') else "조건부 적정"
+    
+    # Extract breakeven and payback period if available
+    breakeven = int(feasibility_result.breakeven_occupancy * 100) if hasattr(feasibility_result, 'breakeven_occupancy') else 78
+    payback_years = int(feasibility_result.payback_period_years) if hasattr(feasibility_result, 'payback_period_years') else 18
+    
+    # Extract confidence
+    confidence = feasibility_result.confidence if hasattr(feasibility_result, 'confidence') else 0.84
     
     # KPI 카드 6개
     kpi_cards = [
@@ -331,13 +338,13 @@ def _map_m5_classic(feasibility_result, meta: dict) -> dict:
         },
         {
             "title": "손익분기",
-            "value": 78,
+            "value": breakeven,
             "unit": "%",
             "description": "임대율 기준"
         },
         {
             "title": "회수기간",
-            "value": 18,
+            "value": payback_years,
             "unit": "년",
             "description": "투자 회수"
         },
@@ -354,8 +361,8 @@ def _map_m5_classic(feasibility_result, meta: dict) -> dict:
         "kpi_cards": kpi_cards,
         "headline": f"{decision} - IRR {irr*100:.1f}% (기준 시나리오)",
         "decision": decision,
-        "confidence_score": 0.84,
-        "confidence_label": "양호"
+        "confidence_score": confidence,
+        "confidence_label": "양호" if confidence >= 0.8 else ("보통" if confidence >= 0.6 else "낮음")
     }
     
     # Details
@@ -436,10 +443,23 @@ def _map_m4_classic(capacity_result, meta: dict) -> dict:
     # 기본 메타 정보
     report_id = meta.get("report_id", f"ZS-M4-{datetime.now().strftime('%Y%m%d%H%M%S')}")
     
-    # 권장 규모 추출
+    # 🔥 CRITICAL: Extract actual data from capacity_result
     legal_units = capacity_result.legal_capacity.total_units if hasattr(capacity_result, 'legal_capacity') and hasattr(capacity_result.legal_capacity, 'total_units') else 34
     incentive_units = capacity_result.incentive_capacity.total_units if hasattr(capacity_result, 'incentive_capacity') and hasattr(capacity_result.incentive_capacity, 'total_units') else 38
     recommended_units = legal_units  # B안이 최적
+    
+    # Extract FAR/BCR data
+    legal_far = capacity_result.legal_capacity.far_max if hasattr(capacity_result, 'legal_capacity') and hasattr(capacity_result.legal_capacity, 'far_max') else 250
+    legal_bcr = capacity_result.legal_capacity.bcr_max if hasattr(capacity_result, 'legal_capacity') and hasattr(capacity_result.legal_capacity, 'bcr_max') else 60
+    
+    # Extract gross floor area
+    gross_floor_area = capacity_result.legal_capacity.gross_floor_area if hasattr(capacity_result, 'legal_capacity') and hasattr(capacity_result.legal_capacity, 'gross_floor_area') else 2520
+    
+    # Extract parking data
+    parking_required = capacity_result.parking.required if hasattr(capacity_result, 'parking') and hasattr(capacity_result.parking, 'required') else recommended_units
+    
+    # Calculate efficiency (assuming 82% default or extract if available)
+    efficiency = int(capacity_result.efficiency * 100) if hasattr(capacity_result, 'efficiency') else 82
     
     # KPI 카드 6개 (필수)
     kpi_cards = [
@@ -463,13 +483,13 @@ def _map_m4_classic(capacity_result, meta: dict) -> dict:
         },
         {
             "title": "주차대수",
-            "value": 34,
+            "value": parking_required,
             "unit": "대",
             "description": "법정 주차 기준"
         },
         {
             "title": "효율률",
-            "value": 82,
+            "value": efficiency,
             "unit": "%",
             "description": "전용면적 비율"
         },
@@ -567,10 +587,17 @@ def _map_m3_classic(housing_type_result, meta: dict) -> dict:
     # 기본 메타 정보
     report_id = meta.get("report_id", f"ZS-M3-{datetime.now().strftime('%Y%m%d%H%M%S')}")
     
-    # 추천 유형 추출
+    # 추천 유형 추출 (실제 데이터 우선)
     recommended_type = housing_type_result.selected_type if hasattr(housing_type_result, 'selected_type') else "청년형"
     
-    # KPI 카드 4-6개 (필수)
+    # 🔥 CRITICAL: Extract actual scores from pipeline_result
+    policy_score = int(housing_type_result.policy_score * 20) if hasattr(housing_type_result, 'policy_score') else 18
+    demand_score = int(housing_type_result.demand_score * 20) if hasattr(housing_type_result, 'demand_score') else 19
+    operation_score = int(housing_type_result.operation_score * 20) if hasattr(housing_type_result, 'operation_score') else 16
+    total_score = int(housing_type_result.total_score) if hasattr(housing_type_result, 'total_score') else (policy_score + demand_score + operation_score)
+    confidence = int(housing_type_result.confidence * 100) if hasattr(housing_type_result, 'confidence') else 85
+    
+    # KPI 카드 4-6개 (필수) - 실제 데이터 사용
     kpi_cards = [
         {
             "title": "추천 유형",
@@ -580,43 +607,43 @@ def _map_m3_classic(housing_type_result, meta: dict) -> dict:
         },
         {
             "title": "정책 적합성",
-            "value": 18,
+            "value": policy_score,
             "unit": "/20",
             "description": "LH 정책 부합도"
         },
         {
             "title": "실수요 점수",
-            "value": 19,
+            "value": demand_score,
             "unit": "/20",
             "description": "지역 수요 적합도"
         },
         {
             "title": "운영 적합성",
-            "value": 16,
+            "value": operation_score,
             "unit": "/20",
             "description": "운영 효율성"
         },
         {
             "title": "종합 점수",
-            "value": 82,
+            "value": total_score,
             "unit": "/100",
             "description": "가중 평균 점수"
         },
         {
             "title": "신뢰도",
-            "value": 85,
+            "value": confidence,
             "unit": "%",
             "description": "분석 신뢰 수준"
         }
     ]
     
-    # Summary (프론트엔드 카드용)
+    # Summary (프론트엔드 카드용) - 실제 confidence 사용
     summary = {
         "kpi_cards": kpi_cards,
         "headline": f"{recommended_type} 매입임대 공급 권장",
         "decision": "추천",
-        "confidence_score": 0.85,
-        "confidence_label": "높음"
+        "confidence_score": confidence / 100.0,
+        "confidence_label": "높음" if confidence >= 80 else ("보통" if confidence >= 60 else "낮음")
     }
     
     # Details (PDF용)
@@ -624,15 +651,15 @@ def _map_m3_classic(housing_type_result, meta: dict) -> dict:
         "narrative": {
             "objective": f"본 분석은 해당 필지에 대한 LH 공급유형을 정책 적합성, 실수요, 운영성을 기반으로 판단합니다. {recommended_type} 매입임대가 가장 적합합니다.",
             "methodology": "5개 유형(청년형/신혼부부형/고령자형/다자녀형/일반형)을 정책 부합도(20점), 실수요 분석(20점), 운영 적합성(20점)로 평가하여 종합 점수를 산정하였습니다.",
-            "key_findings": f"{recommended_type}은 정책 적합성 18/20, 실수요 19/20, 운영 적합성 16/20으로 가장 높은 종합 점수 82/100을 기록하였습니다.",
-            "conclusion": f"따라서 {recommended_type} 매입임대 공급을 1순위로 권장하며, 신혼부부형을 2순위 대안으로 제시합니다."
+            "key_findings": f"{recommended_type}은 정책 적합성 {policy_score}/20, 실수요 {demand_score}/20, 운영 적합성 {operation_score}/20으로 가장 높은 종합 점수 {total_score}/100을 기록하였습니다.",
+            "conclusion": f"따라서 {recommended_type} 매입임대 공급을 1순위로 권장하며, 신뢰도 {confidence}%로 높은 확신을 가지고 제안합니다."
         },
         "tables": [
             {
                 "title": "5개 공급유형 비교",
                 "headers": ["유형", "정책 적합성", "실수요", "운영성", "종합"],
                 "rows": [
-                    ["청년형", "18/20", "19/20", "16/20", "82/100"],
+                    [f"{recommended_type}", f"{policy_score}/20", f"{demand_score}/20", f"{operation_score}/20", f"{total_score}/100"],
                     ["신혼부부형", "17/20", "18/20", "15/20", "78/100"],
                     ["고령자형", "14/20", "12/20", "13/20", "61/100"],
                     ["다자녀형", "15/20", "14/20", "14/20", "67/100"],
