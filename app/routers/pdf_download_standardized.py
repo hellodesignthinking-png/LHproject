@@ -62,6 +62,75 @@ MODULE_NAMES = {
 }
 
 
+def _build_report_context(context_id: str, pipeline_result, module: str) -> dict:
+    """
+    🔥 CRITICAL: Build unified ReportContext for ALL Classic reports (M2-M6)
+    
+    This ensures:
+    1. Address/PNU/run_id are ALWAYS bound from pipeline input (not hardcoded samples)
+    2. NO fallback to "강남구 역삼동" or "테헤란로 152"
+    3. If data missing → "주소 확인 필요" (not sample address)
+    
+    Priority:
+    1. pipeline input address (user entered)
+    2. geocode normalized address
+    3. parcel (PNU) reverse geocoding
+    4. "주소 확인 필요" (never sample)
+    """
+    from datetime import datetime
+    
+    # Extract land data
+    land = pipeline_result.land if hasattr(pipeline_result, 'land') else None
+    
+    # 🔥 CRITICAL: Extract actual address (NO FALLBACK TO GANGNAM)
+    address_line = None
+    if land and hasattr(land, 'address'):
+        address_line = land.address
+    elif land and hasattr(land, 'address_full'):
+        address_line = land.address_full
+    elif land and hasattr(land, 'address_detail'):
+        address_line = land.address_detail
+    
+    # If still no address, use "주소 확인 필요" (NOT sample)
+    if not address_line or address_line in ["서울특별시 강남구", "서울특별시 강남구 역삼동 123-45", "서울특별시 강남구 테헤란로 152"]:
+        address_line = "주소 확인 필요"
+        logger.warning(f"⚠️ No valid address in pipeline_result for {context_id}, using placeholder")
+    
+    # Extract PNU (parcel_id)
+    parcel_id = None
+    if context_id.startswith("RUN_"):
+        # Extract PNU from run_id (format: RUN_<PNU>_<timestamp>)
+        parts = context_id.split("_")
+        if len(parts) >= 2 and parts[1].isdigit() and len(parts[1]) == 19:
+            parcel_id = parts[1]
+    elif context_id.isdigit() and len(context_id) == 19:
+        parcel_id = context_id
+    
+    if land and hasattr(land, 'parcel_id') and not parcel_id:
+        parcel_id = land.parcel_id
+    
+    # Build context
+    report_context = {
+        "run_id": context_id,
+        "parcel_id": parcel_id or "PNU 확인 필요",
+        "address_line": address_line,
+        "generated_at": datetime.now().strftime("%Y년 %m월 %d일 %H:%M:%S"),
+        "eval_base_date": datetime.now().strftime("%Y년 %m월 %d일"),
+        "pipeline_version": "v6.5",
+        "module": module
+    }
+    
+    logger.info(f"""
+🔥 [REPORT CONTEXT BUILT]
+   run_id: {report_context['run_id']}
+   parcel_id: {report_context['parcel_id']}
+   address: {report_context['address_line']}
+   module: {module}
+""")
+    
+    return report_context
+
+
 def _generate_pdf_filename(module: str) -> str:
     """표준 PDF 파일명 생성
     
@@ -162,7 +231,7 @@ async def download_module_pdf(
         )
 
 
-def _map_m6_classic(lh_review_result, meta: dict, upstream_summaries: dict = None) -> dict:
+def _map_m6_classic(lh_review_result, meta: dict, upstream_summaries: dict = None, report_context: dict = None) -> dict:
     """
     M6 LH 종합판단 - Classic Format 매핑
     
@@ -178,6 +247,22 @@ def _map_m6_classic(lh_review_result, meta: dict, upstream_summaries: dict = Non
     decision = lh_review_result.decision if hasattr(lh_review_result, 'decision') else "매입 권고"
     total_score = lh_review_result.total_score if hasattr(lh_review_result, 'total_score') else 84
     
+    # 🔥 CRITICAL: Extract upstream module results (M2-M5) - NULL SAFE
+    if upstream_summaries and isinstance(upstream_summaries, dict):
+        m2_value = upstream_summaries.get('M2', {}).get('total_value', 4300000000) if upstream_summaries.get('M2') else 4300000000
+        m3_type = upstream_summaries.get('M3', {}).get('recommended_type', '청년형') if upstream_summaries.get('M3') else '청년형'
+        m4_units = upstream_summaries.get('M4', {}).get('recommended_units', 34) if upstream_summaries.get('M4') else 34
+        m5_irr = upstream_summaries.get('M5', {}).get('irr', 0.048) if upstream_summaries.get('M5') else 0.048
+    else:
+        # Fallback if upstream_summaries is None or not dict
+        m2_value = 4300000000
+        m3_type = '청년형'
+        m4_units = 34
+        m5_irr = 0.048
+    
+    # Extract confidence
+    confidence = lh_review_result.confidence if hasattr(lh_review_result, 'confidence') else 0.86
+    
     # KPI 카드 6개
     kpi_cards = [
         {
@@ -188,25 +273,25 @@ def _map_m6_classic(lh_review_result, meta: dict, upstream_summaries: dict = Non
         },
         {
             "title": "M2 평가",
-            "value": 43,
+            "value": int(m2_value / 100000000),  # Convert to 억원
             "unit": "억원",
             "description": "토지 평가액"
         },
         {
             "title": "M3 평가",
-            "value": "청년형",
+            "value": m3_type,
             "unit": "",
             "description": "추천 공급유형"
         },
         {
             "title": "M4 평가",
-            "value": 34,
+            "value": m4_units,
             "unit": "세대",
             "description": "권장 규모"
         },
         {
             "title": "M5 평가",
-            "value": "4.8%",
+            "value": f"{m5_irr*100:.1f}%",
             "unit": "IRR",
             "description": "기준 시나리오"
         },
@@ -223,8 +308,8 @@ def _map_m6_classic(lh_review_result, meta: dict, upstream_summaries: dict = Non
         "kpi_cards": kpi_cards,
         "headline": f"{decision} - 종합 점수 {total_score}/100",
         "decision": decision,
-        "confidence_score": 0.86,
-        "confidence_label": "높음"
+        "confidence_score": confidence,
+        "confidence_label": "높음" if confidence >= 0.8 else ("보통" if confidence >= 0.6 else "낮음")
     }
     
     # Details
@@ -291,7 +376,7 @@ def _map_m6_classic(lh_review_result, meta: dict, upstream_summaries: dict = Non
     }
 
 
-def _map_m5_classic(feasibility_result, meta: dict) -> dict:
+def _map_m5_classic(feasibility_result, meta: dict, report_context: dict = None) -> dict:
     """
     M5 사업성 분석 - Classic Format 매핑
     
@@ -431,7 +516,7 @@ def _map_m5_classic(feasibility_result, meta: dict) -> dict:
     }
 
 
-def _map_m4_classic(capacity_result, meta: dict) -> dict:
+def _map_m4_classic(capacity_result, meta: dict, report_context: dict = None) -> dict:
     """
     M4 건축규모 판단 - Classic Format 매핑
     
@@ -575,7 +660,7 @@ def _map_m4_classic(capacity_result, meta: dict) -> dict:
     }
 
 
-def _map_m3_classic(housing_type_result, meta: dict) -> dict:
+def _map_m3_classic(housing_type_result, meta: dict, report_context: dict = None) -> dict:
     """
     M3 공급유형 판단 - Classic Format 매핑
     
@@ -705,6 +790,16 @@ def _map_m3_classic(housing_type_result, meta: dict) -> dict:
             ]
         }
     }
+    
+    # 🔥 CRITICAL: Add report_context to meta if provided
+    if report_context:
+        meta.update({
+            "address": report_context.get("address_line", "주소 확인 필요"),
+            "parcel_id": report_context.get("parcel_id", "PNU 확인 필요"),
+            "run_id": report_context.get("run_id", ""),
+            "generated_at": report_context.get("generated_at", ""),
+            "eval_base_date": report_context.get("eval_base_date", "")
+        })
     
     return {
         "meta": meta,
@@ -999,6 +1094,17 @@ async def _generate_module_html(module: str, context_id: str):
                 detail=f"지원하지 않는 모듈: {module}"
             )
         
+        # 🔥 CRITICAL: Build ReportContext and inject into test_data.meta
+        report_context = _build_report_context(context_id, pipeline_result, module)
+        if 'meta' in test_data:
+            test_data['meta'].update({
+                "address": report_context.get("address_line", "주소 확인 필요"),
+                "parcel_id": report_context.get("parcel_id", "PNU 확인 필요"),
+                "run_id": report_context.get("run_id", ""),
+                "generated_at": report_context.get("generated_at", ""),
+                "eval_base_date": report_context.get("eval_base_date", "")
+            })
+        
         # PDF 생성기 초기화
         generator = ModulePDFGenerator()
         
@@ -1065,7 +1171,9 @@ async def _generate_module_html(module: str, context_id: str):
             # Build template context
             context = {
                 'report_id': f"ZS-M2-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-                'address': land.address if hasattr(land, 'address') else "서울특별시 강남구",
+                'run_id': report_context['run_id'],
+                'parcel_id': report_context['parcel_id'],
+                'address': report_context['address_line'],
                 'land_area_sqm': land_area_sqm,
                 'land_area_pyeong': land_area_pyeong,
                 'zone_type': land.zone_type if hasattr(land, 'zone_type') else "제2종일반주거지역",
