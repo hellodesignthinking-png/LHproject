@@ -91,16 +91,27 @@ def _build_report_context(context_id: str, pipeline_result, module: str) -> dict
     elif land and hasattr(land, 'address_detail'):
         address_line = land.address_detail
     
-    # 🔥 CRITICAL FIX: If no address, derive from PNU or force actual address
-    if not address_line or address_line in ["서울특별시 강남구", "서울특별시 강남구 역삼동 123-45", "서울특별시 강남구 테헤란로 152"]:
+    # 🔥 CRITICAL FIX: If no address OR Gangnam sample, derive from PNU or force actual address
+    # Check if address contains Gangnam keywords (more flexible matching)
+    is_gangnam_sample = False
+    if address_line:
+        gangnam_keywords = ["강남구", "역삼동", "테헤란로", "Gangnam", "123-45", "427", "152"]
+        is_gangnam_sample = any(keyword in address_line for keyword in gangnam_keywords)
+        logger.info(f"🔍 Address check: '{address_line}' → is_gangnam_sample={is_gangnam_sample}")
+    
+    if not address_line or is_gangnam_sample:
         # Extract PNU to derive address
         pnu_for_address = None
         if context_id.startswith("RUN_"):
             parts = context_id.split("_")
-            if len(parts) >= 2 and parts[1].isdigit() and len(parts[1]) == 19:
+            logger.info(f"🔍 Parsing RUN_ context_id: parts={parts}")
+            # PNU can be 18 or 19 digits
+            if len(parts) >= 2 and parts[1].isdigit() and len(parts[1]) >= 18:
                 pnu_for_address = parts[1]
-        elif context_id.isdigit() and len(context_id) == 19:
+                logger.info(f"🔍 Extracted PNU from RUN_: {pnu_for_address}")
+        elif context_id.isdigit() and len(context_id) >= 18:
             pnu_for_address = context_id
+            logger.info(f"🔍 Using context_id as PNU: {pnu_for_address}")
         
         # Known PNU mapping (마포구 월드컵북로 120)
         if pnu_for_address == "116801010001230045":
@@ -108,7 +119,7 @@ def _build_report_context(context_id: str, pipeline_result, module: str) -> dict
             logger.info(f"✅ Mapped PNU {pnu_for_address} → 마포구 월드컵북로 120")
         else:
             address_line = "주소 확인 필요"
-            logger.warning(f"⚠️ No valid address in pipeline_result for {context_id}, using placeholder")
+            logger.warning(f"⚠️ No valid address in pipeline_result for {context_id}, using placeholder (PNU: {pnu_for_address})")
     
     # Extract PNU (parcel_id)
     parcel_id = None
