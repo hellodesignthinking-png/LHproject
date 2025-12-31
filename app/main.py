@@ -88,6 +88,9 @@ from app.routers.pdf_download_standardized import router as pdf_download_router
 # ✨ LH Reports: Import LH Technical Validation Report Router
 from app.routers.lh_reports import router as lh_reports_router
 
+# ✨ Final Reports: Import 5 Final Reports Router (A, B, D, E, F)
+from app.routers.final_reports import router as final_reports_router
+
 # ✨ v11.0 ENHANCEMENTS: Import middleware and utilities
 from app.middleware.rate_limiter import RateLimiter, RateLimitConfig
 from app.middleware.cache_manager import cache_manager, start_cache_cleanup_task
@@ -221,6 +224,12 @@ app.include_router(proxy_kakao_router)
 
 # ✨ PDF Download: Standardized PDF Download Router (M2-M6)
 app.include_router(pdf_download_router)
+
+# ✨ LH Reports: LH Technical Validation Report Router
+app.include_router(lh_reports_router)
+
+# ✨ Final Reports: 5 Final Reports Router (A, B, D, E, F)
+app.include_router(final_reports_router)
 
 # ✨ LH Reports: LH Technical Validation Report Router
 app.include_router(lh_reports_router)

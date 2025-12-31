@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B. 토지주 제출용 보고서</title>
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; margin: 40px; line-height: 1.8; color: #333; }
+        .header { text-align: center; margin-bottom: 40px; border-bottom: 3px solid #4caf50; padding-bottom: 20px; }
+        .header h1 { font-size: 32px; color: #4caf50; margin: 0; }
+        .header .subtitle { font-size: 14px; color: #666; margin-top: 10px; }
+        .site-identity { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 30px 0; }
+        .site-identity table { width: 100%; border-collapse: collapse; }
+        .site-identity th { background: #e8f5e9; padding: 12px; text-align: left; width: 30%; font-weight: 600; }
+        .site-identity td { padding: 12px; background: white; }
+        .section { margin: 40px 0; }
+        .section-title { font-size: 24px; color: #4caf50; border-left: 4px solid #4caf50; padding-left: 12px; margin-bottom: 20px; }
+        .highlight-box { background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4caf50; }
+        .value-card { background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%); color: white; padding: 30px; border-radius: 12px; margin: 20px 0; }
+        .value-card h2 { margin: 0 0 10px 0; }
+        .strength-list { list-style: none; padding: 0; }
+        .strength-list li { background: #fff8e1; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #ffc107; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>B. 토지주 제출용 보고서</h1>
+        <div class="subtitle">Landowner Submission Report</div>
+        <div class="subtitle">귀하의 대상지에 대한 가치 및 활용 가능성 안내</div>
+        <div class="subtitle">보고서 생성일: {{ appraisal_date }}</div>
+    </div>
+
+    <!-- Site Identity Block -->
+    {% include 'components/site_identity_block.html' %}
+
+    <!-- 핵심 가치 요약 -->
+    <div class="section">
+        <div class="value-card">
+            <h2>🏠 대상지의 핵심 가치</h2>
+            <p style="font-size: 18px;">귀하의 토지는 <strong>LH 매입임대 사업</strong>의 <strong>검토 대상으로 적합</strong>한 가치를 지니고 있습니다.</p>
+            <p style="font-size: 36px; margin: 20px 0; font-weight: bold;">총 평가가액: {{ total_value | currency_format }} 억원</p>
+        </div>
+    </div>
+
+    <!-- 3가지 핵심 강점 -->
+    <div class="section">
+        <div class="section-title">1. 이 토지의 3가지 핵심 강점</div>
+        <ul class="strength-list">
+            <li><strong>✅ 입지 가치</strong>: {{ address }}는 {{ location_description }}에 위치하여 높은 접근성과 생활 편의성을 갖추고 있습니다.</li>
+            <li><strong>✅ 개발 가능성</strong>: {{ zone_type }}로 지정되어 있으며, {{ total_units }}세대 규모의 공공주택 개발이 가능합니다.</li>
+            <li><strong>✅ 공공 사업 적합성</strong>: LH 매입임대 기준에 부합하며, <strong>청년형 매입임대</strong> 등 다양한 활용 방안이 검토 가능합니다.</li>
+        </ul>
+    </div>
+
+    <!-- 입지 및 희소성 -->
+    <div class="section">
+        <div class="section-title">2. 입지 및 희소성</div>
+        <div class="highlight-box">
+            <h4>📍 위치: {{ address }}</h4>
+            <p><strong>토지면적</strong>: {{ land_area_sqm | number_format }} ㎡ ({{ land_area_pyeong | number_format }} 평)</p>
+            <p><strong>㎡당 단가</strong>: {{ price_per_sqm | number_format }} 원/㎡</p>
+            <p><strong>평당 단가</strong>: {{ price_per_pyeong | number_format }} 원/평</p>
+            
+            <p style="margin-top: 20px;"><strong>입지 특성</strong>: {{ location_description }}에 위치하여 교통 및 인프라 접근성이 우수합니다.</p>
+        </div>
+    </div>
+
+    <!-- 활용 시나리오 -->
+    <div class="section">
+        <div class="section-title">3. 활용 시나리오</div>
+        
+        <h4>🏘️ 추천 공급유형: {{ recommended_housing_type }}</h4>
+        <p>귀하의 대상지는 <strong>{{ recommended_housing_type }} 매입임대</strong>로 활용될 경우 가장 높은 적합성을 보입니다.</p>
+        
+        <h4>🏗️ 권장 개발 규모</h4>
+        <p><strong>{{ total_units }}세대</strong> 규모의 개발이 적합하며, 인센티브 적용 시 최대 <strong>{{ incentive_units }}세대</strong>까지 가능합니다.</p>
+        
+        <h4>✅ 공공주택 특례 장점</h4>
+        <ul>
+            <li>용적률 인센티브 적용 가능</li>
+            <li>장기 안정적 임대 수익 구조</li>
+            <li>공공기관과의 협력을 통한 사업 안정성</li>
+        </ul>
+    </div>
+
+    <!-- 예상 사업 구조 -->
+    <div class="section">
+        <div class="section-title">4. 예상 사업 구조 (개념 수준)</div>
+        <div class="highlight-box">
+            <p><strong>예상 토지비</strong>: {{ land_cost | currency_format }} 억원</p>
+            <p><strong>예상 건축비</strong>: {{ construction_cost | currency_format }} 억원</p>
+            <p><strong>총 사업비</strong>: {{ total_cost | currency_format }} 억원</p>
+            <p><strong>예상 IRR</strong>: {{ irr }}%</p>
+            
+            <p style="margin-top: 20px; color: #666; font-size: 14px;">※ 실제 사업비 및 수익률은 상세 검토 과정에서 변동될 수 있습니다.</p>
+        </div>
+    </div>
+
+    <!-- 검토 대상 적합성 -->
+    <div class="section">
+        <div class="section-title">5. 왜 이 대상지가 검토 대상이 되는가?</div>
+        <div class="highlight-box">
+            <p><strong>긍정적 평가 포인트</strong>:</p>
+            <ul>
+                <li>토지 평가가액 및 입지 조건이 공공주택 사업에 적합합니다.</li>
+                <li>{{ recommended_housing_type }}로 개발 시 높은 수요가 예상됩니다.</li>
+                <li>법규 및 LH 운영 기준을 충족하고 있습니다.</li>
+            </ul>
+            
+            <p style="margin-top: 20px;"><strong>다음 단계</strong>:</p>
+            <ul>
+                <li>LH 담당자와의 상세 협의</li>
+                <li>추가 실사 및 법률 검토</li>
+                <li>사업 구조 확정 및 계약 협의</li>
+            </ul>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 60px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+        <p style="font-size: 12px; color: #666;">본 보고서는 귀하의 대상지에 대한 가치 평가 및 활용 가능성을 안내하기 위해 작성되었습니다.</p>
+        <p style="font-size: 12px; color: #666;">Report ID: {{ run_id }}</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A. 종합 최종보고서</title>
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; margin: 40px; line-height: 1.8; color: #333; }
+        .header { text-align: center; margin-bottom: 40px; border-bottom: 3px solid #1a73e8; padding-bottom: 20px; }
+        .header h1 { font-size: 32px; color: #1a73e8; margin: 0; }
+        .header .subtitle { font-size: 14px; color: #666; margin-top: 10px; }
+        .site-identity { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 30px 0; }
+        .site-identity table { width: 100%; border-collapse: collapse; }
+        .site-identity th { background: #e8f0fe; padding: 12px; text-align: left; width: 30%; font-weight: 600; }
+        .site-identity td { padding: 12px; background: white; }
+        .section { margin: 40px 0; }
+        .section-title { font-size: 24px; color: #1a73e8; border-left: 4px solid #1a73e8; padding-left: 12px; margin-bottom: 20px; }
+        .info-card { background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .metric { display: inline-block; margin: 10px 20px; }
+        .metric-label { font-size: 12px; color: #666; }
+        .metric-value { font-size: 24px; font-weight: bold; color: #1a73e8; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>A. 종합 최종보고서</h1>
+        <div class="subtitle">Comprehensive Master Report</div>
+        <div class="subtitle">대상지 분석 실행 ID: {{ run_id }}</div>
+        <div class="subtitle">보고서 생성일: {{ appraisal_date }}</div>
+    </div>
+
+    <!-- Site Identity Block -->
+    {% include 'components/site_identity_block.html' %}
+
+    <!-- Executive Summary -->
+    <div class="section">
+        <div class="section-title">1. Executive Summary</div>
+        <div class="info-card">
+            <h3>핵심 결론</h3>
+            <div class="metric">
+                <div class="metric-label">토지가치 (M2)</div>
+                <div class="metric-value">{{ total_value | currency_format }} 억원</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">공급유형 (M3)</div>
+                <div class="metric-value">{{ recommended_housing_type }}</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">규모 (M4)</div>
+                <div class="metric-value">{{ total_units }}세대</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">IRR (M5)</div>
+                <div class="metric-value">{{ irr }}%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- M2: 토지감정평가 -->
+    <div class="section">
+        <div class="section-title">2. M2 토지감정평가</div>
+        <p><strong>대상지</strong>는 <strong>{{ address }}</strong>에 위치하며, 총 면적은 <strong>{{ land_area_sqm | number_format }} ㎡ ({{ land_area_pyeong | number_format }} 평)</strong>입니다.</p>
+        
+        <h4>평가 결과</h4>
+        <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <th>항목</th>
+                <th>금액</th>
+            </tr>
+            <tr>
+                <td>총 토지가액</td>
+                <td>{{ total_value | currency_format }} 억원</td>
+            </tr>
+            <tr>
+                <td>단가 (㎡당)</td>
+                <td>{{ price_per_sqm | number_format }} 원/㎡</td>
+            </tr>
+            <tr>
+                <td>단가 (평당)</td>
+                <td>{{ price_per_pyeong | number_format }} 원/평</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- M3: 공급유형 판단 -->
+    <div class="section">
+        <div class="section-title">3. M3 공급유형 판단</div>
+        <p><strong>권장 공급유형</strong>: {{ recommended_housing_type }}</p>
+        <p><strong>적합도 점수</strong>: {{ housing_type_score }}점</p>
+        <p><strong>2순위 유형</strong>: {{ second_choice_type }}</p>
+    </div>
+
+    <!-- M4: 건축규모 결정 -->
+    <div class="section">
+        <div class="section-title">4. M4 건축규모 결정</div>
+        <p><strong>총 세대수</strong>: {{ total_units }}세대 (법정 기준)</p>
+        <p><strong>인센티브 적용 시</strong>: {{ incentive_units }}세대</p>
+        <p><strong>용적률</strong>: {{ floor_area_ratio }}%</p>
+        <p><strong>건폐율</strong>: {{ building_coverage_ratio }}%</p>
+    </div>
+
+    <!-- M5: 사업성 분석 -->
+    <div class="section">
+        <div class="section-title">5. M5 사업성 분석</div>
+        <h4>투자비</h4>
+        <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <th>항목</th>
+                <th>금액</th>
+            </tr>
+            <tr>
+                <td>토지비</td>
+                <td>{{ land_cost | currency_format }} 억원</td>
+            </tr>
+            <tr>
+                <td>건축비</td>
+                <td>{{ construction_cost | currency_format }} 억원</td>
+            </tr>
+            <tr>
+                <td>총 투자비</td>
+                <td>{{ total_cost | currency_format }} 억원</td>
+            </tr>
+        </table>
+
+        <h4>수익 구조</h4>
+        <p><strong>예상 수익</strong>: {{ total_revenue | currency_format }} 억원</p>
+        <p><strong>IRR</strong>: {{ irr }}%</p>
+        <p><strong>NPV</strong>: {{ npv | currency_format }} 억원</p>
+    </div>
+
+    <!-- M6: 종합 판단 -->
+    <div class="section">
+        <div class="section-title">6. M6 종합 판단</div>
+        <p><strong>최종 판단</strong>: {{ go_decision }}</p>
+        <p><strong>종합 점수</strong>: {{ overall_score }}점</p>
+        <p><strong>리스크 수준</strong>: {{ risk_level }}</p>
+    </div>
+
+    <!-- 부록 -->
+    <div class="section">
+        <div class="section-title">7. 부록: 기준 및 가정</div>
+        <ul>
+            <li>본 보고서는 M2~M6 분석 모듈의 결과를 통합한 종합 문서입니다.</li>
+            <li>모든 수치는 {{ appraisal_date }} 기준입니다.</li>
+            <li>LH 매입임대 운영 기준 및 공공주택 사업 기준을 적용하였습니다.</li>
+            <li>본 보고서는 내부 참고용이며, 법적 효력을 갖지 않습니다.</li>
+        </ul>
+    </div>
+
+    <div style="text-align: center; margin-top: 60px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+        <p style="font-size: 12px; color: #666;">본 보고서는 ZeroSite 분석 시스템에 의해 자동 생성되었습니다.</p>
+        <p style="font-size: 12px; color: #666;">Report ID: {{ run_id }}</p>
+    </div>
+</body>
+</html>
