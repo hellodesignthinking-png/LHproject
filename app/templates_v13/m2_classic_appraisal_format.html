@@ -341,10 +341,10 @@
             </div>
         </div>
 
-        <div class="company-name">Antenna Holdings Co., Ltd.</div>
-        <div class="company-contact">
-            서울시 강남구 테헤란로 427 위워크타워<br>
-            Tel: 02-3789-2000 | Email: appraisal@antennaholdings.com
+        <div class="company-name">ZeroSite Appraisal Engine</div>
+        <div class="company-contact" style="font-size: 11px; color: #6c757d; font-style: italic;">
+            본 보고서는 ZeroSite 분석 엔진을 통해 생성된 분석 결과이며,<br>
+            제출 주체의 물리적 소재지는 평가 대상지와 무관합니다.
         </div>
     </div>
 
@@ -657,14 +657,62 @@
                 </tbody>
             </table>
 
-            <div class="info-box">
-                <div class="info-box-title">최종 시장가치 산정 방법</div>
-                <p>
-                    최종 시장가치는 <strong>거래사례 분석을 중심</strong>으로 판단하였으며,<br>
-                    수익환원법 및 개별공시지가를 참고하여 합리적으로 조정·확정하였습니다.
+            <div class="info-box" style="background-color: #e8f4f8; border-left: 4px solid #0066cc;">
+                <div class="info-box-title">🏛️ LH 공공 매입 평가 기준</div>
+                <p style="font-weight: bold; margin-bottom: 15px;">
+                    본 평가는 LH 공공매입 기준에 따라 <strong>거래사례 시가를 그대로 적용하지 않고</strong>,
+                    아래 원칙에 따라 보수적으로 조정하였습니다.
                 </p>
-                <p style="margin-top: 10px;">
-                    <strong>최종 시장가치: {{ total_value | number_format }} 원</strong>
+                <ul style="margin-left: 20px; line-height: 1.8;">
+                    <li>▷ 공공 매입 적정성 (과도한 시가 반영 방지)</li>
+                    <li>▷ 중장기 운영 안정성 (LH 재정 건전성)</li>
+                    <li>▷ 유사 공공사업 매입 사례 대비 균형</li>
+                </ul>
+            </div>
+
+            <div class="section" style="margin-top: 25px;">
+                <div class="section-title">평가 방법별 가중치</div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;">평가 방법</th>
+                            <th style="width: 30%;">가중치</th>
+                            <th style="width: 30%;">비고</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>거래사례 비교방식</td>
+                            <td class="value-highlight"><strong>70%</strong></td>
+                            <td>중심 평가</td>
+                        </tr>
+                        <tr>
+                            <td>개별공시지가 기준</td>
+                            <td><strong>20%</strong></td>
+                            <td>공공 기준 참고</td>
+                        </tr>
+                        <tr>
+                            <td>수익환원법</td>
+                            <td><strong>10%</strong></td>
+                            <td>보조 검토</td>
+                        </tr>
+                        <tr class="highlight-row">
+                            <td><strong>최종 LH 매입 적정가</strong></td>
+                            <td colspan="2" class="value-highlight"><strong>{{ total_value | number_format }} 원</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="info-box" style="margin-top: 20px;">
+                <div class="info-box-title">조정 논리</div>
+                <p>
+                    거래사례 기준 시가(평균 약 {{ weighted_avg_price | number_format }} 원/㎡)는 민간 시장 기준이며,<br>
+                    LH 공공매입은 <strong>안정적 주거 공급 목적</strong>으로 시행되므로<br>
+                    공시지가 및 공공 조정계수를 적용하여 <strong>{{ price_per_sqm | number_format }} 원/㎡</strong>로 확정하였습니다.
+                </p>
+                <p style="margin-top: 10px; font-weight: bold;">
+                    ✅ 최종 LH 매입 적정가: {{ total_value | number_format }} 원
                 </p>
             </div>
         </div>
