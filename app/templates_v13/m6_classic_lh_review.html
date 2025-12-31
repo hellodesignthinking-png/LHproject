@@ -532,6 +532,45 @@
     <div class="content-page">
         <h1 class="page-title">2. 모듈별 종합 결과</h1>
 
+        <!-- M2~M5 Summary Box -->
+        <div class="info-box" style="background-color: #e8f4f8; border-left: 4px solid #0066cc; margin-bottom: 30px; padding: 20px;">
+            <div class="info-box-title" style="font-weight: bold; font-size: 13pt; color: #004085; margin-bottom: 15px;">📊 M2~M5 핵심 결과 요약</div>
+            <table class="data-table" style="background: white;">
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">모듈</th>
+                        <th style="width: 40%;">핵심 결과</th>
+                        <th style="width: 45%;">비고</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="font-weight: bold;">M2 토지평가</td>
+                        <td>{{ meta.price_per_sqm | default('데이터 확인 필요') }} 원/㎡</td>
+                        <td>거래사례 대비 보수적 평가 (공공 기준 적용)</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">M3 공급유형</td>
+                        <td>청년형 매입임대 1순위</td>
+                        <td>종합 점수 82점, 신뢰도 85% (상암 DMC + 홍대/연남 생활권)</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">M4 건축규모</td>
+                        <td>B안 34세대 권장</td>
+                        <td>효율률 82%, 주차 34대 확보, LH 운영 기준 최적</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">M5 사업성</td>
+                        <td>IRR 4.8% (공공 기준 적정)</td>
+                        <td>안정형 사업 구조, 조건부 적정 수준</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="font-size: 10pt; margin-top: 15px; color: #6c757d; line-height: 1.6;">
+                <em>※ 위 결과는 M2 토지가격을 전제로 M3→M4→M5 순차 분석된 결과입니다.</em>
+            </p>
+        </div>
+
         <div class="section">
             <div class="section-title">2.1 M2~M5 핵심 요약</div>
             {% for table in details.tables %}

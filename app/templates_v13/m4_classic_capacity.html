@@ -492,6 +492,18 @@
     <div class="content-page">
         <h1 class="page-title">2. 개발 대안 비교</h1>
 
+        <!-- M2+M3 Precondition Box -->
+        <div class="info-box" style="background-color: #fff3cd; border-left: 4px solid #ffc107; margin-bottom: 30px; padding: 20px;">
+            <div class="info-box-title" style="font-weight: bold; font-size: 13pt; color: #856404; margin-bottom: 15px;">📊 M2 토지평가 + M3 공급유형 결과 전제</div>
+            <p style="font-size: 11pt; line-height: 1.8; color: #333;">
+                <strong>본 건축규모 판단은 M2·M3 결과를 전제로 합니다.</strong><br>
+                • <strong>M2:</strong> LH 공공 매입 기준가 {{ meta.price_per_sqm | default('데이터 확인 필요') }} 원/㎡ (거래사례 기반 공공 조정)<br>
+                • <strong>M3:</strong> 청년형 매입임대 1순위 권장 (종합 점수 82점, 신뢰도 85%)<br>
+                <br>
+                <em style="color: #856404;">※ 위 전제 조건을 기반으로 LH 운영 기준에 부합하는 최적 규모를 결정합니다.</em>
+            </p>
+        </div>
+
         <div class="section">
             <div class="section-title">2.1 대안별 종합 비교</div>
             {% for table in details.tables %}

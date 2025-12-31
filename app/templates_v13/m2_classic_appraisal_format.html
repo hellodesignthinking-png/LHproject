@@ -261,14 +261,7 @@
             color: #6c757d;
         }
         
-        .page-footer {
-            position: fixed;
-            bottom: 20px;
-            left: 40px;
-            font-size: 9pt;
-            color: #adb5bd;
-            font-style: italic;
-        }
+        /* Removed fixed page-footer to prevent overlap */
 
         /* Print optimization */
         @media print {
@@ -384,6 +377,31 @@
                     <td>{{ confidence_level }} ({{ confidence_score | percentage }})</td>
                 </tr>
             </table>
+        </div>
+
+        <!-- 3단 요약 박스 -->
+        <div class="section" style="margin-top: 30px;">
+            <div class="section-title">평가 과정 3단계 요약</div>
+            <div style="display: flex; justify-content: space-between; gap: 15px;">
+                <div style="flex: 1; background: #e8f4f8; border: 2px solid #0066cc; border-radius: 8px; padding: 20px; text-align: center;">
+                    <div style="font-weight: bold; font-size: 11pt; color: #0066cc; margin-bottom: 10px;">① 거래사례</div>
+                    <div style="font-size: 14pt; font-weight: bold; color: #333;">{{ weighted_avg_price | number_format }}</div>
+                    <div style="font-size: 9pt; color: #666;">원/㎡</div>
+                </div>
+                <div style="flex: 1; background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 20px; text-align: center;">
+                    <div style="font-weight: bold; font-size: 11pt; color: #856404; margin-bottom: 10px;">② LH 조정</div>
+                    <div style="font-size: 11pt; font-weight: bold; color: #333;">공시지가 20%</div>
+                    <div style="font-size: 11pt; font-weight: bold; color: #333;">보수계수</div>
+                </div>
+                <div style="flex: 1; background: #d4edda; border: 2px solid #28a745; border-radius: 8px; padding: 20px; text-align: center;">
+                    <div style="font-weight: bold; font-size: 11pt; color: #155724; margin-bottom: 10px;">③ 최종가</div>
+                    <div style="font-size: 14pt; font-weight: bold; color: #28a745;">{{ price_per_sqm | number_format }}</div>
+                    <div style="font-size: 9pt; color: #666;">원/㎡</div>
+                </div>
+            </div>
+            <div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-left: 4px solid #0066cc;">
+                <p style="font-size: 10pt;"><strong>▶ 조정 논리:</strong> 민간 시가 대비 공공 매입 안정성 기준 적용</p>
+            </div>
         </div>
     </div>
 
@@ -797,13 +815,20 @@
 
     <!-- Page Numbers -->
     <script>
-        // Add page numbers in print
-        let pageCount = 1;
-        document.querySelectorAll('.page-break, .content-page:last-child').forEach(function(element, index) {
-            const pageNum = document.createElement('div');
-            pageNum.className = 'page-number';
-            pageNum.textContent = 'Page ' + (index + 1) + ' of 24';
-            element.appendChild(pageNum);
+        // Dynamic page numbering
+        window.addEventListener('DOMContentLoaded', function() {
+            const pages = document.querySelectorAll('.page-break, .content-page');
+            const totalPages = pages.length;
+            
+            pages.forEach(function(element, index) {
+                const existingPageNum = element.querySelector('.page-number');
+                if (!existingPageNum) {
+                    const pageNum = document.createElement('div');
+                    pageNum.className = 'page-number';
+                    pageNum.textContent = 'Page ' + (index + 1) + ' of ' + totalPages;
+                    element.appendChild(pageNum);
+                }
+            });
         });
     </script>
 </body>

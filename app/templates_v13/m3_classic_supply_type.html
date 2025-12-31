@@ -562,6 +562,19 @@
     <div class="content-page">
         <h1 class="page-title">2. 공급유형 비교 분석</h1>
 
+        <!-- M2 Precondition Box -->
+        <div class="info-box" style="background-color: #fff3cd; border-left: 4px solid #ffc107; margin-bottom: 30px; padding: 20px;">
+            <div class="info-box-title" style="font-weight: bold; font-size: 13pt; color: #856404; margin-bottom: 15px;">📊 M2 토지평가 결과 전제</div>
+            <p style="font-size: 11pt; line-height: 1.8; color: #333;">
+                <strong>본 공급유형 판단은 M2 토지감정평가 결과를 전제로 합니다.</strong><br>
+                • <strong>LH 공공 매입 기준가:</strong> {{ meta.price_per_sqm | default('데이터 확인 필요') }} 원/㎡<br>
+                • <strong>평가 방식:</strong> 거래사례 기반 → 공공 조정 계수 적용 → 최종 매입 적정가 산출<br>
+                • <strong>조정 논리:</strong> 민간 시세 대비 보수적 평가 (공공 매입 안정성 확보)<br>
+                <br>
+                <em style="color: #856404;">※ M2 결과의 토지 단가를 기준으로 사업성 및 공급유형이 결정됩니다.</em>
+            </p>
+        </div>
+
         <div class="section">
             <div class="section-title">2.1 종합 비교표</div>
             {% for table in details.tables %}
