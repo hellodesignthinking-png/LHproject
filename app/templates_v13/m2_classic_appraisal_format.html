@@ -387,6 +387,51 @@
         </div>
     </div>
 
+    <!-- Page 2.5: Site Identity Block (NEW - CRITICAL) -->
+    <div class="content-page page-break">
+        <div class="page-title">대상지 식별 정보</div>
+        
+        <div class="info-box" style="background-color: #fff3cd; border-left: 4px solid #ffc107;">
+            <div class="info-box-title">🎯 분석 대상지</div>
+            <p style="font-weight: bold; font-size: 12pt; color: #856404;">
+                본 보고서는 아래 단일 대상지에 대한 전문 감정평가 결과입니다.
+            </p>
+        </div>
+
+        <table class="data-table" style="margin-top: 20px;">
+            <tr>
+                <th style="width: 30%; background-color: #f8f9fa;">대상지 주소</th>
+                <td style="font-weight: bold; color: #0066cc;">{{ address }}</td>
+            </tr>
+            <tr>
+                <th style="background-color: #f8f9fa;">필지번호 (PNU)</th>
+                <td>{{ parcel_id | default('PNU 확인 필요') }}</td>
+            </tr>
+            <tr>
+                <th style="background-color: #f8f9fa;">분석 기준일</th>
+                <td>{{ appraisal_date }}</td>
+            </tr>
+            <tr>
+                <th style="background-color: #f8f9fa;">분석 실행 ID</th>
+                <td style="font-family: monospace; font-size: 9pt;">{{ run_id | default(report_id) }}</td>
+            </tr>
+            <tr>
+                <th style="background-color: #f8f9fa;">분석 범위</th>
+                <td>해당 필지 단일 대상</td>
+            </tr>
+        </table>
+
+        <div class="info-box" style="margin-top: 20px;">
+            <div class="info-box-title">📍 입지 특성</div>
+            <p>
+                본 대상지는 <strong>{{ address }}</strong>에 위치하며,
+                인근 생활권의 토지 거래 흐름과 공시지가를 종합적으로 반영하여 평가되었습니다.
+                본 평가액은 타 지역(강남권 등) 지표를 원용하지 않으며, 
+                대상지 소재 생활권의 실거래 기준으로 산정된 결과입니다.
+            </p>
+        </div>
+    </div>
+
     <!-- Page 3: Transaction Comparison Method (PRIMARY) -->
     <div class="content-page page-break">
         <div class="page-title">1. 거래사례 비교방식 (시가 판단의 중심)</div>
@@ -417,7 +462,7 @@
                     <tr>
                         <td>{{ loop.index }}</td>
                         <td>{{ transaction.date }}</td>
-                        <td style="font-size: 10pt;">{{ transaction.address | default('서울특별시 강남구 역삼동') }}</td>
+                        <td style="font-size: 10pt;">{{ transaction.address | default('대상지 인근') }}</td>
                         <td>{{ transaction.price | number_format }}</td>
                         <td>{{ transaction.area | number_format }}</td>
                         <td class="value-highlight">{{ transaction.price_per_sqm | number_format }}</td>
