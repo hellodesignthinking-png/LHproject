@@ -37,43 +37,35 @@
     <!-- Site Identity Block -->
     {% include 'components/site_identity_block.html' %}
 
-    <!-- 사업 구조 개요 -->
+    <!-- 핵심 투자 지표 (최우선 배치) -->
     <div class="section">
-        <div class="section-title">1. 사업 구조 개요</div>
-        <div class="financial-box">
-            <h4>📌 사업 전제 조건</h4>
-            <p><strong>대상지</strong>: {{ address }}</p>
-            <p><strong>토지면적</strong>: {{ land_area_sqm | number_format }} ㎡ ({{ land_area_pyeong | number_format }} 평)</p>
-            <p><strong>토지 평가가액 (M2 기준)</strong>: {{ total_value | currency_format }} 억원</p>
-            <p><strong>공급유형 (M3 기준)</strong>: {{ recommended_housing_type }}</p>
+        <div class="section-title">1. 핵심 투자 지표 - Executive Summary</div>
+        <div style="background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%); color: white; padding: 30px; border-radius: 12px; margin: 20px 0;">
+            <h3 style="color: white; margin-top: 0;">💼 투자 타당성 요약</h3>
+            <div class="metric-grid" style="grid-template-columns: repeat(4, 1fr);">
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">
+                    <div style="font-size: 12px; opacity: 0.9;">총 투자비</div>
+                    <div style="font-size: 24px; font-weight: bold; margin-top: 5px;">{{ total_cost | currency_format }}억</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">
+                    <div style="font-size: 12px; opacity: 0.9;">IRR</div>
+                    <div style="font-size: 32px; font-weight: bold; margin-top: 5px;">{{ irr }}%</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">
+                    <div style="font-size: 12px; opacity: 0.9;">NPV</div>
+                    <div style="font-size: 24px; font-weight: bold; margin-top: 5px;">{{ npv | currency_format }}억</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">
+                    <div style="font-size: 12px; opacity: 0.9;">개발 규모</div>
+                    <div style="font-size: 24px; font-weight: bold; margin-top: 5px;">{{ total_units }}세대</div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- 개발 규모 가정 -->
+    <!-- 투자비 및 수익 구조 (M5) -->
     <div class="section">
-        <div class="section-title">2. 개발 규모 가정 (M4 분석 결과)</div>
-        <div class="metric-grid">
-            <div class="metric-card">
-                <div class="label">총 세대수</div>
-                <div class="value">{{ total_units }}</div>
-            </div>
-            <div class="metric-card">
-                <div class="label">용적률</div>
-                <div class="value">{{ floor_area_ratio }}%</div>
-            </div>
-            <div class="metric-card">
-                <div class="label">건폐율</div>
-                <div class="value">{{ building_coverage_ratio }}%</div>
-            </div>
-        </div>
-        
-        <p><strong>인센티브 적용 시</strong>: 최대 {{ incentive_units }}세대까지 개발 가능</p>
-        <p><strong>용도지역</strong>: {{ zone_type }}</p>
-    </div>
-
-    <!-- 투자비 및 수익 구조 -->
-    <div class="section">
-        <div class="section-title">3. 투자비 및 수익 구조 (M5 분석 상세)</div>
+        <div class="section-title">2. 투자비 및 수익 구조 (M5 분석 상세)</div>
         
         <h4>📊 초기 투자비</h4>
         <table>
@@ -107,9 +99,31 @@
         </div>
     </div>
 
-    <!-- IRR 분석 -->
+    <!-- 개발 규모 가정 (M4) -->
     <div class="section">
-        <div class="section-title">4. IRR 분석 및 민간 대비 비교</div>
+        <div class="section-title">3. 개발 규모 가정 (M4 분석 결과)</div>
+        <div class="metric-grid">
+            <div class="metric-card">
+                <div class="label">총 세대수</div>
+                <div class="value">{{ total_units }}</div>
+            </div>
+            <div class="metric-card">
+                <div class="label">용적률</div>
+                <div class="value">{{ floor_area_ratio }}%</div>
+            </div>
+            <div class="metric-card">
+                <div class="label">건폐율</div>
+                <div class="value">{{ building_coverage_ratio }}%</div>
+            </div>
+        </div>
+        
+        <p><strong>인센티브 적용 시</strong>: 최대 {{ incentive_units }}세대까지 개발 가능</p>
+        <p><strong>용도지역</strong>: {{ zone_type }}</p>
+    </div>
+
+    <!-- IRR 분석 및 리스크 명시 -->
+    <div class="section">
+        <div class="section-title">4. IRR 분석 및 투자 특성</div>
         
         <h4>🔍 공공 IRR vs 민간 IRR</h4>
         <table>
@@ -122,7 +136,7 @@
             <tr>
                 <td>공공 사업 IRR</td>
                 <td>4-5%</td>
-                <td><strong>{{ irr }}%</strong></td>
+                <td><strong style="color: #ff9800;">{{ irr }}%</strong></td>
                 <td>안정적, 장기 임대</td>
             </tr>
             <tr>
@@ -134,11 +148,20 @@
         </table>
 
         <div class="financial-box">
-            <p><strong>💡 해석</strong>:</p>
+            <p><strong>💡 투자 특성</strong>:</p>
             <ul>
                 <li>본 사업의 IRR {{ irr }}%는 공공 사업 기준으로 <strong>적정 수준</strong>입니다.</li>
-                <li>민간 개발에 비해 수익률은 낮으나, <strong>리스크가 현저히 낮습니다</strong>.</li>
-                <li>LH와의 장기 계약을 통한 <strong>안정적 수익</strong>이 보장됩니다.</li>
+                <li>민간 개발 대비 <strong>낮은 수익률</strong>, 하지만 <strong>현저히 낮은 리스크</strong>.</li>
+                <li>LH와의 장기 계약을 통한 <strong>예측 가능한 현금 흐름</strong>.</li>
+            </ul>
+        </div>
+
+        <div class="risk-box">
+            <h4>⚠️ 투자 시 유의사항</h4>
+            <ul>
+                <li><strong>수익 상한 구조</strong>: 공공사업 특성상 초과 수익은 제한적입니다.</li>
+                <li><strong>회수 기간</strong>: 장기 임대 구조로 인한 장기 자금 투입 필요.</li>
+                <li><strong>정책 의존성</strong>: 정부 정책 변화에 따른 사업 조건 변동 가능성.</li>
             </ul>
         </div>
     </div>

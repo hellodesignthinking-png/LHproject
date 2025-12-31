@@ -5,120 +5,142 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>E. 사전 검토 리포트</title>
     <style>
-        body { font-family: 'Noto Sans KR', sans-serif; margin: 40px; line-height: 1.6; color: #333; }
-        .header { text-align: center; margin-bottom: 40px; border-bottom: 3px solid #9c27b0; padding-bottom: 20px; }
-        .header h1 { font-size: 32px; color: #9c27b0; margin: 0; }
+        body { font-family: 'Noto Sans KR', sans-serif; margin: 40px; line-height: 1.8; color: #333; }
+        .header { text-align: center; margin-bottom: 40px; border-bottom: 3px solid #00acc1; padding-bottom: 20px; }
+        .header h1 { font-size: 32px; color: #00acc1; margin: 0; }
         .header .subtitle { font-size: 14px; color: #666; margin-top: 10px; }
-        .site-identity { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 30px 0; }
-        .site-identity table { width: 100%; border-collapse: collapse; }
-        .site-identity th { background: #f3e5f5; padding: 12px; text-align: left; width: 30%; font-weight: 600; }
-        .site-identity td { padding: 12px; background: white; }
-        .quick-summary { background: linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%); color: white; padding: 40px; border-radius: 12px; margin: 30px 0; text-align: center; }
-        .quick-summary h2 { margin: 0 0 20px 0; font-size: 28px; }
-        .quick-summary .decision { font-size: 48px; font-weight: bold; margin: 20px 0; }
-        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin: 30px 0; }
-        .kpi-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; }
-        .kpi-card .icon { font-size: 36px; margin-bottom: 10px; }
-        .kpi-card .label { font-size: 13px; color: #666; margin-bottom: 8px; }
-        .kpi-card .value { font-size: 26px; font-weight: bold; color: #9c27b0; }
-        .strength-list { list-style: none; padding: 0; }
-        .strength-list li { background: #e8f5e9; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #4caf50; }
-        .risk-list { list-style: none; padding: 0; }
-        .risk-list li { background: #ffebee; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #f44336; }
-        .next-step-box { background: #fff3e0; padding: 25px; border-radius: 12px; border-left: 4px solid #ff9800; margin: 30px 0; }
+        .quick-card { background: linear-gradient(135deg, #00acc1 0%, #0097a7 100%); color: white; padding: 30px; border-radius: 12px; margin: 20px 0; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+        .summary-box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .summary-box .label { font-size: 12px; color: #666; margin-bottom: 5px; }
+        .summary-box .value { font-size: 20px; font-weight: bold; color: #00acc1; }
+        .conclusion-card { background: #fff8e1; padding: 30px; border-radius: 12px; margin: 30px 0; border-left: 4px solid #ffc107; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th { background: #e0f7fa; padding: 12px; text-align: left; font-weight: 600; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>E. 사전 검토 리포트</h1>
-        <div class="subtitle">Quick Review Report</div>
-        <div class="subtitle">10분 내 핵심 판단 지원</div>
+        <div class="subtitle">Quick Review Report - 5분 빠른 판단</div>
         <div class="subtitle">보고서 생성일: {{ appraisal_date }}</div>
     </div>
 
-    <!-- Site Identity Block (한 장 요약) -->
-    {% include 'components/site_identity_block.html' %}
-
-    <!-- 핵심 판단 -->
-    <div class="quick-summary">
-        <h2>⚡ 핵심 판단 요약</h2>
-        <div class="decision">{{ go_decision }}</div>
-        <p style="font-size: 18px;">본 대상지는 LH 매입임대 사업의 검토 대상으로 조건부 적합합니다.</p>
+    <!-- 대상지 식별 -->
+    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <p><strong>대상지</strong>: {{ address }}</p>
+        <p><strong>필지번호</strong>: {{ parcel_id }}</p>
+        <p><strong>면적</strong>: {{ land_area_sqm | number_format }} ㎡ ({{ land_area_pyeong | number_format }} 평)</p>
     </div>
 
-    <!-- 핵심 수치 카드 -->
-    <div class="kpi-grid">
-        <div class="kpi-card">
-            <div class="icon">🏠</div>
+    <!-- 핵심 판단 카드 -->
+    <div class="quick-card">
+        <h2 style="color: white; margin-top: 0;">⚡ 검토 결론</h2>
+        <div style="font-size: 48px; font-weight: bold; margin: 20px 0;">{{ go_decision }}</div>
+        <p style="font-size: 18px;">종합 점수: <strong>{{ overall_score }}점</strong> | 리스크: <strong>{{ risk_level }}</strong></p>
+    </div>
+
+    <!-- 6개 모듈 요약 -->
+    <div class="summary-grid">
+        <!-- M2 -->
+        <div class="summary-box">
             <div class="label">M2: 토지가치</div>
             <div class="value">{{ total_value | currency_format }}억</div>
+            <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                평가가액 {{ total_value | currency_format }}억원으로 공공사업 기준 부합
+            </p>
         </div>
-        <div class="kpi-card">
-            <div class="icon">🏘️</div>
+
+        <!-- M3 -->
+        <div class="summary-box">
             <div class="label">M3: 공급유형</div>
             <div class="value">{{ recommended_housing_type }}</div>
+            <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                {{ housing_type_score }}점으로 가장 적합
+            </p>
         </div>
-        <div class="kpi-card">
-            <div class="icon">🏗️</div>
-            <div class="label">M4: 규모</div>
+
+        <!-- M4 -->
+        <div class="summary-box">
+            <div class="label">M4: 개발규모</div>
             <div class="value">{{ total_units }}세대</div>
+            <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                용적률 {{ floor_area_ratio }}% 기준
+            </p>
         </div>
-        <div class="kpi-card">
-            <div class="icon">💰</div>
-            <div class="label">M5: IRR</div>
-            <div class="value">{{ irr }}%</div>
+
+        <!-- M5 -->
+        <div class="summary-box">
+            <div class="label">M5: 수익률</div>
+            <div class="value">IRR {{ irr }}%</div>
+            <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                공공사업 기준 {% if irr|float >= 4.0 %}적정{% else %}검토 필요{% endif %}
+            </p>
         </div>
-    </div>
 
-    <!-- 3가지 강점 -->
-    <div style="margin: 40px 0;">
-        <h2 style="color: #9c27b0; font-size: 24px; margin-bottom: 20px;">✅ 강점 3가지</h2>
-        <ul class="strength-list">
-            <li><strong>입지 가치</strong>: {{ address }}는 {{ location_description }}에 위치하여 접근성이 우수합니다.</li>
-            <li><strong>개발 가능성</strong>: {{ total_units }}세대 규모의 공공주택 개발이 가능하며, 인센티브 적용 시 최대 {{ incentive_units }}세대까지 확장 가능합니다.</li>
-            <li><strong>재무 안정성</strong>: IRR {{ irr }}%로 공공 사업 기준 적정 수준이며, 장기 안정적 수익 구조를 갖추고 있습니다.</li>
-        </ul>
-    </div>
+        <!-- M6 -->
+        <div class="summary-box">
+            <div class="label">M6: 최종판단</div>
+            <div class="value">{{ overall_score }}점</div>
+            <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                리스크 {{ risk_level }}
+            </p>
+        </div>
 
-    <!-- 3가지 리스크 -->
-    <div style="margin: 40px 0;">
-        <h2 style="color: #9c27b0; font-size: 24px; margin-bottom: 20px;">⚠️ 리스크 3가지</h2>
-        <ul class="risk-list">
-            <li><strong>금리 변동</strong>: 금리 상승 시 차입 비용 증가로 수익성 감소 가능</li>
-            <li><strong>건축비 인상</strong>: 건축 자재 및 인건비 상승에 따른 총 사업비 증가 리스크</li>
-            <li><strong>인허가 지연</strong>: 인허가 과정에서의 지연 또는 추가 조건 부과 가능성</li>
-        </ul>
-        
-        <div style="background: #fff3e0; padding: 20px; border-radius: 8px; margin-top: 20px;">
-            <h4 style="margin-top: 0;">🛡️ 완화 방안</h4>
-            <ul style="margin: 10px 0;">
-                <li>LH와의 조기 협의를 통한 인허가 리스크 최소화</li>
-                <li>금리 헷지 전략 또는 고정금리 차입 검토</li>
-                <li>건축비 민감도 분석 및 예비비 확보</li>
-            </ul>
+        <!-- 투자비 -->
+        <div class="summary-box">
+            <div class="label">총 투자비</div>
+            <div class="value">{{ total_cost | currency_format }}억</div>
+            <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                토지 {{ land_cost | currency_format }}억 + 건축 {{ construction_cost | currency_format }}억
+            </p>
         </div>
     </div>
 
-    <!-- 최종 판단 및 다음 단계 -->
-    <div class="next-step-box">
-        <h2 style="margin-top: 0; color: #ff9800; font-size: 24px;">🎯 최종 판단 및 다음 단계</h2>
-        
-        <h3 style="font-size: 20px; margin: 20px 0 10px 0;">판단: {{ go_decision }}</h3>
-        <p><strong>종합 점수</strong>: {{ overall_score }}점 / 100점</p>
-        <p><strong>리스크 수준</strong>: {{ risk_level }}</p>
-        
-        <h3 style="font-size: 20px; margin: 30px 0 10px 0;">📋 다음 단계</h3>
-        <ol style="margin: 10px 0; padding-left: 20px;">
-            <li><strong>LH 담당자 미팅</strong>: 사업 구조 및 계약 조건 협의</li>
-            <li><strong>추가 실사</strong>: 법률, 세무, 기술 실사 진행</li>
-            <li><strong>민감도 분석</strong>: 금리, 건축비 변동 시나리오 검토</li>
-            <li><strong>최종 의사결정</strong>: 상세 검토 결과를 바탕으로 GO/NO-GO 확정</li>
+    <!-- 검토 가치 판단 -->
+    <div class="conclusion-card">
+        <h3 style="margin-top: 0;">📋 검토 가치 판단</h3>
+        {% if overall_score >= 80 %}
+        <div style="font-size: 24px; font-weight: bold; color: #4caf50; margin: 15px 0;">
+            ✅ 검토 가치 높음
+        </div>
+        <p>
+            이 대상지는 <strong>LH 매입임대 사업 추진에 적합</strong>한 조건을 갖추고 있습니다.
+            상세 실사 및 협의를 통해 사업 추진을 권장합니다.
+        </p>
+        {% elif overall_score >= 60 %}
+        <div style="font-size: 24px; font-weight: bold; color: #ff9800; margin: 15px 0;">
+            ⚠️ 조건부 검토
+        </div>
+        <p>
+            기본 조건은 충족하나 <strong>일부 보완사항</strong>이 있습니다.
+            추가 검토 및 리스크 관리 후 추진 여부를 결정할 것을 권장합니다.
+        </p>
+        {% else %}
+        <div style="font-size: 24px; font-weight: bold; color: #f44336; margin: 15px 0;">
+            ❌ 검토 가치 낮음
+        </div>
+        <p>
+            현 시점에서는 <strong>사업 추진이 어려운 조건</strong>입니다.
+            대안 검토 또는 조건 개선 후 재검토를 권장합니다.
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- 다음 단계 -->
+    <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h4 style="margin-top: 0;">🔜 다음 단계</h4>
+        <ol style="line-height: 2.0;">
+            <li><strong>상세 분석</strong>: A. 종합 최종보고서 확인</li>
+            <li><strong>투자 검토</strong>: D. 사업성·투자 검토 보고서 확인</li>
+            <li><strong>LH 협의</strong>: C. LH 기술검증 보고서로 공식 검토</li>
         </ol>
     </div>
 
     <div style="text-align: center; margin-top: 60px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
-        <p style="font-size: 12px; color: #666;">본 리포트는 빠른 의사결정을 지원하기 위한 요약 문서입니다.</p>
-        <p style="font-size: 12px; color: #666;">상세 분석은 종합 최종보고서를 참조하시기 바랍니다.</p>
+        <p style="font-size: 12px; color: #666;">본 리포트는 빠른 검토를 위한 요약 문서입니다.</p>
+        <p style="font-size: 12px; color: #666;">상세 분석은 종합 보고서를 참고하시기 바랍니다.</p>
         <p style="font-size: 12px; color: #666;">Report ID: {{ run_id }}</p>
     </div>
 </body>

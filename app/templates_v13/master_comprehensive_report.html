@@ -32,26 +32,36 @@
     <!-- Site Identity Block -->
     {% include 'components/site_identity_block.html' %}
 
-    <!-- Executive Summary -->
+    <!-- Executive Summary (강화) -->
     <div class="section">
-        <div class="section-title">1. Executive Summary</div>
-        <div class="info-card">
-            <h3>핵심 결론</h3>
-            <div class="metric">
-                <div class="metric-label">토지가치 (M2)</div>
-                <div class="metric-value">{{ total_value | currency_format }} 억원</div>
-            </div>
-            <div class="metric">
-                <div class="metric-label">공급유형 (M3)</div>
-                <div class="metric-value">{{ recommended_housing_type }}</div>
-            </div>
-            <div class="metric">
-                <div class="metric-label">규모 (M4)</div>
-                <div class="metric-value">{{ total_units }}세대</div>
-            </div>
-            <div class="metric">
-                <div class="metric-label">IRR (M5)</div>
-                <div class="metric-value">{{ irr }}%</div>
+        <div class="section-title">1. Executive Summary - 의사결정 핵심 요약</div>
+        <div class="info-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px;">
+            <h3 style="color: white; font-size: 20px; margin-bottom: 20px;">🎯 핵심 결론</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px;">
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">
+                    <div style="font-size: 12px; opacity: 0.9;">토지가치 (M2)</div>
+                    <div style="font-size: 28px; font-weight: bold; margin-top: 5px;">{{ total_value | currency_format }}억</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">
+                    <div style="font-size: 12px; opacity: 0.9;">권장 공급유형 (M3)</div>
+                    <div style="font-size: 20px; font-weight: bold; margin-top: 5px;">{{ recommended_housing_type }}</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">
+                    <div style="font-size: 12px; opacity: 0.9;">권장 세대수 (M4)</div>
+                    <div style="font-size: 28px; font-weight: bold; margin-top: 5px;">{{ total_units }}세대</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">
+                    <div style="font-size: 12px; opacity: 0.9;">내부수익률 (M5)</div>
+                    <div style="font-size: 28px; font-weight: bold; margin-top: 5px;">{{ irr }}%</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">
+                    <div style="font-size: 12px; opacity: 0.9;">최종 판단 (M6)</div>
+                    <div style="font-size: 20px; font-weight: bold; margin-top: 5px;">{{ go_decision }}</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">
+                    <div style="font-size: 12px; opacity: 0.9;">종합 점수 (M6)</div>
+                    <div style="font-size: 28px; font-weight: bold; margin-top: 5px;">{{ overall_score }}점</div>
+                </div>
             </div>
         </div>
     </div>
@@ -128,12 +138,36 @@
         <p><strong>NPV</strong>: {{ npv | currency_format }} 억원</p>
     </div>
 
-    <!-- M6: 종합 판단 -->
+    <!-- M6: 종합 판단 (확장) -->
     <div class="section">
-        <div class="section-title">6. M6 종합 판단</div>
-        <p><strong>최종 판단</strong>: {{ go_decision }}</p>
-        <p><strong>종합 점수</strong>: {{ overall_score }}점</p>
-        <p><strong>리스크 수준</strong>: {{ risk_level }}</p>
+        <div class="section-title">6. M6 종합 판단 - 최종 의사결정 근거</div>
+        
+        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; margin: 20px 0; border-radius: 4px;">
+            <h3 style="color: #856404; margin-top: 0;">📊 종합 판단 요약</h3>
+            <p style="font-size: 16px; line-height: 1.8;">
+                본 대상지는 <strong>{{ go_decision }}</strong> 판단을 받았으며, 종합 점수는 <strong>{{ overall_score }}점</strong>입니다. 
+                리스크 수준은 <strong>{{ risk_level }}</strong>로 평가되었습니다.
+            </p>
+        </div>
+
+        <h4>🔍 왜 이 결론에 도달했는가</h4>
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <ul style="line-height: 2.0;">
+                <li><strong>M2 토지가치</strong>: {{ total_value | currency_format }}억원으로 평가되어, 공공사업 매입 기준 범위에 부합합니다.</li>
+                <li><strong>M3 공급유형</strong>: {{ recommended_housing_type }} 유형이 가장 적합하며, 지역 수요 및 입지 조건과 정합성이 높습니다.</li>
+                <li><strong>M4 건축규모</strong>: {{ total_units }}세대 규모로 개발 시, 법적 용적률 기준 내에서 안정적 사업 추진이 가능합니다.</li>
+                <li><strong>M5 사업성</strong>: IRR {{ irr }}%로, 공공사업 수익 기준을 {% if irr|float >= 8.0 %}충족{% else %}검토 필요{% endif %}합니다.</li>
+            </ul>
+        </div>
+
+        <h4>⚠️ 내부 의사결정 시 유의사항</h4>
+        <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <ol style="line-height: 2.0;">
+                <li>본 판단은 {{ appraisal_date }} 기준 분석 결과이며, 법규 및 정책 변경 시 재검토가 필요합니다.</li>
+                <li>{{ go_decision }} 판단은 추가 실사 및 LH 내부 기준 검증 후 최종 확정되어야 합니다.</li>
+                <li>리스크 수준 {{ risk_level }}에 따른 리스크 관리 계획 수립이 권장됩니다.</li>
+            </ol>
+        </div>
     </div>
 
     <!-- 부록 -->
