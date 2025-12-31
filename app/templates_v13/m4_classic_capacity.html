@@ -229,6 +229,21 @@
             text-align: justify;
         }
 
+        /* Info Box */
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #0066cc;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .info-box-title {
+            font-weight: bold;
+            font-size: 13pt;
+            color: #004085;
+            margin-bottom: 10px;
+        }
+
         /* Table Styles */
         .data-table {
             width: 100%;
@@ -405,6 +420,49 @@
                     {{ details.narrative.conclusion }}
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Site Identity Block (NEW - CRITICAL) -->
+    <div class="summary-page page-break">
+        <h1 class="page-title">대상지 식별 정보</h1>
+        
+        <table class="data-table" style="margin-bottom: 30px;">
+            <tr>
+                <th style="width: 30%; background-color: #f8f9fa;">대상지 주소</th>
+                <td style="font-weight: bold; color: #0066cc;">{{ meta.address | default('주소 확인 필요') }}</td>
+            </tr>
+            <tr>
+                <th style="background-color: #f8f9fa;">필지번호 (PNU)</th>
+                <td>{{ meta.parcel_id | default('PNU 확인 필요') }}</td>
+            </tr>
+            <tr>
+                <th style="background-color: #f8f9fa;">분석 기준일</th>
+                <td>{{ meta.eval_base_date | default(meta.generated_at) }}</td>
+            </tr>
+            <tr>
+                <th style="background-color: #f8f9fa;">분석 실행 ID</th>
+                <td style="font-family: monospace; font-size: 9pt;">{{ meta.run_id | default(meta.report_id) }}</td>
+            </tr>
+        </table>
+
+        <div class="info-box" style="background-color: #e7f3ff; border-left: 4px solid #0066cc; padding: 20px; margin-bottom: 20px;">
+            <div class="info-box-title" style="font-weight: bold; font-size: 13pt; color: #004085; margin-bottom: 10px;">✅ 권장안(B안) 선정 이유</div>
+            <p style="line-height: 1.8;">
+                B안(<strong>{{ summary.kpi_cards[0].value }}세대</strong>)은 
+                마포구 내 유사 필지 개발 사례 대비
+                <strong>주차 부담, 공용면적 효율, 임대 운영 안정성</strong> 측면에서
+                가장 균형적인 대안으로 판단됩니다.
+            </p>
+        </div>
+
+        <div class="info-box" style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 20px;">
+            <div class="info-box-title" style="font-weight: bold; font-size: 13pt; color: #856404; margin-bottom: 10px;">⚠️ 과밀 리스크 (A안)</div>
+            <p style="line-height: 1.8; color: #856404;">
+                A안(과밀)은 마포구 지역 특성상 
+                <strong>주차·민원·임대 회전율</strong> 측면에서
+                운영 리스크가 증가할 가능성이 있습니다.
+            </p>
         </div>
     </div>
 

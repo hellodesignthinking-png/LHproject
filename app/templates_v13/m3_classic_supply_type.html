@@ -229,6 +229,52 @@
             text-align: justify;
         }
 
+        /* Site Identity Box */
+        .site-identity-box {
+            background: #ffffff;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+
+        .site-identity-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .site-identity-row:last-child {
+            border-bottom: none;
+        }
+
+        .site-identity-label {
+            flex: 0 0 180px;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .site-identity-value {
+            flex: 1;
+            color: #212529;
+            padding-left: 20px;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #0066cc;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .info-box-title {
+            font-weight: bold;
+            font-size: 13pt;
+            color: #004085;
+            margin-bottom: 10px;
+        }
+
         /* Table Styles */
         .data-table {
             width: 100%;
@@ -376,6 +422,38 @@
         </div>
     </div>
 
+    <!-- Site Identity Block (Page 2) -->
+    <div class="summary-page">
+        <h1 class="page-title">대상지 식별 정보</h1>
+        
+        <div class="site-identity-box">
+            <div class="site-identity-row">
+                <div class="site-identity-label">대상지 주소</div>
+                <div class="site-identity-value">{{ meta.address }}</div>
+            </div>
+            <div class="site-identity-row">
+                <div class="site-identity-label">필지번호 (PNU)</div>
+                <div class="site-identity-value">{{ meta.parcel_id }}</div>
+            </div>
+            <div class="site-identity-row">
+                <div class="site-identity-label">분석 기준일</div>
+                <div class="site-identity-value">{{ meta.eval_base_date }}</div>
+            </div>
+            <div class="site-identity-row">
+                <div class="site-identity-label">분석 실행 ID</div>
+                <div class="site-identity-value">{{ meta.run_id }}</div>
+            </div>
+            <div class="site-identity-row">
+                <div class="site-identity-label">분석 범위</div>
+                <div class="site-identity-value">단일 필지</div>
+            </div>
+            <div class="site-identity-row">
+                <div class="site-identity-label">보고서 유형</div>
+                <div class="site-identity-value">LH 매입 검토용 Classic 분석 보고서</div>
+            </div>
+        </div>
+    </div>
+
     <!-- Executive Summary -->
     <div class="summary-page">
         <h1 class="page-title">Executive Summary</h1>
@@ -410,6 +488,51 @@
                     {{ details.narrative.conclusion }}
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Site Identity Block (NEW - CRITICAL) -->
+    <div class="summary-page page-break">
+        <h1 class="page-title">대상지 식별 정보</h1>
+        
+        <div class="info-box" style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; margin-bottom: 30px;">
+            <div class="info-box-title" style="font-weight: bold; font-size: 13pt; color: #856404; margin-bottom: 10px;">🎯 분석 대상지</div>
+            <p style="font-weight: bold; font-size: 12pt; color: #856404;">
+                본 보고서는 아래 단일 대상지에 대한 공급유형 판단 결과입니다.
+            </p>
+        </div>
+
+        <table class="data-table" style="margin-bottom: 30px;">
+            <tr>
+                <th style="width: 30%; background-color: #f8f9fa;">대상지 주소</th>
+                <td style="font-weight: bold; color: #0066cc;">{{ meta.address | default('주소 확인 필요') }}</td>
+            </tr>
+            <tr>
+                <th style="background-color: #f8f9fa;">필지번호 (PNU)</th>
+                <td>{{ meta.parcel_id | default('PNU 확인 필요') }}</td>
+            </tr>
+            <tr>
+                <th style="background-color: #f8f9fa;">분석 기준일</th>
+                <td>{{ meta.eval_base_date | default(meta.generated_at) }}</td>
+            </tr>
+            <tr>
+                <th style="background-color: #f8f9fa;">분석 실행 ID</th>
+                <td style="font-family: monospace; font-size: 9pt;">{{ meta.run_id | default(meta.report_id) }}</td>
+            </tr>
+        </table>
+
+        <div class="info-box" style="background-color: #e7f3ff; border-left: 4px solid #0066cc; padding: 20px;">
+            <div class="info-box-title" style="font-weight: bold; font-size: 13pt; color: #004085; margin-bottom: 10px;">📍 지역 특성 (마포구 맥락)</div>
+            <p style="line-height: 1.8;">
+                <strong>{{ meta.address | default('본 대상지') }}</strong> 일대는<br>
+                ① 홍대·연남·합정 생활권의 청년 1~2인 가구 유입,<br>
+                ② 상암 DMC 종사자 주거 수요,<br>
+                ③ 기존 원룸·다가구 밀집에 따른 소형 임대 수요가 공존하는 지역입니다.
+            </p>
+            <p style="margin-top: 15px; font-weight: bold; color: #004085;">
+                이에 따라 본 대상지는 '<strong>{{ summary.kpi_cards[0].value }} 매입임대</strong>'가 
+                정책 적합성·실수요·운영 안정성 측면에서 가장 균형적인 공급 유형으로 판단됩니다.
+            </p>
         </div>
     </div>
 

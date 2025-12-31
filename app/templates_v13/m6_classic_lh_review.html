@@ -229,6 +229,21 @@
             text-align: justify;
         }
 
+        /* Info Box */
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #0066cc;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .info-box-title {
+            font-weight: bold;
+            font-size: 13pt;
+            color: #004085;
+            margin-bottom: 10px;
+        }
+
         /* Table Styles */
         .data-table {
             width: 100%;
@@ -415,6 +430,57 @@
                     {{ details.narrative.conclusion }}
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Site Identity Block (NEW - CRITICAL for M6) -->
+    <div class="summary-page page-break">
+        <h1 class="page-title">대상지 식별 정보</h1>
+        
+        <div class="info-box" style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; margin-bottom: 30px;">
+            <div class="info-box-title" style="font-weight: bold; font-size: 13pt; color: #856404; margin-bottom: 10px;">📋 본 보고서 대상</div>
+            <p style="font-weight: bold; font-size: 12pt; color: #856404;">
+                본 LH 종합판단 보고서는 아래 단일 대상지에 대한 M2~M5 분석 결과를 종합한 최종 검토 보고서입니다.
+            </p>
+        </div>
+
+        <table class="data-table" style="margin-bottom: 30px;">
+            <tr>
+                <th style="width: 30%; background-color: #f8f9fa;">대상지 주소</th>
+                <td style="font-weight: bold; color: #0066cc; font-size: 12pt;">{{ meta.address | default('주소 확인 필요') }}</td>
+            </tr>
+            <tr>
+                <th style="background-color: #f8f9fa;">필지번호 (PNU)</th>
+                <td>{{ meta.parcel_id | default('PNU 확인 필요') }}</td>
+            </tr>
+            <tr>
+                <th style="background-color: #f8f9fa;">분석 기준일</th>
+                <td>{{ meta.eval_base_date | default(meta.generated_at) }}</td>
+            </tr>
+            <tr>
+                <th style="background-color: #f8f9fa;">분석 실행 ID</th>
+                <td style="font-family: monospace; font-size: 9pt;">{{ meta.run_id | default(meta.report_id) }}</td>
+            </tr>
+            <tr>
+                <th style="background-color: #f8f9fa;">분석 범위</th>
+                <td>단일 필지 (M2~M5 통합 종합)</td>
+            </tr>
+            <tr>
+                <th style="background-color: #f8f9fa;">보고서 유형</th>
+                <td style="font-weight: bold;">LH 매입 최종 검토용 Classic 종합 보고서</td>
+            </tr>
+        </table>
+
+        <div class="info-box" style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 20px;">
+            <div class="info-box-title" style="font-weight: bold; font-size: 13pt; color: #155724; margin-bottom: 10px;">✅ LH 최종 판단</div>
+            <p style="line-height: 1.8; color: #155724;">
+                본 대상지는 <strong style="font-size: 12pt;">{{ meta.address | default('본 대상지') }}</strong>에 위치한 사업지로,<br>
+                <strong>즉시 매입 확정 대상은 아니나</strong>,<br>
+                조건 충족 시 <strong>LH 매입 검토가 가능한 사업지</strong>로 판단됩니다.
+            </p>
+            <p style="margin-top: 15px; font-weight: bold; font-size: 11pt; color: #155724;">
+                ⚠️ 최종 매입 승인은 LH 내부 심사 기준과 추가 실사 결과에 따라 결정됩니다.
+            </p>
         </div>
     </div>
 

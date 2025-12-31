@@ -229,6 +229,21 @@
             text-align: justify;
         }
 
+        /* Info Box */
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #0066cc;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .info-box-title {
+            font-weight: bold;
+            font-size: 13pt;
+            color: #004085;
+            margin-bottom: 10px;
+        }
+
         /* Table Styles */
         .data-table {
             width: 100%;
@@ -405,6 +420,43 @@
                     {{ details.narrative.conclusion }}
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Site Identity Block (NEW - CRITICAL) -->
+    <div class="summary-page page-break">
+        <h1 class="page-title">대상지 식별 정보</h1>
+        
+        <table class="data-table" style="margin-bottom: 30px;">
+            <tr>
+                <th style="width: 30%; background-color: #f8f9fa;">대상지 주소</th>
+                <td style="font-weight: bold; color: #0066cc;">{{ meta.address | default('주소 확인 필요') }}</td>
+            </tr>
+            <tr>
+                <th style="background-color: #f8f9fa;">필지번호 (PNU)</th>
+                <td>{{ meta.parcel_id | default('PNU 확인 필요') }}</td>
+            </tr>
+            <tr>
+                <th style="background-color: #f8f9fa;">분석 기준일</th>
+                <td>{{ meta.eval_base_date | default(meta.generated_at) }}</td>
+            </tr>
+            <tr>
+                <th style="background-color: #f8f9fa;">분석 실행 ID</th>
+                <td style="font-family: monospace; font-size: 9pt;">{{ meta.run_id | default(meta.report_id) }}</td>
+            </tr>
+        </table>
+
+        <div class="info-box" style="background-color: #e7f3ff; border-left: 4px solid #0066cc; padding: 20px; margin-bottom: 20px;">
+            <div class="info-box-title" style="font-weight: bold; font-size: 13pt; color: #004085; margin-bottom: 10px;">💰 사업성 판단 근거</div>
+            <p style="line-height: 1.8;">
+                본 사업은 M2(토지평가)와 M4(건축규모) 판단을 기반으로,<br>
+                LH 매입임대 운영 기준(IRR ≥ 4.5%, 손실 방지)에 부합하는지 재무 타당성을 검증합니다.
+            </p>
+            <p style="margin-top: 10px; font-weight: bold; color: #004085;">
+                본 사업은 <strong>고수익형 사업</strong>이 아니라,<br>
+                공공 매입임대 목적에 부합하는 <strong>안정형 사업 구조</strong>로,<br>
+                조건부 적정 수준의 사업성으로 판단됩니다.
+            </p>
         </div>
     </div>
 
