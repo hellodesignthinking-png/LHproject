@@ -97,6 +97,9 @@ from app.routers.dashboard import router as dashboard_router
 # ✨ v1.6.0: Import Access Log Router
 from app.routers.access_logs import router as access_logs_router
 
+# ✨ v1.6.0: Import RUN_ID Data Router
+from app.routers.run_id_data import router as run_id_data_router
+
 # ✨ v11.0 ENHANCEMENTS: Import middleware and utilities
 from app.middleware.rate_limiter import RateLimiter, RateLimitConfig
 from app.middleware.cache_manager import cache_manager, start_cache_cleanup_task
@@ -294,6 +297,9 @@ app.include_router(dashboard_router)
 
 # ✨ v1.6.0: Access Logs Router
 app.include_router(access_logs_router)
+
+# ✨ v1.6.0: RUN_ID Data Router
+app.include_router(run_id_data_router)
 
 # ✨ PDF Reports API
 from app.api.endpoints.pdf_reports import router as pdf_reports_router
