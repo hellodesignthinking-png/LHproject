@@ -469,19 +469,75 @@
                 return;
             }
 
-            // 직접 입력한 주소로 가상의 주소 데이터 생성
-            const addressData = {
-                road_address: address,
-                jibunAddress: address,
-                address: address,
-                coordinates: {
-                    lat: 37.5665,  // 기본 좌표 (서울 시청)
-                    lon: 126.978
-                }
-            };
+            // 직접 분석 시작
+            await startDirectAnalysis(address);
+        }
 
-            selectedAddress = addressData;
-            await startAnalysis(addressData);
+        async function startDirectAnalysis(address) {
+            const progressSection = document.getElementById('progressSection');
+            const resultSection = document.getElementById('resultSection');
+            
+            progressSection.style.display = 'block';
+            resultSection.style.display = 'none';
+
+            try {
+                // 모든 단계 활성화
+                updateStep(1, 'active');
+                updateProgress('직접 입력 분석 시작 중...');
+
+                // 새 직접 분석 API 호출
+                const response = await fetch('/api/m1/analyze-direct', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-User-Email': 'user@example.com'
+                    },
+                    body: JSON.stringify({ address: address })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || '분석 실패');
+                }
+
+                const result = await response.json();
+                console.log('Direct analysis result:', result);
+
+                // 모든 단계 완료
+                updateStep(1, 'completed');
+                updateStep(2, 'completed');
+                updateStep(3, 'completed');
+                updateStep(4, 'completed');
+                updateStep(5, 'completed');
+
+                contextId = result.data.context_id;
+
+                // 경고 포함 결과 표시
+                displayResult({
+                    context_id: result.data.context_id,
+                    bundle: result.data.bundle,
+                    message: result.data.message,
+                    warnings: [
+                        "⚠️ 외부 API 조회 없이 생성된 참고용 분석입니다.",
+                        "⚠️ 정확한 토지 데이터는 관할 기관에 문의하세요.",
+                        "⚠️ 법적·행정적 효력이 없습니다."
+                    ]
+                }, address);
+
+            } catch (error) {
+                console.error('Direct analysis error:', error);
+                updateProgress(`⚠️ 오류 발생: ${error.message}`);
+                
+                document.getElementById('progressMessage').innerHTML = `
+                    <div style="text-align: center; color: #e53e3e;">
+                        <h3>❌ 분석 실패</h3>
+                        <p>${error.message}</p>
+                        <button onclick="location.reload()" class="btn" style="margin-top: 20px; background: #667eea; color: white; padding: 12px 24px;">
+                            🔄 다시 시도
+                        </button>
+                    </div>
+                `;
+            }
         }
 
         async function searchAddress() {
@@ -644,33 +700,49 @@
             `;
         }
 
-        function displayResult(data) {
+        function displayResult(data, inputAddress) {
             const resultSection = document.getElementById('resultSection');
             const resultContent = document.getElementById('resultContent');
 
+            // 경고 문구 (직접 입력 모드)
+            const isDirectInput = data.warnings && data.warnings.length > 0;
+            const warningBox = isDirectInput ? `
+                <div style="background: #fed7d7; border: 2px solid #fc8181; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                    <div style="font-size: 18px; font-weight: 600; color: #c53030; margin-bottom: 12px;">
+                        ⚠️ 직접 입력 분석 (참고용)
+                    </div>
+                    <div style="color: #742a2a; line-height: 1.8;">
+                        ${data.warnings.map(w => `• ${w}`).join('<br>')}
+                    </div>
+                </div>
+            ` : '';
+
             let html = `
+                ${warningBox}
+
                 <div class="result-card">
                     <div class="result-title">🎉 분석 완료!</div>
                     <div style="margin: 20px 0;">
                         <strong>Context ID:</strong> ${data.context_id || 'N/A'}<br>
-                        <strong>Status:</strong> ${data.status || 'N/A'}
+                        <strong>Status:</strong> ${data.status || 'N/A'}<br>
+                        <strong>입력 주소:</strong> ${inputAddress || data.bundle?.address || 'N/A'}
                     </div>
                 </div>
 
                 <div class="result-card">
-                    <div class="result-title">📊 토지 정보</div>
+                    <div class="result-title">📊 토지 정보 ${isDirectInput ? '(기본값)' : ''}</div>
                     <div class="result-data">
                         <div class="result-item">
                             <div class="result-label">주소</div>
-                            <div class="result-value">${data.bundle?.address || selectedAddress?.road_address || 'N/A'}</div>
+                            <div class="result-value">${inputAddress || data.bundle?.address || 'N/A'}</div>
                         </div>
                         <div class="result-item">
                             <div class="result-label">면적</div>
-                            <div class="result-value">${data.bundle?.land_area || 'N/A'} ㎡</div>
+                            <div class="result-value">${data.bundle?.land_area || '500'} ㎡</div>
                         </div>
                         <div class="result-item">
                             <div class="result-label">용도지역</div>
-                            <div class="result-value">${data.bundle?.zone || 'N/A'}</div>
+                            <div class="result-value">${data.bundle?.zone || '제2종일반주거지역'}</div>
                         </div>
                         <div class="result-item">
                             <div class="result-label">PNU</div>

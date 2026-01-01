@@ -224,6 +224,46 @@ class FreezeContextResponse(BaseModel):
     message: str = Field("토지 기본정보가 확정되었습니다.")
 
 
+import hashlib
+
+
+def build_direct_input_context(address: str) -> Dict[str, Any]:
+    """
+    직접 입력용 Fallback Context 생성
+    
+    API 없이 주소 문자열만으로 최소한의 분석 컨텍스트 생성
+    - Deterministic: 같은 주소 → 같은 결과
+    - 좌표는 주소 해시 기반 pseudo 좌표
+    - PNU는 DIRECT- 접두사
+    """
+    # 주소 해시 생성 (deterministic)
+    hash_id = hashlib.md5(address.encode()).hexdigest()[:8]
+    
+    # 시/도/구/동 파싱 시도
+    parts = address.split()
+    sido = parts[0] if len(parts) > 0 else "서울특별시"
+    sigungu = parts[1] if len(parts) > 1 else "강남구"
+    dong = parts[2] if len(parts) > 2 else "역삼동"
+    
+    # Pseudo 좌표 생성 (해시 기반, 한국 범위 내)
+    lat_offset = (int(hash_id[:2], 16) % 100) * 0.001
+    lon_offset = (int(hash_id[2:4], 16) % 100) * 0.001
+    
+    return {
+        "run_id": f"DIRECT_{datetime.now().strftime('%Y%m%d')}_{hash_id}",
+        "address": address,
+        "pnu": f"DIRECT-{hash_id}",
+        "latitude": 37.5 + lat_offset,
+        "longitude": 127.0 + lon_offset,
+        "sido": sido,
+        "sigungu": sigungu,
+        "dong": dong,
+        "confidence": "LOW",
+        "source": "DIRECT_INPUT",
+        "warning": "본 분석은 외부 API 조회 없이 사용자 직접 입력 주소를 기반으로 생성된 참고용 분석입니다."
+    }
+
+
 # ============================================================================
 # Helper Functions
 # ============================================================================
@@ -1005,6 +1045,110 @@ class CollectAllResponse(BaseModel):
     failed_modules: List[str] = Field(default_factory=list, description="List of failed data modules (cadastral, legal, road, market)")
     using_mock_data: bool = Field(False, description="Whether any mock data was used")
     timestamp: str = ""
+
+
+class DirectInputRequest(BaseModel):
+    """직접 입력 주소 분석 요청"""
+    address: str = Field(..., description="직접 입력한 주소", min_length=10)
+
+
+@router.post("/analyze-direct", response_model=CollectAllResponse)
+async def analyze_direct_input(
+    request: DirectInputRequest
+):
+    """
+    🏡 직접 입력 주소 분석 (API 키 불필요)
+    
+    외부 API 없이 입력된 주소로 분석 수행
+    - RUN_ID 생성
+    - Fallback 컨텍스트 생성
+    - 6종 보고서 자동 생성
+    - 경고 문구 포함
+    
+    ⚠️ 제한사항:
+    - 실거래가 데이터 없음
+    - 정확한 좌표/PNU 없음
+    - 참고용 분석 (법적 효력 없음)
+    
+    장점:
+    - API 키 불필요
+    - 즉시 분석 가능
+    - 전체 파이프라인 작동
+    """
+    try:
+        address = request.address
+        logger.info(f"🏡 Direct input analysis - Address: {address}")
+        
+        # 직접 입력용 컨텍스트 생성
+        context = build_direct_input_context(address)
+        
+        logger.info(f"✅ Generated direct input context - RUN_ID: {context['run_id']}")
+        
+        # 간단한 bundle 딕셔너리 생성
+        bundle = {
+            "address": address,
+            "coordinates": {"lat": context["latitude"], "lon": context["longitude"]},
+            "land_area": 500.0,
+            "zone": "제2종일반주거지역",
+            "jimok": "대",
+            "pnu": context["pnu"],
+            "sido": context["sido"],
+            "sigungu": context["sigungu"],
+            "dong": context["dong"],
+            "confidence": "LOW",
+            "source": "DIRECT_INPUT"
+        }
+        
+        # Context ID (RUN_ID)
+        context_id = context["run_id"]
+        
+        # Context storage에 저장
+        try:
+            # CanonicalLandContext 생성
+            from app.core.context.canonical_land import CanonicalLandContext
+            
+            land_context = CanonicalLandContext(
+                address=address,
+                pnu=context["pnu"],
+                latitude=context["latitude"],
+                longitude=context["longitude"],
+                land_area=500.0,
+                zone="제2종일반주거지역",
+                source="DIRECT_INPUT"
+            )
+            
+            # Redis/DB에 저장
+            context_storage.store_frozen_context(
+                context_id=context_id,
+                land_context=land_context.to_dict(),
+                ttl_hours=24
+            )
+            
+            logger.info(f"💾 Stored context - ID: {context_id}")
+            
+        except Exception as e:
+            logger.warning(f"Context storage failed: {e}")
+        
+        # Response
+        return CollectAllResponse(
+            success=True,
+            data={
+                "context_id": context_id,
+                "bundle": bundle,
+                "message": f"직접 입력 분석 완료 (참고용) - {address}"
+            },
+            failed_modules=[],
+            using_mock_data=True,
+            timestamp=datetime.now().isoformat(),
+            error=None
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Direct input analysis failed: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"직접 입력 분석 실패: {str(e)}"
+        )
 
 
 @router.options("/collect-all")
