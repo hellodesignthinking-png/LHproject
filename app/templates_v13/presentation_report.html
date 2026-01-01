@@ -3,117 +3,703 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>F. 프레젠테이션 보고서</title>
+    <title>F. 설명용 프레젠테이션 | ZeroSite Explanation Deck</title>
     <style>
-        body { font-family: 'Noto Sans KR', sans-serif; margin: 0; padding: 0; background: #1e1e1e; color: white; }
-        .slide { min-height: 100vh; padding: 60px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; page-break-after: always; }
-        .slide-1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .slide-2 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-        .slide-3 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-        .slide-4 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
-        .slide-5 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
-        .slide-6 { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); }
-        .slide-title { font-size: 48px; font-weight: bold; margin-bottom: 30px; }
-        .slide-subtitle { font-size: 24px; opacity: 0.9; margin-bottom: 20px; }
-        .metric-big { font-size: 72px; font-weight: bold; margin: 30px 0; }
-        .metric-label { font-size: 18px; opacity: 0.8; }
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; max-width: 1200px; margin: 30px 0; }
-        .card { background: rgba(255,255,255,0.2); padding: 30px; border-radius: 12px; backdrop-filter: blur(10px); }
-        .card-title { font-size: 14px; opacity: 0.8; margin-bottom: 10px; }
-        .card-value { font-size: 36px; font-weight: bold; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+        
+        /* Site Identity Block (모든 슬라이드 상단 고정) */
+        .site-identity {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 10px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            opacity: 0.8;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .site-identity span {
+            margin: 0 10px;
+        }
+        
+        /* Slide 기본 구조 */
+        .slide {
+            min-height: 100vh;
+            padding: 100px 80px 80px 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            page-break-after: always;
+        }
+        
+        /* Slide별 배경 그라데이션 */
+        .slide-opening { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .slide-snapshot { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .slide-why { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .slide-feasibility { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .slide-supply { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .slide-scale { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); }
+        .slide-structure { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .slide-risks { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .slide-decision { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .slide-next { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); }
+        
+        /* 제목 스타일 */
+        h1, h2 {
+            font-weight: 700;
+            margin-bottom: 40px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            font-size: 56px;
+            text-align: center;
+        }
+        
+        h2 {
+            font-size: 42px;
+            border-bottom: 3px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 15px;
+        }
+        
+        h3 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        /* 결론 배지 */
+        .decision-badge {
+            display: inline-block;
+            font-size: 72px;
+            font-weight: 700;
+            padding: 40px 60px;
+            border-radius: 20px;
+            margin: 40px 0;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .decision-go {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+        }
+        
+        .decision-hold {
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+        }
+        
+        .decision-stop {
+            background: linear-gradient(135deg, #f44336 0%, #e53935 100%);
+        }
+        
+        /* 한 줄 정의 */
+        .one-line-definition {
+            font-size: 28px;
+            line-height: 1.8;
+            margin: 30px 0;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+        
+        /* 키워드 리스트 */
+        .decision-keywords {
+            list-style: none;
+            font-size: 22px;
+            line-height: 2.2;
+            margin: 30px 0;
+        }
+        
+        .decision-keywords li:before {
+            content: "✓ ";
+            font-weight: 700;
+            color: #4caf50;
+            margin-right: 10px;
+        }
+        
+        /* 회의 목표 박스 */
+        .meeting-goal {
+            font-size: 24px;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            margin-top: 40px;
+            text-align: center;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .meeting-goal strong {
+            color: #ffd700;
+            font-size: 28px;
+        }
+        
+        /* 스냅샷 그리드 */
+        .snapshot-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+        
+        .map {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 40px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+            font-size: 18px;
+        }
+        
+        .facts {
+            list-style: none;
+            font-size: 22px;
+            line-height: 2.5;
+        }
+        
+        .facts li {
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        /* 이유 리스트 */
+        .reasons {
+            list-style: none;
+            font-size: 24px;
+            line-height: 2.2;
+            margin: 30px 0;
+        }
+        
+        .reasons li {
+            padding: 20px 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .reasons li:before {
+            content: "→ ";
+            font-weight: 700;
+            margin-right: 10px;
+        }
+        
+        /* 대비 노트 */
+        .contrast {
+            font-size: 20px;
+            padding: 25px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            margin-top: 30px;
+            border-left: 5px solid #ffd700;
+        }
+        
+        /* 가능성 카드 */
+        .feasibility-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 40px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+        
+        .card h3 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #ffd700;
+        }
+        
+        .card p {
+            font-size: 18px;
+            line-height: 1.8;
+        }
+        
+        .card.limit {
+            border: 2px solid rgba(255, 100, 100, 0.5);
+        }
+        
+        /* 선택 박스 */
+        .choice {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .selected {
+            font-size: 48px;
+            font-weight: 700;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            display: inline-block;
+            margin-top: 20px;
+        }
+        
+        /* Why 리스트 */
+        .why {
+            list-style: none;
+            font-size: 22px;
+            line-height: 2.2;
+            margin: 30px 0;
+        }
+        
+        .why li {
+            padding: 20px 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .why li:before {
+            content: "• ";
+            font-weight: 700;
+            color: #4caf50;
+            margin-right: 10px;
+        }
+        
+        /* 배제 요약 */
+        .excluded {
+            font-size: 18px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            margin-top: 30px;
+            opacity: 0.8;
+        }
+        
+        /* 규모 로직 */
+        .scale-logic {
+            list-style: none;
+            font-size: 24px;
+            line-height: 2.5;
+            margin: 30px 0;
+        }
+        
+        .scale-logic li {
+            padding: 20px 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .rationale {
+            font-size: 22px;
+            padding: 30px;
+            background: rgba(255, 215, 0, 0.2);
+            border-radius: 12px;
+            margin-top: 30px;
+            border-left: 5px solid #ffd700;
+        }
+        
+        /* 구조 다이어그램 */
+        .structure-diagram {
+            padding: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            margin: 40px 0;
+            backdrop-filter: blur(10px);
+            text-align: center;
+            font-size: 24px;
+            line-height: 2.5;
+        }
+        
+        .flow {
+            list-style: none;
+            font-size: 22px;
+            line-height: 2.2;
+            margin: 30px 0;
+        }
+        
+        .flow li {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .exit {
+            font-size: 28px;
+            padding: 30px;
+            background: rgba(76, 175, 80, 0.3);
+            border-radius: 12px;
+            margin-top: 30px;
+            text-align: center;
+            border: 2px solid #4caf50;
+        }
+        
+        /* 리스크 리스트 */
+        .risk-list {
+            list-style: none;
+            font-size: 20px;
+            line-height: 2.0;
+            margin: 30px 0;
+        }
+        
+        .risk-list li {
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .risk-list strong {
+            color: #ffd700;
+            font-size: 22px;
+        }
+        
+        .note {
+            font-size: 18px;
+            padding: 20px;
+            background: rgba(76, 175, 80, 0.2);
+            border-radius: 10px;
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        /* 의사결정 리스트 */
+        .decisions {
+            list-style: none;
+            font-size: 24px;
+            line-height: 2.5;
+            margin: 40px 0;
+        }
+        
+        .decisions li {
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
+            border-left: 5px solid #ffd700;
+        }
+        
+        /* 다음 단계 */
+        .steps {
+            font-size: 22px;
+            line-height: 2.5;
+            margin: 40px 0 40px 40px;
+        }
+        
+        .steps li {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .closing {
+            font-size: 24px;
+            padding: 30px;
+            background: rgba(255, 215, 0, 0.3);
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 40px;
+            border: 2px solid #ffd700;
+        }
     </style>
 </head>
 <body>
 
-<!-- Slide 1: 제목 -->
-<div class="slide slide-1">
-    <div class="slide-title">🏗️ 토지 분석 결과 발표</div>
-    <div class="slide-subtitle">{{ address }}</div>
-    <div style="font-size: 18px; margin-top: 20px;">{{ appraisal_date }}</div>
-</div>
+<!-- Site Identity Block (모든 슬라이드 상단 고정) -->
+<header class="site-identity">
+    <span>ZeroSite 분석 시스템</span>
+    <span>{{ address }}</span>
+    <span>PNU {{ pnu }}</span>
+    <span>RUN_ID {{ run_id }}</span>
+    <span>{{ appraisal_date }}</span>
+</header>
 
-<!-- Slide 2: 핵심 결론 -->
-<div class="slide slide-2">
-    <div class="slide-title">📊 핵심 결론</div>
-    <div class="metric-big">{{ go_decision }}</div>
-    <div class="card-grid">
-        <div class="card">
-            <div class="card-title">종합 점수</div>
-            <div class="card-value">{{ overall_score }}점</div>
-        </div>
-        <div class="card">
-            <div class="card-title">리스크 수준</div>
-            <div class="card-value">{{ risk_level }}</div>
-        </div>
+<!-- ========================================= -->
+<!-- SLIDE 01. Opening / 결론 먼저 -->
+<!-- ========================================= -->
+<section class="slide slide-opening">
+    <h1>의사결정 요약</h1>
+    
+    <div class="decision-badge decision-go">
+        🟢 진행 권장 (GO)
     </div>
-</div>
+    
+    <p class="one-line-definition">
+        상암 DMC 인접, LH 신축매입임대 사업 대상지로서 법·제도 적합성 및 사업 구조 안정성 확보
+    </p>
+    
+    <ul class="decision-keywords">
+        <li>법적 개발 가능 (제3종 일반주거지역)</li>
+        <li>LH 매입임대 대상 유형 부합 (행복주택)</li>
+        <li>물리적 치명적 결함 없음 (정형지, 도로 접면)</li>
+        <li>Exit 구조 명확 (LH 매입)</li>
+    </ul>
+    
+    <div class="meeting-goal">
+        오늘 결정할 사항: <strong>본 사업의 본격 검토 착수 여부</strong>
+    </div>
+</section>
 
-<!-- Slide 3: 토지가치 (M2) -->
-<div class="slide slide-3">
-    <div class="slide-title">💰 토지가치</div>
-    <div class="metric-big">{{ total_value | currency_format }}억원</div>
-    <div class="card-grid">
-        <div class="card">
-            <div class="card-title">㎡당 단가</div>
-            <div class="card-value" style="font-size: 20px;">{{ price_per_sqm | number_format }}원</div>
+<!-- ========================================= -->
+<!-- SLIDE 02. 대상지 한 장 요약 -->
+<!-- ========================================= -->
+<section class="slide slide-snapshot">
+    <h2>대상지 개요</h2>
+    
+    <div class="snapshot-grid">
+        <div class="map">
+            📍 위치 지도<br>
+            (상암 DMC 인접 지역)<br><br>
+            <small>※ 실제 배포 시 지도 이미지 삽입</small>
         </div>
-        <div class="card">
-            <div class="card-title">평당 단가</div>
-            <div class="card-value" style="font-size: 20px;">{{ price_per_pyeong | number_format }}원</div>
-        </div>
+        
+        <ul class="facts">
+            <li><strong>위치:</strong> {{ address }}</li>
+            <li><strong>면적:</strong> {{ land_area_sqm | number_format }}㎡ ({{ land_area_pyeong | number_format }}평)</li>
+            <li><strong>용도지역:</strong> {{ zone_type }}</li>
+            <li><strong>주변 맥락:</strong> 상암 DMC 인접, 홍대·연남 생활권, 지하철 6호선 월드컵경기장역 도보 5분</li>
+        </ul>
     </div>
-</div>
+</section>
 
-<!-- Slide 4: 개발 규모 (M3+M4) -->
-<div class="slide slide-4">
-    <div class="slide-title">🏘️ 개발 규모</div>
-    <div class="card-grid">
-        <div class="card">
-            <div class="card-title">권장 공급유형</div>
-            <div class="card-value" style="font-size: 28px;">{{ recommended_housing_type }}</div>
-        </div>
-        <div class="card">
-            <div class="card-title">총 세대수</div>
-            <div class="card-value">{{ total_units }}세대</div>
-        </div>
-        <div class="card">
-            <div class="card-title">용적률</div>
-            <div class="card-value">{{ floor_area_ratio }}%</div>
-        </div>
-    </div>
-</div>
+<!-- ========================================= -->
+<!-- SLIDE 03. 왜 이 땅을 보게 되었는가 -->
+<!-- ========================================= -->
+<section class="slide slide-why">
+    <h2>검토 배경</h2>
+    
+    <ul class="reasons">
+        <li>사전 검토(E) 단계에서 GO 판단: 법적 개발 가능성 확인</li>
+        <li>LH 신축매입임대 제도 적합성: 행복주택 유형 부합</li>
+        <li>물리적 리스크 1차 체크 통과: 형상·접도·고저차 양호</li>
+        <li>구조적 결격 사유 없음: 제도상 배제 대상 아님</li>
+    </ul>
+    
+    <p class="contrast">
+        <strong>다른 후보지 대비 특징:</strong> 유사 지역 대비 토지가격 경쟁력 우수, LH 제도 정합성 높음, 상암 DMC 인접으로 수요 안정성 확보
+    </p>
+</section>
 
-<!-- Slide 5: 사업성 (M5) -->
-<div class="slide slide-5">
-    <div class="slide-title">💼 사업성 분석</div>
-    <div class="metric-big">IRR {{ irr }}%</div>
-    <div class="card-grid">
+<!-- ========================================= -->
+<!-- SLIDE 04. 개발 가능성 요약 (M1~M2 압축) -->
+<!-- ========================================= -->
+<section class="slide slide-feasibility">
+    <h2>개발 가능성 요약</h2>
+    
+    <div class="feasibility-cards">
         <div class="card">
-            <div class="card-title">총 투자비</div>
-            <div class="card-value">{{ total_cost | currency_format }}억</div>
+            <h3>법적 가능성</h3>
+            <p>
+                <strong>건폐율:</strong> {{ building_coverage_ratio }}%<br>
+                <strong>용적률:</strong> {{ floor_area_ratio }}%<br>
+                <strong>높이:</strong> 4층 이하<br><br>
+                주택 개발 가능
+            </p>
         </div>
+        
         <div class="card">
-            <div class="card-title">예상 수익</div>
-            <div class="card-value">{{ total_revenue | currency_format }}억</div>
+            <h3>제도 적합성</h3>
+            <p>
+                LH 신축매입임대<br>
+                <strong>{{ recommended_housing_type }}</strong><br>
+                유형 적용 가능<br><br>
+                정책 기준 충족
+            </p>
         </div>
-        <div class="card">
-            <div class="card-title">순수익 (NPV)</div>
-            <div class="card-value">{{ npv | currency_format }}억</div>
+        
+        <div class="card limit">
+            <h3>한계 요인</h3>
+            <p>
+                면적 {{ land_area_sqm | number_format }}㎡로<br>
+                소규모 개발<br><br>
+                대규모 단지 불가<br>
+                (세대수 제약)
+            </p>
         </div>
     </div>
-</div>
+</section>
 
-<!-- Slide 6: 다음 단계 -->
-<div class="slide slide-6">
-    <div class="slide-title">🔜 다음 단계</div>
-    <div style="font-size: 24px; line-height: 2.0; text-align: left; max-width: 800px;">
-        <p>1️⃣ 상세 실사 및 법률 검토</p>
-        <p>2️⃣ LH 담당자와 협의</p>
-        <p>3️⃣ 사업 구조 확정</p>
+<!-- ========================================= -->
+<!-- SLIDE 05. 공급 유형과 사업 방향 (M3 요약) -->
+<!-- ========================================= -->
+<section class="slide slide-supply">
+    <h2>공급 유형 결정 논리</h2>
+    
+    <div class="choice">
+        <h3>선택된 유형</h3>
+        <p class="selected">{{ recommended_housing_type }}</p>
     </div>
-    <div style="margin-top: 60px; font-size: 14px; opacity: 0.7;">
-        Report ID: {{ run_id }}
+    
+    <ul class="why">
+        <li><strong>지역 특성:</strong> 상암 DMC·홍대 생활권 → 소형 평형 수요 높음</li>
+        <li><strong>정책 부합:</strong> LH 행복주택 입지 기준 충족 (대학·산업단지 인접)</li>
+        <li><strong>경제성:</strong> 소형 평형 다세대 → 세대수 확보 유리</li>
+    </ul>
+    
+    <p class="excluded">
+        <strong>배제된 유형 및 사유:</strong><br>
+        • 국민임대: 면적 부족 ({{ land_area_sqm | number_format }}㎡로 세대수 확보 어려움)<br>
+        • 영구임대: 입지 부적합 (신규 공급 지역 아님)
+    </p>
+</section>
+
+<!-- ========================================= -->
+<!-- SLIDE 06. 규모와 형태의 합리성 (M4 요약) -->
+<!-- ========================================= -->
+<section class="slide slide-scale">
+    <h2>규모 및 형태 판단</h2>
+    
+    <ul class="scale-logic">
+        <li>법적 상한: 용적률 {{ floor_area_ratio }}% (최대 1,000㎡)</li>
+        <li>설계 가능 규모: 4층, 세대당 평균 50㎡</li>
+        <li><strong>권장 규모: 총 {{ total_units }}세대 (소형 평형 다세대)</strong></li>
+    </ul>
+    
+    <p class="rationale">
+        <strong>이 규모가 적정한 이유:</strong><br>
+        ✓ 인센티브 과다 적용 배제 (안정성 우선)<br>
+        ✓ 주변 건물 스카이라인 조화<br>
+        ✓ LH 매입 기준 범위 내<br>
+        ✓ 현실 시공 가능 범위 (과도한 밀도 회피)
+    </p>
+</section>
+
+<!-- ========================================= -->
+<!-- SLIDE 07. 사업 구조 한 장 설명 -->
+<!-- ========================================= -->
+<section class="slide slide-structure">
+    <h2>사업 구조</h2>
+    
+    <div class="structure-diagram">
+        <strong>돈의 흐름 다이어그램</strong><br><br>
+        
+        [토지주]<br>
+        ↓ 토지 제공<br><br>
+        
+        [시행사/개발사]<br>
+        ↓ 개발·시공 (총 투자비 ○○억)<br><br>
+        
+        [준공]<br>
+        ↓ LH 매입 (매각가 ○○억)<br><br>
+        
+        [LH]<br>
+        ↓ 신축매입임대 운영
     </div>
+    
+    <ul class="flow">
+        <li>토지 확보 → 개발 → 준공</li>
+        <li>LH 매입 → 자금 회수</li>
+    </ul>
+    
+    <p class="exit">
+        Exit 구조: <strong>LH 매입 (공공 기준 매각가)</strong>
+    </p>
+</section>
+
+<!-- ========================================= -->
+<!-- SLIDE 08. 리스크 요약 -->
+<!-- ========================================= -->
+<section class="slide slide-risks">
+    <h2>주요 리스크 및 관리</h2>
+    
+    <ul class="risk-list">
+        <li>
+            <strong>1️⃣ 인허가 지연 리스크</strong> –
+            발생 가능성: 중 (통상 6개월) /
+            관리 방식: 법적 검토 완료, 사전 협의 진행 → <span style="color: #4caf50;">관리 가능</span>
+        </li>
+        <li>
+            <strong>2️⃣ 공사비 상승 리스크</strong> –
+            발생 가능성: 중 (물가 변동) /
+            관리 방식: 보수적 단가 적용 (LH 기준 + 10%) → <span style="color: #4caf50;">흡수 가능</span>
+        </li>
+        <li>
+            <strong>3️⃣ LH 정책 변경 리스크</strong> –
+            발생 가능성: 낮 (현행 제도 안정) /
+            관리 방식: LH 사전 협의 진행 중 → <span style="color: #4caf50;">관리 가능</span>
+        </li>
+        <li>
+            <strong>4️⃣ 매입가 변동 리스크</strong> –
+            발생 가능성: 낮 (공공 기준 적용) /
+            관리 방식: LH 매입 기준 사전 확인 → <span style="color: #4caf50;">구조적 안정</span>
+        </li>
+    </ul>
+    
+    <p class="note">
+        ✓ 치명적 리스크는 사전 검토 단계(E)에서 제거 완료<br>
+        ✓ 남은 리스크는 모두 관리 가능 범위 내
+    </p>
+</section>
+
+<!-- ========================================= -->
+<!-- SLIDE 09. 그래서 무엇을 결정해야 하는가 -->
+<!-- ========================================= -->
+<section class="slide slide-decision">
+    <h2>의사결정 포인트</h2>
+    
+    <ul class="decisions">
+        <li>
+            <strong>🎯 지금 결정할 사항:</strong><br>
+            본 사업의 본격 검토 착수 여부<br>
+            → 진행 시: M2~M5 정밀 분석 결과 바탕으로 실사 착수
+        </li>
+        <li>
+            <strong>⏸️ 보류할 사항:</strong><br>
+            • 최종 매입가 확정 → LH 협의 후 결정<br>
+            • 시공사 선정 → 실사 완료 후 결정
+        </li>
+    </ul>
+</section>
+
+<!-- ========================================= -->
+<!-- SLIDE 10. 다음 단계 -->
+<!-- ========================================= -->
+<section class="slide slide-next">
+    <h2>다음 단계</h2>
+    
+    <ol class="steps">
+        <li><strong>1️⃣ LH 담당자 사전 협의</strong> (2주 내)</li>
+        <li><strong>2️⃣ 상세 실사 및 법률 검토</strong> (1개월)</li>
+        <li><strong>3️⃣ 사업 구조 확정 및 투자 의사결정</strong> (2개월)</li>
+        <li><strong>4️⃣ 토지 확보 및 개발 착수</strong> (실사 완료 후)</li>
+    </ol>
+    
+    <p class="closing">
+        본 안건은 <strong>법·제도 적합성 및 사업 구조 안정성 확보</strong> 기준으로<br>
+        <strong style="color: #4caf50; font-size: 32px;">진행을 권장</strong>합니다.
+    </p>
+</section>
+
+<!-- Report Footer -->
+<div style="position: fixed; bottom: 20px; right: 30px; font-size: 12px; opacity: 0.5; z-index: 999;">
+    Report ID: {{ run_id }} | Generated: {{ appraisal_date }} | ZeroSite Explanation Deck
 </div>
 
 </body>
