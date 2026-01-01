@@ -123,6 +123,7 @@ def _build_common_template_data(context_id: str) -> dict:
         # Site metadata
         "address": address,
         "parcel_id": parcel_id,
+        "pnu": parcel_id,  # Alias for quick_review_report.html
         "run_id": context_id,
         "appraisal_date": datetime.now().strftime("%Y-%m-%d"),
         
