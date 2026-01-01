@@ -410,6 +410,26 @@ async def search_test_page():
         raise HTTPException(status_code=404, detail="Test page not found")
 
 
+@app.get("/analyze", response_class=FileResponse)
+async def real_address_search():
+    """
+    🏡 실제 주소 입력 및 분석 페이지
+    
+    실제 주소를 입력하여 새로운 토지 분석 생성
+    - 주소 검색 (도로명/지번)
+    - 8-STEP 분석 진행
+    - 실시간 데이터 수집
+    - 대시보드 연결
+    """
+    from pathlib import Path
+    
+    analyze_path = Path(__file__).parent.parent / "templates" / "real_address_search.html"
+    if analyze_path.exists():
+        return FileResponse(analyze_path)
+    else:
+        raise HTTPException(status_code=404, detail="Analysis page not found")
+
+
 @app.get("/dashboard")
 async def dashboard_page(
     run_id: Optional[str] = Query(None, description="RUN_ID to display"),

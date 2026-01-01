@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite - 실제 토지 분석</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .title {
+            font-size: 42px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: #718096;
+        }
+
+        .search-section {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 24px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 16px 48px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .suggestions {
+            margin-top: 16px;
+            display: none;
+        }
+
+        .suggestion-item {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .suggestion-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .suggestion-item.selected {
+            border-color: #667eea;
+            background: #edf2f7;
+        }
+
+        .suggestion-road {
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .suggestion-jibun {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .progress-section {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            padding: 0 10px;
+            position: relative;
+        }
+
+        .step::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: -50%;
+            right: 50%;
+            height: 2px;
+            background: #e2e8f0;
+            z-index: -1;
+        }
+
+        .step:first-child::before {
+            display: none;
+        }
+
+        .step-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            color: #a0aec0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .step.active .step-icon {
+            background: #667eea;
+            color: white;
+        }
+
+        .step.completed .step-icon {
+            background: #48bb78;
+            color: white;
+        }
+
+        .step-label {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .result-section {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .result-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .result-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 12px;
+        }
+
+        .result-data {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .result-item {
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .result-label {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 4px;
+        }
+
+        .result-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-box {
+            background: #fed7d7;
+            border: 2px solid #fc8181;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 16px;
+        }
+
+        .error-title {
+            font-weight: 600;
+            color: #c53030;
+            margin-bottom: 8px;
+        }
+
+        .error-message {
+            color: #742a2a;
+        }
+
+        .info-box {
+            background: #bee3f8;
+            border-left: 4px solid #3182ce;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="title">🏡 실제 토지 분석</div>
+            <div class="subtitle">주소를 입력하고 실시간 토지 분석을 받아보세요</div>
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <div class="section-title">1️⃣ 주소 검색</div>
+            
+            <div class="info-box">
+                <strong>💡 입력 예시:</strong><br>
+                • 도로명 주소: 서울시 강남구 테헤란로 123<br>
+                • 지번 주소: 서울시 강남구 역삼동 123-45<br>
+                최소 3글자 이상 입력하세요
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">주소 입력</label>
+                <input 
+                    type="text" 
+                    id="addressInput" 
+                    class="input-field" 
+                    placeholder="예: 서울시 강남구 테헤란로 123"
+                    minlength="3"
+                >
+            </div>
+
+            <button class="btn btn-primary" onclick="searchAddress()" id="searchBtn">
+                🔍 주소 검색
+            </button>
+
+            <!-- Suggestions -->
+            <div id="suggestions" class="suggestions"></div>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="progress-section" id="progressSection">
+            <div class="section-title">2️⃣ 분석 진행 중</div>
+            
+            <div class="progress-steps">
+                <div class="step" id="step1">
+                    <div class="step-icon">1</div>
+                    <div class="step-label">주소 확인</div>
+                </div>
+                <div class="step" id="step2">
+                    <div class="step-icon">2</div>
+                    <div class="step-label">위치 정보</div>
+                </div>
+                <div class="step" id="step3">
+                    <div class="step-icon">3</div>
+                    <div class="step-label">토지 데이터</div>
+                </div>
+                <div class="step" id="step4">
+                    <div class="step-icon">4</div>
+                    <div class="step-label">용도 정보</div>
+                </div>
+                <div class="step" id="step5">
+                    <div class="step-icon">5</div>
+                    <div class="step-label">분석 완료</div>
+                </div>
+            </div>
+
+            <div id="progressMessage" class="loading">
+                <div class="spinner"></div>
+                <div>데이터를 수집하는 중입니다...</div>
+            </div>
+        </div>
+
+        <!-- Result Section -->
+        <div class="result-section" id="resultSection">
+            <div class="section-title">3️⃣ 분석 결과</div>
+            <div id="resultContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let selectedAddress = null;
+        let contextId = null;
+
+        async function searchAddress() {
+            const input = document.getElementById('addressInput');
+            const query = input.value.trim();
+            const suggestionsDiv = document.getElementById('suggestions');
+            const searchBtn = document.getElementById('searchBtn');
+
+            if (query.length < 3) {
+                alert('주소를 최소 3글자 이상 입력하세요');
+                return;
+            }
+
+            searchBtn.disabled = true;
+            searchBtn.textContent = '🔍 검색 중...';
+            suggestionsDiv.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/m1/address/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-User-Email': 'user@example.com'
+                    },
+                    body: JSON.stringify({ query })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`검색 실패: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Search results:', data);
+
+                if (data.suggestions && data.suggestions.length > 0) {
+                    displaySuggestions(data.suggestions);
+                } else {
+                    suggestionsDiv.innerHTML = `
+                        <div class="error-box">
+                            <div class="error-title">검색 결과가 없습니다</div>
+                            <div class="error-message">
+                                "${query}"에 대한 주소를 찾을 수 없습니다.<br>
+                                전체 주소를 입력하거나 다른 검색어를 시도해보세요.
+                            </div>
+                        </div>
+                    `;
+                    suggestionsDiv.style.display = 'block';
+                }
+
+            } catch (error) {
+                console.error('Search error:', error);
+                suggestionsDiv.innerHTML = `
+                    <div class="error-box">
+                        <div class="error-title">⚠️ 검색 오류</div>
+                        <div class="error-message">${error.message}</div>
+                    </div>
+                `;
+                suggestionsDiv.style.display = 'block';
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.textContent = '🔍 주소 검색';
+            }
+        }
+
+        function displaySuggestions(suggestions) {
+            const suggestionsDiv = document.getElementById('suggestions');
+            
+            let html = '<h3 style="margin-bottom: 16px; color: #1a202c;">✅ 검색 결과 - 주소를 선택하세요</h3>';
+            
+            suggestions.forEach((item, index) => {
+                html += `
+                    <div class="suggestion-item" onclick="selectAddress(${index}, ${JSON.stringify(item).replace(/"/g, '&quot;')})">
+                        <div class="suggestion-road">🏠 ${item.road_address || item.roadAddress || 'N/A'}</div>
+                        <div class="suggestion-jibun">📍 ${item.jibun_address || item.jibunAddress || 'N/A'}</div>
+                    </div>
+                `;
+            });
+            
+            suggestionsDiv.innerHTML = html;
+            suggestionsDiv.style.display = 'block';
+        }
+
+        async function selectAddress(index, addressData) {
+            console.log('Selected address:', addressData);
+            selectedAddress = addressData;
+
+            // Mark selected
+            document.querySelectorAll('.suggestion-item').forEach((item, i) => {
+                if (i === index) {
+                    item.classList.add('selected');
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
+
+            // Start analysis
+            await startAnalysis(addressData);
+        }
+
+        async function startAnalysis(addressData) {
+            const progressSection = document.getElementById('progressSection');
+            const resultSection = document.getElementById('resultSection');
+            
+            progressSection.style.display = 'block';
+            resultSection.style.display = 'none';
+
+            try {
+                // Step 1: Geocode
+                updateStep(1, 'active');
+                updateProgress('주소 위치 확인 중...');
+                
+                const address = addressData.road_address || addressData.roadAddress || addressData.address;
+                
+                const geocodeResponse = await fetch('/api/m1/collect-all', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-User-Email': 'user@example.com'
+                    },
+                    body: JSON.stringify({
+                        address: address,
+                        coordinates: addressData.coordinates || {}
+                    })
+                });
+
+                if (!geocodeResponse.ok) {
+                    throw new Error('분석 실패');
+                }
+
+                const result = await geocodeResponse.json();
+                console.log('Analysis result:', result);
+
+                updateStep(1, 'completed');
+                updateStep(2, 'completed');
+                updateStep(3, 'completed');
+                updateStep(4, 'completed');
+                updateStep(5, 'completed');
+
+                contextId = result.context_id;
+
+                displayResult(result);
+
+            } catch (error) {
+                console.error('Analysis error:', error);
+                updateProgress(`⚠️ 오류 발생: ${error.message}`);
+            }
+        }
+
+        function updateStep(stepNum, status) {
+            const step = document.getElementById(`step${stepNum}`);
+            if (step) {
+                step.className = `step ${status}`;
+            }
+        }
+
+        function updateProgress(message) {
+            document.getElementById('progressMessage').innerHTML = `
+                <div class="spinner"></div>
+                <div>${message}</div>
+            `;
+        }
+
+        function displayResult(data) {
+            const resultSection = document.getElementById('resultSection');
+            const resultContent = document.getElementById('resultContent');
+
+            let html = `
+                <div class="result-card">
+                    <div class="result-title">🎉 분석 완료!</div>
+                    <div style="margin: 20px 0;">
+                        <strong>Context ID:</strong> ${data.context_id || 'N/A'}<br>
+                        <strong>Status:</strong> ${data.status || 'N/A'}
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="result-title">📊 토지 정보</div>
+                    <div class="result-data">
+                        <div class="result-item">
+                            <div class="result-label">주소</div>
+                            <div class="result-value">${data.bundle?.address || selectedAddress?.road_address || 'N/A'}</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">면적</div>
+                            <div class="result-value">${data.bundle?.land_area || 'N/A'} ㎡</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">용도지역</div>
+                            <div class="result-value">${data.bundle?.zone || 'N/A'}</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">PNU</div>
+                            <div class="result-value">${data.bundle?.pnu || 'N/A'}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 24px; display: flex; gap: 12px;">
+                    <button class="btn btn-primary" onclick="openDashboard('${data.context_id}')">
+                        📊 대시보드에서 6개 보고서 보기
+                    </button>
+                </div>
+            `;
+
+            resultContent.innerHTML = html;
+            resultSection.style.display = 'block';
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function openDashboard(contextId) {
+            window.open(`/dashboard?user=admin@zerosite.com&run_id=${contextId}`, '_blank');
+        }
+
+        // Enter key support
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('addressInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchAddress();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
