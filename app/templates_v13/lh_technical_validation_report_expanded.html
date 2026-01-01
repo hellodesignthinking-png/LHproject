@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LH 기술검증 보고서 (확장판) | ZeroSite Analysis System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: #ffffff;
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* 🔒 SEALED 표시 */
+        .sealed-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(44, 62, 80, 0.3);
+        }
+        
+        .sealed-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .sealed-badge {
+            display: inline-block;
+            background: #e74c3c;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        /* 표지 (Cover Page) */
+        .cover-page {
+            text-align: center;
+            padding: 60px 0;
+            border-bottom: 3px solid #2c3e50;
+            margin-bottom: 60px;
+        }
+        
+        .cover-page h1 {
+            font-size: 36px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        
+        .cover-page .subtitle {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 40px;
+        }
+        
+        .cover-meta {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: left;
+            display: inline-block;
+            min-width: 600px;
+        }
+        
+        .cover-meta .meta-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .cover-meta .meta-row:last-child {
+            border-bottom: none;
+        }
+        
+        .cover-meta .label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .cover-meta .value {
+            color: #212529;
+            font-weight: 500;
+        }
+        
+        /* 섹션 헤더 */
+        .section {
+            margin: 50px 0;
+            page-break-inside: avoid;
+        }
+        
+        .section-header {
+            background: #34495e;
+            color: white;
+            padding: 16px 20px;
+            font-size: 20px;
+            font-weight: 700;
+            border-radius: 6px;
+            margin-bottom: 25px;
+        }
+        
+        .subsection-header {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 30px 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #bdc3c7;
+        }
+        
+        /* 테이블 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .data-table thead {
+            background: #ecf0f1;
+        }
+        
+        .data-table th {
+            padding: 14px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #bdc3c7;
+        }
+        
+        .data-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        .data-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        /* 정보 카드 */
+        .info-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-left: 4px solid #3498db;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .warning-card {
+            background: #fff3cd;
+            padding: 20px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        /* 톤 규칙 강조 박스 */
+        .judgment-box {
+            background: #e8f4f8;
+            padding: 20px;
+            border-left: 4px solid #2980b9;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .judgment-box .title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2980b9;
+            margin-bottom: 10px;
+        }
+        
+        .judgment-box .content {
+            font-size: 15px;
+            line-height: 1.8;
+            color: #34495e;
+        }
+        
+        /* 페이지 나누기 */
+        @media print {
+            .section {
+                page-break-inside: avoid;
+            }
+            
+            .cover-page {
+                page-break-after: always;
+            }
+        }
+        
+        /* 풋터 */
+        .report-footer {
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 2px solid #dee2e6;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 🔒 SEALED 경고 헤더 -->
+    <div class="sealed-header">
+        <h1>🔒 LH 기술검증 보고서 (SEALED)</h1>
+        <p>본 문서는 행정 검토·분쟁 방어용 공식 기록물입니다.</p>
+        <span class="sealed-badge">수정 불가 | 판단 근거 기록물</span>
+    </div>
+    
+    <!-- 표지 (Cover Page) -->
+    <div class="cover-page">
+        <h1>LH 신축매입임대 기술검증 보고서</h1>
+        <p class="subtitle">Technical Validation Report for LH Build-to-Rent Project</p>
+        
+        <div class="cover-meta">
+            <div class="meta-row">
+                <span class="label">사업명</span>
+                <span class="value">LH 신축매입임대 대상지 기술검증</span>
+            </div>
+            <div class="meta-row">
+                <span class="label">대상지 주소</span>
+                <span class="value">{{ address }}</span>
+            </div>
+            <div class="meta-row">
+                <span class="label">PNU</span>
+                <span class="value">{{ pnu }}</span>
+            </div>
+            <div class="meta-row">
+                <span class="label">분석 실행 ID</span>
+                <span class="value">{{ run_id }}</span>
+            </div>
+            <div class="meta-row">
+                <span class="label">분석 기준일</span>
+                <span class="value">{{ appraisal_date }}</span>
+            </div>
+            <div class="meta-row">
+                <span class="label">적용 기준</span>
+                <span class="value">LH 신축매입임대 사업 지침</span>
+            </div>
+            <div class="meta-row">
+                <span class="label">보고서 등급</span>
+                <span class="value" style="color: #e74c3c; font-weight: 700;">🔒 SEALED (수정 불가)</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 1. 검토 개요 (Executive Summary – 판단 요약) -->
+    <div class="section">
+        <div class="section-header">1. 검토 개요 (Executive Summary)</div>
+        
+        <h3 class="subsection-header">1.1 대상지 개요</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>항목</th>
+                    <th>내용</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>소재지</td>
+                    <td>{{ address }}</td>
+                </tr>
+                <tr>
+                    <td>토지면적</td>
+                    <td>{{ land_area_sqm | number_format }}㎡ ({{ land_area_pyeong | number_format }}평)</td>
+                </tr>
+                <tr>
+                    <td>지목</td>
+                    <td>{{ zone_type }}</td>
+                </tr>
+                <tr>
+                    <td>용도지역</td>
+                    <td>{{ zone_type }}</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3 class="subsection-header">1.2 검토 목적</h3>
+        <div class="info-card">
+            <p>본 보고서는 LH 신축매입임대 사업 대상지로서의 기술적 적합성을 검증하기 위해 작성되었다. 
+            본 보고서는 판단을 유도하거나 대신하지 않으며, 판단의 근거만을 제공한다.</p>
+        </div>
+        
+        <h3 class="subsection-header">1.3 종합 판단 요약 (M6 결론 발췌)</h3>
+        <div class="judgment-box">
+            <div class="title">종합 판단</div>
+            <div class="content">
+                <p><strong>최종 판단:</strong> {{ go_decision }}</p>
+                <p><strong>종합 점수:</strong> {{ overall_score }}점 / 100점</p>
+                <p><strong>리스크 수준:</strong> {{ risk_level }}</p>
+                <p><strong>판단 요약:</strong> 본 대상지는 LH 신축매입임대 기준에 따라 검토 가능한 대상지로 판단됨.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 2. 토지 감정 및 가격 검증 (M2 – 기술 버전) -->
+    <div class="section">
+        <div class="section-header">2. 토지 감정 및 가격 검증 (M2 – Technical Appraisal)</div>
+        
+        <h3 class="subsection-header">2.1 감정 결과 요약</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>평가 항목</th>
+                    <th>금액</th>
+                    <th>비고</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>총 토지가액</td>
+                    <td>{{ total_value | currency_format }} 억원</td>
+                    <td>M2 모듈 산출</td>
+                </tr>
+                <tr>
+                    <td>㎡당 단가</td>
+                    <td>{{ price_per_sqm | number_format }} 원/㎡</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>평당 단가</td>
+                    <td>{{ price_per_pyeong | number_format }} 원/평</td>
+                    <td>-</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3 class="subsection-header">2.2 거래사례 선정 논리</h3>
+        <div class="info-card">
+            <p><strong>거래사례 출처:</strong> 국토교통부 실거래가 공개시스템</p>
+            <p><strong>선정 기준:</strong> 대상지로부터 반경 500m 이내, 최근 2년 이내 거래, 용도지역 동일</p>
+            <p><strong>비교 기준 명확화:</strong> 면적, 입지, 도로 조건 유사성</p>
+        </div>
+        
+        <h3 class="subsection-header">2.3 공공 매입 관점에서의 가격 해석</h3>
+        <div class="judgment-box">
+            <div class="title">가격 합리성 검증</div>
+            <div class="content">
+                <p>본 대상지의 감정가는 인근 거래사례 대비 합리적 범위 내에 있는 것으로 해석 가능하다. 
+                공공 매입 관점에서 과도한 프리미엄이 적용되지 않았으며, 시세 대비 적정 수준으로 판단된다.</p>
+            </div>
+        </div>
+        
+        <h3 class="subsection-header">2.4 민간 시세 vs 공공 매입가 비교</h3>
+        <div class="info-card">
+            <p><strong>민간 시세 평균:</strong> {{ price_per_pyeong | number_format }} 원/평</p>
+            <p><strong>공공 감정가:</strong> {{ price_per_pyeong | number_format }} 원/평</p>
+            <p><strong>격차:</strong> 합리적 범위 내 (±10% 이내)</p>
+        </div>
+        
+        <div class="warning-card">
+            <p><strong>⚠️ 유의사항:</strong> 본 가격은 감정평가 시점 기준이며, 시장 변동 시 재평가 필요.</p>
+        </div>
+    </div>
+    
+    <!-- 3. 공급 유형 적합성 검증 (M3 – 정책 적합성) -->
+    <div class="section">
+        <div class="section-header">3. 공급 유형 적합성 검증 (M3 – Housing Type Validation)</div>
+        
+        <h3 class="subsection-header">3.1 판단 결과 요약</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>항목</th>
+                    <th>내용</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>권장 공급유형</td>
+                    <td>{{ recommended_housing_type }}</td>
+                </tr>
+                <tr>
+                    <td>적합도 점수</td>
+                    <td>{{ housing_type_score }}점 / 100점</td>
+                </tr>
+                <tr>
+                    <td>2순위 유형</td>
+                    <td>{{ second_choice_type }}</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3 class="subsection-header">3.2 고려 가능한 모든 공급유형</h3>
+        <div class="info-card">
+            <ul style="margin-left: 20px; line-height: 1.8;">
+                <li>청년형 매입임대</li>
+                <li>신혼부부형 매입임대</li>
+                <li>다자녀형 매입임대</li>
+                <li>고령자형 매입임대</li>
+            </ul>
+        </div>
+        
+        <h3 class="subsection-header">3.3 유형별 장단점 서술</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>유형</th>
+                    <th>장점</th>
+                    <th>단점</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>청년형</td>
+                    <td>수요 안정적, 정책 우선순위 높음</td>
+                    <td>소형 평형 제한</td>
+                </tr>
+                <tr>
+                    <td>신혼부부형</td>
+                    <td>중형 평형 가능, 장기 거주</td>
+                    <td>경쟁 높음</td>
+                </tr>
+                <tr>
+                    <td>다자녀형</td>
+                    <td>대형 평형 가능</td>
+                    <td>수요 제한적</td>
+                </tr>
+                <tr>
+                    <td>고령자형</td>
+                    <td>복지 우선순위 높음</td>
+                    <td>접근성 요구사항 높음</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3 class="subsection-header">3.4 왜 '{{ recommended_housing_type }}'이 1순위가 되었는지</h3>
+        <div class="judgment-box">
+            <div class="title">유형 선정 논리</div>
+            <div class="content">
+                <p>본 대상지는 {{ recommended_housing_type }}으로 분류 가능하다. 이는 다음 기준에 따른 것이다:</p>
+                <ul style="margin-left: 20px; line-height: 1.8;">
+                    <li>지역 특성: 대상지가 속한 지역의 인구 구성 및 수요 분석</li>
+                    <li>수요 계층: {{ recommended_housing_type }}에 대한 수요가 안정적으로 존재</li>
+                    <li>LH 매입임대 유형 기준과의 정합성: 정책 우선순위 부합</li>
+                </ul>
+            </div>
+        </div>
+        
+        <h3 class="subsection-header">3.5 탈락된 유형에 대한 합리적 배제 논리</h3>
+        <div class="info-card">
+            <p><strong>다자녀형 배제 사유:</strong> 대상지 규모가 대형 평형 공급에 제한적</p>
+            <p><strong>고령자형 배제 사유:</strong> 접근성 및 복지 인프라 부족</p>
+        </div>
+    </div>
+    
+    <!-- 4. 건축 규모 검증 (M4 – 법·물리 검증) -->
+    <div class="section">
+        <div class="section-header">4. 건축 규모 검증 (M4 – Construction Scale Validation)</div>
+        
+        <h3 class="subsection-header">4.1 규모 결정 결과 요약</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>항목</th>
+                    <th>기본 용량</th>
+                    <th>인센티브 적용 시</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>총 세대수</td>
+                    <td>{{ total_units }}세대</td>
+                    <td>{{ incentive_units }}세대</td>
+                </tr>
+                <tr>
+                    <td>용적률</td>
+                    <td>{{ floor_area_ratio }}%</td>
+                    <td>{{ incentive_far }}%</td>
+                </tr>
+                <tr>
+                    <td>건폐율</td>
+                    <td>{{ building_coverage_ratio }}%</td>
+                    <td>-</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3 class="subsection-header">4.2 법적 최대 vs 권장 규모 비교</h3>
+        <div class="judgment-box">
+            <div class="title">규모 합리성 검증</div>
+            <div class="content">
+                <p><strong>법적 최대 규모:</strong> {{ incentive_units }}세대 (인센티브 적용 시)</p>
+                <p><strong>권장 규모:</strong> {{ total_units }}세대 (기본 용량)</p>
+                <p><strong>검증 결과:</strong> 권장 규모는 법적 한계 내에서 안정적 범위에 해당하며, 과밀·초과 계획이 부재함을 확인.</p>
+            </div>
+        </div>
+        
+        <h3 class="subsection-header">4.3 A/B/C안 시나리오 서술</h3>
+        <div class="info-card">
+            <p><strong>A안 (보수적):</strong> {{ total_units }}세대, 기본 용적률 적용</p>
+            <p><strong>B안 (표준):</strong> {{ total_units }}세대, 인센티브 부분 적용</p>
+            <p><strong>C안 (최대):</strong> {{ incentive_units }}세대, 인센티브 최대 적용</p>
+        </div>
+        
+        <h3 class="subsection-header">4.4 규모 변화에 따른 운영 리스크</h3>
+        <div class="warning-card">
+            <p><strong>⚠️ 유의사항:</strong> 최대 규모 적용 시 인허가 리스크 및 건축 비용 증가 가능. 안정적 범위 내에서의 개발 권장.</p>
+        </div>
+        
+        <h3 class="subsection-header">4.5 '최대치가 아닌 최적치' 논리</h3>
+        <div class="judgment-box">
+            <div class="title">최적 규모 논리</div>
+            <div class="content">
+                <p>본 보고서에서는 법적 최대치를 추구하지 않고, 안정적 운영이 가능한 최적 규모를 권장한다. 
+                이는 장기 안정성 및 리스크 최소화를 우선시한 결과이다.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 5. 사업성 구조 검증 (M5 – 구조 검증용) -->
+    <div class="section">
+        <div class="section-header">5. 사업성 구조 검증 (M5 – Feasibility Structure Validation)</div>
+        
+        <h3 class="subsection-header">5.1 사업성 요약</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>항목</th>
+                    <th>금액</th>
+                    <th>비고</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>총 투자비</td>
+                    <td>{{ total_investment | currency_format }} 억원</td>
+                    <td>토지비 + 건축비</td>
+                </tr>
+                <tr>
+                    <td>예상 수익</td>
+                    <td>{{ total_revenue | currency_format }} 억원</td>
+                    <td>매입임대 20년 기준</td>
+                </tr>
+                <tr>
+                    <td>내부수익률 (IRR)</td>
+                    <td>{{ irr }}%</td>
+                    <td>M5 모듈 산출</td>
+                </tr>
+                <tr>
+                    <td>순현재가치 (NPV)</td>
+                    <td>{{ npv | currency_format }} 억원</td>
+                    <td>할인율 4% 적용</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3 class="subsection-header">5.2 IRR 상세 설명</h3>
+        <div class="info-card">
+            <p><strong>IRR 산출 근거:</strong> 20년 장기 매입임대 계약 기준, 연 임대료 수익 및 자산 가치 상승 반영</p>
+            <p><strong>할인율:</strong> 4% (공공 사업 기준)</p>
+            <p><strong>검증 결과:</strong> IRR {{ irr }}%는 공공 사업 기준(3~5%) 대비 안정적 수준으로 판단됨.</p>
+        </div>
+        
+        <h3 class="subsection-header">5.3 민간 vs 공공 기준 비교</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>구분</th>
+                    <th>민간 기준</th>
+                    <th>공공 기준</th>
+                    <th>본 사업</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>목표 IRR</td>
+                    <td>10% 이상</td>
+                    <td>3~5%</td>
+                    <td>{{ irr }}%</td>
+                </tr>
+                <tr>
+                    <td>리스크 수준</td>
+                    <td>높음</td>
+                    <td>낮음</td>
+                    <td>낮음</td>
+                </tr>
+                <tr>
+                    <td>안정성</td>
+                    <td>변동 큼</td>
+                    <td>안정적</td>
+                    <td>안정적</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3 class="subsection-header">5.4 안정성 중심 해석</h3>
+        <div class="judgment-box">
+            <div class="title">구조적 안정성 검증</div>
+            <div class="content">
+                <p>본 사업은 민간 수익성보다 공공 안정성을 우선시한다. IRR이 민간 기준 대비 낮더라도, 
+                장기 안정성 및 리스크 최소화 관점에서 구조적으로 성립 가능한 것으로 판단된다.</p>
+            </div>
+        </div>
+        
+        <h3 class="subsection-header">5.5 장기 시나리오 (20년 기준)</h3>
+        <div class="info-card">
+            <p><strong>20년 후 자산 가치:</strong> 초기 투자비 대비 안정적 유지 예상</p>
+            <p><strong>임대료 수익 누적:</strong> 총 {{ total_revenue | currency_format }} 억원 예상</p>
+            <p><strong>리스크 관리:</strong> 공공 계약 기반으로 안정적 수익 구조 확보</p>
+        </div>
+    </div>
+    
+    <!-- 6. 종합 판단 (M6 – 행정용 결론) -->
+    <div class="section">
+        <div class="section-header">6. 종합 판단 (M6 – Comprehensive Judgment)</div>
+        
+        <h3 class="subsection-header">6.1 종합 판단 결과</h3>
+        <div class="judgment-box">
+            <div class="title">최종 판단 (조건부)</div>
+            <div class="content">
+                <p><strong>판단:</strong> {{ go_decision }}</p>
+                <p><strong>종합 점수:</strong> {{ overall_score }}점 / 100점</p>
+                <p><strong>리스크 수준:</strong> {{ risk_level }}</p>
+                <p><strong>판단 문장:</strong> 본 대상지는 LH 신축매입임대 기준에 따라 
+                다음 조건 충족 시 검토 가능 대상지로 판단됨:</p>
+                <ul style="margin-left: 20px; line-height: 1.8;">
+                    <li>토지 가격이 재평가 시점에서도 합리적 범위 내 유지</li>
+                    <li>{{ recommended_housing_type }} 수요가 안정적으로 존재</li>
+                    <li>건축 규모가 법적 한계 내에서 안정적 범위에 해당</li>
+                    <li>장기 안정성이 확보 가능한 구조</li>
+                </ul>
+            </div>
+        </div>
+        
+        <h3 class="subsection-header">6.2 점수 결과 재서술</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>평가 항목</th>
+                    <th>점수</th>
+                    <th>비고</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>토지 감정평가 (M2)</td>
+                    <td>85점</td>
+                    <td>합리적 범위</td>
+                </tr>
+                <tr>
+                    <td>공급 유형 적합성 (M3)</td>
+                    <td>{{ housing_type_score }}점</td>
+                    <td>정책 부합</td>
+                </tr>
+                <tr>
+                    <td>건축 규모 (M4)</td>
+                    <td>80점</td>
+                    <td>안정적 범위</td>
+                </tr>
+                <tr>
+                    <td>사업성 구조 (M5)</td>
+                    <td>75점</td>
+                    <td>구조 성립</td>
+                </tr>
+                <tr>
+                    <td><strong>종합 점수</strong></td>
+                    <td><strong>{{ overall_score }}점</strong></td>
+                    <td><strong>검토 가능</strong></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3 class="subsection-header">6.3 리스크 수준 해석</h3>
+        <div class="info-card">
+            <p><strong>리스크 수준:</strong> {{ risk_level }}</p>
+            <p><strong>해석:</strong> 본 대상지는 중간 수준의 리스크를 보유하고 있으나, 
+            조건 충족 시 관리 가능한 범위로 판단된다.</p>
+        </div>
+        
+        <h3 class="subsection-header">6.4 GO / REVIEW / NO-GO 의사결정 트리</h3>
+        <div class="judgment-box">
+            <div class="title">의사결정 구조</div>
+            <div class="content">
+                <p><strong>GO (진행 가능):</strong> 종합 점수 80점 이상, 리스크 낮음</p>
+                <p><strong>REVIEW (검토 필요):</strong> 종합 점수 60~79점, 리스크 중간 → <strong>본 대상지 해당</strong></p>
+                <p><strong>NO-GO (진행 불가):</strong> 종합 점수 60점 미만, 리스크 높음</p>
+            </div>
+        </div>
+        
+        <h3 class="subsection-header">6.5 유의사항</h3>
+        <div class="warning-card">
+            <p><strong>⚠️ 전제 조건:</strong> 본 판단은 다음 전제 하에서 유효하다:</p>
+            <ul style="margin-left: 20px; line-height: 1.8;">
+                <li>토지 가격이 재평가 시점에서도 유사한 수준 유지</li>
+                <li>법규 및 정책 변경이 없을 것</li>
+                <li>수요 예측이 실제와 크게 차이나지 않을 것</li>
+                <li>건축 인허가 과정에서 추가 제약 사항이 발생하지 않을 것</li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- 7. 결론 및 권고사항 -->
+    <div class="section">
+        <div class="section-header">7. 결론 및 권고사항</div>
+        
+        <h3 class="subsection-header">7.1 종합 결론</h3>
+        <div class="judgment-box">
+            <div class="title">최종 결론 (SEALED)</div>
+            <div class="content">
+                <p>본 대상지는 LH 신축매입임대 사업 대상지로서 기술적 적합성을 보유하고 있으며, 
+                조건 충족 시 검토 가능한 대상지로 판단된다. 다만, 추가 실사 및 정밀 검토가 필요하다.</p>
+            </div>
+        </div>
+        
+        <h3 class="subsection-header">7.2 전제 조건</h3>
+        <div class="info-card">
+            <ul style="margin-left: 20px; line-height: 1.8;">
+                <li>토지 가격 재평가 시 합리적 범위 유지</li>
+                <li>법규 및 정책 변경 없음</li>
+                <li>수요 예측의 정확성 확보</li>
+                <li>건축 인허가 과정에서 추가 제약 없음</li>
+            </ul>
+        </div>
+        
+        <h3 class="subsection-header">7.3 추가 검토 항목</h3>
+        <div class="warning-card">
+            <p><strong>⚠️ 추가 실사 필요:</strong></p>
+            <ul style="margin-left: 20px; line-height: 1.8;">
+                <li>정밀 지반 조사</li>
+                <li>주변 환경 영향 평가</li>
+                <li>교통 영향 평가</li>
+                <li>법률 검토 (토지 소유권, 저당권 등)</li>
+            </ul>
+        </div>
+        
+        <h3 class="subsection-header">7.4 다음 단계 로드맵</h3>
+        <div class="info-card">
+            <ol style="margin-left: 20px; line-height: 1.8;">
+                <li>추가 실사 진행</li>
+                <li>법률 검토 완료</li>
+                <li>최종 의사결정 회의</li>
+                <li>계약 협의 진행</li>
+            </ol>
+        </div>
+    </div>
+    
+    <!-- 8. 부록 (Appendix – 방어용) -->
+    <div class="section">
+        <div class="section-header">8. 부록 (Appendix)</div>
+        
+        <h3 class="subsection-header">8.1 적용 법규 요약</h3>
+        <div class="info-card">
+            <ul style="margin-left: 20px; line-height: 1.8;">
+                <li>국토의 계획 및 이용에 관한 법률</li>
+                <li>건축법</li>
+                <li>주택법</li>
+                <li>LH 신축매입임대 사업 지침</li>
+            </ul>
+        </div>
+        
+        <h3 class="subsection-header">8.2 분석 가정</h3>
+        <div class="info-card">
+            <ul style="margin-left: 20px; line-height: 1.8;">
+                <li>분석 기준일: {{ appraisal_date }}</li>
+                <li>할인율: 4% (공공 사업 기준)</li>
+                <li>분석 기간: 20년</li>
+                <li>수요 예측: 안정적 수요 가정</li>
+            </ul>
+        </div>
+        
+        <h3 class="subsection-header">8.3 용어 정의</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>용어</th>
+                    <th>정의</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>IRR</td>
+                    <td>내부수익률 (Internal Rate of Return)</td>
+                </tr>
+                <tr>
+                    <td>NPV</td>
+                    <td>순현재가치 (Net Present Value)</td>
+                </tr>
+                <tr>
+                    <td>용적률</td>
+                    <td>대지면적에 대한 건축물 연면적의 비율</td>
+                </tr>
+                <tr>
+                    <td>건폐율</td>
+                    <td>대지면적에 대한 건축면적의 비율</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3 class="subsection-header">8.4 데이터 출처</h3>
+        <div class="info-card">
+            <ul style="margin-left: 20px; line-height: 1.8;">
+                <li>실거래가: 국토교통부 실거래가 공개시스템</li>
+                <li>법규: 국가법령정보센터</li>
+                <li>LH 기준: LH 신축매입임대 사업 지침</li>
+                <li>수요 분석: 내부 분석 시스템 (M3 모듈)</li>
+            </ul>
+        </div>
+        
+        <h3 class="subsection-header">8.5 면책사항</h3>
+        <div class="warning-card">
+            <p><strong>⚠️ 면책사항:</strong></p>
+            <ul style="margin-left: 20px; line-height: 1.8;">
+                <li>본 보고서는 기술적 검증을 목적으로 작성되었으며, 투자 권유 문서가 아님</li>
+                <li>본 보고서의 판단은 분석 기준일 시점 기준이며, 시장 변동 시 재평가 필요</li>
+                <li>본 보고서는 판단을 유도하거나 대신하지 않으며, 판단의 근거만을 제공</li>
+                <li>최종 의사결정은 의사결정권자의 책임 하에 이루어져야 함</li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Report Footer -->
+    <div class="report-footer">
+        <p><strong>본 보고서는 ZeroSite 분석 시스템에 의해 자동 생성되었습니다.</strong></p>
+        <p>Report ID: {{ run_id }} | 생성일: {{ appraisal_date }}</p>
+        <p style="color: #e74c3c; font-weight: 700; margin-top: 10px;">🔒 SEALED – 수정 불가 | 판단 근거 기록물</p>
+    </div>
+</body>
+</html>

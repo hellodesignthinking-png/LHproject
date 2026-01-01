@@ -346,6 +346,47 @@ async def landowner_report_html(
         raise HTTPException(status_code=500, detail=f"토지주 제출용 보고서 HTML 생성 실패: {str(e)}")
 
 
+@router.get("/landowner/html/expanded", response_class=HTMLResponse)
+async def landowner_report_html_expanded(
+    context_id: str = Query(..., description="분석 실행 ID (RUN_*)")
+):
+    """
+    B. 토지주 제출용 보고서 HTML 생성 (확장판 12~20페이지)
+    - 기존 요약본을 12~20페이지 수준으로 확장
+    - 계산 로직 변경 없음, 설득/신뢰/안심 레이어 추가
+    - 대상: 개인 토지주, 가족, 법무대리인
+    - 목적: '이 토지가 공공사업으로 충분히 가치 있고 지금 협의에 들어가는 것이 합리적'임을 설득
+    """
+    try:
+        logger.info(f"🔵 [B. Landowner Report Expanded] HTML generation requested: context_id={context_id}")
+        
+        # Build template data
+        template_data = _build_common_template_data(context_id)
+        
+        # Data integrity check (temporarily disabled)
+        # fingerprint = data_integrity_guard.generate_fingerprint(template_data, "landowner_expanded")
+        
+        # Jinja2 environment
+        templates_path = Path(__file__).parent.parent / "templates_v13"
+        env = Environment(loader=FileSystemLoader(str(templates_path)))
+        env.filters['number_format'] = number_format
+        env.filters['currency_format'] = currency_format
+        
+        # Load expanded template
+        template = env.get_template("landowner_submission_report_expanded.html")
+        html_content = template.render(**template_data)
+        
+        logger.info(f"✅ [B. Landowner Report Expanded] HTML generated successfully: context_id={context_id}")
+        
+        return HTMLResponse(content=html_content, status_code=200)
+        
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        logger.error(f"❌ [B. Landowner Report Expanded] HTML generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"토지주 제출용 보고서 (확장판) HTML 생성 실패: {str(e)}")
+
+
 @router.get("/landowner/pdf")
 async def landowner_report_pdf(
     context_id: str = Query(..., description="분석 실행 ID (RUN_*)")

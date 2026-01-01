@@ -1008,14 +1008,55 @@ export const PipelineOrchestrator: React.FC = () => {
                   >
                     <div style={{ fontSize: '28px', marginBottom: '8px' }}>🤝</div>
                     <div style={{ fontWeight: 'bold', fontSize: '15px', color: '#1e293b', marginBottom: '4px' }}>
-                      토지주 제출용 보고서
+                      토지주 제출용 보고서 (요약본)
                     </div>
                     <div style={{ fontSize: '12px', color: '#64748b' }}>
                       설득용, 긍정적 측면 강조
                     </div>
                   </button>
 
-                  {/* 3. LH 제출용 기술검증 보고서 */}
+                  {/* 2-1. 토지주 제출용 보고서 (확장판) ✨ NEW */}
+                  <button
+                    onClick={() => {
+                      if (!state.contextId) {
+                        alert('⚠️ M1 분석을 먼저 완료해주세요.');
+                        return;
+                      }
+                      const url = `/api/v4/reports/six-types/landowner/html/expanded?context_id=${state.contextId}`;
+                      window.open(url, '_blank');
+                    }}
+                    disabled={!state.contextId}
+                    style={{
+                      padding: '20px',
+                      background: state.contextId ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : '#f0f0f0',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: state.contextId ? 'pointer' : 'not-allowed',
+                      transition: 'all 0.2s',
+                      textAlign: 'left',
+                      color: state.contextId ? 'white' : '#999',
+                      boxShadow: state.contextId ? '0 4px 12px rgba(16, 185, 129, 0.3)' : 'none',
+                      position: 'relative',
+                      opacity: state.contextId ? 1 : 0.6
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                  >
+                    {state.contextId && (
+                      <div style={{ position: 'absolute', top: '8px', right: '8px', background: '#fbbf24', color: '#78350f', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>
+                        확장판 ✨
+                      </div>
+                    )}
+                    <div style={{ fontSize: '28px', marginBottom: '8px' }}>🏡</div>
+                    <div style={{ fontWeight: 'bold', fontSize: '15px', marginBottom: '4px' }}>
+                      토지주 제출용 보고서 (12~20p 전문가용)
+                    </div>
+                    <div style={{ fontSize: '12px', opacity: 0.9 }}>
+                      설득·신뢰·안심 레이어 포함, 상세 증명 문서
+                    </div>
+                  </button>
+
+                  {/* 3. LH 제출용 기술검증 보고서 (요약본) */}
                   <button
                     onClick={() => {
                       if (!state.contextId) {
@@ -1041,10 +1082,51 @@ export const PipelineOrchestrator: React.FC = () => {
                   >
                     <div style={{ fontSize: '28px', marginBottom: '8px' }}>🏛️</div>
                     <div style={{ fontWeight: 'bold', fontSize: '15px', color: '#1e293b', marginBottom: '4px' }}>
-                      LH 제출용 기술검증 보고서
+                      LH 제출용 기술검증 보고서 (SEALED, 요약본)
                     </div>
                     <div style={{ fontSize: '12px', color: '#64748b' }}>
                       LH 기준 중심, 객관적 사실
+                    </div>
+                  </button>
+
+                  {/* 3-1. LH 제출용 기술검증 보고서 (확장판) ✨ NEW */}
+                  <button
+                    onClick={() => {
+                      if (!state.contextId) {
+                        alert('⚠️ M1 분석을 먼저 완료해주세요.');
+                        return;
+                      }
+                      const url = `/api/v4/reports/lh/technical/html/expanded?context_id=${state.contextId}`;
+                      window.open(url, '_blank');
+                    }}
+                    disabled={!state.contextId}
+                    style={{
+                      padding: '20px',
+                      background: state.contextId ? 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)' : '#f0f0f0',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: state.contextId ? 'pointer' : 'not-allowed',
+                      transition: 'all 0.2s',
+                      textAlign: 'left',
+                      color: state.contextId ? 'white' : '#999',
+                      boxShadow: state.contextId ? '0 4px 12px rgba(44, 62, 80, 0.3)' : 'none',
+                      position: 'relative',
+                      opacity: state.contextId ? 1 : 0.6
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                  >
+                    {state.contextId && (
+                      <div style={{ position: 'absolute', top: '8px', right: '8px', background: '#e74c3c', color: 'white', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>
+                        SEALED ✨
+                      </div>
+                    )}
+                    <div style={{ fontSize: '28px', marginBottom: '8px' }}>🔒</div>
+                    <div style={{ fontWeight: 'bold', fontSize: '15px', marginBottom: '4px' }}>
+                      LH 제출용 기술검증 보고서 (25~35p 방어용)
+                    </div>
+                    <div style={{ fontSize: '12px', opacity: 0.9 }}>
+                      행정 검토·분쟁 방어용, 판단 근거 기록물
                     </div>
                   </button>
 
