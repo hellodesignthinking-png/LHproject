@@ -574,11 +574,35 @@ async def quick_review_report_pdf(
     E. 사전 검토 리포트 PDF 다운로드
     
     Playwright를 사용하여 HTML을 PDF로 변환
+    캐싱: RUN_ID × report_type 조합 24시간 캐시
     """
     report_type = "quick-review"
     
     try:
         logger.info(f"📄 [E. Quick Review] PDF generation requested: context_id={context_id}")
+        
+        # Step 1: 캐시 조회
+        from app.services.pdf_cache import get_cached_pdf, set_cached_pdf
+        
+        cached_pdf = get_cached_pdf(run_id=context_id, report_type=report_type)
+        if cached_pdf:
+            logger.info(f"⚡ [E. Quick Review] Cache HIT: returning cached PDF ({len(cached_pdf)} bytes)")
+            
+            # 파일명 생성
+            filename = f"{REPORT_FILENAMES[report_type]}_{context_id}.pdf"
+            
+            return Response(
+                content=cached_pdf,
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": f'attachment; filename="{quote(filename.encode("utf-8"))}"',
+                    "Access-Control-Expose-Headers": "Content-Disposition",
+                    "X-Cache-Status": "HIT"
+                }
+            )
+        
+        # Step 2: Cache MISS - PDF 생성
+        logger.info(f"🔄 [E. Quick Review] Cache MISS: generating PDF via Playwright")
         
         # HTML 엔드포인트 URL 생성 (내부 호출)
         html_url = f"http://localhost:8091{REPORT_HTML_ENDPOINTS[report_type]}?context_id={context_id}"
@@ -591,6 +615,9 @@ async def quick_review_report_pdf(
             timeout_ms=60000  # 60초 타임아웃
         )
         
+        # Step 3: 캐시에 저장
+        set_cached_pdf(run_id=context_id, report_type=report_type, pdf_bytes=pdf_bytes)
+        
         # 파일명 생성
         filename = f"{REPORT_FILENAMES[report_type]}_{context_id}.pdf"
         
@@ -601,7 +628,8 @@ async def quick_review_report_pdf(
             media_type="application/pdf",
             headers={
                 "Content-Disposition": f'attachment; filename="{quote(filename.encode("utf-8"))}"',
-                "Access-Control-Expose-Headers": "Content-Disposition"
+                "Access-Control-Expose-Headers": "Content-Disposition",
+                "X-Cache-Status": "MISS"
             }
         )
         
@@ -653,11 +681,35 @@ async def presentation_report_pdf(
     F. 설명용 프레젠테이션 보고서 PDF 다운로드
     
     Playwright를 사용하여 HTML을 PDF로 변환
+    캐싱: RUN_ID × report_type 조합 24시간 캐시
     """
     report_type = "presentation"
     
     try:
         logger.info(f"📄 [F. Presentation] PDF generation requested: context_id={context_id}")
+        
+        # Step 1: 캐시 조회
+        from app.services.pdf_cache import get_cached_pdf, set_cached_pdf
+        
+        cached_pdf = get_cached_pdf(run_id=context_id, report_type=report_type)
+        if cached_pdf:
+            logger.info(f"⚡ [F. Presentation] Cache HIT: returning cached PDF ({len(cached_pdf)} bytes)")
+            
+            # 파일명 생성
+            filename = f"{REPORT_FILENAMES[report_type]}_{context_id}.pdf"
+            
+            return Response(
+                content=cached_pdf,
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": f'attachment; filename="{quote(filename.encode("utf-8"))}"',
+                    "Access-Control-Expose-Headers": "Content-Disposition",
+                    "X-Cache-Status": "HIT"
+                }
+            )
+        
+        # Step 2: Cache MISS - PDF 생성
+        logger.info(f"🔄 [F. Presentation] Cache MISS: generating PDF via Playwright")
         
         # HTML 엔드포인트 URL 생성 (내부 호출)
         html_url = f"http://localhost:8091{REPORT_HTML_ENDPOINTS[report_type]}?context_id={context_id}"
@@ -669,6 +721,28 @@ async def presentation_report_pdf(
             report_type="F",
             timeout_ms=60000  # 60초 타임아웃
         )
+        
+        # Step 3: 캐시에 저장
+        set_cached_pdf(run_id=context_id, report_type=report_type, pdf_bytes=pdf_bytes)
+        
+        # 파일명 생성
+        filename = f"{REPORT_FILENAMES[report_type]}_{context_id}.pdf"
+        
+        logger.info(f"✅ [F. Presentation] PDF generated successfully: {len(pdf_bytes)} bytes")
+        
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="{quote(filename.encode("utf-8"))}"',
+                "Access-Control-Expose-Headers": "Content-Disposition",
+                "X-Cache-Status": "MISS"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ [F. Presentation] PDF generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"설명용 프레젠테이션 보고서 PDF 생성 실패: {str(e)}")
         
         # 파일명 생성
         filename = f"{REPORT_FILENAMES[report_type]}_{context_id}.pdf"
