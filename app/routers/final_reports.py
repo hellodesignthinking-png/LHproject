@@ -271,6 +271,46 @@ async def master_report_pdf(
         raise HTTPException(status_code=500, detail=f"종합 최종보고서 PDF 생성 실패: {str(e)}")
 
 
+@router.get("/master/html/60p", response_class=HTMLResponse)
+async def master_report_html_60p(
+    context_id: str = Query(..., description="분석 실행 ID (RUN_*)")
+):
+    """
+    A. 종합 최종보고서 HTML 생성 (60페이지 완전판)
+    - 기존 4~6페이지 요약본을 60페이지 수준으로 확장
+    - 계산 로직 변경 없음, 설명·근거·시나리오 추가
+    - 대상: 내부 의사결정권자, 전문가 검토
+    """
+    try:
+        logger.info(f"🔵 [A. Master Report 60p] HTML generation requested: context_id={context_id}")
+        
+        # Build template data
+        template_data = _build_common_template_data(context_id)
+        
+        # Data integrity check (temporarily disabled)
+        # # fingerprint = data_integrity_guard.generate_fingerprint(template_data, "master_60p")
+        
+        # Jinja2 environment
+        templates_path = Path(__file__).parent.parent / "templates_v13"
+        env = Environment(loader=FileSystemLoader(str(templates_path)))
+        env.filters['number_format'] = number_format
+        env.filters['currency_format'] = currency_format
+        
+        # Load 60-page template
+        template = env.get_template("master_comprehensive_report_60p.html")
+        html_content = template.render(**template_data)
+        
+        logger.info(f"✅ [A. Master Report 60p] HTML generated successfully: context_id={context_id}")
+        
+        return HTMLResponse(content=html_content, status_code=200)
+        
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        logger.error(f"❌ [A. Master Report 60p] HTML generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"종합 최종보고서 (60p) HTML 생성 실패: {str(e)}")
+
+
 # ==============================================================================
 # B. 토지주 제출용 보고서 (Landowner Report)
 # ==============================================================================
