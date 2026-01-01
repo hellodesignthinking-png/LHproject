@@ -15,7 +15,8 @@ from app.models.access_log import (
     IPWhitelist,
     get_access_log_storage
 )
-from app.models.security import UserRole, CurrentUser, get_current_user
+from app.models.security import UserRole
+from app.security.dependencies import CurrentUser, get_current_user
 
 
 router = APIRouter(prefix="/api/v4/access-logs", tags=["Access Logs v1.6"])

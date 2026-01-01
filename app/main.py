@@ -203,16 +203,6 @@ app = FastAPI(
     version="1.6.0",
     lifespan=lifespan
 )
-    - ✍️ v7.5-style Professional Narratives
-    - 🌍 Multi-language Support (Korean + English)
-    - 🛡️ Rate Limiting & Caching
-    - 📄 ~26-page Government-grade Reports
-    
-    Status: 100% Complete | Production Ready
-    """,
-    version="11.0-HYBRID-v2",
-    lifespan=lifespan
-)
 
 # 🔥 CRITICAL: Add global exception handler for PipelineExecutionError
 from app.services.pipeline_tracer import PipelineExecutionError
