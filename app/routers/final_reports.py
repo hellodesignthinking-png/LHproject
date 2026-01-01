@@ -23,7 +23,7 @@ from pathlib import Path
 from app.services.context_storage import context_storage
 # from app.services.data_integrity_guard import data_integrity_guard  # TODO: Re-enable when module exists
 from app.services.pdf_generator_playwright import generate_pdf_from_url
-from app.security.dependencies import require_full_access, CurrentUser
+from app.security.dependencies import require_full_access, require_report_access, CurrentUser
 
 logger = logging.getLogger(__name__)
 
@@ -223,12 +223,15 @@ def currency_format(value):
 
 @router.get("/master/html", response_class=HTMLResponse)
 async def master_report_html(
-    context_id: str = Query(..., description="분석 실행 ID (RUN_*)")
+    context_id: str = Query(..., description="분석 실행 ID (RUN_*)"),
+    current_user: CurrentUser = Depends(require_report_access("master"))
 ):
     """
     A. 종합 최종보고서 HTML 생성
     대상: 토지주, LH, 내부 의사결정자, 파트너사
     목적: 전체 분석을 하나의 논리 흐름으로 통합한 아카이브용 기준 문서
+    
+    🔐 v1.5.0: 권한 체크 추가 (ADMIN, INTERNAL만 접근 가능)
     """
     try:
         logger.info(f"🔵 [A. Master Report] HTML generation requested: context_id={context_id}")
@@ -261,10 +264,13 @@ async def master_report_html(
 
 @router.get("/master/pdf")
 async def master_report_pdf(
-    context_id: str = Query(..., description="분석 실행 ID (RUN_*)")
+    context_id: str = Query(..., description="분석 실행 ID (RUN_*)"),
+    current_user: CurrentUser = Depends(require_report_access("master"))
 ):
     """
     A. 종합 최종보고서 PDF 다운로드
+    
+    🔐 v1.5.0: 권한 체크 추가 (ADMIN, INTERNAL만 접근 가능)
     """
     try:
         logger.info(f"🔵 [A. Master Report] PDF generation requested: context_id={context_id}")
@@ -345,12 +351,15 @@ async def master_report_html_60p(
 
 @router.get("/landowner/html", response_class=HTMLResponse)
 async def landowner_report_html(
-    context_id: str = Query(..., description="분석 실행 ID (RUN_*)")
+    context_id: str = Query(..., description="분석 실행 ID (RUN_*)"),
+    current_user: CurrentUser = Depends(require_report_access("landowner"))
 ):
     """
     B. 토지주 제출용 보고서 HTML 생성
     대상: 개인 토지주, 가족, 법무대리인
     목적: 토지의 가치·활용 가능성·검토 적합성 설득
+    
+    🔐 v1.5.0: 권한 체크 추가 (ADMIN, INTERNAL, LANDOWNER만 접근 가능)
     """
     try:
         logger.info(f"🔵 [B. Landowner Report] HTML generation requested: context_id={context_id}")
@@ -417,10 +426,13 @@ async def landowner_report_html_expanded(
 
 @router.get("/landowner/pdf")
 async def landowner_report_pdf(
-    context_id: str = Query(..., description="분석 실행 ID (RUN_*)")
+    context_id: str = Query(..., description="분석 실행 ID (RUN_*)"),
+    current_user: CurrentUser = Depends(require_report_access("landowner"))
 ):
     """
     B. 토지주 제출용 보고서 PDF 다운로드
+    
+    🔐 v1.5.0: 권한 체크 추가 (ADMIN, INTERNAL, LANDOWNER만 접근 가능)
     """
     raise HTTPException(status_code=501, detail="PDF 생성 기능은 HTML 안정화 이후 구현 예정")
 
@@ -432,17 +444,17 @@ async def landowner_report_pdf(
 @router.get("/investment/html", response_class=HTMLResponse)
 async def investment_report_html(
     context_id: str = Query(..., description="분석 실행 ID (RUN_*)"),
-    user: CurrentUser = Depends(require_full_access("investment"))
+    current_user: CurrentUser = Depends(require_report_access("investment"))
 ):
     """
     D. 사업성·투자 검토 보고서 HTML 생성
     대상: 투자자, PF 관계자, 내부 재무팀
     목적: 자본 투입 관점에서의 타당성 분석
     
-    🔒 권한: ADMIN, INTERNAL, INVESTOR만 접근 가능
+    🔐 v1.5.0: 권한 체크 추가 (ADMIN, INTERNAL, INVESTOR만 접근 가능)
     """
     try:
-        logger.info(f"🔵 [D. Investment Report] HTML generation requested: context_id={context_id}, user={user.email}")
+        logger.info(f"🔵 [D. Investment Report] HTML generation requested: context_id={context_id}, user={current_user.email}")
         
         template_data = _build_common_template_data(context_id)
         # fingerprint = data_integrity_guard.generate_fingerprint(template_data, "investment")
@@ -465,10 +477,13 @@ async def investment_report_html(
 
 @router.get("/investment/pdf")
 async def investment_report_pdf(
-    context_id: str = Query(..., description="분석 실행 ID (RUN_*)")
+    context_id: str = Query(..., description="분석 실행 ID (RUN_*)"),
+    current_user: CurrentUser = Depends(require_report_access("investment"))
 ):
     """
     D. 사업성·투자 검토 보고서 PDF 다운로드
+    
+    🔐 v1.5.0: 권한 체크 추가 (ADMIN, INTERNAL, INVESTOR만 접근 가능)
     """
     raise HTTPException(status_code=501, detail="PDF 생성 기능은 HTML 안정화 이후 구현 예정")
 
