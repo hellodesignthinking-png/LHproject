@@ -323,26 +323,66 @@
             <div class="section-title">1️⃣ 주소 검색</div>
             
             <div class="info-box">
-                <strong>💡 입력 예시:</strong><br>
+                <strong>💡 주소 입력 방법:</strong><br>
+                <strong style="color: #667eea;">방법 1. 검색 (추천)</strong> - API로 주소 자동 검색 (현재 Mock 데이터)<br>
+                <strong style="color: #48bb78;">방법 2. 직접 입력</strong> - 정확한 전체 주소를 직접 입력<br>
                 • 도로명 주소: 서울시 강남구 테헤란로 123<br>
-                • 지번 주소: 서울시 강남구 역삼동 123-45<br>
-                최소 3글자 이상 입력하세요
+                • 지번 주소: 서울시 강남구 역삼동 123-45
             </div>
 
-            <div class="input-group">
-                <label class="input-label">주소 입력</label>
-                <input 
-                    type="text" 
-                    id="addressInput" 
-                    class="input-field" 
-                    placeholder="예: 서울시 강남구 테헤란로 123"
-                    minlength="3"
+            <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+                <button 
+                    class="btn" 
+                    style="flex: 1; background: #667eea; color: white;"
+                    onclick="switchMode('search')"
+                    id="searchModeBtn"
                 >
+                    🔍 주소 검색
+                </button>
+                <button 
+                    class="btn" 
+                    style="flex: 1; background: #e2e8f0; color: #4a5568;"
+                    onclick="switchMode('direct')"
+                    id="directModeBtn"
+                >
+                    ✏️ 직접 입력
+                </button>
             </div>
 
-            <button class="btn btn-primary" onclick="searchAddress()" id="searchBtn">
-                🔍 주소 검색
-            </button>
+            <!-- Search Mode -->
+            <div id="searchMode">
+                <div class="input-group">
+                    <label class="input-label">주소 검색</label>
+                    <input 
+                        type="text" 
+                        id="addressInput" 
+                        class="input-field" 
+                        placeholder="예: 서울시 강남구 (최소 3글자)"
+                        minlength="3"
+                    >
+                </div>
+
+                <button class="btn btn-primary" onclick="searchAddress()" id="searchBtn">
+                    🔍 주소 검색
+                </button>
+            </div>
+
+            <!-- Direct Input Mode -->
+            <div id="directMode" style="display: none;">
+                <div class="input-group">
+                    <label class="input-label">전체 주소 (도로명 또는 지번)</label>
+                    <input 
+                        type="text" 
+                        id="directAddressInput" 
+                        class="input-field" 
+                        placeholder="예: 서울특별시 강남구 테헤란로 123"
+                    >
+                </div>
+
+                <button class="btn btn-primary" onclick="useDirectAddress()" id="directBtn">
+                    ✅ 이 주소로 분석 시작
+                </button>
+            </div>
 
             <!-- Suggestions -->
             <div id="suggestions" class="suggestions"></div>
@@ -391,6 +431,58 @@
     <script>
         let selectedAddress = null;
         let contextId = null;
+        let currentMode = 'search';
+
+        function switchMode(mode) {
+            currentMode = mode;
+            const searchMode = document.getElementById('searchMode');
+            const directMode = document.getElementById('directMode');
+            const searchModeBtn = document.getElementById('searchModeBtn');
+            const directModeBtn = document.getElementById('directModeBtn');
+            const suggestionsDiv = document.getElementById('suggestions');
+
+            if (mode === 'search') {
+                searchMode.style.display = 'block';
+                directMode.style.display = 'none';
+                searchModeBtn.style.background = '#667eea';
+                searchModeBtn.style.color = 'white';
+                directModeBtn.style.background = '#e2e8f0';
+                directModeBtn.style.color = '#4a5568';
+                suggestionsDiv.style.display = 'none';
+            } else {
+                searchMode.style.display = 'none';
+                directMode.style.display = 'block';
+                searchModeBtn.style.background = '#e2e8f0';
+                searchModeBtn.style.color = '#4a5568';
+                directModeBtn.style.background = '#48bb78';
+                directModeBtn.style.color = 'white';
+                suggestionsDiv.style.display = 'none';
+            }
+        }
+
+        async function useDirectAddress() {
+            const input = document.getElementById('directAddressInput');
+            const address = input.value.trim();
+
+            if (address.length < 10) {
+                alert('전체 주소를 입력하세요 (최소 10글자)');
+                return;
+            }
+
+            // 직접 입력한 주소로 가상의 주소 데이터 생성
+            const addressData = {
+                road_address: address,
+                jibunAddress: address,
+                address: address,
+                coordinates: {
+                    lat: 37.5665,  // 기본 좌표 (서울 시청)
+                    lon: 126.978
+                }
+            };
+
+            selectedAddress = addressData;
+            await startAnalysis(addressData);
+        }
 
         async function searchAddress() {
             const input = document.getElementById('addressInput');
@@ -608,6 +700,12 @@
             document.getElementById('addressInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     searchAddress();
+                }
+            });
+            
+            document.getElementById('directAddressInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    useDirectAddress();
                 }
             });
         });
