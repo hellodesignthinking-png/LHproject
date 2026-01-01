@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZeroSite v1.4 - 보고서 대시보드</title>
+    <title>ZeroSite - 토지 분석 대시보드</title>
     <style>
         * {
             margin: 0;
@@ -13,7 +13,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f7fafc;
             min-height: 100vh;
             padding: 20px;
         }
@@ -23,138 +23,225 @@
             margin: 0 auto;
         }
 
-        .header {
+        /* Step 1: 프로젝트 요약 카드 */
+        .project-summary {
             background: white;
             border-radius: 16px;
             padding: 32px;
             margin-bottom: 24px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
-        .header-title {
-            font-size: 32px;
+        .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .summary-title {
+            font-size: 24px;
             font-weight: 700;
             color: #1a202c;
             margin-bottom: 8px;
         }
 
-        .header-subtitle {
-            font-size: 16px;
-            color: #718096;
-        }
-
-        .run-id-info {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-        }
-
-        .run-id-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        .analysis-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             padding: 8px 16px;
             border-radius: 24px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
-            margin-bottom: 16px;
         }
 
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
+        .badge-direct {
+            background: #fff5e6;
+            color: #d97706;
+            border: 2px solid #fbbf24;
         }
 
-        .info-item {
-            display: flex;
-            flex-direction: column;
+        .badge-api {
+            background: #e6f7ed;
+            color: #059669;
+            border: 2px solid #10b981;
         }
 
-        .info-label {
+        .confidence-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
             font-size: 12px;
-            color: #a0aec0;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-
-        .info-value {
-            font-size: 16px;
-            color: #2d3748;
             font-weight: 600;
+            margin-left: 8px;
         }
 
+        .confidence-low {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .confidence-high {
+            background: #c6f6d5;
+            color: #2f855a;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .summary-item {
+            background: #f7fafc;
+            padding: 16px;
+            border-radius: 8px;
+        }
+
+        .summary-label {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .summary-value {
+            font-size: 16px;
+            color: #1a202c;
+            font-weight: 600;
+            word-break: break-all;
+        }
+
+        /* Step 3: Direct Input 경고 */
+        .warning-banner {
+            background: linear-gradient(135deg, #fff5e6 0%, #ffedd5 100%);
+            border: 2px solid #fb923c;
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            display: none;
+        }
+
+        .warning-banner.active {
+            display: block;
+        }
+
+        .warning-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #c2410c;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .warning-list {
+            list-style: none;
+            color: #7c2d12;
+            line-height: 1.8;
+        }
+
+        .warning-list li {
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .warning-list li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            font-weight: 700;
+        }
+
+        /* Step 2: 보고서 카드 표준화 */
         .reports-section {
             background: white;
             border-radius: 16px;
             padding: 32px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .section-header {
+            margin-bottom: 24px;
         }
 
         .section-title {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 700;
             color: #1a202c;
-            margin-bottom: 24px;
+            margin-bottom: 8px;
+        }
+
+        .section-subtitle {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .report-grid {
+            display: grid;
+            gap: 16px;
         }
 
         .report-card {
             border: 2px solid #e2e8f0;
             border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 16px;
-            transition: all 0.3s ease;
+            padding: 20px;
+            transition: all 0.2s;
         }
 
         .report-card:hover {
-            border-color: #667eea;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+            border-color: #cbd5e0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
         .report-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             margin-bottom: 16px;
         }
 
-        .report-title-group {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .report-info {
+            flex: 1;
         }
 
-        .report-code {
+        .report-badge {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border-radius: 10px;
-            font-size: 18px;
+            border-radius: 8px;
+            font-size: 16px;
             font-weight: 700;
+            margin-right: 12px;
         }
 
         .report-title {
-            font-size: 18px;
-            font-weight: 600;
+            font-size: 16px;
+            font-weight: 700;
             color: #1a202c;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .report-description {
             font-size: 14px;
             color: #718096;
-            margin-bottom: 16px;
+            line-height: 1.6;
         }
 
         .report-actions {
             display: flex;
-            gap: 12px;
+            gap: 8px;
+            margin-top: 16px;
             flex-wrap: wrap;
         }
 
@@ -165,75 +252,70 @@
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none;
+            transition: all 0.2s;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
-        .btn-html {
-            background: #48bb78;
-            color: white;
-        }
-
-        .btn-html:hover:not(:disabled) {
-            background: #38a169;
-            transform: translateY(-1px);
-        }
-
-        .btn-pdf {
-            background: #ed8936;
-            color: white;
-        }
-
-        .btn-pdf:hover:not(:disabled) {
-            background: #dd6b20;
-            transform: translateY(-1px);
-        }
-
-        .btn-share {
+        .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
 
-        .btn-share:hover:not(:disabled) {
-            transform: translateY(-1px);
+        .btn-primary:hover {
+            transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
 
+        .btn-secondary {
+            background: #f7fafc;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #edf2f7;
+            border-color: #cbd5e0;
+        }
+
+        .btn-share {
+            background: #fff5e6;
+            color: #d97706;
+            border: 2px solid #fbbf24;
+        }
+
+        .btn-share:hover {
+            background: #ffedd5;
+        }
+
         .btn:disabled {
-            background: #e2e8f0;
-            color: #a0aec0;
+            opacity: 0.5;
             cursor: not-allowed;
-            opacity: 0.6;
         }
 
-        .access-denied-badge {
-            display: inline-block;
-            background: #feb2b2;
-            color: #742a2a;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
+        .btn:disabled:hover {
+            transform: none;
+            box-shadow: none;
         }
 
+        /* Step 4: 공유 모달 */
         .modal {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
             z-index: 1000;
-            align-items: center;
-            justify-content: center;
+            padding: 20px;
         }
 
         .modal.active {
             display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .modal-content {
@@ -241,19 +323,52 @@
             border-radius: 16px;
             padding: 32px;
             max-width: 500px;
-            width: 90%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            margin-bottom: 24px;
         }
 
         .modal-title {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 700;
             color: #1a202c;
-            margin-bottom: 16px;
+            margin-bottom: 8px;
         }
 
-        .modal-body {
+        .modal-subtitle {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .modal-warning {
+            background: #fff5e6;
+            border-left: 4px solid #fb923c;
+            padding: 16px;
+            border-radius: 8px;
             margin-bottom: 24px;
+        }
+
+        .modal-warning-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #c2410c;
+            margin-bottom: 8px;
+        }
+
+        .modal-warning-list {
+            list-style: none;
+            font-size: 13px;
+            color: #7c2d12;
+            line-height: 1.8;
+        }
+
+        .modal-warning-list li::before {
+            content: "• ";
+            font-weight: 700;
         }
 
         .form-group {
@@ -274,7 +389,7 @@
             border: 2px solid #e2e8f0;
             border-radius: 8px;
             font-size: 14px;
-            transition: border-color 0.2s;
+            font-family: inherit;
         }
 
         .form-select:focus {
@@ -282,265 +397,486 @@
             border-color: #667eea;
         }
 
-        .warning-box {
-            background: #fef5e7;
-            border-left: 4px solid #f39c12;
-            padding: 16px;
+        .share-result {
+            background: #e6f7ed;
+            border: 2px solid #10b981;
             border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .warning-text {
-            font-size: 14px;
-            color: #c88d00;
-            margin: 0;
-        }
-
-        .modal-footer {
-            display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-        }
-
-        .btn-secondary {
-            background: #e2e8f0;
-            color: #2d3748;
-        }
-
-        .btn-secondary:hover {
-            background: #cbd5e0;
-        }
-
-        .result-box {
+            padding: 16px;
+            margin-top: 20px;
             display: none;
-            background: #f0fff4;
-            border: 2px solid #48bb78;
-            border-radius: 8px;
-            padding: 16px;
-            margin-top: 16px;
         }
 
-        .result-box.active {
+        .share-result.active {
             display: block;
         }
 
         .share-url {
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 12px;
+            font-size: 13px;
+            color: #065f46;
             word-break: break-all;
+            margin: 8px 0;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
             font-family: monospace;
-            font-size: 12px;
-            margin: 12px 0;
         }
 
-        .copy-btn {
-            width: 100%;
-            margin-top: 8px;
-        }
-
-        .user-info {
-            background: #edf2f7;
-            padding: 12px 20px;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
+        .modal-actions {
+            display: flex;
             gap: 12px;
-            font-size: 14px;
+            margin-top: 24px;
         }
 
-        .user-role {
-            background: #667eea;
-            color: white;
-            padding: 4px 12px;
+        .btn-full {
+            flex: 1;
+        }
+
+        /* Step 5: 에러 상태 */
+        .error-card {
+            background: #fed7d7;
+            border: 2px solid #fc8181;
             border-radius: 12px;
-            font-weight: 600;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .error-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #c53030;
+            margin-bottom: 8px;
+        }
+
+        .error-message {
+            font-size: 14px;
+            color: #742a2a;
+            line-height: 1.6;
         }
 
         .loading {
             text-align: center;
-            padding: 40px;
+            padding: 60px 20px;
             color: #718096;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-header {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .report-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <div class="header-title">🎯 ZeroSite v1.4</div>
-            <div class="header-subtitle">보고서 대시보드 - 사용자가 생각하지 않아도 올바른 보고서를</div>
+        <!-- Step 1: 프로젝트 요약 카드 -->
+        <div class="project-summary">
+            <div class="summary-header">
+                <div>
+                    <div class="summary-title">
+                        <span id="project-title">프로젝트 분석</span>
+                    </div>
+                    <div>
+                        <span class="analysis-badge" id="analysis-badge">
+                            <span id="badge-icon">🧪</span>
+                            <span id="badge-text">분석 방식 로딩 중...</span>
+                        </span>
+                        <span class="confidence-badge" id="confidence-badge" style="display: none;">
+                            신뢰도: <span id="confidence-value">-</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-label">RUN_ID</div>
+                    <div class="summary-value" id="summary-run-id">-</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">주소</div>
+                    <div class="summary-value" id="summary-address">-</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">분석 시각</div>
+                    <div class="summary-value" id="summary-timestamp">-</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">면적</div>
+                    <div class="summary-value" id="summary-area">-</div>
+                </div>
+            </div>
         </div>
 
-        <div id="user-info-section"></div>
-        <div id="run-id-info-section" class="loading">데이터 로딩 중...</div>
-        <div id="reports-section"></div>
+        <!-- Step 3: Direct Input 경고 -->
+        <div class="warning-banner" id="direct-warning">
+            <div class="warning-title">
+                <span>⚠️</span>
+                <span>이 프로젝트는 '직접 입력 주소'를 기반으로 생성된 참고용 분석입니다</span>
+            </div>
+            <ul class="warning-list">
+                <li>외부 행정 API(Kakao, VWorld, Data.go.kr)를 조회하지 않았습니다</li>
+                <li>PNU, 좌표, 공시지가 등은 추정값입니다</li>
+                <li>법적·행정적 효력이 없습니다</li>
+                <li>검토/아이디어용으로만 사용하세요</li>
+            </ul>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading" id="loading-state">
+            <div class="spinner"></div>
+            <div>대시보드 로딩 중...</div>
+        </div>
+
+        <!-- Error State -->
+        <div id="error-container"></div>
+
+        <!-- Step 2: 보고서 섹션 -->
+        <div class="reports-section" id="reports-section" style="display: none;">
+            <div class="section-header">
+                <div class="section-title">📊 6종 보고서</div>
+                <div class="section-subtitle">각 보고서는 서로 다른 목적과 대상을 위해 설계되었습니다</div>
+            </div>
+
+            <div class="report-grid" id="report-grid">
+                <!-- Reports will be dynamically loaded -->
+            </div>
+        </div>
     </div>
 
-    <!-- 공유 모달 -->
-    <div id="share-modal" class="modal">
+    <!-- Step 4: 공유 모달 -->
+    <div class="modal" id="share-modal">
         <div class="modal-content">
-            <div class="modal-title">🔗 외부 공유 링크 생성</div>
-            <div class="modal-body">
-                <div class="warning-box">
-                    <p class="warning-text">⚠️ 이 링크는 외부에 전달됩니다. 신중하게 공유하세요.</p>
-                </div>
+            <div class="modal-header">
+                <div class="modal-title">🔗 외부 공유 링크 생성</div>
+                <div class="modal-subtitle">로그인 없이 누구나 볼 수 있는 링크를 만듭니다</div>
+            </div>
 
-                <div class="form-group">
-                    <label class="form-label">만료 시간</label>
-                    <select id="expires-select" class="form-select">
-                        <option value="24">24시간</option>
-                        <option value="168">7일</option>
-                        <option value="720">30일</option>
-                    </select>
-                </div>
+            <div class="modal-warning">
+                <div class="modal-warning-title">⚠️ 공유 전 확인사항</div>
+                <ul class="modal-warning-list">
+                    <li>이 링크는 로그인 없이 외부에 전달됩니다</li>
+                    <li>읽기 전용 (수정 불가)</li>
+                    <li>다운로드 가능</li>
+                    <li>만료 시 자동 차단됩니다</li>
+                </ul>
+            </div>
 
-                <div class="form-group">
-                    <p style="font-size: 14px; color: #718096;">
-                        <strong>권한:</strong> 읽기 전용 / HTML 및 PDF 다운로드 가능
-                    </p>
-                </div>
+            <div class="form-group">
+                <label class="form-label" for="expires-select">유효 기간 선택</label>
+                <select class="form-select" id="expires-select">
+                    <option value="24">24시간</option>
+                    <option value="168" selected>7일</option>
+                    <option value="720">30일</option>
+                </select>
+            </div>
 
-                <div id="share-result" class="result-box">
-                    <p style="font-weight: 600; color: #38a169; margin-bottom: 8px;">✅ 공유 링크 생성 완료!</p>
-                    <div class="share-url" id="share-url-display"></div>
-                    <p style="font-size: 12px; color: #718096; margin-top: 8px;">
-                        만료 시각: <span id="expires-at-display"></span>
-                    </p>
-                    <button class="btn btn-html copy-btn" onclick="copyShareUrl()">📋 링크 복사</button>
+            <div class="share-result" id="share-result">
+                <div style="font-weight: 600; margin-bottom: 8px; color: #065f46;">✅ 공유 링크 생성 완료!</div>
+                <div class="share-url" id="share-url-display">-</div>
+                <div style="font-size: 12px; color: #065f46; margin-top: 8px;">
+                    만료: <span id="expires-at-display">-</span>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeShareModal()">취소</button>
-                <button class="btn btn-share" id="create-share-btn" onclick="createShareLink()">링크 생성</button>
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary btn-full" onclick="closeShareModal()">취소</button>
+                <button class="btn btn-primary btn-full" id="create-share-btn" onclick="createShareLink()">링크 생성</button>
+                <button class="btn btn-share btn-full" id="copy-share-btn" onclick="copyShareUrl()" style="display: none;">📋 복사</button>
             </div>
         </div>
     </div>
 
-    <!-- INJECT_CONFIG -->
     <script>
-        let currentDashboardData = null;
-        let currentShareReport = null;
-
-        // 🔧 Hotfix: 설정 읽기 (DEV 모드에서 주입된 설정 사용)
+        // Configuration
         const config = window.ZEROSITE_CONFIG || {
             defaultUser: 'admin@zerosite.com',
-            defaultRunId: 'TEST_6REPORT',
-            isDev: true
+            apiBasePath: '/api/v4'
         };
 
-        // 페이지 로드 시 데이터 조회
-        async function loadDashboard() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const runId = urlParams.get('run_id') || config.defaultRunId;
+        // Global state
+        let currentRunId = null;
+        let currentShareReport = null;
+        let runIdData = null;
 
+        // Report definitions
+        const REPORTS = [
+            {
+                code: 'A',
+                name: '종합 최종 보고서',
+                description: '전체 분석 결과를 포함한 마스터 보고서 (관리자 전용)',
+                roles: ['ADMIN', 'INTERNAL']
+            },
+            {
+                code: 'B',
+                name: '토지주 보고서',
+                description: '토지 소유자를 위한 핵심 정보 요약',
+                roles: ['ADMIN', 'INTERNAL', 'LANDOWNER']
+            },
+            {
+                code: 'C',
+                name: 'LH 기술검토 보고서',
+                description: 'LH 공사 기술 검토용 상세 분석',
+                roles: ['ADMIN', 'INTERNAL', 'LH']
+            },
+            {
+                code: 'D',
+                name: '시장 분석 보고서',
+                description: '시장 동향 및 투자 가치 분석 (모든 역할 접근 가능)',
+                roles: ['ADMIN', 'INTERNAL', 'LANDOWNER', 'LH', 'INVESTOR']
+            },
+            {
+                code: 'E',
+                name: 'LH 제출 보고서',
+                description: 'LH 공사 제출용 공식 서류',
+                roles: ['ADMIN', 'LH']
+            },
+            {
+                code: 'F',
+                name: '투자자 프레젠테이션',
+                description: '외부 공유용 요약 자료 (공유 기능 지원)',
+                roles: ['ADMIN', 'INTERNAL', 'INVESTOR'],
+                shareable: true
+            }
+        ];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const runId = urlParams.get('run_id');
+            const user = urlParams.get('user') || config.defaultUser;
+
+            if (user) {
+                config.defaultUser = user;
+            }
+
+            if (runId) {
+                currentRunId = runId;
+                loadDashboard(runId);
+            } else {
+                showError('RUN_ID가 제공되지 않았습니다', '대시보드를 로드하려면 run_id 파라미터가 필요합니다.');
+            }
+        });
+
+        async function loadDashboard(runId) {
             try {
-                // Dashboard API 호출 (🔐 X-User-Email 헤더 추가)
-                const response = await fetch(`/api/v4/dashboard/${runId}`, {
+                // For DIRECT_ RUN_IDs, create fallback data from RUN_ID itself
+                if (runId.startsWith('DIRECT_')) {
+                    console.log('📝 DIRECT RUN_ID detected - using fallback data');
+                    runIdData = {
+                        run_id: runId,
+                        address: '직접 입력 주소',
+                        land_area: 500,
+                        zone: '제2종일반주거지역',
+                        pnu: runId.split('_').pop(),
+                        created_at: new Date().toISOString(),
+                        status: 'ACTIVE',
+                        has_data: true
+                    };
+                } else {
+                    // Load RUN_ID data from service
+                    const response = await fetch(`/api/v4/run-ids/info/${runId}`, {
+                        headers: {
+                            'X-User-Email': config.defaultUser
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`RUN_ID 정보를 가져올 수 없습니다 (${response.status})`);
+                    }
+
+                    runIdData = await response.json();
+                }
+
+                // Update UI
+                updateProjectSummary(runIdData);
+                renderReports();
+
+                // Hide loading, show content
+                document.getElementById('loading-state').style.display = 'none';
+                document.getElementById('reports-section').style.display = 'block';
+
+            } catch (error) {
+                console.error('Dashboard load error:', error);
+                showError('대시보드 로드 실패', error.message);
+                document.getElementById('loading-state').style.display = 'none';
+            }
+        }
+
+        function updateProjectSummary(data) {
+            const isDirectInput = data.run_id && data.run_id.startsWith('DIRECT_');
+            const confidence = isDirectInput ? 'LOW' : 'HIGH';
+
+            // Update badges
+            const badge = document.getElementById('analysis-badge');
+            const badgeIcon = document.getElementById('badge-icon');
+            const badgeText = document.getElementById('badge-text');
+            
+            if (isDirectInput) {
+                badge.className = 'analysis-badge badge-direct';
+                badgeIcon.textContent = '✏️';
+                badgeText.textContent = '직접 입력 (참고용)';
+            } else {
+                badge.className = 'analysis-badge badge-api';
+                badgeIcon.textContent = '🔗';
+                badgeText.textContent = 'API 기반 (실제 데이터)';
+            }
+
+            // Show confidence badge
+            const confidenceBadge = document.getElementById('confidence-badge');
+            const confidenceValue = document.getElementById('confidence-value');
+            confidenceBadge.style.display = 'inline-block';
+            confidenceValue.textContent = confidence;
+            confidenceBadge.className = confidence === 'LOW' ? 'confidence-badge confidence-low' : 'confidence-badge confidence-high';
+
+            // Update summary values
+            document.getElementById('summary-run-id').textContent = data.run_id || '-';
+            document.getElementById('summary-address').textContent = data.address || '-';
+            document.getElementById('summary-timestamp').textContent = 
+                data.created_at ? new Date(data.created_at).toLocaleString('ko-KR') : '-';
+            document.getElementById('summary-area').textContent = 
+                data.land_area ? `${data.land_area.toLocaleString()}㎡` : '-';
+
+            // Show warning for direct input
+            if (isDirectInput) {
+                document.getElementById('direct-warning').classList.add('active');
+            }
+        }
+
+        function renderReports() {
+            const grid = document.getElementById('report-grid');
+            grid.innerHTML = '';
+
+            REPORTS.forEach(report => {
+                const card = createReportCard(report);
+                grid.appendChild(card);
+            });
+        }
+
+        function createReportCard(report) {
+            const card = document.createElement('div');
+            card.className = 'report-card';
+
+            const hasAccess = checkReportAccess(report.roles);
+
+            card.innerHTML = `
+                <div class="report-header">
+                    <div style="display: flex; align-items: flex-start; flex: 1;">
+                        <div class="report-badge">${report.code}</div>
+                        <div class="report-info">
+                            <div class="report-title">${report.name}</div>
+                            <div class="report-description">${report.description}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="report-actions">
+                    <button class="btn btn-primary" onclick="openReport('${report.code}', 'html', '${currentRunId}', ${hasAccess})" ${!hasAccess ? 'disabled title="접근 권한이 없습니다"' : ''}>
+                        📄 HTML 보기
+                    </button>
+                    <button class="btn btn-secondary" onclick="openReport('${report.code}', 'pdf', '${currentRunId}', ${hasAccess})" ${!hasAccess ? 'disabled title="접근 권한이 없습니다"' : ''}>
+                        📥 PDF 다운로드
+                    </button>
+                    ${report.shareable && hasAccess ? `
+                        <button class="btn btn-share" onclick="openShareModal('${report.code}', '${currentRunId}')">
+                            🔗 공유하기
+                        </button>
+                    ` : ''}
+                </div>
+            `;
+
+            return card;
+        }
+
+        function checkReportAccess(allowedRoles) {
+            // Simple role check - in production, this should come from backend
+            const userEmail = config.defaultUser;
+            
+            if (userEmail.includes('admin')) return true;
+            if (userEmail.includes('internal') && allowedRoles.includes('INTERNAL')) return true;
+            if (userEmail.includes('landowner') && allowedRoles.includes('LANDOWNER')) return true;
+            if (userEmail.includes('lh') && allowedRoles.includes('LH')) return true;
+            if (userEmail.includes('investor') && allowedRoles.includes('INVESTOR')) return true;
+
+            return allowedRoles.includes('ADMIN');
+        }
+
+        async function openReport(reportType, format, runId, hasAccess) {
+            if (!hasAccess) {
+                showError('접근 권한 없음', '이 보고서는 현재 권한으로 볼 수 없습니다.');
+                return;
+            }
+
+            const url = `/api/v4/reports/six-types/${reportType}/${format}?context_id=${runId}`;
+            
+            try {
+                const response = await fetch(url, {
                     headers: {
                         'X-User-Email': config.defaultUser
                     }
                 });
 
                 if (!response.ok) {
-                    throw new Error(`API Error: ${response.status}`);
+                    if (response.status === 404) {
+                        throw new Error('보고서가 아직 생성되지 않았습니다. 분석이 완료될 때까지 기다려주세요.');
+                    }
+                    throw new Error(`보고서를 로드할 수 없습니다 (${response.status})`);
                 }
 
-                currentDashboardData = await response.json();
-                renderDashboard();
+                if (format === 'html') {
+                    const htmlContent = await response.text();
+                    const newWindow = window.open();
+                    newWindow.document.write(htmlContent);
+                    newWindow.document.close();
+                } else if (format === 'pdf') {
+                    const blob = await response.blob();
+                    const blobUrl = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = blobUrl;
+                    a.download = `Report_${reportType}_${runId}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(blobUrl);
+                }
             } catch (error) {
-                console.error('Failed to load dashboard:', error);
-                document.getElementById('run-id-info-section').innerHTML = `
-                    <div class="run-id-info">
-                        <p style="color: #e53e3e;">❌ 데이터를 불러올 수 없습니다: ${error.message}</p>
-                    </div>
-                `;
+                console.error('Report open error:', error);
+                showError('보고서 열기 실패', error.message);
             }
         }
 
-        function renderDashboard() {
-            const { run_id_info, reports, user_role } = currentDashboardData;
-
-            // 사용자 정보 표시
-            document.getElementById('user-info-section').innerHTML = `
-                <div class="run-id-info">
-                    <div class="user-info">
-                        <span>👤 사용자</span>
-                        <span class="user-role">${user_role}</span>
-                    </div>
-                </div>
-            `;
-
-            // RUN_ID 정보 표시
-            document.getElementById('run-id-info-section').innerHTML = `
-                <div class="run-id-info">
-                    <div class="run-id-badge">RUN_ID: ${run_id_info.run_id}</div>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <div class="info-label">주소</div>
-                            <div class="info-value">${run_id_info.address || 'N/A'}</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">PNU</div>
-                            <div class="info-value">${run_id_info.pnu || 'N/A'}</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">생성일</div>
-                            <div class="info-value">${new Date(run_id_info.created_at).toLocaleDateString('ko-KR')}</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">상태</div>
-                            <div class="info-value">${run_id_info.status}</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // 보고서 목록 표시
-            const reportsHtml = reports.map(report => `
-                <div class="report-card">
-                    <div class="report-header">
-                        <div class="report-title-group">
-                            <div class="report-code">${report.code}</div>
-                            <div>
-                                <div class="report-title">${report.name}</div>
-                                ${!report.has_html_access ? '<span class="access-denied-badge">접근 권한 없음</span>' : ''}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="report-description">${report.description}</div>
-                    <div class="report-actions">
-                        <button class="btn btn-html" 
-                           ${!report.has_html_access ? 'disabled' : ''} 
-                           onclick="openReport('${report.name_en}', 'html', '${run_id_info.run_id}', ${report.has_html_access})">
-                            📄 HTML
-                        </button>
-                        <button class="btn btn-pdf" 
-                           ${!report.has_pdf_access ? 'disabled' : ''} 
-                           onclick="openReport('${report.name_en}', 'pdf', '${run_id_info.run_id}', ${report.has_pdf_access})">
-                            📥 PDF
-                        </button>
-                        ${report.can_share ? `
-                            <button class="btn btn-share" onclick="openShareModal('${report.code}', '${report.name_en}', '${run_id_info.run_id}')">
-                                🔗 공유
-                            </button>
-                        ` : ''}
-                    </div>
-                </div>
-            `).join('');
-
-            document.getElementById('reports-section').innerHTML = `
-                <div class="reports-section">
-                    <div class="section-title">📊 보고서 목록</div>
-                    ${reportsHtml}
-                </div>
-            `;
-        }
-
-        function openShareModal(reportCode, reportType, runId) {
-            currentShareReport = { reportCode, reportType, runId };
+        function openShareModal(reportType, runId) {
+            currentShareReport = { reportType, runId };
             document.getElementById('share-modal').classList.add('active');
             document.getElementById('share-result').classList.remove('active');
+            document.getElementById('copy-share-btn').style.display = 'none';
         }
 
         function closeShareModal() {
@@ -553,6 +889,7 @@
 
             const expiresInHours = parseInt(document.getElementById('expires-select').value);
             const createBtn = document.getElementById('create-share-btn');
+            const copyBtn = document.getElementById('copy-share-btn');
             
             createBtn.disabled = true;
             createBtn.textContent = '생성 중...';
@@ -572,26 +909,22 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error(`API Error: ${response.status}`);
+                    throw new Error(`공유 링크 생성 실패 (${response.status})`);
                 }
 
                 const result = await response.json();
                 
-                // 결과 표시
                 document.getElementById('share-url-display').textContent = result.share_url;
                 document.getElementById('expires-at-display').textContent = 
                     new Date(result.expires_at).toLocaleString('ko-KR');
                 document.getElementById('share-result').classList.add('active');
                 
                 createBtn.textContent = '✅ 생성 완료';
-                setTimeout(() => {
-                    createBtn.disabled = false;
-                    createBtn.textContent = '링크 생성';
-                }, 2000);
+                copyBtn.style.display = 'inline-flex';
 
             } catch (error) {
-                console.error('Failed to create share link:', error);
-                alert(`공유 링크 생성 실패: ${error.message}`);
+                console.error('Share link creation error:', error);
+                showError('공유 링크 생성 실패', error.message);
                 createBtn.disabled = false;
                 createBtn.textContent = '링크 생성';
             }
@@ -600,55 +933,30 @@
         function copyShareUrl() {
             const urlText = document.getElementById('share-url-display').textContent;
             navigator.clipboard.writeText(urlText).then(() => {
-                alert('✅ 링크가 클립보드에 복사되었습니다!');
+                const copyBtn = document.getElementById('copy-share-btn');
+                copyBtn.textContent = '✅ 복사 완료';
+                setTimeout(() => {
+                    copyBtn.textContent = '📋 복사';
+                }, 2000);
             });
         }
 
-        // 🔧 Hotfix: 보고서 열기 함수 (인증 헤더 포함)
-        async function openReport(reportType, format, runId, hasAccess) {
-            if (!hasAccess) {
-                alert('⛔ 접근 권한이 없습니다.');
-                return;
-            }
-
-            const url = `/api/v4/reports/six-types/${reportType}/${format}?context_id=${runId}`;
-            
-            try {
-                const response = await fetch(url, {
-                    headers: {
-                        'X-User-Email': config.defaultUser
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-
-                // HTML은 새 탭에서 열기, PDF는 다운로드
-                if (format === 'html') {
-                    const htmlContent = await response.text();
-                    const newWindow = window.open();
-                    newWindow.document.write(htmlContent);
-                    newWindow.document.close();
-                } else if (format === 'pdf') {
-                    const blob = await response.blob();
-                    const blobUrl = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = blobUrl;
-                    a.download = `${reportType}_${runId}.pdf`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(blobUrl);
-                }
-            } catch (error) {
-                console.error('Failed to open report:', error);
-                alert(`❌ 보고서를 열 수 없습니다: ${error.message}`);
-            }
+        function showError(title, message) {
+            const container = document.getElementById('error-container');
+            container.innerHTML = `
+                <div class="error-card">
+                    <div class="error-title">${title}</div>
+                    <div class="error-message">${message}</div>
+                </div>
+            `;
         }
 
-        // 페이지 로드
-        loadDashboard();
+        // Close modal on outside click
+        document.getElementById('share-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeShareModal();
+            }
+        });
     </script>
 </body>
 </html>

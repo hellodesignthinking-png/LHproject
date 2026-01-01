@@ -73,6 +73,31 @@ async def get_run_id_list(
     )
 
 
+@router.get("/info/{run_id}", response_model=RunIdInfo)
+async def get_run_id_info(
+    run_id: str,
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    """
+    특정 RUN_ID 정보 조회
+    
+    - 대시보드에서 사용
+    - RUN_ID 상세 정보 반환
+    """
+    from fastapi import HTTPException
+    
+    service = get_run_id_service()
+    info = service.get_run_id_info(run_id)
+    
+    if not info:
+        raise HTTPException(
+            status_code=404,
+            detail=f"RUN_ID not found: {run_id}"
+        )
+    
+    return info
+
+
 @router.get("/search", response_model=RunIdListResponse)
 async def search_run_ids(
     q: str = Query(..., description="검색어 (RUN_ID, 주소, PNU)"),
