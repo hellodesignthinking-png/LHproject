@@ -91,6 +91,9 @@ from app.routers.final_reports import router as final_reports_router
 # ✨ v1.3: Import External Sharing Router
 from app.routers.share import router as share_router
 
+# ✨ v1.4: Import Dashboard Router
+from app.routers.dashboard import router as dashboard_router
+
 # ✨ v11.0 ENHANCEMENTS: Import middleware and utilities
 from app.middleware.rate_limiter import RateLimiter, RateLimitConfig
 from app.middleware.cache_manager import cache_manager, start_cache_cleanup_task
@@ -245,6 +248,9 @@ app.include_router(final_reports_router)
 # ✨ v1.3: External Sharing Router
 app.include_router(share_router)
 
+# ✨ v1.4: Dashboard Router
+app.include_router(dashboard_router)
+
 # ✨ PDF Reports API
 from app.api.endpoints.pdf_reports import router as pdf_reports_router
 app.include_router(pdf_reports_router)
@@ -328,6 +334,19 @@ async def health_check():
         },
         "timestamp": datetime.now().isoformat()
     }
+
+
+@app.get("/dashboard")
+async def dashboard_page():
+    """v1.4 보고서 대시보드 페이지"""
+    from fastapi.responses import HTMLResponse
+    from pathlib import Path
+    
+    dashboard_path = Path(__file__).parent.parent / "templates" / "dashboard.html"
+    if dashboard_path.exists():
+        return HTMLResponse(content=dashboard_path.read_text(encoding='utf-8'))
+    else:
+        raise HTTPException(status_code=404, detail="Dashboard not found")
 
 
 @app.post(

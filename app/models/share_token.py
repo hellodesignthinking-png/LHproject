@@ -219,6 +219,33 @@ class ShareTokenStorage:
         if run_id:
             return [t for t in SHARE_TOKENS_STORAGE.values() if t.run_id == run_id]
         return list(SHARE_TOKENS_STORAGE.values())
+    
+    @staticmethod
+    def get_all_tokens() -> list[ShareToken]:
+        """
+        모든 토큰 조회
+        
+        Returns:
+            모든 ShareToken 목록
+        """
+        return list(SHARE_TOKENS_STORAGE.values())
+    
+    @staticmethod
+    def deactivate_token(token: str) -> bool:
+        """
+        토큰 비활성화
+        
+        Args:
+            token: 토큰 UUID
+        
+        Returns:
+            True if success, False if token not found
+        """
+        share_token = SHARE_TOKENS_STORAGE.get(token)
+        if share_token:
+            share_token.is_active = False
+            return True
+        return False
 
 
 # ==============================================================================

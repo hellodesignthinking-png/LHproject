@@ -13,7 +13,7 @@
 from sqlalchemy import Column, String, ARRAY, DateTime, ForeignKey, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from typing import List, Optional
 from enum import Enum
 import uuid
@@ -48,7 +48,7 @@ class ReportType(str, Enum):
 
 class UserBase(BaseModel):
     """사용자 기본 모델"""
-    email: EmailStr
+    email: str  # EmailStr 대신 str 사용 (email-validator dependency 제거)
     role: UserRole
 
 
