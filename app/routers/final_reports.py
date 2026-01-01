@@ -11,7 +11,7 @@ Date: 2025-12-31
 4. 데이터는 하나, 표현은 여섯 가지
 """
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from fastapi.responses import StreamingResponse, HTMLResponse, Response
 import io
 import logging
@@ -23,6 +23,7 @@ from pathlib import Path
 from app.services.context_storage import context_storage
 # from app.services.data_integrity_guard import data_integrity_guard  # TODO: Re-enable when module exists
 from app.services.pdf_generator_playwright import generate_pdf_from_url
+from app.security.dependencies import require_full_access, CurrentUser
 
 logger = logging.getLogger(__name__)
 
@@ -430,15 +431,18 @@ async def landowner_report_pdf(
 
 @router.get("/investment/html", response_class=HTMLResponse)
 async def investment_report_html(
-    context_id: str = Query(..., description="분석 실행 ID (RUN_*)")
+    context_id: str = Query(..., description="분석 실행 ID (RUN_*)"),
+    user: CurrentUser = Depends(require_full_access("investment"))
 ):
     """
     D. 사업성·투자 검토 보고서 HTML 생성
     대상: 투자자, PF 관계자, 내부 재무팀
     목적: 자본 투입 관점에서의 타당성 분석
+    
+    🔒 권한: ADMIN, INTERNAL, INVESTOR만 접근 가능
     """
     try:
-        logger.info(f"🔵 [D. Investment Report] HTML generation requested: context_id={context_id}")
+        logger.info(f"🔵 [D. Investment Report] HTML generation requested: context_id={context_id}, user={user.email}")
         
         template_data = _build_common_template_data(context_id)
         # fingerprint = data_integrity_guard.generate_fingerprint(template_data, "investment")
@@ -537,15 +541,18 @@ async def investment_report_html_expanded(
 
 @router.get("/quick-review/html", response_class=HTMLResponse)
 async def quick_review_report_html(
-    context_id: str = Query(..., description="분석 실행 ID (RUN_*)")
+    context_id: str = Query(..., description="분석 실행 ID (RUN_*)"),
+    user: CurrentUser = Depends(require_full_access("quick-review"))
 ):
     """
     E. 사전 검토 리포트 HTML 생성
     대상: 내부 임원, 빠른 의사결정자
     목적: 10분 내 핵심 판단 지원
+    
+    🔒 권한: ADMIN, INTERNAL만 접근 가능
     """
     try:
-        logger.info(f"🔵 [E. Quick Review] HTML generation requested: context_id={context_id}")
+        logger.info(f"🔵 [E. Quick Review] HTML generation requested: context_id={context_id}, user={user.email}")
         
         template_data = _build_common_template_data(context_id)
         # fingerprint = data_integrity_guard.generate_fingerprint(template_data, "quick_review")
@@ -568,18 +575,21 @@ async def quick_review_report_html(
 
 @router.get("/quick-review/pdf")
 async def quick_review_report_pdf(
-    context_id: str = Query(..., description="분석 실행 ID (RUN_*)")
+    context_id: str = Query(..., description="분석 실행 ID (RUN_*)"),
+    user: CurrentUser = Depends(require_full_access("quick-review"))
 ):
     """
     E. 사전 검토 리포트 PDF 다운로드
     
     Playwright를 사용하여 HTML을 PDF로 변환
     캐싱: RUN_ID × report_type 조합 24시간 캐시
+    
+    🔒 권한: ADMIN, INTERNAL만 접근 가능
     """
     report_type = "quick-review"
     
     try:
-        logger.info(f"📄 [E. Quick Review] PDF generation requested: context_id={context_id}")
+        logger.info(f"📄 [E. Quick Review] PDF generation requested: context_id={context_id}, user={user.email}")
         
         # Step 1: 캐시 조회
         from app.services.pdf_cache import get_cached_pdf, set_cached_pdf
@@ -644,15 +654,18 @@ async def quick_review_report_pdf(
 
 @router.get("/presentation/html", response_class=HTMLResponse)
 async def presentation_report_html(
-    context_id: str = Query(..., description="분석 실행 ID (RUN_*)")
+    context_id: str = Query(..., description="분석 실행 ID (RUN_*)"),
+    user: CurrentUser = Depends(require_full_access("presentation"))
 ):
     """
     F. 설명용 프레젠테이션 보고서 HTML 생성
     대상: 미팅 참석자 전원
     목적: 회의·화면 공유·브리핑
+    
+    🔒 권한: 모든 역할 접근 가능 (LANDOWNER, LH, INVESTOR도 프레젠테이션 열람 가능)
     """
     try:
-        logger.info(f"🔵 [F. Presentation] HTML generation requested: context_id={context_id}")
+        logger.info(f"🔵 [F. Presentation] HTML generation requested: context_id={context_id}, user={user.email}")
         
         template_data = _build_common_template_data(context_id)
         # fingerprint = data_integrity_guard.generate_fingerprint(template_data, "presentation")
@@ -675,18 +688,21 @@ async def presentation_report_html(
 
 @router.get("/presentation/pdf")
 async def presentation_report_pdf(
-    context_id: str = Query(..., description="분석 실행 ID (RUN_*)")
+    context_id: str = Query(..., description="분석 실행 ID (RUN_*)"),
+    user: CurrentUser = Depends(require_full_access("presentation"))
 ):
     """
     F. 설명용 프레젠테이션 보고서 PDF 다운로드
     
     Playwright를 사용하여 HTML을 PDF로 변환
     캐싱: RUN_ID × report_type 조합 24시간 캐시
+    
+    🔒 권한: 모든 역할 접근 가능 (LANDOWNER, LH, INVESTOR도 프레젠테이션 다운로드 가능)
     """
     report_type = "presentation"
     
     try:
-        logger.info(f"📄 [F. Presentation] PDF generation requested: context_id={context_id}")
+        logger.info(f"📄 [F. Presentation] PDF generation requested: context_id={context_id}, user={user.email}")
         
         # Step 1: 캐시 조회
         from app.services.pdf_cache import get_cached_pdf, set_cached_pdf
