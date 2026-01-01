@@ -12,7 +12,7 @@ Date: 2025-12-31
 """
 
 from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import StreamingResponse, HTMLResponse
+from fastapi.responses import StreamingResponse, HTMLResponse, Response
 import io
 import logging
 from datetime import datetime
@@ -22,10 +22,36 @@ from pathlib import Path
 
 from app.services.context_storage import context_storage
 from app.services.data_integrity_guard import data_integrity_guard
+from app.services.pdf_generator_playwright import generate_pdf_from_url
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v4/reports/six-types", tags=["6-Type Final Reports"])
+
+
+# ==============================================================================
+# PDF Generation Configuration
+# ==============================================================================
+
+# Report type → HTML endpoint mapping for PDF generation
+REPORT_HTML_ENDPOINTS = {
+    "master": "/api/v4/reports/six-types/master/html",
+    "landowner": "/api/v4/reports/six-types/landowner/html",
+    "lh-technical": "/api/v4/reports/six-types/lh/technical/html",
+    "investment": "/api/v4/reports/six-types/investment/html",
+    "quick-review": "/api/v4/reports/six-types/quick-review/html",
+    "presentation": "/api/v4/reports/six-types/presentation/html",
+}
+
+# Report type → Friendly filename mapping
+REPORT_FILENAMES = {
+    "master": "종합_최종보고서",
+    "landowner": "토지주_제출용_보고서",
+    "lh-technical": "LH_기술검증_보고서",
+    "investment": "사업성_투자검토_보고서",
+    "quick-review": "사전_검토_리포트",
+    "presentation": "설명용_프레젠테이션",
+}
 
 
 def _get_test_data_for_module(module: str) -> dict:
@@ -546,8 +572,42 @@ async def quick_review_report_pdf(
 ):
     """
     E. 사전 검토 리포트 PDF 다운로드
+    
+    Playwright를 사용하여 HTML을 PDF로 변환
     """
-    raise HTTPException(status_code=501, detail="PDF 생성 기능은 HTML 안정화 이후 구현 예정")
+    report_type = "quick-review"
+    
+    try:
+        logger.info(f"📄 [E. Quick Review] PDF generation requested: context_id={context_id}")
+        
+        # HTML 엔드포인트 URL 생성 (내부 호출)
+        html_url = f"http://localhost:8091{REPORT_HTML_ENDPOINTS[report_type]}?context_id={context_id}"
+        
+        # PDF 생성
+        pdf_bytes = await generate_pdf_from_url(
+            url=html_url,
+            run_id=context_id,
+            report_type="E",
+            timeout_ms=60000  # 60초 타임아웃
+        )
+        
+        # 파일명 생성
+        filename = f"{REPORT_FILENAMES[report_type]}_{context_id}.pdf"
+        
+        logger.info(f"✅ [E. Quick Review] PDF generated successfully: {len(pdf_bytes)} bytes")
+        
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="{quote(filename.encode("utf-8"))}"',
+                "Access-Control-Expose-Headers": "Content-Disposition"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ [E. Quick Review] PDF generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"사전 검토 리포트 PDF 생성 실패: {str(e)}")
 
 
 # ==============================================================================
@@ -591,5 +651,39 @@ async def presentation_report_pdf(
 ):
     """
     F. 설명용 프레젠테이션 보고서 PDF 다운로드
+    
+    Playwright를 사용하여 HTML을 PDF로 변환
     """
-    raise HTTPException(status_code=501, detail="PDF 생성 기능은 HTML 안정화 이후 구현 예정")
+    report_type = "presentation"
+    
+    try:
+        logger.info(f"📄 [F. Presentation] PDF generation requested: context_id={context_id}")
+        
+        # HTML 엔드포인트 URL 생성 (내부 호출)
+        html_url = f"http://localhost:8091{REPORT_HTML_ENDPOINTS[report_type]}?context_id={context_id}"
+        
+        # PDF 생성
+        pdf_bytes = await generate_pdf_from_url(
+            url=html_url,
+            run_id=context_id,
+            report_type="F",
+            timeout_ms=60000  # 60초 타임아웃
+        )
+        
+        # 파일명 생성
+        filename = f"{REPORT_FILENAMES[report_type]}_{context_id}.pdf"
+        
+        logger.info(f"✅ [F. Presentation] PDF generated successfully: {len(pdf_bytes)} bytes")
+        
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="{quote(filename.encode("utf-8"))}"',
+                "Access-Control-Expose-Headers": "Content-Disposition"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ [F. Presentation] PDF generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"설명용 프레젠테이션 보고서 PDF 생성 실패: {str(e)}")

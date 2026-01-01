@@ -15,7 +15,7 @@ async def generate_pdf_from_url(
     url: str,
     run_id: str,
     report_type: str,
-    timeout_ms: int = 30000
+    timeout_ms: int = 60000  # 기본 60초로 증가
 ) -> bytes:
     """
     HTML 보고서 URL을 PDF로 변환한다.
