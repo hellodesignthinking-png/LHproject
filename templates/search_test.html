@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>검색 테스트</title>
+    <style>
+        body { font-family: sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
+        button { padding: 10px 20px; margin: 10px 0; }
+        pre { background: #f5f5f5; padding: 15px; overflow: auto; }
+        .result { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <h1>🔍 검색 API 테스트</h1>
+    
+    <div>
+        <input type="text" id="searchInput" placeholder="검색어 입력 (예: 서울)" style="width: 300px; padding: 10px;">
+        <button onclick="testSearch()">검색</button>
+    </div>
+    
+    <div id="output"></div>
+    
+    <script>
+        async function testSearch() {
+            const query = document.getElementById('searchInput').value.trim() || '서울';
+            const output = document.getElementById('output');
+            
+            output.innerHTML = '<p>🔍 검색 중...</p>';
+            
+            try {
+                const url = `/api/v4/run-ids/search?q=${encodeURIComponent(query)}`;
+                
+                console.log('Request URL:', url);
+                output.innerHTML += `<p><strong>Request URL:</strong> ${url}</p>`;
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'X-User-Email': 'admin@zerosite.com',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('Response status:', response.status);
+                output.innerHTML += `<p><strong>Response status:</strong> ${response.status}</p>`;
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                output.innerHTML += `<p><strong>Response:</strong></p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                
+                if (data.run_ids && data.run_ids.length > 0) {
+                    output.innerHTML += '<h3>검색 결과:</h3>';
+                    data.run_ids.forEach(item => {
+                        output.innerHTML += `
+                            <div class="result">
+                                <strong>${item.run_id}</strong><br>
+                                ${item.address || 'N/A'}<br>
+                                면적: ${item.land_area}㎡ | 용도: ${item.zone || 'N/A'}
+                            </div>
+                        `;
+                    });
+                } else {
+                    output.innerHTML += '<p>❌ 검색 결과 없음</p>';
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                output.innerHTML += `<p style="color: red;"><strong>Error:</strong> ${error.message}</p>`;
+            }
+        }
+        
+        // 페이지 로드 시 자동 검색
+        window.addEventListener('DOMContentLoaded', () => {
+            testSearch();
+        });
+    </script>
+</body>
+</html>

@@ -416,7 +416,13 @@
                 <button class="search-btn" onclick="searchLand()">검색</button>
             </div>
             <div class="search-hint">
-                💡 <strong>검색 가능한 예시:</strong> 서울, 강남, 테헤란로, 서초, 반포대로, 경기도, 성남, 판교, 인천, 송도, 대전, 유성, TEST
+                💡 <strong>빠른 검색:</strong> 
+                <span onclick="document.getElementById('searchInput').value='서울'; searchLand();" style="cursor: pointer; color: #667eea; font-weight: 600; text-decoration: underline;">서울</span>, 
+                <span onclick="document.getElementById('searchInput').value='강남'; searchLand();" style="cursor: pointer; color: #667eea; font-weight: 600; text-decoration: underline;">강남</span>, 
+                <span onclick="document.getElementById('searchInput').value='TEST'; searchLand();" style="cursor: pointer; color: #667eea; font-weight: 600; text-decoration: underline;">TEST</span>, 
+                <span onclick="document.getElementById('searchInput').value='경기'; searchLand();" style="cursor: pointer; color: #667eea; font-weight: 600; text-decoration: underline;">경기</span>, 
+                <span onclick="document.getElementById('searchInput').value='인천'; searchLand();" style="cursor: pointer; color: #667eea; font-weight: 600; text-decoration: underline;">인천</span>
+                (클릭하면 자동 검색)
             </div>
 
             <!-- 검색 결과 -->
@@ -634,6 +640,9 @@
             // 로딩 표시
             resultsDiv.style.display = 'block';
             resultsDiv.innerHTML = '<div class="loading">🔍 검색 중...</div>';
+            
+            // 결과 영역으로 스크롤
+            resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
             try {
                 console.log('🔍 Searching for:', query);
@@ -648,15 +657,19 @@
                 });
                 
                 console.log('📡 Response status:', response.status);
+                console.log('📡 Response headers:', response.headers);
                 
                 if (!response.ok) {
                     const errorText = await response.text();
                     console.error('❌ Error response:', errorText);
-                    throw new Error(`검색 실패: ${response.status}`);
+                    throw new Error(`검색 실패: ${response.status} - ${errorText}`);
                 }
 
                 const data = await response.json();
                 console.log('✅ Response data:', data);
+                console.log('✅ Response type:', typeof data);
+                console.log('✅ run_ids field exists:', 'run_ids' in data);
+                console.log('✅ run_ids value:', data.run_ids);
                 
                 const results = data.run_ids || [];
                 console.log(`📊 Found ${results.length} results`);
@@ -664,25 +677,31 @@
                 if (results.length === 0) {
                     resultsDiv.innerHTML = `
                         <div class="no-results">
-                            <h3 style="margin-bottom: 16px;">검색 결과가 없습니다</h3>
+                            <h3 style="margin-bottom: 16px;">❌ 검색 결과가 없습니다</h3>
                             <p style="color: #718096; margin-bottom: 16px;">
-                                "${query}"에 대한 결과를 찾을 수 없습니다.
+                                "<strong>${query}</strong>"에 대한 결과를 찾을 수 없습니다.
                             </p>
-                            <p style="color: #4a5568; font-size: 14px; line-height: 1.8;">
-                                <strong>💡 검색 가능한 주소:</strong><br>
-                                • 서울시 강남구, 서울시 서초구<br>
-                                • 경기도 성남시, 인천시 연수구<br>
-                                • 대전시 유성구<br><br>
-                                <strong>또는 다음 키워드로 시도해보세요:</strong><br>
-                                강남, 서초, 테헤란로, 반포대로, 성남, 판교, 인천, 송도, 대전, 유성, TEST
-                            </p>
+                            <div style="background: #f7fafc; padding: 20px; border-radius: 8px; text-align: left;">
+                                <p style="color: #2d3748; font-size: 15px; font-weight: 600; margin-bottom: 12px;">
+                                    💡 검색 가능한 키워드:
+                                </p>
+                                <p style="color: #4a5568; font-size: 14px; line-height: 2;">
+                                    <strong style="color: #667eea;">지역:</strong> 서울, 강남, 서초, 경기, 성남, 판교, 인천, 송도, 대전, 유성<br>
+                                    <strong style="color: #667eea;">RUN_ID:</strong> TEST, SAMPLE<br>
+                                    <strong style="color: #667eea;">상세 주소:</strong> 테헤란로, 반포대로, 판교역로, 송도동, 대학로
+                                </p>
+                            </div>
+                            <button onclick="document.getElementById('searchInput').value='서울'; searchLand();" 
+                                    style="margin-top: 16px; padding: 12px 24px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                                🔍 "서울" 검색 해보기
+                            </button>
                         </div>
                     `;
                     return;
                 }
 
                 // 결과 표시
-                let html = `<h3 style="margin-bottom: 16px; color: #1a202c;">검색 결과 (${results.length}건)</h3>`;
+                let html = `<h3 style="margin-bottom: 16px; color: #1a202c;">✅ 검색 결과 (${results.length}건)</h3>`;
                 
                 results.forEach(result => {
                     html += `
@@ -706,8 +725,26 @@
                 resultsDiv.innerHTML = html;
                 
             } catch (error) {
-                console.error('Search error:', error);
-                resultsDiv.innerHTML = '<div class="no-results">검색 중 오류가 발생했습니다</div>';
+                console.error('❌ Search error:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    stack: error.stack
+                });
+                resultsDiv.innerHTML = `
+                    <div class="no-results">
+                        <h3 style="margin-bottom: 16px; color: #e53e3e;">⚠️ 검색 중 오류가 발생했습니다</h3>
+                        <p style="color: #718096; margin-bottom: 16px;">
+                            ${error.message}
+                        </p>
+                        <p style="color: #4a5568; font-size: 14px; margin-bottom: 16px;">
+                            브라우저 개발자 도구(F12)의 콘솔을 확인해주세요.
+                        </p>
+                        <button onclick="searchLand()" 
+                                style="padding: 12px 24px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            🔄 다시 시도
+                        </button>
+                    </div>
+                `;
             }
         }
 

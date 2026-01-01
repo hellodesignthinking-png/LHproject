@@ -398,6 +398,18 @@ async def landing_page():
         raise HTTPException(status_code=404, detail="Landing page not found")
 
 
+@app.get("/search-test", response_class=FileResponse)
+async def search_test_page():
+    """검색 API 테스트 페이지 (DEV 전용)"""
+    from pathlib import Path
+    
+    test_path = Path(__file__).parent.parent / "templates" / "search_test.html"
+    if test_path.exists():
+        return FileResponse(test_path)
+    else:
+        raise HTTPException(status_code=404, detail="Test page not found")
+
+
 @app.get("/dashboard")
 async def dashboard_page(
     run_id: Optional[str] = Query(None, description="RUN_ID to display"),
