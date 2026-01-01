@@ -48,15 +48,15 @@ matplotlib.use('Agg')  # Non-interactive backend
 from .data_contract import (
     DataContract, 
     ValidationResult,
+    ContextSnapshot, 
+    safe_get
+)
 
 # 🔥 v5.0 ENHANCED: Import new systems
 from .smart_data_fallback import SmartDataFallback
 from .enhanced_design_system import EnhancedDesignSystem, LayoutHelper
 from .advanced_chart_builder import AdvancedChartBuilder
-from .enforcement_layout_v6 import EnforcementLayoutV6 
-    ContextSnapshot, 
-    safe_get
-)
+from .enforcement_layout_v6 import EnforcementLayoutV6
 
 # ✅ Import unified design theme
 from .report_theme import ZeroSiteTheme, ZeroSiteColors, ZeroSiteTypography, ZeroSiteLayout
@@ -881,10 +881,7 @@ class ModulePDFGenerator:
         # 📌 PAGE 2: EVIDENCE ZONE (35%) - 프리미엄 분해
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         
-        story.append(Paragraph("<font size='18' color='#1F3A5F'><b>프리미엄 분해 근거
-
-이 프리미엄은 투기적 상승이 아니라
-제도·희소성·실수요가 중첩된 구조다</b></font>", styles['Heading2']))
+        story.append(Paragraph("<font size='18' color='#1F3A5F'><b>프리미엄 분해 근거 - 이 프리미엄은 투기적 상승이 아니라 제도·희소성·실수요가 중첩된 구조다</b></font>", styles['Heading2']))
         story.append(Spacer(1, 0.15*inch))
         
         # v4.9 핵심: 프리미엄 분해 리스트
