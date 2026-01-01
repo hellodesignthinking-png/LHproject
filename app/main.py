@@ -88,6 +88,9 @@ from app.routers.pdf_download_standardized import router as pdf_download_router
 # ✨ v1.0: Import 6-Report System Router (A~F)
 from app.routers.final_reports import router as final_reports_router
 
+# ✨ v1.3: Import External Sharing Router
+from app.routers.share import router as share_router
+
 # ✨ v11.0 ENHANCEMENTS: Import middleware and utilities
 from app.middleware.rate_limiter import RateLimiter, RateLimitConfig
 from app.middleware.cache_manager import cache_manager, start_cache_cleanup_task
@@ -238,6 +241,9 @@ app.include_router(pdf_download_router)
 
 # ✨ v1.0: 6-Report System Router (A~F)
 app.include_router(final_reports_router)
+
+# ✨ v1.3: External Sharing Router
+app.include_router(share_router)
 
 # ✨ PDF Reports API
 from app.api.endpoints.pdf_reports import router as pdf_reports_router
