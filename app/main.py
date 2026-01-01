@@ -440,6 +440,85 @@ async def dashboard_page(
         
         return HTMLResponse(content=html_content)
     else:
+        raise HTTPException(status_code=404, detail="Dashboard page not found")
+
+
+@app.get("/access-logs")
+async def access_logs_page(
+    user: Optional[str] = Query("admin@zerosite.com", description="User email for testing (DEV mode)")
+):
+    """
+    v1.6.0 접근 로그 대시보드 페이지
+    
+    - ADMIN 전용 접근 로그 모니터링
+    - 통계 및 차트
+    - 필터링 및 검색
+    
+    Query Parameters:
+        user: User email (default: admin@zerosite.com)
+    """
+    from fastapi.responses import HTMLResponse
+    from pathlib import Path
+    import os
+    
+    # DEV mode check
+    is_dev_mode = os.getenv("ZEROSITE_ENV", "dev").lower() == "dev"
+    
+    if not is_dev_mode and not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required. Please provide 'user' parameter in DEV mode."
+        )
+    
+    # Check if user is ADMIN
+    # In production, this would check actual authentication
+    if not user.endswith('@zerosite.com'):
+        raise HTTPException(
+            status_code=403,
+            detail="Access logs are only accessible to ADMIN users"
+        )
+    
+    logs_path = Path(__file__).parent.parent / "templates" / "access_logs.html"
+    if logs_path.exists():
+        html_content = logs_path.read_text(encoding='utf-8')
+        
+        # Inject default values into HTML
+        html_content = html_content.replace(
+            '<!-- INJECT_CONFIG -->',
+            f'''<script>
+                window.ZEROSITE_CONFIG = {{
+                    defaultUser: "{user}",
+                    isDev: {str(is_dev_mode).lower()}
+                }};
+            </script>'''
+        )
+        
+        return HTMLResponse(content=html_content)
+    else:
+        raise HTTPException(status_code=404, detail="Access logs page not found")
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required. Please provide 'user' parameter in DEV mode."
+        )
+    
+    dashboard_path = Path(__file__).parent.parent / "templates" / "dashboard.html"
+    if dashboard_path.exists():
+        html_content = dashboard_path.read_text(encoding='utf-8')
+        
+        # Inject default values into HTML (for frontend API calls)
+        html_content = html_content.replace(
+            '<!-- INJECT_CONFIG -->',
+            f'''<script>
+                window.ZEROSITE_CONFIG = {{
+                    defaultUser: "{user}",
+                    defaultRunId: "{run_id or 'TEST_6REPORT'}",
+                    isDev: {str(is_dev_mode).lower()}
+                }};
+            </script>'''
+        )
+        
+        return HTMLResponse(content=html_content)
+    else:
         raise HTTPException(status_code=404, detail="Dashboard not found")
 
 
