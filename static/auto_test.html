@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Auto Search Test</title>
+</head>
+<body>
+    <h1>자동 검색 테스트</h1>
+    <div id="status">테스트 준비 중...</div>
+    <pre id="result"></pre>
+
+    <script>
+        async function autoTest() {
+            const status = document.getElementById('status');
+            const result = document.getElementById('result');
+            
+            status.textContent = '테스트 시작...';
+            let log = '';
+            
+            try {
+                // Test 1: "TEST" 검색
+                log += '=== Test 1: TEST 검색 ===\n';
+                const test1 = await fetch('/api/v4/run-ids/search?q=TEST', {
+                    headers: {
+                        'X-User-Email': 'admin@zerosite.com'
+                    }
+                });
+                const data1 = await test1.json();
+                log += `상태: ${test1.status}\n`;
+                log += `결과: ${data1.run_ids ? data1.run_ids.length : 0}건\n`;
+                log += JSON.stringify(data1, null, 2) + '\n\n';
+                
+                // Test 2: "서울" 검색
+                log += '=== Test 2: 서울 검색 ===\n';
+                const test2 = await fetch(`/api/v4/run-ids/search?q=${encodeURIComponent('서울')}`, {
+                    headers: {
+                        'X-User-Email': 'admin@zerosite.com'
+                    }
+                });
+                const data2 = await test2.json();
+                log += `상태: ${test2.status}\n`;
+                log += `결과: ${data2.run_ids ? data2.run_ids.length : 0}건\n`;
+                log += JSON.stringify(data2, null, 2) + '\n\n';
+                
+                // Test 3: "강남" 검색
+                log += '=== Test 3: 강남 검색 ===\n';
+                const test3 = await fetch(`/api/v4/run-ids/search?q=${encodeURIComponent('강남')}`, {
+                    headers: {
+                        'X-User-Email': 'admin@zerosite.com'
+                    }
+                });
+                const data3 = await test3.json();
+                log += `상태: ${test3.status}\n`;
+                log += `결과: ${data3.run_ids ? data3.run_ids.length : 0}건\n`;
+                log += JSON.stringify(data3, null, 2) + '\n\n';
+                
+                status.textContent = '✅ 테스트 완료';
+                
+            } catch (error) {
+                log += `\n❌ 에러: ${error.message}\n`;
+                status.textContent = '❌ 테스트 실패';
+            }
+            
+            result.textContent = log;
+        }
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(autoTest, 100);
+        });
+    </script>
+</body>
+</html>

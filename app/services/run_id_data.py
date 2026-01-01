@@ -248,27 +248,33 @@ class RunIdDataService:
         """
         all_run_ids = self.get_all_run_ids(limit=100)
         
-        # 검색어 정규화
-        query_lower = query.lower().strip()
+        # 검색어 정규화 (공백 제거만, lower는 한글에 문제 없음)
+        query_normalized = query.strip()
+        
+        logger.info(f"🔍 Searching for: '{query_normalized}' (total RUN_IDs: {len(all_run_ids)})")
         
         # 필터링
         results = []
         for run_id_info in all_run_ids:
-            # RUN_ID 매칭
-            if query_lower in run_id_info.run_id.lower():
+            # RUN_ID 매칭 (대소문자 무시)
+            if query_normalized.lower() in run_id_info.run_id.lower():
                 results.append(run_id_info)
+                logger.debug(f"  ✓ Matched RUN_ID: {run_id_info.run_id}")
                 continue
             
-            # 주소 매칭
-            if run_id_info.address and query_lower in run_id_info.address.lower():
+            # 주소 매칭 (한글은 대소문자 없으므로 그대로 비교)
+            if run_id_info.address and query_normalized in run_id_info.address:
                 results.append(run_id_info)
+                logger.debug(f"  ✓ Matched Address: {run_id_info.address}")
                 continue
             
             # PNU 매칭
-            if run_id_info.pnu and query_lower in run_id_info.pnu:
+            if run_id_info.pnu and query_normalized in run_id_info.pnu:
                 results.append(run_id_info)
+                logger.debug(f"  ✓ Matched PNU: {run_id_info.pnu}")
                 continue
         
+        logger.info(f"🔍 Search results: {len(results)} items found")
         return results[:limit]
     
     def get_run_id_statistics(self) -> Dict[str, Any]:

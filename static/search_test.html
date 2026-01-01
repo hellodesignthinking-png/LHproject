@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Search Test</title>
+</head>
+<body>
+    <h1>Search Test</h1>
+    <input type="text" id="search" value="서울">
+    <button onclick="testSearch()">Test Search</button>
+    <pre id="result"></pre>
+    
+    <script>
+        async function testSearch() {
+            const query = document.getElementById('search').value;
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.textContent = 'Searching for: ' + query + '\n';
+            
+            try {
+                const url = `/api/v4/run-ids/search?q=${encodeURIComponent(query)}`;
+                resultDiv.textContent += 'URL: ' + url + '\n\n';
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'X-User-Email': 'admin@zerosite.com'
+                    }
+                });
+                
+                resultDiv.textContent += 'Status: ' + response.status + '\n';
+                
+                const data = await response.json();
+                resultDiv.textContent += 'Result:\n' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent += 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

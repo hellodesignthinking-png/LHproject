@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Debug</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; border-left: 3px solid #007bff; }
+        .error { border-color: #dc3545; }
+        .success { border-color: #28a745; }
+        input, button { padding: 10px; margin: 5px; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <h1>Search Debug Tool</h1>
+    <input type="text" id="searchInput" value="서울" placeholder="검색어 입력">
+    <button onclick="testSearch()">검색 테스트</button>
+    <button onclick="clearLogs()">로그 지우기</button>
+    <div id="logs"></div>
+
+    <script>
+        function addLog(message, type = 'log') {
+            const logs = document.getElementById('logs');
+            const log = document.createElement('div');
+            log.className = `log ${type}`;
+            log.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.insertBefore(log, logs.firstChild);
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+
+        async function testSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            addLog(`검색 시작: "${query}"`);
+            
+            if (!query) {
+                addLog('검색어가 비어있습니다', 'error');
+                return;
+            }
+
+            try {
+                const encodedQuery = encodeURIComponent(query);
+                addLog(`인코딩된 검색어: ${encodedQuery}`);
+                
+                const url = `/api/v4/run-ids/search?q=${encodedQuery}`;
+                addLog(`API URL: ${url}`);
+                
+                const headers = {
+                    'X-User-Email': 'admin@zerosite.com',
+                    'Content-Type': 'application/json'
+                };
+                addLog(`Headers: ${JSON.stringify(headers)}`);
+                
+                addLog('API 호출 중...');
+                const response = await fetch(url, { headers });
+                
+                addLog(`응답 상태: ${response.status} ${response.statusText}`);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    addLog(`에러 응답: ${errorText}`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                addLog(`결과 수: ${data.run_ids ? data.run_ids.length : 0}`);
+                addLog(`전체 응답: ${JSON.stringify(data, null, 2)}`, 'success');
+                
+                if (data.run_ids && data.run_ids.length > 0) {
+                    data.run_ids.forEach((result, idx) => {
+                        addLog(`  [${idx + 1}] ${result.run_id}: ${result.address}`, 'success');
+                    });
+                } else {
+                    addLog('검색 결과가 없습니다', 'error');
+                }
+                
+            } catch (error) {
+                addLog(`예외 발생: ${error.message}`, 'error');
+                addLog(`Stack: ${error.stack}`, 'error');
+            }
+        }
+
+        // 페이지 로드 시 자동 검색
+        window.addEventListener('DOMContentLoaded', () => {
+            addLog('페이지 로드 완료');
+            addLog('자동 검색 시작...');
+            setTimeout(testSearch, 1000);
+        });
+    </script>
+</body>
+</html>

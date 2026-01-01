@@ -411,12 +411,12 @@
                     type="text" 
                     id="searchInput" 
                     class="search-input" 
-                    placeholder="주소, RUN_ID, PNU를 입력하세요 (예: 서울시 강남구, TEST_6REPORT)"
+                    placeholder="주소를 입력하세요 (예: 강남, 서초, 성남, 인천)"
                 >
                 <button class="search-btn" onclick="searchLand()">검색</button>
             </div>
             <div class="search-hint">
-                💡 주소를 입력하면 해당 토지의 분석 결과를 확인할 수 있습니다
+                💡 <strong>검색 가능한 예시:</strong> 서울, 강남, 테헤란로, 서초, 반포대로, 경기도, 성남, 판교, 인천, 송도, 대전, 유성, TEST
             </div>
 
             <!-- 검색 결과 -->
@@ -636,19 +636,48 @@
             resultsDiv.innerHTML = '<div class="loading">🔍 검색 중...</div>';
 
             try {
-                const response = await fetch(`/api/v4/run-ids/search?q=${encodeURIComponent(query)}`, {
+                console.log('🔍 Searching for:', query);
+                const encodedQuery = encodeURIComponent(query);
+                console.log('📝 Encoded query:', encodedQuery);
+                
+                const url = `/api/v4/run-ids/search?q=${encodedQuery}`;
+                console.log('🌐 Request URL:', url);
+                
+                const response = await fetch(url, {
                     headers: DEV_HEADERS
                 });
                 
+                console.log('📡 Response status:', response.status);
+                
                 if (!response.ok) {
-                    throw new Error('검색 실패');
+                    const errorText = await response.text();
+                    console.error('❌ Error response:', errorText);
+                    throw new Error(`검색 실패: ${response.status}`);
                 }
 
                 const data = await response.json();
+                console.log('✅ Response data:', data);
+                
                 const results = data.run_ids || [];
+                console.log(`📊 Found ${results.length} results`);
                 
                 if (results.length === 0) {
-                    resultsDiv.innerHTML = '<div class="no-results">검색 결과가 없습니다</div>';
+                    resultsDiv.innerHTML = `
+                        <div class="no-results">
+                            <h3 style="margin-bottom: 16px;">검색 결과가 없습니다</h3>
+                            <p style="color: #718096; margin-bottom: 16px;">
+                                "${query}"에 대한 결과를 찾을 수 없습니다.
+                            </p>
+                            <p style="color: #4a5568; font-size: 14px; line-height: 1.8;">
+                                <strong>💡 검색 가능한 주소:</strong><br>
+                                • 서울시 강남구, 서울시 서초구<br>
+                                • 경기도 성남시, 인천시 연수구<br>
+                                • 대전시 유성구<br><br>
+                                <strong>또는 다음 키워드로 시도해보세요:</strong><br>
+                                강남, 서초, 테헤란로, 반포대로, 성남, 판교, 인천, 송도, 대전, 유성, TEST
+                            </p>
+                        </div>
+                    `;
                     return;
                 }
 
