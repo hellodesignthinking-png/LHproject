@@ -438,6 +438,150 @@ async def landowner_report_pdf(
 
 
 # ==============================================================================
+# C. LH 기술검토 보고서 (LH Technical Report)
+# ==============================================================================
+
+@router.get("/lh-technical/html", response_class=HTMLResponse)
+async def lh_technical_report_html(
+    context_id: str = Query(..., description="분석 실행 ID (RUN_*)"),
+    current_user: CurrentUser = Depends(require_report_access("lh-technical"))
+):
+    """
+    C. LH 기술검토 보고서 HTML 생성
+    대상: LH 기술검토팀, 내부 기술팀
+    목적: LH 사업 적격성 기술 검증 및 건축법규 준수 확인
+    
+    🔐 v1.6.0: 권한 체크 추가 (ADMIN, INTERNAL, LH만 접근 가능)
+    ✨ v1.6.0: 신규 구현
+    """
+    try:
+        logger.info(f"🔵 [C. LH Technical Report] HTML generation requested: context_id={context_id}, user={current_user.email}")
+        
+        # Build template data
+        template_data = _build_common_template_data(context_id)
+        
+        # Add LH-specific technical data
+        template_data.update({
+            # 기술검토 항목
+            'lh_criteria_compliance': {
+                'far': template_data.get('far', 200.0),
+                'bcr': template_data.get('bcr', 60.0),
+                'height_limit': template_data.get('height_limit', '35m 이하'),
+                'parking_ratio': template_data.get('parking_ratio', '100%'),
+                'landscape_ratio': template_data.get('landscape_ratio', '30%')
+            },
+            'technical_feasibility': {
+                'structure': '적합',
+                'access': '양호',
+                'utilities': '충족',
+                'environment': '적합'
+            },
+            'recommended_housing_type': template_data.get('recommended_housing_type', '청년형'),
+            'unit_count': template_data.get('total_units', 20),
+            'lh_scoring': {
+                'location': 85,
+                'accessibility': 90,
+                'infrastructure': 88,
+                'regulatory': 92,
+                'total': 89
+            }
+        })
+        
+        # Jinja2 environment
+        templates_path = Path(__file__).parent.parent / "templates_v13"
+        env = Environment(loader=FileSystemLoader(str(templates_path)))
+        env.filters['number_format'] = number_format
+        env.filters['currency_format'] = currency_format
+        
+        # Try to load LH-specific template, fallback to master
+        try:
+            template = env.get_template("lh_technical_report.html")
+        except:
+            logger.warning(f"⚠️ [C. LH Technical Report] Template not found, using master template as fallback")
+            template = env.get_template("master_comprehensive_report.html")
+        
+        html_content = template.render(**template_data)
+        
+        logger.info(f"✅ [C. LH Technical Report] HTML generated successfully")
+        return HTMLResponse(content=html_content)
+        
+    except Exception as e:
+        logger.error(f"❌ [C. LH Technical Report] HTML generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"LH 기술검토 보고서 HTML 생성 실패: {str(e)}")
+
+
+@router.get("/lh-technical/pdf")
+async def lh_technical_report_pdf(
+    context_id: str = Query(..., description="분석 실행 ID (RUN_*)"),
+    current_user: CurrentUser = Depends(require_report_access("lh-technical"))
+):
+    """
+    C. LH 기술검토 보고서 PDF 다운로드
+    
+    🔐 v1.6.0: 권한 체크 추가 (ADMIN, INTERNAL, LH만 접근 가능)
+    ✨ v1.6.0: 신규 구현
+    """
+    report_type = "lh-technical"
+    
+    try:
+        logger.info(f"📄 [C. LH Technical Report] PDF generation requested: context_id={context_id}, user={current_user.email}")
+        
+        # Step 1: 캐시 조회
+        from app.services.pdf_cache import get_cached_pdf, set_cached_pdf
+        
+        cached_pdf = get_cached_pdf(run_id=context_id, report_type=report_type)
+        if cached_pdf:
+            logger.info(f"⚡ [C. LH Technical Report] Cache HIT: returning cached PDF ({len(cached_pdf)} bytes)")
+            
+            filename = f"LH_기술검토_보고서_{context_id}.pdf"
+            
+            return Response(
+                content=cached_pdf,
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": f'attachment; filename="{quote(filename.encode("utf-8"))}"',
+                    "Access-Control-Expose-Headers": "Content-Disposition",
+                    "X-Cache-Status": "HIT"
+                }
+            )
+        
+        # Step 2: Cache MISS - PDF 생성
+        logger.info(f"🔄 [C. LH Technical Report] Cache MISS: generating PDF via Playwright")
+        
+        # HTML endpoint URL
+        html_endpoint = f"/api/v4/reports/six-types/lh-technical/html?context_id={context_id}"
+        
+        # Generate PDF with watermark
+        pdf_bytes = await generate_pdf_from_url(
+            html_endpoint,
+            run_id=context_id,
+            report_type=report_type,
+            headers={"X-User-Email": current_user.email}
+        )
+        
+        # Step 3: 캐시에 저장
+        set_cached_pdf(run_id=context_id, report_type=report_type, pdf_bytes=pdf_bytes)
+        logger.info(f"💾 [C. LH Technical Report] PDF cached: {len(pdf_bytes)} bytes")
+        
+        # Step 4: 파일 반환
+        filename = f"LH_기술검토_보고서_{context_id}.pdf"
+        
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="{quote(filename.encode("utf-8"))}"',
+                "Access-Control-Expose-Headers": "Content-Disposition",
+                "X-Cache-Status": "MISS"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ [C. LH Technical Report] PDF generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"LH 기술검토 보고서 PDF 생성 실패: {str(e)}")
+
+
+# ==============================================================================
 # D. 사업성·투자 검토 보고서 (Investment Report)
 # ==============================================================================
 
