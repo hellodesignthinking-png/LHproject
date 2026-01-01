@@ -1130,7 +1130,7 @@ export const PipelineOrchestrator: React.FC = () => {
                     </div>
                   </button>
 
-                  {/* 4. 사업성·투자 검토 보고서 */}
+                  {/* 4. 사업성·투자 검토 보고서 (요약본) */}
                   <button
                     onClick={() => {
                       const url = `/api/v4/reports/six-types/investment/html?context_id=${state.contextId}`;
@@ -1150,10 +1150,43 @@ export const PipelineOrchestrator: React.FC = () => {
                   >
                     <div style={{ fontSize: '28px', marginBottom: '8px' }}>💼</div>
                     <div style={{ fontWeight: 'bold', fontSize: '15px', color: '#1e293b', marginBottom: '4px' }}>
-                      사업성·투자 검토 보고서
+                      사업성·투자 검토 보고서 (요약본)
                     </div>
                     <div style={{ fontSize: '12px', color: '#64748b' }}>
                       투자자용, M4/M5/M6 중심
+                    </div>
+                  </button>
+
+                  {/* 4-1. 사업성·투자 검토 보고서 (확장판) ✨ NEW */}
+                  <button
+                    onClick={() => {
+                      const url = `/api/v4/reports/six-types/investment/html/expanded?context_id=${state.contextId}`;
+                      window.open(url, '_blank');
+                    }}
+                    style={{
+                      padding: '20px',
+                      background: 'linear-gradient(135deg, #ff9800 0%, #ffb74d 100%)',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      textAlign: 'left',
+                      color: 'white',
+                      boxShadow: '0 4px 12px rgba(255, 152, 0, 0.3)',
+                      position: 'relative'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                  >
+                    <div style={{ position: 'absolute', top: '8px', right: '8px', background: '#2196f3', color: 'white', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>
+                      투자 판단 ✨
+                    </div>
+                    <div style={{ fontSize: '28px', marginBottom: '8px' }}>💰</div>
+                    <div style={{ fontWeight: 'bold', fontSize: '15px', marginBottom: '4px' }}>
+                      사업성·투자 검토 보고서 (12~15p 투자 판단용)
+                    </div>
+                    <div style={{ fontSize: '12px', opacity: 0.9 }}>
+                      리스크 흡수 메커니즘, Exit 명확성, GO/NO-GO 판단
                     </div>
                   </button>
 

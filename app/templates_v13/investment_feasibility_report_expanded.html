@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D. 사업성·투자 검토 보고서 (확장판) | Investment Feasibility Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+            line-height: 1.7;
+            color: #1a1a1a;
+            background: #ffffff;
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* 표지 (Cover Page) */
+        .cover-page {
+            text-align: center;
+            padding: 80px 0;
+            border-bottom: 4px solid #ff9800;
+            margin-bottom: 60px;
+        }
+        
+        .cover-page h1 {
+            font-size: 42px;
+            font-weight: 700;
+            color: #ff9800;
+            margin-bottom: 20px;
+        }
+        
+        .cover-page .subtitle {
+            font-size: 20px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+        
+        .cover-page .purpose {
+            font-size: 18px;
+            color: #777;
+            font-weight: 500;
+            margin-top: 30px;
+            padding: 20px;
+            background: #fff3e0;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        
+        .cover-meta {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: left;
+            display: inline-block;
+            min-width: 600px;
+            margin-top: 40px;
+        }
+        
+        .cover-meta .meta-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .cover-meta .meta-row:last-child {
+            border-bottom: none;
+        }
+        
+        .cover-meta .label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .cover-meta .value {
+            color: #212529;
+            font-weight: 500;
+        }
+        
+        /* 섹션 */
+        .section {
+            margin: 50px 0;
+            page-break-inside: avoid;
+        }
+        
+        .section-header {
+            background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%);
+            color: white;
+            padding: 18px 24px;
+            font-size: 22px;
+            font-weight: 700;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+        }
+        
+        .subsection-header {
+            font-size: 19px;
+            font-weight: 600;
+            color: #ff9800;
+            margin: 35px 0 18px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ffcc80;
+        }
+        
+        /* 히어로 카드 */
+        .hero-card {
+            background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            margin: 30px 0;
+            box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+        }
+        
+        .hero-card h2 {
+            color: white;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+        
+        .hero-metric-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .hero-metric {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .hero-metric .label {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+        
+        .hero-metric .value {
+            font-size: 30px;
+            font-weight: 700;
+        }
+        
+        /* 판단 박스 */
+        .decision-box {
+            background: #e8f5e9;
+            padding: 25px;
+            border-left: 5px solid #4caf50;
+            margin: 25px 0;
+            border-radius: 6px;
+        }
+        
+        .decision-box.warning {
+            background: #fff3e0;
+            border-left-color: #ff9800;
+        }
+        
+        .decision-box.danger {
+            background: #ffebee;
+            border-left-color: #f44336;
+        }
+        
+        .decision-box .title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 12px;
+        }
+        
+        .decision-box .content {
+            font-size: 15px;
+            line-height: 1.9;
+            color: #34495e;
+        }
+        
+        /* 테이블 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+        
+        .data-table thead {
+            background: #fff3e0;
+        }
+        
+        .data-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #ff9800;
+            border-bottom: 2px solid #ffcc80;
+        }
+        
+        .data-table td {
+            padding: 13px 15px;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        
+        .data-table tbody tr:hover {
+            background: #fffaf0;
+        }
+        
+        /* 정보 카드 */
+        .info-card {
+            background: #f8f9fa;
+            padding: 22px;
+            border-left: 4px solid #3498db;
+            margin: 20px 0;
+            border-radius: 6px;
+        }
+        
+        .warning-card {
+            background: #fff3cd;
+            padding: 22px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+            border-radius: 6px;
+        }
+        
+        .danger-card {
+            background: #f8d7da;
+            padding: 22px;
+            border-left: 4px solid #dc3545;
+            margin: 20px 0;
+            border-radius: 6px;
+        }
+        
+        /* 다이어그램 플레이스홀더 */
+        .diagram-placeholder {
+            background: #f5f5f5;
+            border: 2px dashed #ccc;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            border-radius: 8px;
+            color: #999;
+        }
+        
+        /* 리스크 매트릭스 */
+        .risk-matrix {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .risk-item {
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 18px;
+            border-radius: 8px;
+        }
+        
+        .risk-item.high {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+        
+        .risk-item.medium {
+            border-color: #ff9800;
+            background: #fff3e0;
+        }
+        
+        .risk-item.low {
+            border-color: #4caf50;
+            background: #e8f5e9;
+        }
+        
+        .risk-item .risk-title {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        
+        .risk-item .risk-desc {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #555;
+        }
+        
+        /* 페이지 나누기 */
+        @media print {
+            .section {
+                page-break-inside: avoid;
+            }
+            
+            .cover-page {
+                page-break-after: always;
+            }
+        }
+        
+        /* 풋터 */
+        .report-footer {
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 2px solid #dee2e6;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 표지 (Cover Page) -->
+    <div class="cover-page">
+        <h1>사업성·투자 검토 보고서</h1>
+        <p class="subtitle">Investment Feasibility & Return Analysis Report</p>
+        <div class="purpose">
+            💼 "이 사업에 자본을 투입할 합리적 근거가 있는가?"
+        </div>
+        
+        <div class="cover-meta">
+            <div class="meta-row">
+                <span class="label">대상지 주소</span>
+                <span class="value">{{ address }}</span>
+            </div>
+            <div class="meta-row">
+                <span class="label">PNU</span>
+                <span class="value">{{ pnu }}</span>
+            </div>
+            <div class="meta-row">
+                <span class="label">분석 실행 ID</span>
+                <span class="value">{{ run_id }}</span>
+            </div>
+            <div class="meta-row">
+                <span class="label">분석 기준일</span>
+                <span class="value">{{ appraisal_date }}</span>
+            </div>
+            <div class="meta-row">
+                <span class="label">보고서 대상</span>
+                <span class="value">투자자, 시행사, 내부 투자심의위원회</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ① Executive Investment Summary (1p) -->
+    <div class="section">
+        <div class="section-header">① Executive Investment Summary</div>
+        
+        <div class="hero-card">
+            <h2>💼 투자 판단 결과</h2>
+            <div class="decision-box">
+                <div class="title">투자 적합성 판단</div>
+                <div class="content">
+                    <p><strong>🟢 투자 가능 (GO)</strong> - 조건부</p>
+                    <p style="margin-top: 10px;">본 사업은 LH 매입 구조가 명확하며, 리스크가 구조 내에서 소화 가능한 수준으로 판단됩니다. 
+                    다만, 인허가 및 공사비 통제 전제 하에서 투자 검토 대상으로 판단됩니다.</p>
+                </div>
+            </div>
+            
+            <h3 style="color: white; margin-top: 30px; margin-bottom: 15px;">핵심 지표 5종</h3>
+            <div class="hero-metric-grid">
+                <div class="hero-metric">
+                    <div class="label">총 사업비 (CAPEX)</div>
+                    <div class="value">{{ total_investment | currency_format }}억</div>
+                </div>
+                <div class="hero-metric">
+                    <div class="label">예상 매출 / LH 매각가</div>
+                    <div class="value">{{ total_revenue | currency_format }}억</div>
+                </div>
+                <div class="hero-metric">
+                    <div class="label">예상 사업이익</div>
+                    <div class="value">{{ profit | currency_format }}억</div>
+                </div>
+                <div class="hero-metric">
+                    <div class="label">투자수익률 (ROI)</div>
+                    <div class="value">{{ roi }}%</div>
+                </div>
+                <div class="hero-metric">
+                    <div class="label">내부수익률 (IRR)</div>
+                    <div class="value">{{ irr }}%</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="decision-box">
+            <div class="title">결론 (한 문장)</div>
+            <div class="content">
+                본 사업은 **Exit이 명확한 공공 매입 구조**이며, 리스크가 이미 구조 안에서 소화되었기 때문에 
+                투자 검토 대상으로 판단됩니다.
+            </div>
+        </div>
+    </div>
+    
+    <!-- ② 사업 구조 요약 (Structure Overview) (1p) -->
+    <div class="section">
+        <div class="section-header">② 사업 구조 요약 (Structure Overview)</div>
+        
+        <h3 class="subsection-header">2.1 왜 이 사업이 돌아가는지 구조로 설명</h3>
+        
+        <div class="info-card">
+            <h4 style="margin-bottom: 15px;">🔄 사업 주체 구조</h4>
+            <ul style="margin-left: 20px; line-height: 2.0;">
+                <li><strong>토지주:</strong> 토지 제공</li>
+                <li><strong>시행사:</strong> 개발 진행 (사업 주체)</li>
+                <li><strong>LH:</strong> 준공 후 매입 (Exit 확보)</li>
+                <li><strong>운영 주체:</strong> LH 매입임대 운영</li>
+            </ul>
+        </div>
+        
+        <h3 class="subsection-header">2.2 자금 흐름 다이어그램</h3>
+        <div class="diagram-placeholder">
+            <p style="font-size: 16px; color: #666;"><strong>자금 흐름:</strong></p>
+            <p style="margin-top: 10px;">토지비 → 공사비 → 금융비 → LH 매각 → 회수</p>
+        </div>
+        
+        <h3 class="subsection-header">2.3 LH 매입 구조 반영</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>항목</th>
+                    <th>내용</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>매입 방식</td>
+                    <td>준공 후 매입</td>
+                </tr>
+                <tr>
+                    <td>매입 가격</td>
+                    <td>LH 기준 단가 적용 (공공 기준)</td>
+                </tr>
+                <tr>
+                    <td>약정 여부</td>
+                    <td>사전 협의 기반 (계약 전제)</td>
+                </tr>
+                <tr>
+                    <td>Exit 명확성</td>
+                    <td><strong>⭕ 명확함 (분양 리스크 없음)</strong></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="decision-box">
+            <div class="title">핵심 기획 의도</div>
+            <div class="content">
+                이 사업은 분양 사업이 아니라 <strong>Exit이 명확한 공공 매입 구조</strong>입니다. 
+                따라서 분양 리스크(미분양, 가격 변동)는 발생하지 않습니다.
+            </div>
+        </div>
+    </div>
+    
+    <!-- ③ 개발 전제 조건 정합성 검증 (1~2p) -->
+    <div class="section">
+        <div class="section-header">③ 개발 전제 조건 정합성 검증</div>
+        
+        <h3 class="subsection-header">3.1 M1~M4 결과를 '전제 조건'으로 검증</h3>
+        
+        <div class="warning-card">
+            <p><strong>⚠️ 중요:</strong> 여기서는 다시 계산하지 않습니다. <strong>이미 검증된 사실을 '투자 전제'로 선언</strong>하는 파트입니다.</p>
+        </div>
+        
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>검증 항목</th>
+                    <th>결과</th>
+                    <th>비고</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>법적 개발 가능 규모</td>
+                    <td>{{ total_units }}세대 (기본) / {{ incentive_units }}세대 (최대)</td>
+                    <td>M4 검증 완료</td>
+                </tr>
+                <tr>
+                    <td>실제 설계 가능 규모</td>
+                    <td>{{ total_units }}세대 권장</td>
+                    <td>M4 검증 완료</td>
+                </tr>
+                <tr>
+                    <td>공급 유형 적합성</td>
+                    <td>{{ recommended_housing_type }}</td>
+                    <td>M3 검증 완료</td>
+                </tr>
+                <tr>
+                    <td>LH 제도 적합성</td>
+                    <td>✅ 적합</td>
+                    <td>M3 검증 완료</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="info-card">
+            <p><strong>✅ 투자 전제 조건 충족:</strong> M1~M4 분석 결과, 본 대상지는 법적·물리적·정책적으로 개발 가능한 것으로 검증되었습니다.</p>
+        </div>
+    </div>
+    
+    <!-- ④ 총 사업비 분석 (CAPEX Breakdown) (2p) -->
+    <div class="section">
+        <div class="section-header">④ 총 사업비 분석 (CAPEX Breakdown)</div>
+        
+        <h3 class="subsection-header">4.1 사업비 구성 (보수적 상한 기준)</h3>
+        
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>항목</th>
+                    <th>금액 (억원)</th>
+                    <th>비율</th>
+                    <th>비고</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>토지비</td>
+                    <td>{{ land_cost | currency_format }}</td>
+                    <td>{{ (land_cost / total_investment * 100) | number_format }}%</td>
+                    <td>M2 감정평가 기준</td>
+                </tr>
+                <tr>
+                    <td>공사비</td>
+                    <td>{{ construction_cost | currency_format }}</td>
+                    <td>{{ (construction_cost / total_investment * 100) | number_format }}%</td>
+                    <td>LH 기준 단가 적용</td>
+                </tr>
+                <tr>
+                    <td>간접비</td>
+                    <td>{{ indirect_cost | currency_format }}</td>
+                    <td>{{ (indirect_cost / total_investment * 100) | number_format }}%</td>
+                    <td>설계비, 인허가비 등</td>
+                </tr>
+                <tr>
+                    <td>금융비용</td>
+                    <td>{{ finance_cost | currency_format }}</td>
+                    <td>{{ (finance_cost / total_investment * 100) | number_format }}%</td>
+                    <td>PF 이자 반영</td>
+                </tr>
+                <tr>
+                    <td>예비비</td>
+                    <td>{{ contingency_cost | currency_format }}</td>
+                    <td>{{ (contingency_cost / total_investment * 100) | number_format }}%</td>
+                    <td>리스크 버퍼</td>
+                </tr>
+                <tr style="background: #fff3e0;">
+                    <td><strong>총 사업비</strong></td>
+                    <td><strong>{{ total_investment | currency_format }}</strong></td>
+                    <td><strong>100%</strong></td>
+                    <td><strong>CAPEX</strong></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="decision-box">
+            <div class="title">핵심 기획: 보수적 상한 기준 적용</div>
+            <div class="content">
+                <p>본 보고서는 "낙관/비관 시나리오"를 제공하지 않습니다. <strong>LH 기준 단가 + 보수적 상한 기준</strong>을 적용하여, 
+                투자자 입장에서 "과도한 추정치 아닌가?" 하는 의심을 제거합니다.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ⑤ 매출 및 회수 구조 분석 (Revenue & Exit) (2p) -->
+    <div class="section">
+        <div class="section-header">⑤ 매출 및 회수 구조 분석 (Revenue & Exit)</div>
+        
+        <h3 class="subsection-header">5.1 LH 매각 구조 중심</h3>
+        
+        <div class="info-card">
+            <h4 style="margin-bottom: 15px;">LH 매입가 산정 로직 요약</h4>
+            <ul style="margin-left: 20px; line-height: 2.0;">
+                <li>공급 유형: {{ recommended_housing_type }}</li>
+                <li>공급 유형별 단가: LH 기준 단가 적용</li>
+                <li>총 세대수: {{ total_units }}세대</li>
+                <li>세대당 평균 매입가: (계산 예시) 약 {{ (total_revenue / total_units) | currency_format }}억원</li>
+            </ul>
+        </div>
+        
+        <h3 class="subsection-header">5.2 매출 및 회수 구조</h3>
+        
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>항목</th>
+                    <th>금액 (억원)</th>
+                    <th>비고</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>LH 매입가 (총 회수 금액)</td>
+                    <td>{{ total_revenue | currency_format }}</td>
+                    <td>공공 기준 매입</td>
+                </tr>
+                <tr>
+                    <td>회수 시점</td>
+                    <td>준공 후</td>
+                    <td>약 24~30개월</td>
+                </tr>
+                <tr style="background: #e8f5e9;">
+                    <td><strong>총 매출 (Exit)</strong></td>
+                    <td><strong>{{ total_revenue | currency_format }}</strong></td>
+                    <td><strong>명확함 ⭕</strong></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="decision-box">
+            <div class="title">핵심: Exit 명확성</div>
+            <div class="content">
+                <p>본 사업의 매출은 <strong>분양가가 아닌 LH 매입가</strong>로 결정됩니다. 따라서 시장 변동 리스크가 제한적입니다.</p>
+                <p style="margin-top: 10px;"><strong>⚠️ 중요:</strong> 분양가 상상은 하지 않습니다. 
+                <strong>공공 기준에 의해 결정되는 매출 구조</strong>임을 강조합니다.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ⑥ 손익 구조 분석 (Profit Structure) (2p) -->
+    <div class="section">
+        <div class="section-header">⑥ 손익 구조 분석 (Profit Structure)</div>
+        
+        <h3 class="subsection-header">6.1 사업 손익 구조</h3>
+        
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>항목</th>
+                    <th>금액 (억원)</th>
+                    <th>비율</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>총 매출</td>
+                    <td>{{ total_revenue | currency_format }}</td>
+                    <td>100%</td>
+                </tr>
+                <tr>
+                    <td>총 사업비</td>
+                    <td>{{ total_investment | currency_format }}</td>
+                    <td>{{ (total_investment / total_revenue * 100) | number_format }}%</td>
+                </tr>
+                <tr style="background: #e8f5e9;">
+                    <td><strong>총 사업이익</strong></td>
+                    <td><strong>{{ profit | currency_format }}</strong></td>
+                    <td><strong>{{ ((profit / total_revenue) * 100) | number_format }}%</strong></td>
+                </tr>
+                <tr>
+                    <td>마진율</td>
+                    <td colspan="2"><strong>{{ ((profit / total_investment) * 100) | number_format }}%</strong></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3 class="subsection-header">6.2 비용 대비 수익 구조 (핵심)</h3>
+        
+        <div class="decision-box">
+            <div class="title">어디서 남고, 어디서 통제되는가?</div>
+            <div class="content">
+                <p><strong>수익 발생 구조:</strong></p>
+                <ul style="margin-left: 20px; margin-top: 10px; line-height: 1.9;">
+                    <li>LH 매입가 ({{ total_revenue | currency_format }}억) - 총 사업비 ({{ total_investment | currency_format }}억) = 사업이익 ({{ profit | currency_format }}억)</li>
+                    <li>마진율: {{ ((profit / total_investment) * 100) | number_format }}% (투자 대비 수익)</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>통제 포인트:</strong></p>
+                <ul style="margin-left: 20px; margin-top: 10px; line-height: 1.9;">
+                    <li>공사비 통제: LH 기준 단가 준수</li>
+                    <li>토지비 통제: M2 감정평가 기준 준수</li>
+                    <li>금융비 통제: PF 금리 협상 및 조기 회수</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="warning-card">
+            <p><strong>⚠️ 중요:</strong> 본 보고서는 "얼마 남는다"가 아니라, <strong>"어디서 남고, 어디서 통제된다"</strong>를 설명합니다.</p>
+        </div>
+    </div>
+    
+    <!-- ⑦ 투자 수익성 지표 (ROI Metrics) (1~2p) -->
+    <div class="section">
+        <div class="section-header">⑦ 투자 수익성 지표 (ROI Metrics)</div>
+        
+        <h3 class="subsection-header">7.1 정량 판단 구간</h3>
+        
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>지표</th>
+                    <th>값</th>
+                    <th>해석</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>ROI (투자수익률)</td>
+                    <td><strong style="font-size: 20px; color: #ff9800;">{{ roi }}%</strong></td>
+                    <td>투자 대비 수익률</td>
+                </tr>
+                <tr>
+                    <td>IRR (내부수익률)</td>
+                    <td><strong style="font-size: 20px; color: #ff9800;">{{ irr }}%</strong></td>
+                    <td>자본 투입 대비 효율</td>
+                </tr>
+                <tr>
+                    <td>투자 회수 기간</td>
+                    <td>약 24~30개월</td>
+                    <td>준공 후 LH 매각 시점</td>
+                </tr>
+                <tr>
+                    <td>자본 투입 대비 효율</td>
+                    <td>{{ ((profit / total_investment) * 100) | number_format }}%</td>
+                    <td>자본 1억 투입 시 {{ ((profit / total_investment) * 100) | number_format }}원 수익</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="decision-box">
+            <div class="title">기획 포인트: 단일 프로젝트 투자 관점</div>
+            <div class="content">
+                <p>본 보고서는 PF 금융 논리를 적용하지 않습니다. <strong>단일 프로젝트 투자 관점</strong>에서 수익성을 판단합니다.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ⑧ 리스크 구조 및 흡수 메커니즘 (1~2p) 🔥 핵심 -->
+    <div class="section">
+        <div class="section-header">⑧ 리스크 구조 및 흡수 메커니즘 🔥 핵심</div>
+        
+        <div class="warning-card">
+            <p><strong>🔥 이 보고서의 핵심 파트:</strong> 지금 출력물에서 가장 약한 부분입니다. 
+            리스크가 없는 사업이 아니라, <strong>리스크가 이미 구조 안에서 소화된 사업</strong>임을 설명합니다.</p>
+        </div>
+        
+        <h3 class="subsection-header">8.1 리스크 유형별 분석</h3>
+        
+        <div class="risk-matrix">
+            <div class="risk-item medium">
+                <div class="risk-title">🏛️ 인허가 리스크</div>
+                <div class="risk-desc">
+                    <p><strong>발생 가능성:</strong> 중간</p>
+                    <p><strong>사업 영향:</strong> 일정 지연</p>
+                    <p><strong>흡수 장치:</strong> M4 검증 완료, LH 사전 협의</p>
+                </div>
+            </div>
+            
+            <div class="risk-item medium">
+                <div class="risk-title">💰 공사비 리스크</div>
+                <div class="risk-desc">
+                    <p><strong>발생 가능성:</strong> 중간</p>
+                    <p><strong>사업 영향:</strong> 수익 감소</p>
+                    <p><strong>흡수 장치:</strong> 보수적 상한 기준 적용, 예비비 확보</p>
+                </div>
+            </div>
+            
+            <div class="risk-item low">
+                <div class="risk-title">📅 일정 리스크</div>
+                <div class="risk-desc">
+                    <p><strong>발생 가능성:</strong> 낮음</p>
+                    <p><strong>사업 영향:</strong> 금융비 증가</p>
+                    <p><strong>흡수 장치:</strong> 예비 일정 반영, 금융비 버퍼</p>
+                </div>
+            </div>
+            
+            <div class="risk-item low">
+                <div class="risk-title">📜 정책 리스크</div>
+                <div class="risk-desc">
+                    <p><strong>발생 가능성:</strong> 낮음</p>
+                    <p><strong>사업 영향:</strong> 제도 변경</p>
+                    <p><strong>흡수 장치:</strong> LH 제도 기반, 공공 안정성</p>
+                </div>
+            </div>
+            
+            <div class="risk-item low">
+                <div class="risk-title">🏢 Exit 리스크</div>
+                <div class="risk-desc">
+                    <p><strong>발생 가능성:</strong> 매우 낮음</p>
+                    <p><strong>사업 영향:</strong> 회수 불가</p>
+                    <p><strong>흡수 장치:</strong> LH 매입 구조 (Exit 명확)</p>
+                </div>
+            </div>
+            
+            <div class="risk-item low">
+                <div class="risk-title">📉 시장 변동 리스크</div>
+                <div class="risk-desc">
+                    <p><strong>발생 가능성:</strong> 낮음</p>
+                    <p><strong>사업 영향:</strong> 매각가 하락</p>
+                    <p><strong>흡수 장치:</strong> 공공 기준 매입 (시장 영향 제한)</p>
+                </div>
+            </div>
+        </div>
+        
+        <h3 class="subsection-header">8.2 리스크 흡수 메커니즘 상세</h3>
+        
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>리스크</th>
+                    <th>흡수 메커니즘</th>
+                    <th>잔존 리스크</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>인허가</td>
+                    <td>M4 검증 완료, LH 사전 협의</td>
+                    <td>일정 지연 가능성 (금융비 버퍼로 흡수)</td>
+                </tr>
+                <tr>
+                    <td>공사비</td>
+                    <td>보수적 상한 기준 적용, 예비비 확보</td>
+                    <td>예비비 초과 시 수익 감소</td>
+                </tr>
+                <tr>
+                    <td>일정</td>
+                    <td>예비 일정 반영, 금융비 버퍼</td>
+                    <td>장기 지연 시 금융비 증가</td>
+                </tr>
+                <tr>
+                    <td>정책</td>
+                    <td>LH 제도 기반, 공공 안정성</td>
+                    <td>제도 변경 시 재검토 필요</td>
+                </tr>
+                <tr>
+                    <td>Exit</td>
+                    <td>LH 매입 구조 (Exit 명확)</td>
+                    <td>거의 없음 (공공 매입)</td>
+                </tr>
+                <tr>
+                    <td>시장 변동</td>
+                    <td>공공 기준 매입 (시장 영향 제한)</td>
+                    <td>제한적 (공공 기준 우선)</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="decision-box">
+            <div class="title">ZeroSite의 차별 포인트</div>
+            <div class="content">
+                <p>"리스크가 없는 사업"이 아니라, <strong>"리스크가 이미 구조 안에서 소화된 사업"</strong>입니다.</p>
+                <p style="margin-top: 10px;">본 사업의 핵심은 <strong>Exit이 명확한 공공 매입 구조</strong>이며, 
+                대부분의 리스크는 보수적 기준 적용 및 예비비 확보를 통해 구조 내에서 흡수 가능합니다.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ⑨ 투자 판단 결론 (Final Investment Opinion) (1p) -->
+    <div class="section">
+        <div class="section-header">⑨ 투자 판단 결론 (Final Investment Opinion)</div>
+        
+        <div class="decision-box">
+            <div class="title">투자 적합성 최종 판단</div>
+            <div class="content">
+                <p><strong>🟢 투자 가능 (GO) - 조건부</strong></p>
+                <p style="margin-top: 15px;"><strong>판단 근거:</strong></p>
+                <ul style="margin-left: 20px; margin-top: 10px; line-height: 1.9;">
+                    <li>Exit이 명확한 LH 매입 구조</li>
+                    <li>리스크가 구조 내에서 흡수 가능</li>
+                    <li>M1~M4 검증 완료 (법적·물리적·정책적 적합성 확인)</li>
+                    <li>보수적 기준 적용으로 수익성 보수적 추정</li>
+                    <li>투자수익률(ROI) {{ roi }}%, 내부수익률(IRR) {{ irr }}% 달성 가능</li>
+                </ul>
+            </div>
+        </div>
+        
+        <h3 class="subsection-header">9.1 필요한 선행 조건</h3>
+        
+        <div class="warning-card">
+            <ul style="margin-left: 20px; line-height: 1.9;">
+                <li>LH 사전 협의 완료 (매입 가격 및 시점 확정)</li>
+                <li>인허가 리스크 관리 (M4 검증 기준 준수)</li>
+                <li>공사비 통제 (LH 기준 단가 준수)</li>
+                <li>금융 조달 구조 확정 (PF 금리 협상)</li>
+            </ul>
+        </div>
+        
+        <h3 class="subsection-header">9.2 투자 시 유의사항</h3>
+        
+        <div class="danger-card">
+            <p><strong>⚠️ 투자 시 유의사항:</strong></p>
+            <ul style="margin-left: 20px; margin-top: 10px; line-height: 1.9;">
+                <li>본 보고서는 분석 기준일({{ appraisal_date }}) 시점 기준이며, 시장 변동 시 재평가 필요</li>
+                <li>LH 제도 변경 시 재검토 필요</li>
+                <li>인허가 지연 시 금융비 증가 가능성</li>
+                <li>공사비 통제 실패 시 수익 감소 가능성</li>
+            </ul>
+        </div>
+        
+        <h3 class="subsection-header">9.3 명확한 문장 결론</h3>
+        
+        <div class="decision-box">
+            <div class="title">최종 투자 판단 (한 문장)</div>
+            <div class="content">
+                <p><strong>본 사업은 Exit이 명확한 공공 매입 구조이며, 리스크가 구조 내에서 소화 가능한 수준으로 판단되므로, 
+                선행 조건 충족 시 투자 검토 대상으로 판단됩니다.</strong></p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Report Footer -->
+    <div class="report-footer">
+        <p><strong>본 보고서는 ZeroSite 분석 시스템에 의해 자동 생성되었습니다.</strong></p>
+        <p>Report ID: {{ run_id }} | 생성일: {{ appraisal_date }}</p>
+        <p style="margin-top: 10px; font-weight: 600;">💼 투자 판단 문서 | "이 사업에 자본을 투입할 합리적 근거가 있는가?"</p>
+    </div>
+</body>
+</html>
