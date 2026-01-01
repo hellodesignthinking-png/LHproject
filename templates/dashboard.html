@@ -417,21 +417,28 @@
         </div>
     </div>
 
+    <!-- INJECT_CONFIG -->
     <script>
         let currentDashboardData = null;
         let currentShareReport = null;
 
+        // 🔧 Hotfix: 설정 읽기 (DEV 모드에서 주입된 설정 사용)
+        const config = window.ZEROSITE_CONFIG || {
+            defaultUser: 'admin@zerosite.com',
+            defaultRunId: 'TEST_6REPORT',
+            isDev: true
+        };
+
         // 페이지 로드 시 데이터 조회
         async function loadDashboard() {
             const urlParams = new URLSearchParams(window.location.search);
-            const runId = urlParams.get('run_id') || 'TEST_6REPORT';
+            const runId = urlParams.get('run_id') || config.defaultRunId;
 
             try {
-                // Dashboard API 호출
+                // Dashboard API 호출 (🔐 X-User-Email 헤더 추가)
                 const response = await fetch(`/api/v4/dashboard/${runId}`, {
                     headers: {
-                        'X-User-Email': 'investor@example.com',  // 테스트용 (실제로는 로그인 세션에서 가져옴)
-                        'X-User-Role': 'INVESTOR'
+                        'X-User-Email': config.defaultUser
                     }
                 });
 
@@ -503,16 +510,16 @@
                     </div>
                     <div class="report-description">${report.description}</div>
                     <div class="report-actions">
-                        <a href="/api/v4/reports/six-types/${report.name_en}/html?context_id=${run_id_info.run_id}" 
-                           class="btn btn-html" 
-                           ${!report.has_html_access ? 'disabled onclick="return false;"' : ''}>
+                        <button class="btn btn-html" 
+                           ${!report.has_html_access ? 'disabled' : ''} 
+                           onclick="openReport('${report.name_en}', 'html', '${run_id_info.run_id}', ${report.has_html_access})">
                             📄 HTML
-                        </a>
-                        <a href="/api/v4/reports/six-types/${report.name_en}/pdf?context_id=${run_id_info.run_id}" 
-                           class="btn btn-pdf" 
-                           ${!report.has_pdf_access ? 'disabled onclick="return false;"' : ''}>
+                        </button>
+                        <button class="btn btn-pdf" 
+                           ${!report.has_pdf_access ? 'disabled' : ''} 
+                           onclick="openReport('${report.name_en}', 'pdf', '${run_id_info.run_id}', ${report.has_pdf_access})">
                             📥 PDF
-                        </a>
+                        </button>
                         ${report.can_share ? `
                             <button class="btn btn-share" onclick="openShareModal('${report.code}', '${report.name_en}', '${run_id_info.run_id}')">
                                 🔗 공유
@@ -555,8 +562,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-User-Email': 'investor@example.com',
-                        'X-User-Role': 'INVESTOR'
+                        'X-User-Email': config.defaultUser
                     },
                     body: JSON.stringify({
                         run_id: currentShareReport.runId,
@@ -596,6 +602,49 @@
             navigator.clipboard.writeText(urlText).then(() => {
                 alert('✅ 링크가 클립보드에 복사되었습니다!');
             });
+        }
+
+        // 🔧 Hotfix: 보고서 열기 함수 (인증 헤더 포함)
+        async function openReport(reportType, format, runId, hasAccess) {
+            if (!hasAccess) {
+                alert('⛔ 접근 권한이 없습니다.');
+                return;
+            }
+
+            const url = `/api/v4/reports/six-types/${reportType}/${format}?context_id=${runId}`;
+            
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'X-User-Email': config.defaultUser
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                // HTML은 새 탭에서 열기, PDF는 다운로드
+                if (format === 'html') {
+                    const htmlContent = await response.text();
+                    const newWindow = window.open();
+                    newWindow.document.write(htmlContent);
+                    newWindow.document.close();
+                } else if (format === 'pdf') {
+                    const blob = await response.blob();
+                    const blobUrl = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = blobUrl;
+                    a.download = `${reportType}_${runId}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(blobUrl);
+                }
+            } catch (error) {
+                console.error('Failed to open report:', error);
+                alert(`❌ 보고서를 열 수 없습니다: ${error.message}`);
+            }
         }
 
         // 페이지 로드

@@ -285,13 +285,6 @@ if frontend_v9_path.exists():
     app.mount("/v9", StaticFiles(directory=str(frontend_v9_path), html=True), name="frontend_v9")
 
 
-@app.get("/")
-async def root():
-    """메인 페이지 - Admin Dashboard로 리다이렉트 (v11.0 HYBRID v2)"""
-    # v11.0 HYBRID v2 Admin Dashboard로 리다이렉트
-    return RedirectResponse(url="/static/admin_dashboard.html", status_code=302)
-
-
 @app.get("/v11")
 async def root_v11():
     """v11.0 HYBRID v2 Admin Dashboard"""
@@ -349,6 +342,25 @@ async def health_check():
         },
         "timestamp": datetime.now().isoformat()
     }
+
+
+@app.get("/", response_class=FileResponse)
+async def landing_page():
+    """
+    🚀 ZeroSite 랜딩 페이지
+    
+    테스트 링크와 주요 기능 소개 페이지
+    - 5개 역할별 대시보드 테스트 링크
+    - 권한 매트릭스 표시
+    - API 문서 링크
+    """
+    from pathlib import Path
+    
+    landing_path = Path(__file__).parent.parent / "templates" / "landing.html"
+    if landing_path.exists():
+        return FileResponse(landing_path)
+    else:
+        raise HTTPException(status_code=404, detail="Landing page not found")
 
 
 @app.get("/dashboard")

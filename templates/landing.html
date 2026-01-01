@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite - 테스트 랜딩 페이지</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hero {
+            background: white;
+            border-radius: 24px;
+            padding: 48px;
+            margin-bottom: 32px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .hero-title {
+            font-size: 48px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 16px;
+        }
+
+        .hero-subtitle {
+            font-size: 20px;
+            color: #718096;
+            margin-bottom: 32px;
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 24px;
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .test-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .test-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .test-card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .test-card-desc {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+
+        .test-card-url {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            color: #4a5568;
+            word-break: break-all;
+            margin-bottom: 12px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .btn-secondary:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-item {
+            padding: 16px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .feature-item:last-child {
+            border-bottom: none;
+        }
+
+        .feature-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .feature-content {
+            flex: 1;
+        }
+
+        .feature-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .feature-desc {
+            font-size: 14px;
+            color: #718096;
+            line-height: 1.5;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 4px;
+        }
+
+        .role-admin { background: #fed7d7; color: #742a2a; }
+        .role-internal { background: #bee3f8; color: #2c5282; }
+        .role-landowner { background: #c6f6d5; color: #22543d; }
+        .role-lh { background: #feebc8; color: #7c2d12; }
+        .role-investor { background: #e9d8fd; color: #44337a; }
+
+        .info-box {
+            background: #edf2f7;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .info-box-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .info-box-text {
+            font-size: 14px;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 32px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: white;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero">
+            <div class="version-badge">v1.5.1 - Test Stabilization + Hotfix</div>
+            <div class="hero-title">🚀 ZeroSite</div>
+            <div class="hero-subtitle">
+                사용자가 생각하지 않아도 올바른 보고서를<br>
+                권한 기반 대시보드 + 외부 공유 + PDF 워터마크
+            </div>
+        </div>
+
+        <!-- 빠른 테스트 -->
+        <div class="section">
+            <div class="section-title">⚡ 빠른 테스트</div>
+            <div class="test-grid">
+                <div class="test-card">
+                    <div class="test-card-title">🎯 대시보드 (ADMIN)</div>
+                    <div class="test-card-desc">
+                        관리자 권한으로 6개 보고서 모두 접근 가능<br>
+                        <span class="role-badge role-admin">ADMIN</span>
+                    </div>
+                    <div class="test-card-url">/dashboard?user=admin@zerosite.com</div>
+                    <a href="/dashboard?user=admin@zerosite.com" class="btn btn-primary" target="_blank">
+                        🔓 대시보드 열기 (ADMIN)
+                    </a>
+                </div>
+
+                <div class="test-card">
+                    <div class="test-card-title">🏢 대시보드 (INTERNAL)</div>
+                    <div class="test-card-desc">
+                        내부 직원 권한으로 A/B/C/D 보고서 접근<br>
+                        <span class="role-badge role-internal">INTERNAL</span>
+                    </div>
+                    <div class="test-card-url">/dashboard?user=internal@zerosite.com</div>
+                    <a href="/dashboard?user=internal@zerosite.com" class="btn btn-primary" target="_blank">
+                        🔓 대시보드 열기 (INTERNAL)
+                    </a>
+                </div>
+
+                <div class="test-card">
+                    <div class="test-card-title">👨‍🌾 대시보드 (LANDOWNER)</div>
+                    <div class="test-card-desc">
+                        지주 권한으로 B/D 보고서만 접근 가능<br>
+                        <span class="role-badge role-landowner">LANDOWNER</span>
+                    </div>
+                    <div class="test-card-url">/dashboard?user=landowner@example.com</div>
+                    <a href="/dashboard?user=landowner@example.com" class="btn btn-primary" target="_blank">
+                        🔓 대시보드 열기 (LANDOWNER)
+                    </a>
+                </div>
+
+                <div class="test-card">
+                    <div class="test-card-title">🏗️ 대시보드 (LH)</div>
+                    <div class="test-card-desc">
+                        LH 권한으로 C/D/E 보고서 접근<br>
+                        <span class="role-badge role-lh">LH</span>
+                    </div>
+                    <div class="test-card-url">/dashboard?user=lh@example.com</div>
+                    <a href="/dashboard?user=lh@example.com" class="btn btn-primary" target="_blank">
+                        🔓 대시보드 열기 (LH)
+                    </a>
+                </div>
+
+                <div class="test-card">
+                    <div class="test-card-title">💰 대시보드 (INVESTOR)</div>
+                    <div class="test-card-desc">
+                        투자자 권한으로 B/D/F 보고서만 접근<br>
+                        <span class="role-badge role-investor">INVESTOR</span>
+                    </div>
+                    <div class="test-card-url">/dashboard?user=investor@example.com</div>
+                    <a href="/dashboard?user=investor@example.com" class="btn btn-primary" target="_blank">
+                        🔓 대시보드 열기 (INVESTOR)
+                    </a>
+                </div>
+
+                <div class="test-card">
+                    <div class="test-card-title">📋 API 문서</div>
+                    <div class="test-card-desc">
+                        Swagger UI로 전체 API 엔드포인트 탐색
+                    </div>
+                    <div class="test-card-url">/docs</div>
+                    <a href="/docs" class="btn btn-secondary" target="_blank">
+                        📖 API 문서 보기
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 주요 기능 -->
+        <div class="section">
+            <div class="section-title">✨ 주요 기능</div>
+            <ul class="feature-list">
+                <li class="feature-item">
+                    <div class="feature-icon">🔐</div>
+                    <div class="feature-content">
+                        <div class="feature-title">권한 기반 접근 제어 (RBAC)</div>
+                        <div class="feature-desc">
+                            5개 역할별로 6개 보고서에 대한 세밀한 권한 매트릭스 적용<br>
+                            ADMIN, INTERNAL, LANDOWNER, LH, INVESTOR
+                        </div>
+                    </div>
+                </li>
+                <li class="feature-item">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-content">
+                        <div class="feature-title">RUN_ID 기반 대시보드</div>
+                        <div class="feature-desc">
+                            단일 RUN_ID로 6개 보고서를 한 번에 조회하고 관리<br>
+                            사용자 권한에 따라 자동으로 보고서 가시성 제어
+                        </div>
+                    </div>
+                </li>
+                <li class="feature-item">
+                    <div class="feature-icon">🔗</div>
+                    <div class="feature-content">
+                        <div class="feature-title">외부 공유 토큰</div>
+                        <div class="feature-desc">
+                            만료 시간이 있는 UUID 토큰으로 비인증 사용자와 안전하게 공유<br>
+                            RUN_ID + report_type 범위 제한, 토큰 비활성화 기능
+                        </div>
+                    </div>
+                </li>
+                <li class="feature-item">
+                    <div class="feature-icon">🔒</div>
+                    <div class="feature-content">
+                        <div class="feature-title">PDF 워터마크</div>
+                        <div class="feature-desc">
+                            모든 PDF에 RUN_ID, 보고서 타입, 생성 시각이 포함된 워터마크 자동 삽입<br>
+                            Footer 기반으로 제거 불가능한 추적 가능 문서
+                        </div>
+                    </div>
+                </li>
+                <li class="feature-item">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-content">
+                        <div class="feature-title">PDF 캐싱</div>
+                        <div class="feature-desc">
+                            RUN_ID + report_type 기준으로 파일 기반 캐시 적용<br>
+                            동일한 보고서 재요청 시 즉시 응답 (Playwright 재실행 불필요)
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 보고서 권한 매트릭스 -->
+        <div class="section">
+            <div class="section-title">📋 보고서 권한 매트릭스</div>
+            <div class="info-box">
+                <div class="info-box-title">💡 권한 규칙</div>
+                <div class="info-box-text">
+                    각 역할은 다음 보고서에만 접근 가능합니다:<br><br>
+                    <strong>ADMIN:</strong> A, B, C, D, E, F (모든 보고서)<br>
+                    <strong>INTERNAL:</strong> A, B, C, D (내부 보고서 + 공유 가능)<br>
+                    <strong>LANDOWNER:</strong> B, D (지주용 보고서)<br>
+                    <strong>LH:</strong> C, D, E (LH 기술 + 공유 가능)<br>
+                    <strong>INVESTOR:</strong> B, D, F (투자자용 보고서)
+                </div>
+            </div>
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #f7fafc; border-bottom: 2px solid #e2e8f0;">
+                        <th style="padding: 12px; text-align: left;">보고서</th>
+                        <th style="padding: 12px; text-align: center;">ADMIN</th>
+                        <th style="padding: 12px; text-align: center;">INTERNAL</th>
+                        <th style="padding: 12px; text-align: center;">LANDOWNER</th>
+                        <th style="padding: 12px; text-align: center;">LH</th>
+                        <th style="padding: 12px; text-align: center;">INVESTOR</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 12px;"><strong>A:</strong> Master</td>
+                        <td style="padding: 12px; text-align: center;">✅</td>
+                        <td style="padding: 12px; text-align: center;">✅</td>
+                        <td style="padding: 12px; text-align: center;">❌</td>
+                        <td style="padding: 12px; text-align: center;">❌</td>
+                        <td style="padding: 12px; text-align: center;">❌</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 12px;"><strong>B:</strong> Landowner</td>
+                        <td style="padding: 12px; text-align: center;">✅</td>
+                        <td style="padding: 12px; text-align: center;">✅ 🔗</td>
+                        <td style="padding: 12px; text-align: center;">✅</td>
+                        <td style="padding: 12px; text-align: center;">❌</td>
+                        <td style="padding: 12px; text-align: center;">✅</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 12px;"><strong>C:</strong> LH Technical</td>
+                        <td style="padding: 12px; text-align: center;">✅</td>
+                        <td style="padding: 12px; text-align: center;">✅</td>
+                        <td style="padding: 12px; text-align: center;">❌</td>
+                        <td style="padding: 12px; text-align: center;">✅</td>
+                        <td style="padding: 12px; text-align: center;">❌</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 12px;"><strong>D:</strong> Market Analysis</td>
+                        <td style="padding: 12px; text-align: center;">✅</td>
+                        <td style="padding: 12px; text-align: center;">✅ 🔗</td>
+                        <td style="padding: 12px; text-align: center;">✅</td>
+                        <td style="padding: 12px; text-align: center;">✅</td>
+                        <td style="padding: 12px; text-align: center;">✅</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 12px;"><strong>E:</strong> LH Submission</td>
+                        <td style="padding: 12px; text-align: center;">✅</td>
+                        <td style="padding: 12px; text-align: center;">❌</td>
+                        <td style="padding: 12px; text-align: center;">❌</td>
+                        <td style="padding: 12px; text-align: center;">✅</td>
+                        <td style="padding: 12px; text-align: center;">❌</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px;"><strong>F:</strong> Investor</td>
+                        <td style="padding: 12px; text-align: center;">✅</td>
+                        <td style="padding: 12px; text-align: center;">✅ 🔗</td>
+                        <td style="padding: 12px; text-align: center;">❌</td>
+                        <td style="padding: 12px; text-align: center;">❌</td>
+                        <td style="padding: 12px; text-align: center;">✅</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="margin-top: 16px; font-size: 14px; color: #718096;">
+                🔗 표시: 외부 공유 링크 생성 가능 (B, D, F 보고서)
+            </p>
+        </div>
+
+        <!-- 개발 정보 -->
+        <div class="section">
+            <div class="section-title">🛠️ 개발 정보</div>
+            <div class="info-box">
+                <div class="info-box-title">📦 버전 이력</div>
+                <div class="info-box-text">
+                    <strong>v1.5.1 (현재):</strong> Hotfix - Dashboard 401 인증 오류 수정<br>
+                    - dashboard.html에 X-User-Email 헤더 추가<br>
+                    - ZEROSITE_CONFIG 읽기 기능 구현<br>
+                    - openReport() 함수로 인증 헤더 포함한 보고서 열기<br><br>
+                    
+                    <strong>v1.5.0:</strong> Test Stabilization + Security Completion<br>
+                    - A/B/D 엔드포인트에 require_report_access() 적용<br>
+                    - PDF 워터마크 구현 (RUN_ID 기반)<br>
+                    - DEV 모드 지원 (?user= 파라미터)<br>
+                    - PDF 캐시 디렉토리 자동 생성<br><br>
+                    
+                    <strong>v1.4.0:</strong> Dashboard UX Integration<br>
+                    - RUN_ID 기반 대시보드 API<br>
+                    - 6개 보고서 통합 뷰<br>
+                    - 권한 기반 버튼 비활성화<br><br>
+                    
+                    <strong>v1.3.0:</strong> External Sharing System<br>
+                    - UUID 토큰 기반 공유<br>
+                    - 만료 시간 관리<br>
+                    - RUN_ID + report_type 범위 제한
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>🚀 ZeroSite v1.5.1 - 사용자가 생각하지 않아도 올바른 보고서를</p>
+            <p style="margin-top: 8px;">
+                <a href="/docs">API 문서</a> | 
+                <a href="https://github.com/yourusername/zerosite" target="_blank">GitHub</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
