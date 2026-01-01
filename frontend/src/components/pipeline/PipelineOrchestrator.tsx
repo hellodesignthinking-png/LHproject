@@ -906,7 +906,7 @@ export const PipelineOrchestrator: React.FC = () => {
                   gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
                   gap: '15px' 
                 }}>
-                  {/* 1. 종합 최종보고서 */}
+                  {/* 1. 종합 최종보고서 (요약본) */}
                   <button
                     onClick={() => {
                       if (!state.contextId) {
@@ -932,10 +932,53 @@ export const PipelineOrchestrator: React.FC = () => {
                   >
                     <div style={{ fontSize: '28px', marginBottom: '8px' }}>📋</div>
                     <div style={{ fontWeight: 'bold', fontSize: '15px', color: '#1e293b', marginBottom: '4px' }}>
-                      종합 최종보고서
+                      종합 최종보고서 (요약본)
                     </div>
                     <div style={{ fontSize: '12px', color: '#64748b' }}>
-                      M2-M6 모든 분석 포함
+                      빠른 검토용 4~6페이지
+                    </div>
+                  </button>
+
+                  {/* 1-2. 종합 최종보고서 (60페이지 완전판) ✨ 신규! */}
+                  <button
+                    onClick={() => {
+                      if (!state.contextId) {
+                        alert('⚠️ M1 분석을 먼저 완료해주세요.');
+                        return;
+                      }
+                      const url = `/api/v4/reports/six-types/master/html/60p?context_id=${state.contextId}`;
+                      window.open(url, '_blank');
+                    }}
+                    disabled={!state.contextId}
+                    style={{
+                      padding: '20px',
+                      background: state.contextId ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f0f0f0',
+                      border: `2px solid ${state.contextId ? '#667eea' : '#d0d0d0'}`,
+                      borderRadius: '8px',
+                      cursor: state.contextId ? 'pointer' : 'not-allowed',
+                      transition: 'all 0.2s',
+                      textAlign: 'left',
+                      opacity: state.contextId ? 1 : 0.6,
+                      color: state.contextId ? 'white' : '#666'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                  >
+                    <div style={{ fontSize: '28px', marginBottom: '8px' }}>📚</div>
+                    <div style={{ fontWeight: 'bold', fontSize: '15px', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      종합 최종보고서 (완전판)
+                      <span style={{ 
+                        fontSize: '11px', 
+                        background: 'rgba(255,255,255,0.3)', 
+                        padding: '2px 8px', 
+                        borderRadius: '12px',
+                        fontWeight: 'bold'
+                      }}>
+                        60p
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '12px', opacity: 0.9 }}>
+                      전문가용 상세 분석 (증명 레이어 포함)
                     </div>
                   </button>
 
