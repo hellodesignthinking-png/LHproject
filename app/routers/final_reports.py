@@ -21,7 +21,7 @@ from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 
 from app.services.context_storage import context_storage
-from app.services.data_integrity_guard import data_integrity_guard
+# from app.services.data_integrity_guard import data_integrity_guard  # TODO: Re-enable when module exists
 from app.services.pdf_generator_playwright import generate_pdf_from_url
 
 logger = logging.getLogger(__name__)
