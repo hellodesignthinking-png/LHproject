@@ -2,7 +2,7 @@
 FastAPI 메인 애플리케이션
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -117,6 +117,8 @@ HOUSING_TYPE_INFO = {
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """애플리케이션 시작/종료 시 실행"""
+    import os
+    
     print("=" * 60)
     print("🚀 ZeroSite v11.0 HYBRID v2 시스템 시작")
     print("=" * 60)
@@ -126,6 +128,19 @@ async def lifespan(app: FastAPI):
     print(f"💾 Cache: In-Memory (Ready)")
     print(f"🌍 Multi-language: Korean + English")
     print(f"✅ All Enhancements: Active")
+    
+    # 🔧 Hotfix: Ensure PDF cache directory exists
+    pdf_cache_dir = "/tmp/zerosite_pdf_cache"
+    os.makedirs(pdf_cache_dir, exist_ok=True)
+    print(f"📁 PDF Cache Directory: {pdf_cache_dir} (initialized)")
+    
+    # 🔧 Hotfix: Log DEV mode status
+    zerosite_env = os.getenv("ZEROSITE_ENV", "dev")
+    print(f"🔧 ZEROSITE_ENV: {zerosite_env}")
+    if zerosite_env.lower() == "dev":
+        print("⚠️  DEV Mode: Default user injection enabled")
+    
+    print("=" * 60)
     print("=" * 60)
     
     # Initialize database
@@ -337,14 +352,52 @@ async def health_check():
 
 
 @app.get("/dashboard")
-async def dashboard_page():
-    """v1.4 보고서 대시보드 페이지"""
+async def dashboard_page(
+    run_id: Optional[str] = Query(None, description="RUN_ID to display"),
+    user: Optional[str] = Query("admin@zerosite.com", description="User email for testing (DEV mode)")
+):
+    """
+    v1.4 보고서 대시보드 페이지
+    
+    🔧 Hotfix: DEV mode support
+    - Default user injection for easy testing
+    - No authentication required for dashboard HTML
+    - API calls from frontend will use the provided user
+    
+    Query Parameters:
+        run_id: RUN_ID to display (e.g., TEST_6REPORT)
+        user: User email (default: admin@zerosite.com)
+    """
     from fastapi.responses import HTMLResponse
     from pathlib import Path
+    import os
+    
+    # DEV mode check
+    is_dev_mode = os.getenv("ZEROSITE_ENV", "dev").lower() == "dev"
+    
+    if not is_dev_mode and not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required. Please provide 'user' parameter in DEV mode."
+        )
     
     dashboard_path = Path(__file__).parent.parent / "templates" / "dashboard.html"
     if dashboard_path.exists():
-        return HTMLResponse(content=dashboard_path.read_text(encoding='utf-8'))
+        html_content = dashboard_path.read_text(encoding='utf-8')
+        
+        # Inject default values into HTML (for frontend API calls)
+        html_content = html_content.replace(
+            '<!-- INJECT_CONFIG -->',
+            f'''<script>
+                window.ZEROSITE_CONFIG = {{
+                    defaultUser: "{user}",
+                    defaultRunId: "{run_id or 'TEST_6REPORT'}",
+                    isDev: {str(is_dev_mode).lower()}
+                }};
+            </script>'''
+        )
+        
+        return HTMLResponse(content=html_content)
     else:
         raise HTTPException(status_code=404, detail="Dashboard not found")
 
