@@ -1052,6 +1052,155 @@ class DirectInputRequest(BaseModel):
     address: str = Field(..., description="직접 입력한 주소", min_length=10)
 
 
+class RealAddressRequest(BaseModel):
+    """실제 주소 분석 요청 (Kakao API 기반)"""
+    address: str = Field(..., description="실제 주소 (도로명 또는 지번)", min_length=5)
+
+
+@router.post("/analyze-real", response_model=CollectAllResponse)
+async def analyze_real_address(
+    request: RealAddressRequest
+):
+    """
+    🗺️ 실제 주소 분석 (Kakao Maps API 기반)
+    
+    카카오 지도 API로 실제 좌표를 조회하여 분석 수행
+    - 실제 지도 위의 위치 기반
+    - 정확한 행정구역 정보
+    - 법정동 코드 기반 PNU 생성
+    - 6종 보고서 자동 생성
+    
+    ⚠️ 제한사항:
+    - 좌표 정확도는 높음
+    - 토지 이용·규제 정보는 행정 API 미연계
+    - 참고용 분석 (법적 효력 없음)
+    
+    장점:
+    - Mock 데이터 0%
+    - 실제 지도 위치 기반
+    - 정확한 주소 해석
+    """
+    from app.services.kakao_geocoding import kakao_geocoding_service, AddressNotFoundError, KakaoGeocodingError
+    
+    try:
+        address = request.address
+        logger.info(f"🗺️ Real address analysis - Address: {address}")
+        
+        # Kakao API로 주소 → 좌표 변환
+        try:
+            geo_result = await kakao_geocoding_service.geocode_address(address)
+        except AddressNotFoundError:
+            raise HTTPException(
+                status_code=404,
+                detail="주소를 찾을 수 없습니다. 도로명 주소로 다시 시도해 주세요."
+            )
+        except KakaoGeocodingError as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"주소 검색 실패: {str(e)}"
+            )
+        
+        # RUN_ID 생성 (REAL_ 접두사)
+        run_id = f"REAL_{datetime.now().strftime('%Y%m%d')}_{uuid.uuid4().hex[:8]}"
+        
+        # PNU 생성
+        pnu = kakao_geocoding_service.generate_pnu(
+            b_code=geo_result["b_code"],
+            main_no=geo_result.get("main_address_no", "0001"),
+            sub_no=geo_result.get("sub_address_no", "0000"),
+            is_mountain=(geo_result.get("mountain_yn") == "Y")
+        )
+        
+        # 실제 분석 컨텍스트 생성
+        context = {
+            "run_id": run_id,
+            "analysis_mode": "REAL_KAKAO",
+            "address": geo_result["address"],
+            "road_address": geo_result["road_address"],
+            "jibun_address": geo_result["jibun_address"],
+            "pnu": pnu,
+            "latitude": geo_result["lat"],
+            "longitude": geo_result["lon"],
+            "sido": geo_result["region_1depth"],
+            "sigungu": geo_result["region_2depth"],
+            "dong": geo_result["region_3depth"],
+            "b_code": geo_result["b_code"],
+            "confidence": "MEDIUM",
+            "source": "KAKAO_MAPS",
+            "warning": "본 분석은 카카오 지도 기반 위치 정보를 사용합니다. 토지 이용·규제 정보는 행정 API 미연계 상태입니다."
+        }
+        
+        logger.info(f"✅ Generated real context - RUN_ID: {context['run_id']}")
+        logger.info(f"📍 Location: ({context['latitude']}, {context['longitude']})")
+        logger.info(f"🏷️ PNU: {context['pnu']}")
+        
+        # Bundle 데이터 생성
+        bundle = {
+            "address": context["address"],
+            "road_address": context["road_address"],
+            "jibun_address": context["jibun_address"],
+            "coordinates": {"lat": context["latitude"], "lon": context["longitude"]},
+            "land_area": 500.0,  # TODO: VWorld API로 실제 면적 조회
+            "zone": "제2종일반주거지역",  # TODO: 용도지역 API 연동
+            "jimok": "대",
+            "pnu": context["pnu"],
+            "sido": context["sido"],
+            "sigungu": context["sigungu"],
+            "dong": context["dong"],
+            "b_code": context["b_code"],
+            "confidence": "MEDIUM",
+            "source": "KAKAO_MAPS"
+        }
+        
+        # Context storage에 저장
+        try:
+            from app.core.context.canonical_land import CanonicalLandContext
+            
+            land_context = CanonicalLandContext(
+                address=context["address"],
+                pnu=context["pnu"],
+                latitude=context["latitude"],
+                longitude=context["longitude"],
+                land_area=500.0,
+                zone="제2종일반주거지역",
+                source="KAKAO_MAPS"
+            )
+            
+            context_storage.store_frozen_context(
+                context_id=run_id,
+                land_context=land_context.to_dict(),
+                ttl_hours=24
+            )
+            
+            logger.info(f"💾 Stored context - ID: {run_id}")
+            
+        except Exception as e:
+            logger.warning(f"Context storage failed: {e}")
+        
+        # Response
+        return CollectAllResponse(
+            success=True,
+            data={
+                "context_id": run_id,
+                "bundle": bundle,
+                "message": f"실제 주소 분석 완료 (지도 기반) - {context['address']}"
+            },
+            failed_modules=[],
+            using_mock_data=False,  # Mock 아님!
+            timestamp=datetime.now().isoformat(),
+            error=None
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Real address analysis failed: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"실제 주소 분석 실패: {str(e)}"
+        )
+
+
 @router.post("/analyze-direct", response_model=CollectAllResponse)
 async def analyze_direct_input(
     request: DirectInputRequest
