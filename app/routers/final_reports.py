@@ -983,9 +983,9 @@ async def alias_report_html(
     elif report_type == "investment":
         return await investment_report_html(context_id=context_id, current_user=current_user)
     elif report_type == "quick-review":
-        return await quick_review_report_html(context_id=context_id, current_user=current_user)
+        return await quick_review_report_html(context_id=context_id, user=current_user)
     elif report_type == "presentation":
-        return await presentation_report_html(context_id=context_id, current_user=current_user)
+        return await presentation_report_html(context_id=context_id, user=current_user)
     else:
         raise HTTPException(status_code=500, detail="Internal routing error")
 

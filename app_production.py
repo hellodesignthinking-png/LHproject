@@ -73,27 +73,176 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
-try:
-    from app.routers.final_reports import router as final_reports_router
-    app.include_router(final_reports_router)
-    logger.info("✅ Final Reports router registered")
-except Exception as e:
-    logger.warning(f"⚠️ Failed to register Final Reports router: {str(e)}")
+# ============================================================
+# ROUTER REGISTRATION
+# ============================================================
 
+# 1. Report Engines
+try:
+    from app.routers.report_v7_2 import router as report_v72_router
+    app.include_router(report_v72_router)
+    logger.info("✅ Report Engine v7.2 registered")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to register Report v7.2: {str(e)}")
+
+try:
+    from app.api.endpoints.report_v11 import router as report_v11_router
+    app.include_router(report_v11_router)
+    logger.info("✅ Report Engine v11 (Phase 11) registered")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to register Report v11: {str(e)}")
+
+try:
+    from app.routers.report_v13 import router as report_v13_router
+    app.include_router(report_v13_router)
+    logger.info("✅ Report Engine v13 registered")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to register Report v13: {str(e)}")
+
+try:
+    from app.api.endpoints.reports_v3 import router as reports_v3_router
+    app.include_router(reports_v3_router)
+    logger.info("✅ ZeroSite v3.3 Reports registered")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to register Reports v3: {str(e)}")
+
+# 2. Analysis Engines
+try:
+    from app.api.endpoints.analysis_v9_0 import router as analysis_v90_router
+    app.include_router(analysis_v90_router)
+    logger.info("✅ Analysis Engine v9.0 registered")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to register Analysis v9.0: {str(e)}")
+
+try:
+    from app.api.endpoints.analysis_v9_1 import router as analysis_v91_router
+    app.include_router(analysis_v91_router)
+    logger.info("✅ Analysis Engine v9.1 registered")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to register Analysis v9.1: {str(e)}")
+
+try:
+    from app.api.endpoints.analysis_v9_1_REAL import router as analysis_v91_real_router
+    app.include_router(analysis_v91_real_router)
+    logger.info("✅ Analysis Engine v9.1 REAL registered")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to register Analysis v9.1 REAL: {str(e)}")
+
+try:
+    from app.api.endpoints.mvp_analyze import router as mvp_router
+    app.include_router(mvp_router)
+    logger.info("✅ MVP Analysis registered")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to register MVP Analysis: {str(e)}")
+
+# 3. Pipeline & Data APIs
+try:
+    from app.api.endpoints.land_data import router as land_data_router
+    app.include_router(land_data_router)
+    logger.info("✅ Land Data API registered")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to register Land Data API: {str(e)}")
+
+try:
+    from app.api.endpoints.pipeline_reports_v4 import router as pipeline_v4_router
+    app.include_router(pipeline_v4_router)
+    logger.info("✅ Pipeline v4 (6-MODULE) registered")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to register Pipeline v4: {str(e)}")
+
+# 4. M1 Module APIs
 try:
     from app.api.endpoints.m1_step_based import router as m1_router
     app.include_router(m1_router)
-    logger.info("✅ M1 API router registered")
+    logger.info("✅ M1 STEP-Based API registered")
 except Exception as e:
-    logger.warning(f"⚠️ Failed to register M1 API router: {str(e)}")
+    logger.warning(f"⚠️ Failed to register M1 API: {str(e)}")
 
+try:
+    from app.api.endpoints.m1_context_freeze_v2 import router as m1_v2_router
+    app.include_router(m1_v2_router)
+    logger.info("✅ M1 Context Freeze v2 registered")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to register M1 v2: {str(e)}")
+
+try:
+    from app.api.endpoints.m1_pdf_router import router as m1_pdf_router
+    app.include_router(m1_pdf_router)
+    logger.info("✅ M1 PDF Extraction registered")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to register M1 PDF: {str(e)}")
+
+# 5. Proxy APIs
+try:
+    from app.api.endpoints.proxy_vworld import router as proxy_vworld_router
+    app.include_router(proxy_vworld_router)
+    logger.info("✅ V-World Proxy registered")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to register V-World Proxy: {str(e)}")
+
+try:
+    from app.api.endpoints.proxy_kakao import router as proxy_kakao_router
+    app.include_router(proxy_kakao_router)
+    logger.info("✅ Kakao Proxy registered")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to register Kakao Proxy: {str(e)}")
+
+# 6. PDF & Downloads
+try:
+    from app.api.endpoints.pdf_download import router as pdf_download_router
+    app.include_router(pdf_download_router)
+    logger.info("✅ PDF Download API registered")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to register PDF Download: {str(e)}")
+
+try:
+    from app.api.endpoints.pdf_reports import router as pdf_reports_router
+    app.include_router(pdf_reports_router)
+    logger.info("✅ PDF Reports API registered")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to register PDF Reports: {str(e)}")
+
+# 7. Final Reports System (6-Type Reports A~F)
+try:
+    from app.routers.final_reports import router as final_reports_router
+    app.include_router(final_reports_router)
+    logger.info("✅ Final Reports (6-Type A~F) registered")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to register Final Reports: {str(e)}")
+
+# 8. Dashboard & UI
+try:
+    from app.routers.dashboard import router as dashboard_router
+    app.include_router(dashboard_router)
+    logger.info("✅ Dashboard router registered")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to register Dashboard: {str(e)}")
+
+try:
+    from app.routers.share import router as share_router
+    app.include_router(share_router)
+    logger.info("✅ Share router registered")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to register Share: {str(e)}")
+
+# 9. Data & Logging
 try:
     from app.routers.run_id_data import router as run_id_router
     app.include_router(run_id_router)
     logger.info("✅ RUN_ID Data router registered")
 except Exception as e:
-    logger.warning(f"⚠️ Failed to register RUN_ID Data router: {str(e)}")
+    logger.warning(f"⚠️ Failed to register RUN_ID Data: {str(e)}")
+
+try:
+    from app.routers.access_logs import router as access_logs_router
+    app.include_router(access_logs_router)
+    logger.info("✅ Access Logs router registered")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to register Access Logs: {str(e)}")
+
+logger.info("=" * 80)
+logger.info("✅ All routers registration complete")
+logger.info("=" * 80)
 
 # Request/Response Models
 class ReportRequest(BaseModel):
