@@ -1285,23 +1285,19 @@ async def analyze_direct_input(
         
         # Context storage에 저장
         try:
-            # CanonicalLandContext 생성
-            from app.core.context.canonical_land import CanonicalLandContext
-            
-            land_context = CanonicalLandContext(
-                address=address,
-                pnu=context["pnu"],
-                latitude=context["latitude"],
-                longitude=context["longitude"],
-                land_area=500.0,
-                zone="제2종일반주거지역",
-                source="DIRECT_INPUT"
-            )
-            
-            # Redis/DB에 저장
+            # Canonical Land Context는 이미 저장되어 있으므로 간단한 dict만 저장
             context_storage.store_frozen_context(
                 context_id=context_id,
-                land_context=land_context.to_dict(),
+                land_context={
+                    "address": address,
+                    "parcel_id": context["pnu"],
+                    "latitude": context["latitude"],
+                    "longitude": context["longitude"],
+                    "land_area": 500.0,
+                    "zone": "제2종일반주거지역",
+                    "source": context["source"],
+                    "confidence": context["confidence"]
+                },
                 ttl_hours=24
             )
             

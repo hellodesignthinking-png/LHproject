@@ -383,21 +383,19 @@ class KakaoGeocodingService:
         Synchronous wrapper for geocode_address
         동기 컨텍스트에서 사용 가능한 주소 변환
         """
+        import nest_asyncio
         import asyncio
         
         try:
-            # asyncio loop 가져오기 (또는 생성)
-            try:
-                loop = asyncio.get_event_loop()
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
+            # nest_asyncio로 이미 실행 중인 loop에서도 사용 가능
+            nest_asyncio.apply()
             
-            # async 함수 실행
+            loop = asyncio.get_event_loop()
             return loop.run_until_complete(self.geocode_address(address))
         except Exception as e:
             logger.error(f"Sync geocode error: {e}")
-            raise
+            # Fallback to intelligent geocoding
+            return self._intelligent_geocoding_fallback(address)
 
 
 # Global service instance
