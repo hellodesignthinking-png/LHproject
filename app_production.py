@@ -12,6 +12,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 from typing import Optional
 import uvicorn
@@ -20,6 +21,9 @@ from generate_v3_full_report import V3FullReportGenerator
 
 # Create logs directory
 os.makedirs("/home/user/webapp/logs", exist_ok=True)
+
+# Set up Jinja2 templates
+templates = Jinja2Templates(directory="templates")
 
 # Set up logging
 logging.basicConfig(
@@ -580,3 +584,14 @@ if __name__ == "__main__":
         access_log=True,
         reload=False  # Disable reload in production
     )
+
+# Dashboard and UI routes
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard(request: Request):
+    """대시보드 페이지"""
+    return templates.TemplateResponse("dashboard.html", {"request": request})
+
+@app.get("/analyze", response_class=HTMLResponse)
+async def analyze_page(request: Request):
+    """주소 분석 페이지"""
+    return templates.TemplateResponse("real_address_search.html", {"request": request})
