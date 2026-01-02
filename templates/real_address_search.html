@@ -485,8 +485,8 @@
                 updateStep(1, 'active');
                 updateProgress('직접 입력 분석 시작 중...');
 
-                // 새 직접 분석 API 호출
-                const response = await fetch('/api/m1/analyze-direct', {
+                // 실제 주소 분석 API 호출 (기본값: analyze-real)
+                const response = await fetch('/api/m1/analyze-real', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

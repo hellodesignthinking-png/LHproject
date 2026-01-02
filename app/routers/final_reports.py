@@ -54,6 +54,16 @@ REPORT_FILENAMES = {
     "presentation": "설명용_프레젠테이션",
 }
 
+# Alias mapping: A, B, C, D, E, F → Full names
+REPORT_ALIASES = {
+    "A": "master",
+    "B": "landowner",
+    "C": "lh-technical",
+    "D": "investment",
+    "E": "quick-review",
+    "F": "presentation",
+}
+
 
 def _get_test_data_for_module(module: str) -> dict:
     """
@@ -936,3 +946,83 @@ async def presentation_report_pdf(
     except Exception as e:
         logger.error(f"❌ [F. Presentation] PDF generation failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"설명용 프레젠테이션 보고서 PDF 생성 실패: {str(e)}")
+
+
+# ==============================================================================
+# Alias Endpoints: A, B, C, D, E, F → Redirect to Full Names
+# ==============================================================================
+
+@router.get("/{alias}/html", response_class=HTMLResponse)
+async def alias_report_html(
+    alias: str,
+    context_id: str = Query(..., description="분석 실행 ID (RUN_*)"),
+    current_user: CurrentUser = Depends(require_report_access("master"))
+):
+    """
+    Alias endpoint: A, B, C, D, E, F → 해당 보고서 HTML
+    
+    Example:
+        /api/v4/reports/six-types/A/html?context_id=DIRECT_20260102_xxx
+        → master_report_html()
+    """
+    alias_upper = alias.upper()
+    
+    if alias_upper not in REPORT_ALIASES:
+        raise HTTPException(status_code=404, detail=f"Unknown report alias: {alias}")
+    
+    report_type = REPORT_ALIASES[alias_upper]
+    
+    # Redirect to the appropriate handler
+    if report_type == "master":
+        return await master_report_html(context_id=context_id, current_user=current_user)
+    elif report_type == "landowner":
+        return await landowner_report_html(context_id=context_id, current_user=current_user)
+    elif report_type == "lh-technical":
+        from app.routers.lh_reports import lh_technical_report_html
+        return await lh_technical_report_html(context_id=context_id)
+    elif report_type == "investment":
+        return await investment_report_html(context_id=context_id, current_user=current_user)
+    elif report_type == "quick-review":
+        return await quick_review_report_html(context_id=context_id, current_user=current_user)
+    elif report_type == "presentation":
+        return await presentation_report_html(context_id=context_id, current_user=current_user)
+    else:
+        raise HTTPException(status_code=500, detail="Internal routing error")
+
+
+@router.get("/{alias}/pdf")
+async def alias_report_pdf(
+    alias: str,
+    context_id: str = Query(..., description="분석 실행 ID (RUN_*)"),
+    current_user: CurrentUser = Depends(require_report_access("master"))
+):
+    """
+    Alias endpoint: A, B, C, D, E, F → 해당 보고서 PDF
+    
+    Example:
+        /api/v4/reports/six-types/A/pdf?context_id=DIRECT_20260102_xxx
+        → master_report_pdf()
+    """
+    alias_upper = alias.upper()
+    
+    if alias_upper not in REPORT_ALIASES:
+        raise HTTPException(status_code=404, detail=f"Unknown report alias: {alias}")
+    
+    report_type = REPORT_ALIASES[alias_upper]
+    
+    # Redirect to the appropriate handler
+    if report_type == "master":
+        return await master_report_pdf(context_id=context_id, user=current_user)
+    elif report_type == "landowner":
+        return await landowner_report_pdf(context_id=context_id, user=current_user)
+    elif report_type == "lh-technical":
+        from app.routers.lh_reports import lh_technical_report_pdf
+        return await lh_technical_report_pdf(context_id=context_id)
+    elif report_type == "investment":
+        return await investment_report_pdf(context_id=context_id, user=current_user)
+    elif report_type == "quick-review":
+        return await quick_review_report_pdf(context_id=context_id, user=current_user)
+    elif report_type == "presentation":
+        return await presentation_report_pdf(context_id=context_id, user=current_user)
+    else:
+        raise HTTPException(status_code=500, detail="Internal routing error")

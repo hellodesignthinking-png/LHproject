@@ -69,6 +69,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include routers
+try:
+    from app.routers.final_reports import router as final_reports_router
+    app.include_router(final_reports_router)
+    logger.info("✅ Final Reports router registered")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to register Final Reports router: {str(e)}")
+
+try:
+    from app.api.endpoints.m1_step_based import router as m1_router
+    app.include_router(m1_router)
+    logger.info("✅ M1 API router registered")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to register M1 API router: {str(e)}")
+
 # Request/Response Models
 class ReportRequest(BaseModel):
     """Request model for report generation"""
