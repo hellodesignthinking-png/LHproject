@@ -1276,8 +1276,8 @@ async def analyze_direct_input(
             "sido": context["sido"],
             "sigungu": context["sigungu"],
             "dong": context["dong"],
-            "confidence": "LOW",
-            "source": "DIRECT_INPUT"
+            "confidence": context["confidence"],
+            "source": context["source"]
         }
         
         # Context ID (RUN_ID)
