@@ -229,15 +229,47 @@ import hashlib
 
 def build_direct_input_context(address: str) -> Dict[str, Any]:
     """
-    직접 입력용 Fallback Context 생성
+    주소 기반 분석 컨텍스트 생성
     
-    API 없이 주소 문자열만으로 최소한의 분석 컨텍스트 생성
-    - Deterministic: 같은 주소 → 같은 결과
-    - 좌표는 주소 해시 기반 pseudo 좌표
-    - PNU는 DIRECT- 접두사
+    1순위: Kakao API로 실제 좌표 획득
+    2순위: Fallback으로 deterministic pseudo 좌표
+    
+    Returns:
+        - run_id: REAL_xxx (Kakao 성공) 또는 DIRECT_xxx (Fallback)
+        - 실제 좌표 또는 hash 기반 좌표
+        - confidence: MEDIUM (Kakao) 또는 LOW (Fallback)
     """
-    # 주소 해시 생성 (deterministic)
+    # 주소 해시 생성 (deterministic fallback용)
     hash_id = hashlib.md5(address.encode()).hexdigest()[:8]
+    
+    # Kakao API 시도
+    try:
+        from app.services.kakao_geocoding import kakao_geocoding_service
+        
+        if kakao_geocoding_service and kakao_geocoding_service.is_available:
+            logger.info(f"🗺️  Attempting Kakao API geocoding for: {address}")
+            result = kakao_geocoding_service.geocode_address_sync(address)
+            
+            if result and not result.get("is_fallback", False):
+                logger.info(f"✅ Kakao API Success - Real coordinates obtained")
+                return {
+                    "run_id": f"REAL_{datetime.now().strftime('%Y%m%d')}_{hash_id}",
+                    "address": result["address"],
+                    "pnu": f"REAL-{hash_id}",  # TODO: Generate real PNU from b_code
+                    "latitude": result["lat"],
+                    "longitude": result["lon"],
+                    "sido": result["region_1depth"],
+                    "sigungu": result["region_2depth"],
+                    "dong": result["region_3depth"],
+                    "confidence": "MEDIUM",
+                    "source": "KAKAO_API",
+                    "warning": "본 분석은 Kakao Maps API 기반 좌표를 사용하나, 토지 관련 데이터는 참고용입니다."
+                }
+    except Exception as e:
+        logger.warning(f"⚠️  Kakao API failed, using fallback: {e}")
+    
+    # Fallback: Hash 기반 deterministic 좌표
+    logger.info(f"📍 Using fallback mode for: {address}")
     
     # 시/도/구/동 파싱 시도
     parts = address.split()
@@ -1279,6 +1311,8 @@ async def analyze_direct_input(
             logger.warning(f"Context storage failed: {e}")
         
         # Response
+        using_mock = context["source"] != "KAKAO_API"
+        
         return CollectAllResponse(
             success=True,
             data={
@@ -1287,7 +1321,7 @@ async def analyze_direct_input(
                 "message": f"직접 입력 분석 완료 (참고용) - {address}"
             },
             failed_modules=[],
-            using_mock_data=True,
+            using_mock_data=using_mock,
             timestamp=datetime.now().isoformat(),
             error=None
         )
