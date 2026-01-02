@@ -88,6 +88,13 @@ try:
 except Exception as e:
     logger.warning(f"⚠️ Failed to register M1 API router: {str(e)}")
 
+try:
+    from app.routers.run_id_data import router as run_id_router
+    app.include_router(run_id_router)
+    logger.info("✅ RUN_ID Data router registered")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to register RUN_ID Data router: {str(e)}")
+
 # Request/Response Models
 class ReportRequest(BaseModel):
     """Request model for report generation"""
@@ -578,7 +585,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "app_production:app",
         host="0.0.0.0",
-        port=8091,
+        port=8000,
         workers=1,  # Single worker for development; increase for production
         log_level="info",
         access_log=True,

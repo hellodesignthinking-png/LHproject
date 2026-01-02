@@ -1306,22 +1306,6 @@ async def analyze_direct_input(
             
             logger.info(f"💾 Stored context - ID: {context_id}")
             
-            # ContextSnapshot DB에도 저장
-            try:
-                from app.database import SessionLocal
-                from app.models.context_snapshot import ContextSnapshot
-                
-                with SessionLocal() as db:
-                    snapshot = ContextSnapshot(
-                        context_id=context_id,
-                        context_data=context_data
-                    )
-                    db.add(snapshot)
-                    db.commit()
-                    logger.info(f"💾 Stored context snapshot in DB - ID: {context_id}")
-            except Exception as db_error:
-                logger.warning(f"DB snapshot storage failed: {db_error}")
-            
         except Exception as e:
             logger.warning(f"Context storage failed: {e}")
         

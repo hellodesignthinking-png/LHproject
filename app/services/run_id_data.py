@@ -210,11 +210,13 @@ class RunIdDataService:
                 ).first()
                 
                 if snapshot:
-                    context_data = snapshot.context_data
+                    import json
+                    # Parse JSON string to dict
+                    context_data = json.loads(snapshot.context_data) if isinstance(snapshot.context_data, str) else snapshot.context_data
                     return RunIdInfo(
                         run_id=snapshot.context_id,
                         address=context_data.get('address'),
-                        pnu=context_data.get('pnu'),
+                        pnu=context_data.get('pnu') or context_data.get('parcel_id'),
                         land_area=context_data.get('land_area'),
                         zone=context_data.get('zone'),
                         created_at=snapshot.created_at,
