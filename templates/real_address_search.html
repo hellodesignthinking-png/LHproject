@@ -651,20 +651,21 @@
                 
                 const address = addressData.road_address || addressData.roadAddress || addressData.address;
                 
-                const geocodeResponse = await fetch('/api/m1/collect-all', {
+                const geocodeResponse = await fetch('/api/m1/analyze-direct', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-User-Email': 'user@example.com'
+                        'X-User-Email': 'admin@zerosite.com'
                     },
                     body: JSON.stringify({
-                        address: address,
-                        coordinates: addressData.coordinates || {}
+                        address: address
                     })
                 });
 
                 if (!geocodeResponse.ok) {
-                    throw new Error('분석 실패');
+                    const errorData = await geocodeResponse.json();
+                    console.error('API Error:', errorData);
+                    throw new Error(errorData.message || '분석 실패');
                 }
 
                 const result = await geocodeResponse.json();
@@ -676,9 +677,11 @@
                 updateStep(4, 'completed');
                 updateStep(5, 'completed');
 
-                contextId = result.context_id;
+                // Extract context_id from result.data
+                contextId = result.data?.context_id || result.context_id;
 
-                displayResult(result);
+                // Pass the entire result.data to displayResult
+                displayResult(result.data || result, address);
 
             } catch (error) {
                 console.error('Analysis error:', error);
