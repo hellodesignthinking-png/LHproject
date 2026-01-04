@@ -6,15 +6,27 @@
 
 ## 🔗 접속 URL
 
-### 프론트엔드 다운로드 포털
+### ⭐ 다운로드 포털 (추천) - ✅ 작동 확인 완료
+**Vite Frontend를 통한 접근:**
 ```
-https://3000-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/static/reports/
+https://5173-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/reports/
 ```
 
-### 백엔드 API (직접 다운로드)
+### 직접 PDF 다운로드 (Vite 서빙)
+```
+M2: https://5173-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/reports/M2_Land_Appraisal_Classic.pdf
+M3: https://5173-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/reports/M3_Supply_Type_Classic.pdf
+M4: https://5173-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/reports/M4_Building_Scale_Classic.pdf
+M5: https://5173-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/reports/M5_Feasibility_Classic.pdf
+M6: https://5173-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/reports/M6_LH_Judgment_Classic.pdf
+```
+
+### 백엔드 API (대체 방법)
 ```
 https://49999-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/static/reports/{filename}
 ```
+
+> **✅ 해결됨**: Vite public 폴더를 통해 PDF 서빙 확인 완료 (HTTP 200 OK)
 
 ## 📄 다운로드 가능한 보고서
 
@@ -34,24 +46,24 @@ https://49999-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/static/reports/{f
 3. PDF 파일이 자동으로 다운로드됨
 
 ### 방법 2: 직접 URL 접근
-각 보고서를 직접 다운로드하려면 아래 URL을 사용:
+각 보고서를 직접 다운로드하려면 아래 URL을 사용 (✅ 테스트 완료):
 
 ```
-M2: https://49999-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/static/reports/M2_Land_Appraisal_Classic.pdf
-M3: https://49999-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/static/reports/M3_Supply_Type_Classic.pdf
-M4: https://49999-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/static/reports/M4_Building_Scale_Classic.pdf
-M5: https://49999-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/static/reports/M5_Feasibility_Classic.pdf
-M6: https://49999-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/static/reports/M6_LH_Judgment_Classic.pdf
+M2: https://5173-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/reports/M2_Land_Appraisal_Classic.pdf
+M3: https://5173-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/reports/M3_Supply_Type_Classic.pdf
+M4: https://5173-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/reports/M4_Building_Scale_Classic.pdf
+M5: https://5173-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/reports/M5_Feasibility_Classic.pdf
+M6: https://5173-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/reports/M6_LH_Judgment_Classic.pdf
 ```
 
 ### 방법 3: API를 통한 통합
 프론트엔드 앱에서 다운로드 버튼 구현:
 
 ```javascript
-// M2 보고서 다운로드 예제
+// M2 보고서 다운로드 예제 (Vite public 경로)
 const downloadM2Report = () => {
     const link = document.createElement('a');
-    link.href = '/static/reports/M2_Land_Appraisal_Classic.pdf';
+    link.href = '/reports/M2_Land_Appraisal_Classic.pdf';
     link.download = 'M2_토지감정평가_보고서.pdf';
     document.body.appendChild(link);
     link.click();
@@ -63,24 +75,41 @@ const downloadM2Report = () => {
 
 ```
 /home/user/webapp/
-└── static/
-    └── reports/
-        ├── index.html                                    # 다운로드 포털 페이지
-        ├── M2_ 토지감정평가 보고서 - Classic Format.pdf    # 원본 (한글명)
-        ├── M2_Land_Appraisal_Classic.pdf                 # 영문명
-        ├── M3_ 공급유형 판단 보고서 - Classic Format.pdf   # 원본 (한글명)
-        ├── M3_Supply_Type_Classic.pdf                    # 영문명
-        ├── M4_ 건축규모 판단 보고서 - Classic Format.pdf   # 원본 (한글명)
-        ├── M4_Building_Scale_Classic.pdf                 # 영문명
-        ├── M5_ 사업성 분석 보고서 - Classic Format.pdf     # 원본 (한글명)
-        ├── M5_Feasibility_Classic.pdf                    # 영문명
-        ├── M6_ LH 종합판단 보고서 - Classic Format.pdf     # 원본 (한글명)
-        └── M6_LH_Judgment_Classic.pdf                    # 영문명
+├── static/
+│   └── reports/                                      # 백엔드 static 파일 (참조용)
+│       ├── index.html
+│       └── *.pdf (5개 모듈 × 2개 파일명)
+│
+└── frontend/
+    └── public/
+        └── reports/                                  # ✅ Vite가 서빙하는 실제 경로
+            ├── index.html                            # 다운로드 포털 페이지
+            ├── M2_ 토지감정평가 보고서 - Classic Format.pdf    # 원본 (한글명)
+            ├── M2_Land_Appraisal_Classic.pdf                 # 영문명
+            ├── M3_ 공급유형 판단 보고서 - Classic Format.pdf   # 원본 (한글명)
+            ├── M3_Supply_Type_Classic.pdf                    # 영문명
+            ├── M4_ 건축규모 판단 보고서 - Classic Format.pdf   # 원본 (한글명)
+            ├── M4_Building_Scale_Classic.pdf                 # 영문명
+            ├── M5_ 사업성 분석 보고서 - Classic Format.pdf     # 원본 (한글명)
+            ├── M5_Feasibility_Classic.pdf                    # 영문명
+            ├── M6_ LH 종합판단 보고서 - Classic Format.pdf     # 원본 (한글명)
+            └── M6_LH_Judgment_Classic.pdf                    # 영문명
 ```
 
 ## 🔧 기술 구현
 
-### 백엔드 (FastAPI)
+### Vite Public 폴더 서빙 (✅ 채택된 방법)
+```bash
+# PDF 파일을 Vite public 폴더로 복사
+cp static/reports/*.pdf frontend/public/reports/
+cp static/reports/index.html frontend/public/reports/
+```
+
+Vite는 `public` 폴더의 파일을 자동으로 루트 경로에서 서빙합니다:
+- `frontend/public/reports/index.html` → `/reports/index.html`
+- `frontend/public/reports/*.pdf` → `/reports/*.pdf`
+
+### 백엔드 (FastAPI) - 대체 방법
 ```python
 # app/main.py
 from fastapi.staticfiles import StaticFiles
@@ -102,22 +131,42 @@ if static_path.exists():
 - [x] PDF 파일 업로드 및 static/reports 디렉토리 배치
 - [x] 영문 파일명으로 리네임 (한글 인코딩 문제 방지)
 - [x] FastAPI static files 마운트 설정
+- [x] Vite public 폴더로 PDF 복사 ✅ **최종 해결**
 - [x] 다운로드 포털 페이지 (index.html) 생성
+- [x] **HTTP 200 OK 테스트 완료** (포털 및 PDF 모두 접근 가능)
 - [x] Git에 커밋 및 원격 저장소에 푸시
 - [x] 프론트엔드/백엔드 URL 확인
+
+### 테스트 결과
+```bash
+# 포털 페이지 테스트
+curl -I https://5173-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/reports/index.html
+# HTTP/2 200 ✅
+
+# PDF 다운로드 테스트
+curl -I https://5173-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/reports/M2_Land_Appraisal_Classic.pdf
+# HTTP/2 200 ✅
+# Content-Type: application/pdf
+# Content-Length: 853666 bytes (833 KB)
+```
 
 ## 📌 중요 사항
 
 1. **파일명 인코딩**: 한글 파일명과 영문 파일명 모두 제공하여 다양한 환경에서 호환성 보장
-2. **CORS 설정**: 백엔드에서 CORS 미들웨어가 활성화되어 있어 프론트엔드에서 접근 가능
+2. **Vite Public 서빙**: Vite 개발 서버가 `public` 폴더의 파일을 자동으로 서빙 (빠른 접근)
 3. **캐시 정책**: static 파일은 브라우저에 캐시되므로 빠른 다운로드 가능
-4. **.gitignore**: static/reports가 gitignore에 포함되었으나 `-f` 플래그로 강제 추가됨
+4. **이중 배치**: `static/reports`(백엔드용) + `frontend/public/reports`(Vite용)으로 이중화
+5. **포트 주의**: Vite는 5173번 포트, 백엔드는 49999번 포트
 
 ## 🚀 배포 상태
 
-- **프론트엔드**: https://3000-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai
-- **백엔드 API**: https://49999-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai
-- **다운로드 포털**: https://3000-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/static/reports/
+| 서비스 | URL | 상태 |
+|--------|-----|------|
+| **Vite Frontend** | https://5173-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai | ✅ 실행 중 |
+| **다운로드 포털** | https://5173-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/reports/ | ✅ HTTP 200 OK |
+| **M2 PDF** | https://5173-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai/reports/M2_Land_Appraisal_Classic.pdf | ✅ HTTP 200 OK |
+| **백엔드 API** | https://49999-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai | ✅ 실행 중 |
+| **GitHub 저장소** | https://github.com/hellodesignthinking-png/LHproject | ✅ feature/expert-report-generator |
 
 ## 📝 다음 단계 (선택사항)
 
