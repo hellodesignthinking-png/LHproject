@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M3: 공급 유형 판단 보고서 - REAL APPRAISAL STANDARD</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            font-size: 11pt;
+            line-height: 1.6;
+            color: #333;
+            background: white;
+        }
+
+        /* Cover Page */
+        .cover-page {
+            text-align: center;
+            padding: 80px 40px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            page-break-after: always;
+        }
+
+        .company-logo {
+            font-size: 24pt;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            letter-spacing: 8px;
+        }
+
+        .main-title {
+            font-size: 36pt;
+            font-weight: bold;
+            margin: 40px 0 10px 0;
+            color: #1a1a1a;
+            letter-spacing: 2px;
+        }
+
+        .sub-title {
+            font-size: 28pt;
+            font-weight: bold;
+            margin-bottom: 60px;
+            color: #2c3e50;
+        }
+
+        .report-info-box {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            padding: 40px;
+            margin: 40px auto;
+            max-width: 600px;
+            text-align: left;
+        }
+
+        .report-info-row {
+            display: flex;
+            padding: 15px 0;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 13pt;
+        }
+
+        .report-info-row:last-child {
+            border-bottom: none;
+        }
+
+        .report-info-label {
+            font-weight: bold;
+            width: 150px;
+            color: #495057;
+        }
+
+        .report-info-value {
+            flex: 1;
+            color: #212529;
+        }
+
+        .company-name {
+            margin-top: 60px;
+            font-size: 18pt;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .company-contact {
+            margin-top: 20px;
+            font-size: 10pt;
+            color: #6c757d;
+            line-height: 1.8;
+        }
+
+        /* Content Pages */
+        .content-page {
+            padding: 40px;
+            page-break-inside: avoid;
+            min-height: auto;
+        }
+
+        .page-title {
+            font-size: 20pt;
+            font-weight: bold;
+            margin-bottom: 25px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #0066cc;
+            color: #2c3e50;
+        }
+
+        .section {
+            margin-bottom: 35px;
+            page-break-inside: avoid;
+        }
+
+        .section-title {
+            font-size: 15pt;
+            font-weight: bold;
+            margin-bottom: 18px;
+            color: #495057;
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-left: 5px solid #0066cc;
+        }
+
+        /* Executive Summary Box */
+        .executive-summary {
+            background: #e8f4f8;
+            border: 3px solid #0066cc;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .executive-label {
+            font-size: 18pt;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .executive-result {
+            font-size: 24pt;
+            font-weight: bold;
+            color: #0066cc;
+            margin-bottom: 15px;
+        }
+
+        .executive-detail {
+            font-size: 13pt;
+            color: #495057;
+            line-height: 1.8;
+        }
+
+        /* Table Styles */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 11pt;
+            background: white;
+        }
+
+        .data-table th {
+            background: #2c3e50;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #1a252f;
+        }
+
+        .data-table td {
+            padding: 10px 12px;
+            border: 1px solid #dee2e6;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .data-table tr:hover {
+            background: #e9ecef;
+        }
+
+        .highlight-row {
+            background: #fff3cd !important;
+            font-weight: bold;
+        }
+
+        .selected-row {
+            background: #d4edda !important;
+            font-weight: bold;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: #e7f3ff;
+            border-left: 5px solid #0066cc;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .info-box-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #0066cc;
+            font-size: 13pt;
+        }
+
+        /* Value highlight */
+        .value-highlight {
+            color: #0066cc;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        /* Hierarchy Badge */
+        .hierarchy-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 10pt;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .badge-primary {
+            background: #0066cc;
+            color: white;
+        }
+
+        .badge-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .badge-reference {
+            background: #dee2e6;
+            color: #495057;
+        }
+
+        /* Page break */
+        .page-break {
+            page-break-after: always;
+        }
+
+        @media print {
+            body {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Page 1: Cover -->
+    <div class="cover-page">
+        <div class="company-logo">ANTENNA HOLDINGS</div>
+        <div class="main-title">Professional Analysis Report</div>
+        <div class="sub-title">공급 유형 판단 보고서</div>
+        
+        <div class="report-info-box">
+            <div class="report-info-row">
+                <div class="report-info-label">보고서 번호</div>
+                <div class="report-info-value">ZS-M3-20251229144102</div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">사업지</div>
+                <div class="report-info-value">서울특별시 마포구 상암동 1234</div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">사업 규모</div>
+                <div class="report-info-value">총 150세대 (전용면적 59㎡ 기준), 30주차</div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">분석 기준일</div>
+                <div class="report-info-value">2025년 12월 29일</div>
+            </div>
+        </div>
+
+        <div class="company-name">Antenna Holdings Co., Ltd.</div>
+        <div class="company-contact">
+            서울시 강남구 테헤란로 427 위워크타워<br>
+            Tel: 02-3789-2000 | Email: analysis@antennaholdings.com
+        </div>
+    </div>
+
+    <!-- Page 2: Executive Summary -->
+    <div class="content-page page-break">
+        <div class="page-title">핵심 판단 요약</div>
+
+        <div class="executive-summary">
+            <div class="executive-label">선정된 공급 유형</div>
+            <div class="executive-result">신혼희망타운</div>
+            <div class="executive-detail">
+                본 사업지는 정책 대상 적합성 및 입지 수요 분석 결과, 신혼희망타운 공급 유형으로 선정하는 것이 타당합니다. 정책 우선순위 및 지역 특성을 종합적으로 검토한 결과, 해당 유형이 사업 목적 달성에 가장 적합한 것으로 판단됩니다.
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">판단 근거 요약</div>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 30%;">평가 항목</th>
+                    <th style="width: 70%;">결과</th>
+                </tr>
+                <tr>
+                    <td>정책 대상 적합성</td>
+                    <td class="value-highlight">85.0점 / 100점</td>
+                </tr>
+                <tr>
+                    <td>입지 수요 분석</td>
+                    <td class="value-highlight">78.0점 / 100점</td>
+                </tr>
+                <tr>
+                    <td>공급 가능성</td>
+                    <td class="value-highlight">72.0점 / 100점</td>
+                </tr>
+                <tr class="selected-row">
+                    <td><strong>최종 선정 유형</strong></td>
+                    <td><strong>신혼희망타운</strong></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Page 3: Policy Target Analysis (PRIMARY) -->
+    <div class="content-page page-break">
+        <div class="page-title">
+            <span class="hierarchy-badge badge-primary">PRIMARY</span>
+            1. 정책 대상 적합성 분석
+        </div>
+
+        <div class="info-box">
+            <div class="info-box-title">📌 정책 대상 분석</div>
+            <p>정부 및 LH의 정책 방향, 지역별 수요층 특성, 입지 조건을 종합하여 공급 유형의 정책적 타당성을 판단합니다.</p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">정책 우선순위 평가</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">공급 유형</th>
+                        <th style="width: 20%;">정책 우선순위</th>
+                        <th style="width: 20%;">지역 수요</th>
+                        <th style="width: 20%;">입지 적합성</th>
+                        <th style="width: 15%;">종합 점수</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr class="selected-row">
+                        <td>신혼희망타운</td>
+                        <td>최우선</td>
+                        <td>높음</td>
+                        <td>적합</td>
+                        <td class="value-highlight">85점</td>
+                    </tr>
+                    
+                    <tr >
+                        <td>청년주택</td>
+                        <td>우선</td>
+                        <td>보통</td>
+                        <td>보통</td>
+                        <td class="value-highlight">70점</td>
+                    </tr>
+                    
+                    <tr >
+                        <td>행복주택</td>
+                        <td>보통</td>
+                        <td>낮음</td>
+                        <td>부적합</td>
+                        <td class="value-highlight">55점</td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">정책 대상 세부 분석</div>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 30%;">분석 항목</th>
+                    <th style="width: 70%;">결과</th>
+                </tr>
+                <tr>
+                    <td>주요 수요층</td>
+                    <td>20-30대 신혼부부, 결혼 7년 이내</td>
+                </tr>
+                <tr>
+                    <td>소득 수준</td>
+                    <td>도시근로자 가구 월평균 소득 100% 이하</td>
+                </tr>
+                <tr>
+                    <td>가구 유형</td>
+                    <td>무주택 세대구성원, 1-2인 가구</td>
+                </tr>
+                <tr>
+                    <td>정책 지원 사항</td>
+                    <td>LH 일괄매입, 장기저리 융자 지원</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Page 4: Demand Analysis (SECONDARY) -->
+    <div class="content-page page-break">
+        <div class="page-title">
+            <span class="hierarchy-badge badge-secondary">SECONDARY</span>
+            2. 입지 수요 분석
+        </div>
+
+        <div class="info-box">
+            <div class="info-box-title">📌 입지 수요 분석</div>
+            <p>사업지 주변의 인구 구성, 교통 접근성, 생활 인프라를 분석하여 각 공급 유형의 실제 수요를 추정합니다.</p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">주변 인구 구성 분석</div>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 30%;">인구 구성</th>
+                    <th style="width: 30%;">비율</th>
+                    <th style="width: 40%;">분석</th>
+                </tr>
+                
+                <tr>
+                    <td>20-30대 미혼</td>
+                    <td class="value-highlight">35.5%</td>
+                    <td>청년층 비중이 높아 청년주택 수요 예상</td>
+                </tr>
+                
+                <tr>
+                    <td>신혼부부 (결혼 7년 이내)</td>
+                    <td class="value-highlight">28.3%</td>
+                    <td>신혼희망타운 주요 수요층으로 판단</td>
+                </tr>
+                
+                <tr>
+                    <td>자녀 1명 이하 가구</td>
+                    <td class="value-highlight">22.1%</td>
+                    <td>소형 평형 선호층 다수</td>
+                </tr>
+                
+                <tr>
+                    <td>기타</td>
+                    <td class="value-highlight">14.1%</td>
+                    <td>일반 수요층</td>
+                </tr>
+                
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">교통 및 생활 인프라</div>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 30%;">항목</th>
+                    <th style="width: 70%;">현황</th>
+                </tr>
+                <tr>
+                    <td>대중교통 접근성</td>
+                    <td>지하철 2호선 역세권 (도보 5분), 버스 정류장 3개소</td>
+                </tr>
+                <tr>
+                    <td>교육 시설</td>
+                    <td>초등학교 1개소 (도보 10분), 어린이집 5개소</td>
+                </tr>
+                <tr>
+                    <td>상업 시설</td>
+                    <td>대형마트 1개소 (1km), 편의점 8개소</td>
+                </tr>
+                <tr>
+                    <td>의료 시설</td>
+                    <td>종합병원 1개소 (2km), 의원 12개소</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Page 5: Final Decision -->
+    <div class="content-page page-break">
+        <div class="page-title">3. 최종 판단</div>
+
+        <div class="section">
+            <div class="section-title">종합 평가 결과</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>평가 방법</th>
+                        <th>가중치</th>
+                        <th>점수</th>
+                        <th>비고</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>정책 대상 적합성 (PRIMARY)</td>
+                        <td>50%</td>
+                        <td class="value-highlight">85.0점</td>
+                        <td>정책 방향 및 대상층 분석</td>
+                    </tr>
+                    <tr>
+                        <td>입지 수요 분석 (SECONDARY)</td>
+                        <td>30%</td>
+                        <td class="value-highlight">78.0점</td>
+                        <td>인구 구성 및 인프라 분석</td>
+                    </tr>
+                    <tr>
+                        <td>공급 가능성 (REFERENCE)</td>
+                        <td>20%</td>
+                        <td class="value-highlight">72.0점</td>
+                        <td>사업 실행 가능성</td>
+                    </tr>
+                    <tr class="selected-row">
+                        <td><strong>종합 점수</strong></td>
+                        <td><strong>100%</strong></td>
+                        <td class="value-highlight"><strong>80.30000000000001점</strong></td>
+                        <td><strong>최종 선정: 신혼희망타운</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">판단 의견</div>
+            <div class="info-box">
+                <p>본 사업지는 신혼희망타운 공급 유형으로 선정됩니다. 정책 대상 분석 결과 85.0점, 입지 수요 분석 결과 78.0점으로 종합 점수 80.3점을 기록하였으며, LH 정책 방향 및 지역 수요와 부합하는 것으로 판단됩니다. 사업 실행 가능성이 확보되었으므로, 해당 유형으로의 사업 추진을 권고합니다.</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 60px; text-align: right;">
+            <p style="font-size: 12pt; margin-bottom: 10px;">2025년 12월 29일</p>
+            <p style="font-size: 13pt; font-weight: bold; color: #2c3e50;">작성 주체: ZeroSite Analysis Engine</p>
+            <p style="font-size: 12pt; color: #6c757d; margin-top: 15px;">Antenna Holdings Co., Ltd.</p>
+        </div>
+    </div>
+
+    <!-- Page 6: Legal Disclaimer -->
+    <div class="content-page">
+        <div class="page-title">4. 분석 기준 및 제한사항</div>
+
+        <div class="section">
+            <div class="section-title">분석 기준</div>
+            <div class="info-box">
+                <p><strong>1. 분석 목적:</strong> 본 보고서는 공급 유형 선정을 위한 전문 분석입니다.</p>
+                <p><strong>2. 분석 기준일:</strong> 2025년 12월 29일 기준이며, 이후 정책 변화는 반영되지 않습니다.</p>
+                <p><strong>3. 데이터 출처:</strong> 통계청, 국토교통부, LH 내부 자료 등 공신력 있는 기관의 자료를 활용했습니다.</p>
+                <p><strong>4. 적용 범위:</strong> 본 판단은 분석 기준일 당시의 정책 및 시장 상황을 반영한 것입니다.</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">주의사항</div>
+            <ul style="padding-left: 20px; line-height: 2;">
+                <li>본 보고서의 내용을 임의로 수정하거나 일부만 발췌하여 사용할 수 없습니다.</li>
+                <li>공급 유형 선정은 분석 기준일 당시의 정책 및 수요 상황을 반영한 것입니다.</li>
+                <li>정책 변경, 지역 개발 계획 등 향후 변경 가능한 요소는 별도 확인이 필요합니다.</li>
+                <li>최종 사업 승인은 관련 부서의 추가 검토가 필요합니다.</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 80px; padding: 30px; background: #f8f9fa; border: 2px solid #dee2e6;">
+            <p style="text-align: center; font-size: 11pt; color: #6c757d; line-height: 1.8;">
+                본 분석은 전문 분석 기준 및 LH 내부 기준에 따라 작성되었으며,<br>
+                분석 과정에서 취득한 정보와 자료는 엄격히 보호됩니다.<br>
+                <br>
+                <strong>Confidential - For Official Use Only</strong>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

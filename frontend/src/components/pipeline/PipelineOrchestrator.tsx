@@ -23,6 +23,7 @@
 
 import React, { useState } from 'react';
 import { M1LandingPage } from '../m1/M1LandingPage';
+import { BACKEND_URL } from '../../config';
 import './PipelineOrchestrator.css';
 
 type PipelineStage = 
@@ -78,11 +79,18 @@ export const PipelineOrchestrator: React.FC = () => {
    * 
    * Actions:
    * 1. Store frozen context_id and parcel_id
-   * 2. Automatically trigger M2→M6 pipeline
-   * 3. No user interaction required until M6 decision
+   * 2. Convert M1 formData to mock_land_data format
+   * 3. Automatically trigger M2→M6 pipeline with land data
+   * 4. No user interaction required until M6 decision
    */
-  const handleM1FreezeComplete = async (contextId: string, parcelId: string) => {
+  const handleM1FreezeComplete = async (contextId: string, parcelId: string, formData?: any) => {
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🚀 [PipelineOrchestrator] handleM1FreezeComplete CALLED!');
+    console.log('═══════════════════════════════════════════════════════');
     console.log('🔒 M1 Context Frozen:', { contextId, parcelId });
+    console.log('📦 M1 FormData received:', !!formData);
+    console.log('📦 M1 FormData keys:', formData ? Object.keys(formData) : 'null');
+    console.log('📦 M1 FormData full:', formData);
     console.log('⏰ Time:', new Date().toLocaleTimeString());
     
     setState(prev => ({
@@ -101,28 +109,92 @@ export const PipelineOrchestrator: React.FC = () => {
       console.log('🚀 Starting automatic M2→M6 pipeline execution...');
       console.log('⏰ Time:', new Date().toLocaleTimeString());
       
-      // 🔥 CRITICAL FIX: Use centralized backend URL config
-      const apiUrl = `${import.meta.env.VITE_BACKEND_URL || 'https://8005-iytptjlm3wjktifqay52f-2b54fc91.sandbox.novita.ai'}/api/v4/pipeline/analyze`;
+      // 🔥 CRITICAL FIX: Use centralized config
+      const apiUrl = `${BACKEND_URL}/api/v4/pipeline/analyze`;
+      
+      // 🆕 Convert M1 formData to mock_land_data format if provided
+      let mock_land_data = null;
+      if (formData) {
+        console.log('📝 Converting M1 formData to mock_land_data...');
+        mock_land_data = {
+          // STEP 1-2: Address & Coordinates
+          address: formData.selectedAddress?.jibun_address || '',
+          road_address: formData.selectedAddress?.road_address || '',
+          sido: formData.geocodeData?.sido || formData.selectedAddress?.sido || '',
+          sigungu: formData.geocodeData?.sigungu || formData.selectedAddress?.sigungu || '',
+          dong: formData.geocodeData?.dong || formData.selectedAddress?.dong || '',
+          coordinates: {
+            lat: formData.geocodeData?.coordinates?.lat || 0,
+            lon: formData.geocodeData?.coordinates?.lon || 0
+          },
+          coordinates_verified: true,
+          address_source: formData.dataSources?.address || 'API',
+          coordinates_source: formData.dataSources?.geocode || 'API',
+          
+          // STEP 3: Cadastral
+          bonbun: formData.cadastralData?.bonbun || '',
+          bubun: formData.cadastralData?.bubun || '0',
+          jimok: formData.cadastralData?.jimok || '',
+          area: formData.cadastralData?.area || 0,
+          cadastral_source: formData.dataSources?.cadastral || 'API',
+          
+          // STEP 4: Zoning & Legal (🔥 CRITICAL: All required fields)
+          zone_type: formData.landUseData?.zone_type || '',
+          zone_detail: formData.landUseData?.zone_detail || null,
+          land_use: formData.landUseData?.land_use || '주거용',  // ← 필수!
+          far: formData.landUseData?.far || 0,
+          bcr: formData.landUseData?.bcr || 0,
+          height_limit: formData.landUseData?.height_limit || null,  // ← null (not 0!)
+          regulations: formData.landUseData?.regulations || [],
+          restrictions: formData.landUseData?.restrictions || [],
+          zoning_source: formData.dataSources?.landUse || 'API',
+          
+          // STEP 5: Road Access
+          road_contact: '접도',
+          road_width: formData.roadInfoData?.road_width || 0,
+          road_type: formData.roadInfoData?.road_type || '',
+          nearby_roads: formData.roadInfoData?.nearby_roads || [],
+          road_source: formData.dataSources?.roadInfo || 'API',
+          
+          // STEP 6: Market Data
+          official_land_price: formData.marketData?.official_land_price || null,
+          official_land_price_date: formData.marketData?.official_land_price_date || null,
+          official_price_source: formData.dataSources?.marketData || 'API',
+          transaction_cases_appraisal: formData.marketData?.transactions?.slice(0, 5) || [],
+          transaction_cases_reference: formData.marketData?.transactions || [],
+          
+          // Premium factors
+          corner_lot: false,
+          wide_road: false,
+          
+          // Metadata
+          created_by: 'pipeline_user'
+        };
+        console.log('✅ mock_land_data prepared:', mock_land_data);
+      }
+      
+      const requestBody = {
+        parcel_id: parcelId,
+        use_cache: false,
+        ...(mock_land_data && { mock_land_data })
+      };
       
       console.log(`📡 Calling pipeline API: ${apiUrl}`);
-      console.log('📦 Request body:', { parcel_id: parcelId, use_cache: false });
+      console.log('📦 Request body:', requestBody);
       
       const fetchStartTime = Date.now();
       
-      // 🆕 Add timeout to prevent infinite waiting
+      // 🆕 Add timeout to prevent infinite waiting (increase to 120s for full pipeline)
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
-        console.error('⏰ REQUEST TIMEOUT after 30 seconds');
+        console.error('⏰ REQUEST TIMEOUT after 120 seconds');
         controller.abort();
-      }, 30000); // 30 second timeout
+      }, 120000); // 120 second timeout for full pipeline
       
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          parcel_id: parcelId,
-          use_cache: false
-        }),
+        body: JSON.stringify(requestBody),
         signal: controller.signal
       });
       
@@ -240,8 +312,8 @@ export const PipelineOrchestrator: React.FC = () => {
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      // 🔥 CRITICAL FIX: Hardcoded backend URL
-      const apiUrl = `${import.meta.env.VITE_BACKEND_URL || 'https://8005-iytptjlm3wjktifqay52f-2b54fc91.sandbox.novita.ai'}/api/v4/pipeline/reports/comprehensive`;
+      // 🔥 CRITICAL FIX: Use centralized config
+      const apiUrl = `${BACKEND_URL}/api/v4/pipeline/reports/comprehensive`;
       
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -349,8 +421,8 @@ export const PipelineOrchestrator: React.FC = () => {
         {/* Stage 1: M1 Input (8 steps) */}
         {state.stage === 'M1_INPUT' && (
           <M1LandingPage 
-            onContextFreezeComplete={(contextId: string, parcelId: string) => {
-              handleM1FreezeComplete(contextId, parcelId);
+            onContextFreezeComplete={(contextId: string, parcelId: string, formData?: any) => {
+              handleM1FreezeComplete(contextId, parcelId, formData);
             }}
           />
         )}
@@ -458,7 +530,8 @@ export const PipelineOrchestrator: React.FC = () => {
                     title="토지감정평가"
                     icon="💰"
                     data={state.m2Result}
-                    contextId={state.contextId} 
+                    contextId={state.contextId || ''}
+                    analysisId={state.analysisId} 
                     keyMetrics={[
                       { 
                         label: '토지가치', 
@@ -503,7 +576,8 @@ export const PipelineOrchestrator: React.FC = () => {
                     title="LH 선호유형"
                     icon="🏠"
                     data={state.m3Result}
-                    contextId={state.contextId} 
+                    contextId={state.contextId || ''}
+                    analysisId={state.analysisId}
                     keyMetrics={[
                       { 
                         label: '선호 구조', 
@@ -538,7 +612,8 @@ export const PipelineOrchestrator: React.FC = () => {
                     title="건축규모 분석"
                     icon="📐"
                     data={state.m4Result}
-                    contextId={state.contextId} 
+                    contextId={state.contextId || ''}
+                    analysisId={state.analysisId}
                     keyMetrics={[
                       { label: '법정 세대수', value: (state.m4Result.summary?.legal_units !== undefined && state.m4Result.summary?.legal_units !== null) ? `${state.m4Result.summary.legal_units}세대` : (state.m4Result.details?.legal_capacity?.total_units !== undefined) ? `${state.m4Result.details.legal_capacity.total_units}세대` : '분석 필요' },
                       { label: '인센티브 세대수', value: (state.m4Result.summary?.incentive_units !== undefined && state.m4Result.summary?.incentive_units !== null) ? `${state.m4Result.summary.incentive_units}세대` : (state.m4Result.details?.incentive_capacity?.total_units !== undefined) ? `${state.m4Result.details.incentive_capacity.total_units}세대` : '분석 필요' },
@@ -555,7 +630,8 @@ export const PipelineOrchestrator: React.FC = () => {
                     title="사업성 분석"
                     icon="💼"
                     data={state.m5Result}
-                    contextId={state.contextId} 
+                    contextId={state.contextId || ''}
+                    analysisId={state.analysisId}
                     keyMetrics={[
                       { 
                         label: 'NPV (Public)', 
@@ -590,7 +666,8 @@ export const PipelineOrchestrator: React.FC = () => {
                     title="LH 심사예측"
                     icon="⚖️"
                     data={state.m6Result}
-                    contextId={state.contextId} 
+                    contextId={state.contextId || ''}
+                    analysisId={state.analysisId}
                     keyMetrics={[
                       { 
                         label: '최종 결정', 
@@ -626,18 +703,201 @@ export const PipelineOrchestrator: React.FC = () => {
                 )}
               </div>
 
-              {/* Final Report 6 Types Buttons - NEW */}
+              {/* Latest REAL APPRAISAL STANDARD Reports - NEW */}
               <div style={{ 
                 marginTop: '40px', 
+                padding: '30px', 
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+                borderRadius: '12px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+              }}>
+                <div style={{ textAlign: 'center', marginBottom: '25px' }}>
+                  <h3 style={{ margin: 0, fontSize: '22px', color: 'white', fontWeight: 'bold' }}>
+                    ⭐ 최신 REAL APPRAISAL STANDARD 보고서
+                  </h3>
+                  <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', marginTop: '8px' }}>
+                    전문 감정평가 문서 형식 | M2-M6 전체 포함 | 실시간 데이터 생성
+                  </p>
+                </div>
+                
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                  gap: '15px',
+                  marginBottom: '20px'
+                }}>
+                  <a
+                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/pipeline/reports/module/M2/html?context_id=${state.contextId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      padding: '18px',
+                      background: 'white',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      color: '#333',
+                      textAlign: 'center',
+                      transition: 'transform 0.2s, box-shadow 0.2s',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      display: 'block'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    }}
+                  >
+                    <div style={{ fontSize: '32px', marginBottom: '8px' }}>💰</div>
+                    <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '4px' }}>M2 토지감정평가</div>
+                    <div style={{ fontSize: '11px', color: '#666' }}>거래사례 중심</div>
+                  </a>
+                  
+                  <a
+                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/pipeline/reports/module/M3/html?context_id=${state.contextId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      padding: '18px',
+                      background: 'white',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      color: '#333',
+                      textAlign: 'center',
+                      transition: 'transform 0.2s, box-shadow 0.2s',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      display: 'block'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    }}
+                  >
+                    <div style={{ fontSize: '32px', marginBottom: '8px' }}>🏘️</div>
+                    <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '4px' }}>M3 공급 유형</div>
+                    <div style={{ fontSize: '11px', color: '#666' }}>단일 결정</div>
+                  </a>
+                  
+                  <a
+                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/pipeline/reports/module/M4/html?context_id=${state.contextId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      padding: '18px',
+                      background: 'white',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      color: '#333',
+                      textAlign: 'center',
+                      transition: 'transform 0.2s, box-shadow 0.2s',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      display: 'block'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    }}
+                  >
+                    <div style={{ fontSize: '32px', marginBottom: '8px' }}>🏗️</div>
+                    <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '4px' }}>M4 건축 규모</div>
+                    <div style={{ fontSize: '11px', color: '#666' }}>최적 규모</div>
+                  </a>
+                  
+                  <a
+                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/pipeline/reports/module/M5/html?context_id=${state.contextId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      padding: '18px',
+                      background: 'white',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      color: '#333',
+                      textAlign: 'center',
+                      transition: 'transform 0.2s, box-shadow 0.2s',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      display: 'block'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    }}
+                  >
+                    <div style={{ fontSize: '32px', marginBottom: '8px' }}>📊</div>
+                    <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '4px' }}>M5 사업성 분석</div>
+                    <div style={{ fontSize: '11px', color: '#666' }}>LH 매입 모델</div>
+                  </a>
+                  
+                  <a
+                    href={`https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai/api/v4/pipeline/reports/module/M6/html?context_id=${state.contextId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      padding: '18px',
+                      background: 'white',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      color: '#333',
+                      textAlign: 'center',
+                      transition: 'transform 0.2s, box-shadow 0.2s',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      display: 'block'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    }}
+                  >
+                    <div style={{ fontSize: '32px', marginBottom: '8px' }}>✅</div>
+                    <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '4px' }}>M6 종합 판단</div>
+                    <div style={{ fontSize: '11px', color: '#666' }}>LH 심사</div>
+                  </a>
+                </div>
+                
+                <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                  <div style={{ 
+                    display: 'inline-block',
+                    padding: '12px 24px',
+                    background: 'rgba(255,255,255,0.2)',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    color: 'white'
+                  }}>
+                    💡 Tip: 브라우저에서 Ctrl+P → "PDF로 저장" → "배경 그래픽 켜기"
+                  </div>
+                </div>
+              </div>
+
+              {/* Final Report 6 Types Buttons - Original */}
+              <div style={{ 
+                marginTop: '20px', 
                 padding: '30px', 
                 background: '#f8f9fa', 
                 borderRadius: '12px',
                 border: '2px solid #e0e0e0'
               }}>
                 <div style={{ textAlign: 'center', marginBottom: '25px' }}>
-                  <h3 style={{ margin: 0, fontSize: '20px', color: '#1976d2' }}>📊 최종보고서 6종</h3>
+                  <h3 style={{ margin: 0, fontSize: '20px', color: '#1976d2' }}>📊 실시간 생성 보고서</h3>
                   <p style={{ fontSize: '14px', color: '#666', marginTop: '8px' }}>
-                    분석 결과를 용도별로 확인하세요 (새 탭에서 열림)
+                    현재 분석 데이터 기반 (새 탭에서 열림)
                   </p>
                   {!state.contextId && (
                     <div style={{ 
@@ -666,7 +926,7 @@ export const PipelineOrchestrator: React.FC = () => {
                         alert('⚠️ M1 분석을 먼저 완료해주세요.');
                         return;
                       }
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/all_in_one/html?context_id=${state.contextId}`;
+                      const url = `${BACKEND_URL}/api/v4/reports/final/all_in_one/html?context_id=${state.contextId}`;
                       window.open(url, '_blank');
                     }}
                     disabled={!state.contextId}
@@ -699,7 +959,7 @@ export const PipelineOrchestrator: React.FC = () => {
                         alert('⚠️ M1 분석을 먼저 완료해주세요.');
                         return;
                       }
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/landowner_summary/html?context_id=${state.contextId}`;
+                      const url = `${BACKEND_URL}/api/v4/reports/final/landowner_summary/html?context_id=${state.contextId}`;
                       window.open(url, '_blank');
                     }}
                     disabled={!state.contextId}
@@ -732,7 +992,7 @@ export const PipelineOrchestrator: React.FC = () => {
                         alert('⚠️ M1 분석을 먼저 완료해주세요.');
                         return;
                       }
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/lh_technical/html?context_id=${state.contextId}`;
+                      const url = `${BACKEND_URL}/api/v4/reports/final/lh_technical/html?context_id=${state.contextId}`;
                       window.open(url, '_blank');
                     }}
                     disabled={!state.contextId}
@@ -761,7 +1021,7 @@ export const PipelineOrchestrator: React.FC = () => {
                   {/* 4. 사업성·투자 검토 보고서 */}
                   <button
                     onClick={() => {
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/financial_feasibility/html?context_id=${state.contextId}`;
+                      const url = `${BACKEND_URL}/api/v4/reports/final/financial_feasibility/html?context_id=${state.contextId}`;
                       window.open(url, '_blank');
                     }}
                     style={{
@@ -788,7 +1048,7 @@ export const PipelineOrchestrator: React.FC = () => {
                   {/* 5. 사전 검토 리포트 */}
                   <button
                     onClick={() => {
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/quick_check/html?context_id=${state.contextId}`;
+                      const url = `${BACKEND_URL}/api/v4/reports/final/quick_check/html?context_id=${state.contextId}`;
                       window.open(url, '_blank');
                     }}
                     style={{
@@ -819,7 +1079,7 @@ export const PipelineOrchestrator: React.FC = () => {
                         alert('⚠️ M1 분석을 먼저 완료해주세요.');
                         return;
                       }
-                      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/reports/final/presentation/html?context_id=${state.contextId}`;
+                      const url = `${BACKEND_URL}/api/v4/reports/final/presentation/html?context_id=${state.contextId}`;
                       window.open(url, '_blank');
                     }}
                     disabled={!state.contextId}
@@ -968,7 +1228,8 @@ interface ModuleResultCardProps {
   title: string;
   icon: string;
   data: any;
-  contextId: string; // ✅ ADD: Pass contextId from parent
+  contextId: string; // ✅ UUID (for UI session)
+  analysisId: string | null; // ✅ ADD: PNU for data queries
   keyMetrics: { label: string; value: string; highlight?: boolean }[];
 }
 
@@ -977,16 +1238,18 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
   title, 
   icon, 
   data,
-  contextId, // ✅ ADD
+  contextId, // UUID (for UI session)
+  analysisId, // PNU (for data queries) ✅
   keyMetrics 
 }) => {
+  const [expanded, setExpanded] = React.useState(false);
   const handleDownloadPDF = async () => {
     try {
       console.log(`📄 [PDF DOWNLOAD] Starting download for ${moduleId}...`);
       
       // 🔥 FIX: Use pdf_download_url from data if available
       const pdfUrl = data?.pdf_download_url;
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://8005-iytptjlm3wjktifqay52f-2b54fc91.sandbox.novita.ai';
+      const backendUrl = BACKEND_URL || 'https://8005-iytptjlm3wjktifqay52f-2b54fc91.sandbox.novita.ai';
       
       // ✅ USE: contextId from props (passed from parent state)
       const finalUrl = pdfUrl 
@@ -1070,7 +1333,7 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
   const handleHTMLPreview = () => {
     try {
       const htmlUrl = data?.html_preview_url;
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://8005-iytptjlm3wjktifqay52f-2b54fc91.sandbox.novita.ai';
+      const backendUrl = BACKEND_URL || 'https://8005-iytptjlm3wjktifqay52f-2b54fc91.sandbox.novita.ai';
       
       const finalUrl = htmlUrl 
         ? `${backendUrl}${htmlUrl}`
@@ -1153,13 +1416,196 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
         ))}
       </div>
       
-      {/* Download and Preview Buttons */}
-      <div style={{ display: 'flex', gap: '8px' }}>
+      {/* Detailed Report Section (Expandable - Embedded HTML Report) */}
+      {expanded && (
+        <div style={{
+          marginTop: '20px',
+          border: '2px solid #2196F3',
+          borderRadius: '8px',
+          overflow: 'hidden',
+          background: 'white'
+        }}>
+          {/* Report Header */}
+          <div style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            padding: '15px 20px',
+            color: 'white',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '24px' }}>{icon}</span>
+              <div>
+                <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{moduleId}: {title}</div>
+                <div style={{ fontSize: '12px', opacity: 0.9 }}>전문 감정평가 보고서</div>
+              </div>
+            </div>
+            <button
+              onClick={() => setExpanded(false)}
+              style={{
+                background: 'rgba(255,255,255,0.2)',
+                border: '1px solid rgba(255,255,255,0.3)',
+                color: 'white',
+                padding: '8px 15px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: '600'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.3)'}
+              onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+            >
+              ✕ 닫기
+            </button>
+          </div>
+          
+          {/* Embedded HTML Report via iframe */}
+          <div style={{ position: 'relative', height: '800px', background: 'white' }}>
+            {/* 🔥 CRITICAL FIX: Use analysisId prop (PNU) instead of contextId (UUID) */}
+            {(() => {
+              const reportKey = analysisId;
+              if (!reportKey) {
+                console.error('❌ analysisId 없음 - 보고서 열기 차단');
+                return (
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    height: '100%',
+                    fontSize: '16px',
+                    color: '#666'
+                  }}>
+                    ⚠️ Pipeline 실행이 완료되지 않았습니다.
+                  </div>
+                );
+              }
+              
+              const iframeUrl = `${BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai'}/api/v4/reports/${moduleId}/html?context_id=${reportKey}`;
+              
+              console.log('📌 REPORT DEBUG', {
+                moduleId,
+                contextId,
+                analysisId,
+                reportKey,
+                iframeUrl
+              });
+              
+              return (
+                <iframe
+                  src={iframeUrl}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                    display: 'block'
+                  }}
+                  title={`${moduleId} 상세 보고서`}
+                  onLoad={() => console.log(`✅ [Embedded Report] ${moduleId} loaded successfully with reportKey=${reportKey}`)}
+                  onError={() => console.error(`❌ [Embedded Report] ${moduleId} failed to load with reportKey=${reportKey}`)}
+                />
+              );
+            })()}
+          </div>
+          
+          {/* Footer with Action Buttons */}
+          <div style={{
+            background: '#f5f5f5',
+            padding: '15px 20px',
+            borderTop: '1px solid #ddd',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <div style={{ fontSize: '13px', color: '#666' }}>
+              💡 <strong>Tip:</strong> Ctrl+P를 눌러 PDF로 저장할 수 있습니다 (배경 그래픽 켜기)
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => {
+                  // 🔥 CRITICAL FIX: Use analysisId prop (PNU) instead of contextId (UUID)
+                  const reportKey = analysisId || contextId;
+                  const htmlUrl = `${BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai'}/api/v4/reports/${moduleId}/html?context_id=${reportKey}`;
+                  console.log(`🔍 [Report URL] moduleId=${moduleId}, contextId=${contextId}, analysisId=${analysisId}, reportKey=${reportKey}`);
+                  window.open(htmlUrl, '_blank');
+                }}
+                style={{
+                  padding: '10px 20px',
+                  background: '#2196F3',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = '#1976D2'}
+                onMouseOut={(e) => e.currentTarget.style.background = '#2196F3'}
+              >
+                <span>🔗</span>
+                <span>새 탭에서 열기</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Action Buttons */}
+      <div style={{ display: 'flex', gap: '8px', marginTop: '15px' }}>
+        {/* Toggle Detailed View Button - Primary Action */}
         <button
-          onClick={handleDownloadPDF}
+          onClick={() => {
+            console.log(`📊 [ModuleResultCard] Toggling detailed view for ${moduleId}, expanded: ${!expanded}`);
+            setExpanded(!expanded);
+          }}
           style={{
             flex: 1,
-            padding: '10px',
+            padding: '12px',
+            background: expanded ? '#FF5722' : '#4CAF50',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            fontSize: '14px',
+            fontWeight: '700',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
+            transition: 'all 0.3s ease',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.background = expanded ? '#E64A19' : '#388E3C';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.background = expanded ? '#FF5722' : '#4CAF50';
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+          }}
+        >
+          <span style={{ fontSize: '18px' }}>{expanded ? '🔼' : '📊'}</span>
+          <span>{expanded ? '상세 보고서 닫기' : '상세 보고서 보기'}</span>
+        </button>
+        
+        {/* Secondary Action - Open in New Tab */}
+        <button
+          onClick={() => {
+            const backendUrl = BACKEND_URL || 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai';
+            // 🔥 CRITICAL FIX: Use analysisId prop (PNU) instead of contextId (UUID)
+            const reportKey = analysisId || contextId;
+            const htmlUrl = `${backendUrl}/api/v4/reports/${moduleId}/html?context_id=${reportKey}`;
+            console.log(`🔍 [New Tab] moduleId=${moduleId}, analysisId=${analysisId}, reportKey=${reportKey}`);
+            console.log(`🔗 [HTML REPORT] Opening in new tab: ${htmlUrl}`);
+            window.open(htmlUrl, '_blank');
+          }}
+          style={{
+            padding: '12px 20px',
             background: '#2196F3',
             color: 'white',
             border: 'none',
@@ -1170,41 +1616,31 @@ const ModuleResultCard: React.FC<ModuleResultCardProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '8px'
-          }}
-          onMouseOver={(e) => e.currentTarget.style.background = '#1976D2'}
-          onMouseOut={(e) => e.currentTarget.style.background = '#2196F3'}
-        >
-          <span>📄</span>
-          <span>PDF 보고서 다운로드</span>
-        </button>
-        <button
-          onClick={handleHTMLPreview}
-          disabled={!htmlPreviewAvailable}
-          title={htmlPreviewAvailable ? 'HTML 미리보기 열기' : 'HTML 미리보기 준비 중 (데이터 생성 후 활성화)'}
-          style={{
-            flex: 1,
-            padding: '10px',
-            background: htmlPreviewAvailable ? '#4CAF50' : '#CCCCCC',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: '13px',
-            fontWeight: '600',
-            cursor: htmlPreviewAvailable ? 'pointer' : 'not-allowed',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
             gap: '8px',
-            opacity: htmlPreviewAvailable ? 1 : 0.6
+            transition: 'all 0.3s ease',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
           }}
-          onMouseOver={(e) => htmlPreviewAvailable && (e.currentTarget.style.background = '#388E3C')}
-          onMouseOut={(e) => htmlPreviewAvailable && (e.currentTarget.style.background = '#4CAF50')}
+          onMouseOver={(e) => {
+            e.currentTarget.style.background = '#1976D2';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.background = '#2196F3';
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+          }}
         >
-          <span>👁️</span>
-          <span>HTML 미리보기</span>
+          <span>🔗</span>
+          <span>새 탭</span>
         </button>
       </div>
+      
+      {!expanded && (
+        <div style={{ fontSize: '11px', color: '#999', marginTop: '8px', textAlign: 'center' }}>
+          💡 <strong>상세 보고서 보기</strong>를 클릭하면 전문 감정평가 보고서가 표시됩니다
+        </div>
+      )}
     </div>
   );
 };

@@ -124,13 +124,13 @@ async def lifespan(app: FastAPI):
     init_db()
     print("✅ Database tables created")
     
-    # Start background tasks
-    cleanup_task = asyncio.create_task(start_cache_cleanup_task())
+    # Start background tasks (commented out to prevent startup issues)
+    # cleanup_task = asyncio.create_task(start_cache_cleanup_task())
     
     yield
     
     # Cleanup
-    cleanup_task.cancel()
+    # cleanup_task.cancel()
     print("=" * 60)
     print("👋 시스템 종료")
     print("=" * 60)

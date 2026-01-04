@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M3: 공급 유형 판단 보고서 - REAL APPRAISAL STANDARD</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            font-size: 11pt;
+            line-height: 1.6;
+            color: #333;
+            background: white;
+        }
+
+        /* Cover Page */
+        .cover-page {
+            text-align: center;
+            padding: 80px 40px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            page-break-after: always;
+        }
+
+        .company-logo {
+            font-size: 24pt;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            letter-spacing: 8px;
+        }
+
+        .main-title {
+            font-size: 36pt;
+            font-weight: bold;
+            margin: 40px 0 10px 0;
+            color: #1a1a1a;
+            letter-spacing: 2px;
+        }
+
+        .sub-title {
+            font-size: 28pt;
+            font-weight: bold;
+            margin-bottom: 60px;
+            color: #2c3e50;
+        }
+
+        .report-info-box {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            padding: 40px;
+            margin: 40px auto;
+            max-width: 600px;
+            text-align: left;
+        }
+
+        .report-info-row {
+            display: flex;
+            padding: 15px 0;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 13pt;
+        }
+
+        .report-info-row:last-child {
+            border-bottom: none;
+        }
+
+        .report-info-label {
+            font-weight: bold;
+            width: 150px;
+            color: #495057;
+        }
+
+        .report-info-value {
+            flex: 1;
+            color: #212529;
+        }
+
+        .company-name {
+            margin-top: 60px;
+            font-size: 18pt;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .company-contact {
+            margin-top: 20px;
+            font-size: 10pt;
+            color: #6c757d;
+            line-height: 1.8;
+        }
+
+        /* Content Pages */
+        .content-page {
+            padding: 40px;
+            page-break-inside: avoid;
+            min-height: auto;
+        }
+
+        .page-title {
+            font-size: 20pt;
+            font-weight: bold;
+            margin-bottom: 25px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #0066cc;
+            color: #2c3e50;
+        }
+
+        .section {
+            margin-bottom: 35px;
+            page-break-inside: avoid;
+        }
+
+        .section-title {
+            font-size: 15pt;
+            font-weight: bold;
+            margin-bottom: 18px;
+            color: #495057;
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-left: 5px solid #0066cc;
+        }
+
+        /* Executive Summary Box */
+        .executive-summary {
+            background: #e8f4f8;
+            border: 3px solid #0066cc;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .executive-label {
+            font-size: 18pt;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .executive-result {
+            font-size: 24pt;
+            font-weight: bold;
+            color: #0066cc;
+            margin-bottom: 15px;
+        }
+
+        .executive-detail {
+            font-size: 13pt;
+            color: #495057;
+            line-height: 1.8;
+        }
+
+        /* Table Styles */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 11pt;
+            background: white;
+        }
+
+        .data-table th {
+            background: #2c3e50;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #1a252f;
+        }
+
+        .data-table td {
+            padding: 10px 12px;
+            border: 1px solid #dee2e6;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .data-table tr:hover {
+            background: #e9ecef;
+        }
+
+        .highlight-row {
+            background: #fff3cd !important;
+            font-weight: bold;
+        }
+
+        .selected-row {
+            background: #d4edda !important;
+            font-weight: bold;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: #e7f3ff;
+            border-left: 5px solid #0066cc;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .info-box-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #0066cc;
+            font-size: 13pt;
+        }
+
+        /* Value highlight */
+        .value-highlight {
+            color: #0066cc;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        /* Hierarchy Badge */
+        .hierarchy-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 10pt;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .badge-primary {
+            background: #0066cc;
+            color: white;
+        }
+
+        .badge-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .badge-reference {
+            background: #dee2e6;
+            color: #495057;
+        }
+
+        /* Page break */
+        .page-break {
+            page-break-after: always;
+        }
+
+        @media print {
+            body {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Page 1: Cover -->
+    <div class="cover-page">
+        <div class="company-logo">ANTENNA HOLDINGS</div>
+        <div class="main-title">Professional Analysis Report</div>
+        <div class="sub-title">공급 유형 판단 보고서</div>
+        
+        <div class="report-info-box">
+            <div class="report-info-row">
+                <div class="report-info-label">보고서 번호</div>
+                <div class="report-info-value">{{ report_id }}</div>
+            </div>
+            <div class="report-info-row" style="background-color: #f0f8ff; border-left: 3px solid #0066cc; padding-left: 10px;">
+                <div class="report-info-label">🔒 Context ID</div>
+                <div class="report-info-value" style="font-family: monospace; font-size: 9pt;">{{ report_id.split("_M")[0] if "_M" in report_id else report_id }}</div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">사업지</div>
+                <div class="report-info-value">{{ project_address }}</div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">사업 규모</div>
+                <div class="report-info-value">{{ project_scale }}</div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">분석 기준일</div>
+                <div class="report-info-value">{{ analysis_date }}</div>
+            </div>
+        </div>
+
+        <div class="company-name">Antenna Holdings Co., Ltd.</div>
+        <div class="company-contact">
+            서울시 강남구 테헤란로 427 위워크타워<br>
+            Tel: 02-3789-2000 | Email: analysis@antennaholdings.com
+        </div>
+    </div>
+
+    <!-- Page 2: Executive Summary -->
+    <div class="content-page page-break">
+        <div class="page-title">핵심 판단 요약</div>
+
+        <div class="executive-summary">
+            <div class="executive-label">선정된 공급 유형</div>
+            <div class="executive-result">{{ selected_supply_type }}</div>
+            <div class="executive-detail">
+                <p style="font-size: 11pt; color: #6c757d; margin-bottom: 15px;"><em>본 분석은 M2 토지 시가 적정성 판단을 전제로 진행되었습니다.</em></p>
+                {{ executive_conclusion }}
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">판단 근거 요약</div>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 30%;">평가 항목</th>
+                    <th style="width: 70%;">결과</th>
+                </tr>
+                <tr>
+                    <td>정책 대상 적합성</td>
+                    <td class="value-highlight">{{ policy_target_score }}점 / 100점</td>
+                </tr>
+                <tr>
+                    <td>입지 수요 분석</td>
+                    <td class="value-highlight">{{ demand_score }}점 / 100점</td>
+                </tr>
+                <tr>
+                    <td>공급 가능성</td>
+                    <td class="value-highlight">{{ supply_feasibility_score }}점 / 100점</td>
+                </tr>
+                <tr class="selected-row">
+                    <td><strong>최종 선정 유형</strong></td>
+                    <td><strong>{{ selected_supply_type }}</strong></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Page 3: Policy Target Analysis (PRIMARY) -->
+    <div class="content-page page-break">
+        <div class="page-title">
+            <span class="hierarchy-badge badge-primary">PRIMARY</span>
+            1. 정책 대상 적합성 분석
+        </div>
+
+        <div class="info-box">
+            <div class="info-box-title">📌 정책 대상 분석</div>
+            <p>정부 및 LH의 정책 방향, 지역별 수요층 특성, 입지 조건을 종합하여 공급 유형의 정책적 타당성을 판단합니다.</p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">정책 우선순위 평가</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">공급 유형</th>
+                        <th style="width: 20%;">정책 우선순위</th>
+                        <th style="width: 20%;">지역 수요</th>
+                        <th style="width: 20%;">입지 적합성</th>
+                        <th style="width: 15%;">종합 점수</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for type_data in supply_type_analysis %}
+                    <tr {% if type_data.is_selected %}class="selected-row"{% endif %}>
+                        <td>{{ type_data.supply_type }}</td>
+                        <td>{{ type_data.policy_priority }}</td>
+                        <td>{{ type_data.regional_demand }}</td>
+                        <td>{{ type_data.location_fit }}</td>
+                        <td class="value-highlight">{{ type_data.total_score }}점</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">1-1. 공급 유형별 배제 사유 검토</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">공급 유형</th>
+                        <th style="width: 75%;">배제 사유 요약</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for exclusion in exclusion_reasons %}
+                    <tr {% if exclusion.supply_type == selected_supply_type %}class="selected-row"{% endif %}>
+                        <td>{% if exclusion.supply_type == selected_supply_type %}<strong>{{ exclusion.supply_type }}</strong>{% else %}{{ exclusion.supply_type }}{% endif %}</td>
+                        <td>{% if exclusion.supply_type == selected_supply_type %}<strong>{{ exclusion.exclusion_reason }}</strong>{% else %}{{ exclusion.exclusion_reason }}{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="info-box" style="margin-top: 20px;">
+                <p><strong>→ 판단 근거:</strong> {{ selected_supply_type }}은 지역 수요 구조와 정책 방향이 가장 직접적으로 일치하며, 다른 유형 대비 심사 안정성이 확보됩니다.</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">정책 대상 세부 분석</div>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 30%;">분석 항목</th>
+                    <th style="width: 70%;">결과</th>
+                </tr>
+                <tr>
+                    <td>주요 수요층</td>
+                    <td>{{ target_demographic }}</td>
+                </tr>
+                <tr>
+                    <td>소듍 수준</td>
+                    <td>{{ income_level }}</td>
+                </tr>
+                <tr>
+                    <td>가구 유형</td>
+                    <td>{{ household_type }}</td>
+                </tr>
+                <tr>
+                    <td>정책 지원 사항</td>
+                    <td>{{ policy_support }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Page 4: Demand Analysis (SECONDARY) -->
+    <div class="content-page page-break">
+        <div class="page-title">
+            <span class="hierarchy-badge badge-secondary">SECONDARY</span>
+            2. 입지 수요 분석
+        </div>
+
+        <div class="info-box">
+            <div class="info-box-title">📌 입지 수요 분석</div>
+            <p>사업지 주변의 인구 구성, 교통 접근성, 생활 인프라를 분석하여 각 공급 유형의 실제 수요를 추정합니다.</p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">주변 인구 구성 분석</div>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 30%;">인구 구성</th>
+                    <th style="width: 30%;">비율</th>
+                    <th style="width: 40%;">분석</th>
+                </tr>
+                {% for demo_data in demographic_analysis %}
+                <tr>
+                    <td>{{ demo_data.category }}</td>
+                    <td class="value-highlight">{{ demo_data.percentage }}%</td>
+                    <td>{{ demo_data.analysis }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">교통 및 생활 인프라</div>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 30%;">항목</th>
+                    <th style="width: 70%;">현황</th>
+                </tr>
+                <tr>
+                    <td>대중교통 접근성</td>
+                    <td>{{ transport_access }}</td>
+                </tr>
+                <tr>
+                    <td>교육 시설</td>
+                    <td>{{ education_facilities }}</td>
+                </tr>
+                <tr>
+                    <td>상업 시설</td>
+                    <td>{{ commercial_facilities }}</td>
+                </tr>
+                <tr>
+                    <td>의료 시설</td>
+                    <td>{{ medical_facilities }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Page 5: Final Decision -->
+    <div class="content-page page-break">
+        <div class="page-title">3. 최종 판단</div>
+
+        <div class="section">
+            <div class="section-title">3-1. 공급 유형별 심사 안정성 검토</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">공급 유형</th>
+                        <th style="width: 20%;">안정성</th>
+                        <th style="width: 55%;">판단 근거</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stability_data in review_stability_analysis %}
+                    <tr {% if stability_data.supply_type == selected_supply_type %}class="selected-row"{% endif %}>
+                        <td>{{ stability_data.supply_type }}</td>
+                        <td class="{% if stability_data.stability_level == '높음' %}value-highlight{% endif %}">{{ stability_data.stability_level }}</td>
+                        <td>{{ stability_data.reason }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">종합 평가 결과</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>평가 방법</th>
+                        <th>적용</th>
+                        <th>점수</th>
+                        <th>비고</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>정책 대상 적합성</td>
+                        <td>중심</td>
+                        <td class="value-highlight">{{ policy_target_score }}점</td>
+                        <td>정책 방향 및 대상층 분석</td>
+                    </tr>
+                    <tr>
+                        <td>입지 수요 분석</td>
+                        <td>참고</td>
+                        <td class="value-highlight">{{ demand_score }}점</td>
+                        <td>인구 구성 및 인프라 분석</td>
+                    </tr>
+                    <tr>
+                        <td>공급 가능성</td>
+                        <td>참고</td>
+                        <td class="value-highlight">{{ supply_feasibility_score }}점</td>
+                        <td>사업 실행 가능성</td>
+                    </tr>
+                    <tr class="selected-row">
+                        <td><strong>종합 판단</strong></td>
+                        <td><strong>확정</strong></td>
+                        <td class="value-highlight"><strong>{{ total_score }}점</strong></td>
+                        <td><strong>최종 선정: {{ selected_supply_type }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="info-box" style="margin-top: 20px;">
+                <p><strong>판단 방법:</strong> 정책 대상 적합성을 중심으로 판단하였으며, 입지 수요 및 공급 가능성을 보조적으로 검토하였습니다.</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">판단 의견</div>
+            <div class="info-box">
+                <p>{{ final_opinion }}</p>
+                <p style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #dee2e6; font-weight: bold; color: #0066cc;">
+                    선정된 공급 유형을 기준으로, 실행 가능한 건축 규모 검토(M4)를 진행합니다.
+                </p>
+            </div>
+        </div>
+
+        <div style="margin-top: 60px; text-align: right;">
+            <p style="font-size: 12pt; margin-bottom: 10px;">{{ analysis_date }}</p>
+            <p style="font-size: 13pt; font-weight: bold; color: #2c3e50;">작성 주체: ZeroSite Analysis Engine</p>
+            <p style="font-size: 12pt; color: #6c757d; margin-top: 15px;">Antenna Holdings Co., Ltd.</p>
+        </div>
+    </div>
+
+    <!-- Page 6: Legal Disclaimer -->
+    <div class="content-page">
+        <div class="page-title">4. 분석 기준 및 제한사항</div>
+
+        <div class="section">
+            <div class="section-title">분석 기준</div>
+            <div class="info-box">
+                <p><strong>1. 분석 목적:</strong> 본 보고서는 공급 유형 선정을 위한 전문 분석입니다.</p>
+                <p><strong>2. 분석 기준일:</strong> {{ analysis_date }} 기준이며, 이후 정책 변화는 반영되지 않습니다.</p>
+                <p><strong>3. 데이터 출처:</strong> 통계청, 국토교통부, LH 내부 자료 등 공신력 있는 기관의 자료를 활용했습니다.</p>
+                <p><strong>4. 적용 범위:</strong> 본 판단은 분석 기준일 당시의 정책 및 시장 상황을 반영한 것입니다.</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">주의사항</div>
+            <ul style="padding-left: 20px; line-height: 2;">
+                <li>본 보고서의 내용을 임의로 수정하거나 일부만 발췌하여 사용할 수 없습니다.</li>
+                <li>공급 유형 선정은 분석 기준일 당시의 정책 및 수요 상황을 반영한 것입니다.</li>
+                <li>정책 변경, 지역 개발 계획 등 향후 변경 가능한 요소는 별도 확인이 필요합니다.</li>
+                <li>최종 사업 승인은 관련 부서의 추가 검토가 필요합니다.</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 80px; padding: 30px; background: #f8f9fa; border: 2px solid #dee2e6;">
+            <p style="text-align: center; font-size: 11pt; color: #6c757d; line-height: 1.8;">
+                본 분석은 전문 분석 기준 및 LH 내부 기준에 따라 작성되었으며,<br>
+                분석 과정에서 취득한 정보와 자료는 엄격히 보호됩니다.<br>
+                <br>
+                <strong>Confidential - For Official Use Only</strong>
+            </p>
+        </div>
+    </div>
+        <!-- 🔒 USER GUARANTEE FOOTER -->
+        {% include '_user_guarantee_footer.html' %}
+</body>
+</html>

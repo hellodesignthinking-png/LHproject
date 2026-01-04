@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M2: 토지감정평가 보고서 - Professional Format v6.5</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+            font-size: 10pt;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        /* Cover Page */
+        .cover-page {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #005BAC 0%, #003D73 100%);
+            color: white;
+            page-break-after: always;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .cover-logo {
+            font-size: 48pt;
+            font-weight: 700;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+        
+        .cover-title {
+            font-size: 32pt;
+            font-weight: 600;
+            margin-bottom: 40px;
+            border-top: 3px solid white;
+            border-bottom: 3px solid white;
+            padding: 20px 0;
+        }
+        
+        .cover-subtitle {
+            font-size: 16pt;
+            opacity: 0.9;
+            margin-bottom: 60px;
+        }
+        
+        .cover-meta {
+            font-size: 12pt;
+            line-height: 2;
+        }
+        
+        .cover-meta strong {
+            font-weight: 600;
+            margin-right: 20px;
+        }
+        
+        /* Executive Summary Page */
+        .executive-summary {
+            page-break-after: always;
+            padding: 20px 0;
+        }
+        
+        .page-title {
+            font-size: 20pt;
+            font-weight: 700;
+            color: #005BAC;
+            border-bottom: 3px solid #005BAC;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .summary-box {
+            background: #E6F2FF;
+            padding: 30px;
+            border-radius: 8px;
+            border-left: 5px solid #005BAC;
+            margin-bottom: 30px;
+        }
+        
+        .price-highlight {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .price-highlight .label {
+            font-size: 12pt;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .price-highlight .value {
+            font-size: 36pt;
+            font-weight: 700;
+            color: #005BAC;
+            margin: 20px 0;
+        }
+        
+        .price-highlight .per-sqm {
+            font-size: 14pt;
+            color: #333;
+            margin-top: 10px;
+        }
+        
+        .confidence-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            background: #28A745;
+            color: white;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12pt;
+            margin-top: 15px;
+        }
+        
+        /* Data Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+        }
+        
+        th {
+            background: #005BAC;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 10pt;
+        }
+        
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 9pt;
+        }
+        
+        tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .number-cell {
+            text-align: right;
+            font-weight: 600;
+            color: #005BAC;
+        }
+        
+        /* Section Headers */
+        .section {
+            page-break-before: always;
+            padding: 20px 0;
+        }
+        
+        .section-title {
+            font-size: 16pt;
+            font-weight: 700;
+            color: #005BAC;
+            border-bottom: 2px solid #005BAC;
+            padding-bottom: 8px;
+            margin: 30px 0 20px 0;
+        }
+        
+        .subsection-title {
+            font-size: 12pt;
+            font-weight: 600;
+            color: #333;
+            margin: 20px 0 10px 0;
+            padding-left: 10px;
+            border-left: 3px solid #005BAC;
+        }
+        
+        /* Info Boxes */
+        .info-box {
+            background: #F8F9FA;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border-left: 4px solid #005BAC;
+        }
+        
+        .info-box h4 {
+            color: #005BAC;
+            margin-bottom: 10px;
+            font-size: 11pt;
+        }
+        
+        .info-box p {
+            font-size: 9pt;
+            line-height: 1.8;
+            color: #666;
+        }
+        
+        /* Grid Layout */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .metric-card {
+            background: white;
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+        }
+        
+        .metric-card .label {
+            font-size: 9pt;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .metric-card .value {
+            font-size: 18pt;
+            font-weight: 700;
+            color: #005BAC;
+        }
+        
+        .metric-card .unit {
+            font-size: 9pt;
+            color: #999;
+            margin-top: 5px;
+        }
+        
+        /* Footer */
+        .page-footer {
+            position: fixed;
+            bottom: 10mm;
+            width: 100%;
+            text-align: center;
+            font-size: 8pt;
+            color: #999;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 5px;
+        }
+        
+        /* Disclaimer */
+        .disclaimer {
+            background: #FFF9E6;
+            border: 1px solid #FFE082;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 8pt;
+            color: #666;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+        
+        .disclaimer-title {
+            font-weight: 700;
+            color: #F57C00;
+            margin-bottom: 8px;
+        }
+        
+        /* Print optimizations */
+        @media print {
+            .no-print {
+                display: none;
+            }
+            
+            .page-break {
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Cover Page -->
+<div class="cover-page">
+    <div class="cover-logo">ZEROSITE</div>
+    <div class="cover-title">토지감정평가 보고서</div>
+    <div class="cover-subtitle">Professional Appraisal Report</div>
+    <div class="cover-meta">
+        <div><strong>보고서 번호:</strong> {{ report_id }}</div>
+        <div><strong>평가 대상:</strong> {{ address }}</div>
+        <div><strong>토지면적:</strong> {{ land_area_sqm | number_format }}㎡ ({{ land_area_pyeong | number_format }}평)</div>
+        <div><strong>용도지역:</strong> {{ zone_type }}</div>
+        <div><strong>평가기준일:</strong> {{ valuation_date }}</div>
+    </div>
+</div>
+
+<!-- Page 1: Executive Summary -->
+<div class="executive-summary">
+    <h1 class="page-title">Executive Summary</h1>
+    
+    <div class="summary-box">
+        <h3 style="color: #005BAC; margin-bottom: 15px;">평가 결과 요약</h3>
+        <p style="font-size: 11pt; line-height: 1.8;">
+            본 감정평가는 <strong>{{ zone_type }}</strong> 상의 대지 <strong>{{ land_area_sqm | number_format }}㎡</strong>에 대하여 
+            거래사례비교법, 원가법, 수익환원법의 3가지 평가방법을 종합적으로 적용하여 산정하였습니다.
+        </p>
+    </div>
+    
+    <div class="price-highlight">
+        <div class="label">최종 평가액</div>
+        <div class="value">₩ {{ final_value | number_format }}</div>
+        <div class="per-sqm">㎡당 {{ price_per_sqm | number_format }}원 (평당 {{ price_per_pyeong | number_format }}원)</div>
+        <span class="confidence-badge">신뢰도: {{ confidence_level }} ({{ confidence_score }}%)</span>
+    </div>
+    
+    <div class="grid-3" style="margin-top: 30px;">
+        <div class="metric-card">
+            <div class="label">가중치 평균법</div>
+            <div class="value">{{ weighted_average_pct }}%</div>
+            <div class="unit">최종 평가액</div>
+        </div>
+        <div class="metric-card">
+            <div class="label">공시지가 대비</div>
+            <div class="value">{{ official_price_ratio }}%</div>
+            <div class="unit">프리미엄</div>
+        </div>
+        <div class="metric-card">
+            <div class="label">평가 방법</div>
+            <div class="value">3</div>
+            <div class="unit">종합 적용</div>
+        </div>
+    </div>
+    
+    <table style="margin-top: 30px;">
+        <thead>
+            <tr>
+                <th>평가 방법</th>
+                <th>평가액 (원)</th>
+                <th>가중치</th>
+                <th>적용 근거</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>거래사례비교법</strong></td>
+                <td class="number-cell">{{ sales_comparison_value | number_format }}</td>
+                <td class="number-cell">{{ sales_comparison_weight }}%</td>
+                <td>인근 거래사례 {{ comparable_count }}건 분석</td>
+            </tr>
+            <tr>
+                <td><strong>원가법</strong></td>
+                <td class="number-cell">{{ cost_approach_value | number_format }}</td>
+                <td class="number-cell">{{ cost_approach_weight }}%</td>
+                <td>공시지가 기반 적정 프리미엄 적용</td>
+            </tr>
+            <tr>
+                <td><strong>수익환원법</strong></td>
+                <td class="number-cell">{{ income_approach_value | number_format }}</td>
+                <td class="number-cell">{{ income_approach_weight }}%</td>
+                <td>임대수익 환원 (Cap Rate {{ cap_rate }}%)</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Page 2: 대상 토지 개요 -->
+<div class="section">
+    <h1 class="page-title">1. 대상 토지 개요</h1>
+    
+    <h2 class="section-title">1-1. 기본 정보</h2>
+    <table>
+        <tr>
+            <th style="width: 30%;">항목</th>
+            <th>내용</th>
+        </tr>
+        <tr>
+            <td><strong>소재지</strong></td>
+            <td>{{ address }}</td>
+        </tr>
+        <tr>
+            <td><strong>지번</strong></td>
+            <td>{{ parcel_number }}</td>
+        </tr>
+        <tr>
+            <td><strong>토지면적</strong></td>
+            <td>{{ land_area_sqm | number_format }}㎡ ({{ land_area_pyeong | number_format }}평)</td>
+        </tr>
+        <tr>
+            <td><strong>용도지역</strong></td>
+            <td>{{ zone_type }}</td>
+        </tr>
+        <tr>
+            <td><strong>건폐율</strong></td>
+            <td>{{ building_coverage_ratio }}%</td>
+        </tr>
+        <tr>
+            <td><strong>용적률</strong></td>
+            <td>{{ floor_area_ratio }}%</td>
+        </tr>
+        <tr>
+            <td><strong>지목</strong></td>
+            <td>{{ land_category }}</td>
+        </tr>
+        <tr>
+            <td><strong>도로조건</strong></td>
+            <td>{{ road_condition }}</td>
+        </tr>
+    </table>
+    
+    <h2 class="section-title">1-2. 공시지가 정보</h2>
+    <div class="info-box">
+        <h4>📊 개별공시지가 ({{ official_price_year }}년 기준)</h4>
+        <p><strong>공시지가:</strong> ㎡당 {{ official_price_per_sqm | number_format }}원 (평당 {{ official_price_per_pyeong | number_format }}원)</p>
+        <p><strong>총 공시가액:</strong> {{ official_total_value | number_format }}원</p>
+        <p><strong>출처:</strong> 국토교통부 개별공시지가</p>
+    </div>
+</div>
+
+<!-- Page 3: 거래사례비교법 -->
+<div class="section">
+    <h1 class="page-title">2. 거래사례비교법</h1>
+    
+    <div class="info-box">
+        <h4>📍 평가 방법론</h4>
+        <p>
+            인근 지역 유사 토지의 실제 거래사례 {{ comparable_count }}건을 수집하여, 
+            시점보정, 위치보정, 개별보정, 기타보정을 순차적으로 적용한 후 
+            가중평균하여 대상 토지의 적정 시장가치를 산정하였습니다.
+        </p>
+    </div>
+    
+    <h2 class="section-title">2-1. 거래사례 목록</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>번호</th>
+                <th>소재지</th>
+                <th>면적(㎡)</th>
+                <th>거래가(원)</th>
+                <th>단가(원/㎡)</th>
+                <th>거래일자</th>
+                <th>거리(m)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for comp in comparables %}
+            <tr>
+                <td style="text-align: center;">{{ loop.index }}</td>
+                <td>{{ comp.address }}</td>
+                <td class="number-cell">{{ comp.area | number_format }}</td>
+                <td class="number-cell">{{ comp.price | number_format }}</td>
+                <td class="number-cell">{{ comp.price_per_sqm | number_format }}</td>
+                <td style="text-align: center;">{{ comp.transaction_date }}</td>
+                <td class="number-cell">{{ comp.distance | number_format }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <h2 class="section-title">2-2. 보정 계수 적용</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>사례번호</th>
+                <th>시점보정</th>
+                <th>위치보정</th>
+                <th>개별보정</th>
+                <th>기타보정</th>
+                <th>가중치</th>
+                <th>보정 후 단가</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for comp in comparables %}
+            <tr>
+                <td style="text-align: center;">{{ loop.index }}</td>
+                <td class="number-cell">{{ comp.time_correction | number_format(2) }}</td>
+                <td class="number-cell">{{ comp.location_correction | number_format(2) }}</td>
+                <td class="number-cell">{{ comp.individual_correction | number_format(2) }}</td>
+                <td class="number-cell">{{ comp.other_correction | number_format(2) }}</td>
+                <td class="number-cell">{{ comp.weight }}%</td>
+                <td class="number-cell">{{ comp.adjusted_price | number_format }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="info-box" style="background: #E8F5E9;">
+        <h4>💡 계산식</h4>
+        <p style="font-family: 'Courier New', monospace; background: white; padding: 10px; border-radius: 4px;">
+            평가액 = [Σ(거래사례 단가 × 시점보정 × 위치보정 × 개별보정 × 기타보정 × 가중치) / Σ가중치] × 대상 토지면적
+        </p>
+        <p style="margin-top: 10px;"><strong>산정 결과:</strong> {{ sales_comparison_value | number_format }}원</p>
+    </div>
+</div>
+
+<!-- Page 4: 원가법 -->
+<div class="section">
+    <h1 class="page-title">3. 원가법 (토지만 평가)</h1>
+    
+    <div class="info-box">
+        <h4>📊 평가 방법론</h4>
+        <p>
+            국토교통부 개별공시지가를 기준으로 하되, 대상 토지의 입지 특성, 
+            개발 가능성, 시장 수요 등을 종합적으로 고려한 적정 프리미엄을 적용하여 
+            현재 시점의 토지가치를 산정하였습니다.
+        </p>
+    </div>
+    
+    <h2 class="section-title">3-1. 기준가 산정</h2>
+    <div class="grid-2">
+        <div class="metric-card">
+            <div class="label">개별공시지가</div>
+            <div class="value">{{ official_price_per_sqm | number_format }}</div>
+            <div class="unit">원/㎡</div>
+        </div>
+        <div class="metric-card">
+            <div class="label">공시지가 총액</div>
+            <div class="value">{{ official_total_value | number_format }}</div>
+            <div class="unit">원</div>
+        </div>
+    </div>
+    
+    <h2 class="section-title">3-2. 프리미엄 적용</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>항목</th>
+                <th>내용</th>
+                <th>적용률</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>입지 프리미엄</strong></td>
+                <td>역세권 도보 5분, 상권 인접</td>
+                <td class="number-cell">+{{ location_premium }}%</td>
+            </tr>
+            <tr>
+                <td><strong>개발 프리미엄</strong></td>
+                <td>용적률 {{ floor_area_ratio }}% 활용 가능</td>
+                <td class="number-cell">+{{ development_premium }}%</td>
+            </tr>
+            <tr>
+                <td><strong>시장 프리미엄</strong></td>
+                <td>수요 초과 지역, 거래 활발</td>
+                <td class="number-cell">+{{ market_premium }}%</td>
+            </tr>
+            <tr style="background: #E6F2FF;">
+                <td><strong>총 프리미엄</strong></td>
+                <td></td>
+                <td class="number-cell"><strong>+{{ total_premium }}%</strong></td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <div class="info-box" style="background: #E8F5E9;">
+        <h4>💡 계산식</h4>
+        <p style="font-family: 'Courier New', monospace; background: white; padding: 10px; border-radius: 4px;">
+            토지가액 = 개별공시지가(원/㎡) × (1 + 총프리미엄) × 토지면적(㎡)
+        </p>
+        <p style="margin-top: 10px;"><strong>출처:</strong> 국토교통부 개별공시지가</p>
+        <p><strong>산정 결과:</strong> {{ cost_approach_value | number_format }}원</p>
+    </div>
+</div>
+
+<!-- Page 5: 수익환원법 -->
+<div class="section">
+    <h1 class="page-title">4. 수익환원법 (토지 개발 시)</h1>
+    
+    <div class="info-box">
+        <h4>🏢 평가 방법론</h4>
+        <p>
+            대상 토지를 LH 공공임대주택으로 개발할 경우 발생하는 순수익을 환원율로 
+            환원하여 토지가치를 산정하는 방법입니다. 영구적 임대수익을 기준으로 
+            Cap Rate {{ cap_rate }}%를 적용하였습니다.
+        </p>
+    </div>
+    
+    <h2 class="section-title">4-1. 개발 전제</h2>
+    <table>
+        <tr>
+            <th style="width: 30%;">항목</th>
+            <th>내용</th>
+        </tr>
+        <tr>
+            <td><strong>개발 유형</strong></td>
+            <td>{{ development_type }}</td>
+        </tr>
+        <tr>
+            <td><strong>예상 세대수</strong></td>
+            <td>{{ estimated_units }}세대</td>
+        </tr>
+        <tr>
+            <td><strong>평균 임대료</strong></td>
+            <td>월 {{ avg_rent | number_format }}원/세대</td>
+        </tr>
+        <tr>
+            <td><strong>공실률</strong></td>
+            <td>{{ vacancy_rate }}%</td>
+        </tr>
+        <tr>
+            <td><strong>운영비율</strong></td>
+            <td>{{ operating_expense_ratio }}%</td>
+        </tr>
+    </table>
+    
+    <h2 class="section-title">4-2. 수익 분석</h2>
+    <div class="grid-2">
+        <div class="metric-card">
+            <div class="label">연간 총수익</div>
+            <div class="value">{{ annual_gross_income | number_format }}</div>
+            <div class="unit">원/년</div>
+        </div>
+        <div class="metric-card">
+            <div class="label">연간 순수익 (NOI)</div>
+            <div class="value">{{ annual_net_income | number_format }}</div>
+            <div class="unit">원/년</div>
+        </div>
+    </div>
+    
+    <div class="info-box" style="background: #E8F5E9; margin-top: 30px;">
+        <h4>💡 계산식</h4>
+        <p style="font-family: 'Courier New', monospace; background: white; padding: 10px; border-radius: 4px;">
+            수익환원가 = 연간 순수익 (NOI) ÷ 환원율 (Cap Rate)
+        </p>
+        <p style="font-family: 'Courier New', monospace; background: white; padding: 10px; border-radius: 4px; margin-top: 10px;">
+            = {{ annual_net_income | number_format }}원 ÷ {{ cap_rate }}% = {{ income_approach_value | number_format }}원
+        </p>
+    </div>
+</div>
+
+<!-- Page 6: 최종 평가 -->
+<div class="section">
+    <h1 class="page-title">5. 최종 평가액 산정</h1>
+    
+    <h2 class="section-title">5-1. 가중 평균 산정</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>평가 방법</th>
+                <th>평가액 (원)</th>
+                <th>가중치 (%)</th>
+                <th>가중 평가액 (원)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>거래사례비교법</strong></td>
+                <td class="number-cell">{{ sales_comparison_value | number_format }}</td>
+                <td class="number-cell">{{ sales_comparison_weight }}</td>
+                <td class="number-cell">{{ sales_comparison_weighted | number_format }}</td>
+            </tr>
+            <tr>
+                <td><strong>원가법</strong></td>
+                <td class="number-cell">{{ cost_approach_value | number_format }}</td>
+                <td class="number-cell">{{ cost_approach_weight }}</td>
+                <td class="number-cell">{{ cost_approach_weighted | number_format }}</td>
+            </tr>
+            <tr>
+                <td><strong>수익환원법</strong></td>
+                <td class="number-cell">{{ income_approach_value | number_format }}</td>
+                <td class="number-cell">{{ income_approach_weight }}</td>
+                <td class="number-cell">{{ income_approach_weighted | number_format }}</td>
+            </tr>
+            <tr style="background: #E6F2FF; font-weight: bold;">
+                <td><strong>합계</strong></td>
+                <td></td>
+                <td class="number-cell">100</td>
+                <td class="number-cell">{{ final_value | number_format }}</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <div class="price-highlight" style="margin-top: 40px;">
+        <div class="label">최종 평가액</div>
+        <div class="value">₩ {{ final_value | number_format }}</div>
+        <div class="per-sqm">
+            ㎡당 {{ price_per_sqm | number_format }}원<br>
+            (평당 {{ price_per_pyeong | number_format }}원)
+        </div>
+    </div>
+    
+    <h2 class="section-title">5-2. 평가 신뢰도</h2>
+    <div class="grid-3">
+        <div class="metric-card">
+            <div class="label">신뢰도 점수</div>
+            <div class="value">{{ confidence_score }}</div>
+            <div class="unit">점 / 100점</div>
+        </div>
+        <div class="metric-card">
+            <div class="label">신뢰도 등급</div>
+            <div class="value" style="font-size: 14pt;">{{ confidence_level }}</div>
+            <div class="unit">HIGH/MEDIUM/LOW</div>
+        </div>
+        <div class="metric-card">
+            <div class="label">거래사례 수</div>
+            <div class="value">{{ comparable_count }}</div>
+            <div class="unit">건</div>
+        </div>
+    </div>
+</div>
+
+<!-- Page 7: 법적 고지 -->
+<div class="section">
+    <h1 class="page-title">6. 법적 고지 및 면책조항</h1>
+    
+    <div class="disclaimer">
+        <div class="disclaimer-title">⚠️ 중요 고지사항</div>
+        <p>
+            본 보고서는 ZeroSite 토지분석 시스템에서 자동 생성한 감정평가 참고자료로, 
+            「부동산 가격공시에 관한 법률」 제2조 및 「감정평가 및 감정평가사에 관한 법률」에 
+            따른 공인감정평가사의 공식 감정평가서가 아닙니다.
+        </p>
+        <p style="margin-top: 10px;">
+            본 보고서의 평가액은 통계적 분석 및 AI 알고리즘을 기반으로 산정된 참고가격이며, 
+            실제 거래가격, 공시지가, 과세표준, 법적 분쟁의 근거자료로 사용될 수 없습니다.
+        </p>
+        <p style="margin-top: 10px;">
+            정확한 감정평가가 필요한 경우 반드시 공인감정평가사에게 공식 감정평가를 의뢰하시기 바랍니다.
+        </p>
+    </div>
+    
+    <h2 class="section-title">6-1. 평가 전제 조건</h2>
+    <table>
+        <tr>
+            <th style="width: 30%;">항목</th>
+            <th>내용</th>
+        </tr>
+        <tr>
+            <td><strong>평가 목적</strong></td>
+            <td>토지매입 의사결정 참고용</td>
+        </tr>
+        <tr>
+            <td><strong>평가 기준일</strong></td>
+            <td>{{ valuation_date }}</td>
+        </tr>
+        <tr>
+            <td><strong>데이터 출처</strong></td>
+            <td>국토교통부, 한국부동산원, 공공데이터포털</td>
+        </tr>
+        <tr>
+            <td><strong>평가 방법</strong></td>
+            <td>거래사례비교법, 원가법, 수익환원법 종합</td>
+        </tr>
+        <tr>
+            <td><strong>유효기간</strong></td>
+            <td>평가기준일로부터 3개월</td>
+        </tr>
+    </table>
+    
+    <div class="info-box" style="margin-top: 30px;">
+        <h4>📞 문의</h4>
+        <p><strong>회사명:</strong> ZeroSite Co., Ltd.</p>
+        <p><strong>웹사이트:</strong> https://zerosite.ai</p>
+        <p><strong>이메일:</strong> support@zerosite.ai</p>
+        <p><strong>전화:</strong> 02-1234-5678</p>
+    </div>
+</div>
+
+<div class="page-footer">
+    ZeroSite Professional Appraisal Report v6.5 | Confidential | Page <span class="page-number"></span>
+</div>
+
+</body>
+</html>

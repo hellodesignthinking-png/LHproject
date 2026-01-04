@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>M5: 사업성 분석 보고서 - REAL APPRAISAL STANDARD</title>
+    <style>
+        @page { size: A4; margin: 20mm; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Malgun Gothic', sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+        .cover-page { text-align: center; padding: 80px 40px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; page-break-after: always; }
+        .company-logo { font-size: 24pt; font-weight: bold; margin-bottom: 10px; color: #2c3e50; letter-spacing: 8px; }
+        .main-title { font-size: 36pt; font-weight: bold; margin: 40px 0 10px 0; color: #1a1a1a; }
+        .sub-title { font-size: 28pt; font-weight: bold; margin-bottom: 60px; color: #2c3e50; }
+        .report-info-box { background: #f8f9fa; border: 2px solid #dee2e6; padding: 40px; margin: 40px auto; max-width: 600px; text-align: left; }
+        .report-info-row { display: flex; padding: 15px 0; border-bottom: 1px solid #dee2e6; font-size: 13pt; }
+        .report-info-row:last-child { border-bottom: none; }
+        .report-info-label { font-weight: bold; width: 150px; color: #495057; }
+        .report-info-value { flex: 1; color: #212529; }
+        .company-name { margin-top: 60px; font-size: 18pt; font-weight: bold; color: #2c3e50; }
+        .company-contact { margin-top: 20px; font-size: 10pt; color: #6c757d; line-height: 1.8; }
+        .content-page { padding: 40px; page-break-inside: avoid; }
+        .page-title { font-size: 20pt; font-weight: bold; margin-bottom: 25px; padding-bottom: 12px; border-bottom: 3px solid #0066cc; color: #2c3e50; }
+        .section { margin-bottom: 35px; }
+        .section-title { font-size: 15pt; font-weight: bold; margin-bottom: 18px; color: #495057; background: #f8f9fa; padding: 10px 15px; border-left: 5px solid #0066cc; }
+        .executive-summary { background: #e8f4f8; border: 3px solid #0066cc; padding: 30px; margin: 30px 0; text-align: center; }
+        .executive-label { font-size: 18pt; font-weight: bold; margin-bottom: 20px; color: #2c3e50; }
+        .executive-result { font-size: 24pt; font-weight: bold; color: #0066cc; margin-bottom: 15px; }
+        .executive-detail { font-size: 13pt; color: #495057; line-height: 1.8; }
+        .data-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 11pt; }
+        .data-table th { background: #2c3e50; color: white; padding: 12px; text-align: left; font-weight: bold; border: 1px solid #1a252f; }
+        .data-table td { padding: 10px 12px; border: 1px solid #dee2e6; }
+        .data-table tr:nth-child(even) { background: #f8f9fa; }
+        .highlight-row { background: #fff3cd !important; font-weight: bold; }
+        .pass-row { background: #d4edda !important; font-weight: bold; }
+        .info-box { background: #e7f3ff; border-left: 5px solid #0066cc; padding: 20px; margin: 20px 0; }
+        .info-box-title { font-weight: bold; margin-bottom: 10px; color: #0066cc; font-size: 13pt; }
+        .value-highlight { color: #0066cc; font-weight: bold; font-size: 1.1em; }
+        .hierarchy-badge { display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 10pt; font-weight: bold; margin-right: 10px; }
+        .badge-primary { background: #0066cc; color: white; }
+        .badge-secondary { background: #6c757d; color: white; }
+        .page-break { page-break-after: always; }
+    </style>
+</head>
+<body>
+    <div class="cover-page">
+        <div class="company-logo">ANTENNA HOLDINGS</div>
+        <div class="main-title">Professional Analysis Report</div>
+        <div class="sub-title">사업성 분석 보고서</div>
+        <div class="report-info-box">
+            <div class="report-info-row"><div class="report-info-label">보고서 번호</div><div class="report-info-value">CTX_TEST_20251229161726782177_M5</div></div>
+            </div>
+            <div class="report-info-row" style="background-color: #f0f8ff; border-left: 3px solid #0066cc; padding-left: 10px;">
+                <div class="report-info-label">🔒 Context ID</div>
+                <div class="report-info-value" style="font-family: monospace; font-size: 9pt;">CTX_TEST_20251229161726782177</div>
+            <div class="report-info-row"><div class="report-info-label">사업지</div><div class="report-info-value">서울특별시 강남구 역삼동 1234</div></div>
+            <div class="report-info-row"><div class="report-info-label">사업 규모</div><div class="report-info-value">총 150세대, 주차 120대</div></div>
+            <div class="report-info-row"><div class="report-info-label">분석 기준일</div><div class="report-info-value">2025년 12월 29일</div></div>
+        </div>
+        <div class="company-name">Antenna Holdings Co., Ltd.</div>
+        <div class="company-contact">서울시 강남구 테헤란로 427 위워크타워<br>Tel: 02-3789-2000</div>
+    </div>
+
+    <div class="content-page page-break">
+        <div class="page-title">핵심 판단 요약</div>
+        <div class="executive-summary">
+            <div class="executive-label">사업 실행 가능성</div>
+            <div class="executive-result">PASS (실행 가능)</div>
+            <div class="executive-detail">
+                <p style="font-size: 11pt; color: #6c757d; margin-bottom: 15px;"><em>본 분석은 M4 건축 규모 판단 결과를 전제로 진행되었습니다.</em></p>
+                <p style='margin-bottom: 15px;'><strong>📊 M4 건축 규모:</strong> 본 사업은 M4에서 <strong>150세대</strong> 규모로 결정되었으며, 이 규모를 전제로 재무 분석을 진행하였습니다.</p><p>본 사업은 M4에서 도출된 150세대 규모를 기준으로 LH 일괄매입 구조에 적용한 결과, 재무적 실행 가능성이 안정적으로 확보됩니다.</p>
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-title">재무 지표 요약</div>
+            <table class="data-table">
+                <tr><th style="width:40%;">지표</th><th>결과</th></tr>
+                <tr><td>총 사업비</td><td class="value-highlight">85,000백만원</td></tr>
+                <tr><td>LH 매입가</td><td class="value-highlight">92,000백만원</td></tr>
+                <tr><td>사업수익률</td><td class="value-highlight">8.2%</td></tr>
+                <tr class="pass-row"><td><strong>실행 가능성</strong></td><td><strong>PASS (실행 가능)</strong></td></tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="content-page page-break">
+        <div class="page-title"><span class="hierarchy-badge badge-primary">PRIMARY</span>1. LH 매입 구조 분석</div>
+        <div class="info-box">
+            <div class="info-box-title">📌 LH 매입 구조</div>
+            <p>LH 일괄매입 방식에 따른 사업 구조 및 수익성을 분석하여 재무적 실행 가능성을 판단합니다.</p>
+        </div>
+        <div class="section">
+            <div class="section-title">사업비 구성</div>
+            <table class="data-table">
+                <tr><th>항목</th><th>금액 (백만원)</th><th>비율</th></tr>
+                
+                <tr><td>토지비</td><td>42,000</td><td>49.4%</td></tr>
+                
+                <tr><td>건축비</td><td>32,000</td><td>37.6%</td></tr>
+                
+                <tr><td>기타비용</td><td>11,000</td><td>12.9%</td></tr>
+                
+                <tr class="highlight-row"><td><strong>총 사업비</strong></td><td><strong>85,000</strong></td><td><strong>100%</strong></td></tr>
+            </table>
+        </div>
+        <div class="section">
+            <div class="section-title">1-1. 건축 규모(150세대)와 사업성의 연계 검토</div>
+            <div class="info-box">
+                <p>150세대 규모는 과도한 사업비 증가를 억제하면서도 LH 매입가 기준 수익성을 확보할 수 있는 범위입니다. 
+
+규모를 확대할 경우 건축비 및 부대비 증가로 수익률 변동성이 확대되는 반면, 150세대는 비용과 수익의 균형이 가장 안정적인 지점입니다.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-page page-break">
+        <div class="page-title"><span class="hierarchy-badge badge-secondary">SECONDARY</span>2. 재무 지표 분석</div>
+        <div class="section">
+            <div class="section-title">주요 재무 지표</div>
+            <table class="data-table">
+                <tr><th style="width:40%;">지표</th><th>결과</th></tr>
+                <tr><td>총 사업비</td><td class="value-highlight">85,000백만원</td></tr>
+                <tr><td>LH 매입가</td><td class="value-highlight">92,000백만원</td></tr>
+                <tr><td>사업수익률</td><td class="value-highlight">8.2%</td></tr>
+                <tr class="pass-row"><td><strong>실행 가능성</strong></td><td><strong>PASS (실행 가능)</strong></td></tr>
+            </table>
+        </div>
+        <div class="section">
+            <div class="section-title">2-1. 수익률 해석</div>
+            <div class="info-box">
+                <p>사업수익률 8.2%는 LH 일괄매입 사업에서 요구되는 최소 수익률 범위를 상회하는 수준으로, 재무적 안정성을 확보한 수치입니다.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-page page-break">
+        <div class="page-title">3. 최종 판단</div>
+        <div class="section">
+            <div class="section-title">2-1. 주요 재무 리스크 및 대응 구조</div>
+            <div class="info-box">
+                <p>본 사업의 주요 재무 리스크는 건축비 변동 가능성이나, 이는 M4 단계에서 과도한 규모 확장을 배제함으로써 선제적으로 완화되었습니다. 
+
+따라서 본 사업의 재무 리스크는 관리 가능한 수준으로 판단됩니다.</p>
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-title">종합 평가 결과</div>
+            <table class="data-table">
+                <tr><th style="width:40%;">평가 항목</th><th>점수</th></tr>
+                <tr><td>LH 매입 구조</td><td class="value-highlight">90점</td></tr>
+                <tr><td>재무 지표</td><td class="value-highlight">85점</td></tr>
+                <tr><td>리스크 분석</td><td class="value-highlight">75점</td></tr>
+                <tr class="pass-row"><td><strong>최종 실행 가능성</strong></td><td class="value-highlight"><strong>PASS (실행 가능)</strong></td></tr>
+            </table>
+        </div>
+        <div class="section">
+            <div class="section-title">판단 의견</div>
+            <div class="info-box"><p>종합 검토 결과, 본 사업은 LH 일괄매입 구조 기준에서 재무적 실행 가능성이 충분히 확보되어, 사업 추진이 타당한 것으로 판단됩니다.
+
+LH 매입 구조를 중심으로 판단하였으며, 재무 지표와 리스크 요소를 종합적으로 검토하였습니다. 사업수익률 8.2%는 LH 일괄매입 사업에서 요구되는 최소 수익률 범위를 상회하는 수준으로, 재무적 안정성을 확보한 수치입니다.
+
+본 사업의 주요 재무 리스크는 건축비 변동 가능성이나, 이는 M4 단계에서 과도한 규모 확장을 배제함으로써 선제적으로 완화되었습니다. 
+
+따라서 본 사업의 재무 리스크는 관리 가능한 수준으로 판단됩니다.
+
+<strong style='color: #0066cc;'>→ 본 사업성 분석 결과를 종합하여, LH 매입 가능 여부에 대한 최종 판단(M6)을 진행합니다.</strong></p></div>
+        </div>
+        <div style="margin-top: 60px; text-align: right;">
+            <p style="font-size: 12pt; margin-bottom: 10px;">2025년 12월 29일</p>
+            <p style="font-size: 13pt; font-weight: bold; color: #2c3e50;">작성 주체: ZeroSite Analysis Engine</p>
+            <p style="font-size: 12pt; color: #6c757d; margin-top: 15px;">Antenna Holdings Co., Ltd.</p>
+        </div>
+    </div>
+        <!-- 🔒 USER GUARANTEE FOOTER -->
+        <!-- 
+🔒 USER GUARANTEE MESSAGE - RULE 5
+===================================
+본 문구는 모든 M2~M6 보고서 하단에 고정 표시됩니다.
+
+Version: REAL APPRAISAL STANDARD v6.5 FINAL - EXECUTION LOCK
+Date: 2025-12-29
+-->
+
+<div class="user-guarantee" style="
+    margin-top: 60px;
+    padding: 24px 32px;
+    background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+    border: 2px solid #0EA5E9;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(14, 165, 233, 0.1);
+">
+    <div style="
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+    ">
+        <div style="
+            font-size: 32px;
+            color: #0284C7;
+            flex-shrink: 0;
+        ">
+            🔒
+        </div>
+        <div>
+            <h3 style="
+                margin: 0 0 12px 0;
+                font-size: 18px;
+                font-weight: 700;
+                color: #075985;
+            ">
+                분석 무결성 보증
+            </h3>
+            <p style="
+                margin: 0 0 16px 0;
+                font-size: 14px;
+                line-height: 1.8;
+                color: #0C4A6E;
+            ">
+                본 분석은 입력된 주소를 기준으로 <strong>M2~M6 전 단계가 단일 분석 세션(Context ID)</strong>에서
+                동시에 생성된 결과입니다.
+            </p>
+            <div style="
+                display: grid;
+                grid-template-columns: auto 1fr;
+                gap: 12px 16px;
+                padding: 16px;
+                background: white;
+                border-radius: 8px;
+                border: 1px solid #BAE6FD;
+            ">
+                <div style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    color: #0284C7;
+                    font-size: 14px;
+                    font-weight: 600;
+                ">
+                    <i class="fas fa-fingerprint"></i>
+                    <span>Context ID:</span>
+                </div>
+                <div style="
+                    font-family: 'Courier New', monospace;
+                    font-size: 13px;
+                    color: #0C4A6E;
+                    padding: 4px 8px;
+                    background: #F0F9FF;
+                    border-radius: 4px;
+                ">
+                    
+                </div>
+
+                <div style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    color: #0284C7;
+                    font-size: 14px;
+                    font-weight: 600;
+                ">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>생성 시각:</span>
+                </div>
+                <div style="
+                    font-size: 14px;
+                    color: #0C4A6E;
+                    font-weight: 500;
+                ">
+                    2025년 12월 29일
+                </div>
+            </div>
+            <p style="
+                margin: 16px 0 0 0;
+                font-size: 12px;
+                color: #64748B;
+                font-style: italic;
+            ">
+                ✓ 모든 모듈이 동일한 Context ID로 생성되어 데이터 일관성이 보장됩니다.<br>
+                ✓ 주소 변경 시 전체 분석이 새로운 세션으로 재실행됩니다.
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+.user-guarantee i {
+    font-size: 16px;
+}
+
+@media print {
+    .user-guarantee {
+        page-break-inside: avoid;
+        margin-top: 40px;
+    }
+}
+</style>
+</body>
+</html>

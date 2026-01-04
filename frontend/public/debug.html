@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pipeline Debug Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #00ff00;
+        }
+        .log {
+            background: #000;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #00ff00;
+            border-radius: 4px;
+        }
+        button {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #00cc00;
+        }
+        .error { color: #ff0000; }
+        .success { color: #00ff00; }
+        .info { color: #00ccff; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Pipeline Connection Debug</h1>
+    <div id="status" class="log">
+        <strong>Status:</strong> <span id="statusText">Ready</span>
+    </div>
+    <div id="logs" class="log" style="max-height: 400px; overflow-y: auto;">
+        <strong>Logs:</strong><br>
+    </div>
+
+    <button onclick="testM1Freeze()">Test M1 Context Freeze</button>
+    <button onclick="testPipelineAnalyze()">Test Pipeline Analyze</button>
+    <button onclick="testFullFlow()">Test Full Flow</button>
+    <button onclick="clearLogs()">Clear Logs</button>
+
+    <script>
+        const BACKEND_URL = 'https://8091-ivaebkgzir7elqapbc68q-8f57ffe2.sandbox.novita.ai';
+        
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const time = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            logsDiv.innerHTML += `<div class="${className}">[${time}] ${message}</div>`;
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        function setStatus(text, type = 'info') {
+            const statusText = document.getElementById('statusText');
+            statusText.textContent = text;
+            statusText.className = type;
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '<strong>Logs:</strong><br>';
+        }
+
+        async function testM1Freeze() {
+            log('🚀 Testing M1 Context Freeze API...', 'info');
+            setStatus('Testing M1 Freeze...', 'info');
+
+            const testData = {
+                // STEP 1-2: Address & Coordinates
+                address: "서울특별시 강남구 역삼동 123",
+                road_address: "서울특별시 강남구 테헤란로 123",
+                sido: "서울특별시",
+                sigungu: "강남구",
+                dong: "역삼동",
+                coordinates: { lat: 37.498, lon: 127.028 },
+                coordinates_verified: true,
+                address_source: "API",
+                coordinates_source: "API",
+                
+                // STEP 3: Cadastral
+                bonbun: "123",
+                bubun: "0",
+                jimok: "대",
+                area: 500,
+                cadastral_source: "API",
+                
+                // STEP 4: Zoning & Legal
+                zone_type: "제2종일반주거지역",
+                zone_detail: "제2종일반주거지역",
+                land_use: "주거용",  // ← 필수 필드!
+                far: 200,
+                bcr: 60,
+                height_limit: null,  // ← null로 변경 (0은 validation 에러)
+                regulations: [],
+                restrictions: [],
+                zoning_source: "API",
+                
+                // STEP 5: Road Access
+                road_contact: "접도",
+                road_width: 12,
+                road_type: "일반도로",
+                nearby_roads: [],
+                road_source: "API",
+                
+                // STEP 6: Market Data
+                official_land_price: 1000000,
+                official_land_price_date: "2024-01-01",
+                official_price_source: "API",
+                transaction_cases_appraisal: [],
+                transaction_cases_reference: [],
+                
+                // Premium factors
+                corner_lot: false,
+                wide_road: false,
+                
+                // Metadata
+                created_by: "debug_test"
+            };
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/m1/freeze-context-v2`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                log(`✅ M1 Freeze Success!`, 'success');
+                log(`📦 Context ID: ${data.context_id}`, 'success');
+                log(`📦 Parcel ID: ${data.parcel_id}`, 'success');
+                log(`📊 Confidence: ${data.confidence_score}`, 'success');
+                setStatus('M1 Freeze: SUCCESS', 'success');
+                
+                // Store for next test
+                window.lastContextId = data.context_id;
+                window.lastParcelId = data.parcel_id;
+                
+            } catch (error) {
+                log(`❌ M1 Freeze Failed: ${error.message}`, 'error');
+                setStatus('M1 Freeze: FAILED', 'error');
+            }
+        }
+
+        async function testPipelineAnalyze() {
+            if (!window.lastParcelId) {
+                log('⚠️ Run "Test M1 Freeze" first!', 'error');
+                return;
+            }
+
+            log('🚀 Testing Pipeline Analyze API...', 'info');
+            setStatus('Testing Pipeline Analyze...', 'info');
+
+            const requestBody = {
+                parcel_id: window.lastParcelId,
+                use_cache: false,
+                mock_land_data: {
+                    address: "서울특별시 강남구 역삼동 123",
+                    coordinates: { lat: 37.498, lon: 127.028 },
+                    area: 500,
+                    zone_type: "제2종일반주거지역",
+                    far: 200,
+                    bcr: 60,
+                    road_width: 12,
+                    bonbun: "123",
+                    jimok: "대"
+                }
+            };
+
+            log(`📦 Parcel ID: ${window.lastParcelId}`, 'info');
+
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${BACKEND_URL}/api/v4/pipeline/analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const elapsed = Date.now() - startTime;
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(JSON.stringify(errorData, null, 2));
+                }
+
+                const data = await response.json();
+                log(`✅ Pipeline Analyze Success! (${elapsed}ms)`, 'success');
+                log(`📊 Status: ${data.status}`, 'success');
+                log(`📊 Analysis ID: ${data.analysis_id}`, 'success');
+                log(`📊 Modules Executed: ${data.modules_executed}`, 'success');
+                log(`📊 Land Value: ${data.land_value?.toLocaleString()} 원`, 'success');
+                log(`📊 Housing Type: ${data.selected_housing_type}`, 'success');
+                log(`📊 LH Decision: ${data.lh_decision}`, 'success');
+                setStatus('Pipeline Analyze: SUCCESS', 'success');
+                
+            } catch (error) {
+                log(`❌ Pipeline Analyze Failed: ${error.message}`, 'error');
+                setStatus('Pipeline Analyze: FAILED', 'error');
+            }
+        }
+
+        async function testFullFlow() {
+            clearLogs();
+            log('🚀 Starting Full Flow Test...', 'info');
+            await testM1Freeze();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testPipelineAnalyze();
+            log('✅ Full Flow Test Complete!', 'success');
+        }
+
+        // Auto-run on load
+        log('✅ Debug page loaded', 'success');
+        log(`🔗 Backend URL: ${BACKEND_URL}`, 'info');
+    </script>
+</body>
+</html>

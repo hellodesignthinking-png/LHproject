@@ -86,23 +86,25 @@ def get_common_styles() -> str:
         
         /* 섹션 */
         .section {
-            margin-bottom: 40px;
+            margin-bottom: 60px;  /* 40px → 60px: 섹션 간 여백 확대 */
+            page-break-inside: avoid;  /* PDF 출력 시 섹션 분리 방지 */
         }
         
         .section-title {
-            font-size: 18px;
+            font-size: 20px;  /* 18px → 20px: 제목 크기 증가 */
             font-weight: 700;
             color: #3B82F6;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #3B82F6;
+            margin-bottom: 24px;  /* 20px → 24px */
+            padding-bottom: 12px;  /* 10px → 12px */
+            border-bottom: 3px solid #3B82F6;  /* 2px → 3px: 구분선 강화 */
+            letter-spacing: -0.02em;  /* 가독성 향상 */
         }
         
         .section-subtitle {
-            font-size: 15px;
+            font-size: 16px;  /* 15px → 16px */
             font-weight: 600;
             color: #1F2937;
-            margin: 20px 0 12px 0;
+            margin: 24px 0 16px 0;  /* 20px/12px → 24px/16px */
         }
         
         /* 데이터 카드 */
@@ -110,15 +112,15 @@ def get_common_styles() -> str:
             background: #F9FAFB;
             border: 1px solid #E5E7EB;
             border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 16px;
+            padding: 24px;  /* 20px → 24px */
+            margin-bottom: 24px;  /* 16px → 24px */
         }
         
         .data-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
+            padding: 14px 0;  /* 10px → 14px */
             border-bottom: 1px solid #E5E7EB;
         }
         
@@ -129,19 +131,28 @@ def get_common_styles() -> str:
         .data-label {
             font-weight: 600;
             color: #6B7280;
-            font-size: 13px;
+            font-size: 14px;  /* 13px → 14px */
         }
         
         .data-value {
             font-weight: 700;
             color: #1F2937;
-            font-size: 15px;
+            font-size: 16px;  /* 15px → 16px: 수치 강조 */
             text-align: right;
         }
         
-        .data-value.na {
+        /* Phase 2.5: 핵심 수치 강조 */
+        .data-value.highlight {
+            font-size: 18px;
+            color: #3B82F6;
+            font-weight: 800;
+        }
+        
+        .data-value.na,
+        .data-value.auxiliary {
             color: #9CA3AF;
             font-style: italic;
+            font-size: 13px;  /* 보조 정보는 작게 */
         }
         
         /* 경고 박스 */
@@ -166,34 +177,47 @@ def get_common_styles() -> str:
             line-height: 1.5;
         }
         
-        /* 의사결정 카드 (Executive Summary) */
+        /* 의사결정 카드 (Executive Summary) - Phase 2.5 임팩트 강화 */
         .decision-card {
             background: linear-gradient(135deg, #10B981 0%, #059669 100%);
             color: white;
-            border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 30px;
+            border-radius: 16px;  /* 12px → 16px */
+            padding: 40px;  /* 30px → 40px: 더 넓은 공간 */
+            margin-bottom: 40px;  /* 30px → 40px */
             text-align: center;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);  /* 그림자 추가 */
         }
         
         .decision-card.conditional {
             background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.3);
         }
         
         .decision-card.negative {
             background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
         }
         
         .decision-title {
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 16px;
+            font-size: 28px;  /* 22px → 28px: 더 큰 제목 */
+            font-weight: 800;  /* 700 → 800 */
+            margin-bottom: 20px;  /* 16px → 20px */
+            letter-spacing: -0.02em;
+        }
+        
+        .decision-subtitle {
+            font-size: 16px;
+            opacity: 0.95;
+            margin-bottom: 24px;
+            line-height: 1.6;
         }
         
         .decision-details {
             display: flex;
             justify-content: space-around;
-            margin-top: 20px;
+            margin-top: 30px;  /* 20px → 30px */
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);  /* 구분선 추가 */
         }
         
         .decision-metric {
@@ -201,14 +225,16 @@ def get_common_styles() -> str:
         }
         
         .decision-metric-label {
-            font-size: 12px;
-            opacity: 0.8;
-            margin-bottom: 8px;
+            font-size: 13px;  /* 12px → 13px */
+            opacity: 0.9;  /* 0.8 → 0.9 */
+            margin-bottom: 10px;  /* 8px → 10px */
+            font-weight: 500;
         }
         
         .decision-metric-value {
-            font-size: 24px;
-            font-weight: 700;
+            font-size: 32px;  /* 24px → 32px: 더 큰 수치 */
+            font-weight: 800;  /* 700 → 800 */
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  /* 텍스트 그림자 */
         }
         
         /* 리스트 */
@@ -345,6 +371,123 @@ def get_common_styles() -> str:
             font-weight: 600;
         }
         
+        /* Phase 2.5: 표 스타일 추가 */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 24px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        thead {
+            background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+            color: white;
+        }
+        
+        thead th {
+            padding: 16px;
+            font-weight: 700;
+            font-size: 14px;
+            text-align: left;
+            letter-spacing: 0.02em;
+        }
+        
+        tbody tr {
+            border-bottom: 1px solid #E5E7EB;
+            transition: background 0.2s;
+        }
+        
+        tbody tr:hover {
+            background: #F9FAFB;
+        }
+        
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+        
+        tbody td {
+            padding: 14px 16px;
+            font-size: 13px;
+            color: #374151;
+        }
+        
+        /* 표 내 핵심 수치 강조 */
+        tbody td.highlight {
+            font-weight: 700;
+            color: #3B82F6;
+            font-size: 15px;
+        }
+        
+        /* 표 합계 행 */
+        tbody tr.total-row {
+            background: #F3F4F6;
+            font-weight: 700;
+        }
+        
+        tbody tr.total-row td {
+            border-top: 2px solid #3B82F6;
+            color: #1F2937;
+        }
+        
+        /* Phase 2.5: 핵심 KPI 박스 */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .kpi-box {
+            background: white;
+            border: 2px solid #E5E7EB;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .kpi-box:hover {
+            border-color: #3B82F6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .kpi-box.primary {
+            border-color: #3B82F6;
+            background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+        }
+        
+        .kpi-label {
+            font-size: 13px;
+            color: #6B7280;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .kpi-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #1F2937;
+            margin-bottom: 8px;
+            line-height: 1.2;
+        }
+        
+        .kpi-box.primary .kpi-value {
+            color: #3B82F6;
+        }
+        
+        .kpi-unit {
+            font-size: 13px;
+            color: #9CA3AF;
+            font-weight: 500;
+        }
+        
         /* 인쇄용 */
         @media print {
             body {
@@ -367,28 +510,28 @@ def get_common_styles() -> str:
 def format_currency(value: Optional[int]) -> str:
     """원화 포맷팅 (방어적 렌더링)"""
     if value is None:
-        return '<span class="data-value na">N/A (검증 필요)</span>'
+        return '<span class="data-value auxiliary">본 항목은 현 단계에서 산출 대상에서 제외되었습니다</span>'
     return f'<span class="data-value">{value:,}원</span>'
 
 
 def format_percentage(value: Optional[float]) -> str:
     """퍼센트 포맷팅 (방어적 렌더링)"""
     if value is None:
-        return '<span class="data-value na">N/A (검증 필요)</span>'
+        return '<span class="data-value auxiliary">본 항목은 현 단계에서 산출 대상에서 제외되었습니다</span>'
     return f'<span class="data-value">{value}%</span>'
 
 
 def format_units(value: Optional[int]) -> str:
     """세대수 포맷팅 (방어적 렌더링)"""
     if value is None:
-        return '<span class="data-value na">N/A (검증 필요)</span>'
+        return '<span class="data-value auxiliary">본 항목은 현 단계에서 산출 대상에서 제외되었습니다</span>'
     return f'<span class="data-value">{value}세대</span>'
 
 
 def format_generic(value: Optional[Any], suffix: str = "") -> str:
     """일반 값 포맷팅 (방어적 렌더링)"""
     if value is None or value == "":
-        return '<span class="data-value na">N/A (검증 필요)</span>'
+        return '<span class="data-value auxiliary">실시설계 또는 인허가 단계에서 추가 검토 예정</span>'
     return f'<span class="data-value">{value}{suffix}</span>'
 
 
@@ -1624,6 +1767,7 @@ def render_final_report_html(report_type: str, data: Dict[str, Any]) -> str:
         "lh_technical": render_lh_technical,
         "financial_feasibility": render_financial_feasibility,
         "quick_check": render_quick_check,
+        "executive_summary": render_presentation_report,
         "presentation": render_presentation_report
     }
     

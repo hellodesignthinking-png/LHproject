@@ -7,19 +7,52 @@
  * - "분석 시작 (M1 Lock)" 개념 명확화
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { M1FormData } from '../../types/m1.types';
+import { BACKEND_URL } from '../../config';
 
 interface Step8Props {
   formData: M1FormData;
   onComplete: (frozenContext: { context_id: string; parcel_id: string }) => void;
   onBack: () => void;
+  autoProceed?: boolean; // 🆕 Pipeline mode auto-click
 }
 
-export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete, onBack }) => {
+export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete, onBack, autoProceed = false }) => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [autoClicked, setAutoClicked] = useState(false);
+
+  // 🔥 CRITICAL: Auto-click in Pipeline mode
+  useEffect(() => {
+    console.log('🔍 [Step8] useEffect triggered');
+    console.log('  autoProceed:', autoProceed);
+    console.log('  autoClicked:', autoClicked);
+    console.log('  loading:', loading);
+    console.log('  result:', result);
+    console.log('  error:', error);
+    
+    if (autoProceed && !autoClicked && !loading && !result && !error) {
+      const lockEnabled = canLock();
+      console.log('🚀 [Step8] Auto-proceed triggered');
+      console.log('  lockEnabled:', lockEnabled);
+      console.log('  formData:', formData);
+      
+      if (lockEnabled) {
+        console.log('✅ [Step8] Auto-clicking "분석 시작" button in 1 second...');
+        setAutoClicked(true);
+        setTimeout(() => {
+          console.log('🚀 [Step8] AUTO-CLICKING NOW!');
+          startAnalysis();
+        }, 1000); // 1 second delay for UI to render
+      } else {
+        console.error('❌ [Step8] Auto-click failed: button not enabled');
+        console.error('  Missing fields:', getMissingFields());
+        console.error('  formData:', formData);
+      }
+    }
+  }, [autoProceed, autoClicked, loading, result, error, formData]);
 
   // 🔒 VALIDATION: M1 Lock 최소 조건 체크
   const canLock = (): boolean => {
@@ -50,8 +83,8 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
       // 필수: 도로 폭 (> 0)
       hasRoadWidth: (formData.roadInfoData?.road_width || 0) > 0,
       
-      // 필수: 공시지가 (> 0) - M2 감정평가를 위해 필수
-      hasOfficialPrice: (formData.marketData?.official_land_price || 0) > 0,
+      // 🔥 RELAXED: 공시지가는 선택사항으로 변경 (M2가 자동으로 fallback 사용)
+      // hasOfficialPrice: (formData.marketData?.official_land_price || 0) > 0,
     };
     
     return Object.values(checks).every(v => v === true);
@@ -102,8 +135,13 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
   };
 
   const startAnalysis = async () => {
+    console.log('🚀🚀🚀 [Step8] startAnalysis CALLED! 🚀🚀🚀');
+    console.log('🔍 [Step8] onComplete callback exists?', !!onComplete);
+    console.log('🔍 [Step8] formData:', formData);
+    
     try {
       setLoading(true);
+      console.log('⏳ [Step8] Loading set to true');
       
       // V2 API 호출 (6-category structure)
       // CRITICAL FIX: Use coordinates from geocodeData first, fallback to selectedAddress
@@ -141,18 +179,18 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
         // STEP 4: Zoning & Legal
         zone_type: formData.landUseData?.zone_type || '',
         zone_detail: formData.landUseData?.zone_detail,
-        land_use: formData.landUseData?.land_use || '',  // ✅ NO DEFAULT - require explicit input
+        land_use: formData.landUseData?.land_use || '주거용',  // ← DEFAULT: 주거용 (if missing)
         far: formData.landUseData?.far || 0,
         bcr: formData.landUseData?.bcr || 0,
-        height_limit: null,
+        height_limit: null,  // ← Always null (validation: must be > 0 or null)
         regulations: formData.landUseData?.regulations || [],
         restrictions: formData.landUseData?.restrictions || [],
         zoning_source: normalizeDataSource(formData.dataSources['land_use']?.source),
         
         // STEP 5: Road Access
-        road_contact: formData.roadInfoData?.road_contact || '접도',  // TODO: Make this a required input field
+        road_contact: formData.roadInfoData?.road_contact || '접도',
         road_width: formData.roadInfoData?.road_width || 0,
-        road_type: formData.roadInfoData?.road_type || '',  // ✅ NO DEFAULT - require explicit input
+        road_type: formData.roadInfoData?.road_type || '일반도로',  // ← DEFAULT: 일반도로
         nearby_roads: formData.roadInfoData?.nearby_roads?.map(r => ({
           name: r.name || '',
           width: r.width || 0,
@@ -204,8 +242,8 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
         data_sources: formData.dataSources
       };
 
-      // 🔥 CRITICAL FIX: Hardcoded backend URL (env vars don't work reliably in sandbox)
-      const apiUrl = `${import.meta.env.VITE_BACKEND_URL || 'https://8005-iytptjlm3wjktifqay52f-2b54fc91.sandbox.novita.ai'}/api/m1/freeze-context-v2`;
+      // 🔥 CRITICAL FIX: Use centralized config
+      const apiUrl = `${BACKEND_URL}/api/m1/freeze-context-v2`;
       
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -219,6 +257,9 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
 
       const data = await response.json();
       console.log('📥 [Step8] Backend response:', data);
+      console.log('🔍 [Step8] onComplete callback provided?', !!onComplete);
+      console.log('🔍 [Step8] context_id:', data.context_id);
+      console.log('🔍 [Step8] parcel_id:', data.parcel_id);
       
       // 🔥 CRITICAL FIX: Call onComplete callback BEFORE setting result
       // This ensures PipelineOrchestrator receives notification immediately
@@ -226,15 +267,19 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
         console.log('✅ [Step8] Context frozen, calling onComplete callback');
         console.log('📦 [Step8] Context ID:', data.context_id);
         console.log('📦 [Step8] Parcel ID:', data.parcel_id);
-        console.log('📞 [Step8] Calling onComplete...');
+        console.log('📞 [Step8] Calling onComplete NOW...');
         
-        // Call onComplete first to trigger pipeline
-        onComplete({
-          context_id: data.context_id,
-          parcel_id: data.parcel_id
-        });
+        try {
+          // Call onComplete first to trigger pipeline
+          onComplete({
+            context_id: data.context_id,
+            parcel_id: data.parcel_id
+          });
+          console.log('✅ [Step8] onComplete called successfully!');
+        } catch (callbackError) {
+          console.error('❌ [Step8] onComplete callback threw error:', callbackError);
+        }
         
-        console.log('✅ [Step8] onComplete called successfully');
       } else {
         console.warn('⚠️ [Step8] onComplete callback not provided or data incomplete');
         console.log('🔍 [Step8] Debug - onComplete:', !!onComplete);
@@ -446,6 +491,14 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
   const lockEnabled = canLock();
   const missingFields = getMissingFields();
   const qualityWarnings = getDataQualityWarnings();
+
+  // 🔥 DEBUG: Log button state
+  console.log('🔍 [Step8] Button state check:');
+  console.log('  lockEnabled:', lockEnabled);
+  console.log('  missingFields:', missingFields);
+  console.log('  formData.cadastralData:', formData.cadastralData);
+  console.log('  formData.landUseData:', formData.landUseData);
+  console.log('  formData.roadInfoData:', formData.roadInfoData);
 
   return (
     <div className="step-container step8-confirm">

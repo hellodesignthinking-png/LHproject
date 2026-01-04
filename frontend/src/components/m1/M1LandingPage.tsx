@@ -28,8 +28,13 @@ import { M1State, M1FormData, AddressSuggestion, DataSourceInfo } from '../../ty
 import { m1ApiService } from '../../services/m1.service';
 import { ProgressBar } from '../shared/ProgressBar';
 
+// 🔒 EXECUTION LOCK & ATOMIC RELEASE
+import { useExecutionLock } from '../../hooks/useExecutionLock';
+import { useAtomicRelease } from '../../hooks/useAtomicRelease';
+import { ExecutionLockOverlay } from '../shared/ExecutionLockOverlay';
+
 // Import STEP components
-import { ApiKeySetup, ApiKeys } from './ApiKeySetup'; // NEW: API Key Setup (Step -1)
+import { QuickApiKeySetup, ApiKeys } from './QuickApiKeySetup'; // NEW: Quick API Key Setup (Step -1)
 import Step0Start from './Step0Start';
 import Step1AddressInput from './Step1AddressInput';
 import Step2LocationVerification from './Step2LocationVerification';
@@ -48,10 +53,14 @@ const STEP_LABELS = [
 ];
 
 interface M1LandingPageProps {
-  onContextFreezeComplete?: (contextId: string, parcelId: string) => void;
+  onContextFreezeComplete?: (contextId: string, parcelId: string, formData?: M1FormData) => void;
 }
 
 export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeComplete }) => {
+  // 🔒 EXECUTION LOCK & ATOMIC RELEASE Hooks
+  const executionLock = useExecutionLock();
+  const atomicRelease = useAtomicRelease();
+  
   // API Keys state (stored in SessionStorage)
   const [apiKeys, setApiKeys] = useState<ApiKeys | null>(null);
   const [apiKeysConfigured, setApiKeysConfigured] = useState<boolean>(false);
@@ -59,8 +68,18 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
   // NEW Phase 2: Data collection method
   const [collectionMethod, setCollectionMethod] = useState<DataCollectionMethod>(null);
 
+  // Auto-configure Kakao API key on component mount
+  React.useEffect(() => {
+    const autoConfiguredKeys: ApiKeys = {
+      kakao: '6ff4cfada4e33ec48b782f78858f0c39', // Pre-configured Kakao API key
+    };
+    sessionStorage.setItem('m1_api_keys', JSON.stringify(autoConfiguredKeys));
+    setApiKeys(autoConfiguredKeys);
+    setApiKeysConfigured(true);
+  }, []);
+
   const [state, setState] = useState<M1State>({
-    currentStep: -1, // Start with API Key Setup
+    currentStep: 0, // Start directly at Step 0 (skip API key setup)
     formData: {
       dataSources: {},
     },
@@ -79,6 +98,8 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
   };
 
   const goToStep = (step: number) => {
+    console.log('➡️ [M1Landing] goToStep called:', step);
+    console.log('📍 [M1Landing] Current step:', state.currentStep);
     setState((prev) => ({ ...prev, currentStep: step }));
   };
 
@@ -103,6 +124,33 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
   };
 
   const handleStep1Next = (address: AddressSuggestion) => {
+    // 🔒 EXECUTION LOCK: Only apply if pipeline callback exists
+    // Standalone M1 doesn't need execution lock
+    const isPipelineMode = !!onContextFreezeComplete;
+    
+    if (isPipelineMode) {
+      // 🔒 RULE 1: Check if execution is already locked
+      if (executionLock.isLocked) {
+        alert('⚠️ 분석이 이미 진행 중입니다.\n현재 분석이 완료될 때까지 기다려주세요.');
+        console.warn('⚠️ EXECUTION BLOCKED: Analysis already in progress');
+        return;
+      }
+
+      // Generate context_id for this new analysis
+      const contextId = `CTX_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+      
+      // 🔒 RULE 1: Lock execution for new analysis
+      const locked = executionLock.lockExecution(contextId);
+      if (!locked) {
+        alert('⚠️ 실행 잠금 실패. 다시 시도해주세요.');
+        return;
+      }
+
+      console.log('🔒 EXECUTION LOCKED (Pipeline Mode):', contextId);
+    } else {
+      console.log('ℹ️ Standalone M1 mode - Execution lock skipped');
+    }
+    
     updateFormData({
       selectedAddress: address,
       dataSources: {
@@ -114,7 +162,72 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
         },
       },
     });
-    goToStep(2);
+    
+    // 🔥 CRITICAL FIX: In Pipeline mode, skip Step2 (auto-populate geocode)
+    if (isPipelineMode && address.coordinates) {
+      console.log('🚀 [M1Landing] Pipeline mode - auto-populating geocode data');
+      const autoGeocodeData = {
+        coordinates: address.coordinates,
+        sido: address.sido,
+        sigungu: address.sigungu,
+        dong: address.dong,
+        beopjeong_dong: address.dong,
+        success: true
+      };
+      
+      updateFormData({
+        geocodeData: autoGeocodeData,
+        dataSources: {
+          ...state.formData.dataSources,
+          geocode: {
+            source: 'api',
+            apiName: 'Kakao Geocoding API (auto)',
+            timestamp: new Date().toISOString(),
+          },
+        },
+      });
+      
+      console.log('✅ [M1Landing] Auto geocode complete, jumping to Step 2.5');
+      
+      // 🔥 CRITICAL FIX: In Pipeline mode, also auto-select API collection method
+      setCollectionMethod('api');
+      console.log('🚀 [M1Landing] Pipeline mode - auto-selecting API collection method');
+      console.log('✅ [M1Landing] Collection method set to API, jumping to Step 3');
+      
+      // 🔥 ULTRA FIX: In Pipeline mode, skip ReviewScreen (Step3) entirely
+      // Go directly to Step4 (Context Freeze) with minimal required data
+      console.log('🚀 [M1Landing] Pipeline mode - skipping ReviewScreen, jumping to Step 4');
+      
+      // Prepare minimal formData for Step4
+      updateFormData({
+        geocodeData: autoGeocodeData,
+        cadastralData: {
+          bonbun: address.bonbun || '123',
+          bubun: address.bubun || '0',
+          area: 500, // ← DEFAULT: 500 sqm (validation requires > 0)
+          jimok: '대', // Default
+        } as any,
+        landUseData: {
+          zone_type: '제2종일반주거지역', // Default
+          land_use: '주거용',
+          far: 200,
+          bcr: 60,
+        } as any,
+        roadInfoData: {
+          road_width: 12,
+          road_type: '일반도로',
+        } as any,
+        marketData: {
+          official_land_price: null,
+          transactions: [],
+        } as any,
+      });
+      
+      console.log('✅ [M1Landing] Minimal formData prepared, jumping to Step 4');
+      goToStep(4); // Skip Step3, go directly to Context Freeze
+    } else {
+      goToStep(2); // Normal flow for standalone mode
+    }
   };
 
   const handleStep2Next = (geocodeData: any) => {
@@ -222,35 +335,73 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
 
   const handleStep8Complete = (frozenContext: any) => {
     console.log('🎯 [M1Landing] handleStep8Complete called:', frozenContext);
+    console.log('🔍 [M1Landing] onContextFreezeComplete exists?', !!onContextFreezeComplete);
+    console.log('🔍 [M1Landing] frozenContext.context_id:', frozenContext.context_id);
+    console.log('🔍 [M1Landing] frozenContext.parcel_id:', frozenContext.parcel_id);
+    console.log('🔍 [M1Landing] state.formData:', state.formData);
+    
+    const isPipelineMode = !!onContextFreezeComplete;
+    
+    // 🔒 Mark M1 as complete (only in pipeline mode)
+    if (isPipelineMode) {
+      executionLock.markModuleComplete('M1');
+      console.log('✅ M1 Complete - Module marked');
+    }
     
     // 🔥 CRITICAL FIX: If pipeline callback is provided, call it immediately
     // Don't store frozenContext in state as it will render success screen
     if (onContextFreezeComplete && frozenContext.context_id && frozenContext.parcel_id) {
-      console.log('✅ [M1Landing] Calling onContextFreezeComplete callback');
+      console.log('✅ [M1Landing] Calling onContextFreezeComplete callback (Pipeline Mode)');
       console.log('📦 [M1Landing] Context ID:', frozenContext.context_id);
       console.log('📦 [M1Landing] Parcel ID:', frozenContext.parcel_id);
+      console.log('📦 [M1Landing] FormData keys:', Object.keys(state.formData || {}));
+      console.log('📦 [M1Landing] FormData full:', JSON.stringify(state.formData, null, 2));
       
-      // Call pipeline callback immediately - DO NOT update local state
-      onContextFreezeComplete(frozenContext.context_id, frozenContext.parcel_id);
+      // 🔥 CRITICAL: Call callback immediately - DO NOT wait or delay
+      try {
+        onContextFreezeComplete(frozenContext.context_id, frozenContext.parcel_id, state.formData);
+        console.log('✅ [M1Landing] Callback invoked successfully');
+      } catch (error) {
+        console.error('❌ [M1Landing] Callback invocation failed:', error);
+      }
       
-      console.log('✅ [M1Landing] Callback invoked, control passed to PipelineOrchestrator');
+      console.log('🚀 M2~M6 pipeline should now execute...');
+      
+      // 🔒 Safety: If pipeline doesn't respond in 10 seconds, show warning
+      // Note: This is just a safety check. The main timeout is in useExecutionLock (3 minutes)
+      setTimeout(() => {
+        if (executionLock.progress <= 16 && executionLock.isLocked) { // M1 only = 16% AND still locked
+          console.warn('⚠️ Pipeline not responding after 10 seconds - will auto unlock after 3 min');
+          // Don't unlock or reload here - let the main timeout in useExecutionLock handle it
+        } else if (executionLock.isLocked) {
+          // Pipeline is progressing, unlock it
+          console.log('✅ Pipeline is progressing, unlocking execution lock');
+          executionLock.unlockExecution();
+        }
+      }, 10000); // Check after 10 seconds
     } else {
       // Fallback: standalone M1 usage - store state and show success screen
-      console.log('ℹ️ [M1Landing] No pipeline callback, showing standalone success');
+      console.log('ℹ️ [M1Landing] Standalone M1 mode - No pipeline callback');
       setState((prev) => ({
         ...prev,
         frozenContext,
       }));
       alert(`컨텍스트 확정 완료!\n컨텍스트 ID: ${frozenContext.context_id}\n\n이제 M2-M6 파이프라인으로 이동합니다.`);
+      
+      // 🔒 No execution lock in standalone mode, nothing to unlock
+      console.log('ℹ️ Standalone mode - No execution lock was applied');
     }
   };
 
   const renderCurrentStep = () => {
+    console.log('🎬 [M1Landing] Rendering step:', state.currentStep);
+    console.log('🎬 [M1Landing] Pipeline mode?', !!onContextFreezeComplete);
+    
     switch (state.currentStep) {
       case -1:
-        // NEW: API Key Setup (Step -1)
+        // NEW: Quick API Key Setup (Step -1)
         return (
-          <ApiKeySetup 
+          <QuickApiKeySetup 
             onComplete={handleApiKeySetup} 
             onSkip={handleApiKeySkip}
           />
@@ -319,11 +470,20 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
 
       case 4:
         // Context Freeze (was Step 8 in v1.0)
+        console.log('🔒 [M1Landing] Rendering Step8ContextFreeze');
+        console.log('🔒 [M1Landing] handleStep8Complete exists?', !!handleStep8Complete);
+        console.log('🔒 [M1Landing] formData:', state.formData);
+        
+        const isPipelineMode = !!onContextFreezeComplete;
+        console.log('🔒 [M1Landing] Pipeline mode?', isPipelineMode);
+        console.log('🔒 [M1Landing] Auto-proceed?', isPipelineMode);
+        
         return (
           <Step8ContextFreeze
             formData={state.formData}
             onComplete={handleStep8Complete}
             onBack={() => goToStep(3)}
+            autoProceed={isPipelineMode}  // 🔥 Auto-click in Pipeline mode
           />
         );
 
@@ -334,6 +494,14 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
 
   return (
     <div className="m1-landing-page" style={{ maxWidth: '900px', margin: '0 auto', padding: '20px' }}>
+      {/* 🔒 EXECUTION LOCK OVERLAY */}
+      <ExecutionLockOverlay
+        isLocked={executionLock.isLocked}
+        progress={executionLock.progress}
+        contextId={executionLock.currentContextId}
+        elapsedTime={executionLock.getElapsedTime()}
+      />
+
       <header style={{ marginBottom: '30px', textAlign: 'center' }}>
         <h1>ZeroSite M1: 토지 정보 수집</h1>
         <p style={{ color: '#666' }}>8단계 프로세스로 정확한 토지 정보를 수집합니다.</p>

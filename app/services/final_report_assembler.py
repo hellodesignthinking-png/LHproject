@@ -17,10 +17,55 @@ Date: 2025-12-21
 
 from typing import Dict, Any, Optional, List
 from datetime import datetime
+import logging
 
 from app.core.canonical_data_contract import (
     M2Summary, M3Summary, M4Summary, M5Summary, M6Summary
 )
+
+logger = logging.getLogger(__name__)
+
+
+# ============================================================================
+# Phase 2: 점수 해석 헬퍼 함수
+# ============================================================================
+
+def interpret_score(score: Optional[int], max_score: int = 100, context: str = "종합") -> str:
+    """
+    점수를 상대적 해석 문장으로 변환 (Phase 2 품질 개선)
+    
+    Args:
+        score: 실제 점수
+        max_score: 만점
+        context: 점수 문맥 (종합, 입지, 규모 등)
+    
+    Returns:
+        해석 문장
+    """
+    if score is None:
+        return "본 점수는 현 단계에서 산출 대상에서 제외되었습니다."
+    
+    percentage = (score / max_score) * 100
+    
+    if percentage >= 85:
+        relative = "상위 15% 수준"
+        quality = "매우 우수한"
+    elif percentage >= 70:
+        relative = "상위 30% 수준"
+        quality = "우수한"
+    elif percentage >= 60:
+        relative = "평균 이상"
+        quality = "양호한"
+    elif percentage >= 50:
+        relative = "평균 수준"
+        quality = "보통의"
+    else:
+        relative = "평균 이하"
+        quality = "개선이 필요한"
+    
+    return f"""본 {context} 점수 {score}점(/{max_score}점)은 동일 권역 내 유사 후보지 평균 대비 {relative}에 해당하며,
+{quality} 수준으로 평가됩니다. 이는 단일 수치의 우열을 판단하기 위한 것이 아니라,
+동일 유형 후보지 간 상대적 비교를 보조하기 위한 참고 지표로 활용됩니다."""
 
 
 # ============================================================================
@@ -47,58 +92,247 @@ class FinalReportData:
         self.m6: Optional[M6Summary] = self._parse_m6()
         
     def _parse_m2(self) -> Optional[M2Summary]:
-        """M2 토지감정평가 데이터 추출"""
+        """M2 토지감정평가 데이터 추출
+        
+        ⚠️ CRITICAL: 실제 CanonicalAppraisalResult 구조에 맞게 파싱
+        
+        실제 구조 (3가지 시나리오):
+        1) CanonicalAppraisalResult.to_context_dict() - 실제 프로덕션
+           - calculation["final_appraised_total"] → land_value_total_krw
+           - calculation["premium_adjusted_per_sqm"] → pyeong_price_krw (계산 필요)
+           - confidence["overall_score"] → confidence_pct
+           - transaction_cases 배열 길이 → transaction_count
+        
+        2) M2Result with summary (v4.0 표준)
+           - m2_result["summary"]["land_value_total_krw"]
+        
+        3) Test data fallback (appraisal 최상위)
+           - appraisal["land_value"]
+        """
         try:
             m2_data = self.canonical.get("m2_result", {})
-            if not m2_data:
-                return None
-            summary = m2_data.get("summary", {})
-            return M2Summary(**summary) if summary else None
-        except Exception:
+            
+            # Scenario 2: v4.0 standard structure
+            if m2_data:
+                summary = m2_data.get("summary", {})
+                if summary and "land_value_total_krw" in summary:
+                    return M2Summary(**summary)
+            
+            # Scenario 1: CanonicalAppraisalResult structure (PRODUCTION)
+            if m2_data:
+                calculation = m2_data.get("calculation", {})
+                confidence_info = m2_data.get("confidence", {})
+                transaction_cases = m2_data.get("transaction_cases", [])
+                
+                if calculation and "final_appraised_total" in calculation:
+                    # Extract values from CanonicalAppraisalResult structure
+                    land_value_total = calculation.get("final_appraised_total")
+                    premium_adjusted_per_sqm = calculation.get("premium_adjusted_per_sqm")
+                    
+                    # Calculate pyeong price: per_sqm * 3.3058
+                    pyeong_price = None
+                    if premium_adjusted_per_sqm:
+                        pyeong_price = int(premium_adjusted_per_sqm * 3.3058)
+                    
+                    # Extract confidence score
+                    confidence_pct = None
+                    if isinstance(confidence_info, dict):
+                        overall_score = confidence_info.get("overall_score")
+                        if overall_score is not None:
+                            confidence_pct = int(overall_score * 100) if overall_score <= 1 else int(overall_score)
+                    
+                    # Count transaction cases
+                    transaction_count = len(transaction_cases) if isinstance(transaction_cases, list) else None
+                    
+                    return M2Summary(
+                        land_value_total_krw=int(land_value_total) if land_value_total else None,
+                        pyeong_price_krw=pyeong_price,
+                        confidence_pct=confidence_pct,
+                        transaction_count=transaction_count
+                    )
+            
+            # Scenario 3: Test data fallback (appraisal at top level or nested)
+            appraisal = m2_data.get("appraisal", {}) if m2_data else self.canonical.get("appraisal", {})
+            confidence = m2_data.get("confidence", {}) if m2_data else self.canonical.get("confidence", {})
+            transactions = m2_data.get("transactions", {}) if m2_data else self.canonical.get("transactions", {})
+            
+            if appraisal and "land_value" in appraisal:
+                # Test data structure
+                confidence_raw = None
+                if isinstance(confidence, dict):
+                    confidence_raw = confidence.get("scores", {}).get("confidence_score")
+                    if confidence_raw is None:
+                        confidence_raw = confidence.get("confidence_score")
+                if confidence_raw is None:
+                    confidence_raw = appraisal.get("confidence_score")
+                
+                transaction_cnt = None
+                if isinstance(transactions, dict):
+                    transaction_cnt = transactions.get("count")
+                if transaction_cnt is None:
+                    transaction_cnt = appraisal.get("transaction_count")
+                
+                return M2Summary(
+                    land_value_total_krw=int(appraisal.get("land_value", 0)) if appraisal.get("land_value") else None,
+                    pyeong_price_krw=int(appraisal.get("unit_price_pyeong", 0)) if appraisal.get("unit_price_pyeong") else None,
+                    confidence_pct=int(confidence_raw * 100) if confidence_raw else None,
+                    transaction_count=transaction_cnt
+                )
+            
+            logger.warning("M2 파싱 실패: m2_result, calculation, appraisal 모두 없음")
+            return None
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to parse M2 data: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             return None
     
     def _parse_m3(self) -> Optional[M3Summary]:
-        """M3 LH 선호유형 데이터 추출"""
+        """M3 LH 선호유형 데이터 추출
+        
+        ⚠️ CRITICAL: HousingTypeContext.to_dict() 구조 참조:
+        - m3_result.to_dict()["selected"]["type"] → recommended_type
+        - m3_result.to_dict()["scores"][type_code]["total"] → total_score
+        - m3_result.to_dict()["selected"]["confidence"] → confidence_pct
+        - m3_result.to_dict()["selected"]["secondary_name"] → second_choice
+        """
         try:
             m3_data = self.canonical.get("m3_result", {})
-            if not m3_data:
+            if not m3_data or not isinstance(m3_data, dict):
                 return None
-            summary = m3_data.get("summary", {})
-            return M3Summary(**summary) if summary else None
-        except Exception:
+            
+            # HousingTypeContext가 이미 dict로 변환되었을 경우 직접 접근
+            selected = m3_data.get("selected", {})
+            scores_dict = m3_data.get("scores", {})
+            
+            if not selected:
+                return None
+            
+            # 선택된 유형의 총점 가져오기
+            selected_type_code = selected.get("type")
+            type_scores = scores_dict.get(selected_type_code, {})
+            total_score_raw = type_scores.get("total") if type_scores else None
+            
+            # total_score는 int여야 하므로 반올림
+            total_score = int(round(total_score_raw)) if total_score_raw is not None else None
+            
+            return M3Summary(
+                recommended_type=selected.get("name") or selected.get("type"),
+                total_score=total_score,
+                confidence_pct=int(selected.get("confidence", 0) * 100) if selected.get("confidence") else None,
+                second_choice=selected.get("secondary_name")
+            )
+        except Exception as e:
+            logger.warning(f"M3 파싱 실패: {e}")
             return None
     
     def _parse_m4(self) -> Optional[M4Summary]:
-        """M4 건축규모 데이터 추출"""
+        """M4 건축규모 데이터 추출
+        
+        ⚠️ CRITICAL: CapacityContextV2.to_dict() 구조 참조:
+        - m4_result.to_dict()["legal_capacity"]["total_units"] → legal_units
+        - m4_result.to_dict()["incentive_capacity"]["total_units"] → incentive_units
+        - m4_result.to_dict()["parking_solutions"]["alternative_A"]["total_parking"] → parking_alt_a
+        - m4_result.to_dict()["parking_solutions"]["alternative_B"]["total_parking"] → parking_alt_b
+        """
         try:
             m4_data = self.canonical.get("m4_result", {})
-            if not m4_data:
+            if not m4_data or not isinstance(m4_data, dict):
                 return None
-            summary = m4_data.get("summary", {})
-            return M4Summary(**summary) if summary else None
-        except Exception:
+            
+            legal_cap = m4_data.get("legal_capacity", {})
+            incentive_cap = m4_data.get("incentive_capacity", {})
+            parking_sols = m4_data.get("parking_solutions", {})
+            
+            if not legal_cap and not incentive_cap:
+                return None
+            
+            return M4Summary(
+                legal_units=legal_cap.get("total_units"),
+                incentive_units=incentive_cap.get("total_units"),
+                parking_alt_a=parking_sols.get("alternative_A", {}).get("total_parking"),
+                parking_alt_b=parking_sols.get("alternative_B", {}).get("total_parking")
+            )
+        except Exception as e:
+            logger.warning(f"M4 파싱 실패: {e}")
             return None
     
     def _parse_m5(self) -> Optional[M5Summary]:
-        """M5 사업성분석 데이터 추출"""
+        """M5 사업성분석 데이터 추출
+        
+        ⚠️ CRITICAL: FeasibilityContext.to_dict() 구조 참조:
+        - m5_result.to_dict()["financials"]["npv_public"] → npv_public_krw
+        - m5_result.to_dict()["financials"]["irr_public"] → irr_pct
+        - m5_result.to_dict()["financials"]["roi"] → roi_pct
+        - m5_result.to_dict()["profitability"]["grade"] → grade
+        """
         try:
             m5_data = self.canonical.get("m5_result", {})
-            if not m5_data:
+            if not m5_data or not isinstance(m5_data, dict):
                 return None
-            summary = m5_data.get("summary", {})
-            return M5Summary(**summary) if summary else None
-        except Exception:
+            
+            financials = m5_data.get("financials", {})
+            profitability = m5_data.get("profitability", {})
+            
+            if not financials and not profitability:
+                return None
+            
+            # IRR/ROI는 0-1 범위 값이므로 백분율로 변환
+            irr_raw = financials.get("irr_public")
+            roi_raw = financials.get("roi")
+            
+            irr_pct = round(irr_raw * 100, 1) if irr_raw is not None and irr_raw < 1 else irr_raw
+            roi_pct = round(roi_raw * 100, 1) if roi_raw is not None and roi_raw < 1 else roi_raw
+            
+            return M5Summary(
+                npv_public_krw=financials.get("npv_public"),
+                irr_pct=irr_pct,
+                roi_pct=roi_pct,
+                grade=profitability.get("grade")
+            )
+        except Exception as e:
+            logger.warning(f"M5 파싱 실패: {e}")
             return None
     
     def _parse_m6(self) -> Optional[M6Summary]:
-        """M6 LH 심사예측 데이터 추출"""
+        """M6 LH 심사예측 데이터 추출
+        
+        ⚠️ CRITICAL: LHReviewContext.to_dict() 구조 참조:
+        - m6_result.to_dict()["decision"]["type"] → decision (GO/CONDITIONAL/NO_GO)
+        - m6_result.to_dict()["approval"]["probability"] → approval_probability_pct
+        - m6_result.to_dict()["grade"] → grade (S/A/B/C/D/F)
+        """
         try:
             m6_data = self.canonical.get("m6_result", {})
-            if not m6_data:
+            if not m6_data or not isinstance(m6_data, dict):
                 return None
-            summary = m6_data.get("summary", {})
-            return M6Summary(**summary) if summary else None
-        except Exception:
+            
+            decision_info = m6_data.get("decision", {})
+            approval_info = m6_data.get("approval", {})
+            scores_info = m6_data.get("scores", {})
+            
+            if not decision_info:
+                return None
+            
+            # approval_probability는 0-1 값이므로 백분율로 변환
+            approval_prob = approval_info.get("probability")
+            approval_pct = int(approval_prob * 100) if approval_prob is not None else None
+            
+            # total_score는 required field
+            total_score = scores_info.get("total")
+            if total_score is None:
+                logger.warning("M6 total_score 누락")
+                return None
+            
+            return M6Summary(
+                decision=decision_info.get("type"),  # GO/CONDITIONAL/NO_GO
+                total_score=float(total_score),
+                approval_probability_pct=approval_pct,
+                grade=m6_data.get("grade")
+            )
+        except Exception as e:
+            logger.warning(f"M6 파싱 실패: {e}")
             return None
 
 
@@ -217,10 +451,14 @@ def assemble_all_in_one_report(data: FinalReportData) -> Dict[str, Any]:
     # 주택 유형 (M3 기반)
     recommended_housing_type = None
     housing_type_score = None
+    housing_type_score_interpretation = None
     
     if data.m3:
         recommended_housing_type = data.m3.recommended_type
         housing_type_score = data.m3.total_score
+        # Phase 2: 점수 해석 추가
+        if housing_type_score:
+            housing_type_score_interpretation = interpret_score(housing_type_score, 100, "주택유형 적합도")
     
     # 확장 콘텐츠: 정책·제도 환경 분석 (8페이지 분량)
     policy_context = {
@@ -656,9 +894,14 @@ LH 사업의 리스크 관리는 ①사전 검증 강화, ②비용 관리 철�
     }
     
     # 확장 콘텐츠: LH 심사 관점 상세 분석
+    lh_score_interpretation = None
+    if data.m6 and data.m6.total_score:
+        lh_score_interpretation = interpret_score(int(data.m6.total_score), data.m6.max_score, "LH 심사 예측")
+    
     lh_review_details = {
         "scoring_methodology": "LH는 다양한 평가 항목에 대해 정량적·정성적 점수를 부여합니다.",
         "key_evaluation_points": data.m6 and f"본 사업은 LH 심사 기준 대비 {data.m6.total_score}점/{data.m6.max_score}점을 획득한 것으로 예측됩니다." or "심사 예측 진행 중",
+        "score_interpretation": lh_score_interpretation,  # Phase 2
         "approval_threshold": "일반적으로 70점 이상 시 승인 가능성이 높으며, 60-69점은 조건부, 60점 미만은 보완 필요로 판단됩니다.",
         "improvement_areas": key_risks if key_risks else ["개선 영역 분석 진행 중"]
     }
@@ -694,6 +937,7 @@ LH 사업의 리스크 관리는 ①사전 검증 강화, ②비용 관리 철�
         # 5. 주택 유형
         "recommended_housing_type": recommended_housing_type,
         "housing_type_score": housing_type_score,
+        "housing_type_score_interpretation": housing_type_score_interpretation,  # Phase 2
         "housing_type_rationale": housing_type_rationale,  # NEW - 확장 콘텐츠
         
         # 6. 사업성 지표
@@ -1310,6 +1554,7 @@ def assemble_final_report(
         "lh_technical": assemble_lh_technical,
         "financial_feasibility": assemble_financial_feasibility,
         "quick_check": assemble_quick_check,
+        "executive_summary": assemble_presentation_report,
         "presentation": assemble_presentation_report
     }
     

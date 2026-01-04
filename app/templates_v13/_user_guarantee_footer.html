@@ -1,0 +1,122 @@
+<!-- 
+🔒 USER GUARANTEE MESSAGE - RULE 5
+===================================
+본 문구는 모든 M2~M6 보고서 하단에 고정 표시됩니다.
+
+Version: REAL APPRAISAL STANDARD v6.5 FINAL - EXECUTION LOCK
+Date: 2025-12-29
+-->
+
+<div class="user-guarantee" style="
+    margin-top: 60px;
+    padding: 24px 32px;
+    background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+    border: 2px solid #0EA5E9;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(14, 165, 233, 0.1);
+">
+    <div style="
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+    ">
+        <div style="
+            font-size: 32px;
+            color: #0284C7;
+            flex-shrink: 0;
+        ">
+            🔒
+        </div>
+        <div>
+            <h3 style="
+                margin: 0 0 12px 0;
+                font-size: 18px;
+                font-weight: 700;
+                color: #075985;
+            ">
+                분석 무결성 보증
+            </h3>
+            <p style="
+                margin: 0 0 16px 0;
+                font-size: 14px;
+                line-height: 1.8;
+                color: #0C4A6E;
+            ">
+                본 분석은 입력된 주소를 기준으로 <strong>M2~M6 전 단계가 단일 분석 세션(Context ID)</strong>에서
+                동시에 생성된 결과입니다.
+            </p>
+            <div style="
+                display: grid;
+                grid-template-columns: auto 1fr;
+                gap: 12px 16px;
+                padding: 16px;
+                background: white;
+                border-radius: 8px;
+                border: 1px solid #BAE6FD;
+            ">
+                <div style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    color: #0284C7;
+                    font-size: 14px;
+                    font-weight: 600;
+                ">
+                    <i class="fas fa-fingerprint"></i>
+                    <span>Context ID:</span>
+                </div>
+                <div style="
+                    font-family: 'Courier New', monospace;
+                    font-size: 13px;
+                    color: #0C4A6E;
+                    padding: 4px 8px;
+                    background: #F0F9FF;
+                    border-radius: 4px;
+                ">
+                    {{ context_id }}
+                </div>
+
+                <div style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    color: #0284C7;
+                    font-size: 14px;
+                    font-weight: 600;
+                ">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>생성 시각:</span>
+                </div>
+                <div style="
+                    font-size: 14px;
+                    color: #0C4A6E;
+                    font-weight: 500;
+                ">
+                    {{ analysis_date }}
+                </div>
+            </div>
+            <p style="
+                margin: 16px 0 0 0;
+                font-size: 12px;
+                color: #64748B;
+                font-style: italic;
+            ">
+                ✓ 모든 모듈이 동일한 Context ID로 생성되어 데이터 일관성이 보장됩니다.<br>
+                ✓ 주소 변경 시 전체 분석이 새로운 세션으로 재실행됩니다.
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+.user-guarantee i {
+    font-size: 16px;
+}
+
+@media print {
+    .user-guarantee {
+        page-break-inside: avoid;
+        margin-top: 40px;
+    }
+}
+</style>

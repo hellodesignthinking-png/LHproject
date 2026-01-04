@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M4: 건축 규모 판단 보고서 - REAL APPRAISAL STANDARD</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            font-size: 11pt;
+            line-height: 1.6;
+            color: #333;
+            background: white;
+        }
+
+        /* Cover Page */
+        .cover-page {
+            text-align: center;
+            padding: 80px 40px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            page-break-after: always;
+        }
+
+        .company-logo {
+            font-size: 24pt;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            letter-spacing: 8px;
+        }
+
+        .main-title {
+            font-size: 36pt;
+            font-weight: bold;
+            margin: 40px 0 10px 0;
+            color: #1a1a1a;
+            letter-spacing: 2px;
+        }
+
+        .sub-title {
+            font-size: 28pt;
+            font-weight: bold;
+            margin-bottom: 60px;
+            color: #2c3e50;
+        }
+
+        .report-info-box {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            padding: 40px;
+            margin: 40px auto;
+            max-width: 600px;
+            text-align: left;
+        }
+
+        .report-info-row {
+            display: flex;
+            padding: 15px 0;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 13pt;
+        }
+
+        .report-info-row:last-child {
+            border-bottom: none;
+        }
+
+        .report-info-label {
+            font-weight: bold;
+            width: 150px;
+            color: #495057;
+        }
+
+        .report-info-value {
+            flex: 1;
+            color: #212529;
+        }
+
+        .company-name {
+            margin-top: 60px;
+            font-size: 18pt;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .company-contact {
+            margin-top: 20px;
+            font-size: 10pt;
+            color: #6c757d;
+            line-height: 1.8;
+        }
+
+        /* Content Pages */
+        .content-page {
+            padding: 40px;
+            page-break-inside: avoid;
+            min-height: auto;
+        }
+
+        .page-title {
+            font-size: 20pt;
+            font-weight: bold;
+            margin-bottom: 25px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #0066cc;
+            color: #2c3e50;
+        }
+
+        .section {
+            margin-bottom: 35px;
+            page-break-inside: avoid;
+        }
+
+        .section-title {
+            font-size: 15pt;
+            font-weight: bold;
+            margin-bottom: 18px;
+            color: #495057;
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-left: 5px solid #0066cc;
+        }
+
+        /* Executive Summary Box */
+        .executive-summary {
+            background: #e8f4f8;
+            border: 3px solid #0066cc;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .executive-label {
+            font-size: 18pt;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .executive-result {
+            font-size: 24pt;
+            font-weight: bold;
+            color: #0066cc;
+            margin-bottom: 15px;
+        }
+
+        .executive-detail {
+            font-size: 13pt;
+            color: #495057;
+            line-height: 1.8;
+        }
+
+        /* Table Styles */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 11pt;
+            background: white;
+        }
+
+        .data-table th {
+            background: #2c3e50;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #1a252f;
+        }
+
+        .data-table td {
+            padding: 10px 12px;
+            border: 1px solid #dee2e6;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .data-table tr:hover {
+            background: #e9ecef;
+        }
+
+        .highlight-row {
+            background: #fff3cd !important;
+            font-weight: bold;
+        }
+
+        .selected-row {
+            background: #d4edda !important;
+            font-weight: bold;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: #e7f3ff;
+            border-left: 5px solid #0066cc;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .info-box-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #0066cc;
+            font-size: 13pt;
+        }
+
+        /* Value highlight */
+        .value-highlight {
+            color: #0066cc;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        /* Hierarchy Badge */
+        .hierarchy-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 10pt;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .badge-primary {
+            background: #0066cc;
+            color: white;
+        }
+
+        .badge-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .badge-reference {
+            background: #dee2e6;
+            color: #495057;
+        }
+
+        /* Page break */
+        .page-break {
+            page-break-after: always;
+        }
+
+        @media print {
+            body {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Page 1: Cover -->
+    <div class="cover-page">
+        <div class="company-logo">ANTENNA HOLDINGS</div>
+        <div class="main-title">Professional Analysis Report</div>
+        <div class="sub-title">건축 규모 판단 보고서</div>
+        
+        <div class="report-info-box">
+            <div class="report-info-row">
+                <div class="report-info-label">보고서 번호</div>
+                <div class="report-info-value">ZS-M4-20251229133752</div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">사업지</div>
+                <div class="report-info-value">서울특별시 강남구 역삼동 1234</div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">토지면적</div>
+                <div class="report-info-value">5,800㎡ (1,754평)</div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">용도지역</div>
+                <div class="report-info-value">제2종일반주거지역</div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">분석 기준일</div>
+                <div class="report-info-value">2025년 12월 29일</div>
+            </div>
+        </div>
+
+        <div class="company-name">Antenna Holdings Co., Ltd.</div>
+        <div class="company-contact">
+            서울시 강남구 테헤란로 427 위워크타워<br>
+            Tel: 02-3789-2000 | Email: analysis@antennaholdings.com
+        </div>
+    </div>
+
+    <!-- Page 2: Executive Summary -->
+    <div class="content-page page-break">
+        <div class="page-title">핵심 판단 요약</div>
+
+        <div class="executive-summary">
+            <div class="executive-label">적정 건축 규모</div>
+            <div class="executive-result">총 150세대, 주차 120대</div>
+            <div class="executive-detail">
+                본 사업의 적정 건축 규모는 총 150세대, 주차 120대로 판단됩니다. 법적 제약 분석 및 LH 심사 기준을 종합적으로 검토한 결과, 해당 규모가 사업 목적 달성 및 승인 가능성 측면에서 가장 적합한 것으로 판단됩니다.
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">판단 근거 요약</div>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 30%;">평가 항목</th>
+                    <th style="width: 70%;">결과</th>
+                </tr>
+                <tr>
+                    <td>법적 허용 규모</td>
+                    <td class="value-highlight">180세대 (법정 최대)</td>
+                </tr>
+                <tr>
+                    <td>심사 기준 적합성</td>
+                    <td class="value-highlight">85.0점 / 100점</td>
+                </tr>
+                <tr>
+                    <td>사업 안정성</td>
+                    <td class="value-highlight">80.0점 / 100점</td>
+                </tr>
+                <tr class="selected-row">
+                    <td><strong>최종 선정 규모</strong></td>
+                    <td><strong>총 150세대, 주차 120대</strong></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Page 3: Legal Constraints (PRIMARY) -->
+    <div class="content-page page-break">
+        <div class="page-title">
+            <span class="hierarchy-badge badge-primary">PRIMARY</span>
+            1. 법적 제약 분석
+        </div>
+
+        <div class="info-box">
+            <div class="info-box-title">📌 법적 제약 분석</div>
+            <p>건축법, 주차장법, 용도지역 규제 등 법적 기준을 검토하여 실행 가능한 최대 규모를 산정합니다.</p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">용적률 및 건폐율 분석</div>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 30%;">항목</th>
+                    <th style="width: 30%;">법정 한도</th>
+                    <th style="width: 40%;">계획 적용</th>
+                </tr>
+                <tr>
+                    <td>건폐율</td>
+                    <td>60.0%</td>
+                    <td class="value-highlight">54.0%</td>
+                </tr>
+                <tr>
+                    <td>용적률</td>
+                    <td>250.0%</td>
+                    <td class="value-highlight">212.5%</td>
+                </tr>
+                <tr>
+                    <td>최대 건축면적</td>
+                    <td>3500 ㎡</td>
+                    <td class="value-highlight">3150 ㎡</td>
+                </tr>
+                <tr>
+                    <td>최대 연면적</td>
+                    <td>14500 ㎡</td>
+                    <td class="value-highlight">12325 ㎡</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">주차대수 산정</div>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 40%;">항목</th>
+                    <th style="width: 60%;">결과</th>
+                </tr>
+                <tr>
+                    <td>법정 주차대수</td>
+                    <td class="value-highlight">105대</td>
+                </tr>
+                <tr>
+                    <td>계획 주차대수</td>
+                    <td class="value-highlight">120대</td>
+                </tr>
+                <tr>
+                    <td>주차 확보율</td>
+                    <td class="value-highlight">114.3%</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Page 4: Review Standards (SECONDARY) -->
+    <div class="content-page page-break">
+        <div class="page-title">
+            <span class="hierarchy-badge badge-secondary">SECONDARY</span>
+            2. 심사 기준 적합성
+        </div>
+
+        <div class="info-box">
+            <div class="info-box-title">📌 심사 기준 분석</div>
+            <p>LH 내부 심사 기준 및 사업성 평가 기준을 적용하여 승인 가능성을 판단합니다.</p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">세대수 구성 분석</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">평형</th>
+                        <th style="width: 25%;">세대수</th>
+                        <th style="width: 25%;">비율</th>
+                        <th style="width: 25%;">LH 기준 적합성</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td>59㎡ (18평형)</td>
+                        <td>90세대</td>
+                        <td>60.0%</td>
+                        <td class="value-highlight">적합</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>74㎡ (22평형)</td>
+                        <td>45세대</td>
+                        <td>30.0%</td>
+                        <td class="value-highlight">적합</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>84㎡ (25평형)</td>
+                        <td>15세대</td>
+                        <td>10.0%</td>
+                        <td class="value-highlight">적합</td>
+                    </tr>
+                    
+                    <tr class="highlight-row">
+                        <td><strong>총 세대수</strong></td>
+                        <td colspan="3"><strong>150세대</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">심사 기준 체크리스트</div>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 40%;">심사 항목</th>
+                    <th style="width: 30%;">기준</th>
+                    <th style="width: 30%;">판정</th>
+                </tr>
+                
+                <tr>
+                    <td>세대수 적정성</td>
+                    <td>100-200세대</td>
+                    <td class="value-highlight">적합</td>
+                </tr>
+                
+                <tr>
+                    <td>평형 구성 비율</td>
+                    <td>소형 60% 이상</td>
+                    <td class="value-highlight">적합</td>
+                </tr>
+                
+                <tr>
+                    <td>주차 확보율</td>
+                    <td>세대당 0.7대 이상</td>
+                    <td class="value-highlight">적합</td>
+                </tr>
+                
+                <tr>
+                    <td>층수 제한</td>
+                    <td>15층 이하</td>
+                    <td class="value-highlight">적합</td>
+                </tr>
+                
+            </table>
+        </div>
+    </div>
+
+    <!-- Page 5: Final Decision -->
+    <div class="content-page page-break">
+        <div class="page-title">3. 최종 판단</div>
+
+        <div class="section">
+            <div class="section-title">종합 평가 결과</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>평가 방법</th>
+                        <th>가중치</th>
+                        <th>점수</th>
+                        <th>비고</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>법적 제약 분석 (PRIMARY)</td>
+                        <td>50%</td>
+                        <td class="value-highlight">90.0점</td>
+                        <td>건축법, 용적률, 주차장법 검토</td>
+                    </tr>
+                    <tr>
+                        <td>심사 기준 적합성 (SECONDARY)</td>
+                        <td>30%</td>
+                        <td class="value-highlight">85.0점</td>
+                        <td>LH 내부 심사 기준 적용</td>
+                    </tr>
+                    <tr>
+                        <td>사업 안정성 (REFERENCE)</td>
+                        <td>20%</td>
+                        <td class="value-highlight">80.0점</td>
+                        <td>사업 리스크 분석</td>
+                    </tr>
+                    <tr class="selected-row">
+                        <td><strong>종합 점수</strong></td>
+                        <td><strong>100%</strong></td>
+                        <td class="value-highlight"><strong>86.5점</strong></td>
+                        <td><strong>최종 규모: 총 150세대, 주차 120대</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">판단 의견</div>
+            <div class="info-box">
+                <p>본 사업의 건축 규모는 총 150세대, 주차 120대로 선정됩니다. 법적 제약 분석 결과 90.0점, LH 심사 기준 적합성 85.0점으로 종합 점수 86.5점을 기록하였으며, 건축법 및 관련 법규를 모두 충족하는 것으로 판단됩니다. 사업 안정성이 확보되었으므로, 해당 규모로의 사업 추진을 권고합니다.</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 60px; text-align: right;">
+            <p style="font-size: 12pt; margin-bottom: 10px;">2025년 12월 29일</p>
+            <p style="font-size: 13pt; font-weight: bold; color: #2c3e50;">작성 주체: ZeroSite Analysis Engine</p>
+            <p style="font-size: 12pt; color: #6c757d; margin-top: 15px;">Antenna Holdings Co., Ltd.</p>
+        </div>
+    </div>
+
+    <!-- Page 6: Legal Disclaimer -->
+    <div class="content-page">
+        <div class="page-title">4. 분석 기준 및 제한사항</div>
+
+        <div class="section">
+            <div class="section-title">분석 기준</div>
+            <div class="info-box">
+                <p><strong>1. 분석 목적:</strong> 본 보고서는 건축 규모 판단을 위한 전문 분석입니다.</p>
+                <p><strong>2. 분석 기준일:</strong> 2025년 12월 29일 기준이며, 이후 법규 변경은 반영되지 않습니다.</p>
+                <p><strong>3. 적용 법규:</strong> 건축법, 주차장법, 국토의 계획 및 이용에 관한 법률 등을 적용했습니다.</p>
+                <p><strong>4. 적용 범위:</strong> 본 판단은 분석 기준일 당시의 법규 및 LH 기준을 반영한 것입니다.</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">주의사항</div>
+            <ul style="padding-left: 20px; line-height: 2;">
+                <li>본 보고서의 내용을 임의로 수정하거나 일부만 발췌하여 사용할 수 없습니다.</li>
+                <li>건축 규모는 분석 기준일 당시의 법규를 적용한 것입니다.</li>
+                <li>법규 변경, 인허가 조건 등 향후 변경 가능한 요소는 별도 확인이 필요합니다.</li>
+                <li>최종 건축허가는 관할 지자체의 승인이 필요합니다.</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 80px; padding: 30px; background: #f8f9fa; border: 2px solid #dee2e6;">
+            <p style="text-align: center; font-size: 11pt; color: #6c757d; line-height: 1.8;">
+                본 분석은 전문 분석 기준 및 법규에 따라 작성되었으며,<br>
+                분석 과정에서 취득한 정보와 자료는 엄격히 보호됩니다.<br>
+                <br>
+                <strong>Confidential - For Official Use Only</strong>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
