@@ -1,5 +1,6 @@
 """
 FastAPI 메인 애플리케이션
+Updated: 2026-01-04 - M1 Address Search Fix
 """
 
 from fastapi import FastAPI, HTTPException
