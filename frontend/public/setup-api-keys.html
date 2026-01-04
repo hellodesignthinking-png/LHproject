@@ -256,7 +256,10 @@
             try {
                 const keys = JSON.parse(sessionStorage.getItem('m1_api_keys'));
                 
-                const response = await fetch('/api/m1/address/search', {
+                // Use backend API URL directly
+                const backendUrl = 'https://49999-ix27pwgxgiz4rqbhpf92x-a402f90a.sandbox.novita.ai';
+                
+                const response = await fetch(`${backendUrl}/api/m1/address/search`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -267,7 +270,12 @@
                     body: JSON.stringify({ query: '서울시 강남구' })
                 });
                 
-                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const text = await response.text();
+                const result = text ? JSON.parse(text) : { error: 'Empty response' };
                 
                 if (result.success && !result.using_mock_data) {
                     messageDiv.innerHTML = '<div class="message success">✅ 주소 검색 성공! ' + (result.suggestions?.length || 0) + '개 결과</div>';
