@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite 보고서 다운로드</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .logo {
+            font-size: 36px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .report-grid {
+            display: grid;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .report-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .report-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+        
+        .report-info {
+            flex: 1;
+        }
+        
+        .report-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a237e;
+            margin-bottom: 5px;
+        }
+        
+        .report-subtitle {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .report-module {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+        
+        .download-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .download-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .download-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .info-box {
+            background: #e8f4f8;
+            border-left: 4px solid #0288d1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .info-box p {
+            color: #0277bd;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            color: #999;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">ZEROSITE</div>
+            <div class="subtitle">Classic Format 보고서 다운로드</div>
+        </div>
+        
+        <div class="info-box">
+            <p><strong>📄 5종 모듈 보고서</strong><br>
+            각 모듈별로 생성된 Classic Format PDF 보고서를 다운로드할 수 있습니다.</p>
+        </div>
+        
+        <div class="report-grid">
+            <div class="report-card">
+                <div class="report-info">
+                    <div>
+                        <span class="report-module">M2</span>
+                        <span class="report-title">토지감정평가 보고서</span>
+                    </div>
+                    <div class="report-subtitle">Land Appraisal Report - Classic Format (834 KB)</div>
+                </div>
+                <a href="/static/reports/M2_Land_Appraisal_Classic.pdf" download class="download-btn">
+                    📥 다운로드
+                </a>
+            </div>
+            
+            <div class="report-card">
+                <div class="report-info">
+                    <div>
+                        <span class="report-module">M3</span>
+                        <span class="report-title">공급유형 판단 보고서</span>
+                    </div>
+                    <div class="report-subtitle">Supply Type Analysis Report - Classic Format (775 KB)</div>
+                </div>
+                <a href="/static/reports/M3_Supply_Type_Classic.pdf" download class="download-btn">
+                    📥 다운로드
+                </a>
+            </div>
+            
+            <div class="report-card">
+                <div class="report-info">
+                    <div>
+                        <span class="report-module">M4</span>
+                        <span class="report-title">건축규모 판단 보고서</span>
+                    </div>
+                    <div class="report-subtitle">Building Scale Assessment Report - Classic Format (642 KB)</div>
+                </div>
+                <a href="/static/reports/M4_Building_Scale_Classic.pdf" download class="download-btn">
+                    📥 다운로드
+                </a>
+            </div>
+            
+            <div class="report-card">
+                <div class="report-info">
+                    <div>
+                        <span class="report-module">M5</span>
+                        <span class="report-title">사업성 분석 보고서</span>
+                    </div>
+                    <div class="report-subtitle">Feasibility Analysis Report - Classic Format (656 KB)</div>
+                </div>
+                <a href="/static/reports/M5_Feasibility_Classic.pdf" download class="download-btn">
+                    📥 다운로드
+                </a>
+            </div>
+            
+            <div class="report-card">
+                <div class="report-info">
+                    <div>
+                        <span class="report-module">M6</span>
+                        <span class="report-title">LH 종합판단 보고서</span>
+                    </div>
+                    <div class="report-subtitle">LH Comprehensive Judgment Report - Classic Format (754 KB)</div>
+                </div>
+                <a href="/static/reports/M6_LH_Judgment_Classic.pdf" download class="download-btn">
+                    📥 다운로드
+                </a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            © 2025 ZEROSITE by Antenna Holdings | Classic Format Reports
+        </div>
+    </div>
+    
+    <script>
+        // Add click tracking
+        document.querySelectorAll('.download-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const reportName = this.closest('.report-card').querySelector('.report-title').textContent;
+                console.log(`Downloading: ${reportName}`);
+                
+                // Visual feedback
+                this.style.opacity = '0.6';
+                setTimeout(() => {
+                    this.style.opacity = '1';
+                }, 200);
+            });
+        });
+    </script>
+</body>
+</html>
