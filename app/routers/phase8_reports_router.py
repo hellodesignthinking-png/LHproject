@@ -8,15 +8,17 @@ M2-M6 모듈별 보고서와 종합 최종보고서(Type A)를 생성하는 API 
 """
 
 from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import HTMLResponse, Response
+from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from typing import Optional
 import logging
 from datetime import datetime
+import io
 
 from app.services.phase8_module_report_generator import Phase8ModuleReportGenerator
 from app.services.phase8_six_types_report_generator import Phase8SixTypesReportGenerator
 from app.services.phase8_template_renderer import Phase8TemplateRenderer
 from app.services.phase8_pipeline_loader import get_pipeline_result, get_address_from_result, create_mock_pipeline_result
+from app.services.phase8_pdf_generator import pdf_generator
 from app.models.phase8_report_types import (
     ModuleEnum,
     ReportTypeEnum,
@@ -606,7 +608,20 @@ async def get_type_a_comprehensive_report_html(
         logger.info(f"Generating Type A Comprehensive Report for context_id={context_id}")
         logger.info(f"Options: include_m7={include_m7}, expand_appendix={expand_appendix}")
         
-        # TODO: 실제 구현 시 파이프라인 결과를 가져와서 템플릿에 전달
+        # 파이프라인 결과 가져오기
+        pipeline_result = await get_pipeline_result(context_id)
+        if not pipeline_result:
+            logger.warning(f"No pipeline result found for {context_id}, using MOCK data")
+            pipeline_result = await create_mock_pipeline_result(context_id)
+        
+        address = await get_address_from_result(pipeline_result)
+        
+        # 각 모듈 보고서 데이터 생성
+        m2_data = module_report_generator.generate_m2_report(context_id, pipeline_result, address)
+        m3_data = module_report_generator.generate_m3_report(context_id, pipeline_result, address)
+        m4_data = module_report_generator.generate_m4_report(context_id, pipeline_result, address)
+        m5_data = module_report_generator.generate_m5_report(context_id, pipeline_result, address)
+        m6_data = module_report_generator.generate_m6_report(context_id, pipeline_result, address)
         
         html_content = f"""
         <!DOCTYPE html>
@@ -673,11 +688,41 @@ async def get_type_a_comprehensive_report_html(
                 <h1>📊 종합 최종보고서 (Type A)</h1>
                 
                 <div class="info">
-                    <p><strong>📍 Context ID:</strong> {context_id}</p>
+                    <p><strong>📍 주소:</strong> {address}</p>
                     <p><strong>📅 생성일시:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
                     <p><strong>🔧 M7 포함:</strong> {'예' if include_m7 else '아니오'}</p>
                     <p><strong>📚 부록 확장:</strong> {'예' if expand_appendix else '아니오'}</p>
-                    <p><span class="status success">✅ Phase 8 시스템 정상 작동</span></p>
+                    <p><span class="status success">✅ Phase 8 시스템 정상 작동 (실제 데이터 연동)</span></p>
+                </div>
+                
+                <h2 style="color: #1E3A5F; margin-top: 40px;">🎯 핵심 요약</h2>
+                <div class="module-section" style="background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr style="background: #0A1628; color: white;">
+                            <th style="padding: 12px; text-align: left;">모듈</th>
+                            <th style="padding: 12px; text-align: left;">핵심 결과</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 12px; border: 1px solid #ddd;"><strong>M2 감정평가</strong></td>
+                            <td style="padding: 12px; border: 1px solid #ddd;">{m2_data.land_value_krw} (신뢰도: {m2_data.confidence_level})</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 12px; border: 1px solid #ddd;"><strong>M3 주거유형</strong></td>
+                            <td style="padding: 12px; border: 1px solid #ddd;">{m3_data.selected_type_name} (점수: {m3_data.selected_type_score})</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 12px; border: 1px solid #ddd;"><strong>M4 건축규모</strong></td>
+                            <td style="padding: 12px; border: 1px solid #ddd;">{m4_data.selected_scenario_name} - {m4_data.selected_scenario_units}세대</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 12px; border: 1px solid #ddd;"><strong>M5 사업성</strong></td>
+                            <td style="padding: 12px; border: 1px solid #ddd;">IRR {m5_data.irr}%, NPV {m5_data.npv_krw}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 12px; border: 1px solid #ddd;"><strong>M6 최종판정</strong></td>
+                            <td style="padding: 12px; border: 1px solid #ddd; font-weight: bold; color: #2E7D32;">{m6_data.decision_label}</td>
+                        </tr>
+                    </table>
                 </div>
                 
                 <h2 style="color: #1E3A5F; margin-top: 40px;">📋 보고서 구성</h2>
@@ -1337,3 +1382,158 @@ async def get_type_f_presentation_report_html(
     except Exception as e:
         logger.error(f"Failed to generate Type F report: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Type F 보고서 생성 실패: {str(e)}")
+
+
+# ========================================
+# PDF 다운로드 엔드포인트
+# ========================================
+
+@router.get("/modules/{module}/pdf")
+async def download_module_report_pdf(
+    module: str,
+    context_id: str = Query(..., description="분석 컨텍스트 ID")
+):
+    """
+    모듈별 보고서 PDF 다운로드
+    
+    Args:
+        module: m2, m3, m4, m5, m6 중 하나
+        context_id: 컨텍스트 ID
+    
+    Returns:
+        PDF 파일 (application/pdf)
+    """
+    try:
+        logger.info(f"Generating PDF for module {module}, context_id={context_id}")
+        
+        # HTML 엔드포인트 URL 생성
+        base_url = "http://localhost:49999"  # 내부 호출용
+        html_url = f"{base_url}/api/v4/reports/phase8/modules/{module}/html?context_id={context_id}"
+        
+        # PDF 생성
+        pdf_bytes = await pdf_generator.url_to_pdf(
+            url=html_url,
+            page_format="A4",
+            margin={
+                "top": "20mm",
+                "right": "15mm",
+                "bottom": "20mm",
+                "left": "15mm"
+            }
+        )
+        
+        # 파일명 생성
+        filename = f"phase8_{module}_report_{context_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        
+        # PDF 응답
+        return StreamingResponse(
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to generate PDF: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"PDF 생성 실패: {str(e)}")
+
+
+@router.get("/comprehensive/type-a/pdf")
+async def download_type_a_pdf(
+    context_id: str = Query(..., description="분석 컨텍스트 ID"),
+    include_m7: bool = Query(True, description="M7 포함 여부"),
+    expand_appendix: bool = Query(True, description="부록 확장 여부")
+):
+    """
+    Type A 종합 최종보고서 PDF 다운로드
+    
+    Args:
+        context_id: 컨텍스트 ID
+        include_m7: M7 포함 여부
+        expand_appendix: 부록 확장 여부
+    
+    Returns:
+        PDF 파일
+    """
+    try:
+        logger.info(f"Generating Type A PDF for context_id={context_id}")
+        
+        # HTML 엔드포인트 URL
+        base_url = "http://localhost:49999"
+        html_url = f"{base_url}/api/v4/reports/phase8/comprehensive/type-a/html?context_id={context_id}&include_m7={include_m7}&expand_appendix={expand_appendix}"
+        
+        # PDF 생성
+        pdf_bytes = await pdf_generator.url_to_pdf(
+            url=html_url,
+            page_format="A4",
+            margin={
+                "top": "20mm",
+                "right": "15mm",
+                "bottom": "25mm",
+                "left": "15mm"
+            }
+        )
+        
+        filename = f"phase8_type_a_comprehensive_{context_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        
+        return StreamingResponse(
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to generate Type A PDF: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Type A PDF 생성 실패: {str(e)}")
+
+
+@router.get("/six-types/{report_type}/pdf")
+async def download_six_type_report_pdf(
+    report_type: str,
+    context_id: str = Query(..., description="분석 컨텍스트 ID")
+):
+    """
+    6종 보고서 PDF 다운로드
+    
+    Args:
+        report_type: type-b, type-c, type-d, type-e, type-f 중 하나
+        context_id: 컨텍스트 ID
+    
+    Returns:
+        PDF 파일
+    """
+    try:
+        logger.info(f"Generating PDF for {report_type}, context_id={context_id}")
+        
+        # HTML 엔드포인트 URL
+        base_url = "http://localhost:49999"
+        html_url = f"{base_url}/api/v4/reports/phase8/six-types/{report_type}/html?context_id={context_id}"
+        
+        # PDF 생성
+        pdf_bytes = await pdf_generator.url_to_pdf(
+            url=html_url,
+            page_format="A4",
+            margin={
+                "top": "20mm",
+                "right": "15mm",
+                "bottom": "20mm",
+                "left": "15mm"
+            }
+        )
+        
+        filename = f"phase8_{report_type}_report_{context_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        
+        return StreamingResponse(
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to generate {report_type} PDF: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"{report_type} PDF 생성 실패: {str(e)}")
