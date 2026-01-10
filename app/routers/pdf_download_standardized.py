@@ -223,18 +223,35 @@ def _get_real_data_for_module(module: str, context_id: str) -> dict:
         # 🔥 Extract module-specific data from PipelineResult
         if module == "M2":
             appraisal = result.appraisal
+            
+            # 🔥 Phase 8 Enhancement: Extract transaction samples
+            transaction_cases = []
+            if hasattr(appraisal, 'transaction_samples') and appraisal.transaction_samples:
+                for i, sample in enumerate(appraisal.transaction_samples[:5], 1):  # Top 5
+                    transaction_cases.append({
+                        "case_id": f"CASE_{i:03d}",
+                        "date": sample.transaction_date if hasattr(sample, 'transaction_date') else "N/A",
+                        "area": f"{sample.area_sqm:.1f}" if hasattr(sample, 'area_sqm') else "N/A",
+                        "price": sample.price_total if hasattr(sample, 'price_total') else 0,
+                        "distance": f"{sample.distance_km * 1000:.0f}m" if hasattr(sample, 'distance_km') else "N/A",
+                        "address": sample.address if hasattr(sample, 'address') else "N/A"
+                    })
+            
             data = {
                 "summary": {
                     "land_value_total_krw": appraisal.land_value,
                     "pyeong_price_krw": appraisal.unit_price_pyeong if hasattr(appraisal, 'unit_price_pyeong') else 0,
                     "confidence_pct": appraisal.confidence_metrics.confidence_score * 100,
-                    "transaction_count": appraisal.transaction_count if hasattr(appraisal, 'transaction_count') else 0
+                    "transaction_count": len(transaction_cases)  # 🔥 Use actual count
                 },
                 "details": {
                     "appraisal": {
                         "land_value": appraisal.land_value,
                         "unit_price_sqm": appraisal.unit_price_sqm if hasattr(appraisal, 'unit_price_sqm') else 0,
                         "unit_price_pyeong": appraisal.unit_price_pyeong if hasattr(appraisal, 'unit_price_pyeong') else 0
+                    },
+                    "transactions": {
+                        "cases": transaction_cases  # 🔥 Phase 8: Add transaction cases
                     },
                     "confidence": {
                         "score": appraisal.confidence_metrics.confidence_score
@@ -727,12 +744,13 @@ async def preview_module_html(
     모듈별 HTML 보고서 미리보기
     
     🔥 REAL DATA ONLY: pipeline results_cache에서 실제 데이터 로드
+    🔥 Phase 8 Enhanced: 거래사례 5건, POI 분석, 주차 대안 등 풍부한 데이터
     PDF 다운로드 전 브라우저에서 내용을 확인할 수 있습니다.
     """
     try:
         logger.info(f"📄 HTML 미리보기 요청: module={module}, context_id={context_id}")
         
-        # 🔥 REAL DATA LOADER: 실제 pipeline 데이터 로드
+        # 🔥 REAL DATA LOADER: 실제 pipeline 데이터 로드 (Phase 8 enhanced)
         real_data = _get_real_data_for_module(module, context_id)
         
         if not real_data:
