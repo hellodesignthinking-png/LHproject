@@ -89,6 +89,9 @@ from app.routers.pdf_download_standardized import router as pdf_download_router
 # ✨ M7: Import M7 Community Plan Router (Standalone Reports)
 from app.routers.m7_community_plan_router import router as m7_router
 
+# ✨ Phase 6: Import Feedback & Benchmarking System Router
+from app.routers.phase6_router import router as phase6_router
+
 # ✨ v11.0 ENHANCEMENTS: Import middleware and utilities
 from app.middleware.rate_limiter import RateLimiter, RateLimitConfig
 from app.middleware.cache_manager import cache_manager, start_cache_cleanup_task
@@ -225,6 +228,9 @@ app.include_router(pdf_download_router)
 
 # ✨ M7: M7 Community Plan standalone reports
 app.include_router(m7_router)
+
+# ✨ Phase 6: Feedback & Benchmarking System
+app.include_router(phase6_router)
 
 # ✨ PDF Reports API
 from app.api.endpoints.pdf_reports import router as pdf_reports_router
