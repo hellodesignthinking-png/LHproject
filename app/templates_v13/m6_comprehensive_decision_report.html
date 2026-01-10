@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M6 종합 판단 보고서 - ZeroSite</title>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      line-height: 1.6;
+      color: #1a1a1a;
+      background: #f8f9fa;
+    }
+    
+    .report-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    /* Header */
+    .site-identity {
+      background: linear-gradient(135deg, #0A1628 0%, #1E3A5F 100%);
+      color: white;
+      padding: 40px;
+      text-align: center;
+    }
+    
+    .site-logo {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: 2px;
+    }
+    
+    .report-header {
+      padding: 60px 40px 40px;
+      background: linear-gradient(to bottom, #f8f9fa 0%, white 100%);
+    }
+    
+    .report-title {
+      font-size: 36px;
+      font-weight: 700;
+      color: #0A1628;
+      margin-bottom: 12px;
+    }
+    
+    .report-subtitle {
+      font-size: 18px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+    
+    .report-meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+    
+    .meta-item {
+      padding: 12px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    
+    .meta-label {
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    
+    .meta-value {
+      color: #1a1a1a;
+      font-weight: 500;
+    }
+    
+    /* Sections */
+    .section {
+      padding: 40px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .section-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #0A1628;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 3px solid #0A1628;
+    }
+    
+    .section-subtitle {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1E3A5F;
+      margin: 24px 0 16px;
+    }
+    
+    /* Decision Card */
+    .decision-card {
+      padding: 32px;
+      border-radius: 12px;
+      margin: 24px 0;
+      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+      border-left: 6px solid #4caf50;
+    }
+    
+    .decision-card.conditional {
+      background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+      border-left-color: #ff9800;
+    }
+    
+    .decision-card.negative {
+      background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+      border-left-color: #f44336;
+    }
+    
+    .decision-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    
+    .decision-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+    
+    .decision-metric {
+      text-align: center;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 8px;
+    }
+    
+    .decision-metric-label {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    
+    .decision-metric-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #0A1628;
+    }
+    
+    /* Info Boxes */
+    .info-box {
+      padding: 20px;
+      background: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      border-radius: 4px;
+      margin: 20px 0;
+      line-height: 1.8;
+    }
+    
+    .warning-box {
+      padding: 20px;
+      background: #fff3e0;
+      border-left: 4px solid #ff9800;
+      border-radius: 4px;
+      margin: 20px 0;
+      line-height: 1.8;
+    }
+    
+    .success-box {
+      padding: 20px;
+      background: #e8f5e9;
+      border-left: 4px solid #4caf50;
+      border-radius: 4px;
+      margin: 20px 0;
+      line-height: 1.8;
+    }
+    
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 14px;
+    }
+    
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border: 1px solid #e0e0e0;
+    }
+    
+    th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #0A1628;
+    }
+    
+    tr:hover {
+      background: #f8f9fa;
+    }
+    
+    /* Lists */
+    .report-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .report-list li {
+      padding: 12px;
+      margin: 8px 0;
+      background: #f8f9fa;
+      border-left: 3px solid #2196f3;
+      border-radius: 4px;
+    }
+    
+    .report-list.positive li {
+      background: #e8f5e9;
+      border-left-color: #4caf50;
+    }
+    
+    .report-list.risk li {
+      background: #ffebee;
+      border-left-color: #f44336;
+    }
+    
+    /* Footer */
+    .report-footer {
+      padding: 40px;
+      background: #f8f9fa;
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+    }
+    
+    /* Module Summary Boxes */
+    .module-summary {
+      padding: 20px;
+      margin: 16px 0;
+      border-radius: 8px;
+      border-left: 4px solid #2196f3;
+      background: #f8f9fa;
+    }
+    
+    .module-summary .module-name {
+      font-weight: 700;
+      color: #1E3A5F;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+    
+    .module-summary .module-content {
+      color: #666;
+      line-height: 1.6;
+    }
+    
+    /* Print Styles */
+    @media print {
+      body {
+        background: white;
+      }
+      
+      .report-container {
+        box-shadow: none;
+      }
+      
+      .section {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="report-container">
+    <!-- Site Identity -->
+    <div class="site-identity">
+      <div class="site-logo">ZEROSITE</div>
+      <div style="font-size: 14px; opacity: 0.9;">M6 종합 판단 보고서 | COMPREHENSIVE DECISION REPORT</div>
+    </div>
+
+    <!-- Report Header -->
+    <div class="report-header">
+      <div class="report-title">M6. 종합 판단 보고서</div>
+      <div class="report-subtitle">
+        M2-M5 통합 분석 | 리스크 평가 | 최종 권고사항
+      </div>
+      
+      <div class="report-meta">
+        <div class="meta-item">
+          <div class="meta-label">생성일시</div>
+          <div class="meta-value">{{ generated_at }}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Context ID</div>
+          <div class="meta-value">{{ context_id }}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">대상 주소</div>
+          <div class="meta-value">{{ address }}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">보고서 버전</div>
+          <div class="meta-value">M6 v1.0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1. Executive Summary -->
+    <section class="section">
+      <div class="section-title">1. 종합 판정 요약</div>
+      
+      <div class="decision-card {% if m6_grade in ['A', 'B'] %}{% elif m6_grade == 'C' %}conditional{% else %}negative{% endif %}">
+        <div class="decision-title">{{ m6_decision }}</div>
+        <div style="margin: 16px 0; font-size: 14px; line-height: 1.6; opacity: 0.95;">
+          본 사업은 LH 공공매입임대 사업 기준에 대한 종합 평가 결과, 
+          {% if m6_total_score >= 80 %}
+          <strong>우수한 평가</strong>를 받았으며 즉시 추진이 권장됩니다.
+          {% elif m6_total_score >= 70 %}
+          <strong>양호한 평가</strong>를 받았으나 일부 보완이 필요합니다.
+          {% elif m6_total_score >= 60 %}
+          <strong>보통 평가</strong>로 주요 요소 개선 후 재검토가 필요합니다.
+          {% else %}
+          <strong>미흡한 평가</strong>로 근본적인 사업 구조 재설계가 필요합니다.
+          {% endif %}
+        </div>
+        <div class="decision-details">
+          <div class="decision-metric">
+            <div class="decision-metric-label">종합 점수</div>
+            <div class="decision-metric-value">{{ m6_total_score }}/100</div>
+          </div>
+          <div class="decision-metric">
+            <div class="decision-metric-label">등급</div>
+            <div class="decision-metric-value">{{ m6_grade }}</div>
+          </div>
+          <div class="decision-metric">
+            <div class="decision-metric-label">승인 확률</div>
+            <div class="decision-metric-value">{{ m6_approval_probability }}%</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. 모듈별 결과 통합 -->
+    <section class="section">
+      <div class="section-title">2. 모듈별 결과 통합</div>
+      
+      <div class="section-subtitle">M2. 토지감정평가 요약</div>
+      <div class="module-summary">
+        <div class="module-name">M2 토지감정평가</div>
+        <div class="module-content">{{ m2_summary }}</div>
+      </div>
+      
+      <div class="section-subtitle">M3. 공급 유형 판단 요약</div>
+      <div class="module-summary">
+        <div class="module-name">M3 공급 유형 판단</div>
+        <div class="module-content">{{ m3_summary }}</div>
+      </div>
+      
+      <div class="section-subtitle">M4. 건축 규모 검토 요약</div>
+      <div class="module-summary">
+        <div class="module-name">M4 건축 규모 검토</div>
+        <div class="module-content">{{ m4_summary }}</div>
+      </div>
+      
+      <div class="section-subtitle">M5. 사업성 분석 요약</div>
+      <div class="module-summary">
+        <div class="module-name">M5 사업성 분석</div>
+        <div class="module-content">{{ m5_summary }}</div>
+      </div>
+    </section>
+
+    <!-- 3. 세부 점수 분석 -->
+    <section class="section">
+      <div class="section-title">3. 세부 점수 분석</div>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>평가 항목</th>
+            <th>점수</th>
+            <th>만점</th>
+            <th>달성률</th>
+            <th>평가</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>입지 조건</td>
+            <td>{{ location_score }}</td>
+            <td>{{ location_max }}</td>
+            <td>{{ location_ratio|round(1) }}%</td>
+            <td>{% if location_ratio >= 80 %}우수{% elif location_ratio >= 60 %}양호{% else %}보통{% endif %}</td>
+          </tr>
+          <tr>
+            <td>건축 규모</td>
+            <td>{{ scale_score }}</td>
+            <td>{{ scale_max }}</td>
+            <td>{{ scale_ratio|round(1) }}%</td>
+            <td>{% if scale_ratio >= 80 %}우수{% elif scale_ratio >= 60 %}양호{% else %}보통{% endif %}</td>
+          </tr>
+          <tr>
+            <td>사업성</td>
+            <td>{{ feasibility_score }}</td>
+            <td>{{ feasibility_max }}</td>
+            <td>{{ feasibility_ratio|round(1) }}%</td>
+            <td>{% if feasibility_ratio >= 80 %}우수{% elif feasibility_ratio >= 60 %}양호{% else %}보통{% endif %}</td>
+          </tr>
+          <tr>
+            <td>법규 준수</td>
+            <td>{{ compliance_score }}</td>
+            <td>{{ compliance_max }}</td>
+            <td>{{ compliance_ratio|round(1) }}%</td>
+            <td>{% if compliance_ratio >= 80 %}우수{% elif compliance_ratio >= 60 %}양호{% else %}보통{% endif %}</td>
+          </tr>
+          <tr style="background: #f8f9fa; font-weight: 700;">
+            <td>종합 점수</td>
+            <td>{{ m6_total_score }}</td>
+            <td>100</td>
+            <td>{{ m6_total_score }}%</td>
+            <td>{{ m6_grade }}</td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div class="info-box">
+        <strong>📊 점수 체계 설명</strong><br>
+        • 입지 조건 (30점): M1 입지 분석 결과 기반<br>
+        • 건축 규모 (25점): M4 건축 계획 적정성 평가<br>
+        • 사업성 (30점): M5 재무지표 (IRR, NPV 등) 평가<br>
+        • 법규 준수 (15점): 관련 법규 및 LH 기준 충족도
+      </div>
+    </section>
+
+    <!-- 4. 긍정 요인 분석 -->
+    <section class="section">
+      <div class="section-title">4. 긍정 요인 분석</div>
+      
+      <ul class="report-list positive">
+        {% for factor in positive_factors %}
+        <li>✅ {{ factor }}</li>
+        {% endfor %}
+      </ul>
+      
+      <div class="success-box">
+        <strong>💡 강점 요약</strong><br>
+        본 사업은 {{ positive_factors|length }}개의 주요 긍정 요인을 보유하고 있으며,
+        {% if m6_total_score >= 70 %}
+        전반적으로 LH 기준을 충족하는 우수한 조건을 갖추고 있습니다.
+        {% else %}
+        일부 긍정 요인이 있으나 개선이 필요한 부분도 존재합니다.
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- 5. 리스크 요인 분석 -->
+    <section class="section">
+      <div class="section-title">5. 리스크 요인 분석</div>
+      
+      <ul class="report-list risk">
+        {% for risk in risk_factors %}
+        <li>⚠️ {{ risk }}</li>
+        {% endfor %}
+      </ul>
+      
+      <div class="warning-box">
+        <strong>⚡ 리스크 관리 필요</strong><br>
+        {{ risk_factors|length }}개의 리스크 요인이 식별되었습니다.
+        이러한 리스크를 최소화하기 위한 대응 방안 마련이 필요합니다.
+      </div>
+    </section>
+
+    <!-- 6. 필수 요건 검증 -->
+    <section class="section">
+      <div class="section-title">6. 필수 요건 검증 (Hard-fail Check)</div>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>항목</th>
+            <th>기준</th>
+            <th>실제</th>
+            <th>충족 여부</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in hard_fail_items %}
+          <tr>
+            <td>{{ item.name }}</td>
+            <td>{{ item.limit }}</td>
+            <td>{{ item.value }}</td>
+            <td style="font-weight: 700; {% if item.passed %}color: #4caf50;{% else %}color: #f44336;{% endif %}">
+              {% if item.passed %}✅ 충족{% else %}❌ 미충족{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      
+      {% set failed_count = hard_fail_items | selectattr('passed', 'equalto', false) | list | length %}
+      {% if failed_count > 0 %}
+      <div class="warning-box">
+        <strong>⚠️ 미충족 항목 발견</strong><br>
+        {{ failed_count }}개의 필수 요건이 미충족 상태입니다. 
+        이 항목들은 LH 심사 시 부적격 사유가 될 수 있으므로 반드시 개선이 필요합니다.
+      </div>
+      {% else %}
+      <div class="success-box">
+        <strong>✅ 모든 필수 요건 충족</strong><br>
+        모든 필수 요건을 충족하여 LH 심사 기본 자격을 갖추었습니다.
+      </div>
+      {% endif %}
+    </section>
+
+    <!-- 7. 조건부 추진 시나리오 -->
+    <section class="section">
+      <div class="section-title">7. 조건부 추진 시나리오</div>
+      
+      <ul class="report-list">
+        {% for scenario in conditional_scenarios %}
+        <li>{{ scenario }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <!-- 8. 다음 단계 실사 계획 -->
+    <section class="section">
+      <div class="section-title">8. 다음 단계 실사 계획</div>
+      
+      <div style="white-space: pre-line; line-height: 2;">
+{% for step in next_steps %}{{ step }}
+{% endfor %}
+      </div>
+    </section>
+
+    <!-- 9. 최종 권고사항 -->
+    <section class="section">
+      <div class="section-title">9. 최종 권고사항</div>
+      
+      <ul class="report-list">
+        {% for recommendation in final_recommendations %}
+        <li>{{ recommendation }}</li>
+        {% endfor %}
+      </ul>
+      
+      <div class="{% if m6_total_score >= 70 %}success-box{% else %}warning-box{% endif %}" style="margin-top: 30px;">
+        <strong>📋 종합 의견</strong><br><br>
+        {% if m6_total_score >= 80 %}
+        본 사업은 LH 공공매입임대 사업으로서 <strong>매우 적합</strong>한 것으로 판단되며,
+        <strong>즉시 추진을 권장</strong>합니다. LH와의 사전 협의를 통해 세부 조건을 명확히 하고
+        정식 사업계획서를 제출하시기 바랍니다.
+        {% elif m6_total_score >= 70 %}
+        본 사업은 LH 기준을 <strong>대체로 충족</strong>하나, 일부 보완이 필요합니다.
+        리스크 요인을 최소화하고 LH와의 사전 협의를 통해 <strong>조건부 추진</strong>을 권장합니다.
+        {% elif m6_total_score >= 60 %}
+        본 사업은 현재 상태로는 LH 심사 통과가 <strong>불확실</strong>합니다.
+        주요 요소들을 대폭 개선한 후 <strong>재검토</strong>를 권장합니다.
+        {% else %}
+        본 사업은 현재 상태로는 LH 심사 통과가 <strong>어렵습니다</strong>.
+        근본적인 사업 구조 재설계 또는 <strong>대안 검토</strong>가 필요합니다.
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <div class="report-footer">
+      <div style="margin-bottom: 16px;">
+        <strong>ZeroSite</strong> | M6 종합 판단 보고서
+      </div>
+      <div style="font-size: 12px; color: #999;">
+        본 보고서는 AI 기반 분석 시스템에 의해 생성되었으며,<br>
+        실제 LH 심사 결과와 다를 수 있습니다. 최종 의사결정 전 전문가 자문을 권장합니다.
+      </div>
+      <div style="margin-top: 16px; font-size: 12px;">
+        © 2026 ZeroSite by Antenna Holdings. All rights reserved.
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
