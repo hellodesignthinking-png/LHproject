@@ -593,13 +593,13 @@ async def real_address_api(query: str, kakao_api_key: Optional[str] = None) -> t
 # STEP 1: Address Search
 # ============================================================================
 
-@router.post("/address/search", response_model=AddressSearchResponse)
-async def search_address_endpoint(
-    request: AddressSearchRequest,
+@router.get("/address/search", response_model=AddressSearchResponse)
+async def search_address_get(
+    query: str = Query(..., description="주소 검색 쿼리"),
     x_kakao_api_key: Optional[str] = Header(None, alias="X-Kakao-API-Key")
 ):
     """
-    STEP 1: Search for addresses (도로명/지번)
+    STEP 1: Search for addresses (도로명/지번) - GET method
     
     Returns list of address suggestions with coordinates.
     User selects one to proceed to STEP 2.
@@ -610,7 +610,48 @@ async def search_address_endpoint(
     Security: Kakao API key provided via request header (not stored server-side)
     """
     try:
-        logger.info(f"🔍 STEP 1: Address search - query: {request.query}")
+        logger.info(f"🔍 STEP 1: Address search (GET) - query: {query}")
+        logger.info(f"🔑 Kakao API Key provided: {bool(x_kakao_api_key)}")
+        
+        # Call real address search API with fallback
+        suggestions, using_mock = await real_address_api(query, x_kakao_api_key)
+        
+        if using_mock:
+            logger.warning(f"⚠️ Returning MOCK data for '{query}' - {len(suggestions)} suggestions")
+        
+        return AddressSearchResponse(
+            suggestions=suggestions,
+            success=True,
+            using_mock_data=using_mock
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Address search failed: {str(e)}")
+        return AddressSearchResponse(
+            suggestions=[],
+            success=False,
+            using_mock_data=False
+        )
+
+
+@router.post("/address/search", response_model=AddressSearchResponse)
+async def search_address_endpoint(
+    request: AddressSearchRequest,
+    x_kakao_api_key: Optional[str] = Header(None, alias="X-Kakao-API-Key")
+):
+    """
+    STEP 1: Search for addresses (도로명/지번) - POST method
+    
+    Returns list of address suggestions with coordinates.
+    User selects one to proceed to STEP 2.
+    
+    ⚠️ WARNING: If no API key provided, returns mock development data.
+    Production systems must provide valid Kakao API key.
+    
+    Security: Kakao API key provided via request header (not stored server-side)
+    """
+    try:
+        logger.info(f"🔍 STEP 1: Address search (POST) - query: {request.query}")
         logger.info(f"🔑 Kakao API Key provided: {bool(x_kakao_api_key)}")
         
         # Call real address search API with fallback
