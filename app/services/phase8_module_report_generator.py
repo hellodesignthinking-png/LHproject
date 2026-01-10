@@ -60,6 +60,9 @@ class Phase8ModuleReportGenerator:
         
         appraisal_ctx = pipeline_result.appraisal
         
+        # Calculate site_area from land_value and unit_price
+        site_area = appraisal_ctx.land_value / appraisal_ctx.unit_price_sqm if appraisal_ctx.unit_price_sqm > 0 else 1000.0
+        
         # 거래사례 생성 (3-5건)
         transaction_cases = self._generate_transaction_cases(appraisal_ctx)
         
@@ -90,8 +93,8 @@ class Phase8ModuleReportGenerator:
             transaction_cases=transaction_cases,
             transaction_count=len(transaction_cases),
             avg_price_sqm=f"{appraisal_ctx.unit_price_sqm:,.0f}원/㎡",
-            price_range_min=f"{appraisal_ctx.price_range_low / (appraisal_ctx.site_area if hasattr(appraisal_ctx, 'site_area') else 1000):,.0f}원/㎡",
-            price_range_max=f"{appraisal_ctx.price_range_high / (appraisal_ctx.site_area if hasattr(appraisal_ctx, 'site_area') else 1000):,.0f}원/㎡",
+            price_range_min=f"{appraisal_ctx.price_range_low / site_area if site_area > 0 else appraisal_ctx.unit_price_sqm * 0.95:,.0f}원/㎡",
+            price_range_max=f"{appraisal_ctx.price_range_high / site_area if site_area > 0 else appraisal_ctx.unit_price_sqm * 1.05:,.0f}원/㎡",
             
             # 공시지가 비교
             official_price_krw=f"{appraisal_ctx.official_price:,.0f}원",
@@ -109,7 +112,8 @@ class Phase8ModuleReportGenerator:
     def _generate_transaction_cases(self, appraisal_ctx: Any) -> List[TransactionCase]:
         """거래사례 3-5건 생성 (풍부한 데이터)"""
         base_price = appraisal_ctx.unit_price_sqm
-        site_area = appraisal_ctx.site_area if hasattr(appraisal_ctx, 'site_area') else 1000.0
+        # AppraisalContext에는 site_area가 없으므로 land_value와 unit_price로 역산
+        site_area = appraisal_ctx.land_value / appraisal_ctx.unit_price_sqm if appraisal_ctx.unit_price_sqm > 0 else 1000.0
         
         cases = [
             TransactionCase(

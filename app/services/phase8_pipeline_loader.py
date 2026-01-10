@@ -1,10 +1,11 @@
 """
-Phase 8: 파이프라인 결과 조회 헬퍼
+Phase 8: 파이프라인 결과 조회 헬퍼 (FIXED)
 ====================================
 
 context_id 또는 parcel_id로 파이프라인 결과를 가져오는 유틸리티
+- 모든 Context 클래스의 실제 필드에 맞춘 Mock 데이터
 
-작성일: 2026-01-10
+작성일: 2026-01-10 (Updated)
 """
 
 import json
@@ -15,9 +16,16 @@ from datetime import datetime
 
 from app.core.pipeline.zer0site_pipeline import PipelineResult
 from app.core.context.canonical_land import CanonicalLandContext
-from app.core.context.appraisal_context import AppraisalContext
-from app.core.context.housing_type_context import HousingTypeContext
-from app.core.context.capacity_context_v2 import CapacityContextV2
+from app.core.context.appraisal_context import (
+    AppraisalContext, TransactionSample, 
+    PremiumFactors, ConfidenceMetrics
+)
+from app.core.context.housing_type_context import HousingTypeContext, TypeScore
+from app.core.context.capacity_context_v2 import (
+    CapacityContextV2, GFABreakdown, CapacityScale, 
+    MassingOption, UnitSummary, ParkingSolution,
+    RampCondition, ParkingType, RampFeasibility
+)
 from app.core.context.feasibility_context import FeasibilityContext
 from app.core.context.lh_review_context import LHReviewContext
 
@@ -82,7 +90,7 @@ async def get_address_from_result(result: PipelineResult) -> str:
 
 async def create_mock_pipeline_result(context_id: str) -> PipelineResult:
     """
-    테스트용 Mock 파이프라인 결과 생성
+    테스트용 Mock 파이프라인 결과 생성 (모든 필드 정확)
     
     Args:
         context_id: 컨텍스트 ID
@@ -92,18 +100,9 @@ async def create_mock_pipeline_result(context_id: str) -> PipelineResult:
     """
     logger.warning(f"Creating MOCK pipeline result for: {context_id}")
     
-    # Mock Context 생성 (실제 데이터 구조 유지)
-    from app.core.context.canonical_land import CanonicalLandContext
-    from app.core.context.appraisal_context import AppraisalContext
-    from app.core.context.housing_type_context import HousingTypeContext, TypeScore
-    from app.core.context.capacity_context_v2 import (
-        CapacityContextV2, GFABreakdown, CapacityScale, 
-        MassingOption, UnitSummary, ParkingSolution
-    )
-    from app.core.context.feasibility_context import FeasibilityContext
-    from app.core.context.lh_review_context import LHReviewContext
-    
-    # M1: Land (CanonicalLandContext with correct fields)
+    # ========================================
+    # M1: CanonicalLandContext
+    # ========================================
     land_ctx = CanonicalLandContext(
         parcel_id="1168010100100010001",
         address="서울특별시 강남구 역삼동 123-45",
@@ -130,66 +129,82 @@ async def create_mock_pipeline_result(context_id: str) -> PipelineResult:
         retrieval_date=datetime.now().strftime("%Y-%m-%d"),
     )
     
-    # M2: Appraisal (complete structure with all required fields)
-    from app.core.context.appraisal_context import TransactionSample, PremiumFactors, ConfidenceMetrics
+    # ========================================
+    # M2: AppraisalContext (모든 필드 정확)
+    # ========================================
     
-    # Create transaction samples
+    # Transaction Samples (정확한 필드명)
     transaction_samples = [
         TransactionSample(
-            address="인근 토지 A",
-            distance=150,
-            trade_date="2025-11-15",
-            land_area_sqm=950.0,
-            land_area_pyeong=287.4,
-            transaction_price=2850000000,
-            price_per_sqm=3000000,
-            price_per_pyeong=9917400,
-            similarity_score=0.95,
-            adjustments=[],
-            adjusted_price_per_sqm=3000000
+            address="서울시 강남구 역삼동 123-12",
+            transaction_date="2025-11-15",
+            price_total=2850000000.0,
+            price_per_sqm=3000000.0,
+            area_sqm=950.0,
+            distance_km=0.15,
+            zone_type="제2종일반주거지역",
+            adjusted_price_per_sqm=3000000.0,
+            adjustment_factors={"location": 1.0, "area": 0.95}
         ),
         TransactionSample(
-            address="인근 토지 B",
-            distance=220,
-            trade_date="2025-10-28",
-            land_area_sqm=1100.0,
-            land_area_pyeong=332.8,
-            transaction_price=3234000000,
-            price_per_sqm=2940000,
-            price_per_pyeong=9717720,
-            similarity_score=0.90,
-            adjustments=[],
-            adjusted_price_per_sqm=2940000
+            address="서울시 강남구 역삼동 145-8",
+            transaction_date="2025-10-28",
+            price_total=3234000000.0,
+            price_per_sqm=2940000.0,
+            area_sqm=1100.0,
+            distance_km=0.22,
+            zone_type="제2종일반주거지역",
+            adjusted_price_per_sqm=2940000.0,
+            adjustment_factors={"location": 1.0, "area": 1.1}
+        ),
+        TransactionSample(
+            address="서울시 강남구 역삼동 134-25",
+            transaction_date="2025-09-10",
+            price_total=3213000000.0,
+            price_per_sqm=3060000.0,
+            area_sqm=1050.0,
+            distance_km=0.18,
+            zone_type="제2종일반주거지역",
+            adjusted_price_per_sqm=3060000.0,
+            adjustment_factors={"location": 1.02, "area": 1.05}
         ),
     ]
     
+    # Premium Factors (정확한 필드명)
     premium_factors = PremiumFactors(
-        location=15.0,
-        accessibility=10.0,
-        infrastructure=8.0,
-        development_potential=7.0,
-        total=40.0
+        road_score=8.0,
+        terrain_score=9.0,
+        location_score=15.0,
+        accessibility_score=12.0,
+        distance_premium=3.0,
+        time_premium=2.0,
+        size_premium=1.0,
+        zone_premium=5.0,
+        total_premium_rate=42.86
     )
     
+    # Confidence Metrics (정확한 필드명)
     confidence_metrics = ConfidenceMetrics(
-        data_quality=0.90,
-        sample_size=0.80,
-        time_relevance=0.85,
-        similarity=0.88,
-        overall=0.86
+        sample_count_score=0.80,
+        price_variance_score=0.90,
+        distance_score=0.88,
+        recency_score=0.85,
+        confidence_score=0.86,
+        confidence_level="HIGH"
     )
     
+    # AppraisalContext (모든 필드)
     appraisal_ctx = AppraisalContext(
-        land_value=3000000000.0,  # 30억
-        unit_price_sqm=3000000.0,  # 300만원/㎡
-        unit_price_pyeong=9917400.0,  # 평당
-        official_price=2100000000.0,  # 공시지가 (70%)
+        land_value=3000000000.0,
+        unit_price_sqm=3000000.0,
+        unit_price_pyeong=9917400.0,
+        official_price=2100000000.0,
         official_price_per_sqm=2100000.0,
         transaction_samples=transaction_samples,
         transaction_count=len(transaction_samples),
-        avg_transaction_price=2970000.0,
+        avg_transaction_price=3000000.0,
         premium_factors=premium_factors,
-        premium_rate=40.0,
+        premium_rate=42.86,
         confidence_metrics=confidence_metrics,
         confidence_score=0.86,
         confidence_level="HIGH",
@@ -198,11 +213,18 @@ async def create_mock_pipeline_result(context_id: str) -> PipelineResult:
         valuation_date=datetime.now().strftime("%Y-%m-%d"),
         valuation_method="거래사례비교법",
         appraiser="ZeroSite AI",
-        site_area=1000.0,  # For backward compatibility
+        negotiation_strategies=[
+            {"strategy": "공시지가 기준 협상", "expected_discount": "5-8%"},
+            {"strategy": "LH 매입 기준 활용", "expected_discount": "3-5%"}
+        ],
+        asking_price=3200000000.0,
+        price_gap_pct=6.67,
+        recommendation="적정가",
     )
     
-    # M3: Housing Type
-    from app.core.context.housing_type_context import TypeScore
+    # ========================================
+    # M3: HousingTypeContext
+    # ========================================
     
     youth_score = TypeScore(
         type_name="청년형",
@@ -214,19 +236,31 @@ async def create_mock_pipeline_result(context_id: str) -> PipelineResult:
         demand_prediction=85.0,
     )
     
+    newlywed_score = TypeScore(
+        type_name="신혼부부형",
+        type_code="NEWLYWED",
+        total_score=78.0,
+        location_score=28.0,
+        accessibility_score=26.0,
+        poi_score=24.0,
+        demand_prediction=78.0,
+    )
+    
     housing_ctx = HousingTypeContext(
         selected_type="청년형",
         demand_prediction="수요 높음",
         preferred_type=youth_score,
-        candidate_types=[youth_score],
+        candidate_types=[youth_score, newlywed_score],
     )
     
-    # M4: Capacity (V2) - 실제 구조에 맞춘 Mock 데이터
-    from app.core.context.capacity_context_v2 import (
-        GFABreakdown, CapacityScale, MassingOption, 
-        UnitSummary, ParkingSolution, RampCondition,
-        ParkingType, RampFeasibility
-    )
+    # Add fields for backward compatibility
+    housing_ctx.recommended_type = "청년형"
+    housing_ctx.lifestyle_score = 85.0
+    housing_ctx.second_choice = "신혼부부형"
+    
+    # ========================================
+    # M4: CapacityContextV2 (완전한 구조)
+    # ========================================
     
     # GFA Breakdown
     gfa_breakdown_legal = GFABreakdown(
@@ -285,29 +319,47 @@ async def create_mock_pipeline_result(context_id: str) -> PipelineResult:
     )
     
     # Massing Options
-    massing_option_a = MassingOption(
-        option_id="A",
-        option_name="2개동 × 15층",
-        building_count=2,
-        floors_per_building=15,
-        standard_floor_area_sqm=400.0,
-        units_per_floor=4,
-        achieved_gfa_sqm=30000.0,
-        achieved_far=300.0,
-        far_achievement_rate=1.0,
-        site_coverage_ratio=60.0,
-        open_space_ratio=40.0,
-        buildability_score=85.0,
-        efficiency_score=90.0,
-        remarks=["효율적 배치", "엘리베이터 2개동"],
-    )
+    massing_options = [
+        MassingOption(
+            option_id="A",
+            option_name="2개동 × 15층",
+            building_count=2,
+            floors_per_building=15,
+            standard_floor_area_sqm=1000.0,
+            units_per_floor=4,
+            achieved_gfa_sqm=30000.0,
+            achieved_far=300.0,
+            far_achievement_rate=1.0,
+            site_coverage_ratio=60.0,
+            open_space_ratio=40.0,
+            buildability_score=85.0,
+            efficiency_score=88.0,
+            remarks=["균형잡힌 배치", "쾌적한 동간 거리"]
+        ),
+        MassingOption(
+            option_id="B",
+            option_name="3개동 × 10층",
+            building_count=3,
+            floors_per_building=10,
+            standard_floor_area_sqm=1000.0,
+            units_per_floor=4,
+            achieved_gfa_sqm=30000.0,
+            achieved_far=300.0,
+            far_achievement_rate=1.0,
+            site_coverage_ratio=60.0,
+            open_space_ratio=40.0,
+            buildability_score=82.0,
+            efficiency_score=85.0,
+            remarks=["저층 쾌적성", "다동 배치"]
+        ),
+    ]
     
     # Unit Summary
     unit_summary = UnitSummary(
-        total_units=100,
-        preferred_unit_type="청년형 30㎡",
+        total_units=120,
+        preferred_unit_type="청년형 (30㎡)",
         unit_mix_ratio={"30㎡": 0.7, "45㎡": 0.3},
-        unit_count_by_type={"30㎡": 70, "45㎡": 30},
+        unit_count_by_type={"30㎡": 84, "45㎡": 36},
         unit_area_by_type={"30㎡": 30.0, "45㎡": 45.0},
         min_unit_area_sqm=30.0,
         max_unit_area_sqm=45.0,
@@ -317,61 +369,107 @@ async def create_mock_pipeline_result(context_id: str) -> PipelineResult:
     # Ramp Condition
     ramp_condition = RampCondition(
         ramp_width_m=5.5,
-        ramp_length_m=45.0,
-        turning_radius_m=6.0,
+        ramp_length_m=8.0,
+        turning_radius_m=6.5,
         non_residential_area_sqm=150.0,
         feasibility=RampFeasibility.FEASIBLE,
-        constraint_issues=[],
+        constraint_issues=[]
     )
     
-    # Parking Solution (주차 우선)
-    parking_solution = ParkingSolution(
-        solution_type="alternative_B",
-        solution_name="주차 우선 시나리오",
-        parking_type=ParkingType.SELF_PARKING,
-        total_parking_spaces=120,
-        self_parking_spaces=120,
-        basement_floors=3,
-        ramp_condition=ramp_condition,
-        mechanical_parking_spaces=0,
-        mechanical_type=None,
-        adjusted_total_units=100,
-        adjusted_floors=None,
-        adjusted_gfa_sqm=None,
-        far_sacrifice_ratio=0.0,
-        parking_achievability_score=95.0,
-        remarks=["법정 주차대수 확보", "지하 3층 자주식"],
-    )
+    # Parking Solutions
+    parking_solutions = {
+        "alternative_A": ParkingSolution(
+            solution_type="alternative_A",
+            solution_name="대안 A: 지하 2층 자주식",
+            parking_type=ParkingType.UNDERGROUND,
+            total_parking_spaces=144,
+            self_parking_spaces=144,
+            basement_floors=2,
+            ramp_condition=ramp_condition,
+            mechanical_parking_spaces=0,
+            mechanical_type=None,
+            adjusted_total_units=None,
+            adjusted_floors=None,
+            adjusted_gfa_sqm=None,
+            far_sacrifice_ratio=None,
+            parking_achievability_score=90.0,
+            remarks=["지상 공간 확보", "쾌적한 단지 환경", "건축비 증가"]
+        ),
+        "alternative_B": ParkingSolution(
+            solution_type="alternative_B",
+            solution_name="대안 B: 지상 + 지하 혼합",
+            parking_type=ParkingType.MIXED,
+            total_parking_spaces=144,
+            self_parking_spaces=100,
+            basement_floors=1,
+            ramp_condition=ramp_condition,
+            mechanical_parking_spaces=44,
+            mechanical_type="2단 승강식",
+            adjusted_total_units=120,
+            adjusted_floors=None,
+            adjusted_gfa_sqm=30000.0,
+            far_sacrifice_ratio=0.0,
+            parking_achievability_score=85.0,
+            remarks=["비용 절감", "공간 효율", "주차 우선"]
+        ),
+    }
     
+    # CapacityContextV2
     capacity_ctx = CapacityContextV2(
         legal_capacity=legal_capacity,
         incentive_capacity=incentive_capacity,
-        massing_options=[massing_option_a],
+        massing_options=massing_options,
         unit_summary=unit_summary,
-        parking_solutions={"alternative_B": parking_solution},
-        calculation_date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        parking_solutions=parking_solutions,
     )
     
-    # M5: Feasibility
+    # Add fields for backward compatibility
+    capacity_ctx.legal_far = 250.0
+    capacity_ctx.legal_bcr = 60.0
+    capacity_ctx.legal_units = 100
+    capacity_ctx.legal_gfa = 25000.0
+    capacity_ctx.incentive_far = 300.0
+    capacity_ctx.final_units = 120
+    capacity_ctx.final_gfa = 30000.0
+    
+    # ========================================
+    # M5: FeasibilityContext
+    # ========================================
+    
     feasibility_ctx = FeasibilityContext(
-        total_cost=15000000000.0,    # 150억
-        total_revenue=18000000000.0,  # 180억
-        irr_pct=12.5,
-        npv=2500000000.0,             # 25억
-        roi_pct=20.0,
-        payback_years=7.5,
+        land_cost=3000000000.0,
+        construction_cost=7500000000.0,
+        indirect_cost=1500000000.0,
+        total_cost=12000000000.0,
+        lh_rental_revenue=14400000000.0,
+        total_revenue=14400000000.0,
+        net_profit=2400000000.0,
+        irr=0.125,  # 12.5%
+        npv=2400000000.0,
+        roi=0.20,
+        payback_period=7.5,
     )
     
-    # M6: LH Review
+    # ========================================
+    # M6: LHReviewContext
+    # ========================================
+    
     lh_review_ctx = LHReviewContext(
         total_score=82.5,
         grade="A",
-        approval_probability=75.0,
         decision="추진 권장",
-        final_decision="추진 권장",
+        approval_probability=0.85,
+        location_score=28.0,
+        scale_score=22.0,
+        feasibility_score=25.0,
+        compliance_score=7.5,
     )
     
-    return PipelineResult(
+    # ========================================
+    # PipelineResult 생성
+    # ========================================
+    
+    result = PipelineResult(
         land=land_ctx,
         appraisal=appraisal_ctx,
         housing_type=housing_ctx,
@@ -379,3 +477,6 @@ async def create_mock_pipeline_result(context_id: str) -> PipelineResult:
         feasibility=feasibility_ctx,
         lh_review=lh_review_ctx,
     )
+    
+    logger.info(f"✅ Mock pipeline result created for: {context_id}")
+    return result
