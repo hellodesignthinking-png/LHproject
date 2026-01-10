@@ -149,6 +149,7 @@ class M7Summary:
 
 def generate_m7_from_context(
     m1_result: Dict[str, Any],
+    m2_result: Optional[Dict[str, Any]],
     m3_result: Dict[str, Any],
     m4_result: Dict[str, Any],
     m5_result: Optional[Dict[str, Any]],
@@ -157,6 +158,11 @@ def generate_m7_from_context(
 ) -> M7CommunityPlan:
     """
     M1~M6 결과를 기반으로 M7 커뮤니티 계획을 생성합니다.
+    
+    **M2 연동**: 토지 가치 기반 공간 확장
+    **M1 연동**: 입지 특성 기반 페르소나/프로그램
+    **M5 연동**: 사업성 기반 공간 확장
+    **M6 연동**: LH 심사 기준 기반 운영 모델
     
     이 함수는 실제 계산을 수행하지 않고, M2~M6의 결과를 해석하여
     운영 가능한 커뮤니티 계획을 도출합니다.
@@ -178,8 +184,8 @@ def generate_m7_from_context(
     # M7-3: 커뮤니티 목표
     goals = _define_community_goals(housing_type, household_count)
     
-    # M7-4: 공간 구성 (M5 데이터 연동)
-    spaces = _define_community_spaces(household_count, m5_result)
+    # M7-4: 공간 구성 (M2+M5 데이터 연동)
+    spaces = _define_community_spaces(household_count, m5_result, m2_result)
     
     # M7-5: 프로그램 구성 (M1 데이터 연동)
     programs = _define_community_programs(housing_type, m1_result)
@@ -304,14 +310,25 @@ def _define_community_goals(housing_type: str, household_count: int) -> Communit
     )
 
 
-def _define_community_spaces(household_count: int, m5_data: Optional[Dict] = None) -> List[CommunitySpace]:
+def _define_community_spaces(
+    household_count: int, 
+    m5_data: Optional[Dict] = None, 
+    m2_data: Optional[Dict] = None
+) -> List[CommunitySpace]:
     """
     공간 구성 정의
     
+    **M2 연동 로직**:
+    - 토지 가치 평당 1,500만원 이상 → 프리미엄 공간 (북카페, 세미나실)
+    - 토지 가치 평당 1,000~1,500만원 → 표준 확장 공간
+    - 토지 가치 평당 1,000만원 미만 → 기본 공간만
+    
     **M5 연동 로직**:
-    - NPV 3억 이상 → 추가 공간 확대 (독서실, 피트니스)
-    - NPV 5억 이상 → 프리미엄 공간 추가 (북카페, 세미나실)
+    - NPV 3억 이상 → 추가 공간 확대 (독서실)
+    - NPV 5억 이상 → 피트니스 룸 추가
     - 낮은 수익성 → 기본 공간만 구성
+    
+    **우선순위**: M2 토지 가치가 M5 NPV보다 우선 (입지 품질 중심)
     """
     spaces = [
         CommunitySpace(
@@ -330,6 +347,12 @@ def _define_community_spaces(household_count: int, m5_data: Optional[Dict] = Non
         )
     ]
     
+    # M2 토지 가치 분석
+    land_value_per_pyeong = 0
+    if m2_data:
+        summary = m2_data.get("summary", {})
+        land_value_per_pyeong = summary.get("pyeong_price_krw", 0)
+    
     # M5 사업성 분석
     npv_krw = 0
     if m5_data:
@@ -346,8 +369,28 @@ def _define_community_spaces(household_count: int, m5_data: Optional[Dict] = Non
             equipment=["요가 매트", "접이식 테이블", "음향 시설"]
         ))
     
-    # M5 기반 추가 확장 (NPV 3억 이상)
-    if npv_krw >= 300_000_000:
+    # M2 기반 프리미엄 공간 확장 (평당 1,500만원 이상)
+    if land_value_per_pyeong >= 15_000_000:
+        spaces.append(CommunitySpace(
+            space_name="북카페 라운지",
+            function="독서, 담소, 소규모 모임",
+            operation_method="자유 이용 (오전 9시-오후 9시)",
+            capacity=20,
+            equipment=["서가", "안락 의자", "커피 머신", "조명", "Wi-Fi"]
+        ))
+        
+        spaces.append(CommunitySpace(
+            space_name="세미나실",
+            function="교육, 강연, 워크숍",
+            operation_method="예약제 (3일 전 신청)",
+            capacity=30,
+            equipment=["프로젝터", "화상회의 시스템", "화이트보드", "개별 책상"]
+        ))
+        
+        logger.info(f"✨ M2 프리미엄 공간 추가: 평당 {land_value_per_pyeong:,}원 (북카페, 세미나실)")
+    
+    # M2 기반 표준 확장 (평당 1,000~1,500만원)
+    elif land_value_per_pyeong >= 10_000_000:
         spaces.append(CommunitySpace(
             space_name="공유 독서실",
             function="개인 학습, 재택근무 공간",
@@ -356,7 +399,21 @@ def _define_community_spaces(household_count: int, m5_data: Optional[Dict] = Non
             equipment=["개인 책상", "독서등", "공용 프린터", "Wi-Fi"]
         ))
         
-        if npv_krw >= 500_000_000:  # NPV 5억 이상
+        logger.info(f"📚 M2 표준 공간 추가: 평당 {land_value_per_pyeong:,}원 (독서실)")
+    
+    # M5 기반 추가 확장 (M2가 없을 경우 대체)
+    elif npv_krw >= 300_000_000 and land_value_per_pyeong < 10_000_000:
+        spaces.append(CommunitySpace(
+            space_name="공유 독서실",
+            function="개인 학습, 재택근무 공간",
+            operation_method="자유 이용 (선착순)",
+            capacity=15,
+            equipment=["개인 책상", "독서등", "공용 프린터", "Wi-Fi"]
+        ))
+        
+        logger.info(f"💰 M5 기반 공간 추가: NPV {npv_krw:,}원 (독서실)")
+        
+        if npv_krw >= 500_000_000:
             spaces.append(CommunitySpace(
                 space_name="피트니스 룸",
                 function="기초 운동, 건강 관리",
@@ -364,6 +421,8 @@ def _define_community_spaces(household_count: int, m5_data: Optional[Dict] = Non
                 capacity=10,
                 equipment=["런닝머신", "사이클", "아령", "요가 매트"]
             ))
+            
+            logger.info(f"💪 M5 고수익 공간 추가: NPV {npv_krw:,}원 (피트니스)")
     
     return spaces
 

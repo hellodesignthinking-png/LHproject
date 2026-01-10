@@ -102,8 +102,9 @@ async def get_m7_community_plan_pdf(
     M7 커뮤니티 계획 독립 보고서 (PDF)
     
     **기능**:
-    - M7 HTML을 PDF로 변환하여 다운로드
+    - M7 HTML을 Playwright로 PDF 변환하여 다운로드
     - 파일명: m7_community_plan_{context_id}.pdf
+    - 고품질 렌더링, 한글 폰트 지원
     
     **사용 예시**:
     ```
@@ -115,18 +116,52 @@ async def get_m7_community_plan_pdf(
     try:
         # 1. HTML 생성
         html_response = await get_m7_community_plan_html(context_id)
+        html_content = html_response.body.decode('utf-8')
         
-        # 2. PDF 안내 메시지
-        # WeasyPrint/pydyf 버전 호환성 문제로 인해 브라우저 프린트 권장
-        logger.warning("⚠️ PDF direct generation disabled due to library compatibility")
-        raise HTTPException(
-            status_code=501,
-            detail={
-                "message": "PDF 직접 생성 기능은 현재 준비 중입니다",
-                "workaround": "HTML 버전을 브라우저에서 열고 Ctrl+P → 'PDF로 저장' → '배경 그래픽 켜기'를 선택하세요",
-                "html_endpoint": f"/api/v4/reports/m7/community-plan/html?context_id={context_id}"
-            }
-        )
+        # 2. Playwright PDF 생성
+        try:
+            from app.services.pdf_generator import generate_pdf_from_html
+            
+            # PDF 생성 옵션
+            pdf_bytes = await generate_pdf_from_html(
+                html_content=html_content,
+                filename=f"m7_community_plan_{context_id}.pdf",
+                page_format="A4",
+                print_background=True,
+                margin={
+                    "top": "2cm",
+                    "right": "1.5cm",
+                    "bottom": "2cm",
+                    "left": "1.5cm"
+                }
+            )
+            
+            # 파일명 생성
+            filename = f"m7_community_plan_{context_id}.pdf"
+            
+            logger.info(f"✅ M7 PDF 생성 완료 (Playwright): {filename} ({len(pdf_bytes)} bytes)")
+            
+            return Response(
+                content=pdf_bytes,
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": f"attachment; filename={filename}",
+                    "Content-Length": str(len(pdf_bytes))
+                }
+            )
+            
+        except ImportError:
+            # Playwright 미설치 시 대체 방법
+            logger.warning("⚠️ Playwright not installed, using browser print instructions")
+            raise HTTPException(
+                status_code=501,
+                detail={
+                    "message": "PDF 자동 생성 기능을 사용할 수 없습니다",
+                    "reason": "Playwright 라이브러리가 설치되지 않았습니다",
+                    "workaround": "HTML 버전을 브라우저에서 열고 Ctrl+P → 'PDF로 저장' → '배경 그래픽 켜기'를 선택하세요",
+                    "html_endpoint": f"/api/v4/reports/m7/community-plan/html?context_id={context_id}"
+                }
+            )
         
     except HTTPException:
         raise

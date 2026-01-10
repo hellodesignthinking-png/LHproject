@@ -1,496 +1,243 @@
 """
-ZeroSite v3.3 PDF Generator
-==========================
+Playwright 기반 PDF 생성 서비스
+================================
 
-Composer 결과물을 PDF로 변환하는 서비스
+HTML을 고품질 PDF로 변환합니다.
 
-Features:
-- HTML 템플릿 기반 PDF 생성
-- Master Plan v3.3 스타일 가이드 적용
-- 7개 보고서 타입 지원
-- WeasyPrint 기반 고품질 PDF
-
-Author: ZeroSite Development Team
-Date: 2025-12-15
-Version: v3.3
+Version: 1.0
+Date: 2026-01-10
 """
 
-from weasyprint import HTML, CSS
-from jinja2 import Environment, FileSystemLoader, select_autoescape
-from pathlib import Path
-from datetime import datetime
-from typing import Dict, Any, Optional
-import tempfile
+import asyncio
 import logging
+from typing import Optional
+from playwright.async_api import async_playwright, Browser, Page
 
 logger = logging.getLogger(__name__)
 
 
-class PDFGenerator:
+class PlaywrightPDFGenerator:
     """
-    Report Composer 결과물을 PDF로 변환
+    Playwright를 사용한 PDF 생성 엔진
     
-    Usage:
-        generator = PDFGenerator()
-        pdf_bytes = generator.generate("pre_report", composer_result, metadata)
+    **특징**:
+    - Chromium 헤드리스 브라우저 사용
+    - CSS 미디어 쿼리 지원 (@media print)
+    - 배경 그래픽 포함
+    - 한글 폰트 렌더링
+    
+    **사용 예시**:
+    ```python
+    generator = PlaywrightPDFGenerator()
+    pdf_bytes = await generator.generate_pdf_from_html(
+        html_content="<html>...</html>",
+        filename="report.pdf"
+    )
+    ```
     """
-    
-    # 템플릿 디렉토리
-    TEMPLATE_DIR = Path(__file__).parent.parent / "templates" / "reports"
-    
-    # 스타일 가이드 (Master Plan v3.3 Section 6)
-    STYLE_GUIDE = """
-    @page {
-        size: A4;
-        margin: 2cm 1.5cm;
-        
-        @top-right {
-            content: "ZeroSite Report";
-            font-size: 8pt;
-            color: #666;
-        }
-        
-        @bottom-center {
-            content: "Page " counter(page) " of " counter(pages);
-            font-size: 8pt;
-            color: #666;
-        }
-    }
-    
-    body {
-        font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
-        font-size: 10pt;
-        line-height: 1.6;
-        color: #333;
-    }
-    
-    h1 {
-        font-size: 18pt;
-        font-weight: 700;
-        color: #2c3e50;
-        margin-top: 0;
-        margin-bottom: 10pt;
-        border-bottom: 2px solid #3498db;
-        padding-bottom: 5pt;
-    }
-    
-    h2 {
-        font-size: 14pt;
-        font-weight: 600;
-        color: #34495e;
-        margin-top: 15pt;
-        margin-bottom: 8pt;
-    }
-    
-    h3 {
-        font-size: 12pt;
-        font-weight: 600;
-        color: #555;
-        margin-top: 10pt;
-        margin-bottom: 5pt;
-    }
-    
-    /* Status colors (Master Plan v3.3) */
-    .status-pass, .status-high { 
-        color: #2ECC71; 
-        font-weight: 600;
-    }
-    
-    .status-warning, .status-medium { 
-        color: #F1C40F; 
-        font-weight: 600;
-    }
-    
-    .status-fail, .status-low { 
-        color: #E74C3C; 
-        font-weight: 600;
-    }
-    
-    /* Header */
-    .header {
-        border-bottom: 2px solid #333;
-        padding-bottom: 10pt;
-        margin-bottom: 20pt;
-    }
-    
-    .header h1 {
-        border: none;
-        margin-bottom: 5pt;
-    }
-    
-    .header .metadata {
-        font-size: 8pt;
-        color: #666;
-    }
-    
-    /* Footer */
-    .footer {
-        margin-top: 30pt;
-        padding-top: 10pt;
-        border-top: 1px solid #ddd;
-        font-size: 8pt;
-        color: #666;
-        text-align: center;
-    }
-    
-    /* Tables */
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 10pt 0;
-    }
-    
-    th {
-        background-color: #f5f5f5;
-        text-align: left;
-        padding: 8pt;
-        border: 1px solid #ddd;
-        font-weight: 600;
-    }
-    
-    td {
-        padding: 8pt;
-        border: 1px solid #ddd;
-    }
-    
-    tr:nth-child(even) {
-        background-color: #fafafa;
-    }
-    
-    /* Lists */
-    ul {
-        margin: 10pt 0;
-        padding-left: 20pt;
-    }
-    
-    li {
-        margin: 5pt 0;
-    }
-    
-    /* Boxes */
-    .info-box {
-        background-color: #e8f4f8;
-        border-left: 4px solid #3498db;
-        padding: 10pt;
-        margin: 10pt 0;
-    }
-    
-    .warning-box {
-        background-color: #fef5e7;
-        border-left: 4px solid #f39c12;
-        padding: 10pt;
-        margin: 10pt 0;
-    }
-    
-    .success-box {
-        background-color: #e8f8f5;
-        border-left: 4px solid #27ae60;
-        padding: 10pt;
-        margin: 10pt 0;
-    }
-    
-    .danger-box {
-        background-color: #fadbd8;
-        border-left: 4px solid #e74c3c;
-        padding: 10pt;
-        margin: 10pt 0;
-    }
-    
-    /* Metrics dashboard */
-    .metrics-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10pt;
-        margin: 15pt 0;
-    }
-    
-    .metric-card {
-        background: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 4pt;
-        padding: 10pt;
-        text-align: center;
-    }
-    
-    .metric-label {
-        font-size: 8pt;
-        color: #666;
-        text-transform: uppercase;
-    }
-    
-    .metric-value {
-        font-size: 16pt;
-        font-weight: 700;
-        color: #2c3e50;
-        margin: 5pt 0;
-    }
-    
-    .metric-unit {
-        font-size: 9pt;
-        color: #888;
-    }
-    
-    /* Page breaks */
-    .page-break {
-        page-break-after: always;
-    }
-    
-    .avoid-break {
-        page-break-inside: avoid;
-    }
-    
-    /* Charts (simplified for PDF) */
-    .chart-bar {
-        background: #ecf0f1;
-        border-radius: 2pt;
-        padding: 5pt;
-        margin: 5pt 0;
-    }
-    
-    .chart-bar-fill {
-        background: linear-gradient(to right, #3498db, #2980b9);
-        height: 20pt;
-        border-radius: 2pt;
-        display: flex;
-        align-items: center;
-        padding: 0 5pt;
-        color: white;
-        font-weight: 600;
-    }
-    """
-    
-    # 보고서 타입별 템플릿 매핑
-    REPORT_TEMPLATES = {
-        "pre_report": "pre_report.html",
-        "comprehensive": "comprehensive.html",
-        "lh_decision": "lh_decision.html",
-        "investor": "investor.html",
-        "land_price": "land_price.html",
-        "internal": "internal.html",
-        "full_report": "full_report.html"
-    }
     
     def __init__(self):
-        """Initialize PDF Generator"""
-        # 템플릿 디렉토리 생성
-        self.TEMPLATE_DIR.mkdir(parents=True, exist_ok=True)
-        
-        # Jinja2 환경 설정
-        self.jinja_env = Environment(
-            loader=FileSystemLoader(str(self.TEMPLATE_DIR)),
-            autoescape=select_autoescape(['html', 'xml'])
-        )
-        
-        # Custom filters 등록
-        self.jinja_env.filters['format_number'] = self._format_number
-        self.jinja_env.filters['format_currency'] = self._format_currency
-        self.jinja_env.filters['format_percent'] = self._format_percent
-        
-        logger.info(f"PDFGenerator initialized. Template dir: {self.TEMPLATE_DIR}")
+        self._browser: Optional[Browser] = None
     
-    def generate(
-        self, 
-        report_type: str, 
-        composer_result: Dict[str, Any], 
-        metadata: Optional[Dict[str, Any]] = None
+    async def _get_browser(self) -> Browser:
+        """브라우저 인스턴스 가져오기 (재사용)"""
+        if self._browser is None or not self._browser.is_connected():
+            playwright = await async_playwright().start()
+            self._browser = await playwright.chromium.launch(
+                headless=True,
+                args=[
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu'
+                ]
+            )
+            logger.info("✅ Playwright Chromium 브라우저 시작")
+        
+        return self._browser
+    
+    async def generate_pdf_from_html(
+        self,
+        html_content: str,
+        filename: str = "document.pdf",
+        page_format: str = "A4",
+        print_background: bool = True,
+        margin: Optional[dict] = None
     ) -> bytes:
         """
-        Composer 결과물을 PDF로 변환
+        HTML 문자열을 PDF로 변환
         
         Args:
-            report_type: "pre_report", "comprehensive", "investor" 등
-            composer_result: Composer.compose() 반환값
-            metadata: 추가 메타데이터 (report_id, created_at 등)
-            
+            html_content: HTML 문자열
+            filename: 파일명 (메타데이터용)
+            page_format: 페이지 크기 (A4, A3, Letter 등)
+            print_background: 배경 그래픽 포함 여부
+            margin: 여백 설정 (예: {"top": "2cm", "bottom": "2cm"})
+        
         Returns:
             PDF 바이트 데이터
+        """
+        browser = await self._get_browser()
+        page: Page = await browser.new_page()
+        
+        try:
+            # HTML 로드
+            await page.set_content(html_content, wait_until="networkidle")
+            logger.info(f"📄 HTML 로드 완료: {len(html_content)} bytes")
             
-        Raises:
-            ValueError: Unknown report type
-            FileNotFoundError: Template not found
-        """
-        # 1. 템플릿 이름 확인
-        template_name = self.REPORT_TEMPLATES.get(report_type)
-        if not template_name:
-            raise ValueError(f"Unknown report type: {report_type}")
-        
-        # 2. HTML 렌더링
-        html_content = self._render_template(template_name, composer_result, metadata or {})
-        
-        # 3. PDF 변환 with enhanced error handling
-        try:
-            pdf_bytes = self._convert_to_pdf(html_content)
-            logger.info(f"✅ PDF generated successfully for {report_type}")
-            return pdf_bytes
-        except Exception as e:
-            logger.error(f"❌ PDF generation failed: {e}")
-            # Generate error PDF as fallback
-            try:
-                error_html = self._create_error_pdf(report_type, composer_result, metadata or {}, str(e))
-                return self._convert_to_pdf(error_html)
-            except Exception as fallback_error:
-                logger.error(f"❌ Fallback PDF generation also failed: {fallback_error}")
-                # Last resort: simple text PDF
-                return self._create_minimal_pdf(report_type, str(e))
-    
-    def _render_template(
-        self, 
-        template_name: str, 
-        data: Dict[str, Any], 
-        metadata: Dict[str, Any]
-    ) -> str:
-        """HTML 템플릿에 데이터 바인딩"""
-        try:
-            template = self.jinja_env.get_template(template_name)
-        except Exception as e:
-            logger.error(f"Template {template_name} not found: {e}")
-            # Fallback to simple template
-            return self._create_simple_html(data, metadata)
-        
-        context = {
-            "data": data,
-            "metadata": metadata,
-            "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "report_id": metadata.get("report_id", "N/A")
-        }
-        
-        return template.render(**context)
-    
-    def _convert_to_pdf(self, html_content: str) -> bytes:
-        """HTML을 PDF로 변환"""
-        try:
-            html = HTML(string=html_content)
-            css = CSS(string=self.STYLE_GUIDE)
+            # PDF 생성 옵션
+            pdf_options = {
+                "format": page_format,
+                "print_background": print_background,
+                "prefer_css_page_size": False,  # format 우선 사용
+            }
             
-            # Write PDF with stylesheets
-            pdf_bytes = html.write_pdf(stylesheets=[css])
+            # 여백 설정
+            if margin is None:
+                margin = {
+                    "top": "2cm",
+                    "right": "2cm",
+                    "bottom": "2cm",
+                    "left": "2cm"
+                }
+            pdf_options["margin"] = margin
+            
+            # PDF 생성
+            pdf_bytes = await page.pdf(**pdf_options)
+            logger.info(f"✅ PDF 생성 완료: {filename} ({len(pdf_bytes)} bytes)")
+            
             return pdf_bytes
-        except TypeError as e:
-            # Fallback for version compatibility issues
-            logger.warning(f"PDF generation with CSS failed ({e}), trying without CSS")
-            html = HTML(string=html_content)
-            return html.write_pdf()
+        
+        except Exception as e:
+            logger.error(f"❌ PDF 생성 실패: {e}", exc_info=True)
+            raise
+        
+        finally:
+            await page.close()
     
-    def _create_simple_html(self, data: Dict[str, Any], metadata: Dict[str, Any]) -> str:
-        """템플릿이 없을 때 간단한 HTML 생성"""
-        return f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <title>ZeroSite Report</title>
-        </head>
-        <body>
-            <div class="header">
-                <h1>ZeroSite Report</h1>
-                <p>Report ID: {metadata.get('report_id', 'N/A')}</p>
-                <p>Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
-            </div>
-            <div>
-                <h2>Report Data</h2>
-                <pre>{str(data)}</pre>
-            </div>
-        </body>
-        </html>
+    async def generate_pdf_from_url(
+        self,
+        url: str,
+        filename: str = "document.pdf",
+        page_format: str = "A4",
+        print_background: bool = True,
+        margin: Optional[dict] = None,
+        wait_for_selector: Optional[str] = None
+    ) -> bytes:
         """
-    
-    def _create_error_pdf(self, report_type: str, data: Dict[str, Any], metadata: Dict[str, Any], error_msg: str) -> str:
-        """PDF 생성 실패 시 에러 리포트 HTML 생성"""
-        return f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <title>ZeroSite Report - Generation Error</title>
-            <style>
-                body {{ font-family: 'Malgun Gothic', sans-serif; padding: 20px; }}
-                .error-box {{ background: #fee; border: 2px solid #c33; padding: 15px; margin: 20px 0; }}
-                .data-section {{ background: #f5f5f5; padding: 15px; margin: 10px 0; }}
-                h1 {{ color: #c33; }}
-                h2 {{ color: #666; }}
-                pre {{ white-space: pre-wrap; word-wrap: break-word; font-size: 9pt; }}
-            </style>
-        </head>
-        <body>
-            <h1>⚠️ ZeroSite Report Generation Error</h1>
-            <div class="error-box">
-                <h2>Error Details</h2>
-                <p><strong>Report Type:</strong> {report_type}</p>
-                <p><strong>Report ID:</strong> {metadata.get('report_id', 'N/A')}</p>
-                <p><strong>Generated:</strong> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
-                <p><strong>Error Message:</strong></p>
-                <pre>{error_msg}</pre>
-            </div>
-            <div class="data-section">
-                <h2>Report Data (Raw)</h2>
-                <pre>{str(data)[:2000]}</pre>
-            </div>
-            <p style="color: #666; font-size: 9pt; margin-top: 30px;">
-                This is an automatically generated error report. Please contact support with the Report ID.
-            </p>
-        </body>
-        </html>
-        """
-    
-    def _create_minimal_pdf(self, report_type: str, error_msg: str) -> bytes:
-        """최소한의 에러 PDF (마지막 수단)"""
-        minimal_html = f"""<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>Error</title></head>
-<body><h1>PDF Generation Error</h1><p>Report Type: {report_type}</p><p>Error: {error_msg}</p></body>
-</html>"""
-        html = HTML(string=minimal_html)
-        return html.write_pdf()
-    
-    def generate_to_file(
-        self, 
-        report_type: str, 
-        composer_result: Dict[str, Any], 
-        output_path: str, 
-        metadata: Optional[Dict[str, Any]] = None
-    ) -> str:
-        """
-        PDF를 파일로 저장
+        URL에서 페이지를 로드하고 PDF로 변환
+        
+        Args:
+            url: 대상 URL
+            filename: 파일명
+            page_format: 페이지 크기
+            print_background: 배경 그래픽 포함
+            margin: 여백 설정
+            wait_for_selector: 대기할 CSS 셀렉터 (예: "#report-content")
         
         Returns:
-            저장된 파일 경로
+            PDF 바이트 데이터
         """
-        pdf_bytes = self.generate(report_type, composer_result, metadata)
+        browser = await self._get_browser()
+        page: Page = await browser.new_page()
         
-        output_file = Path(output_path)
-        output_file.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            # URL 로드
+            await page.goto(url, wait_until="networkidle", timeout=30000)
+            logger.info(f"🌐 URL 로드 완료: {url}")
+            
+            # 특정 요소 대기 (옵션)
+            if wait_for_selector:
+                await page.wait_for_selector(wait_for_selector, timeout=10000)
+                logger.info(f"⏳ 셀렉터 대기 완료: {wait_for_selector}")
+            
+            # 추가 대기 (자바스크립트 렌더링)
+            await asyncio.sleep(1)
+            
+            # PDF 생성 옵션
+            pdf_options = {
+                "format": page_format,
+                "print_background": print_background,
+                "prefer_css_page_size": False,
+            }
+            
+            if margin is None:
+                margin = {
+                    "top": "2cm",
+                    "right": "2cm",
+                    "bottom": "2cm",
+                    "left": "2cm"
+                }
+            pdf_options["margin"] = margin
+            
+            # PDF 생성
+            pdf_bytes = await page.pdf(**pdf_options)
+            logger.info(f"✅ PDF 생성 완료: {filename} ({len(pdf_bytes)} bytes)")
+            
+            return pdf_bytes
         
-        with open(output_file, 'wb') as f:
-            f.write(pdf_bytes)
+        except Exception as e:
+            logger.error(f"❌ PDF 생성 실패 (URL: {url}): {e}", exc_info=True)
+            raise
         
-        logger.info(f"PDF saved to {output_path}")
-        return str(output_file)
+        finally:
+            await page.close()
     
-    # ========================================
-    # Jinja2 Custom Filters
-    # ========================================
+    async def close(self):
+        """브라우저 종료"""
+        if self._browser:
+            await self._browser.close()
+            self._browser = None
+            logger.info("🔒 Playwright 브라우저 종료")
+
+
+# 싱글톤 인스턴스
+_pdf_generator: Optional[PlaywrightPDFGenerator] = None
+
+
+async def get_pdf_generator() -> PlaywrightPDFGenerator:
+    """PDF 생성기 싱글톤 인스턴스 가져오기"""
+    global _pdf_generator
+    if _pdf_generator is None:
+        _pdf_generator = PlaywrightPDFGenerator()
+    return _pdf_generator
+
+
+async def generate_pdf_from_html(
+    html_content: str,
+    filename: str = "document.pdf",
+    **kwargs
+) -> bytes:
+    """
+    편의 함수: HTML을 PDF로 변환
     
-    @staticmethod
-    def _format_number(value: float, decimal_places: int = 2) -> str:
-        """숫자 포맷팅"""
-        if value is None:
-            return "N/A"
-        return f"{value:,.{decimal_places}f}"
+    Args:
+        html_content: HTML 문자열
+        filename: 파일명
+        **kwargs: PDF 생성 옵션
     
-    @staticmethod
-    def _format_currency(value: float, unit: str = "원") -> str:
-        """통화 포맷팅"""
-        if value is None:
-            return "N/A"
-        if value >= 100_000_000:  # 1억 이상
-            return f"{value / 100_000_000:,.1f}억{unit}"
-        elif value >= 10_000:  # 1만 이상
-            return f"{value / 10_000:,.0f}만{unit}"
-        else:
-            return f"{value:,.0f}{unit}"
+    Returns:
+        PDF 바이트 데이터
+    """
+    generator = await get_pdf_generator()
+    return await generator.generate_pdf_from_html(html_content, filename, **kwargs)
+
+
+async def generate_pdf_from_url(
+    url: str,
+    filename: str = "document.pdf",
+    **kwargs
+) -> bytes:
+    """
+    편의 함수: URL을 PDF로 변환
     
-    @staticmethod
-    def _format_percent(value: float, decimal_places: int = 1) -> str:
-        """퍼센트 포맷팅"""
-        if value is None:
-            return "N/A"
-        return f"{value:.{decimal_places}f}%"
+    Args:
+        url: 대상 URL
+        filename: 파일명
+        **kwargs: PDF 생성 옵션
+    
+    Returns:
+        PDF 바이트 데이터
+    """
+    generator = await get_pdf_generator()
+    return await generator.generate_pdf_from_url(url, filename, **kwargs)

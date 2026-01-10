@@ -979,21 +979,16 @@ export const PipelineOrchestrator: React.FC = () => {
                     </div>
                   </button>
 
-                  {/* PDF 안내 버튼 */}
+                  {/* PDF 다운로드 버튼 */}
                   <button
                     onClick={() => {
                       if (!state.contextId) {
                         alert('⚠️ M1 분석을 먼저 완료해주세요.');
                         return;
                       }
-                      alert(
-                        '📥 PDF 다운로드 방법\n\n' +
-                        '1. HTML 보고서를 브라우저에서 엽니다\n' +
-                        '2. Ctrl+P (Mac: Cmd+P) 키를 누릅니다\n' +
-                        '3. "PDF로 저장"을 선택합니다\n' +
-                        '4. "배경 그래픽 켜기" 옵션을 활성화합니다\n' +
-                        '5. 저장 버튼을 클릭합니다'
-                      );
+                      // Playwright 기반 자동 PDF 다운로드
+                      const url = `${BACKEND_URL}/api/v4/reports/m7/community-plan/pdf?context_id=${state.contextId}`;
+                      window.open(url, '_blank');
                     }}
                     disabled={!state.contextId}
                     style={{
@@ -1023,9 +1018,9 @@ export const PipelineOrchestrator: React.FC = () => {
                       e.currentTarget.style.boxShadow = 'none';
                     }}
                   >
-                    <div style={{ fontSize: '16px' }}>📥 PDF 다운로드 안내</div>
+                    <div style={{ fontSize: '16px' }}>📥 PDF 다운로드</div>
                     <div style={{ fontSize: '12px', color: '#888', fontWeight: 'normal' }}>
-                      브라우저 프린트 기능 사용
+                      고품질 PDF 자동 생성 (Playwright)
                     </div>
                   </button>
                 </div>
