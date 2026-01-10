@@ -335,130 +335,373 @@ def _get_real_data_for_module(module: str, context_id: str) -> dict:
 
 def _get_test_data_for_module(module: str, context_id: str) -> dict:
     """
-    ⚠️ DEPRECATED: 테스트 데이터 생성 (더 이상 사용하지 않음)
+    ✅ RE-ENABLED: 테스트 데이터 생성 (데모/개발용)
     
-    이 함수는 _get_real_data_for_module()로 대체되었습니다.
-    실제 pipeline 데이터만 사용해야 합니다.
+    실제 pipeline 실행 없이도 PDF 생성 가능하도록 풍부한 테스트 데이터 제공
+    Production에서는 _get_real_data_for_module() 사용 권장
     """
-    logger.warning(f"⚠️ DEPRECATED: _get_test_data_for_module called for module={module}")
-    raise HTTPException(
-        status_code=500,
-        detail="테스트 데이터 함수는 더 이상 사용되지 않습니다. 실제 pipeline 실행이 필요합니다."
-    )
+    logger.info(f"✅ TEST MODE: Generating test data for module={module}, context_id={context_id}")
     
     # Legacy test data (NEVER REACHED)
     if module == "M2":
         return {
+            "context_id": context_id,
+            "module_id": "M2",
+            "report_title": "토지감정평가 보고서",
+            "generated_at": datetime.now().isoformat(),
+            "land_info": {
+                "address": "서울특별시 마포구 월드컵북로 120",
+                "parcel_id": "116801010001230045",
+                "area_sqm": 500.0,
+                "area_pyeong": 151.25,
+                "zone_type": "제2종일반주거지역",
+                "jimok": "대"
+            },
             "appraisal": {
                 "land_value": 1621848717,
+                "land_value_formatted": "₩16억 2,185만원",
                 "unit_price_sqm": 3243697,
-                "unit_price_pyeong": 10723014
+                "unit_price_sqm_formatted": "₩324만원/㎡",
+                "unit_price_pyeong": 10723014,
+                "unit_price_pyeong_formatted": "₩1,072만원/평"
             },
             "official_price": {
                 "total": 500000000,
-                "per_sqm": 1000000
+                "total_formatted": "₩5억원",
+                "per_sqm": 1000000,
+                "per_sqm_formatted": "₩100만원/㎡",
+                "reference_date": "2025-01-01"
             },
             "transactions": {
                 "count": 10,
-                "avg_price_sqm": 3243697
+                "avg_price_sqm": 3243697,
+                "avg_price_sqm_formatted": "₩324만원/㎡",
+                "recent_deals": [
+                    {"date": "2024-11", "price_sqm": 3300000},
+                    {"date": "2024-10", "price_sqm": 3250000},
+                    {"date": "2024-09", "price_sqm": 3200000}
+                ]
             },
             "confidence": {
                 "score": 0.85,  # 85%
-                "level": "HIGH"
+                "score_pct": 85,
+                "level": "HIGH",
+                "level_kr": "높음"
+            },
+            "summary": {
+                "conclusion": "해당 토지의 감정평가액은 16억 2,185만원으로 산정되었으며, 인근 실거래가 분석 결과 신뢰도는 85%로 높은 수준입니다.",
+                "key_findings": [
+                    "공시지가 대비 약 324% 수준",
+                    "최근 3개월 실거래가 추세 안정적",
+                    "인근 유사 필지 거래 사례 충분"
+                ]
             }
         }
     
     elif module == "M3":
         # M3 canonical 형식에 맞게 변경
         return {
+            "context_id": context_id,
+            "module_id": "M3",
+            "report_title": "선호유형분석 보고서",
+            "generated_at": datetime.now().isoformat(),
+            "land_info": {
+                "address": "서울특별시 마포구 월드컵북로 120",
+                "parcel_id": "116801010001230045"
+            },
             "recommended_type": "청년형",
+            "recommended_type_code": "YOUTH",
             "total_score": 85,  # 0-100 점수
             "confidence": {
-                "score": 0.85  # 0-1 범위
+                "score": 0.85,  # 0-1 범위
+                "score_pct": 85,
+                "level": "HIGH",
+                "level_kr": "높음"
             },
             "second_choice": "신혼부부형",
+            "second_choice_score": 78,
             "preference_analysis": {
                 "주거 유형": "청년형",
                 "점수": "85.0/100",
                 "신뢰도": "85%",
-                "선호도": "매우 높음"
+                "선호도": "매우 높음",
+                "추천 근거": "높은 이동성 요구와 생활편의 선호"
             },
             "lifestyle_factors": {
-                "이동성": {"score": 90, "weight": 0.3},
-                "생활편의": {"score": 85, "weight": 0.25},
-                "커뮤니티": {"score": 80, "weight": 0.25},
-                "주거비용": {"score": 75, "weight": 0.2}
+                "이동성": {"score": 90, "weight": 0.3, "description": "지하철/버스 접근성 우수"},
+                "생활편의": {"score": 85, "weight": 0.25, "description": "편의시설 집중 지역"},
+                "커뮤니티": {"score": 80, "weight": 0.25, "description": "청년층 커뮤니티 형성 활발"},
+                "주거비용": {"score": 75, "weight": 0.2, "description": "저렴한 임대료 수준"}
             },
             "demographics": {
                 "target_age": "20-39세",
                 "household_type": "1-2인 가구",
-                "income_level": "중위소득 50-100%"
+                "income_level": "중위소득 50-100%",
+                "population_in_area": "약 15,000명"
+            },
+            "comparison": {
+                "청년형": {"score": 85, "rank": 1},
+                "신혼부부형": {"score": 78, "rank": 2},
+                "다자녀형": {"score": 65, "rank": 3},
+                "고령자형": {"score": 52, "rank": 4}
+            },
+            "summary": {
+                "conclusion": "청년형 주택이 가장 적합하며, 85점으로 매우 높은 선호도를 보입니다.",
+                "key_findings": [
+                    "교통 접근성이 우수하여 청년층 선호",
+                    "생활 편의시설이 풍부한 지역",
+                    "1-2인 가구 수요가 높음"
+                ]
             }
         }
     
     elif module == "M4":
         return {
+            "context_id": context_id,
+            "module_id": "M4",
+            "report_title": "건축규모결정 보고서",
+            "generated_at": datetime.now().isoformat(),
+            "land_info": {
+                "address": "서울특별시 마포구 월드컵북로 120",
+                "parcel_id": "116801010001230045",
+                "area_sqm": 500.0,
+                "zone_type": "제2종일반주거지역"
+            },
             "selected_scenario_id": "scenario_A",
+            "recommended_scenario": "법적 상한 + 인센티브",
             "legal_capacity": {
                 "far_max": 200.0,
+                "far_max_formatted": "200%",
                 "bcr_max": 60.0,
+                "bcr_max_formatted": "60%",
                 "total_units": 20,
-                "gross_floor_area": 1500.0
+                "gross_floor_area": 1000.0,
+                "gross_floor_area_formatted": "1,000㎡"
             },
             "incentive_capacity": {
                 "far_max": 260.0,
-                "total_units": 26
+                "far_max_formatted": "260%",
+                "far_bonus": 60.0,
+                "far_bonus_formatted": "+60%",
+                "total_units": 26,
+                "gross_floor_area": 1300.0,
+                "gross_floor_area_formatted": "1,300㎡",
+                "incentive_reason": "공공임대주택 30% 이상 공급"
             },
             "parking": {
-                "alt_a": {"count": 18},
-                "alt_b": {"count": 20}
-            },
-            "scenarios": [
-                {"id": "scenario_A", "units": 26}
-            ]
-        }
-    
-    elif module == "M5":
-        return {
-            "household_count": 20,
-            "costs": {
-                "land": 50000000000,
-                "construction": 30000000000,
-                "total": 85700000000
-            },
-            "revenues": {
-                "total": 102000000000
+                "alt_a": {
+                    "count": 18,
+                    "type": "지상+지하",
+                    "cost": 540000000,
+                    "cost_formatted": "₩5억 4,000만원"
+                },
+                "alt_b": {
+                    "count": 20,
+                    "type": "기계식",
+                    "cost": 600000000,
+                    "cost_formatted": "₩6억원"
+                }
             },
             "scenarios": [
                 {
                     "id": "scenario_A",
+                    "name": "법적 상한",
                     "units": 20,
-                    "profit": 16300000000,
-                    "profit_margin": 16.0
+                    "far": 200.0,
+                    "efficiency": 82.0,
+                    "efficiency_formatted": "82%"
+                },
+                {
+                    "id": "scenario_B",
+                    "name": "인센티브 적용",
+                    "units": 26,
+                    "far": 260.0,
+                    "efficiency": 85.0,
+                    "efficiency_formatted": "85%"
                 }
-            ]
+            ],
+            "comparison": {
+                "units_diff": 6,
+                "far_diff": 60.0,
+                "cost_diff": 180000000,
+                "cost_diff_formatted": "₩1억 8,000만원"
+            },
+            "summary": {
+                "conclusion": "인센티브 적용 시 26세대 건축 가능하며, 법적 상한 대비 6세대 증가",
+                "key_findings": [
+                    "법적 상한: 20세대 (용적률 200%)",
+                    "인센티브: 26세대 (용적률 260%)",
+                    "권장: 인센티브 시나리오 (효율 85%)"
+                ]
+            }
+        }
+    
+    elif module == "M5":
+        return {
+            "context_id": context_id,
+            "module_id": "M5",
+            "report_title": "사업성분석 보고서",
+            "generated_at": datetime.now().isoformat(),
+            "land_info": {
+                "address": "서울특별시 마포구 월드컵북로 120",
+                "parcel_id": "116801010001230045"
+            },
+            "household_count": 20,
+            "selected_scenario": "시나리오 A (법적 상한)",
+            "costs": {
+                "land": 1621848717,
+                "land_formatted": "₩16억 2,185만원",
+                "construction": 800000000,
+                "construction_formatted": "₩8억원",
+                "indirect": 242892553,
+                "indirect_formatted": "₩2억 4,289만원",
+                "total": 2664741270,
+                "total_formatted": "₩26억 6,474만원"
+            },
+            "revenues": {
+                "rental": 3000000000,
+                "rental_formatted": "₩30억원",
+                "total": 3000000000,
+                "total_formatted": "₩30억원"
+            },
+            "profit": {
+                "amount": 335258730,
+                "amount_formatted": "₩3억 3,526만원",
+                "margin": 12.58,
+                "margin_formatted": "12.6%"
+            },
+            "financial_metrics": {
+                "irr": 4.8,
+                "irr_formatted": "4.8%",
+                "npv": 335258730,
+                "npv_formatted": "₩3억 3,526만원",
+                "roi": 12.58,
+                "roi_formatted": "12.6%",
+                "payback_period": 7.9,
+                "payback_period_formatted": "7.9년"
+            },
+            "scenarios": [
+                {
+                    "id": "scenario_A",
+                    "name": "법적 상한 (20세대)",
+                    "units": 20,
+                    "profit": 335258730,
+                    "profit_formatted": "₩3억 3,526만원",
+                    "profit_margin": 12.6,
+                    "irr": 4.8,
+                    "npv": 335258730
+                },
+                {
+                    "id": "scenario_B",
+                    "name": "인센티브 (26세대)",
+                    "units": 26,
+                    "profit": 520000000,
+                    "profit_formatted": "₩5억 2,000만원",
+                    "profit_margin": 16.2,
+                    "irr": 6.2,
+                    "npv": 520000000
+                }
+            ],
+            "sensitivity": {
+                "construction_cost_10pct": {
+                    "profit_change": -80000000,
+                    "profit_change_formatted": "-₩8,000만원"
+                },
+                "rental_income_10pct": {
+                    "profit_change": 300000000,
+                    "profit_change_formatted": "+₩3억원"
+                }
+            },
+            "feasibility_status": "조건부 적정",
+            "feasibility_grade": "B+",
+            "summary": {
+                "conclusion": "사업성 분석 결과 조건부 적정으로 판단되며, IRR 4.8%로 투자 가능 수준입니다.",
+                "key_findings": [
+                    "순현재가치(NPV): ₩3억 3,526만원 (양수)",
+                    "내부수익률(IRR): 4.8% (최소 요구수익률 충족)",
+                    "투자회수기간: 7.9년",
+                    "권장: 인센티브 시나리오 선택 시 수익성 개선"
+                ]
+            }
         }
     
     elif module == "M6":
         return {
+            "context_id": context_id,
+            "module_id": "M6",
+            "report_title": "LH심사예측 보고서",
+            "generated_at": datetime.now().isoformat(),
+            "land_info": {
+                "address": "서울특별시 마포구 월드컵북로 120",
+                "parcel_id": "116801010001230045"
+            },
             # 🔥 단일 소스: total_score만 사용
             "total_score": 85.0,
+            "total_score_formatted": "85.0/100",
             "m6_score": 85.0,  # 동일한 값
             "m5_score": 75,
+            "m5_score_formatted": "75/100",
             "approval_rate": 0.77,  # 77%
+            "approval_rate_pct": 77,
+            "approval_rate_formatted": "77%",
             "grade": "A",
+            "grade_kr": "우수",
             "decision": "GO",
+            "decision_kr": "추진 권장",
+            "decision_type": "CONDITIONAL",
+            "decision_type_kr": "조건부 승인",
             "scores": {
                 "total": 85.0,  # 동일한 값
                 "location": 30,
+                "location_max": 35,
+                "location_formatted": "30/35",
                 "scale": 12,
+                "scale_max": 15,
+                "scale_formatted": "12/15",
                 "feasibility": 35,
-                "compliance": 18
+                "feasibility_max": 40,
+                "feasibility_formatted": "35/40",
+                "compliance": 8,
+                "compliance_max": 10,
+                "compliance_formatted": "8/10"
+            },
+            "score_breakdown": {
+                "입지 조건": {"score": 30, "max": 35, "pct": 85.7},
+                "건축 규모": {"score": 12, "max": 15, "pct": 80.0},
+                "사업성": {"score": 35, "max": 40, "pct": 87.5},
+                "법규 준수": {"score": 8, "max": 10, "pct": 80.0}
             },
             "hard_fail_items": [
-                {"name": "용적률", "passed": True},
-                {"name": "주차", "passed": True}
-            ]
+                {"name": "용적률", "passed": True, "status": "충족", "value": "200%", "limit": "200%"},
+                {"name": "주차", "passed": True, "status": "충족", "value": "18대", "limit": "15대"},
+                {"name": "일조권", "passed": True, "status": "충족", "value": "8시간", "limit": "6시간"}
+            ],
+            "risk_factors": [
+                {"level": "LOW", "category": "입지", "description": "교통 접근성 우수"},
+                {"level": "MEDIUM", "category": "사업성", "description": "수익률 개선 필요"},
+                {"level": "LOW", "category": "법규", "description": "모든 규정 충족"}
+            ],
+            "next_steps": [
+                "LH 공식 사전심사 신청",
+                "M5 수익률 개선 방안 검토",
+                "설계 도면 작성 및 제출",
+                "사업계획승인 신청 준비"
+            ],
+            "comparison_with_similar": {
+                "avg_score": 75.0,
+                "this_score": 85.0,
+                "percentile": 82
+            },
+            "summary": {
+                "conclusion": "LH 심사 통과 가능성이 77%로 높으며, 종합 점수 85점으로 우수한 수준입니다.",
+                "key_findings": [
+                    "종합 점수: 85/100 (A등급)",
+                    "LH 승인 예상 확률: 77%",
+                    "모든 필수 요건 충족",
+                    "권장: 조건부 추진 (수익률 개선 후)"
+                ],
+                "recommendation": "사업성 개선 방안 검토 후 LH 사전심사 신청 권장"
+            }
         }
     
     return {}
@@ -1562,3 +1805,107 @@ def _render_final_report_html(assembled_report: dict, context_id: str) -> str:
     """
     
     return html
+
+
+# ============================================================
+# 🧪 TEST ENDPOINTS - 개발/QA용 테스트 데이터 생성
+# ============================================================
+
+@router.post("/test/create-context/{context_id}")
+async def create_test_context(context_id: str):
+    """
+    테스트용 분석 컨텍스트를 생성합니다.
+    
+    **개발/QA 전용 엔드포인트**
+    
+    Examples:
+        POST /api/v4/reports/test/create-context/test_demo_123
+    """
+    test_context = {
+        "address": "서울시 마포구 월드컵북로 120",
+        "parcel_id": "116801010001230045",
+        "generated_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        
+        # M2 데이터 (v4.0 표준 구조)
+        "m2_result": {
+            "summary": {
+                "land_value_total_krw": 1621848717,
+                "pyeong_price_krw": 10723014,
+                "confidence_pct": 85,
+                "transaction_count": 10
+            }
+        },
+        
+        # M3 데이터 (v4.0 표준 구조)
+        "m3_result": {
+            "selected": {
+                "type": "YOUTH",
+                "name": "청년형",
+                "confidence": 0.85,
+                "secondary_name": "신혼부부형"
+            },
+            "scores": {
+                "YOUTH": {
+                    "total": 85
+                }
+            }
+        },
+        
+        # M4 데이터 (v4.0 표준 구조)
+        "m4_result": {
+            "summary": {
+                "legal_units": 20,
+                "incentive_units": 26,
+                "parking_alt_a": 18,
+                "parking_alt_b": 20
+            }
+        },
+        
+        # M5 데이터 (v4.0 표준 구조)
+        "m5_result": {
+            "summary": {
+                "npv_public_krw": 340000000,
+                "irr_pct": 4.8,
+                "roi_pct": 5.2,
+                "grade": "B+"
+            }
+        },
+        
+        # M6 데이터 (v4.0 표준 구조)
+        "m6_result": {
+            "summary": {
+                "decision": "조건부 추진 가능",
+                "total_score": 85,
+                "approval_probability_pct": 77,
+                "grade": "A"
+            }
+        },
+        
+        # M7 커뮤니티 계획 데이터 (NEW)
+        "m7_result": {
+            "summary": {
+                "primary_resident_type": "청년형",
+                "community_goal_summary": "입주자 간 고립 방지 및 안전망 구축",
+                "key_programs_count": 4,
+                "operation_model": "LH 직접 운영",
+                "sustainability_score": 75.0,
+                "space_count": 3,
+                "monthly_program_frequency": 2,
+                "participation_target_pct": 30.0
+            }
+        }
+    }
+    
+    # Context storage에 저장
+    context_storage.store_frozen_context(context_id, test_context)
+    
+    return {
+        "success": True,
+        "context_id": context_id,
+        "message": f"✅ 테스트 컨텍스트 생성 완료: {context_id}",
+        "data_summary": {
+            "modules": ["M2", "M3", "M4", "M5", "M6", "M7"],
+            "address": test_context["address"],
+            "generated_at": test_context["generated_at"]
+        }
+    }

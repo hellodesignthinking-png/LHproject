@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>종합 최종보고서 - ZeroSite REAL APPRAISAL STANDARD</title>
+  
+  <!-- Report Loading Indicator -->
+  <style>
+    #report-loading {
+      position: fixed;
+      inset: 0;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #e0e0e0;
+      border-top: 4px solid #0A1628;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    #report-loading p {
+      margin-top: 20px;
+      color: #0A1628;
+      font-size: 16px;
+      font-weight: 500;
+    }
+  </style>
+  
+  <!-- Common Styles -->
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      line-height: 1.6;
+      color: #1a1a1a;
+      background: #f8f9fa;
+    }
+    
+    .report-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    /* Site Identity Block */
+    .site-identity {
+      background: linear-gradient(135deg, #0A1628 0%, #1E3A5F 100%);
+      color: white;
+      padding: 40px;
+      text-align: center;
+    }
+    
+    .site-logo {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: 2px;
+    }
+    
+    .site-tagline {
+      font-size: 14px;
+      opacity: 0.9;
+      letter-spacing: 1px;
+    }
+    
+    /* Report Header */
+    .report-header {
+      padding: 60px 40px 40px;
+      background: linear-gradient(to bottom, #f8f9fa 0%, white 100%);
+    }
+    
+    .report-title {
+      font-size: 36px;
+      font-weight: 700;
+      color: #0A1628;
+      margin-bottom: 12px;
+    }
+    
+    .report-subtitle {
+      font-size: 18px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+    
+    .report-meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+    
+    .meta-item {
+      padding: 12px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    
+    .meta-label {
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    
+    .meta-value {
+      color: #1a1a1a;
+      font-weight: 500;
+    }
+    
+    /* Sections */
+    .section {
+      padding: 40px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .section-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #0A1628;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 3px solid #0A1628;
+    }
+    
+    .section-subtitle {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1E3A5F;
+      margin: 24px 0 16px;
+    }
+    
+    /* Decision Card */
+    .decision-card {
+      padding: 32px;
+      border-radius: 12px;
+      margin: 24px 0;
+      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+      border-left: 6px solid #4caf50;
+    }
+    
+    .decision-card.conditional {
+      background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+      border-left-color: #ff9800;
+    }
+    
+    .decision-card.negative {
+      background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+      border-left-color: #f44336;
+    }
+    
+    .decision-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    
+    .decision-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+    
+    .decision-metric {
+      text-align: center;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 8px;
+    }
+    
+    .decision-metric-label {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    
+    .decision-metric-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #0A1628;
+    }
+    
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 14px;
+    }
+    
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border: 1px solid #e0e0e0;
+    }
+    
+    th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #0A1628;
+    }
+    
+    tr:hover {
+      background: #f8f9fa;
+    }
+    
+    /* Info Boxes */
+    .info-box {
+      padding: 20px;
+      background: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      border-radius: 4px;
+      margin: 20px 0;
+    }
+    
+    .warning-box {
+      padding: 20px;
+      background: #fff3e0;
+      border-left: 4px solid #ff9800;
+      border-radius: 4px;
+      margin: 20px 0;
+    }
+    
+    /* Lists */
+    .report-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .report-list li {
+      padding: 12px;
+      margin: 8px 0;
+      background: #f8f9fa;
+      border-left: 3px solid #2196f3;
+      border-radius: 4px;
+    }
+    
+    /* Footer */
+    .report-footer {
+      padding: 40px;
+      background: #f8f9fa;
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+    }
+    
+    /* Content Box for rich text (M7 커뮤니티 계획) */
+    .content-box {
+      padding: 20px;
+      background: #FAFAFA;
+      border-radius: 8px;
+      margin: 16px 0;
+      line-height: 1.8;
+      color: #374151;
+    }
+    
+    .content-box strong {
+      color: #0A1628;
+      font-weight: 600;
+    }
+    
+    .content-box br {
+      display: block;
+      content: "";
+      margin: 8px 0;
+    }
+    
+    /* Print Styles */
+    @media print {
+      body {
+        background: white;
+      }
+      
+      .report-container {
+        box-shadow: none;
+      }
+      
+      .section {
+        page-break-inside: avoid;
+      }
+      
+      #report-loading {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading Indicator -->
+  <div id="report-loading">
+    <div class="spinner"></div>
+    <p>종합 감정평가 보고서를 생성 중입니다…</p>
+  </div>
+
+  <div class="report-container">
+    <!-- 0. Site Identity Block (필수 / 단일 소스) -->
+    <div class="site-identity">
+      <div class="site-logo">ZEROSITE</div>
+      <div class="site-tagline">REAL APPRAISAL STANDARD | 전문 감정평가 시스템</div>
+    </div>
+
+    <!-- 1. Report Header -->
+    <div class="report-header">
+      <div class="report-title">최신 REAL APPRAISAL STANDARD 보고서</div>
+      <div class="report-subtitle">
+        전문 감정평가 문서 형식 | M2–M6 전체 포함 | 실시간 데이터 생성
+      </div>
+      
+      <div class="report-meta">
+        <div class="meta-item">
+          <div class="meta-label">생성일시</div>
+          <div class="meta-value">{{ generated_at }}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Context ID</div>
+          <div class="meta-value">{{ context_id }}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">대상 주소</div>
+          <div class="meta-value">{{ address }}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">보고서 버전</div>
+          <div class="meta-value">v2.0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Executive Summary (요약 2~3p) -->
+    <section id="summary" class="section">
+      <div class="section-title">Executive Summary (최종 판정)</div>
+      
+      <!-- Decision Card -->
+      <div class="decision-card {{ decision_class }}">
+        <div class="decision-title">{{ final_decision }}</div>
+        <div style="margin: 16px 0; font-size: 14px; line-height: 1.6; opacity: 0.95;">
+          {{ final_decision_interpretation }}
+        </div>
+        <div class="decision-details">
+          <div class="decision-metric">
+            <div class="decision-metric-label">승인 가능성</div>
+            <div class="decision-metric-value">{{ approval_probability_pct }}%</div>
+          </div>
+          <div class="decision-metric">
+            <div class="decision-metric-label">종합 등급</div>
+            <div class="decision-metric-value">{{ grade }}</div>
+          </div>
+          <div class="decision-metric">
+            <div class="decision-metric-label">종합 점수</div>
+            <div class="decision-metric-value">{{ total_score }}/100</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Key Findings -->
+      <div class="section-subtitle">주요 발견사항</div>
+      <ul class="report-list">
+        {% for finding in key_findings %}
+        <li>{{ finding }}</li>
+        {% endfor %}
+      </ul>
+      
+      <!-- Risks -->
+      <div class="section-subtitle">주요 리스크 요인</div>
+      <ul class="report-list">
+        {% for risk in key_risks %}
+        <li>{{ risk }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <!-- 3. Module Sections -->
+    
+    <!-- M2: 토지감정평가 -->
+    <section id="M2" class="section">
+      <div class="section-title">M2. 토지감정평가</div>
+      
+      <div class="info-box">
+        <strong>감정평가액:</strong> {{ land_value_krw }}<br>
+        <strong>단가 (㎡):</strong> {{ unit_price_sqm }}<br>
+        <strong>단가 (평):</strong> {{ unit_price_pyeong }}<br>
+        <strong>신뢰도:</strong> {{ confidence_pct }}%
+      </div>
+      
+      <div class="section-subtitle">실거래가 분석</div>
+      <p>최근 {{ transaction_count }}건의 실거래 사례를 분석하였으며, 평균 단가는 {{ avg_price_sqm }}입니다.</p>
+      
+      <div class="section-subtitle">공시지가 비교</div>
+      <table>
+        <thead>
+          <tr>
+            <th>구분</th>
+            <th>금액</th>
+            <th>비율</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>감정평가액</td>
+            <td>{{ land_value_krw }}</td>
+            <td>100%</td>
+          </tr>
+          <tr>
+            <td>공시지가</td>
+            <td>{{ official_price_krw }}</td>
+            <td>{{ official_price_ratio }}%</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- M3: 선호유형분석 -->
+    <section id="M3" class="section">
+      <div class="section-title">M3. 선호유형분석</div>
+      
+      <div class="info-box">
+        <strong>추천 유형:</strong> {{ recommended_housing_type }}<br>
+        <strong>종합 점수:</strong> {{ housing_type_score }}/100<br>
+        <strong>2순위:</strong> {{ second_choice_type }}
+      </div>
+      
+      <div class="section-subtitle">라이프스타일 요인 분석</div>
+      <table>
+        <thead>
+          <tr>
+            <th>요인</th>
+            <th>점수</th>
+            <th>가중치</th>
+            <th>설명</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for factor in lifestyle_factors %}
+          <tr>
+            <td>{{ factor.name }}</td>
+            <td>{{ factor.score }}</td>
+            <td>{{ factor.weight }}%</td>
+            <td>{{ factor.description }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <!-- M4: 건축규모결정 -->
+    <section id="M4" class="section">
+      <div class="section-title">M4. 건축규모결정</div>
+      
+      <div class="section-subtitle">법적 상한 시나리오</div>
+      <div class="info-box">
+        <strong>용적률:</strong> {{ legal_far }}%<br>
+        <strong>건폐율:</strong> {{ legal_bcr }}%<br>
+        <strong>세대수:</strong> {{ legal_units }}세대<br>
+        <strong>연면적:</strong> {{ legal_gfa }}㎡
+      </div>
+      
+      <div class="section-subtitle">인센티브 적용 시나리오</div>
+      <div class="info-box">
+        <strong>용적률:</strong> {{ incentive_far }}%<br>
+        <strong>세대수:</strong> {{ incentive_units }}세대<br>
+        <strong>연면적:</strong> {{ incentive_gfa }}㎡<br>
+        <strong>증가:</strong> +{{ units_increase }}세대
+      </div>
+      
+      <div class="section-subtitle">주차 계획</div>
+      <table>
+        <thead>
+          <tr>
+            <th>대안</th>
+            <th>주차대수</th>
+            <th>방식</th>
+            <th>비용</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>대안 A</td>
+            <td>{{ parking_alt_a_count }}대</td>
+            <td>{{ parking_alt_a_type }}</td>
+            <td>{{ parking_alt_a_cost }}</td>
+          </tr>
+          <tr>
+            <td>대안 B</td>
+            <td>{{ parking_alt_b_count }}대</td>
+            <td>{{ parking_alt_b_type }}</td>
+            <td>{{ parking_alt_b_cost }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- M5: 사업성분석 -->
+    <section id="M5" class="section">
+      <div class="section-title">M5. 사업성분석</div>
+      
+      <div class="section-subtitle">재무지표</div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin: 20px 0;">
+        <div class="decision-metric">
+          <div class="decision-metric-label">IRR (내부수익률)</div>
+          <div class="decision-metric-value">{{ irr_pct }}%</div>
+        </div>
+        <div class="decision-metric">
+          <div class="decision-metric-label">NPV (순현재가치)</div>
+          <div class="decision-metric-value">{{ npv_krw }}</div>
+        </div>
+        <div class="decision-metric">
+          <div class="decision-metric-label">ROI (투자수익률)</div>
+          <div class="decision-metric-value">{{ roi_pct }}%</div>
+        </div>
+        <div class="decision-metric">
+          <div class="decision-metric-label">회수기간</div>
+          <div class="decision-metric-value">{{ payback_years }}년</div>
+        </div>
+      </div>
+      
+      <div class="section-subtitle">비용 구조</div>
+      <table>
+        <thead>
+          <tr>
+            <th>항목</th>
+            <th>금액</th>
+            <th>비율</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>토지비</td>
+            <td>{{ land_cost_krw }}</td>
+            <td>{{ land_cost_ratio }}%</td>
+          </tr>
+          <tr>
+            <td>건축비</td>
+            <td>{{ construction_cost_krw }}</td>
+            <td>{{ construction_cost_ratio }}%</td>
+          </tr>
+          <tr>
+            <td>간접비</td>
+            <td>{{ indirect_cost_krw }}</td>
+            <td>{{ indirect_cost_ratio }}%</td>
+          </tr>
+          <tr>
+            <td><strong>총 비용</strong></td>
+            <td><strong>{{ total_cost_krw }}</strong></td>
+            <td><strong>100%</strong></td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div class="section-subtitle">수익 구조</div>
+      <table>
+        <thead>
+          <tr>
+            <th>항목</th>
+            <th>금액</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>임대 수익</td>
+            <td>{{ rental_revenue_krw }}</td>
+          </tr>
+          <tr>
+            <td><strong>총 수익</strong></td>
+            <td><strong>{{ total_revenue_krw }}</strong></td>
+          </tr>
+          <tr>
+            <td><strong>순이익</strong></td>
+            <td><strong>{{ net_profit_krw }}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- M6: LH심사예측 -->
+    <section id="M6" class="section">
+      <div class="section-title">M6. LH심사예측</div>
+      
+      <div class="info-box">
+        <strong>종합 점수:</strong> {{ m6_total_score }}/100<br>
+        <strong>등급:</strong> {{ m6_grade }}<br>
+        <strong>승인 확률:</strong> {{ m6_approval_probability }}%<br>
+        <strong>최종 결정:</strong> {{ m6_decision }}
+      </div>
+      
+      <div class="section-subtitle">세부 점수</div>
+      <table>
+        <thead>
+          <tr>
+            <th>평가 항목</th>
+            <th>점수</th>
+            <th>만점</th>
+            <th>비율</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>입지 조건</td>
+            <td>{{ location_score }}</td>
+            <td>{{ location_max }}</td>
+            <td>{{ location_ratio }}%</td>
+          </tr>
+          <tr>
+            <td>건축 규모</td>
+            <td>{{ scale_score }}</td>
+            <td>{{ scale_max }}</td>
+            <td>{{ scale_ratio }}%</td>
+          </tr>
+          <tr>
+            <td>사업성</td>
+            <td>{{ feasibility_score }}</td>
+            <td>{{ feasibility_max }}</td>
+            <td>{{ feasibility_ratio }}%</td>
+          </tr>
+          <tr>
+            <td>법규 준수</td>
+            <td>{{ compliance_score }}</td>
+            <td>{{ compliance_max }}</td>
+            <td>{{ compliance_ratio }}%</td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div class="section-subtitle">필수 요건 검증</div>
+      <table>
+        <thead>
+          <tr>
+            <th>항목</th>
+            <th>기준</th>
+            <th>실제</th>
+            <th>충족</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in hard_fail_items %}
+          <tr>
+            <td>{{ item.name }}</td>
+            <td>{{ item.limit }}</td>
+            <td>{{ item.value }}</td>
+            <td>{% if item.passed %}✅ 충족{% else %}❌ 미충족{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      
+      <div class="section-subtitle">다음 단계</div>
+      <ul class="report-list">
+        {% for step in next_steps %}
+        <li>{{ step }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <!-- M7: 커뮤니티 운영 계획 -->
+    {% if community_plan %}
+    <section id="M7" class="section">
+      <div class="section-title">M7. 커뮤니티 운영 계획</div>
+      
+      <div class="info-box" style="background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%); border-left: 4px solid #6366F1;">
+        <strong>대상 입주자 유형:</strong> {{ community_plan.primary_resident_type }}<br>
+        <strong>커뮤니티 목표:</strong> {{ community_plan.community_goal }}<br>
+        <strong>운영 모델:</strong> {{ community_plan.operation_model }}
+      </div>
+      
+      <div class="section-subtitle">8.1 커뮤니티 기획 목표 및 방향</div>
+      <div class="content-box">
+        {{ community_plan.goal_interpretation|safe }}
+      </div>
+      
+      <div class="section-subtitle">8.2 프로그램 운영 계획</div>
+      <div class="content-box">
+        {{ community_plan.program_plan|safe }}
+      </div>
+      
+      <div class="section-subtitle">8.3 운영 주체 및 역할 분담</div>
+      <div class="content-box">
+        {{ community_plan.operation_model_detail|safe }}
+      </div>
+      
+      <div class="section-subtitle">8.4 지속 가능성 확보 방안</div>
+      <div class="content-box">
+        {{ community_plan.sustainability_detail|safe }}
+      </div>
+      
+      <div class="section-subtitle">커뮤니티 계획 요약</div>
+      <table>
+        <thead>
+          <tr>
+            <th>항목</th>
+            <th>계획 내용</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>핵심 프로그램 수</td>
+            <td>{{ community_plan.key_programs_count }}개</td>
+          </tr>
+          <tr>
+            <td>월간 프로그램 빈도</td>
+            <td>{{ community_plan.monthly_program_frequency }}회</td>
+          </tr>
+          <tr>
+            <td>목표 참여율</td>
+            <td>{{ community_plan.participation_target_pct }}%</td>
+          </tr>
+          <tr>
+            <td>커뮤니티 공간 수</td>
+            <td>{{ community_plan.space_count }}개소</td>
+          </tr>
+          {% if community_plan.sustainability_score %}
+          <tr>
+            <td>지속 가능성 점수</td>
+            <td>{{ community_plan.sustainability_score }}/100</td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+      
+      <div class="info-box" style="background: #F0FDF4; border-left: 4px solid #22C55E;">
+        <strong>✅ 실행 가능성 평가</strong><br>
+        본 커뮤니티 계획은 LH 공공임대주택 운영 정책과 부합하며, 
+        {% if community_plan.sustainability_score and community_plan.sustainability_score >= 70 %}
+        지속 가능성이 우수한 것으로 평가됩니다.
+        {% else %}
+        실현 가능한 수준으로 설계되었습니다.
+        {% endif %}
+        모든 프로그램은 자율 참여 원칙을 기반으로 하며, 입주자에게 과도한 부담을 주지 않도록 설계되었습니다.
+      </div>
+    </section>
+    {% endif %}
+
+    <!-- 4. Appendix (선택 / 60p 복원 시 필수) -->
+    <section id="appendix" class="section">
+      <div class="section-title">부록 (Appendix)</div>
+      
+      <div class="section-subtitle">A. 거래사례 원문</div>
+      <p>실거래가 데이터 및 거래 사례 상세 정보</p>
+      
+      <div class="section-subtitle">B. 법규 원문 요약</div>
+      <p>관련 법규 및 규정 상세 내용</p>
+      
+      <div class="section-subtitle">C. 계산 근거</div>
+      <p>시나리오별 상세 계산 과정 및 근거</p>
+    </section>
+
+    <!-- 5. Footer -->
+    <div class="report-footer">
+      <div style="margin-bottom: 16px;">
+        <strong>ZeroSite</strong> | REAL APPRAISAL STANDARD
+      </div>
+      <div style="font-size: 12px; color: #999;">
+        본 보고서는 AI 기반 분석 시스템에 의해 생성되었으며,<br>
+        실제 감정평가 또는 투자 결정의 참고 자료로만 활용되어야 합니다.
+      </div>
+      <div style="margin-top: 16px; font-size: 12px;">
+        © {{ current_year }} ZeroSite by Antenna Holdings. All rights reserved.
+      </div>
+    </div>
+  </div>
+
+  <!-- Remove Loading on Page Load -->
+  <script>
+    window.addEventListener("load", function() {
+      const loader = document.getElementById("report-loading");
+      if (loader) {
+        setTimeout(function() {
+          loader.style.display = "none";
+        }, 500);
+      }
+    });
+  </script>
+
+</body>
+</html>

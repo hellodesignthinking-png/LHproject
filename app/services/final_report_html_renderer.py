@@ -598,7 +598,19 @@ def render_qa_status_footer(qa_status: Dict[str, str]) -> str:
 # ============================================================================
 
 def render_all_in_one_report(data: Dict[str, Any]) -> str:
-    """1. 종합 최종보고서"""
+    """
+    1. 종합 최종보고서 (Master Comprehensive Report)
+    
+    ✅ NEW: Jinja2 템플릿 렌더러 사용
+    템플릿: app/templates_v13/master_comprehensive_report.html
+    """
+    from app.services.template_renderer import render_master_comprehensive_report
+    
+    # 새 템플릿 렌더러 사용
+    return render_master_comprehensive_report(data)
+    
+    # ===== 아래 코드는 레거시 (하드코딩 HTML) =====
+    # 추후 제거 예정
     
     # 데이터 부족 체크
     missing = []

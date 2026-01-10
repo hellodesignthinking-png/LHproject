@@ -406,7 +406,7 @@ export const PipelineOrchestrator: React.FC = () => {
             <Arrow />
             <StageIndicator label="M1 확정" active={state.stage === 'M1_FROZEN'} completed={state.stage !== 'M1_INPUT' && state.stage !== 'M1_FROZEN'} />
             <Arrow />
-            <StageIndicator label="M2-M6 분석" active={state.stage === 'PIPELINE_RUNNING'} completed={state.stage === 'RESULTS_READY' || state.stage === 'REPORTS_GENERATED'} />
+            <StageIndicator label="M2-M7 분석" active={state.stage === 'PIPELINE_RUNNING'} completed={state.stage === 'RESULTS_READY' || state.stage === 'REPORTS_GENERATED'} />
             <Arrow />
             <StageIndicator label="결과 검토" active={state.stage === 'RESULTS_READY'} completed={state.stage === 'REPORTS_GENERATED'} />
             <Arrow />
@@ -502,7 +502,7 @@ export const PipelineOrchestrator: React.FC = () => {
           </div>
         )}
 
-        {/* Stage 3: Results Ready - Display M2-M6 results */}
+        {/* Stage 3: Results Ready - Display M2-M7 results */}
         {state.stage === 'RESULTS_READY' && (
           <div>
             <div style={{ 
@@ -716,7 +716,7 @@ export const PipelineOrchestrator: React.FC = () => {
                     ⭐ 최신 REAL APPRAISAL STANDARD 보고서
                   </h3>
                   <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', marginTop: '8px' }}>
-                    전문 감정평가 문서 형식 | M2-M6 전체 포함 | 실시간 데이터 생성
+                    전문 감정평가 문서 형식 | M2-M7 전체 포함 | 실시간 데이터 생성
                   </p>
                 </div>
                 
@@ -870,6 +870,36 @@ export const PipelineOrchestrator: React.FC = () => {
                     <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '4px' }}>M6 종합 판단</div>
                     <div style={{ fontSize: '11px', color: '#666' }}>LH 심사</div>
                   </a>
+                  
+                  <a
+                    href={`${BACKEND_URL}/api/v4/reports/final/all_in_one/html?context_id=${state.contextId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      padding: '18px',
+                      background: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      color: '#333',
+                      textAlign: 'center',
+                      transition: 'transform 0.2s, box-shadow 0.2s',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      display: 'block',
+                      border: '2px solid #6366F1'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(99, 102, 241, 0.3)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    }}
+                  >
+                    <div style={{ fontSize: '32px', marginBottom: '8px' }}>🏘️</div>
+                    <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '4px', color: '#6366F1' }}>M7 커뮤니티</div>
+                    <div style={{ fontSize: '11px', color: '#6366F1' }}>운영 계획 ✨</div>
+                  </a>
                 </div>
                 
                 <div style={{ textAlign: 'center', marginTop: '20px' }}>
@@ -883,6 +913,133 @@ export const PipelineOrchestrator: React.FC = () => {
                   }}>
                     💡 Tip: 브라우저에서 Ctrl+P → "PDF로 저장" → "배경 그래픽 켜기"
                   </div>
+                </div>
+              </div>
+
+              {/* M7 Standalone Report Section */}
+              <div style={{ 
+                marginTop: '20px', 
+                padding: '25px', 
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+                borderRadius: '12px',
+                border: '2px solid rgba(255,255,255,0.3)',
+                boxShadow: '0 8px 24px rgba(102,126,234,0.3)'
+              }}>
+                <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                  <h3 style={{ margin: 0, fontSize: '22px', color: 'white', fontWeight: 'bold' }}>
+                    🏘️ M7 커뮤니티 운영 계획 독립 보고서
+                  </h3>
+                  <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', marginTop: '8px' }}>
+                    커뮤니티 계획만 집중 분석 | M2-M6 내용 제외
+                  </p>
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                  {/* HTML 버튼 */}
+                  <button
+                    onClick={() => {
+                      if (!state.contextId) {
+                        alert('⚠️ M1 분석을 먼저 완료해주세요.');
+                        return;
+                      }
+                      const url = `${BACKEND_URL}/api/v4/reports/m7/community-plan/html?context_id=${state.contextId}`;
+                      window.open(url, '_blank');
+                    }}
+                    disabled={!state.contextId}
+                    style={{
+                      padding: '20px',
+                      background: state.contextId ? 'white' : 'rgba(255,255,255,0.5)',
+                      border: '2px solid rgba(255,255,255,0.5)',
+                      borderRadius: '10px',
+                      cursor: state.contextId ? 'pointer' : 'not-allowed',
+                      transition: 'all 0.3s ease',
+                      fontWeight: 'bold',
+                      fontSize: '16px',
+                      color: '#667eea',
+                      opacity: state.contextId ? 1 : 0.6,
+                      textAlign: 'left',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (state.contextId) {
+                        e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.boxShadow = '0 12px 28px rgba(255,255,255,0.4)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  >
+                    <div style={{ fontSize: '16px' }}>📄 HTML 보고서</div>
+                    <div style={{ fontSize: '12px', color: '#888', fontWeight: 'normal' }}>
+                      브라우저에서 보기
+                    </div>
+                  </button>
+
+                  {/* PDF 안내 버튼 */}
+                  <button
+                    onClick={() => {
+                      if (!state.contextId) {
+                        alert('⚠️ M1 분석을 먼저 완료해주세요.');
+                        return;
+                      }
+                      alert(
+                        '📥 PDF 다운로드 방법\n\n' +
+                        '1. HTML 보고서를 브라우저에서 엽니다\n' +
+                        '2. Ctrl+P (Mac: Cmd+P) 키를 누릅니다\n' +
+                        '3. "PDF로 저장"을 선택합니다\n' +
+                        '4. "배경 그래픽 켜기" 옵션을 활성화합니다\n' +
+                        '5. 저장 버튼을 클릭합니다'
+                      );
+                    }}
+                    disabled={!state.contextId}
+                    style={{
+                      padding: '20px',
+                      background: state.contextId ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)',
+                      border: '2px solid rgba(255,255,255,0.5)',
+                      borderRadius: '10px',
+                      cursor: state.contextId ? 'pointer' : 'not-allowed',
+                      transition: 'all 0.3s ease',
+                      fontWeight: 'bold',
+                      fontSize: '16px',
+                      color: '#764ba2',
+                      opacity: state.contextId ? 1 : 0.6,
+                      textAlign: 'left',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (state.contextId) {
+                        e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.boxShadow = '0 12px 28px rgba(255,255,255,0.4)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  >
+                    <div style={{ fontSize: '16px' }}>📥 PDF 다운로드 안내</div>
+                    <div style={{ fontSize: '12px', color: '#888', fontWeight: 'normal' }}>
+                      브라우저 프린트 기능 사용
+                    </div>
+                  </button>
+                </div>
+
+                <div style={{ 
+                  marginTop: '15px', 
+                  padding: '12px', 
+                  background: 'rgba(255,255,255,0.15)', 
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                  color: 'rgba(255,255,255,0.9)',
+                  textAlign: 'center'
+                }}>
+                  📌 포함 내용: 커뮤니티 목표, 공간 구성, 프로그램, 운영 구조, 지속가능성 계획
                 </div>
               </div>
 
@@ -948,7 +1105,7 @@ export const PipelineOrchestrator: React.FC = () => {
                       종합 최종보고서
                     </div>
                     <div style={{ fontSize: '12px', color: '#64748b' }}>
-                      M2-M6 모든 분석 포함
+                      M2-M7 모든 분석 포함
                     </div>
                   </button>
 
@@ -1157,7 +1314,7 @@ export const PipelineOrchestrator: React.FC = () => {
               6종 보고서가 준비되었습니다. 다운로드하여 활용하세요.
             </p>
             
-            {/* Report download links (placeholder) */}
+            {/* Report download links */}
             <div style={{ 
               marginTop: '30px',
               display: 'grid',
@@ -1166,19 +1323,59 @@ export const PipelineOrchestrator: React.FC = () => {
               maxWidth: '800px',
               margin: '30px auto'
             }}>
-              {['사전검토보고서', '감정평가서', 'LH심사예측', '사업성분석', '종합보고서', '요약보고서'].map((reportName, idx) => (
+              {[
+                { name: '사전검토보고서', type: 'quick_check' },
+                { name: '감정평가서', type: 'lh_technical' },
+                { name: 'LH심사예측', type: 'lh_technical' },
+                { name: '사업성분석', type: 'financial_feasibility' },
+                { name: '종합보고서', type: 'all_in_one' },
+                { name: '요약보고서', type: 'landowner_summary' }
+              ].map((report, idx) => (
                 <div 
                   key={idx}
+                  onClick={() => {
+                    if (!state.contextId) {
+                      alert('먼저 분석 결과를 확인한 후 시도하세요.');
+                      return;
+                    }
+                    // 종합보고서는 새 창으로 HTML 오픈
+                    if (report.type === 'all_in_one') {
+                      const url = `${BACKEND_URL}/api/v4/reports/final/${report.type}/html?context_id=${encodeURIComponent(state.contextId)}`;
+                      window.open(url, '_blank', 'noopener,noreferrer');
+                    } else {
+                      // 다른 보고서는 PDF 다운로드 (향후 구현)
+                      alert(`${report.name} 다운로드 기능은 곧 추가됩니다.`);
+                    }
+                  }}
                   style={{ 
                     padding: '15px', 
-                    background: '#f5f5f5', 
+                    background: report.type === 'all_in_one' ? '#e3f2fd' : '#f5f5f5',
                     borderRadius: '8px',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    border: report.type === 'all_in_one' ? '2px solid #2196F3' : 'none'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = report.type === 'all_in_one' ? '#bbdefb' : '#e0e0e0';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = report.type === 'all_in_one' ? '#e3f2fd' : '#f5f5f5';
+                    e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
-                  <div style={{ fontSize: '32px', marginBottom: '5px' }}>📄</div>
-                  <div style={{ fontSize: '14px', fontWeight: 'bold' }}>{reportName}</div>
-                  <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>PDF 다운로드</div>
+                  <div style={{ fontSize: '32px', marginBottom: '5px' }}>
+                    {report.type === 'all_in_one' ? '📋' : '📄'}
+                  </div>
+                  <div style={{ fontSize: '14px', fontWeight: 'bold' }}>{report.name}</div>
+                  <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                    {report.type === 'all_in_one' ? 'M2~M7 통합 분석 (새 창)' : 'PDF 다운로드'}
+                  </div>
+                  {report.type === 'all_in_one' && (
+                    <div style={{ fontSize: '11px', color: '#1976D2', marginTop: '8px', fontWeight: '500' }}>
+                      ✨ M7 커뮤니티 계획 포함
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

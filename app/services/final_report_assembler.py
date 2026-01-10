@@ -22,6 +22,7 @@ import logging
 from app.core.canonical_data_contract import (
     M2Summary, M3Summary, M4Summary, M5Summary, M6Summary
 )
+from app.models.m7_community_plan import M7Summary
 
 logger = logging.getLogger(__name__)
 
@@ -84,12 +85,13 @@ class FinalReportData:
         self.context_id = context_id
         self.canonical = canonical_data
         
-        # M2-M6 Summary 파싱
+        # M2-M7 Summary 파싱
         self.m2: Optional[M2Summary] = self._parse_m2()
         self.m3: Optional[M3Summary] = self._parse_m3()
         self.m4: Optional[M4Summary] = self._parse_m4()
         self.m5: Optional[M5Summary] = self._parse_m5()
         self.m6: Optional[M6Summary] = self._parse_m6()
+        self.m7: Optional[M7Summary] = self._parse_m7()
         
     def _parse_m2(self) -> Optional[M2Summary]:
         """M2 토지감정평가 데이터 추출
@@ -111,6 +113,7 @@ class FinalReportData:
         """
         try:
             m2_data = self.canonical.get("m2_result", {})
+            logger.info(f"🔍 [M2 Parse] m2_data keys: {list(m2_data.keys()) if m2_data else 'None'}")
             
             # Scenario 2: v4.0 standard structure
             if m2_data:
@@ -235,12 +238,29 @@ class FinalReportData:
         - m4_result.to_dict()["incentive_capacity"]["total_units"] → incentive_units
         - m4_result.to_dict()["parking_solutions"]["alternative_A"]["total_parking"] → parking_alt_a
         - m4_result.to_dict()["parking_solutions"]["alternative_B"]["total_parking"] → parking_alt_b
+        
+        또는 summary 구조:
+        - m4_result["summary"]["legal_units"]
+        - m4_result["summary"]["incentive_units"]
+        - m4_result["summary"]["parking_alt_a"]
+        - m4_result["summary"]["parking_alt_b"]
         """
         try:
             m4_data = self.canonical.get("m4_result", {})
             if not m4_data or not isinstance(m4_data, dict):
                 return None
             
+            # ✅ NEW: summary 구조 우선 확인 (테스트 데이터용)
+            summary = m4_data.get("summary", {})
+            if summary and isinstance(summary, dict):
+                return M4Summary(
+                    legal_units=summary.get("legal_units"),
+                    incentive_units=summary.get("incentive_units"),
+                    parking_alt_a=summary.get("parking_alt_a"),
+                    parking_alt_b=summary.get("parking_alt_b")
+                )
+            
+            # 기존 구조 (프로덕션용)
             legal_cap = m4_data.get("legal_capacity", {})
             incentive_cap = m4_data.get("incentive_capacity", {})
             parking_sols = m4_data.get("parking_solutions", {})
@@ -266,12 +286,29 @@ class FinalReportData:
         - m5_result.to_dict()["financials"]["irr_public"] → irr_pct
         - m5_result.to_dict()["financials"]["roi"] → roi_pct
         - m5_result.to_dict()["profitability"]["grade"] → grade
+        
+        또는 summary 구조:
+        - m5_result["summary"]["npv_public_krw"]
+        - m5_result["summary"]["irr_pct"]
+        - m5_result["summary"]["roi_pct"]
+        - m5_result["summary"]["grade"]
         """
         try:
             m5_data = self.canonical.get("m5_result", {})
             if not m5_data or not isinstance(m5_data, dict):
                 return None
             
+            # ✅ NEW: summary 구조 우선 확인 (테스트 데이터용)
+            summary = m5_data.get("summary", {})
+            if summary and isinstance(summary, dict):
+                return M5Summary(
+                    npv_public_krw=summary.get("npv_public_krw"),
+                    irr_pct=summary.get("irr_pct"),
+                    roi_pct=summary.get("roi_pct"),
+                    grade=summary.get("grade")
+                )
+            
+            # 기존 구조 (프로덕션용)
             financials = m5_data.get("financials", {})
             profitability = m5_data.get("profitability", {})
             
@@ -302,12 +339,29 @@ class FinalReportData:
         - m6_result.to_dict()["decision"]["type"] → decision (GO/CONDITIONAL/NO_GO)
         - m6_result.to_dict()["approval"]["probability"] → approval_probability_pct
         - m6_result.to_dict()["grade"] → grade (S/A/B/C/D/F)
+        
+        또는 summary 구조:
+        - m6_result["summary"]["decision"]
+        - m6_result["summary"]["approval_probability_pct"]
+        - m6_result["summary"]["grade"]
+        - m6_result["summary"]["total_score"]
         """
         try:
             m6_data = self.canonical.get("m6_result", {})
             if not m6_data or not isinstance(m6_data, dict):
                 return None
             
+            # ✅ NEW: summary 구조 우선 확인 (테스트 데이터용)
+            summary = m6_data.get("summary", {})
+            if summary and isinstance(summary, dict):
+                return M6Summary(
+                    decision=summary.get("decision"),
+                    total_score=summary.get("total_score", 0),
+                    grade=summary.get("grade"),
+                    approval_probability_pct=summary.get("approval_probability_pct")
+                )
+            
+            # 기존 구조 (프로덕션용)
             decision_info = m6_data.get("decision", {})
             approval_info = m6_data.get("approval", {})
             scores_info = m6_data.get("scores", {})
@@ -334,6 +388,214 @@ class FinalReportData:
         except Exception as e:
             logger.warning(f"M6 파싱 실패: {e}")
             return None
+    
+    def _parse_m7(self) -> Optional[M7Summary]:
+        """M7 커뮤니티 계획 데이터 추출
+        
+        M7은 M1~M6 기반으로 자동 생성되는 커뮤니티 계획입니다.
+        
+        예상 구조:
+        - m7_result["summary"]["primary_resident_type"]
+        - m7_result["summary"]["community_goal_summary"]
+        - m7_result["summary"]["key_programs_count"]
+        - m7_result["summary"]["operation_model"]
+        - m7_result["summary"]["space_count"]
+        - m7_result["summary"]["monthly_program_frequency"]
+        - m7_result["summary"]["participation_target_pct"]
+        
+        ⚠️ M7이 없을 경우 기본값 생성 (M3/M4 기반)
+        """
+        try:
+            m7_data = self.canonical.get("m7_result", {})
+            
+            # Scenario 1: 명시적 M7 summary 존재
+            if m7_data and isinstance(m7_data, dict):
+                summary = m7_data.get("summary", {})
+                if summary and isinstance(summary, dict):
+                    return M7Summary(
+                        primary_resident_type=summary.get("primary_resident_type", "청년형"),
+                        community_goal_summary=summary.get("community_goal_summary", "입주자 간 고립 방지 및 안전망 구축"),
+                        key_programs_count=summary.get("key_programs_count", 3),
+                        operation_model=summary.get("operation_model", "LH 직접 운영"),
+                        sustainability_score=summary.get("sustainability_score"),
+                        space_count=summary.get("space_count", 2),
+                        monthly_program_frequency=summary.get("monthly_program_frequency", 2),
+                        participation_target_pct=summary.get("participation_target_pct", 30.0)
+                    )
+            
+            # Scenario 2: M7 부재 시 M3/M4 기반 기본값 생성
+            logger.info("📦 M7 데이터 없음, M3/M4 기반 기본 커뮤니티 계획 생성")
+            
+            # M3에서 주택 유형 추출
+            housing_type = "청년형"
+            if self.m3:
+                housing_type = self.m3.selected_name or "청년형"
+            
+            # M4에서 세대수 추출
+            household_count = 20
+            if self.m4:
+                household_count = self.m4.legal_units or 20
+            
+            # 기본 커뮤니티 계획 생성
+            return M7Summary(
+                primary_resident_type=housing_type,
+                community_goal_summary="입주자 간 고립 방지 및 생활 안정성 제고",
+                key_programs_count=3 if household_count < 30 else 4,
+                operation_model="LH 직접 운영" if household_count < 50 else "전문 위탁 운영사",
+                sustainability_score=None,
+                space_count=2 if household_count < 30 else 3,
+                monthly_program_frequency=2,
+                participation_target_pct=30.0
+            )
+            
+        except Exception as e:
+            logger.warning(f"M7 파싱 실패: {e}")
+            return None
+    
+    def _parse_m7(self) -> Optional[M7Summary]:
+        """
+        M7 커뮤니티 계획 데이터 추출
+        
+        ⚠️ M7은 계산 모듈이 아닌 '운영·커뮤니티 계획 모듈'입니다.
+        M2~M6 결과를 활용하여 커뮤니티 운영 계획을 도출합니다.
+        
+        구조:
+        - m7_result["summary"]["primary_resident_type"]
+        - m7_result["summary"]["community_goal_summary"]
+        - m7_result["summary"]["key_programs_count"]
+        - m7_result["summary"]["operation_model"]
+        """
+        try:
+            m7_data = self.canonical.get("m7_result", {})
+            if not m7_data or not isinstance(m7_data, dict):
+                # M7 데이터가 없으면 None 반환 (필수 아님)
+                logger.info("M7 커뮤니티 계획 데이터 없음 (선택 모듈)")
+                return None
+            
+            # summary 구조 확인
+            summary = m7_data.get("summary", {})
+            if summary and isinstance(summary, dict):
+                return M7Summary(
+                    primary_resident_type=summary.get("primary_resident_type", "일반"),
+                    community_goal_summary=summary.get("community_goal_summary", "커뮤니티 목표 수립 중"),
+                    key_programs_count=summary.get("key_programs_count", 0),
+                    operation_model=summary.get("operation_model", "운영 모델 검토 중"),
+                    sustainability_score=summary.get("sustainability_score"),
+                    space_count=summary.get("space_count"),
+                    monthly_program_frequency=summary.get("monthly_program_frequency"),
+                    participation_target_pct=summary.get("participation_target_pct")
+                )
+            
+            # 전체 m7_result 구조에서 직접 추출 (fallback)
+            return M7Summary(
+                primary_resident_type=m7_data.get("primary_resident_type", "일반"),
+                community_goal_summary=m7_data.get("community_goal_summary", "커뮤니티 목표 수립 중"),
+                key_programs_count=m7_data.get("key_programs_count", 0),
+                operation_model=m7_data.get("operation_model", "운영 모델 검토 중"),
+                sustainability_score=m7_data.get("sustainability_score"),
+                space_count=m7_data.get("space_count"),
+                monthly_program_frequency=m7_data.get("monthly_program_frequency"),
+                participation_target_pct=m7_data.get("participation_target_pct")
+            )
+        except Exception as e:
+            logger.warning(f"M7 파싱 실패: {e}")
+            return None
+
+
+# ============================================================================
+# Helper Functions
+# ============================================================================
+
+def _assemble_community_plan_section(data: FinalReportData) -> Dict[str, Any]:
+    """
+    M7 커뮤니티 계획 섹션 조립
+    
+    Args:
+        data: FinalReportData with M7Summary
+    
+    Returns:
+        커뮤니티 계획 섹션 데이터
+    """
+    if not data.m7:
+        return None
+    
+    m7 = data.m7
+    
+    # 커뮤니티 목표 해석
+    goal_interpretation = f"""
+본 사업은 <strong>{m7.primary_resident_type}</strong> 입주자를 주요 대상으로 하며, 
+커뮤니티의 핵심 목표는 '<strong>{m7.community_goal_summary}</strong>'입니다.
+이는 단순한 주거 공간 제공을 넘어, 입주자 간 유대감 형성과 생활 안정성 제고를 
+목표로 하는 LH 공공임대 정책의 방향성과 부합합니다.
+    """
+    
+    # 프로그램 운영 계획
+    program_plan = f"""
+<strong>프로그램 운영 계획</strong><br><br>
+• 핵심 프로그램 수: <strong>{m7.key_programs_count}개</strong><br>
+• 월간 프로그램 빈도: <strong>{m7.monthly_program_frequency if m7.monthly_program_frequency else '미정'}회</strong><br>
+• 목표 참여율: <strong>{m7.participation_target_pct if m7.participation_target_pct else '미정'}%</strong><br>
+• 공간 수: <strong>{m7.space_count if m7.space_count else '미정'}개소</strong><br><br>
+
+프로그램은 <strong>자율 참여 원칙</strong>을 기반으로 운영되며, 
+입주자에게 과도한 부담을 주지 않는 범위에서 커뮤니티 활동을 지원합니다.
+    """
+    
+    # 운영 모델
+    operation_model_detail = f"""
+<strong>운영 모델: {m7.operation_model}</strong><br><br>
+커뮤니티 운영은 <strong>{m7.operation_model}</strong> 방식으로 진행되며, 
+다음과 같은 역할 분담이 이루어집니다:<br><br>
+
+<strong>LH 역할</strong>:<br>
+• 운영 감독 및 프로그램 승인<br>
+• 예산 관리 및 지원<br>
+• 분쟁 발생 시 중재 및 조정<br><br>
+
+<strong>입주자 역할</strong>:<br>
+• 프로그램 자율 참여<br>
+• 공용 공간 이용 (예약제)<br>
+• 자율 규약 준수<br><br>
+
+<strong>운영비 구조</strong>:<br>
+커뮤니티 운영비는 공용 관리비에 포함되며, 
+입주자의 별도 부담은 발생하지 않습니다.
+    """
+    
+    # 지속 가능성 확보 방안
+    sustainability_detail = f"""
+<strong>지속 가능성 확보 방안</strong><br><br>
+
+<strong>1) 과부하 방지</strong><br>
+• 프로그램 참여는 전적으로 자율이며, 강요하지 않음<br>
+• 공간 이용 예약 시스템으로 과밀 방지<br>
+• 연간 프로그램 수를 적정 수준으로 제한 (월 {m7.monthly_program_frequency or 2}회 수준)<br><br>
+
+<strong>2) 운영 중단 대비</strong><br>
+• 운영사 교체 또는 프로그램 중단 시, LH 직접 운영 전환 가능<br>
+• 간소화된 기본 운영 모델을 항상 준비<br><br>
+
+<strong>3) 비용 관리</strong><br>
+• 연간 운영비는 세대당 월 2만원 이내 수준으로 제한<br>
+• 초과 시 프로그램 축소 또는 조정<br><br>
+
+<strong>최종 평가</strong>: 본 커뮤니티 계획은 {'지속 가능성이 우수한 것으로 평가됩니다.' if m7.sustainability_score and m7.sustainability_score >= 70 else '실현 가능한 수준으로 설계되었습니다.' if m7.sustainability_score else '실현 가능한 수준으로 설계되었습니다.'}
+    """
+    
+    return {
+        "primary_resident_type": m7.primary_resident_type,
+        "community_goal": m7.community_goal_summary,
+        "goal_interpretation": goal_interpretation,
+        "program_plan": program_plan,
+        "operation_model": m7.operation_model,
+        "operation_model_detail": operation_model_detail,
+        "sustainability_detail": sustainability_detail,
+        "key_programs_count": m7.key_programs_count,
+        "monthly_program_frequency": m7.monthly_program_frequency,
+        "participation_target_pct": m7.participation_target_pct,
+        "space_count": m7.space_count,
+        "sustainability_score": m7.sustainability_score
+    }
 
 
 # ============================================================================
@@ -953,6 +1215,9 @@ LH 사업의 리스크 관리는 ①사전 검증 강화, ②비용 관리 철�
         
         # 7. LH 심사 관점 (NEW - 확장 콘텐츠)
         "lh_review_details": lh_review_details,
+        
+        # 8. M7 커뮤니티 계획 (NEW)
+        "community_plan": _assemble_community_plan_section(data) if data.m7 else None,
         
         # QA Status
         "qa_status": _calculate_qa_status(data)
