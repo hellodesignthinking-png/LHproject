@@ -122,6 +122,8 @@ async def get_m7_community_plan_pdf(
         try:
             from app.services.pdf_generator import generate_pdf_from_html
             
+            logger.info(f"🎬 Playwright PDF 생성 시작: context_id={context_id}")
+            
             # PDF 생성 옵션
             pdf_bytes = await generate_pdf_from_html(
                 html_content=html_content,
@@ -150,9 +152,9 @@ async def get_m7_community_plan_pdf(
                 }
             )
             
-        except ImportError:
+        except ImportError as import_err:
             # Playwright 미설치 시 대체 방법
-            logger.warning("⚠️ Playwright not installed, using browser print instructions")
+            logger.warning(f"⚠️ Playwright import failed: {import_err}")
             raise HTTPException(
                 status_code=501,
                 detail={
@@ -162,14 +164,27 @@ async def get_m7_community_plan_pdf(
                     "html_endpoint": f"/api/v4/reports/m7/community-plan/html?context_id={context_id}"
                 }
             )
+        except Exception as pdf_error:
+            # Playwright 실행 오류 (상세 로깅)
+            logger.error(f"❌ Playwright PDF 생성 오류: {type(pdf_error).__name__}: {pdf_error}", exc_info=True)
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "message": "PDF 생성 중 오류가 발생했습니다",
+                    "error_type": type(pdf_error).__name__,
+                    "error_detail": str(pdf_error),
+                    "workaround": "HTML 버전을 브라우저에서 열고 Ctrl+P로 PDF를 저장하세요",
+                    "html_endpoint": f"/api/v4/reports/m7/community-plan/html?context_id={context_id}"
+                }
+            )
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"❌ M7 PDF 생성 실패: {e}", exc_info=True)
+        logger.error(f"❌ M7 PDF 엔드포인트 실패: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"M7 PDF 생성 중 오류가 발생했습니다: {str(e)}"
+            detail=f"M7 PDF 생성 중 예상치 못한 오류가 발생했습니다: {str(e)}"
         )
 
 

@@ -241,3 +241,7 @@ async def generate_pdf_from_url(
     """
     generator = await get_pdf_generator()
     return await generator.generate_pdf_from_url(url, filename, **kwargs)
+
+
+# 하위 호환성: PDFGenerator 별칭
+PDFGenerator = PlaywrightPDFGenerator
