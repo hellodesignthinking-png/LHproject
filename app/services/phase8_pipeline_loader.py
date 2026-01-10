@@ -110,7 +110,6 @@ async def create_mock_pipeline_result(context_id: str) -> PipelineResult:
         area_sqm=1000.0,
         area_pyeong=302.5,
         zone_type="제2종일반주거지역",
-        zone_district="제2종일반주거지역",
         legal_far=250.0,
         legal_bcr=60.0,
         road_condition="12m 도로 접함",
