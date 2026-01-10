@@ -95,7 +95,7 @@ async def create_mock_pipeline_result(context_id: str) -> PipelineResult:
     # Mock Context 생성 (실제 데이터 구조 유지)
     from app.core.context.canonical_land import CanonicalLandContext
     from app.core.context.appraisal_context import AppraisalContext
-    from app.core.context.housing_type_context import HousingTypeContext, HousingTypeCandidate
+    from app.core.context.housing_type_context import HousingTypeContext, TypeScore
     from app.core.context.capacity_context_v2 import CapacityContextV2, Scenario
     from app.core.context.feasibility_context import FeasibilityContext
     from app.core.context.lh_review_context import LHReviewContext
@@ -125,16 +125,23 @@ async def create_mock_pipeline_result(context_id: str) -> PipelineResult:
     )
     
     # M3: Housing Type
+    from app.core.context.housing_type_context import TypeScore
+    
+    youth_score = TypeScore(
+        type_name="청년형",
+        type_code="YOUTH",
+        total_score=85.0,
+        location_score=30.0,
+        accessibility_score=28.0,
+        poi_score=27.0,
+        demand_prediction=85.0,
+    )
+    
     housing_ctx = HousingTypeContext(
-        selected_type="장기전세주택",
+        selected_type="청년형",
         demand_prediction="수요 높음",
-        preferred_type=HousingTypeCandidate(
-            name="장기전세주택",
-            policy_score=90.0,
-            demand_score=85.0,
-            financial_score=80.0,
-            total_score=255.0,
-        ),
+        preferred_type=youth_score,
+        candidate_types=[youth_score],
     )
     
     # M4: Capacity (V2)
