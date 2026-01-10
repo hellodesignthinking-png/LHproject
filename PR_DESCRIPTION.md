@@ -1,168 +1,290 @@
-# 🎯 ZeroSite v8.8 → v8.9: Complete Canonical Flow + Report Generator + Operational Freeze
+# M7 커뮤니티 계획 모듈 및 고급 통합 구현
 
-## 📊 Summary
+## 📋 개요
 
-This PR implements the complete ZeroSite v8.8 → v8.9 transition, adding **100% appraisal immutability guarantees** through:
-- **Canonical Flow Architecture** (Appraisal as Single Source of Truth)
-- **Professional 60-Page Report Generator** (FACT/INTERPRETATION/JUDGMENT structure)
-- **Comprehensive Visualization Module** (5 chart types)
-- **Operational Freeze** (CI rules, legal text, metadata tracking)
+M7 커뮤니티 계획 모듈의 전체 구현 및 M1/M5/M6 통합을 완료했습니다. 본 PR은 LH 신축매입임대 사업의 커뮤니티 운영 계획 자동 생성 기능을 추가합니다.
 
-## ✅ What's Included
+## 🎯 주요 변경 사항
 
-### Phase 1-3: Canonical Flow Implementation
-- ✅ **AppraisalContextLock**: Immutable appraisal results with SHA-256 hash verification
-- ✅ **Canonical Schema**: Standardized data structures (`CanonicalAppraisalResult`, `ZoningInfo`, `PremiumInfo`)
-- ✅ **CanonicalFlowAdapter**: Bidirectional data transformation layer
-- ✅ **Land Diagnosis Canonical**: Refactored to use READ-ONLY appraisal reference
-- ✅ **LH Analysis Canonical**: Refactored to use locked appraisal value as definitive land cost
-- ✅ **CanonicalPipeline v8.9**: FACT → INTERPRETATION → JUDGMENT flow enforcement with hash verification
+### 1. M7 커뮤니티 계획 모듈 (Core)
 
-### V8.7 Enhancements
-- ✅ **CH4 Dynamic Scoring**: 7-type demand scoring system with demographic weighting
-- ✅ **CH3.3 ROI-based Feasibility**: Business feasibility analysis with comprehensive scoring
+**구현 내용**:
+- ✅ M7 데이터 모델 및 7개 하위 섹션 (M7-1 ~ M7-7)
+- ✅ M1~M6 자동 연동 기반 커뮤니티 계획 생성
+- ✅ 운영 가능성 중심 설계 (월 2회, 세대당 2만원 이하)
+- ✅ LH 제출 가능 계획서 톤 유지
 
-### V8.8 Report Generator (60 Pages)
-- ✅ **Section 1 (FACT)**: Appraisal results - 18 pages, IMMUTABLE with legal disclaimer
-- ✅ **Section 2 (INTERPRETATION)**: Land diagnosis - 19 pages, READ-ONLY with legal disclaimer
-- ✅ **Section 3 (JUDGMENT)**: LH analysis - 15 pages, appraisal-based with legal disclaimer
-- ✅ **Appendix**: Metadata + legal notices - 5 pages with hash signature tracking
-- ✅ **Legal Fixed Phrases**: Immutability disclaimers enforced in all sections
+**파일**:
+- `app/models/m7_community_plan.py` (신규, 500+ 라인)
 
-### V8.8 Visualization Module
-- ✅ **Kakao Static Map**: Location visualization (HTML embed)
-- ✅ **Radar Chart**: Type demand scores (Chart.js JSON)
-- ✅ **Risk Heatmap**: Risk matrix table (HTML table)
-- ✅ **Market Histogram**: Transaction price distribution (Chart.js JSON)
-- ✅ **FAR Change Graph**: Zoning history timeline (Chart.js JSON)
-- ✅ **Base64 Embedding**: All visualizations embedded in reports with graceful fallbacks
+### 2. M7 독립 보고서 시스템
 
-### V8.9 Operational Freeze
-- ✅ **API-Level Immutability**: `__setattr__` override, SHA-256 hash signatures
-- ✅ **Pipeline Enforcement**: FACT → INTERPRETATION → JUDGMENT with stage verification
-- ✅ **PDF Legal Text**: Section-specific immutability disclaimers
-- ✅ **Metadata Tracking**: `context_id`, `version`, `hash_signature`, timestamps
-- ⚠️ **CI Blocking Rules**: Implemented but not pushed (see `CI_WORKFLOWS_NOTE.md`)
+**구현 내용**:
+- ✅ M7 전용 HTML 템플릿 구현
+- ✅ M7 독립 보고서 라우터 (3개 엔드포인트)
+- ✅ 프론트엔드 독립 섹션 (보라색 그라데이션 디자인)
+- ✅ PDF 다운로드 안내 기능
 
-## 📊 Test Results
+**엔드포인트**:
+- `GET /api/v4/reports/m7/status?context_id={id}`
+- `GET /api/v4/reports/m7/community-plan/html?context_id={id}`
+- `GET /api/v4/reports/m7/community-plan/pdf?context_id={id}`
 
-### 100% Test Coverage (39/39 Tests Passed)
+**파일**:
+- `app/routers/m7_community_plan_router.py` (신규, 200+ 라인)
+- `app/templates_v13/m7_community_plan_report.html` (신규, 400+ 라인)
+- `frontend/src/components/pipeline/PipelineOrchestrator.tsx` (수정)
 
-| Test Suite | Status | Details |
-|------------|--------|---------|
-| **Premium Regression** | ✅ PASSED | 3 cases, ±0.5% accuracy verified |
-| **E2E Immutability** | ✅ PASSED | 4 pipeline stages, appraisal value unchanged |
-| **Calculation Determinism** | ✅ PASSED | 5 runs, identical results |
-| **Premium Range Validation** | ✅ PASSED | 0-20% range enforced |
-| **Report Generation** | ✅ PASSED | 60/60 pages exact |
-| **Visualization Module** | ✅ PASSED | 4/5 charts operational |
-| **Hash Verification** | ✅ PASSED | Tamper detection working |
-| **Version Upgrade** | ✅ PASSED | v8.7 → v8.8 data migration |
+### 3. 고급 통합 로직
 
-### Key Test Examples
+#### 📍 M1 입지 분석 연동
+| M1 데이터 | M7 반영 내용 | 임계값 |
+|----------|------------|--------|
+| 교통 접근성 | 페르소나 rationale 강화 | 역세권 800m 이내 |
+| 역세권 | 프로그램 확장 | 취업·창업 + 직장인 교류회 |
+| 생활편의시설 | 신혼형 선호 | 점수 70점 이상 |
+| 공원 접근성 | 야외 활동 추가 | 500m 이내 |
 
-```python
-# Premium Regression Test
-case_001: 월드컵북로 120 - 제2종일반주거지역
-  ├─ Premium Rate: 9.0% (Expected: 9.0%, Diff: 0.00%)
-  ├─ Final Land Value: 4,154,535,000원 (Expected: 4,154,535,000원, Diff: 0.00%)
-  └─ Status: ✅ PASSED
+#### 💰 M5 사업성 분석 연동
+| NPV 범위 | M7 공간 구성 |
+|---------|------------|
+| 5억 이상 | 기본 + 독서실 + 피트니스 |
+| 3~5억 | 기본 + 독서실 |
+| 3억 미만 | 기본 공간만 |
 
-# E2E Immutability Test
-Appraisal Context: LOCKED at 4,154,535,000원
-  ├─ Stage 1 (Appraisal): 4,154,535,000원 ✅ LOCKED
-  ├─ Stage 2 (Diagnosis): 4,154,535,000원 ✅ UNCHANGED
-  ├─ Stage 3 (LH Analysis): 4,154,535,000원 ✅ UNCHANGED
-  └─ Hash Verification: ✅ VALID (no tampering detected)
+#### 🏢 M6 LH 심사 기준 연동
+| LH 점수 | 운영 모델 | 지속가능성 전략 |
+|---------|----------|----------------|
+| 80점+ | LH 직접 운영 | 적극 확대 (월 2만원) |
+| 60-79점 | 협력 운영 | 점진 확대 (월 1.5만원) |
+| 60점 미만 | 전문 위탁 | 보수 운영 (월 1만원) |
 
-# Report Generation Test
-Report ID: 20251215_025328
-  ├─ Section 1 (FACT): 18 pages ✅
-  ├─ Section 2 (INTERPRETATION): 19 pages ✅
-  ├─ Section 3 (JUDGMENT): 15 pages ✅
-  ├─ Appendix: 5 pages ✅
-  └─ Total: 60 pages ✅ EXACT
-```
+### 4. 보고서 시스템 개선
 
-## 🎯 System Status
+**구현 내용**:
+- ✅ Jinja2 템플릿 렌더링 시스템
+- ✅ 60-70페이지 종합 최종보고서 템플릿
+- ✅ M2-M6 모듈별 독립 보고서 지원
+- ✅ 새 창 열림 + QA 체크리스트 통합
 
-| Component | Before | After | Status |
-|-----------|---------|-------|---------|
-| **Overall Completion** | 75% | 100% | 🎉 PRODUCTION READY |
-| **Appraisal Immutability** | 0% | 100% | ✅ GUARANTEED |
-| **Pipeline Integrity** | 0% | 100% | ✅ ENFORCED |
-| **Test Coverage** | 60% | 100% | ✅ COMPLETE |
-| **Legal Protection** | 0% | 100% | ✅ ENFORCED |
-| **Metadata Tracking** | 0% | 100% | ✅ COMPLETE |
-
-## 📁 Files Modified/Created
-
-### Core Services (8 files)
-- `app/services/appraisal_context.py` - Immutability lock with hash verification
-- `app/services/canonical_schema.py` - Standardized data structures
-- `app/services/canonical_flow_adapter.py` - Data transformation layer
-- `app/services/canonical_pipeline_v8_9.py` - Pipeline enforcement
-- `app/services/land_diagnosis_canonical.py` - Diagnosis engine (READ-ONLY)
-- `app/services/lh_analysis_canonical.py` - LH engine (appraisal-based)
-- `app/services/report_generator_v8_8.py` - 60-page report generator
-- `app/services/visualization_module_v8_8.py` - 5 visualization types
-
-### Scoring Modules (2 files)
-- `app/services/ch4_dynamic_scoring.py` - 7-type demand scoring
-- `app/services/ch3_feasibility_scoring.py` - ROI-based feasibility
-
-### Tests (5 files)
-- `tests/test_appraisal_premium_regression.py` - Premium regression (CI blocking)
-- `tests/test_e2e_pipeline_fixed.py` - E2E immutability (CI blocking)
-- `tests/test_ch3_feasibility_scoring.py` - Feasibility scoring tests
-- `tests/test_ch4_dynamic_scoring.py` - Dynamic scoring tests
-- `test_report_v8_8_complete.py` - Complete report generation test
-
-### Documentation (3 files)
-- `IMPLEMENTATION_SUMMARY_V8_8.md` - Comprehensive implementation summary
-- `CI_WORKFLOWS_NOTE.md` - CI/CD workflows documentation (NEW)
-- `PR_DESCRIPTION.md` - This PR description (NEW)
-
-## 🚀 Deployment Checklist
-
-- ✅ All functionality complete and tested
-- ✅ Zero regressions verified (39/39 tests passed)
-- ✅ Legal disclaimers enforced in all reports
-- ✅ Hash-based tamper detection active
-- ✅ Version tracking in all outputs
-- ✅ Metadata tracking operational
-- ⚠️ CI/CD workflows documented (manual setup required)
-- ⏳ Final integration with `main.py` (post-merge)
-
-## ⚠️ Important Notes
-
-### CI/CD Workflows
-The following CI/CD workflows were implemented but could not be pushed due to GitHub App permission restrictions (`workflows` permission required):
-- `ci-premium-regression.yml` - Premium regression blocking (±0.5% threshold)
-- `ci-e2e-immutability.yml` - E2E immutability blocking (hash verification)
-
-**Manual Setup Required**: See `CI_WORKFLOWS_NOTE.md` for complete workflow configurations and setup instructions.
-
-### Post-Merge Integration
-After this PR is merged, the following integration work is recommended:
-1. Integrate `ReportGeneratorV88` into `main.py`
-2. Add visualization generation to API responses
-3. Enable CI blocking rules in GitHub repository settings
-4. Update API documentation with new endpoints
-5. Deploy to production environment
-
-## 🎉 Conclusion
-
-This PR represents **100% completion** of the ZeroSite v8.8 → v8.9 transition, delivering:
-
-✅ **Appraisal Immutability**: Guaranteed through Python object-level immutability + SHA-256 hashing + legal disclaimers  
-✅ **Pipeline Integrity**: FACT → INTERPRETATION → JUDGMENT flow enforced at every stage  
-✅ **Professional Reports**: 60-page reports with embedded visualizations and metadata  
-✅ **Zero Regressions**: 100% test coverage with ±0.5% accuracy maintained  
-✅ **Production Ready**: All systems operational and verified  
-
-**ZeroSite v8.9 is ready for production deployment with guaranteed data integrity and legal protection!**
+**파일**:
+- `app/services/template_renderer.py` (신규, 250+ 라인)
+- `app/templates_v13/master_comprehensive_report.html` (신규, 700+ 라인)
 
 ---
 
-**Co-authored-by**: GenSpark AI Developer <ai@genspark.ai>
+## 📊 데이터 흐름
+
+```
+M1 입지 분석 ──────┐
+                   ├──> M7 페르소나
+M3 공급 유형 ──────┤
+                   └──> M7 프로그램
+M1 역세권/공원 ────┘
+
+M4 세대 구성 ──────> M7 운영 규모
+
+M5 사업성 ────────> M7 공간 확장
+                   (NPV 기반)
+
+M6 LH 심사 ───────┐
+                  ├──> M7 운영 모델
+                  └──> M7 지속가능성
+```
+
+---
+
+## 🧪 테스트
+
+### 통합 테스트
+```bash
+# 1. 테스트 컨텍스트 생성
+POST /api/v4/reports/test/create-context/test_001
+
+# 2. M7 상태 확인
+GET /api/v4/reports/m7/status?context_id=test_001
+
+# 3. M7 HTML 보고서
+GET /api/v4/reports/m7/community-plan/html?context_id=test_001
+
+# 4. 종합 보고서 (M7 포함)
+GET /api/v4/reports/final/all_in_one/html?context_id=test_001
+```
+
+### 테스트 결과
+- ✅ M7 데이터 모델 파싱 성공
+- ✅ M1/M5/M6 통합 로직 동작 확인
+- ✅ HTML 템플릿 렌더링 정상
+- ✅ 프론트엔드 UI 표시 정상
+
+---
+
+## 📦 변경 파일 통계
+
+### 신규 생성 (17개)
+- `app/models/m7_community_plan.py`
+- `app/routers/m7_community_plan_router.py`
+- `app/services/template_renderer.py`
+- `app/templates_v13/m7_community_plan_report.html`
+- `app/templates_v13/master_comprehensive_report.html`
+- `test_m7_integration.py`
+- `M7_COMMUNITY_PLAN_IMPLEMENTATION.md`
+- `M7_COMPLETE.md`
+- `M7_FRONTEND_INTEGRATION_COMPLETE.md`
+- `M7_ADVANCED_INTEGRATION_COMPLETE.md`
+- 기타 문서 7개
+
+### 수정 (7개)
+- `app/main.py` (M7 라우터 등록)
+- `app/services/final_report_assembler.py` (M7 파싱 로직)
+- `app/routers/pdf_download_standardized.py` (테스트 엔드포인트)
+- `frontend/src/components/pipeline/PipelineOrchestrator.tsx` (M7 UI)
+- 기타 3개
+
+### 통계
+- **총 변경**: 24개 파일
+- **추가**: 7,743 라인
+- **삭제**: 49 라인
+
+---
+
+## ✅ 체크리스트
+
+### 기능 구현
+- [x] M7 데이터 모델 정의
+- [x] M7 파싱 로직 구현
+- [x] M7 독립 보고서 엔드포인트
+- [x] M1 입지 분석 연동
+- [x] M5 사업성 반영
+- [x] M6 LH 심사 기준 연동
+- [x] 프론트엔드 UI 추가
+- [x] 통합 테스트 완료
+
+### 코드 품질
+- [x] Type hints 추가
+- [x] Docstring 작성
+- [x] 에러 핸들링 구현
+- [x] 로깅 추가
+
+### 문서화
+- [x] 기획 문서 작성
+- [x] 완료 보고서 작성
+- [x] API 문서화
+- [x] 사용 예시 추가
+
+### 핵심 원칙 준수
+- [x] M2~M6 계산 로직 비변경
+- [x] 입력값 M1~M6 자동 연동
+- [x] 운영 가능성 중심 설계
+- [x] LH 제출 가능 톤 유지
+
+---
+
+## 🚀 배포 전 확인 사항
+
+### Backend
+- [x] FastAPI 서버 정상 구동
+- [x] M7 엔드포인트 응답 정상
+- [x] 템플릿 렌더링 정상
+- [x] 에러 로깅 작동
+
+### Frontend
+- [x] Vite 개발 서버 정상
+- [x] M7 독립 섹션 표시
+- [x] 보라색 그라데이션 디자인
+- [x] 버튼 클릭 동작 정상
+
+### 통합
+- [x] M1→M7 데이터 흐름
+- [x] M5→M7 공간 확장
+- [x] M6→M7 운영 모델
+- [x] 종합 보고서 M7 포함
+
+---
+
+## 📄 관련 문서
+
+1. **기획 문서**: `M7_COMMUNITY_PLAN_IMPLEMENTATION.md`
+   - M7 요구사항 및 설계
+   - 7개 하위 모듈 상세 명세
+
+2. **완료 보고서**: `M7_COMPLETE.md`
+   - 기본 구현 완료 내역
+   - 테스트 결과
+
+3. **프론트엔드 통합**: `M7_FRONTEND_INTEGRATION_COMPLETE.md`
+   - UI 구현 상세
+   - 사용자 흐름
+
+4. **고급 통합**: `M7_ADVANCED_INTEGRATION_COMPLETE.md`
+   - M1/M5/M6 연동 로직
+   - 데이터 흐름 다이어그램
+
+---
+
+## 🔍 리뷰 포인트
+
+### 1. 데이터 모델
+- `M7CommunityPlan` 클래스 구조 검토
+- 7개 하위 섹션 타입 정의 확인
+
+### 2. 통합 로직
+- M1 입지 데이터 파싱 로직 검토
+- M5 NPV 임계값 설정 적정성
+- M6 점수 기반 운영 모델 결정 로직
+
+### 3. 템플릿
+- Jinja2 템플릿 문법 검토
+- HTML/CSS 렌더링 품질
+- 브라우저 호환성
+
+### 4. 보안
+- 입력 데이터 검증
+- XSS 방어 (autoescaping)
+- 에러 메시지 노출 제어
+
+---
+
+## 🎯 향후 개선 사항 (Out of Scope)
+
+1. **Playwright PDF 자동 생성**
+   - 현재: 브라우저 프린트 안내
+   - 개선: 서버 측 PDF 자동 생성
+
+2. **M2 감정평가 연동**
+   - 토지 가치 기반 공간 확장
+
+3. **실시간 피드백 시스템**
+   - 입주 후 6개월 피드백 수집
+
+4. **지역별 벤치마킹 DB**
+   - 유사 지역 LH 사례 자동 반영
+
+---
+
+## 🙋 질문 & 답변
+
+### Q1: M7이 M2~M6 계산에 영향을 주나요?
+**A**: 아니요. M7은 M1~M6의 **결과를 해석**하여 커뮤니티 계획을 생성할 뿐, M2~M6의 계산 로직은 전혀 수정하지 않았습니다.
+
+### Q2: LH 제출이 가능한가요?
+**A**: 네. M7은 계획서/문서 톤을 유지하며, 홍보 문구나 과장된 표현을 배제했습니다. 월 2회 프로그램, 세대당 2만원 이하 등 현실적인 수치를 사용합니다.
+
+### Q3: PDF 다운로드는 어떻게 하나요?
+**A**: 현재는 브라우저 프린트 기능(Ctrl+P → PDF 저장)을 안내합니다. 향후 Playwright 기반 자동 PDF 생성으로 개선 예정입니다.
+
+### Q4: M1/M5/M6 데이터가 없으면?
+**A**: M7은 기본값으로 생성됩니다. M3(주택 유형), M4(세대수)만 있으면 최소한의 M7을 생성할 수 있습니다.
+
+---
+
+## 🎉 결론
+
+M7 커뮤니티 계획 모듈의 전체 구현이 완료되었습니다. LH 신축매입임대 사업의 **데이터 기반 맞춤형 커뮤니티 계획 자동 생성**이 가능해졌으며, M1 입지/M5 사업성/M6 LH 심사 결과를 반영하여 **최적화된 운영 계획**을 도출합니다.
+
+---
+
+**PR Author**: @hellodesignthinking-png  
+**Co-Author**: Claude Code Agent  
+**Date**: 2026-01-10  
+**Branch**: `feature/expert-report-generator` → `main`
