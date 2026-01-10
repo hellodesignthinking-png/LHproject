@@ -96,7 +96,10 @@ async def create_mock_pipeline_result(context_id: str) -> PipelineResult:
     from app.core.context.canonical_land import CanonicalLandContext
     from app.core.context.appraisal_context import AppraisalContext
     from app.core.context.housing_type_context import HousingTypeContext, TypeScore
-    from app.core.context.capacity_context_v2 import CapacityContextV2, Scenario
+    from app.core.context.capacity_context_v2 import (
+        CapacityContextV2, GFABreakdown, CapacityScale, 
+        MassingOption, UnitSummary, ParkingSolution
+    )
     from app.core.context.feasibility_context import FeasibilityContext
     from app.core.context.lh_review_context import LHReviewContext
     
@@ -144,34 +147,135 @@ async def create_mock_pipeline_result(context_id: str) -> PipelineResult:
         candidate_types=[youth_score],
     )
     
-    # M4: Capacity (V2)
-    scenario_a = Scenario(
-        name="법정 최대",
-        total_units=100,
-        total_gfa=25000.0,
+    # M4: Capacity (V2) - 실제 구조에 맞춘 Mock 데이터
+    from app.core.context.capacity_context_v2 import (
+        GFABreakdown, CapacityScale, MassingOption, 
+        UnitSummary, ParkingSolution, RampCondition,
+        ParkingType, RampFeasibility
+    )
+    
+    # GFA Breakdown
+    gfa_breakdown_legal = GFABreakdown(
+        total_gfa_sqm=25000.0,
+        nia_sqm=18750.0,
+        nia_ratio=75.0,
+        common_core_sqm=3750.0,
+        common_corridor_sqm=1250.0,
+        common_shared_sqm=625.0,
+        common_total_sqm=5625.0,
+        common_ratio=22.5,
+        mechanical_sqm=500.0,
+        loss_sqm=125.0,
+        mechanical_loss_ratio=2.5,
+    )
+    
+    gfa_breakdown_incentive = GFABreakdown(
+        total_gfa_sqm=30000.0,
+        nia_sqm=22500.0,
+        nia_ratio=75.0,
+        common_core_sqm=4500.0,
+        common_corridor_sqm=1500.0,
+        common_shared_sqm=750.0,
+        common_total_sqm=6750.0,
+        common_ratio=22.5,
+        mechanical_sqm=600.0,
+        loss_sqm=150.0,
+        mechanical_loss_ratio=2.5,
+    )
+    
+    # Capacity Scales
+    legal_capacity = CapacityScale(
         applied_far=250.0,
-        parking_spaces=120,
+        applied_bcr=60.0,
+        max_footprint_sqm=600.0,
+        target_gfa_sqm=25000.0,
+        gfa_breakdown=gfa_breakdown_legal,
+        total_units=100,
+        unit_type_distribution={"30㎡": 70, "45㎡": 30},
+        average_unit_area_sqm=33.75,
+        required_parking_spaces=120,
+        parking_ratio=1.2,
     )
-    scenario_b = Scenario(
-        name="추천 시나리오",
-        total_units=80,
-        total_gfa=20000.0,
-        applied_far=200.0,
-        parking_spaces=100,
+    
+    incentive_capacity = CapacityScale(
+        applied_far=300.0,
+        applied_bcr=60.0,
+        max_footprint_sqm=600.0,
+        target_gfa_sqm=30000.0,
+        gfa_breakdown=gfa_breakdown_incentive,
+        total_units=120,
+        unit_type_distribution={"30㎡": 84, "45㎡": 36},
+        average_unit_area_sqm=33.75,
+        required_parking_spaces=144,
+        parking_ratio=1.2,
     )
-    scenario_c = Scenario(
-        name="보수적",
-        total_units=60,
-        total_gfa=15000.0,
-        applied_far=150.0,
-        parking_spaces=80,
+    
+    # Massing Options
+    massing_option_a = MassingOption(
+        option_id="A",
+        option_name="2개동 × 15층",
+        building_count=2,
+        floors_per_building=15,
+        standard_floor_area_sqm=400.0,
+        units_per_floor=4,
+        achieved_gfa_sqm=30000.0,
+        achieved_far=300.0,
+        far_achievement_rate=1.0,
+        site_coverage_ratio=60.0,
+        open_space_ratio=40.0,
+        buildability_score=85.0,
+        efficiency_score=90.0,
+        remarks=["효율적 배치", "엘리베이터 2개동"],
+    )
+    
+    # Unit Summary
+    unit_summary = UnitSummary(
+        total_units=100,
+        preferred_unit_type="청년형 30㎡",
+        unit_mix_ratio={"30㎡": 0.7, "45㎡": 0.3},
+        unit_count_by_type={"30㎡": 70, "45㎡": 30},
+        unit_area_by_type={"30㎡": 30.0, "45㎡": 45.0},
+        min_unit_area_sqm=30.0,
+        max_unit_area_sqm=45.0,
+        average_unit_area_sqm=33.75,
+    )
+    
+    # Ramp Condition
+    ramp_condition = RampCondition(
+        ramp_width_m=5.5,
+        ramp_length_m=45.0,
+        turning_radius_m=6.0,
+        non_residential_area_sqm=150.0,
+        feasibility=RampFeasibility.FEASIBLE,
+        constraint_issues=[],
+    )
+    
+    # Parking Solution (주차 우선)
+    parking_solution = ParkingSolution(
+        solution_type="alternative_B",
+        solution_name="주차 우선 시나리오",
+        parking_type=ParkingType.SELF_PARKING,
+        total_parking_spaces=120,
+        self_parking_spaces=120,
+        basement_floors=3,
+        ramp_condition=ramp_condition,
+        mechanical_parking_spaces=0,
+        mechanical_type=None,
+        adjusted_total_units=100,
+        adjusted_floors=None,
+        adjusted_gfa_sqm=None,
+        far_sacrifice_ratio=0.0,
+        parking_achievability_score=95.0,
+        remarks=["법정 주차대수 확보", "지하 3층 자주식"],
     )
     
     capacity_ctx = CapacityContextV2(
-        scenario_a=scenario_a,
-        scenario_b=scenario_b,
-        scenario_c=scenario_c,
-        recommended_scenario="B",
+        legal_capacity=legal_capacity,
+        incentive_capacity=incentive_capacity,
+        massing_options=[massing_option_a],
+        unit_summary=unit_summary,
+        parking_solutions={"alternative_B": parking_solution},
+        calculation_date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     )
     
     # M5: Feasibility
