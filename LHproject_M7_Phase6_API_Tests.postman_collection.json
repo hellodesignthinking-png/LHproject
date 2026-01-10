@@ -1,0 +1,269 @@
+{
+  "info": {
+    "name": "LHproject - M7 & Phase 6 API Tests",
+    "description": "M7 커뮤니티 계획 및 Phase 6 피드백/벤치마킹 시스템 API 테스트",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "M7 - Community Plan",
+      "item": [
+        {
+          "name": "1. Create Test Context",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v4/reports/test/create-context/m7_test_001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v4", "reports", "test", "create-context", "m7_test_001"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Check M7 Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v4/reports/m7/status?context_id=m7_test_001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v4", "reports", "m7", "status"],
+              "query": [
+                {
+                  "key": "context_id",
+                  "value": "m7_test_001"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Get M7 HTML Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v4/reports/m7/community-plan/html?context_id=m7_test_001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v4", "reports", "m7", "community-plan", "html"],
+              "query": [
+                {
+                  "key": "context_id",
+                  "value": "m7_test_001"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Get M7 PDF Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v4/reports/m7/community-plan/pdf?context_id=m7_test_001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v4", "reports", "m7", "community-plan", "pdf"],
+              "query": [
+                {
+                  "key": "context_id",
+                  "value": "m7_test_001"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Phase 6 - Feedback System",
+      "item": [
+        {
+          "name": "1. Submit Resident Feedback",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"feedback_id\": \"feedback_001\",\n  \"context_id\": \"m7_test_001\",\n  \"collection_date\": \"2026-07-10\",\n  \"months_after_move_in\": 6,\n  \"space_feedback\": [\n    {\n      \"space_name\": \"커뮤니티 라운지\",\n      \"usage_frequency\": 8,\n      \"satisfaction_score\": 85.0,\n      \"issues\": [],\n      \"strengths\": [\"쾌적한 환경\", \"좋은 시설\"]\n    },\n    {\n      \"space_name\": \"공유 주방\",\n      \"usage_frequency\": 4,\n      \"satisfaction_score\": 72.0,\n      \"issues\": [\"청소 문제\"],\n      \"strengths\": [\"편리한 조리 시설\"]\n    }\n  ],\n  \"program_feedback\": [\n    {\n      \"program_name\": \"취업 준비 세미나\",\n      \"participation_rate\": 65.0,\n      \"satisfaction_score\": 88.0,\n      \"attendance_count\": 12,\n      \"suggestions\": [\"더 자주 개최\"]\n    },\n    {\n      \"program_name\": \"월간 네트워킹\",\n      \"participation_rate\": 55.0,\n      \"satisfaction_score\": 82.0,\n      \"attendance_count\": 10,\n      \"suggestions\": []\n    }\n  ],\n  \"community_engagement\": {\n    \"overall_engagement\": 78.0,\n    \"neighbor_interaction\": 75.0,\n    \"event_participation\": 68.0,\n    \"online_community_activity\": 82.0\n  },\n  \"overall_satisfaction\": 80.0,\n  \"open_comments\": [\n    \"전반적으로 만족스러운 커뮤니티 환경입니다.\"\n  ],\n  \"respondent_count\": 18,\n  \"total_household_count\": 30\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v4/phase6/feedback/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v4", "phase6", "feedback", "submit"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get Feedback Analysis",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v4/phase6/feedback/analysis/analysis_feedback_001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v4", "phase6", "feedback", "analysis", "analysis_feedback_001"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Get Feedback by Context",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v4/phase6/feedback/context/m7_test_001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v4", "phase6", "feedback", "context", "m7_test_001"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Create M7 Update Proposal",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v4/phase6/m7/update-proposal?context_id=m7_test_001&feedback_id=feedback_001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v4", "phase6", "m7", "update-proposal"],
+              "query": [
+                {
+                  "key": "context_id",
+                  "value": "m7_test_001"
+                },
+                {
+                  "key": "feedback_id",
+                  "value": "feedback_001"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Phase 6 - Benchmarking System",
+      "item": [
+        {
+          "name": "1. Get All Benchmarking Cases",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v4/phase6/benchmarking/cases",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v4", "phase6", "benchmarking", "cases"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get Filtered Cases (청년형)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v4/phase6/benchmarking/cases?housing_type=청년형&min_household_count=20&max_household_count=40",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v4", "phase6", "benchmarking", "cases"],
+              "query": [
+                {
+                  "key": "housing_type",
+                  "value": "청년형"
+                },
+                {
+                  "key": "min_household_count",
+                  "value": "20"
+                },
+                {
+                  "key": "max_household_count",
+                  "value": "40"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Get Benchmarking Recommendations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v4/phase6/benchmarking/recommendations?context_id=m7_test_001&housing_type=청년형&household_count=30&address=서울시 마포구",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v4", "phase6", "benchmarking", "recommendations"],
+              "query": [
+                {
+                  "key": "context_id",
+                  "value": "m7_test_001"
+                },
+                {
+                  "key": "housing_type",
+                  "value": "청년형"
+                },
+                {
+                  "key": "household_count",
+                  "value": "30"
+                },
+                {
+                  "key": "address",
+                  "value": "서울시 마포구"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Get Case Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v4/phase6/benchmarking/case/lh_case_001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v4", "phase6", "benchmarking", "case", "lh_case_001"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Phase 6 Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v4/phase6/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v4", "phase6", "health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:49999",
+      "type": "string"
+    }
+  ]
+}
