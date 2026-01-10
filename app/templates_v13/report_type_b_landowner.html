@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>토지주 제출용 보고서 - ZeroSite</title>
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Noto Sans KR', -apple-system, sans-serif;
+      line-height: 1.8;
+      color: #1a1a1a;
+      background: #f8f9fa;
+    }
+    
+    .report-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+      color: white;
+      padding: 50px 40px;
+      text-align: center;
+    }
+    
+    .header h1 {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+    
+    .header p {
+      font-size: 16px;
+      opacity: 0.95;
+    }
+    
+    .section {
+      padding: 40px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .section-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1976d2;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #1976d2;
+    }
+    
+    .highlight-box {
+      padding: 24px;
+      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+      border-left: 4px solid #2196f3;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    
+    .highlight-box h3 {
+      color: #1565c0;
+      margin-bottom: 12px;
+      font-size: 18px;
+    }
+    
+    .benefit-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .benefit-list li {
+      padding: 12px 12px 12px 40px;
+      margin: 8px 0;
+      background: #f1f8ff;
+      border-left: 3px solid #4caf50;
+      border-radius: 4px;
+      position: relative;
+    }
+    
+    .benefit-list li:before {
+      content: "✓";
+      position: absolute;
+      left: 15px;
+      color: #4caf50;
+      font-weight: 700;
+      font-size: 16px;
+    }
+    
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+    
+    .info-card {
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    .info-card .label {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    
+    .info-card .value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1976d2;
+    }
+    
+    .timeline {
+      padding: 20px 0;
+    }
+    
+    .timeline-item {
+      padding: 16px;
+      margin: 12px 0;
+      background: #f8f9fa;
+      border-left: 4px solid #2196f3;
+      border-radius: 4px;
+    }
+    
+    .timeline-item .step {
+      font-weight: 700;
+      color: #1976d2;
+      margin-bottom: 8px;
+    }
+    
+    .faq-item {
+      margin: 20px 0;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+    
+    .faq-item .question {
+      font-weight: 700;
+      color: #1976d2;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+    
+    .faq-item .answer {
+      color: #666;
+      line-height: 1.8;
+    }
+    
+    .footer {
+      padding: 40px;
+      background: #f8f9fa;
+      text-align: center;
+      color: #666;
+    }
+    
+    @media print {
+      body { background: white; }
+      .report-container { box-shadow: none; }
+      .section { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="report-container">
+    <!-- Header -->
+    <div class="header">
+      <h1>LH 공공매입임대 사업 제안서</h1>
+      <p>안정적이고 합리적인 토지 활용 방안</p>
+    </div>
+
+    <!-- 1. 사업 개요 -->
+    <section class="section">
+      <div class="section-title">1. 사업 개요</div>
+      
+      <div class="highlight-box">
+        <h3>📍 대상지 정보</h3>
+        <p><strong>주소:</strong> {{ address }}</p>
+        <p><strong>평가일:</strong> {{ generated_at }}</p>
+        <p><strong>사업 유형:</strong> LH 공공매입임대 (장기 안정 임대주택)</p>
+      </div>
+      
+      <p style="margin: 20px 0; line-height: 2;">
+        본 제안은 귀하의 토지를 <strong>한국토지주택공사(LH)</strong>가 매입하여 
+        <strong>공공임대주택</strong>을 건설하는 사업입니다. LH는 정부 산하 공공기관으로,
+        안정적이고 투명한 토지 거래를 보장합니다.
+      </p>
+    </section>
+
+    <!-- 2. LH 공공매입임대 사업 소개 -->
+    <section class="section">
+      <div class="section-title">2. LH 공공매입임대 사업이란?</div>
+      
+      <div class="highlight-box">
+        <h3>🏢 LH (한국토지주택공사)</h3>
+        <p>
+          LH는 국토교통부 산하 공공기관으로, 국민 주거 안정을 위해 설립된 정부 기관입니다.
+          <strong>신뢰성과 안정성이 보장</strong>되는 거래처입니다.
+        </p>
+      </div>
+      
+      <ul class="benefit-list">
+        <li><strong>공정한 감정평가:</strong> 공인 감정평가사의 객관적 평가로 합리적 가격 산정</li>
+        <li><strong>안정적 거래:</strong> 정부 기관과의 거래로 계약 불이행 위험 제로</li>
+        <li><strong>투명한 절차:</strong> 모든 과정이 법적 기준에 따라 투명하게 진행</li>
+        <li><strong>신속한 대금 지급:</strong> 계약 체결 후 합의된 일정에 따라 정확한 대금 지급</li>
+        <li><strong>세금 혜택:</strong> 공공사업 양도로 각종 세제 혜택 적용 가능</li>
+      </ul>
+    </section>
+
+    <!-- 3. 토지 가치 평가 -->
+    <section class="section">
+      <div class="section-title">3. 귀하의 토지 가치 평가</div>
+      
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="label">감정평가액</div>
+          <div class="value">{{ land_value_summary }}</div>
+        </div>
+        <div class="info-card">
+          <div class="label">평가 신뢰도</div>
+          <div class="value">{{ confidence_pct }}%</div>
+        </div>
+        <div class="info-card">
+          <div class="label">단가 (㎡)</div>
+          <div class="value">{{ unit_price_sqm }}</div>
+        </div>
+      </div>
+      
+      <div class="highlight-box">
+        <h3>💰 가격 산정 근거</h3>
+        <p>{{ price_formation_logic }}</p>
+      </div>
+      
+      <p style="margin-top: 20px; padding: 15px; background: #fff3e0; border-radius: 8px; border-left: 4px solid #ff9800;">
+        <strong>📌 참고:</strong> 
+        본 평가액은 공인 감정평가 기준에 따라 산정되었으며,
+        LH와의 협의 과정에서 최종 매입 가격이 결정됩니다.
+        일반적으로 감정평가액을 기준으로 ±5% 범위 내에서 협의됩니다.
+      </p>
+    </section>
+
+    <!-- 4. 건축 계획 개요 -->
+    <section class="section">
+      <div class="section-title">4. 건축 계획 개요</div>
+      
+      <div class="highlight-box">
+        <h3>🏗️ 계획 개요</h3>
+        <p>{{ building_plan_summary }}</p>
+      </div>
+      
+      <div class="info-grid" style="margin-top: 20px;">
+        <div class="info-card">
+          <div class="label">예상 세대수</div>
+          <div class="value">{{ planned_units }}세대</div>
+        </div>
+        <div class="info-card">
+          <div class="label">주택 유형</div>
+          <div class="value">{{ housing_type }}</div>
+        </div>
+        <div class="info-card">
+          <div class="label">용도지역</div>
+          <div class="value">주거지역</div>
+        </div>
+      </div>
+      
+      <p style="margin-top: 20px; line-height: 2;">
+        본 계획은 <strong>법적 기준을 모두 충족</strong>하며, 
+        LH의 공공임대주택 건설 기준에 부합하는 설계입니다.
+        주변 환경과 조화를 이루는 쾌적한 주거 단지로 조성될 예정입니다.
+      </p>
+    </section>
+
+    <!-- 5. 안정성 및 신뢰성 -->
+    <section class="section">
+      <div class="section-title">5. 거래의 안정성 및 신뢰성</div>
+      
+      <ul class="benefit-list">
+        <li><strong>정부 보증:</strong> LH는 정부가 100% 출자한 공공기관으로 절대적 신뢰성</li>
+        <li><strong>법적 보호:</strong> 공공사업 특례법에 따라 토지주 권리 보호</li>
+        <li><strong>합리적 가격:</strong> 시장 시세를 반영한 공정한 감정평가</li>
+        <li><strong>신속 처리:</strong> 민간 거래 대비 빠른 절차 진행</li>
+        <li><strong>세금 혜택:</strong> 공공사업 양도 시 양도소득세 감면 혜택 가능</li>
+        <li><strong>대금 안정:</strong> 정부 예산으로 100% 확실한 대금 지급</li>
+      </ul>
+      
+      <div class="highlight-box" style="margin-top: 30px;">
+        <h3>✅ 민간 거래 vs LH 매입 비교</h3>
+        <table style="width: 100%; margin-top: 15px; border-collapse: collapse;">
+          <thead>
+            <tr style="background: #e3f2fd;">
+              <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">구분</th>
+              <th style="padding: 10px; text-align: center; border: 1px solid #ddd;">민간 거래</th>
+              <th style="padding: 10px; text-align: center; border: 1px solid #ddd;">LH 매입</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding: 10px; border: 1px solid #ddd;">계약 안정성</td>
+              <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">중 (개인 신용)</td>
+              <td style="padding: 10px; text-align: center; border: 1px solid #ddd; background: #e8f5e9;"><strong>최상 (정부 보증)</strong></td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border: 1px solid #ddd;">대금 지급</td>
+              <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">변동 가능</td>
+              <td style="padding: 10px; text-align: center; border: 1px solid #ddd; background: #e8f5e9;"><strong>100% 확실</strong></td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border: 1px solid #ddd;">가격 협상</td>
+              <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">장기간 소요</td>
+              <td style="padding: 10px; text-align: center; border: 1px solid #ddd; background: #e8f5e9;"><strong>신속 진행</strong></td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border: 1px solid #ddd;">세금 혜택</td>
+              <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">일반 세율</td>
+              <td style="padding: 10px; text-align: center; border: 1px solid #ddd; background: #e8f5e9;"><strong>감면 혜택</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 6. 예상 일정 및 절차 -->
+    <section class="section">
+      <div class="section-title">6. 예상 일정 및 절차</div>
+      
+      <div class="timeline">
+        {% for step in schedule_steps %}
+        <div class="timeline-item">
+          <div class="step">{{ step.title }}</div>
+          <div>{{ step.description }}</div>
+          <div style="margin-top: 8px; font-size: 13px; color: #666;">
+            예상 기간: {{ step.duration }}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      
+      <p style="margin-top: 20px; padding: 15px; background: #e8f5e9; border-radius: 8px; border-left: 4px solid #4caf50;">
+        <strong>📅 총 예상 기간:</strong> 
+        사업 협의 시작부터 토지 대금 수령까지 약 <strong>6-12개월</strong> 소요 예상
+        (토지 조건 및 인허가 상황에 따라 변동 가능)
+      </p>
+    </section>
+
+    <!-- 7. 자주 묻는 질문 (Q&A) -->
+    <section class="section">
+      <div class="section-title">7. 자주 묻는 질문 (Q&A)</div>
+      
+      {% for faq in faq_items %}
+      <div class="faq-item">
+        <div class="question">Q. {{ faq.question }}</div>
+        <div class="answer">A. {{ faq.answer }}</div>
+      </div>
+      {% endfor %}
+    </section>
+
+    <!-- 8. 다음 단계 -->
+    <section class="section">
+      <div class="section-title">8. 다음 단계</div>
+      
+      <div class="highlight-box">
+        <h3>📞 상담 및 문의</h3>
+        <p style="margin-bottom: 15px;">
+          본 제안서에 대해 궁금하신 사항이나 추가 협의가 필요하신 경우,
+          언제든지 연락 주시기 바랍니다.
+        </p>
+        <ul style="list-style: none; padding: 0;">
+          <li style="margin: 8px 0;">• LH 본사 또는 지역 본부 방문 상담 가능</li>
+          <li style="margin: 8px 0;">• 전문 상담역과 1:1 상담 진행</li>
+          <li style="margin: 8px 0;">• 세무사/변호사 등 전문가 자문 지원 가능</li>
+        </ul>
+      </div>
+      
+      <p style="margin-top: 30px; text-align: center; font-size: 18px; font-weight: 700; color: #1976d2;">
+        귀하의 소중한 토지를 <br>
+        공공의 이익과 국민 주거 안정을 위해 <br>
+        활용할 수 있는 기회가 되기를 바랍니다.
+      </p>
+    </section>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div style="margin-bottom: 16px;">
+        <strong>ZeroSite</strong> | LH 공공매입임대 사업 분석 시스템
+      </div>
+      <div style="font-size: 12px; color: #999;">
+        본 제안서는 참고 자료이며, 실제 거래 조건은 LH와의 협의를 통해 최종 결정됩니다.<br>
+        자세한 사항은 LH 담당자와 상담하시기 바랍니다.
+      </div>
+      <div style="margin-top: 16px; font-size: 12px;">
+        © 2026 ZeroSite. All rights reserved.
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
