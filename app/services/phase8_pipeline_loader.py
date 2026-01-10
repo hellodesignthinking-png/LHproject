@@ -103,27 +103,102 @@ async def create_mock_pipeline_result(context_id: str) -> PipelineResult:
     from app.core.context.feasibility_context import FeasibilityContext
     from app.core.context.lh_review_context import LHReviewContext
     
-    # M1: Land
+    # M1: Land (CanonicalLandContext with correct fields)
     land_ctx = CanonicalLandContext(
         parcel_id="1168010100100010001",
         address="서울특별시 강남구 역삼동 123-45",
+        road_address="서울특별시 강남구 테헤란로 123",
+        coordinates=(37.5012, 127.0396),
+        sido="서울특별시",
+        sigungu="강남구",
+        dong="역삼동",
         area_sqm=1000.0,
         area_pyeong=302.5,
+        land_category="대",
+        land_use="주거용",
         zone_type="제2종일반주거지역",
-        legal_far=250.0,
-        legal_bcr=60.0,
-        road_condition="12m 도로 접함",
-        is_corner_lot=False,
+        zone_detail="제2종일반주거지역",
+        far=250.0,
+        bcr=60.0,
+        road_width=12.0,
+        road_type="일반도로",
+        terrain_height="평지",
+        terrain_shape="정형지",
+        regulations={},
+        restrictions=[],
+        data_source="Mock",
+        retrieval_date=datetime.now().strftime("%Y-%m-%d"),
     )
     
-    # M2: Appraisal
+    # M2: Appraisal (complete structure with all required fields)
+    from app.core.context.appraisal_context import TransactionSample, PremiumFactors, ConfidenceMetrics
+    
+    # Create transaction samples
+    transaction_samples = [
+        TransactionSample(
+            address="인근 토지 A",
+            distance=150,
+            trade_date="2025-11-15",
+            land_area_sqm=950.0,
+            land_area_pyeong=287.4,
+            transaction_price=2850000000,
+            price_per_sqm=3000000,
+            price_per_pyeong=9917400,
+            similarity_score=0.95,
+            adjustments=[],
+            adjusted_price_per_sqm=3000000
+        ),
+        TransactionSample(
+            address="인근 토지 B",
+            distance=220,
+            trade_date="2025-10-28",
+            land_area_sqm=1100.0,
+            land_area_pyeong=332.8,
+            transaction_price=3234000000,
+            price_per_sqm=2940000,
+            price_per_pyeong=9717720,
+            similarity_score=0.90,
+            adjustments=[],
+            adjusted_price_per_sqm=2940000
+        ),
+    ]
+    
+    premium_factors = PremiumFactors(
+        location=15.0,
+        accessibility=10.0,
+        infrastructure=8.0,
+        development_potential=7.0,
+        total=40.0
+    )
+    
+    confidence_metrics = ConfidenceMetrics(
+        data_quality=0.90,
+        sample_size=0.80,
+        time_relevance=0.85,
+        similarity=0.88,
+        overall=0.86
+    )
+    
     appraisal_ctx = AppraisalContext(
         land_value=3000000000.0,  # 30억
-        unit_price=3000000.0,     # 300만원/㎡
+        unit_price_sqm=3000000.0,  # 300만원/㎡
+        unit_price_pyeong=9917400.0,  # 평당
+        official_price=2100000000.0,  # 공시지가 (70%)
+        official_price_per_sqm=2100000.0,
+        transaction_samples=transaction_samples,
+        transaction_count=len(transaction_samples),
+        avg_transaction_price=2970000.0,
+        premium_factors=premium_factors,
+        premium_rate=40.0,
+        confidence_metrics=confidence_metrics,
+        confidence_score=0.86,
         confidence_level="HIGH",
-        confidence_score=0.85,
-        method_used="거래사례비교법",
-        evaluation_date=datetime.now().strftime("%Y-%m-%d"),
+        price_range_low=2850000000.0,
+        price_range_high=3150000000.0,
+        valuation_date=datetime.now().strftime("%Y-%m-%d"),
+        valuation_method="거래사례비교법",
+        appraiser="ZeroSite AI",
+        site_area=1000.0,  # For backward compatibility
     )
     
     # M3: Housing Type
