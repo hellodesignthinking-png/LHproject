@@ -92,6 +92,9 @@ from app.routers.m7_community_plan_router import router as m7_router
 # ✨ Phase 6: Import Feedback & Benchmarking System Router
 from app.routers.phase6_router import router as phase6_router
 
+# ✨ Phase 8: Import Module & Comprehensive Reports Router
+from app.routers.phase8_reports_router import router as phase8_router
+
 # ✨ v11.0 ENHANCEMENTS: Import middleware and utilities
 from app.middleware.rate_limiter import RateLimiter, RateLimitConfig
 from app.middleware.cache_manager import cache_manager, start_cache_cleanup_task
@@ -231,6 +234,9 @@ app.include_router(m7_router)
 
 # ✨ Phase 6: Feedback & Benchmarking System
 app.include_router(phase6_router)
+
+# ✨ Phase 8: Module & Comprehensive Reports System
+app.include_router(phase8_router)
 
 # ✨ PDF Reports API
 from app.api.endpoints.pdf_reports import router as pdf_reports_router
