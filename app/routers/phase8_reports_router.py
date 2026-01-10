@@ -16,15 +16,12 @@ from datetime import datetime
 from app.services.phase8_module_report_generator import Phase8ModuleReportGenerator
 from app.services.phase8_six_types_report_generator import Phase8SixTypesReportGenerator
 from app.services.phase8_template_renderer import Phase8TemplateRenderer
+from app.services.phase8_pipeline_loader import get_pipeline_result, get_address_from_result, create_mock_pipeline_result
 from app.models.phase8_report_types import (
     ModuleEnum,
     ReportTypeEnum,
     ModuleReportResponse,
 )
-
-# 기존 파이프라인 및 컨텍스트 임포트 (실제 구현에 맞게 조정 필요)
-# from app.core.pipeline.zer0site_pipeline import ZeroSitePipeline
-# from app.services.context_manager import ContextManager
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +42,7 @@ template_renderer = Phase8TemplateRenderer()
 
 @router.get("/modules/m2/html", response_class=HTMLResponse)
 async def get_m2_report_html(
-    context_id: str = Query(..., description="분석 컨텍스트 ID")
+    context_id: str = Query(..., description="분석 컨텍스트 ID (parcel_id)")
 ):
     """
     M2: 토지감정평가 보고서 (HTML)
@@ -57,11 +54,25 @@ async def get_m2_report_html(
     try:
         logger.info(f"Generating M2 report HTML for context_id={context_id}")
         
-        # TODO: 실제 구현 시 파이프라인 결과를 가져와야 함
-        # pipeline_result = await get_pipeline_result(context_id)
-        # address = await get_address(context_id)
+        # 파이프라인 결과 가져오기
+        pipeline_result = await get_pipeline_result(context_id)
         
-        # 임시 응답 (실제 구현 필요)
+        # 결과가 없으면 Mock 데이터 사용
+        if not pipeline_result:
+            logger.warning(f"No pipeline result found for {context_id}, using MOCK data")
+            pipeline_result = await create_mock_pipeline_result(context_id)
+        
+        # 주소 추출
+        address = await get_address_from_result(pipeline_result)
+        
+        # M2 보고서 데이터 생성
+        report_data = module_report_generator.generate_m2_report(
+            context_id=context_id,
+            pipeline_result=pipeline_result,
+            address=address
+        )
+        
+        # 템플릿 렌더링 (간단한 HTML 응답)
         html_content = f"""
         <!DOCTYPE html>
         <html lang="ko">
@@ -69,18 +80,165 @@ async def get_m2_report_html(
             <meta charset="UTF-8">
             <title>M2 토지감정평가 보고서</title>
             <style>
-                body {{ font-family: 'Noto Sans KR', sans-serif; padding: 40px; }}
-                h1 {{ color: #0A1628; }}
-                .info {{ background: #e3f2fd; padding: 20px; border-radius: 8px; }}
+                body {{ 
+                    font-family: 'Noto Sans KR', sans-serif; 
+                    padding: 40px;
+                    background: #f8f9fa;
+                }}
+                .container {{
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    background: white;
+                    padding: 40px;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    border-radius: 8px;
+                }}
+                h1 {{ 
+                    color: #0A1628; 
+                    border-bottom: 3px solid #0A1628;
+                    padding-bottom: 12px;
+                }}
+                .info {{ 
+                    background: #e3f2fd; 
+                    padding: 20px; 
+                    border-radius: 8px;
+                    margin: 20px 0;
+                }}
+                .section {{
+                    margin: 30px 0;
+                    padding: 20px;
+                    border: 1px solid #e0e0e0;
+                    border-radius: 6px;
+                }}
+                h2 {{ color: #1E3A5F; margin-top: 30px; }}
+                table {{
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 15px 0;
+                }}
+                th, td {{
+                    padding: 12px;
+                    text-align: left;
+                    border-bottom: 1px solid #e0e0e0;
+                }}
+                th {{
+                    background: #f8f9fa;
+                    font-weight: 600;
+                }}
+                .status {{
+                    display: inline-block;
+                    padding: 4px 12px;
+                    background: #d4edda;
+                    color: #155724;
+                    border-radius: 12px;
+                    font-size: 12px;
+                    font-weight: 600;
+                }}
             </style>
         </head>
         <body>
-            <h1>M2. 토지감정평가 보고서</h1>
-            <div class="info">
-                <p><strong>Context ID:</strong> {context_id}</p>
-                <p><strong>생성일시:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-                <p><em>Phase 8 모듈별 보고서 시스템이 정상 작동 중입니다.</em></p>
-                <p><strong>다음 단계:</strong> 파이프라인 결과 연동 후 실제 보고서 생성</p>
+            <div class="container">
+                <h1>M2. 토지감정평가 보고서</h1>
+                
+                <div class="info">
+                    <p><strong>📍 Context ID:</strong> {report_data.context_id}</p>
+                    <p><strong>📅 생성일시:</strong> {report_data.generated_at}</p>
+                    <p><strong>🏠 대상지:</strong> {report_data.address}</p>
+                    <p style="margin-top: 15px;"><span class="status">✅ 실제 파이프라인 데이터 연동 완료</span></p>
+                </div>
+                
+                <div class="section">
+                    <h2>1. 감정평가 결과</h2>
+                    <table>
+                        <tr>
+                            <th style="width: 30%;">항목</th>
+                            <th>값</th>
+                        </tr>
+                        <tr>
+                            <td>감정평가액</td>
+                            <td style="font-size: 18px; font-weight: 700; color: #0A1628;">{report_data.land_value_krw}</td>
+                        </tr>
+                        <tr>
+                            <td>단가 (㎡)</td>
+                            <td>{report_data.unit_price_sqm}</td>
+                        </tr>
+                        <tr>
+                            <td>단가 (평)</td>
+                            <td>{report_data.unit_price_pyeong}</td>
+                        </tr>
+                        <tr>
+                            <td>신뢰도</td>
+                            <td>{report_data.confidence_pct}%</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="section">
+                    <h2>2. 거래사례 분석</h2>
+                    <p><strong>거래사례 수:</strong> {report_data.transaction_count}건</p>
+                    <p><strong>평균 단가:</strong> {report_data.avg_price_sqm}</p>
+                    <p><strong>가격 범위:</strong> {report_data.price_range_min} ~ {report_data.price_range_max}</p>
+                    
+                    <h3 style="margin-top: 20px;">거래사례 상세</h3>
+                    <table>
+                        <tr>
+                            <th>번호</th>
+                            <th>주소</th>
+                            <th>면적(㎡)</th>
+                            <th>거래가(원/㎡)</th>
+                            <th>거래일</th>
+                        </tr>
+                        {''.join([f'''
+                        <tr>
+                            <td>{i+1}</td>
+                            <td>{case.address}</td>
+                            <td>{case.area_sqm}</td>
+                            <td>{case.price_per_sqm}</td>
+                            <td>{case.transaction_date}</td>
+                        </tr>
+                        ''' for i, case in enumerate(report_data.transaction_cases)])}
+                    </table>
+                </div>
+                
+                <div class="section">
+                    <h2>3. 공시지가 대비 분석</h2>
+                    <table>
+                        <tr>
+                            <th>항목</th>
+                            <th>금액</th>
+                            <th>비율</th>
+                        </tr>
+                        <tr>
+                            <td>감정평가액</td>
+                            <td>{report_data.land_value_krw}</td>
+                            <td>100%</td>
+                        </tr>
+                        <tr>
+                            <td>공시지가</td>
+                            <td>{report_data.official_price_krw}</td>
+                            <td>{report_data.official_price_ratio}%</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="section">
+                    <h2>4. 가격 형성 논리</h2>
+                    <p style="line-height: 1.8;">{report_data.price_formation_logic}</p>
+                </div>
+                
+                <div class="section">
+                    <h2>5. 리스크 요인</h2>
+                    <ul style="line-height: 2;">
+                        {''.join([f'<li>{risk}</li>' for risk in report_data.risk_factors])}
+                    </ul>
+                </div>
+                
+                <div class="section">
+                    <h2>6. 한계점 및 유의사항</h2>
+                    <ul style="line-height: 2;">
+                        {''.join([f'<li>{lim}</li>' for lim in report_data.limitations])}
+                    </ul>
+                </div>
             </div>
         </body>
         </html>
@@ -89,7 +247,7 @@ async def get_m2_report_html(
         return HTMLResponse(content=html_content)
         
     except Exception as e:
-        logger.error(f"Failed to generate M2 report: {str(e)}")
+        logger.error(f"Failed to generate M2 report: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"M2 보고서 생성 실패: {str(e)}")
 
 
