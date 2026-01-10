@@ -14,8 +14,11 @@ import logging
 from datetime import datetime
 
 from app.services.phase8_module_report_generator import Phase8ModuleReportGenerator
+from app.services.phase8_six_types_report_generator import Phase8SixTypesReportGenerator
+from app.services.phase8_template_renderer import Phase8TemplateRenderer
 from app.models.phase8_report_types import (
     ModuleEnum,
+    ReportTypeEnum,
     ModuleReportResponse,
 )
 
@@ -31,7 +34,9 @@ router = APIRouter(
 )
 
 # 보고서 생성기 인스턴스
-report_generator = Phase8ModuleReportGenerator()
+module_report_generator = Phase8ModuleReportGenerator()
+six_types_report_generator = Phase8SixTypesReportGenerator()
+template_renderer = Phase8TemplateRenderer()
 
 
 # ========================================
@@ -470,10 +475,11 @@ async def health_check():
     """Phase 8 시스템 상태 확인"""
     return {
         "status": "healthy",
-        "phase": "Phase 8: Module & Comprehensive Reports",
+        "phase": "Phase 8: Module, Comprehensive & Six-Type Reports",
         "features": {
             "module_reports": ["M2", "M3", "M4", "M5", "M6"],
             "comprehensive_report": "Type A",
+            "six_type_reports": ["Type B", "Type C", "Type D", "Type E", "Type F"],
             "pdf_generation": "pending",
         },
         "endpoints": {
@@ -485,6 +491,534 @@ async def health_check():
                 "/api/v4/reports/phase8/modules/m6/html",
             ],
             "comprehensive_report": "/api/v4/reports/phase8/comprehensive/type-a/html",
+            "six_type_reports": [
+                "/api/v4/reports/phase8/six-types/type-b/html (Landowner)",
+                "/api/v4/reports/phase8/six-types/type-c/html (LH Technical)",
+                "/api/v4/reports/phase8/six-types/type-d/html (Investor)",
+                "/api/v4/reports/phase8/six-types/type-e/html (Preliminary)",
+                "/api/v4/reports/phase8/six-types/type-f/html (Presentation)",
+            ],
         },
         "timestamp": datetime.now().isoformat(),
     }
+
+
+# ========================================
+# 6종 보고서 엔드포인트 (Type B-F)
+# ========================================
+
+@router.get("/six-types/type-b/html", response_class=HTMLResponse)
+async def get_type_b_landowner_report_html(
+    context_id: str = Query(..., description="분석 컨텍스트 ID")
+):
+    """
+    Type B: 토지주 제출용 보고서 (HTML)
+    
+    - 안정성·수익성 강조
+    - 토지 가치, 사업 계획, 수익 구조
+    - 15-20페이지 분량
+    """
+    try:
+        logger.info(f"Generating Type B Landowner Report for context_id={context_id}")
+        
+        # TODO: 실제 구현 시 파이프라인 결과 가져오기
+        # pipeline_result = await get_pipeline_result(context_id)
+        # address = await get_address(context_id)
+        # report_data = six_types_report_generator.generate_type_b_report(
+        #     context_id, pipeline_result, address
+        # )
+        # return template_renderer.render_template(
+        #     "report_type_b_landowner.html", report_data
+        # )
+        
+        # 임시 응답
+        html_content = f"""
+        <!DOCTYPE html>
+        <html lang="ko">
+        <head>
+            <meta charset="UTF-8">
+            <title>Type B - 토지주 제출용 보고서</title>
+            <style>
+                body {{ 
+                    font-family: 'Noto Sans KR', sans-serif; 
+                    padding: 40px;
+                    background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%);
+                }}
+                .container {{
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    background: white;
+                    padding: 50px;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                    border-radius: 12px;
+                }}
+                h1 {{ 
+                    color: #2e7d32; 
+                    font-size: 36px;
+                    border-bottom: 3px solid #4caf50;
+                    padding-bottom: 15px;
+                }}
+                .info {{ 
+                    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); 
+                    padding: 30px; 
+                    border-radius: 12px;
+                    border-left: 5px solid #4caf50;
+                    margin: 25px 0;
+                }}
+                .status {{
+                    display: inline-block;
+                    padding: 8px 16px;
+                    background: #4caf50;
+                    color: white;
+                    border-radius: 20px;
+                    font-weight: 600;
+                    font-size: 14px;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>📄 Type B - 토지주 제출용 보고서</h1>
+                
+                <div class="info">
+                    <p><strong>📍 Context ID:</strong> {context_id}</p>
+                    <p><strong>📅 생성일시:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+                    <p><strong>📝 보고서 유형:</strong> 토지주 설득용 (안정성·수익성 강조)</p>
+                    <p style="margin-top: 20px;"><span class="status">✅ Phase 8.3 6종 보고서 시스템 가동</span></p>
+                </div>
+                
+                <h2 style="color: #2e7d32; margin-top: 40px;">📋 보고서 특징</h2>
+                <ul style="line-height: 2; font-size: 16px;">
+                    <li><strong>토지 가치 평가:</strong> 감정평가액, 단가, 신뢰도</li>
+                    <li><strong>사업 계획:</strong> 공급 유형, 세대수, 공사 기간</li>
+                    <li><strong>수익성 분석:</strong> 예상 수익, 토지주 몫, ROI</li>
+                    <li><strong>안정성 보장:</strong> LH 승인 확률, 리스크 관리</li>
+                    <li><strong>추진 권고:</strong> 다음 단계, 계약 절차</li>
+                </ul>
+                
+                <div style="margin-top: 50px; padding: 30px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
+                    <h3 style="color: #856404;">🚀 다음 단계</h3>
+                    <p style="line-height: 1.8;">
+                        파이프라인 결과 연동 후 실제 데이터로 토지주 설득용 보고서를 생성합니다.<br>
+                        템플릿: <code>app/templates_v13/report_type_b_landowner.html</code>
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        return HTMLResponse(content=html_content)
+        
+    except Exception as e:
+        logger.error(f"Failed to generate Type B report: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Type B 보고서 생성 실패: {str(e)}")
+
+
+@router.get("/six-types/type-c/html", response_class=HTMLResponse)
+async def get_type_c_lh_technical_report_html(
+    context_id: str = Query(..., description="분석 컨텍스트 ID")
+):
+    """
+    Type C: LH 기술검증 보고서 (HTML)
+    
+    - 기술 규정 준수 검증
+    - M2-M6 기술 검토 상세
+    - 40-50페이지 분량
+    """
+    try:
+        logger.info(f"Generating Type C LH Technical Report for context_id={context_id}")
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html lang="ko">
+        <head>
+            <meta charset="UTF-8">
+            <title>Type C - LH 기술검증 보고서</title>
+            <style>
+                body {{ 
+                    font-family: 'Noto Sans KR', sans-serif; 
+                    padding: 40px;
+                    background: linear-gradient(135deg, #f8f9fa 0%, #e1f5fe 100%);
+                }}
+                .container {{
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    background: white;
+                    padding: 50px;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                    border-radius: 12px;
+                }}
+                h1 {{ 
+                    color: #0066cc; 
+                    font-size: 36px;
+                    border-bottom: 3px solid #2196f3;
+                    padding-bottom: 15px;
+                }}
+                .info {{ 
+                    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); 
+                    padding: 30px; 
+                    border-radius: 12px;
+                    border-left: 5px solid #2196f3;
+                    margin: 25px 0;
+                }}
+                .status {{
+                    display: inline-block;
+                    padding: 8px 16px;
+                    background: #2196f3;
+                    color: white;
+                    border-radius: 20px;
+                    font-weight: 600;
+                    font-size: 14px;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🔧 Type C - LH 기술검증 보고서</h1>
+                
+                <div class="info">
+                    <p><strong>📍 Context ID:</strong> {context_id}</p>
+                    <p><strong>📅 생성일시:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+                    <p><strong>📝 보고서 유형:</strong> LH 기술검증용 (법규 준수, 구조 안전성)</p>
+                    <p style="margin-top: 20px;"><span class="status">✅ Phase 8.3 6종 보고서 시스템 가동</span></p>
+                </div>
+                
+                <h2 style="color: #0066cc; margin-top: 40px;">📋 보고서 특징</h2>
+                <ul style="line-height: 2; font-size: 16px;">
+                    <li><strong>M2 기술 검토:</strong> 감정평가 방법론, 계산 근거</li>
+                    <li><strong>M3 유형 검증:</strong> 후보 유형별 기술 비교</li>
+                    <li><strong>M4 규모 검토:</strong> 법적 한계, 구조 시스템, 주차</li>
+                    <li><strong>M5 경제성:</strong> 사업비 산출, 재무 구조</li>
+                    <li><strong>M6 종합 판단:</strong> 필수 요건, 기술 리스크</li>
+                </ul>
+                
+                <div style="margin-top: 50px; padding: 30px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
+                    <h3 style="color: #856404;">🚀 다음 단계</h3>
+                    <p style="line-height: 1.8;">
+                        파이프라인 결과 연동 후 실제 데이터로 LH 기술검증 보고서를 생성합니다.<br>
+                        템플릿: <code>app/templates_v13/report_type_c_lh_technical.html</code>
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        return HTMLResponse(content=html_content)
+        
+    except Exception as e:
+        logger.error(f"Failed to generate Type C report: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Type C 보고서 생성 실패: {str(e)}")
+
+
+@router.get("/six-types/type-d/html", response_class=HTMLResponse)
+async def get_type_d_investor_report_html(
+    context_id: str = Query(..., description="분석 컨텍스트 ID")
+):
+    """
+    Type D: 사업성·투자 검토 보고서 (HTML)
+    
+    - 재무 KPI (IRR, NPV, ROI, Payback)
+    - 비용/수익 구조, 민감도 분석
+    - 25-30페이지 분량
+    """
+    try:
+        logger.info(f"Generating Type D Investor Report for context_id={context_id}")
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html lang="ko">
+        <head>
+            <meta charset="UTF-8">
+            <title>Type D - 사업성·투자 검토 보고서</title>
+            <style>
+                body {{ 
+                    font-family: 'Noto Sans KR', sans-serif; 
+                    padding: 40px;
+                    background: linear-gradient(135deg, #f8f9fa 0%, #f0fff4 100%);
+                }}
+                .container {{
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    background: white;
+                    padding: 50px;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                    border-radius: 12px;
+                }}
+                h1 {{ 
+                    color: #28a745; 
+                    font-size: 36px;
+                    border-bottom: 3px solid #4caf50;
+                    padding-bottom: 15px;
+                }}
+                .info {{ 
+                    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); 
+                    padding: 30px; 
+                    border-radius: 12px;
+                    border-left: 5px solid #4caf50;
+                    margin: 25px 0;
+                }}
+                .status {{
+                    display: inline-block;
+                    padding: 8px 16px;
+                    background: #28a745;
+                    color: white;
+                    border-radius: 20px;
+                    font-weight: 600;
+                    font-size: 14px;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>💰 Type D - 사업성·투자 검토 보고서</h1>
+                
+                <div class="info">
+                    <p><strong>📍 Context ID:</strong> {context_id}</p>
+                    <p><strong>📅 생성일시:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+                    <p><strong>📝 보고서 유형:</strong> 투자자용 (재무 지표, 수익성 강조)</p>
+                    <p style="margin-top: 20px;"><span class="status">✅ Phase 8.3 6종 보고서 시스템 가동</span></p>
+                </div>
+                
+                <h2 style="color: #28a745; margin-top: 40px;">📋 보고서 특징</h2>
+                <ul style="line-height: 2; font-size: 16px;">
+                    <li><strong>핵심 KPI:</strong> IRR, NPV, ROI, 회수기간</li>
+                    <li><strong>비용 구조:</strong> 토지비, 건축비, 간접비 상세</li>
+                    <li><strong>수익 구조:</strong> 임대, 분양, 기타 수익</li>
+                    <li><strong>민감도 분석:</strong> 분양가, 건축비, 토지비 ±10%</li>
+                    <li><strong>시나리오:</strong> 낙관/기본/비관 3가지</li>
+                    <li><strong>투자 결론:</strong> 등급, 리스크, 권고 의견</li>
+                </ul>
+                
+                <div style="margin-top: 50px; padding: 30px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
+                    <h3 style="color: #856404;">🚀 다음 단계</h3>
+                    <p style="line-height: 1.8;">
+                        파이프라인 결과 연동 후 실제 데이터로 투자자용 보고서를 생성합니다.<br>
+                        템플릿: <code>app/templates_v13/report_type_d_investor.html</code>
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        return HTMLResponse(content=html_content)
+        
+    except Exception as e:
+        logger.error(f"Failed to generate Type D report: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Type D 보고서 생성 실패: {str(e)}")
+
+
+@router.get("/six-types/type-e/html", response_class=HTMLResponse)
+async def get_type_e_preliminary_report_html(
+    context_id: str = Query(..., description="분석 컨텍스트 ID")
+):
+    """
+    Type E: 사전 검토 리포트 (HTML)
+    
+    - 빠른 사업성 평가
+    - 핵심 지표 요약
+    - 5-8페이지 분량
+    """
+    try:
+        logger.info(f"Generating Type E Preliminary Report for context_id={context_id}")
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html lang="ko">
+        <head>
+            <meta charset="UTF-8">
+            <title>Type E - 사전 검토 리포트</title>
+            <style>
+                body {{ 
+                    font-family: 'Noto Sans KR', sans-serif; 
+                    padding: 40px;
+                    background: linear-gradient(135deg, #f8f9fa 0%, #f5f5f5 100%);
+                }}
+                .container {{
+                    max-width: 900px;
+                    margin: 0 auto;
+                    background: white;
+                    padding: 40px;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                    border-radius: 12px;
+                }}
+                h1 {{ 
+                    color: #6c757d; 
+                    font-size: 32px;
+                    border-bottom: 3px solid #adb5bd;
+                    padding-bottom: 15px;
+                }}
+                .info {{ 
+                    background: linear-gradient(135deg, #f8f9fa 0%, #dee2e6 100%); 
+                    padding: 25px; 
+                    border-radius: 12px;
+                    border-left: 5px solid #6c757d;
+                    margin: 20px 0;
+                }}
+                .status {{
+                    display: inline-block;
+                    padding: 6px 14px;
+                    background: #6c757d;
+                    color: white;
+                    border-radius: 16px;
+                    font-weight: 600;
+                    font-size: 13px;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>📋 Type E - 사전 검토 리포트</h1>
+                
+                <div class="info">
+                    <p><strong>📍 Context ID:</strong> {context_id}</p>
+                    <p><strong>📅 생성일시:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+                    <p><strong>📝 보고서 유형:</strong> 빠른 판단용 (핵심만 요약)</p>
+                    <p style="margin-top: 15px;"><span class="status">✅ Phase 8.3 6종 보고서 시스템 가동</span></p>
+                </div>
+                
+                <h2 style="color: #6c757d; margin-top: 35px;">📋 보고서 특징</h2>
+                <ul style="line-height: 2; font-size: 15px;">
+                    <li><strong>사전 결과:</strong> 승인 확률, 등급, 결론</li>
+                    <li><strong>대상지 개요:</strong> 면적, 가격, 권장 유형</li>
+                    <li><strong>법규 간편 검토:</strong> 용적률, 건폐율, 세대수</li>
+                    <li><strong>사업성 요약:</strong> IRR, ROI, 회수기간</li>
+                    <li><strong>긍정/리스크:</strong> 주요 고려사항</li>
+                    <li><strong>다음 단계:</strong> 실사 계획, 추가 검토 항목</li>
+                </ul>
+                
+                <div style="margin-top: 40px; padding: 25px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
+                    <h3 style="color: #856404;">🚀 다음 단계</h3>
+                    <p style="line-height: 1.8; font-size: 14px;">
+                        파이프라인 결과 연동 후 실제 데이터로 간편 검토 리포트를 생성합니다.<br>
+                        템플릿: <code>app/templates_v13/report_type_e_preliminary.html</code>
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        return HTMLResponse(content=html_content)
+        
+    except Exception as e:
+        logger.error(f"Failed to generate Type E report: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Type E 보고서 생성 실패: {str(e)}")
+
+
+@router.get("/six-types/type-f/html", response_class=HTMLResponse)
+async def get_type_f_presentation_report_html(
+    context_id: str = Query(..., description="분석 컨텍스트 ID")
+):
+    """
+    Type F: 설명용 프레젠테이션 (HTML)
+    
+    - 임원급 프레젠테이션 슬라이드
+    - 16슬라이드 구성
+    - 10-15슬라이드 분량
+    """
+    try:
+        logger.info(f"Generating Type F Presentation Report for context_id={context_id}")
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html lang="ko">
+        <head>
+            <meta charset="UTF-8">
+            <title>Type F - 설명용 프레젠테이션</title>
+            <style>
+                body {{ 
+                    font-family: 'Noto Sans KR', sans-serif; 
+                    padding: 0;
+                    margin: 0;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                }}
+                .container {{
+                    max-width: 1200px;
+                    height: 675px;
+                    margin: 40px auto;
+                    background: white;
+                    padding: 60px;
+                    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+                    border-radius: 16px;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                }}
+                h1 {{ 
+                    color: #667eea; 
+                    font-size: 48px;
+                    text-align: center;
+                    margin-bottom: 20px;
+                }}
+                .info {{ 
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 40px; 
+                    border-radius: 16px;
+                    margin: 30px 0;
+                    text-align: center;
+                }}
+                .status {{
+                    display: inline-block;
+                    padding: 10px 20px;
+                    background: rgba(255,255,255,0.2);
+                    color: white;
+                    border-radius: 24px;
+                    font-weight: 600;
+                    font-size: 14px;
+                    backdrop-filter: blur(10px);
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🎨 Type F - 설명용 프레젠테이션</h1>
+                
+                <div class="info">
+                    <p style="font-size: 18px;"><strong>📍 Context ID:</strong> {context_id}</p>
+                    <p style="font-size: 18px;"><strong>📅 생성일시:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+                    <p style="font-size: 18px; margin-top: 10px;"><strong>📝 보고서 유형:</strong> 프레젠테이션 슬라이드 (16장)</p>
+                    <p style="margin-top: 30px;"><span class="status">✅ Phase 8.3 6종 보고서 시스템 가동</span></p>
+                </div>
+                
+                <h2 style="color: #667eea; text-align: center; margin-top: 40px;">📋 슬라이드 구성</h2>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px;">
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                        <strong>1-2.</strong> 표지 & 핵심 요약
+                    </div>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                        <strong>3-5.</strong> 대상지 & 토지 가치
+                    </div>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                        <strong>6-8.</strong> 사업 계획 & 규모
+                    </div>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                        <strong>9-11.</strong> 재무 지표 & 수익
+                    </div>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                        <strong>12-14.</strong> 종합 판단 & SWOT
+                    </div>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                        <strong>15-16.</strong> 다음 단계 & Q&A
+                    </div>
+                </div>
+                
+                <div style="margin-top: 40px; padding: 25px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107; text-align: center;">
+                    <p style="margin: 0; line-height: 1.8;">
+                        <strong>🚀 다음 단계:</strong> 파이프라인 결과 연동 후 실제 프레젠테이션 생성<br>
+                        템플릿: <code>app/templates_v13/report_type_f_presentation.html</code>
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        return HTMLResponse(content=html_content)
+        
+    except Exception as e:
+        logger.error(f"Failed to generate Type F report: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Type F 보고서 생성 실패: {str(e)}")
