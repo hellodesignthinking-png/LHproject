@@ -509,17 +509,48 @@ def prepare_m5_enhanced_report_data(
     """
     M5 Enhanced 보고서 데이터 준비 (외부 호출용)
     
-    Hard Stop 규칙 10: 최종 검증
+    🔴 2026-01-11: M5 Real Data Engine으로 전환
+    - 실제 M4 데이터 + 사용자 입력 데이터만 사용
+    - MOC/SAMPLE/구버전 로직 차단
     
     Args:
         context_id: Context ID
         m4_data: M4 모듈 데이터
-        module_data: M5 모듈 데이터
+        module_data: M5 모듈 데이터 (사용자 입력 포함)
         frozen_context: Context.get_frozen_context(context_id) 결과 (데이터 바인딩 복구용)
     
     Returns:
         보고서 데이터 또는 에러 상태
     """
+    logger.info(f"🚀 M5 Enhanced Report 생성 요청: {context_id}")
+    
+    try:
+        # M5 Real Data Engine 사용
+        from app.utils.m5_real_data_engine import prepare_m5_real_data_report
+        
+        # 사용자 입력 데이터 추출
+        user_inputs = module_data.get("details", {})
+        
+        report_data = prepare_m5_real_data_report(
+            context_id=context_id,
+            m4_data=m4_data,
+            user_inputs=user_inputs,
+            frozen_context=frozen_context
+        )
+        
+        # Real Data Engine 결과 확인
+        if report_data.get("error"):
+            logger.error(f"❌ M5 Real Data Engine 오류: {report_data.get('error_type')}")
+            return report_data
+        
+        logger.info(f"✅ M5 Real Data Engine 보고서 생성 완료")
+        return report_data
+    
+    except Exception as e:
+        logger.error(f"❌ M5 Real Data Engine 실행 중 예외 발생: {e}")
+        logger.warning(f"⚠️ Fallback to legacy M5EnhancedAnalyzer")
+    
+    # Fallback: 기존 로직 사용 (개발 중 오류 방지용)
     analyzer = M5EnhancedAnalyzer(context_id, m4_data, module_data, frozen_context)
     
     # 🔴 데이터 바인딩 에러 체크
