@@ -89,8 +89,8 @@ class M4EnhancedAnalyzer:
         """
         데이터 무결성 검증 (Hard Gate)
         
-        🔴 DATA INSUFFICIENT 조건:
-        필수 입력 2개 이상 누락 시 즉시 중단
+        🔴 DATA INSUFFICIENT 조건 (강화):
+        필수 입력 1개라도 누락 시 즉시 중단
         
         Returns:
             (valid: bool, errors: List[str])
@@ -101,16 +101,16 @@ class M4EnhancedAnalyzer:
         # 1. 주소 검증 (필수)
         address = self.m1_data.get("address", "").strip()
         if not address or address == "주소 정보 없음" or "Mock Data" in str(address):
-            errors.append("사업지 주소")
+            errors.append("사업지 주소 (법정동 기준)")
             missing_required.append("주소")
         
         # 2. 토지면적 검증 (필수)
         land_area = self.m1_data.get("land_area", 0)
         if not land_area or land_area <= 0:
-            errors.append("토지면적(㎡)")
+            errors.append("토지면적 (단위: ㎡)")
             missing_required.append("토지면적")
         if isinstance(land_area, str) and ("built-in" in land_area or "object" in land_area):
-            errors.append("토지면적에 Python 객체 주소가 포함되어 있습니다.")
+            errors.append("토지면적 (단위: ㎡)")
             missing_required.append("토지면적")
         
         # 3. 용도지역 검증 (필수)
@@ -121,12 +121,13 @@ class M4EnhancedAnalyzer:
         
         # 4. M3 공급유형 검증 (필수)
         if not self.m3_supply_type or self.m3_supply_type == "":
-            errors.append("공급유형(M3 결과)")
+            errors.append("공급유형 (M3 결과)")
             missing_required.append("공급유형")
         
-        # 🔴 DATA INSUFFICIENT: 필수 입력 2개 이상 누락 시
-        if len(missing_required) >= 2:
+        # 🔴 DATA INSUFFICIENT (강화): 필수 입력 1개라도 누락 시
+        if len(missing_required) >= 1:
             logger.error(f"🔴 DATA INSUFFICIENT: {len(missing_required)}개 필수 입력 누락 - {missing_required}")
+            logger.error(f"📍 위 항목 중 1개라도 누락 시 분석은 수행되지 않습니다.")
             return (False, errors)
         
         # 5. 숫자 필드 검증
@@ -489,7 +490,17 @@ class M4EnhancedAnalyzer:
                 "missing_items": missing_items,
                 "context_id": self.context_id,
                 "report_id": f"ZS-M4-INSUFFICIENT-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-                "use_data_insufficient_template": True
+                "use_data_insufficient_template": True,
+                "template_version": "v2",  # V2 템플릿 사용
+                "fixed_message": "ZeroSite는 필수 데이터가 입력되기 전까지 분석·계산·판단을 수행하지 않습니다.",
+                "mds_requirements": {
+                    "사업지 주소 (법정동 기준)": bool(address and "Mock" not in address),
+                    "토지면적 (㎡)": bool(land_area and land_area > 0),
+                    "용도지역": bool(zoning),
+                    "M3 공급유형 결과": bool(supply_type)
+                },
+                "analysis_date": datetime.now().strftime("%Y년 %m월 %d일"),
+                "project_address": address if address else "주소 정보 없음"
             }
         
         # 2. 법적 건축 가능 범위 계산

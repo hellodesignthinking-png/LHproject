@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔴 DATA INSUFFICIENT – ANALYSIS BLOCKED - ZeroSite</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            font-size: 11pt;
+            line-height: 1.9;
+            color: #2c3e50;
+            background: white;
+            position: relative;
+            padding: 40px;
+        }
+
+        /* ZeroSite Watermark */
+        body::before {
+            content: 'ZEROSITE';
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 120pt;
+            font-weight: bold;
+            color: rgba(0, 102, 204, 0.03);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* System Status Declaration (최상단) */
+        .system-status {
+            background: #c0392b;
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 40px;
+            box-shadow: 0 8px 20px rgba(192, 57, 43, 0.3);
+        }
+
+        .system-status-title {
+            font-size: 24pt;
+            font-weight: bold;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+
+        .system-status-message {
+            font-size: 13pt;
+            line-height: 1.8;
+        }
+
+        /* Logo */
+        .logo {
+            text-align: center;
+            font-size: 28pt;
+            font-weight: bold;
+            color: #0066cc;
+            letter-spacing: 12px;
+            margin: 40px 0 20px 0;
+        }
+
+        /* MDS Section */
+        .mds-section {
+            background: #ecf0f1;
+            border-left: 6px solid #e74c3c;
+            padding: 30px;
+            margin: 30px 0;
+            border-radius: 4px;
+        }
+
+        .section-title {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .section-content {
+            font-size: 11.5pt;
+            color: #34495e;
+            line-height: 2.0;
+        }
+
+        /* Required Items Checklist */
+        .checklist-box {
+            background: white;
+            border: 3px solid #e74c3c;
+            border-radius: 8px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+
+        .checklist-title {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #c0392b;
+            margin-bottom: 20px;
+        }
+
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+
+        .checklist-item {
+            padding: 15px;
+            margin: 10px 0;
+            background: #f8f9fa;
+            border-left: 5px solid #e74c3c;
+            font-size: 12pt;
+            display: flex;
+            align-items: center;
+        }
+
+        .checklist-icon {
+            font-size: 18pt;
+            margin-right: 15px;
+        }
+
+        .checklist-note {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+            color: #856404;
+        }
+
+        /* Analysis Scope Box */
+        .scope-box {
+            background: #e8f4f8;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+
+        .scope-title {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #2980b9;
+            margin-bottom: 15px;
+        }
+
+        .scope-content {
+            font-size: 11pt;
+            color: #34495e;
+            line-height: 1.9;
+        }
+
+        .scope-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+        }
+
+        .scope-list li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .scope-list li::before {
+            content: '•';
+            position: absolute;
+            left: 10px;
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        /* Prohibition Box */
+        .prohibition-box {
+            background: #fff9e6;
+            border: 3px solid #e74c3c;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+
+        .prohibition-title {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #c0392b;
+            margin-bottom: 15px;
+        }
+
+        .prohibition-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .prohibition-item {
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: white;
+            border-left: 4px solid #e74c3c;
+            font-size: 11pt;
+            color: #721c24;
+        }
+
+        .prohibition-item::before {
+            content: '❌';
+            margin-right: 10px;
+            font-size: 14pt;
+        }
+
+        .prohibition-note {
+            background: white;
+            border: 2px solid #e74c3c;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #c0392b;
+        }
+
+        /* Session Invalidation Box */
+        .invalidation-box {
+            background: #f8d7da;
+            border: 3px solid #dc3545;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .invalidation-title {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #721c24;
+            margin-bottom: 15px;
+        }
+
+        .invalidation-message {
+            font-size: 11.5pt;
+            color: #721c24;
+            line-height: 2.0;
+        }
+
+        /* Final System Message */
+        .final-message {
+            background: #2c3e50;
+            color: white;
+            border-radius: 8px;
+            padding: 35px;
+            margin: 40px 0;
+            text-align: center;
+            font-size: 13pt;
+            font-weight: 600;
+            line-height: 2.2;
+            box-shadow: 0 8px 20px rgba(44, 62, 80, 0.3);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 2px solid #ecf0f1;
+            color: #7f8c8d;
+            font-size: 9pt;
+        }
+
+        .contact-info {
+            margin-top: 20px;
+            font-size: 10pt;
+            color: #95a5a6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- System Status Declaration (최상단) -->
+        <div class="system-status">
+            <div class="system-status-title">🔴 DATA INSUFFICIENT – ANALYSIS BLOCKED</div>
+            <div class="system-status-message">
+                필수 입력 데이터 부족으로 인해 분석을 시작할 수 없습니다.
+            </div>
+        </div>
+
+        <!-- Logo -->
+        <div class="logo">ZEROSITE</div>
+
+        <!-- 1. MDS (Minimum Data Set) 개념 명시 -->
+        <div class="mds-section">
+            <div class="section-title">📊 분석 중단 사유 (엔진 기준)</div>
+            <div class="section-content">
+                ZeroSite는 <strong>최소 데이터 세트(Minimum Data Set, MDS)</strong>가 충족되어야만 
+                분석을 수행하도록 설계된 시스템입니다.<br><br>
+                
+                현재 입력값은 <strong>M4 건축규모 판단을 위한 MDS 요건을 충족하지 못합니다.</strong><br><br>
+                
+                따라서 ZeroSite는 분석·계산·판단을 수행하지 않으며, 
+                필수 데이터 입력 후 새로운 분석 세션으로 재시작됩니다.
+            </div>
+        </div>
+
+        <!-- 2. 필수 입력 항목 체크리스트 -->
+        <div class="checklist-box">
+            <div class="checklist-title">📌 필수 입력 항목 (M4 기준)</div>
+            
+            <ul class="checklist">
+                <li class="checklist-item">
+                    <span class="checklist-icon">⬜</span>
+                    <span>사업지 주소 (법정동 기준)</span>
+                </li>
+                <li class="checklist-item">
+                    <span class="checklist-icon">⬜</span>
+                    <span>토지면적 (단위: ㎡)</span>
+                </li>
+                <li class="checklist-item">
+                    <span class="checklist-icon">⬜</span>
+                    <span>용도지역</span>
+                </li>
+                <li class="checklist-item">
+                    <span class="checklist-icon">⬜</span>
+                    <span>공급유형 (M3 결과)</span>
+                </li>
+            </ul>
+            
+            <div class="checklist-note">
+                📍 위 항목 중 1개라도 누락 시 분석은 수행되지 않습니다.
+            </div>
+        </div>
+
+        <!-- 3. 입력 완료 시에만 가능한 작업 -->
+        <div class="scope-box">
+            <div class="scope-title">✅ 입력 완료 시에만 가능한 작업</div>
+            <div class="scope-content">
+                위 필수 입력 항목이 모두 충족될 경우에만, 
+                ZeroSite는 다음 분석을 수행합니다:
+                
+                <ul class="scope-list">
+                    <li>법적 건축 가능 범위 산정</li>
+                    <li>권장 건축 규모 및 세대수 도출</li>
+                    <li>주차 계획 검토</li>
+                    <li>건축 규모 리스크 분석</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 4. 절대 수행하지 않는 작업 선언 -->
+        <div class="prohibition-box">
+            <div class="prohibition-title">🚫 입력 전 절대 수행하지 않는 작업</div>
+            
+            <ul class="prohibition-list">
+                <li class="prohibition-item">유사 사례 기반 추정</li>
+                <li class="prohibition-item">평균값 또는 관행값 적용</li>
+                <li class="prohibition-item">"일반적인 경우"라는 가정</li>
+                <li class="prohibition-item">불완전한 데이터 기반 판단</li>
+            </ul>
+            
+            <div class="prohibition-note">
+                👉 ZeroSite는 입력되지 않은 데이터를 추론하지 않습니다.
+            </div>
+        </div>
+
+        <!-- 5. 기존 분석 결과 무효 처리 -->
+        <div class="invalidation-box">
+            <div class="invalidation-title">⚠️ 기존 분석 결과 처리</div>
+            <div class="invalidation-message">
+                현재 세션(Context ID: <strong>{{ context_id }}</strong>)에서 생성된<br>
+                모든 M4 분석 결과는 <strong>무효 처리</strong>되었으며,<br>
+                필수 데이터 입력 후 <strong>새로운 분석 세션으로 재실행</strong>됩니다.
+            </div>
+        </div>
+
+        <!-- Final System Message -->
+        <div class="final-message">
+            ZeroSite는 필수 데이터가 충족되기 전까지<br>
+            분석·계산·판단을 수행하지 않습니다.
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div>ⓒ ZeroSite by AntennaHoldings | Natai Heum</div>
+            <div class="contact-info">
+                analysis@antennaholdings.com | 서울시 강남구 테헤란로 427 위워크타워
+            </div>
+        </div>
+    </div>
+</body>
+</html>

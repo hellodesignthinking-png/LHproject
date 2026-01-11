@@ -104,8 +104,12 @@ def generate_module_report_html(
             # 🔴 Check for DATA INSUFFICIENT
             if template_data.get("error") and template_data.get("use_data_insufficient_template"):
                 logger.warning(f"🔴 DATA INSUFFICIENT detected for {module_id}")
+                
+                # V2 템플릿 사용 여부 확인
+                template_version = template_data.get("template_version", "v1")
+                
                 template_file = {
-                    "M4": "m4_data_insufficient.html",
+                    "M4": f"m4_data_insufficient_v2.html" if template_version == "v2" else "m4_data_insufficient.html",
                     # Add other modules as needed
                 }.get(module_id, "m4_data_insufficient.html")
             else:
