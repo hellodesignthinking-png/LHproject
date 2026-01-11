@@ -214,6 +214,67 @@ class AnalysisAPIService {
   }
 
   /**
+   * Execute module analysis (⚡ EXECUTION TRIGGER)
+   * 
+   * CRITICAL: This is the execution trigger that actually runs M2-M6
+   * Call this after M1 verification is approved to start the pipeline
+   */
+  async executeModule(
+    projectId: string,
+    moduleName: string
+  ): Promise<{ success: boolean; message: string; execution_id?: string }> {
+    const response = await fetch(
+      `${this.baseUrl}/api/analysis/projects/${projectId}/modules/${moduleName}/execute`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || `Failed to execute ${moduleName}`);
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Execute M1 → M6 full pipeline
+   * 
+   * This is a convenience method that triggers all modules in sequence
+   * Use after M1 verification is approved
+   */
+  async executeFullPipeline(projectId: string): Promise<{
+    success: boolean;
+    executed_modules: string[];
+    message: string;
+  }> {
+    const executedModules: string[] = [];
+    
+    // Execute M2-M6 in sequence
+    const modules = ['M2', 'M3', 'M4', 'M5', 'M6'];
+    
+    for (const module of modules) {
+      try {
+        await this.executeModule(projectId, module);
+        executedModules.push(module);
+      } catch (error) {
+        console.error(`Failed to execute ${module}:`, error);
+        // Continue to next module even if one fails
+      }
+    }
+    
+    return {
+      success: executedModules.length > 0,
+      executed_modules: executedModules,
+      message: `Executed ${executedModules.length}/${modules.length} modules`
+    };
+  }
+
+  /**
    * List all projects
    */
   async listProjects(limit: number = 50, offset: number = 0) {

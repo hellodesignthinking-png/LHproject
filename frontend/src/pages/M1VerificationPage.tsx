@@ -128,15 +128,39 @@ export const M1VerificationPage: React.FC = () => {
     try {
       setVerifying(true);
       
-      const response = await analysisAPI.verifyModule(projectId, 'M1', {
+      // Step 1: Verify M1
+      const verifyResponse = await analysisAPI.verifyModule(projectId, 'M1', {
         approved: true,
         comments: 'M1 data verified by user',
         verified_by: 'user@example.com' // TODO: Get from auth context
       });
       
-      alert(`✅ ${response.message}\n\n${response.next_action}`);
+      console.log('✅ M1 Verified:', verifyResponse.message);
       
-      // Navigate to M2 results page
+      // Step 2: Execute M2-M6 pipeline (CRITICAL EXECUTION TRIGGER)
+      console.log('⚡ Triggering M2-M6 execution...');
+      
+      try {
+        const execResponse = await analysisAPI.executeFullPipeline(projectId);
+        console.log('✅ Pipeline execution triggered:', execResponse.message);
+        console.log('Executed modules:', execResponse.executed_modules);
+        
+        alert(
+          `✅ M1 Verified Successfully!\n\n` +
+          `${verifyResponse.message}\n\n` +
+          `⚡ Executing M2-M6 modules...\n` +
+          `${execResponse.executed_modules.join(', ')}`
+        );
+      } catch (execError) {
+        console.error('❌ Pipeline execution failed:', execError);
+        alert(
+          `✅ M1 Verified, but pipeline execution failed:\n` +
+          `${execError instanceof Error ? execError.message : 'Unknown error'}\n\n` +
+          `You may need to execute modules manually.`
+        );
+      }
+      
+      // Step 3: Navigate to M2 results page
       navigate(`/projects/${projectId}/modules/m2/results`);
       
     } catch (err) {

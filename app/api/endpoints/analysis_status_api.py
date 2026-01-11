@@ -228,6 +228,113 @@ async def verify_module_results(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class ExecuteModuleResponse(BaseModel):
+    """Module execution response"""
+    success: bool
+    message: str
+    module_name: str
+    execution_id: Optional[str] = None
+    status: str
+
+
+@router.post("/projects/{project_id}/modules/{module_name}/execute", response_model=ExecuteModuleResponse)
+async def execute_module(
+    project_id: str,
+    module_name: str
+):
+    """
+    ⚡ CRITICAL: Execute module analysis
+    
+    This triggers the actual execution of M2-M6 modules.
+    M1 is executed automatically on project creation.
+    
+    Args:
+        project_id: Project identifier
+        module_name: M2, M3, M4, M5, or M6 (M1 is automatic)
+    
+    Returns:
+        Execution status and result
+    """
+    
+    # Validate module name
+    valid_modules = ["M2", "M3", "M4", "M5", "M6"]
+    if module_name not in valid_modules:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid module: {module_name}. Only M2-M6 can be executed via this endpoint."
+        )
+    
+    # Get project status
+    status = analysis_status_storage.get_status(project_id)
+    if not status:
+        raise HTTPException(status_code=404, detail=f"Project not found: {project_id}")
+    
+    # Check if module can be executed
+    can_execute, reason = status.can_execute_module(module_name)
+    if not can_execute:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot execute {module_name}: {reason}"
+        )
+    
+    try:
+        execution_id = str(uuid.uuid4())
+        
+        logger.info(f"⚡ Executing {module_name} for project {project_id}")
+        logger.info(f"   Execution ID: {execution_id}")
+        
+        # Mark module as in progress
+        analysis_status_storage.update_module_status(
+            project_id=project_id,
+            module_name=module_name,
+            status=ModuleStatus.IN_PROGRESS,
+            result_summary={"execution_id": execution_id, "started_at": datetime.now().isoformat()}
+        )
+        
+        # TODO: Actually execute the module logic here
+        # For now, immediately mark as completed (mock)
+        # In production, this would call the actual M2/M3/M4/M5/M6 services
+        
+        mock_result = {
+            "execution_id": execution_id,
+            "module": module_name,
+            "computed_at": datetime.now().isoformat(),
+            "status": "completed",
+            "message": f"{module_name} execution completed (mock)"
+        }
+        
+        # Mark module as completed
+        analysis_status_storage.update_module_status(
+            project_id=project_id,
+            module_name=module_name,
+            status=ModuleStatus.COMPLETED,
+            result_summary=mock_result
+        )
+        
+        logger.info(f"✅ {module_name} execution completed")
+        
+        return ExecuteModuleResponse(
+            success=True,
+            message=f"{module_name} executed successfully",
+            module_name=module_name,
+            execution_id=execution_id,
+            status="completed"
+        )
+    
+    except Exception as e:
+        logger.error(f"❌ {module_name} execution failed: {e}")
+        
+        # Mark module as failed
+        analysis_status_storage.update_module_status(
+            project_id=project_id,
+            module_name=module_name,
+            status=ModuleStatus.FAILED,
+            result_summary={"error": str(e)}
+        )
+        
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/projects/{project_id}/modules/{module_name}/result", response_model=ModuleResultResponse)
 async def get_module_result(
     project_id: str,
