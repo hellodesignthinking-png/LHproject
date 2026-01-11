@@ -748,8 +748,9 @@ def _generate_m3_content(summary: Dict, details: Dict) -> str:
     """Generate M3 (Housing Type) report content"""
     
     selected_type = summary.get("selected_type", "N/A")
+    selected_type_name = summary.get("selected_type_name", selected_type)
     confidence = summary.get("confidence_pct")
-    demand_score = summary.get("demand_score")
+    demand_score = summary.get("demand_score", 0)
     
     content = f"""
     <div class="section">
@@ -757,43 +758,141 @@ def _generate_m3_content(summary: Dict, details: Dict) -> str:
         <div class="highlight-box">
             <h3>권장 공급 유형</h3>
             <div style="font-size: 36px; font-weight: 700; color: #667eea; margin: 15px 0;">
-                {selected_type}
+                {selected_type_name}
             </div>
             <p style="color: #666;">
-                수요 점수: {demand_score or 'N/A'} | 신뢰도: {format_percentage(confidence)}
+                수요 점수: {format_percentage(demand_score) if demand_score else 'N/A'} | 신뢰도: {format_percentage(confidence)}
             </p>
         </div>
     </div>
     
     <div class="section">
-        <h2 class="section-title">📊 수요 분석</h2>
-        <p>입지 특성 및 주변 인구 구조를 분석하여 최적의 공급 유형을 도출하였습니다.</p>
+        <h2 class="section-title">📊 유형별 점수 분석</h2>
+        <p>각 공급 유형별 적합성을 종합 평가하였습니다.</p>
         
-        <h3 class="section-subtitle">입지 특성 분석</h3>
+        <table class="data-table">
+            <tr>
+                <th>공급 유형</th>
+                <th>적합도 점수</th>
+            </tr>
+    """
+    
+    # Add type scores
+    type_scores = details.get("type_scores", {})
+    if type_scores:
+        for type_key, type_data in type_scores.items():
+            type_name = type_data.get("name", type_key)
+            score = type_data.get("score", 0)
+            content += f"""
+            <tr>
+                <td>{type_name}</td>
+                <td style="font-weight: 700; color: {'#667eea' if score > 70 else '#888'};">
+                    {format_percentage(score) if score else 'N/A'}
+                </td>
+            </tr>
+            """
+    else:
+        content += """
+            <tr>
+                <td colspan="2" style="text-align: center; color: #999;">유형별 점수 데이터 없음</td>
+            </tr>
+        """
+    
+    content += """
+        </table>
+    </div>
+    
+    <div class="section">
+        <h2 class="section-title">🗺️ POI 분석 (입지 특성)</h2>
+        <p>주변 생활편의시설 및 교통 접근성을 분석하였습니다.</p>
+        
         <div class="info-grid">
     """
     
-    # Add location analysis
-    location_analysis = details.get("location_analysis", {})
-    for key, value in location_analysis.items():
-        content += f"""
+    # Add POI analysis
+    poi_data = details.get("poi_analysis", {})
+    poi_labels = {
+        "subway_count": "🚇 지하철역",
+        "bus_stop_count": "🚌 버스정류장",
+        "convenience_count": "🏪 편의점",
+        "hospital_count": "🏥 병원",
+        "school_count": "🏫 학교",
+        "park_count": "🌳 공원"
+    }
+    
+    if poi_data:
+        for key, label in poi_labels.items():
+            value = poi_data.get(key, 0)
+            content += f"""
         <div class="info-card">
-            <div class="info-card-title">{key}</div>
-            <div class="info-card-value">{value}</div>
+            <div class="info-card-title">{label}</div>
+            <div class="info-card-value">{value}개</div>
+        </div>
+            """
+    else:
+        content += """
+        <div class="info-card">
+            <div class="info-card-title">⚠️ POI 데이터 없음</div>
+            <div class="info-card-value">N/A</div>
         </div>
         """
     
     content += """
         </div>
     </div>
+    """
     
+    # Add strengths/weaknesses/recommendations
+    strengths = details.get("strengths", [])
+    weaknesses = details.get("weaknesses", [])
+    recommendations = details.get("recommendations", [])
+    
+    if strengths:
+        content += """
+    <div class="section">
+        <h2 class="section-title">✅ 강점</h2>
+        <ul style="line-height: 2;">
+        """
+        for strength in strengths:
+            content += f"<li>{strength}</li>"
+        content += """
+        </ul>
+    </div>
+        """
+    
+    if weaknesses:
+        content += """
+    <div class="section">
+        <h2 class="section-title">⚠️ 약점</h2>
+        <ul style="line-height: 2;">
+        """
+        for weakness in weaknesses:
+            content += f"<li>{weakness}</li>"
+        content += """
+        </ul>
+    </div>
+        """
+    
+    content += f"""
     <div class="section">
         <h2 class="section-title">💡 권장사항</h2>
         <div class="highlight-box">
+    """
+    
+    if recommendations:
+        content += "<ul style='line-height: 2;'>"
+        for rec in recommendations:
+            content += f"<li>{rec}</li>"
+        content += "</ul>"
+    else:
+        content += f"""
             <p style="line-height: 1.8;">
-                입지 분석 결과, <strong>""" + selected_type + """</strong> 공급이 가장 적합할 것으로 판단됩니다.
+                입지 분석 결과, <strong>{selected_type_name}</strong> 공급이 가장 적합할 것으로 판단됩니다.
                 주변 생활 패턴과 인구 구조를 고려할 때 해당 유형에 대한 수요가 높을 것으로 예상됩니다.
             </p>
+        """
+    
+    content += """
         </div>
     </div>
     """

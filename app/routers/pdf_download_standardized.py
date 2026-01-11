@@ -296,19 +296,21 @@ def _get_real_data_for_module(module: str, context_id: str) -> dict:
             
             data = {
                 "summary": {
-                    "recommended_type": housing_type.selected_type,
-                    "recommended_type_name": housing_type.selected_type_name if hasattr(housing_type, 'selected_type_name') else housing_type.selected_type,
-                    "total_score": housing_type.selection_confidence if hasattr(housing_type, 'selection_confidence') else 0,
+                    # 🔥 FIX: Use 'selected_type' to match template expectations
+                    "selected_type": housing_type.selected_type,
+                    "selected_type_name": housing_type.selected_type_name if hasattr(housing_type, 'selected_type_name') else housing_type.selected_type,
+                    "demand_score": housing_type.selection_confidence if hasattr(housing_type, 'selection_confidence') else 0,
                     "confidence_pct": housing_type.selection_confidence * 100 if hasattr(housing_type, 'selection_confidence') else 0,
                     "location_score": housing_type.location_score if hasattr(housing_type, 'location_score') else 0,
                     "demand_prediction": housing_type.demand_prediction if hasattr(housing_type, 'demand_prediction') else 0
                 },
                 "details": {
-                    "recommended_type": housing_type.selected_type,
-                    "recommended_type_name": housing_type.selected_type_name if hasattr(housing_type, 'selected_type_name') else housing_type.selected_type,
+                    "selected_type": housing_type.selected_type,
+                    "selected_type_name": housing_type.selected_type_name if hasattr(housing_type, 'selected_type_name') else housing_type.selected_type,
                     "total_score": housing_type.selection_confidence if hasattr(housing_type, 'selection_confidence') else 0,
                     "type_scores": type_scores,  # 🔥 추가: 유형별 점수
                     "poi_analysis": poi_data,  # 🔥 추가: POI 분석
+                    "location_analysis": poi_data,  # 🔥 추가: 입지 특성 분석 (동일 데이터)
                     "strengths": housing_type.strengths if hasattr(housing_type, 'strengths') else [],
                     "weaknesses": housing_type.weaknesses if hasattr(housing_type, 'weaknesses') else [],
                     "recommendations": housing_type.recommendations if hasattr(housing_type, 'recommendations') else []
