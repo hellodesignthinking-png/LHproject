@@ -2349,13 +2349,27 @@ def _prepare_template_data_for_enhanced(module_id: str, context_id: str, module_
     """
     from datetime import datetime
     
-    # ✅ NEW: Use advanced analysis logic for M3
+    # ✅ NEW: Use advanced analysis logic for M3/M4
     if module_id == "M3":
         from app.utils.m3_enhanced_logic import prepare_m3_enhanced_report_data
         try:
             return prepare_m3_enhanced_report_data(context_id, module_data)
         except Exception as e:
             logger.error(f"M3 enhanced logic failed: {e}, falling back to basic logic")
+            # Fallback to basic logic below
+    
+    if module_id == "M4":
+        from app.utils.m4_enhanced_logic import prepare_m4_enhanced_report_data
+        try:
+            result = prepare_m4_enhanced_report_data(context_id, module_data)
+            # Check for data integrity error
+            if result.get("error", False):
+                logger.error(f"M4 data integrity check failed: {result.get('error_details', [])}")
+                # Return error template data
+                return result
+            return result
+        except Exception as e:
+            logger.error(f"M4 enhanced logic failed: {e}, falling back to basic logic")
             # Fallback to basic logic below
     
     summary = module_data.get("summary", {})
