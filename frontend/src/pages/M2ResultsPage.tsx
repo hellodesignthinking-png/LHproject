@@ -14,8 +14,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { analysisAPI, ModuleResult, useProjectStatus } from '../../services/analysisAPI';
-import { ModuleStatusBar } from '../../components/ModuleStatusBar';
+import { analysisAPI, ModuleResult, useProjectStatus } from '../services/analysisAPI';
+import { ModuleStatusBar } from '../components/ModuleStatusBar';
 import './ModuleResultsPage.css';
 
 interface M2Data {

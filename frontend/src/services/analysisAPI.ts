@@ -11,9 +11,8 @@
  * from a specific context at a specific time.
  */
 
-import { config } from '../config';
-
-const API_BASE_URL = config.apiBaseUrl || 'http://localhost:8000';
+import React, { useEffect, useState } from 'react';
+import { API_BASE_URL } from '../config';
 
 // ============================================================================
 // Type Definitions
@@ -385,5 +384,5 @@ export function useProjectStatus(projectId: string | null, interval: number = 50
   return { status, loading, error };
 }
 
-// Note: React import needed for the hook
-import React from 'react';
+// Default export for easier imports
+export default analysisAPI;

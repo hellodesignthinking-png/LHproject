@@ -17,8 +17,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { analysisAPI, ModuleResult, useProjectStatus } from '../../services/analysisAPI';
-import { ModuleStatusBar } from '../../components/ModuleStatusBar';
+import { analysisAPI, ModuleResult, useProjectStatus } from '../services/analysisAPI';
+import { ModuleStatusBar } from '../components/ModuleStatusBar';
 import './M1VerificationPage.css';
 
 interface M1Data {

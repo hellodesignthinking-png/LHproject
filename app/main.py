@@ -24,7 +24,7 @@ from app.schemas import (
     ParcelAnalysisResult
 )
 from app.services.analysis_engine import AnalysisEngine
-from app.services.report_generator import ProfessionalReportGenerator
+# from app.services.report_generator import ProfessionalReportGenerator  # Phase 3 refactored
 from app.services.advanced_report_generator import ExpertReportGenerator
 from app.services.lh_official_report_generator import LHOfficialReportGenerator
 from app.services.lh_report_generator_v7_2 import LHReportGeneratorV72
