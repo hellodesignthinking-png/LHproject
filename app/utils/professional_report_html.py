@@ -2396,14 +2396,19 @@ def _prepare_template_data_for_enhanced(module_id: str, context_id: str, module_
     
     if module_id == "M5":
         from app.utils.m5_enhanced_logic import prepare_m5_enhanced_report_data
+        from app.services.context_storage import Context
         try:
             # M5 requires M4 data
             # Extract from module_data which contains full pipeline results
             results = module_data.get("results", {})
             m4_data = results.get("capacity", {})
             
-            # Call M5 enhanced logic with actual M4 data
-            result = prepare_m5_enhanced_report_data(context_id, m4_data, module_data)
+            # 🔴 데이터 바인딩 복구를 위한 frozen_context 조회
+            frozen_context = Context.get_frozen_context(context_id)
+            logger.info(f"🔄 Retrieved frozen_context for M5: {bool(frozen_context)}")
+            
+            # Call M5 enhanced logic with actual M4 data and frozen_context
+            result = prepare_m5_enhanced_report_data(context_id, m4_data, module_data, frozen_context)
             # Check for data integrity error
             if result.get("error", False):
                 logger.error(f"M5 data integrity check failed: {result.get('missing_items', [])}")
@@ -2411,11 +2416,12 @@ def _prepare_template_data_for_enhanced(module_id: str, context_id: str, module_
                 return result
             return result
         except Exception as e:
-            logger.error(f"M5 enhanced logic failed: {e}, falling back to basic logic")
+            logger.error(f"M5 enhanced logic failed: {e}", exc_info=True)
             # Fallback to basic logic below
     
     if module_id == "M6":
         from app.utils.m6_enhanced_logic import prepare_m6_enhanced_report_data
+        from app.services.context_storage import Context
         try:
             # M6 requires M1, M3, M4, M5 data
             # Extract from module_data which contains full pipeline results
@@ -2425,13 +2431,18 @@ def _prepare_template_data_for_enhanced(module_id: str, context_id: str, module_
             m4_data = results.get("capacity", {})
             m5_data = results.get("feasibility", {})
             
-            # Call M6 enhanced logic with actual pipeline data
+            # 🔴 데이터 바인딩 복구를 위한 frozen_context 조회
+            frozen_context = Context.get_frozen_context(context_id)
+            logger.info(f"🔄 Retrieved frozen_context for M6: {bool(frozen_context)}")
+            
+            # Call M6 enhanced logic with actual pipeline data and frozen_context
             result = prepare_m6_enhanced_report_data(
                 context_id,
                 m1_data,
                 m3_data,
                 m4_data,
-                m5_data
+                m5_data,
+                frozen_context
             )
             # Check for data integrity error
             if result.get("error", False):
@@ -2440,7 +2451,7 @@ def _prepare_template_data_for_enhanced(module_id: str, context_id: str, module_
                 return result
             return result
         except Exception as e:
-            logger.error(f"M6 enhanced logic failed: {e}, falling back to basic logic")
+            logger.error(f"M6 enhanced logic failed: {e}", exc_info=True)
             # Fallback to basic logic below
     
     summary = module_data.get("summary", {})

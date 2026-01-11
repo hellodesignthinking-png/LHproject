@@ -18,12 +18,25 @@ M6 Enhanced LH Comprehensive Review Logic - FAIL FAST Decision Chain
 8. 문서 표기
 9. 메타 선언
 
+🔴 데이터 바인딩 복구 강화 (2026-01-11 추가):
+- M1~M5 데이터 연결 상태 진단
+- Context ID 기반 상위 모듈 재조회
+- M6 판단 실행 조건 Gate 검증
+
 Author: ZeroSite Development Team
 Date: 2026-01-11
 """
 
 from typing import Dict, Any, List, Optional, Tuple
 import logging
+
+# 🔴 데이터 바인딩 복구 모듈 Import
+try:
+    from app.utils.data_binding_recovery import apply_data_binding_recovery
+    DATA_BINDING_RECOVERY_AVAILABLE = True
+except ImportError:
+    DATA_BINDING_RECOVERY_AVAILABLE = False
+    logging.warning("⚠️ data_binding_recovery module not available")
 
 logger = logging.getLogger(__name__)
 
@@ -36,13 +49,77 @@ class M6EnhancedAnalyzer:
     - 조건부 판단 구조만 허용
     """
     
-    def __init__(self, context_id: str, m1_data: Dict[str, Any], m3_data: Dict[str, Any], 
-                 m4_data: Dict[str, Any], m5_data: Dict[str, Any]):
+    def __init__(
+        self, 
+        context_id: str, 
+        m1_data: Dict[str, Any], 
+        m3_data: Dict[str, Any], 
+        m4_data: Dict[str, Any], 
+        m5_data: Dict[str, Any],
+        frozen_context: Optional[Dict[str, Any]] = None
+    ):
         self.context_id = context_id
         self.m1_data = m1_data
         self.m3_data = m3_data
         self.m4_data = m4_data
         self.m5_data = m5_data
+        self.frozen_context = frozen_context
+        
+        # 🔴 데이터 바인딩 복구 실행 (M1~M5 데이터 연결 확인)
+        if DATA_BINDING_RECOVERY_AVAILABLE and frozen_context:
+            logger.info(f"🔄 M6: Checking M1~M5 data binding for {context_id}")
+            
+            # 데이터 연결 상태 검증
+            binding_status = self._validate_data_binding()
+            
+            if not binding_status["all_connected"]:
+                logger.warning(f"⚠️ M6: Data binding issues detected: {binding_status['missing']}")
+                
+                # 데이터 재조회 시도
+                self._recover_missing_data(frozen_context, binding_status["missing"])
+        
+        self.binding_error = False
+        self.binding_error_message = None
+    
+    def _validate_data_binding(self) -> Dict[str, Any]:
+        """M1~M5 데이터 연결 상태 검증"""
+        missing = []
+        
+        if not self.m1_data or len(self.m1_data) == 0:
+            missing.append("M1")
+        if not self.m3_data or len(self.m3_data) == 0:
+            missing.append("M3")
+        if not self.m4_data or len(self.m4_data) == 0:
+            missing.append("M4")
+        if not self.m5_data or len(self.m5_data) == 0:
+            missing.append("M5")
+        
+        return {
+            "all_connected": len(missing) == 0,
+            "missing": missing
+        }
+    
+    def _recover_missing_data(self, frozen_context: Dict[str, Any], missing_modules: List[str]):
+        """누락된 모듈 데이터 재조회"""
+        for module_id in missing_modules:
+            module_result = frozen_context.get(module_id, {})
+            if module_result:
+                result_data = module_result.get("result", {})
+                
+                if module_id == "M1":
+                    self.m1_data = result_data
+                    logger.info(f"✅ M6: M1 data recovered")
+                elif module_id == "M3":
+                    self.m3_data = result_data
+                    logger.info(f"✅ M6: M3 data recovered")
+                elif module_id == "M4":
+                    self.m4_data = result_data
+                    logger.info(f"✅ M6: M4 data recovered")
+                elif module_id == "M5":
+                    self.m5_data = result_data
+                    logger.info(f"✅ M6: M5 data recovered")
+            else:
+                logger.error(f"❌ M6: {module_id} data recovery failed")
         
     def validate_decision_chain(self) -> Tuple[bool, List[str]]:
         """
@@ -346,14 +423,26 @@ def prepare_m6_enhanced_report_data(
     m1_data: Dict[str, Any],
     m3_data: Dict[str, Any],
     m4_data: Dict[str, Any],
-    m5_data: Dict[str, Any]
+    m5_data: Dict[str, Any],
+    frozen_context: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
     """
     M6 Enhanced 보고서 데이터 준비 (외부 호출용)
     
     최상위 원칙: FAIL FAST
+    
+    Args:
+        context_id: Context ID
+        m1_data: M1 토지 정보
+        m3_data: M3 공급 유형
+        m4_data: M4 건축 규모
+        m5_data: M5 사업성 분석
+        frozen_context: Context.get_frozen_context(context_id) 결과 (데이터 바인딩 복구용)
+    
+    Returns:
+        보고서 데이터 또는 에러 상태
     """
-    analyzer = M6EnhancedAnalyzer(context_id, m1_data, m3_data, m4_data, m5_data)
+    analyzer = M6EnhancedAnalyzer(context_id, m1_data, m3_data, m4_data, m5_data, frozen_context)
     
     # Step 1: Decision Chain 무결성 검증
     is_valid, errors = analyzer.validate_decision_chain()

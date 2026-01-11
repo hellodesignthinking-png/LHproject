@@ -14,6 +14,11 @@ M5 Enhanced Feasibility Analysis Logic - LH Public Rental Project
 9. M6 연계 문장 필수
 10. 기술 오류 제거
 
+🔴 데이터 바인딩 복구 강화 (2026-01-11 추가):
+- M4 데이터 연결 상태 진단
+- Context ID 기반 M4 결과 재조회
+- M5 계산 실행 조건 Gate 검증
+
 Author: ZeroSite Development Team
 Date: 2026-01-11
 """
@@ -21,6 +26,14 @@ Date: 2026-01-11
 from typing import Dict, Any, List, Optional, Tuple
 import logging
 import math
+
+# 🔴 데이터 바인딩 복구 모듈 Import
+try:
+    from app.utils.data_binding_recovery import apply_data_binding_recovery
+    DATA_BINDING_RECOVERY_AVAILABLE = True
+except ImportError:
+    DATA_BINDING_RECOVERY_AVAILABLE = False
+    logging.warning("⚠️ data_binding_recovery module not available")
 
 logger = logging.getLogger(__name__)
 
@@ -33,12 +46,62 @@ class M5EnhancedAnalyzer:
     - 재무 지표 간 논리 일관성 보장
     """
     
-    def __init__(self, context_id: str, m4_data: Dict[str, Any], module_data: Dict[str, Any]):
+    def __init__(
+        self, 
+        context_id: str, 
+        m4_data: Dict[str, Any], 
+        module_data: Dict[str, Any],
+        frozen_context: Optional[Dict[str, Any]] = None
+    ):
         self.context_id = context_id
         self.m4_data = m4_data
         self.summary = module_data.get("summary", {})
         self.details = module_data.get("details", {})
         self.raw_data = module_data
+        self.frozen_context = frozen_context
+        
+        # 🔴 데이터 바인딩 복구 실행 (M4 데이터 연결 확인)
+        if DATA_BINDING_RECOVERY_AVAILABLE and frozen_context:
+            logger.info(f"🔄 M5: Checking M4 data binding for {context_id}")
+            
+            # M4 데이터 검증
+            m4_valid = self._validate_m4_data_connection()
+            
+            if not m4_valid:
+                logger.warning(f"⚠️ M5: M4 data connection issue detected")
+                
+                # M4 데이터 재조회 시도
+                m4_result = frozen_context.get("M4", {})
+                if m4_result:
+                    self.m4_data = m4_result.get("result", {})
+                    logger.info(f"✅ M5: M4 data recovered from frozen context")
+                else:
+                    logger.error(f"❌ M5: M4 data recovery failed")
+                    self.binding_error = True
+                    self.binding_error_message = "M4 건축규모 데이터가 연결되지 않았습니다."
+                    return
+        
+        self.binding_error = False
+        self.binding_error_message = None
+    
+    def _validate_m4_data_connection(self) -> bool:
+        """M4 데이터 연결 상태 검증"""
+        if not self.m4_data or len(self.m4_data) == 0:
+            logger.warning(f"⚠️ M5: M4 data is empty")
+            return False
+        
+        # 필수 필드 확인
+        m4_summary = self.m4_data.get("summary", {})
+        m4_details = self.m4_data.get("details", {})
+        
+        unit_count = m4_summary.get("recommended_units") or m4_details.get("optimal_units")
+        total_floor_area = m4_details.get("total_floor_area_sqm")
+        
+        if not unit_count or not total_floor_area:
+            logger.warning(f"⚠️ M5: M4 required fields missing")
+            return False
+        
+        return True
         
     def validate_required_data(self) -> Tuple[bool, List[str]]:
         """
@@ -437,13 +500,45 @@ class M5EnhancedAnalyzer:
         return risks
 
 
-def prepare_m5_enhanced_report_data(context_id: str, m4_data: Dict[str, Any], module_data: Dict[str, Any]) -> Dict[str, Any]:
+def prepare_m5_enhanced_report_data(
+    context_id: str, 
+    m4_data: Dict[str, Any], 
+    module_data: Dict[str, Any],
+    frozen_context: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     """
     M5 Enhanced 보고서 데이터 준비 (외부 호출용)
     
     Hard Stop 규칙 10: 최종 검증
+    
+    Args:
+        context_id: Context ID
+        m4_data: M4 모듈 데이터
+        module_data: M5 모듈 데이터
+        frozen_context: Context.get_frozen_context(context_id) 결과 (데이터 바인딩 복구용)
+    
+    Returns:
+        보고서 데이터 또는 에러 상태
     """
-    analyzer = M5EnhancedAnalyzer(context_id, m4_data, module_data)
+    analyzer = M5EnhancedAnalyzer(context_id, m4_data, module_data, frozen_context)
+    
+    # 🔴 데이터 바인딩 에러 체크
+    if analyzer.binding_error:
+        from datetime import datetime
+        logger.error(f"❌ M5 Data Binding Error for {context_id}")
+        
+        return {
+            "error": True,
+            "error_type": "DATA_BINDING_ERROR",
+            "error_message": analyzer.binding_error_message,
+            "missing_items": ["M4 건축규모 데이터"],
+            "context_id": context_id,
+            "report_id": f"ZS-M5-BINDING-ERROR-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+            "use_data_not_loaded_template": True,
+            "template_version": "connection_error",
+            "analysis_date": datetime.now().strftime("%Y년 %m월 %d일"),
+            "fixed_message": "ZeroSite는 M4 건축규모 데이터가 연결되지 않은 상태에서 사업성 분석을 수행하지 않습니다."
+        }
     
     # Step 1: 데이터 무결성 검증
     is_valid, missing_items = analyzer.validate_required_data()
