@@ -1017,8 +1017,9 @@ def _generate_m2_content(summary: Dict, details: Dict) -> str:
     
     if transaction_cases:
         for idx, case in enumerate(transaction_cases[:5], 1):
-            case_price = case.get('price', 0)
-            case_area = case.get('area', 0)
+            # Convert to float to handle both string and numeric inputs
+            case_price = float(case.get('price', 0)) if case.get('price') else 0
+            case_area = float(case.get('area', 0)) if case.get('area') else 0
             unit_price_case = case_price / case_area if case_area > 0 else 0
             
             content += f"""
@@ -1053,8 +1054,9 @@ def _generate_m2_content(summary: Dict, details: Dict) -> str:
     
     if transaction_cases:
         for idx, case in enumerate(transaction_cases[:5], 1):
-            case_price = case.get('price', 0)
-            case_area = case.get('area', 0)
+            # Convert to float to handle both string and numeric inputs
+            case_price = float(case.get('price', 0)) if case.get('price') else 0
+            case_area = float(case.get('area', 0)) if case.get('area') else 0
             unit_price_case = case_price / case_area if case_area > 0 else 0
             case_address = case.get('address', '주소 정보 없음')
             case_date = case.get('date', 'N/A')
