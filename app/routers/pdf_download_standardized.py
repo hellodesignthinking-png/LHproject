@@ -246,9 +246,18 @@ def _get_real_data_for_module(module: str, context_id: str) -> dict:
                 },
                 "details": {
                     "appraisal": {
+                        "method": appraisal.valuation_method if hasattr(appraisal, 'valuation_method') else "공시지가 기준법",
                         "land_value": appraisal.land_value,
+                        "unit_price": appraisal.unit_price_sqm if hasattr(appraisal, 'unit_price_sqm') else 0,
                         "unit_price_sqm": appraisal.unit_price_sqm if hasattr(appraisal, 'unit_price_sqm') else 0,
-                        "unit_price_pyeong": appraisal.unit_price_pyeong if hasattr(appraisal, 'unit_price_pyeong') else 0
+                        "unit_price_pyeong": appraisal.unit_price_pyeong if hasattr(appraisal, 'unit_price_pyeong') else 0,
+                        # 🔥 추가: 공시지가 정보
+                        "base_price": appraisal.official_price if hasattr(appraisal, 'official_price') else 0,
+                        "base_price_per_sqm": appraisal.official_price_per_sqm if hasattr(appraisal, 'official_price_per_sqm') else 0,
+                        # 🔥 추가: 조정률 (평균 거래가 / 공시지가)
+                        "adjustment_rate": ((appraisal.unit_price_sqm / appraisal.official_price_per_sqm * 100 - 100) 
+                                          if hasattr(appraisal, 'official_price_per_sqm') and appraisal.official_price_per_sqm > 0 
+                                          else 0)
                     },
                     "transactions": {
                         "cases": transaction_cases  # 🔥 Phase 8: Add transaction cases
@@ -261,15 +270,48 @@ def _get_real_data_for_module(module: str, context_id: str) -> dict:
         
         elif module == "M3":
             housing_type = result.housing_type
+            
+            # 🔥 Phase 8 Enhancement: Extract detailed housing type analysis
+            type_scores = {}
+            if hasattr(housing_type, 'type_scores'):
+                for type_key, type_score in housing_type.type_scores.items():
+                    if hasattr(type_score, 'total_score'):
+                        type_scores[type_key] = {
+                            "score": type_score.total_score,
+                            "name": type_score.type_name if hasattr(type_score, 'type_name') else type_key
+                        }
+            
+            # POI 분석
+            poi_data = {}
+            if hasattr(housing_type, 'poi_analysis'):
+                poi = housing_type.poi_analysis
+                poi_data = {
+                    "subway_count": poi.subway_count if hasattr(poi, 'subway_count') else 0,
+                    "bus_stop_count": poi.bus_stop_count if hasattr(poi, 'bus_stop_count') else 0,
+                    "convenience_count": poi.convenience_count if hasattr(poi, 'convenience_count') else 0,
+                    "hospital_count": poi.hospital_count if hasattr(poi, 'hospital_count') else 0,
+                    "school_count": poi.school_count if hasattr(poi, 'school_count') else 0,
+                    "park_count": poi.park_count if hasattr(poi, 'park_count') else 0
+                }
+            
             data = {
                 "summary": {
                     "recommended_type": housing_type.selected_type,
-                    "total_score": housing_type.score if hasattr(housing_type, 'score') else 0,
-                    "confidence_pct": housing_type.confidence_score * 100 if hasattr(housing_type, 'confidence_score') else 0
+                    "recommended_type_name": housing_type.selected_type_name if hasattr(housing_type, 'selected_type_name') else housing_type.selected_type,
+                    "total_score": housing_type.selection_confidence if hasattr(housing_type, 'selection_confidence') else 0,
+                    "confidence_pct": housing_type.selection_confidence * 100 if hasattr(housing_type, 'selection_confidence') else 0,
+                    "location_score": housing_type.location_score if hasattr(housing_type, 'location_score') else 0,
+                    "demand_prediction": housing_type.demand_prediction if hasattr(housing_type, 'demand_prediction') else 0
                 },
                 "details": {
                     "recommended_type": housing_type.selected_type,
-                    "total_score": housing_type.score if hasattr(housing_type, 'score') else 0
+                    "recommended_type_name": housing_type.selected_type_name if hasattr(housing_type, 'selected_type_name') else housing_type.selected_type,
+                    "total_score": housing_type.selection_confidence if hasattr(housing_type, 'selection_confidence') else 0,
+                    "type_scores": type_scores,  # 🔥 추가: 유형별 점수
+                    "poi_analysis": poi_data,  # 🔥 추가: POI 분석
+                    "strengths": housing_type.strengths if hasattr(housing_type, 'strengths') else [],
+                    "weaknesses": housing_type.weaknesses if hasattr(housing_type, 'weaknesses') else [],
+                    "recommendations": housing_type.recommendations if hasattr(housing_type, 'recommendations') else []
                 }
             }
         

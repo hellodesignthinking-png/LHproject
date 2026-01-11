@@ -671,6 +671,7 @@ def _generate_m2_content(summary: Dict, details: Dict) -> str:
         <table class="data-table">
             <thead>
                 <tr>
+                    <th>주소</th>
                     <th>거래일</th>
                     <th>거래면적</th>
                     <th>거래금액</th>
@@ -686,16 +687,17 @@ def _generate_m2_content(summary: Dict, details: Dict) -> str:
         for case in transaction_cases[:5]:  # Show top 5
             content += f"""
                 <tr>
+                    <td>{case.get('address', 'N/A')}</td>
                     <td>{case.get('date', 'N/A')}</td>
                     <td>{case.get('area', 'N/A')}㎡</td>
-                    <td>{format_currency(case.get('amount'))}</td>
-                    <td>{case.get('distance', 'N/A')}m</td>
+                    <td>{format_currency(case.get('price', 0))}</td>
+                    <td>{case.get('distance', 'N/A')}</td>
                 </tr>
             """
     else:
         content += """
                 <tr>
-                    <td colspan="4" style="text-align: center; color: #999;">거래사례 데이터가 없습니다</td>
+                    <td colspan="5" style="text-align: center; color: #999;">거래사례 데이터가 없습니다</td>
                 </tr>
         """
     
