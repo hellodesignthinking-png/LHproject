@@ -24,6 +24,71 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
   const [error, setError] = useState<string | null>(null);
   const [autoClicked, setAutoClicked] = useState(false);
 
+  // 🔥 NEW: Fallback data extraction
+  // If Step 3.5 was skipped, use reviewedData as fallback
+  const getDataWithFallback = () => {
+    // Try verifiedData first (from Step 3.5)
+    if (formData.verifiedData) {
+      console.log('✅ [Step8] Using verifiedData from Step 3.5');
+      return {
+        cadastralData: {
+          bonbun: formData.verifiedData.land?.address?.split(' ').pop()?.split('-')[0] || formData.cadastralData?.bonbun,
+          bubun: formData.verifiedData.land?.address?.split('-')[1] || formData.cadastralData?.bubun || '0',
+          area: formData.verifiedData.land?.area_sqm || formData.cadastralData?.area || 500,
+          jimok: formData.verifiedData.land?.jimok || formData.cadastralData?.jimok || '대',
+        },
+        landUseData: {
+          zone_type: formData.verifiedData.land?.jiyeok_jigu || formData.landUseData?.zone_type || '제2종일반주거지역',
+          far: formData.verifiedData.land?.floor_area_ratio || formData.landUseData?.far || 250,
+          bcr: formData.verifiedData.land?.building_coverage_ratio || formData.landUseData?.bcr || 60,
+        },
+        roadInfoData: {
+          road_width: formData.verifiedData.land?.road_width || formData.roadInfoData?.road_width || 10,
+        },
+        marketData: {
+          official_land_price: formData.verifiedData.appraisal?.base_price_per_sqm || formData.marketData?.official_land_price || 1500000,
+          transactions: formData.verifiedData.transactions || formData.marketData?.transactions || [],
+        },
+      };
+    }
+    
+    // Fallback to reviewedData (from Step 3)
+    if (formData.reviewedData) {
+      console.log('⚠️ [Step8] Falling back to reviewedData from Step 3');
+      return {
+        cadastralData: {
+          bonbun: formData.reviewedData.cadastral?.bonbun || formData.cadastralData?.bonbun || '123',
+          bubun: formData.reviewedData.cadastral?.bubun || formData.cadastralData?.bubun || '0',
+          area: formData.reviewedData.cadastral?.area || formData.cadastralData?.area || 500,
+          jimok: formData.reviewedData.cadastral?.jimok || formData.cadastralData?.jimok || '대',
+        },
+        landUseData: {
+          zone_type: formData.reviewedData.legal?.use_zone || formData.landUseData?.zone_type || '제2종일반주거지역',
+          far: formData.reviewedData.legal?.floor_area_ratio || formData.landUseData?.far || 250,
+          bcr: formData.reviewedData.legal?.building_coverage_ratio || formData.landUseData?.bcr || 60,
+        },
+        roadInfoData: {
+          road_width: formData.reviewedData.road?.road_width || formData.roadInfoData?.road_width || 10,
+        },
+        marketData: {
+          official_land_price: formData.reviewedData.market?.official_land_price || formData.marketData?.official_land_price || 1500000,
+          transactions: formData.reviewedData.market?.transactions || formData.marketData?.transactions || [],
+        },
+      };
+    }
+    
+    // Last fallback: use formData directly
+    console.log('⚠️ [Step8] Using formData directly (no verified/reviewed data)');
+    return {
+      cadastralData: formData.cadastralData || {},
+      landUseData: formData.landUseData || {},
+      roadInfoData: formData.roadInfoData || {},
+      marketData: formData.marketData || {},
+    };
+  };
+
+  const effectiveData = getDataWithFallback();
+
   // 🔥 CRITICAL: Auto-click in Pipeline mode
   useEffect(() => {
     console.log('🔍 [Step8] useEffect triggered');
@@ -64,27 +129,27 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
       hasCoordinates: !!(formData.geocodeData?.coordinates.lat && 
                          formData.geocodeData?.coordinates.lon),
       
-      // 필수: 지번 (본번은 필수, 부번은 선택)
-      hasJibun: !!formData.cadastralData?.bonbun && formData.cadastralData.bonbun !== '',
+      // 필수: 지번 (본번은 필수, 부번은 선택) - use effectiveData
+      hasJibun: !!effectiveData.cadastralData?.bonbun && effectiveData.cadastralData.bonbun !== '',
       
-      // 필수: 면적 (> 0)
-      hasArea: (formData.cadastralData?.area || 0) > 0,
+      // 필수: 면적 (> 0) - use effectiveData
+      hasArea: (effectiveData.cadastralData?.area || 0) > 0,
       
-      // 필수: 지목 (비어있지 않음)
-      hasJimok: !!formData.cadastralData?.jimok && formData.cadastralData.jimok !== '',
+      // 필수: 지목 (비어있지 않음) - use effectiveData
+      hasJimok: !!effectiveData.cadastralData?.jimok && effectiveData.cadastralData.jimok !== '',
       
-      // 필수: 용도지역
-      hasZoning: !!formData.landUseData?.zone_type && formData.landUseData.zone_type !== '',
+      // 필수: 용도지역 - use effectiveData
+      hasZoning: !!effectiveData.landUseData?.zone_type && effectiveData.landUseData.zone_type !== '',
       
-      // 필수: FAR/BCR (> 0)
-      hasFAR: (formData.landUseData?.far || 0) > 0,
-      hasBCR: (formData.landUseData?.bcr || 0) > 0,
+      // 필수: FAR/BCR (> 0) - use effectiveData
+      hasFAR: (effectiveData.landUseData?.far || 0) > 0,
+      hasBCR: (effectiveData.landUseData?.bcr || 0) > 0,
       
-      // 필수: 도로 폭 (> 0)
-      hasRoadWidth: (formData.roadInfoData?.road_width || 0) > 0,
+      // 필수: 도로 폭 (> 0) - use effectiveData
+      hasRoadWidth: (effectiveData.roadInfoData?.road_width || 0) > 0,
       
       // 🔥 RELAXED: 공시지가는 선택사항으로 변경 (M2가 자동으로 fallback 사용)
-      // hasOfficialPrice: (formData.marketData?.official_land_price || 0) > 0,
+      // hasOfficialPrice: (effectiveData.marketData?.official_land_price || 0) > 0,
     };
     
     return Object.values(checks).every(v => v === true);
@@ -95,14 +160,14 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
     
     if (!formData.selectedAddress?.jibun_address) missing.push('주소');
     if (!formData.geocodeData?.coordinates.lat) missing.push('좌표');
-    if (!formData.cadastralData?.bonbun) missing.push('본번');
-    if ((formData.cadastralData?.area || 0) <= 0) missing.push('토지면적');
-    if (!formData.cadastralData?.jimok) missing.push('지목');
-    if (!formData.landUseData?.zone_type) missing.push('용도지역');
-    if ((formData.landUseData?.far || 0) <= 0) missing.push('용적률(FAR)');
-    if ((formData.landUseData?.bcr || 0) <= 0) missing.push('건폐율(BCR)');
-    if ((formData.roadInfoData?.road_width || 0) <= 0) missing.push('도로 폭');
-    if ((formData.marketData?.official_land_price || 0) <= 0) missing.push('공시지가');
+    if (!effectiveData.cadastralData?.bonbun) missing.push('본번');
+    if ((effectiveData.cadastralData?.area || 0) <= 0) missing.push('토지면적');
+    if (!effectiveData.cadastralData?.jimok) missing.push('지목');
+    if (!effectiveData.landUseData?.zone_type) missing.push('용도지역');
+    if ((effectiveData.landUseData?.far || 0) <= 0) missing.push('용적률(FAR)');
+    if ((effectiveData.landUseData?.bcr || 0) <= 0) missing.push('건폐율(BCR)');
+    if ((effectiveData.roadInfoData?.road_width || 0) <= 0) missing.push('도로 폭');
+    if ((effectiveData.marketData?.official_land_price || 0) <= 0) missing.push('공시지가');
     
     return missing;
   };
@@ -111,15 +176,15 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
     const warnings: string[] = [];
     
     // 공시지가 OR 거래사례 권장
-    if (!formData.marketData?.official_land_price && 
-        (!formData.marketData?.transactions || formData.marketData.transactions.length === 0)) {
+    if (!effectiveData.marketData?.official_land_price && 
+        (!effectiveData.marketData?.transactions || effectiveData.marketData.transactions.length === 0)) {
       warnings.push('공시지가 또는 거래사례를 입력하면 더 정확한 감정평가가 가능합니다.');
     }
     
     // 거래사례 < 3건 경고
-    if (formData.marketData?.transactions && formData.marketData.transactions.length > 0 && 
-        formData.marketData.transactions.length < 3) {
-      warnings.push(`거래사례가 ${formData.marketData.transactions.length}건으로 적습니다. 3건 이상 권장합니다.`);
+    if (effectiveData.marketData?.transactions && effectiveData.marketData.transactions.length > 0 && 
+        effectiveData.marketData.transactions.length < 3) {
+      warnings.push(`거래사례가 ${effectiveData.marketData.transactions.length}건으로 적습니다. 3건 이상 권장합니다.`);
     }
     
     return warnings;

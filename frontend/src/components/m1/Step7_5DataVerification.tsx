@@ -53,6 +53,9 @@ const Step7_5DataVerification: React.FC<Step7_5DataVerificationProps> = ({
   onBack,
   initialData
 }) => {
+  console.log('🎯🎯🎯 [Step3.5] COMPONENT RENDERING!');
+  console.log('📋 [Step3.5] initialData:', initialData);
+  
   const [isEditing, setIsEditing] = useState<{ [key: string]: boolean }>({});
   const [data, setData] = useState<VerificationData>({
     land: initialData?.land || {
