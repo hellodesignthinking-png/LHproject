@@ -13,6 +13,13 @@ M4 Enhanced Analysis Logic - Building Capacity Decision with Data Integrity Vali
 8. 점수·평가 조건 충족 시에만 출력
 9. 기술적 오류 제거 (Python 객체 주소, 공란, NULL 금지)
 
+🔴 데이터 바인딩 복구 강화 (2026-01-11 추가):
+- 0단계: 데이터 연결 상태 진단 (최우선)
+- 1단계: Context ID 기반 상위 모듈(M1~M3) 재조회
+- 2단계: M4 계산 실행 조건 Gate 검증
+- 3단계: 계산 결과 출력 규칙 강화
+- 바인딩 실패 시 즉시 중단 + 안내 메시지
+
 Author: ZeroSite Development Team
 Date: 2026-01-11
 """
@@ -20,6 +27,14 @@ Date: 2026-01-11
 from typing import Dict, Any, List, Tuple, Optional
 import logging
 import re
+
+# 🔴 데이터 바인딩 복구 모듈 Import
+try:
+    from app.utils.data_binding_recovery import apply_data_binding_recovery
+    DATA_BINDING_RECOVERY_AVAILABLE = True
+except ImportError:
+    DATA_BINDING_RECOVERY_AVAILABLE = False
+    logging.warning("⚠️ data_binding_recovery module not available")
 
 logger = logging.getLogger(__name__)
 
@@ -60,11 +75,38 @@ class M4EnhancedAnalyzer:
     # 공용면적 비율 (복도형 기준)
     COMMON_AREA_RATIO = 0.35  # 35%
     
-    def __init__(self, context_id: str, module_data: Dict[str, Any]):
+    def __init__(self, context_id: str, module_data: Dict[str, Any], frozen_context: Optional[Dict[str, Any]] = None):
         self.context_id = context_id
         self.summary = module_data.get("summary", {})
         self.details = module_data.get("details", {})
         self.raw_data = module_data
+        self.frozen_context = frozen_context
+        
+        # 🔴 데이터 바인딩 복구 실행 (최우선)
+        if DATA_BINDING_RECOVERY_AVAILABLE and frozen_context:
+            logger.info(f"🔄 Attempting data binding recovery for {context_id}")
+            recovery_result = apply_data_binding_recovery(
+                context_id=context_id,
+                module_data=self.details,
+                frozen_context=frozen_context
+            )
+            
+            if recovery_result["status"] == "BINDING_ERROR":
+                logger.error(f"❌ Data binding recovery FAILED for {context_id}")
+                self.binding_error = True
+                self.binding_error_message = recovery_result["error_message"]
+                self.m1_data = {}
+                self.m3_supply_type = ""
+                return
+            elif recovery_result["status"] == "RECOVERED":
+                logger.info(f"✅ Data binding RECOVERED for {context_id}")
+                # 복구된 데이터로 details 갱신
+                self.details.update(recovery_result["data"])
+            else:
+                logger.info(f"✅ Data already CONNECTED for {context_id}")
+        
+        self.binding_error = False
+        self.binding_error_message = None
         
         # M1 데이터 추출
         self.m1_data = self._extract_m1_data()
@@ -554,9 +596,33 @@ class M4EnhancedAnalyzer:
         }
 
 
-def prepare_m4_enhanced_report_data(context_id: str, module_data: Dict[str, Any]) -> Dict[str, Any]:
+def prepare_m4_enhanced_report_data(
+    context_id: str, 
+    module_data: Dict[str, Any],
+    frozen_context: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     """
     M4 Enhanced 보고서 데이터 준비 (외부 호출용)
+    
+    Args:
+        context_id: Context ID
+        module_data: M4 모듈 데이터
+        frozen_context: Context.get_frozen_context(context_id) 결과 (데이터 바인딩 복구용)
+    
+    Returns:
+        보고서 데이터 또는 에러 상태
     """
-    analyzer = M4EnhancedAnalyzer(context_id, module_data)
+    analyzer = M4EnhancedAnalyzer(context_id, module_data, frozen_context)
+    
+    # 🔴 데이터 바인딩 에러 체크
+    if analyzer.binding_error:
+        logger.error(f"❌ M4 Data Binding Error for {context_id}")
+        return {
+            "error": True,
+            "error_type": "DATA_BINDING_ERROR",
+            "error_message": analyzer.binding_error_message,
+            "use_data_insufficient_template": True,
+            "template_version": "connection_error"
+        }
+    
     return analyzer.generate_full_m4_report_data()

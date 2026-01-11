@@ -110,9 +110,13 @@ def generate_module_report_html(
                     # V2 템플릿 사용 여부 확인
                     template_version = template_data.get("template_version", "v1")
                     
-                    template_file = {
-                        "M4": f"m4_data_insufficient_v2.html" if template_version == "v2" else "m4_data_insufficient.html",
-                    }.get(module_id, "m4_data_insufficient.html")
+                    # 🔴 DATA CONNECTION ERROR (최우선)
+                    if template_version == "connection_error":
+                        template_file = "m4_data_connection_error.html"
+                    else:
+                        template_file = {
+                            "M4": f"m4_data_insufficient_v2.html" if template_version == "v2" else "m4_data_insufficient.html",
+                        }.get(module_id, "m4_data_insufficient.html")
                 
                 # M5: DATA NOT LOADED
                 elif template_data.get("use_data_not_loaded_template"):
@@ -2373,8 +2377,13 @@ def _prepare_template_data_for_enhanced(module_id: str, context_id: str, module_
     
     if module_id == "M4":
         from app.utils.m4_enhanced_logic import prepare_m4_enhanced_report_data
+        from app.services.context_storage import Context
         try:
-            result = prepare_m4_enhanced_report_data(context_id, module_data)
+            # 🔴 데이터 바인딩 복구를 위한 frozen_context 조회
+            frozen_context = Context.get_frozen_context(context_id)
+            logger.info(f"🔄 Retrieved frozen_context for M4: {bool(frozen_context)}")
+            
+            result = prepare_m4_enhanced_report_data(context_id, module_data, frozen_context)
             # Check for data integrity error
             if result.get("error", False):
                 logger.error(f"M4 data integrity check failed: {result.get('error_details', [])}")
@@ -2382,7 +2391,7 @@ def _prepare_template_data_for_enhanced(module_id: str, context_id: str, module_
                 return result
             return result
         except Exception as e:
-            logger.error(f"M4 enhanced logic failed: {e}, falling back to basic logic")
+            logger.error(f"M4 enhanced logic failed: {e}", exc_info=True)
             # Fallback to basic logic below
     
     if module_id == "M5":
