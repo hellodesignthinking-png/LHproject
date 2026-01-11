@@ -466,24 +466,46 @@
             try {
                 // Step 1: M1 토지정보 분석
                 await runModule('m1', 'M1: 토지정보 수집', async () => {
-                    const payload = { address };
+                    // 1-1: 주소 검색으로 lat/lon 획득
+                    const searchResponse = await fetch('/api/m1/address/search', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: address })
+                    });
+                    
+                    const searchData = await searchResponse.json();
+                    
+                    if (!searchResponse.ok || !searchData.suggestions || searchData.suggestions.length === 0) {
+                        throw new Error('주소를 찾을 수 없습니다. 정확한 주소를 입력해주세요.');
+                    }
+                    
+                    const firstResult = searchData.suggestions[0];
+                    const finalAddress = firstResult.road_address || firstResult.jibun_address;
+                    
+                    // 1-2: collect-all로 전체 정보 수집
+                    const payload = {
+                        address: finalAddress,
+                        lat: firstResult.coordinates.lat,
+                        lon: firstResult.coordinates.lon
+                    };
+                    
                     if (landArea) payload.land_area_sqm = parseFloat(landArea);
                     if (zoning) payload.zoning = zoning;
 
-                    const response = await fetch('/api/m1/collect-all', {
+                    const collectResponse = await fetch('/api/m1/collect-all', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
                     
-                    const data = await response.json();
+                    const collectData = await collectResponse.json();
                     
-                    if (!response.ok) {
-                        throw new Error(data.detail || data.message || 'M1 분석 실패');
+                    if (!collectResponse.ok) {
+                        throw new Error(collectData.detail || collectData.message || 'M1 분석 실패');
                     }
                     
-                    currentContextId = data.context_id;
-                    return `Context ID: ${currentContextId}`;
+                    currentContextId = collectData.context_id;
+                    return `Context ID: ${currentContextId} | ${finalAddress}`;
                 });
 
                 // Step 2: M3 공급유형 결정
