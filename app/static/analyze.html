@@ -466,14 +466,21 @@
             try {
                 // Step 1: M1 토지정보 분석
                 await runModule('m1', 'M1: 토지정보 수집', async () => {
-                    const params = new URLSearchParams({ address });
-                    if (landArea) params.append('land_area_sqm', landArea);
-                    if (zoning) params.append('zoning', zoning);
+                    const payload = { address };
+                    if (landArea) payload.land_area_sqm = parseFloat(landArea);
+                    if (zoning) payload.zoning = zoning;
 
-                    const response = await fetch(`/api/m1/v2/analyze?${params}`, { method: 'POST' });
+                    const response = await fetch('/api/m1/collect-all', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
                     const data = await response.json();
                     
-                    if (!response.ok) throw new Error(data.detail || 'M1 분석 실패');
+                    if (!response.ok) {
+                        throw new Error(data.detail || data.message || 'M1 분석 실패');
+                    }
                     
                     currentContextId = data.context_id;
                     return `Context ID: ${currentContextId}`;
