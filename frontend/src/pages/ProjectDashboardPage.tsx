@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { analysisAPI, ProjectStatus } from '../services/analysisAPI';
+import { analysisAPI, AnalysisStatus } from '../services/analysisAPI';
 import { ModuleStatusBar } from '../components/ModuleStatusBar';
 import './ProjectDashboardPage.css';
 
 export const ProjectDashboardPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const [status, setStatus] = useState<ProjectStatus | null>(null);
+  const [status, setStatus] = useState<AnalysisStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,8 +21,8 @@ export const ProjectDashboardPage: React.FC = () => {
         setStatus(data);
 
         // Auto-navigate to M1 verification if not yet verified
-        if (data.module_statuses.M1 === 'PENDING' || 
-            data.module_statuses.M1 === 'IN_PROGRESS') {
+        if (data.m1_status.status === 'not_started' || 
+            data.m1_status.status === 'in_progress') {
           navigate(`/projects/${projectId}/modules/m1/verify`, { replace: true });
         }
       } catch (err: any) {
@@ -42,20 +42,18 @@ export const ProjectDashboardPage: React.FC = () => {
   const handleNavigateToModule = (module: string) => {
     if (!projectId || !status) return;
 
-    const moduleStatus = status.module_statuses[module];
+    const moduleKey = `${module.toLowerCase()}_status` as keyof AnalysisStatus;
+    const moduleInfo = status[moduleKey] as any;
+    const moduleStatus = moduleInfo?.status || 'not_started';
     
     if (module === 'M1') {
-      if (moduleStatus === 'VERIFIED' || moduleStatus === 'COMPLETED') {
-        navigate(`/projects/${projectId}/modules/m1/verify`);
-      } else {
-        navigate(`/projects/${projectId}/modules/m1/verify`);
-      }
-    } else if (moduleStatus === 'VERIFIED' || moduleStatus === 'COMPLETED') {
+      navigate(`/projects/${projectId}/modules/m1/verify`);
+    } else if (moduleStatus === 'verified' || moduleStatus === 'completed') {
       navigate(`/projects/${projectId}/modules/${module.toLowerCase()}/results`);
-    } else if (moduleStatus === 'LOCKED') {
-      alert(`Please complete previous modules before accessing ${module}`);
-    } else if (moduleStatus === 'INVALID') {
-      alert(`${module} results are invalid. Please re-execute the module.`);
+    } else if (moduleStatus === 'not_started') {
+      alert(`이전 모듈을 먼저 완료해주세요`);
+    } else if (moduleStatus === 'invalid') {
+      alert(`${module} 결과가 유효하지 않습니다. 다시 실행해주세요.`);
     }
   };
 
@@ -102,12 +100,12 @@ export const ProjectDashboardPage: React.FC = () => {
         >
           ← All Projects
         </button>
-        <h1>📂 {status.name || 'Project Dashboard'}</h1>
-        <p className="project-address">📍 {status.address || 'Address not specified'}</p>
+        <h1>📂 {status.project_name || '프로젝트 대시보드'}</h1>
+        <p className="project-address">📍 {status.address || '주소 미지정'}</p>
       </div>
 
       {/* Context Metadata */}
-      {status.context_id && (
+      {status.current_context_id && (
         <div className="context-info">
           <h3>🔍 Context Information</h3>
           <div className="context-grid">
@@ -117,7 +115,7 @@ export const ProjectDashboardPage: React.FC = () => {
             </div>
             <div className="context-item">
               <span className="label">Context ID:</span>
-              <code>{status.context_id.substring(0, 16)}...</code>
+              <code>{status.current_context_id.substring(0, 16)}...</code>
             </div>
             <div className="context-item">
               <span className="label">Created:</span>
@@ -132,20 +130,20 @@ export const ProjectDashboardPage: React.FC = () => {
       )}
 
       {/* M1 Verification Required Banner */}
-      {status.module_statuses.M1 !== 'VERIFIED' && status.module_statuses.M1 !== 'COMPLETED' && (
+      {status.m1_status.status !== 'verified' && status.m1_status.status !== 'completed' && (
         <div className="verification-required-banner">
           <div className="banner-icon">🔒</div>
           <div className="banner-content">
-            <h3>M1 Human Verification Required</h3>
+            <h3>M1 인간 검증 필요</h3>
             <p>
-              M1 land data has been collected but requires human verification before proceeding.
-              Please review and approve the data to continue.
+              M1 토지 데이터가 수집되었지만 계속 진행하려면 인간 검증이 필요합니다.
+              데이터를 검토하고 승인해주세요.
             </p>
             <button 
               className="btn-verify"
               onClick={() => navigate(`/projects/${projectId}/modules/m1/verify`)}
             >
-              🔍 Review & Verify M1 Data
+              🔍 M1 데이터 검토 및 검증
             </button>
           </div>
         </div>
@@ -153,10 +151,12 @@ export const ProjectDashboardPage: React.FC = () => {
 
       {/* Module Progress */}
       <div className="module-progress">
-        <h3>📊 Analysis Progress</h3>
+        <h3>📊 분석 진행 상황</h3>
         <div className="progress-cards">
           {['M1', 'M2', 'M3', 'M4', 'M5', 'M6'].map((module) => {
-            const moduleStatus = status.module_statuses[module];
+            const moduleKey = `${module.toLowerCase()}_status` as keyof AnalysisStatus;
+            const moduleInfo = status[moduleKey] as any;
+            const moduleStatus = moduleInfo?.status || 'not_started';
             const statusClass = getStatusClass(moduleStatus);
             const statusIcon = getStatusIcon(moduleStatus);
             const moduleName = getModuleName(module);
@@ -173,10 +173,10 @@ export const ProjectDashboardPage: React.FC = () => {
                 </div>
                 <div className="card-title">{moduleName}</div>
                 <div className="card-status">{formatStatus(moduleStatus)}</div>
-                {moduleStatus === 'VERIFIED' || moduleStatus === 'COMPLETED' ? (
-                  <button className="btn-view">View Results →</button>
-                ) : moduleStatus === 'PENDING' && module === 'M1' ? (
-                  <button className="btn-verify">Verify Now →</button>
+                {moduleStatus === 'verified' || moduleStatus === 'completed' ? (
+                  <button className="btn-view">결과 보기 →</button>
+                ) : moduleStatus === 'not_started' && module === 'M1' ? (
+                  <button className="btn-verify">지금 검증 →</button>
                 ) : null}
               </div>
             );
@@ -186,36 +186,33 @@ export const ProjectDashboardPage: React.FC = () => {
 
       {/* Quick Actions */}
       <div className="quick-actions">
-        <h3>⚡ Quick Actions</h3>
+        <h3>⚡ 빠른 작업</h3>
         <div className="action-buttons">
           <button 
             className="action-btn"
             onClick={() => navigate(`/projects/${projectId}/modules/m1/verify`)}
-            disabled={status.module_statuses.M1 !== 'PENDING' && 
-                     status.module_statuses.M1 !== 'VERIFIED' &&
-                     status.module_statuses.M1 !== 'COMPLETED'}
           >
-            🔍 Review M1 Data
+            🔍 M1 데이터 검토
           </button>
-          {status.module_statuses.M6 === 'COMPLETED' && (
+          {status.m6_status.status === 'completed' && (
             <button 
               className="action-btn"
               onClick={() => navigate(`/projects/${projectId}/report`)}
             >
-              📄 Generate Final Report
+              📄 최종 보고서 생성
             </button>
           )}
           <button 
             className="action-btn secondary"
             onClick={() => {
-              if (confirm('Are you sure you want to delete this project?')) {
+              if (confirm('정말로 이 프로젝트를 삭제하시겠습니까?')) {
                 analysisAPI.deleteProject(projectId!).then(() => {
                   navigate('/projects');
                 });
               }
             }}
           >
-            🗑️ Delete Project
+            🗑️ 프로젝트 삭제
           </button>
         </div>
       </div>
@@ -226,49 +223,49 @@ export const ProjectDashboardPage: React.FC = () => {
 // Helper functions
 function getStatusClass(status: string): string {
   switch (status) {
-    case 'VERIFIED':
-    case 'COMPLETED': return 'status-completed';
-    case 'IN_PROGRESS': return 'status-in-progress';
-    case 'PENDING': return 'status-pending';
-    case 'INVALID': return 'status-invalid';
-    case 'FAILED': return 'status-failed';
+    case 'verified':
+    case 'completed': return 'status-completed';
+    case 'in_progress': return 'status-in-progress';
+    case 'not_started': return 'status-pending';
+    case 'invalid': return 'status-invalid';
+    case 'error': return 'status-failed';
     default: return 'status-locked';
   }
 }
 
 function getStatusIcon(status: string): string {
   switch (status) {
-    case 'VERIFIED':
-    case 'COMPLETED': return '✅';
-    case 'IN_PROGRESS': return '🔄';
-    case 'PENDING': return '⏸️';
-    case 'INVALID': return '⚠️';
-    case 'FAILED': return '❌';
+    case 'verified':
+    case 'completed': return '✅';
+    case 'in_progress': return '🔄';
+    case 'not_started': return '⏸️';
+    case 'invalid': return '⚠️';
+    case 'error': return '❌';
     default: return '🔒';
   }
 }
 
 function getModuleName(module: string): string {
   const names: Record<string, string> = {
-    M1: 'Land Information',
-    M2: 'Land Valuation',
-    M3: 'Housing Type',
-    M4: 'Building Scale',
-    M5: 'Feasibility Analysis',
-    M6: 'LH Review'
+    M1: '토지 정보',
+    M2: '토지 가치',
+    M3: '주택 유형',
+    M4: '건축 규모',
+    M5: '타당성 분석',
+    M6: 'LH 판정'
   };
   return names[module] || module;
 }
 
 function formatStatus(status: string): string {
   const formatted: Record<string, string> = {
-    VERIFIED: 'Verified ✓',
-    COMPLETED: 'Completed ✓',
-    IN_PROGRESS: 'In Progress...',
-    PENDING: 'Pending',
-    INVALID: 'Invalid - Re-run Required',
-    FAILED: 'Failed',
-    LOCKED: 'Locked'
+    verified: '검증됨 ✓',
+    completed: '완료됨 ✓',
+    in_progress: '진행 중...',
+    not_started: '시작 안 됨',
+    invalid: '유효하지 않음 - 재실행 필요',
+    error: '실패',
+    locked: '잠김'
   };
   return formatted[status] || status;
 }
