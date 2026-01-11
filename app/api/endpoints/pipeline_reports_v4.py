@@ -466,7 +466,7 @@ async def run_pipeline_analysis(request: PipelineAnalysisRequest):
             return PipelineAnalysisResponse(
                 parcel_id=request.parcel_id,
                 analysis_id=request.parcel_id,  # 🔥 FIX: Use parcel_id as analysis_id (data key)
-                status="success (cached)",
+                status="success",  # Fixed: Pydantic validation requires "success" or "failed"
                 execution_time_ms=0,
                 modules_executed=6,
                 results=pipeline_result_to_dict(cached_result),
