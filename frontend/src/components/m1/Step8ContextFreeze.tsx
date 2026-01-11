@@ -314,6 +314,17 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
         data_sources: formData.dataSources
       };
 
+      // 🔥 DEBUG: Log the complete request
+      console.log('🚀 [Step8] Sending freeze request:', JSON.stringify(freezeRequestV2, null, 2));
+      console.log('📋 [Step8] bonbun:', freezeRequestV2.bonbun);
+      console.log('📋 [Step8] area:', freezeRequestV2.area);
+      console.log('📋 [Step8] jimok:', freezeRequestV2.jimok);
+      console.log('📋 [Step8] zone_type:', freezeRequestV2.zone_type);
+      console.log('📋 [Step8] far:', freezeRequestV2.far);
+      console.log('📋 [Step8] bcr:', freezeRequestV2.bcr);
+      console.log('📋 [Step8] road_width:', freezeRequestV2.road_width);
+      console.log('📋 [Step8] transactions:', freezeRequestV2.transaction_cases_appraisal);
+
       // 🔥 CRITICAL FIX: Use centralized config
       const apiUrl = `${BACKEND_URL}/api/m1/freeze-context-v2`;
       
