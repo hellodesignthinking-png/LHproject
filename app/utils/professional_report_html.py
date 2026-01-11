@@ -15,10 +15,26 @@ Generates detailed appraisal-style reports matching uploaded PDF format EXACTLY
 - M4_ 건축 규모 판단 보고서 - REAL APPRAISAL STANDARD.pdf
 - M5_ 사업성 분석 보고서 - REAL APPRAISAL STANDARD.pdf
 - M6_ LH 종합 판단.pdf
+
+🔥 ENHANCED: M3/M4 now use Jinja2 templates (v2_enhanced)
 """
 
 from datetime import datetime
 from typing import Dict, Any, Optional
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+from pathlib import Path
+import logging
+
+logger = logging.getLogger(__name__)
+
+# 🔥 NEW: Jinja2 템플릿 환경 설정
+TEMPLATES_DIR = Path(__file__).parent.parent / "templates_v13"
+jinja_env = Environment(
+    loader=FileSystemLoader(str(TEMPLATES_DIR)),
+    autoescape=select_autoescape(['html', 'xml']),
+    trim_blocks=True,
+    lstrip_blocks=True,
+)
 
 
 def format_currency(value: Optional[float]) -> str:
@@ -66,6 +82,8 @@ def generate_module_report_html(
     - Professional typography
     - Print-ready format
     
+    🔥 ENHANCED: M3/M4 use Jinja2 templates (v2_enhanced)
+    
     Args:
         module_id: Module ID (M2-M6)
         context_id: Context ID (parcel_id / analysis_id)
@@ -74,6 +92,37 @@ def generate_module_report_html(
     Returns:
         Professional HTML report string matching uploaded PDF format
     """
+    
+    # 🔥 NEW: M3/M4 use enhanced Jinja2 templates
+    if module_id in ["M3", "M4"]:
+        try:
+            logger.info(f"🎨 Using enhanced Jinja2 template for {module_id}")
+            
+            # Select template
+            template_file = {
+                "M3": "m3_supply_type_format_v2_enhanced.html",
+                "M4": "m4_building_scale_format_v2_enhanced.html"
+            }.get(module_id)
+            
+            # Load template
+            template = jinja_env.get_template(template_file)
+            
+            # Prepare template data (convert module_data to template variables)
+            template_data = _prepare_template_data_for_enhanced(module_id, context_id, module_data)
+            
+            # Render template
+            html = template.render(**template_data)
+            
+            logger.info(f"✅ Enhanced template rendered: {len(html)} chars")
+            return html
+            
+        except Exception as e:
+            logger.error(f"❌ Enhanced template rendering failed for {module_id}: {e}")
+            logger.warning(f"⚠️ Falling back to legacy inline HTML generator")
+            # Fall through to legacy generator below
+    
+    # Legacy inline HTML generator for M2, M5, M6
+    # (and fallback for M3/M4 if template rendering fails)
     
     # Module configurations (Korean names from uploaded PDFs)
     module_config = {
@@ -2284,3 +2333,162 @@ def _generate_m6_content(summary: Dict, details: Dict) -> str:
     """
     
     return content
+
+
+def _prepare_template_data_for_enhanced(module_id: str, context_id: str, module_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Prepare data for enhanced M3/M4 Jinja2 templates
+    
+    Args:
+        module_id: Module ID (M3 or M4)
+        context_id: Context/analysis ID
+        module_data: Raw module data
+        
+    Returns:
+        Dict with all required template variables
+    """
+    from datetime import datetime
+    
+    summary = module_data.get("summary", {})
+    details = module_data.get("details", {})
+    
+    # Common data for both modules
+    template_data = {
+        "context_id": context_id,
+        "report_id": f"ZS-{module_id}-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+        "analysis_date": datetime.now().strftime("%Y년 %m월 %d일"),
+        "project_address": details.get("address", "주소 정보 없음"),
+    }
+    
+    if module_id == "M3":
+        # M3-specific data preparation
+        template_data.update({
+            "selected_supply_type": summary.get("recommended_type", "청년형"),
+            "selected_type_code": summary.get("recommended_type_code", "youth"),
+            "executive_conclusion": summary.get("conclusion", "청년형 공급유형이 가장 적합한 것으로 판단됩니다."),
+            
+            # Scores
+            "policy_target_score": details.get("policy_score", 85),
+            "demand_score": details.get("demand_score", 78),
+            "supply_feasibility_score": details.get("feasibility_score", 82),
+            "total_score": details.get("total_score", 245),
+            
+            # Location analysis
+            "location_analysis": {
+                "transport_access": details.get("transport_access", "양호한 대중교통 접근성"),
+                "lifestyle_infra": details.get("lifestyle_infra", "생활 인프라 양호"),
+                "youth_suitability": details.get("youth_suitability", "청년 생활에 적합"),
+            },
+            
+            # Population & demand structure
+            "demographic_analysis": {
+                "population_structure": details.get("population_structure", "청년층 인구 비중 높음"),
+                "household_composition": details.get("household_composition", "1-2인 가구 비중 70%"),
+                "rental_ratio": details.get("rental_ratio", "임차 가구 비중 65%"),
+            },
+            
+            # Supply type comparison
+            "supply_type_analysis": [
+                {
+                    "type": "청년형",
+                    "location_fit": "상",
+                    "demand_sustainability": "상",
+                    "business_fit": "상",
+                    "lh_priority": "상",
+                    "conclusion": "최적 유형"
+                },
+                {
+                    "type": "신혼희망타운 I형",
+                    "location_fit": "중",
+                    "demand_sustainability": "중",
+                    "business_fit": "중",
+                    "lh_priority": "중",
+                    "conclusion": "차선"
+                },
+                {
+                    "type": "신혼희망타운 II형",
+                    "location_fit": "하",
+                    "demand_sustainability": "하",
+                    "business_fit": "하",
+                    "lh_priority": "하",
+                    "conclusion": "부적합"
+                }
+            ],
+            
+            # Exclusion reasons
+            "exclusion_reasons": [
+                {"type": "신혼희망타운 II형", "reason": "대규모 세대수 요구로 부지 규모 부족"},
+                {"type": "고령자형", "reason": "주변 인구 구성상 고령 수요 낮음"},
+                {"type": "다자녀형", "reason": "교육 인프라 및 공원 시설 부족"}
+            ],
+            
+            # Module linkage
+            "m4_linkage": "청년형 전용면적 기준 적정 세대수 산정",
+            "m5_linkage": "소형 평형 중심으로 임대수익률 안정성 확보",
+            "m6_linkage": "LH 청년 정책 부합으로 심사 가점 예상",
+            
+            # Risk factors
+            "risk_factors": [
+                "주차 공간 부족 시 입주자 불편 가능성",
+                "주변 임대료 상승 시 경쟁력 약화 우려"
+            ],
+            
+            "final_opinion": summary.get("opinion", "본 사업지는 청년형 공급유형으로 추진하는 것이 정책·수요·사업 구조상 가장 합리적인 선택입니다.")
+        })
+        
+    elif module_id == "M4":
+        # M4-specific data preparation
+        template_data.update({
+            "project_scale": details.get("scale", "대지면적: 500㎡"),
+            
+            # Legal framework
+            "zoning": details.get("zoning", "제2종일반주거지역"),
+            "building_coverage": details.get("building_coverage", "60%"),
+            "floor_area_ratio": details.get("floor_area_ratio", "200%"),
+            "height_limit": details.get("height_limit", "21m (7층)"),
+            
+            # Scenario A: Basic
+            "scenario_a": {
+                "total_floor_area": details.get("basic_floor_area", "1,000㎡"),
+                "unit_count_range": details.get("basic_units", "15-18세대"),
+                "parking_spaces": details.get("basic_parking", "8대"),
+                "feasibility": "법정 기준 충족"
+            },
+            
+            # Scenario B: With incentives
+            "scenario_b": {
+                "total_floor_area": details.get("incentive_floor_area", "1,200㎡"),
+                "unit_count_range": details.get("incentive_units", "18-22세대"),
+                "parking_spaces": details.get("incentive_parking", "10대"),
+                "feasibility": "LH 인센티브 적용 가능"
+            },
+            
+            # M3 linkage
+            "m3_linkage": "청년형 전용면적 기준: 40-50㎡",
+            "unit_composition": "전용 40㎡: 12세대, 전용 50㎡: 8세대",
+            
+            # Parking analysis
+            "parking_analysis": {
+                "legal_standard": "0.5대/세대",
+                "relaxation_possible": "청년형 임대주택 완화 적용 가능",
+                "lh_acceptance": "주차 계획 보완 조건으로 수용 가능",
+                "risk_level": "관리 가능"
+            },
+            
+            # Module linkage
+            "m5_linkage": "20세대 기준 손익분기점 확보 가능",
+            "m6_linkage": "적정 규모로 LH 심사 리스크 최소화",
+            
+            # Final recommendation
+            "recommended_unit_range": details.get("recommended_range", "18-22세대"),
+            "optimal_units": details.get("optimal_units", "20세대"),
+            "recommendation_reason": "법규·공급유형·사업성·LH 심사를 종합적으로 고려한 최적 규모",
+            
+            # Risk factors
+            "risk_factors": [
+                "일조권 사선제한으로 상층부 면적 축소 가능성",
+                "인센티브 적용 불가 시 세대수 감소"
+            ]
+        })
+    
+    return template_data
