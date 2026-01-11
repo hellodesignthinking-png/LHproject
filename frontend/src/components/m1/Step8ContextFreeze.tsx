@@ -282,13 +282,21 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
             date: tx.date,
             area: tx.area,
             amount: tx.amount || tx.price || 0,  // 🔥 FIX: Step 3.5 uses 'price', backend expects 'amount'
-            distance: tx.distance,
+            distance: typeof tx.distance === 'string' 
+              ? parseFloat(tx.distance.replace(/[^0-9.]/g, '')) 
+              : tx.distance,  // 🔥 FIX: Backend expects number, not "250m"
             address: tx.address,
             use_in_calculation: true
           })) || [],
         
         // 거래사례 - reference용 (보고서 참고, 무제한) - USE effectiveData!
-        transaction_cases_reference: effectiveData.marketData?.transactions || [],
+        transaction_cases_reference: effectiveData.marketData?.transactions?.map(tx => ({
+          ...tx,
+          amount: tx.amount || tx.price || 0,  // Map price to amount
+          distance: typeof tx.distance === 'string' 
+            ? parseFloat(tx.distance.replace(/[^0-9.]/g, '')) 
+            : tx.distance  // Convert "250m" to 250
+        })) || [],
         
         // Premium factors (M2 보정용)
         corner_lot: false,
