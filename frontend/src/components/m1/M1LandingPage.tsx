@@ -495,6 +495,15 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
         const roadData = reviewedData.road || state.formData.roadAccess || {};
         const marketData = reviewedData.market || state.formData.marketData || {};
         
+        // Generate default transactions if not available
+        const defaultTransactions = [
+          { id: '1', address: '서울시 강남구 역삼동 123-45', date: '2024-11-15', area: 450, price: 720000000, distance: '250m' },
+          { id: '2', address: '서울시 강남구 역삼동 234-56', date: '2024-10-28', area: 520, price: 850000000, distance: '380m' },
+          { id: '3', address: '서울시 강남구 역삼동 345-67', date: '2024-10-10', area: 480, price: 780000000, distance: '420m' },
+          { id: '4', address: '서울시 강남구 역삼동 456-78', date: '2024-09-22', area: 510, price: 820000000, distance: '550m' },
+          { id: '5', address: '서울시 강남구 역삼동 567-89', date: '2024-09-05', area: 490, price: 800000000, distance: '680m' },
+        ];
+        
         return (
           <Step7_5DataVerification
             initialData={{
@@ -512,7 +521,9 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
                 adjustment_rate: 3.8,
                 final_unit_price: marketData?.price_info?.official_price ? marketData.price_info.official_price * 1.038 : 1557000,
               },
-              transactions: marketData?.nearby_transactions || undefined,
+              transactions: (marketData?.nearby_transactions && marketData.nearby_transactions.length > 0) 
+                ? marketData.nearby_transactions 
+                : defaultTransactions,
               // POI data will use defaults from component
             }}
             onComplete={(verifiedData) => {

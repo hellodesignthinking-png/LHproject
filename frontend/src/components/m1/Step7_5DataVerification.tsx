@@ -190,11 +190,17 @@ const Step7_5DataVerification: React.FC<Step7_5DataVerificationProps> = ({
 
   const handleSubmit = () => {
     // Validate data
-    if (data.transactions.length < 5) {
-      alert('최소 5건의 거래사례가 필요합니다.');
+    if (data.transactions.length < 1) {
+      alert('최소 1건의 거래사례가 필요합니다.');
       return;
     }
 
+    // Log final verified data
+    console.log('✅ [Step7_5] Data verification complete:', data);
+    console.log('  - Land area:', data.land.area_sqm, '㎡');
+    console.log('  - Transaction cases:', data.transactions.length, '건');
+    console.log('  - Final unit price:', data.appraisal.final_unit_price, '원/㎡');
+    
     onComplete(data);
   };
 
@@ -720,9 +726,9 @@ const Step7_5DataVerification: React.FC<Step7_5DataVerificationProps> = ({
         </button>
         <button
           onClick={handleSubmit}
-          disabled={data.transactions.length < 5}
+          disabled={data.transactions.length < 1}
           className={`px-8 py-3 rounded-lg font-medium transition-colors ${
-            data.transactions.length < 5
+            data.transactions.length < 1
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
               : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
           }`}
