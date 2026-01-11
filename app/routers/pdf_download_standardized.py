@@ -275,12 +275,19 @@ def _get_real_data_for_module(module: str, context_id: str) -> dict:
         
         elif module == "M4":
             capacity = result.capacity
+            
+            # 🔥 FIX: parking_solutions is an object, not a dict
+            parking_spaces = 0
+            if hasattr(capacity, 'parking_solutions'):
+                if hasattr(capacity.parking_solutions, 'total_parking_spaces'):
+                    parking_spaces = capacity.parking_solutions.total_parking_spaces
+            
             data = {
                 "summary": {
                     "legal_units": capacity.legal_capacity.total_units if hasattr(capacity, 'legal_capacity') else 0,
                     "incentive_units": capacity.incentive_capacity.total_units if hasattr(capacity, 'incentive_capacity') else 0,
-                    "parking_alt_a": capacity.parking_solutions.get('alternative_A', {}).get('total_parking_spaces', 0) if hasattr(capacity, 'parking_solutions') else 0,
-                    "parking_alt_b": capacity.parking_solutions.get('alternative_B', {}).get('total_parking_spaces', 0) if hasattr(capacity, 'parking_solutions') else 0
+                    "parking_alt_a": parking_spaces,
+                    "parking_alt_b": parking_spaces
                 },
                 "details": {
                     "legal_capacity": {
