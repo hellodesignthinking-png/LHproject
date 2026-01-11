@@ -272,6 +272,21 @@ async def root():
         return RedirectResponse(url="/docs")
 
 
+@app.get("/reports")
+async def reports_viewer():
+    """모듈 보고서 조회 페이지"""
+    from fastapi.responses import FileResponse
+    import os
+    
+    static_file = os.path.join(os.path.dirname(__file__), "static", "reports.html")
+    
+    if os.path.exists(static_file):
+        return FileResponse(static_file)
+    else:
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url="/docs")
+
+
 @app.get("/admin")
 async def admin_dashboard():
     """Admin Dashboard (v11.0 HYBRID v2)"""
