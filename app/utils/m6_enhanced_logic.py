@@ -429,7 +429,10 @@ def prepare_m6_enhanced_report_data(
     """
     M6 Enhanced 보고서 데이터 준비 (외부 호출용)
     
-    최상위 원칙: FAIL FAST
+    🔴 2026-01-11: M6 Real Decision Engine으로 전환
+    - 실제 M1~M5 데이터 종합 분석
+    - DecisionType.GO / 기본 점수 로직 차단
+    - 조건부 GO / 재검토 필요 구조
     
     Args:
         context_id: Context ID
@@ -442,6 +445,42 @@ def prepare_m6_enhanced_report_data(
     Returns:
         보고서 데이터 또는 에러 상태
     """
+    logger.info(f"🚀 M6 Enhanced Report 생성 요청: {context_id}")
+    
+    try:
+        # M6 Real Decision Engine 사용
+        from app.utils.m6_real_decision_engine import prepare_m6_real_decision_report
+        
+        # M2 데이터 추출 (frozen_context에서)
+        m2_data = {}
+        if frozen_context:
+            m2_result = frozen_context.get("results", {}).get("market_analysis")
+            if m2_result:
+                m2_data = m2_result
+        
+        report_data = prepare_m6_real_decision_report(
+            context_id=context_id,
+            m1_data=m1_data,
+            m2_data=m2_data,
+            m3_data=m3_data,
+            m4_data=m4_data,
+            m5_data=m5_data,
+            frozen_context=frozen_context
+        )
+        
+        # Real Decision Engine 결과 확인
+        if report_data.get("error"):
+            logger.error(f"❌ M6 Real Decision Engine 오류: {report_data.get('error_type')}")
+            return report_data
+        
+        logger.info(f"✅ M6 Real Decision Engine 보고서 생성 완료")
+        return report_data
+    
+    except Exception as e:
+        logger.error(f"❌ M6 Real Decision Engine 실행 중 예외 발생: {e}")
+        logger.warning(f"⚠️ Fallback to legacy M6EnhancedAnalyzer")
+    
+    # Fallback: 기존 로직 사용 (개발 중 오류 방지용)
     analyzer = M6EnhancedAnalyzer(context_id, m1_data, m3_data, m4_data, m5_data, frozen_context)
     
     # Step 1: Decision Chain 무결성 검증
