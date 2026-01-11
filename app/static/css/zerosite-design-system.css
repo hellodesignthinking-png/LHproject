@@ -1,0 +1,596 @@
+/**
+ * ZeroSite Design System v1.0
+ * LH 공공기관 결재용 Decision OS
+ * 
+ * "LH 실무자가 이 화면을 캡처해 결재라인에 올릴 수 있는가?"
+ * 
+ * ⓒ ZeroSite by AntennaHoldings | Natai Heum
+ */
+
+/* ============================================
+   1. CSS Variables (Design Tokens)
+   ============================================ */
+
+:root {
+  /* Primary Colors */
+  --color-deep-navy: #0A1628;
+  --color-institutional-blue: #1F3A5F;
+  
+  /* Neutral Colors */
+  --color-background-white: #F8F9FB;
+  --color-background-section: #FFFFFF;
+  --color-border-light: #E6E8EC;
+  --color-text-primary: #0A1628;
+  --color-text-secondary: #5A5F6A;
+  --color-text-caption: #9CA3AF;
+  
+  /* Semantic Colors */
+  --color-positive: #2E7D32;
+  --color-warning: #C62828;
+  --color-info: #1976D2;
+  --color-neutral: #616161;
+  
+  /* Font Families */
+  --font-primary: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-secondary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  
+  /* Spacing Scale */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+  --spacing-xxxl: 64px;
+  
+  /* Layout */
+  --container-max-width: 1200px;
+  --container-padding: 80px;
+}
+
+/* ============================================
+   2. Reset & Base Styles
+   ============================================ */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-primary);
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--color-text-primary);
+  background: var(--color-background-white);
+}
+
+/* ============================================
+   3. Typography
+   ============================================ */
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: var(--spacing-md);
+}
+
+h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-deep-navy);
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--color-institutional-blue);
+}
+
+h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+h4 {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+p {
+  margin-bottom: var(--spacing-md);
+  color: var(--color-text-primary);
+}
+
+a {
+  color: var(--color-institutional-blue);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--color-deep-navy);
+}
+
+/* ============================================
+   4. Layout Components
+   ============================================ */
+
+.zs-container {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: 0 var(--container-padding);
+}
+
+.zs-grid {
+  display: grid;
+  gap: var(--spacing-lg);
+}
+
+.zs-grid--2col {
+  grid-template-columns: 2fr 1fr;
+}
+
+.zs-grid--3col {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.zs-grid--4col {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* ============================================
+   5. Header Component
+   ============================================ */
+
+.zs-header {
+  background: var(--color-background-section);
+  border-bottom: 2px solid var(--color-deep-navy);
+  padding: var(--spacing-xl) 0;
+  margin-bottom: var(--spacing-xxl);
+}
+
+.zs-header__container {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: 0 var(--container-padding);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.zs-header__title {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--color-institutional-blue);
+  margin-bottom: var(--spacing-sm);
+}
+
+.zs-header__meta {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.zs-header__divider {
+  color: var(--color-border-light);
+}
+
+.zs-header__context {
+  text-align: right;
+}
+
+.zs-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-caption);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: var(--spacing-xs);
+}
+
+.zs-number {
+  font-family: var(--font-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-deep-navy);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================
+   6. Summary Block Component
+   ============================================ */
+
+.zs-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-lg);
+  padding: var(--spacing-xl);
+  border: 1px solid var(--color-border-light);
+  background: var(--color-background-section);
+  margin-bottom: var(--spacing-xxl);
+}
+
+.zs-summary__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.zs-summary__label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.zs-summary__value {
+  font-family: var(--font-secondary);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-deep-navy);
+  font-variant-numeric: tabular-nums;
+}
+
+.zs-summary__value--positive {
+  color: var(--color-positive);
+}
+
+.zs-summary__value--warning {
+  color: var(--color-warning);
+}
+
+.zs-summary__value--info {
+  color: var(--color-info);
+}
+
+/* ============================================
+   7. Section Component
+   ============================================ */
+
+.zs-section {
+  margin-bottom: var(--spacing-xxl);
+}
+
+.zs-section__title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 2px solid var(--color-deep-navy);
+}
+
+.zs-section__content {
+  line-height: 1.7;
+}
+
+.zs-section__content p {
+  margin-bottom: var(--spacing-md);
+  color: var(--color-text-primary);
+}
+
+.zs-section__content ul,
+.zs-section__content ol {
+  margin-bottom: var(--spacing-md);
+  padding-left: var(--spacing-lg);
+}
+
+.zs-section__content li {
+  margin-bottom: var(--spacing-sm);
+  color: var(--color-text-primary);
+}
+
+/* ============================================
+   8. Table Component
+   ============================================ */
+
+.zs-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: var(--spacing-xl);
+  font-size: 14px;
+}
+
+.zs-table thead {
+  border-bottom: 2px solid var(--color-deep-navy);
+}
+
+.zs-table th {
+  padding: var(--spacing-md);
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  background: var(--color-background-white);
+}
+
+.zs-table td {
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border-light);
+  color: var(--color-text-primary);
+}
+
+.zs-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.zs-table tbody tr:hover {
+  background: var(--color-background-white);
+}
+
+.zs-table__number {
+  font-family: var(--font-secondary);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* ============================================
+   9. Risk Section Component
+   ============================================ */
+
+.zs-risk {
+  border-left: 4px solid var(--color-warning);
+  padding-left: var(--spacing-lg);
+  margin-bottom: var(--spacing-xxl);
+}
+
+.zs-risk__title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-warning);
+  margin-bottom: var(--spacing-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.zs-risk__icon {
+  font-size: 20px;
+}
+
+.zs-risk__list {
+  list-style: none;
+  padding: 0;
+}
+
+.zs-risk__item {
+  margin-bottom: var(--spacing-md);
+  line-height: 1.7;
+  color: var(--color-text-primary);
+}
+
+.zs-risk__item strong {
+  color: var(--color-warning);
+  font-weight: 600;
+}
+
+/* ============================================
+   10. Button Component
+   ============================================ */
+
+.zs-button {
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-primary);
+}
+
+.zs-button--primary {
+  background: var(--color-deep-navy);
+  color: white;
+}
+
+.zs-button--primary:hover {
+  background: var(--color-institutional-blue);
+}
+
+.zs-button--secondary {
+  background: transparent;
+  color: var(--color-deep-navy);
+  border: 1px solid var(--color-border-light);
+}
+
+.zs-button--secondary:hover {
+  background: var(--color-background-white);
+}
+
+/* ============================================
+   11. Footer Component
+   ============================================ */
+
+.zs-footer {
+  border-top: 1px solid var(--color-border-light);
+  padding: var(--spacing-xl) 0;
+  margin-top: var(--spacing-xxxl);
+  text-align: center;
+}
+
+.zs-footer__content {
+  font-size: 13px;
+  color: var(--color-text-caption);
+  line-height: 1.6;
+}
+
+.zs-footer__content p {
+  margin-bottom: var(--spacing-sm);
+}
+
+.zs-footer__copyright {
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.zs-footer__watermark {
+  margin-top: var(--spacing-md);
+  font-family: var(--font-secondary);
+  font-weight: 900;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--color-text-caption);
+}
+
+/* ============================================
+   12. Utility Classes
+   ============================================ */
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-positive {
+  color: var(--color-positive);
+}
+
+.text-warning {
+  color: var(--color-warning);
+}
+
+.text-info {
+  color: var(--color-info);
+}
+
+.mb-0 {
+  margin-bottom: 0;
+}
+
+.mb-sm {
+  margin-bottom: var(--spacing-sm);
+}
+
+.mb-md {
+  margin-bottom: var(--spacing-md);
+}
+
+.mb-lg {
+  margin-bottom: var(--spacing-lg);
+}
+
+.mb-xl {
+  margin-bottom: var(--spacing-xl);
+}
+
+/* ============================================
+   13. Print Styles (PDF Export)
+   ============================================ */
+
+@media print {
+  @page {
+    size: A4;
+    margin: 2cm;
+  }
+
+  body {
+    background: white;
+  }
+
+  body::before {
+    content: 'ZEROSITE';
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    font-size: 120px;
+    font-weight: 900;
+    color: rgba(0, 0, 0, 0.03);
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  .zs-header,
+  .zs-section,
+  .zs-table,
+  .zs-summary {
+    break-inside: avoid;
+  }
+
+  .zs-button {
+    display: none;
+  }
+
+  a {
+    text-decoration: underline;
+    color: var(--color-text-primary);
+  }
+}
+
+/* ============================================
+   14. Responsive (Tablet & Mobile)
+   ============================================ */
+
+@media (max-width: 1024px) {
+  :root {
+    --container-padding: 40px;
+  }
+
+  .zs-grid--2col,
+  .zs-grid--3col,
+  .zs-grid--4col {
+    grid-template-columns: 1fr;
+  }
+
+  .zs-header__container {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .zs-header__context {
+    text-align: left;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --container-padding: 20px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  h2 {
+    font-size: 20px;
+  }
+
+  h3 {
+    font-size: 16px;
+  }
+
+  .zs-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .zs-table {
+    font-size: 13px;
+  }
+
+  .zs-table th,
+  .zs-table td {
+    padding: var(--spacing-sm);
+  }
+}
+
+/* ============================================
+   End of ZeroSite Design System v1.0
+   ============================================ */

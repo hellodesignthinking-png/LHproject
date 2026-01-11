@@ -202,6 +202,9 @@ app.include_router(mvp_router)
 # ✨ v13.0: Include Report Engine v13 with v15 Phase 1 Decision Engine
 app.include_router(report_v13_router)
 
+# ✨ Static Files: Mount static directory for CSS/JS/Images
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
 # ✨ v3.3: Include ZeroSite v3.3 Report API (Phase 2 Complete - All 6 Composers)
 app.include_router(reports_v3_router)
 
@@ -246,11 +249,6 @@ app.include_router(pdf_reports_router)
 from app.api.endpoints.test_inject import router as test_inject_router
 app.include_router(test_inject_router)
 
-# 정적 파일 서빙
-static_path = Path(__file__).parent.parent / "static"
-if static_path.exists():
-    app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
-
 # ✨ v9.0: Frontend v9.0 서빙
 frontend_v9_path = Path(__file__).parent.parent / "frontend_v9"
 if frontend_v9_path.exists():
@@ -259,8 +257,24 @@ if frontend_v9_path.exists():
 
 @app.get("/")
 async def root():
-    """메인 페이지 - Admin Dashboard로 리다이렉트 (v11.0 HYBRID v2)"""
-    # v11.0 HYBRID v2 Admin Dashboard로 리다이렉트
+    """메인 페이지 - ZeroSite Decision OS Landing Page"""
+    from fastapi.responses import FileResponse
+    import os
+    
+    # app/static/index.html의 절대 경로 생성
+    static_file = os.path.join(os.path.dirname(__file__), "static", "index.html")
+    
+    if os.path.exists(static_file):
+        return FileResponse(static_file)
+    else:
+        # static 파일이 없으면 기본 리다이렉트
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url="/docs")
+
+
+@app.get("/admin")
+async def admin_dashboard():
+    """Admin Dashboard (v11.0 HYBRID v2)"""
     return RedirectResponse(url="/static/admin_dashboard.html", status_code=302)
 
 

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite - LH 공공임대 의사결정 시스템</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/zerosite-design-system.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Noto+Sans+KR:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="zs-header">
+        <div class="zs-header__container">
+            <div class="zs-header__main">
+                <h1 class="zs-header__title">ZeroSite</h1>
+                <p class="zs-header__meta">
+                    <span>LH 공공임대 의사결정 시스템</span>
+                    <span class="zs-header__divider">|</span>
+                    <span>Decision OS v1.0</span>
+                </p>
+            </div>
+            <div class="zs-header__context">
+                <span class="zs-label">System Status</span>
+                <span class="zs-number">Production Ready</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="zs-container">
+        <!-- System Overview -->
+        <section class="zs-section">
+            <h3 class="zs-section__title">시스템 개요</h3>
+            <div class="zs-section__content">
+                <p>ZeroSite는 LH 신축매입임대 사업의 타당성 검토를 위한 의사결정 지원 시스템입니다.</p>
+                <p>본 시스템은 토지정보 분석(M1)부터 최종 종합 판단(M6)까지 6단계 모듈을 통해 실제 데이터 기반의 판단 근거를 제공합니다.</p>
+                <p><strong>모든 분석 결과는 LH 내부 검토 및 결재 문서로 활용 가능합니다.</strong></p>
+            </div>
+        </section>
+
+        <!-- Module Summary -->
+        <section class="zs-summary">
+            <div class="zs-summary__item">
+                <span class="zs-summary__label">M1</span>
+                <span class="zs-summary__value">토지정보 분석</span>
+            </div>
+            <div class="zs-summary__item">
+                <span class="zs-summary__label">M3</span>
+                <span class="zs-summary__value">공급유형 결정</span>
+            </div>
+            <div class="zs-summary__item">
+                <span class="zs-summary__label">M4</span>
+                <span class="zs-summary__value">건축 규모 판단</span>
+            </div>
+            <div class="zs-summary__item">
+                <span class="zs-summary__label">M5</span>
+                <span class="zs-summary__value">사업성 분석</span>
+            </div>
+            <div class="zs-summary__item">
+                <span class="zs-summary__label">M6</span>
+                <span class="zs-summary__value">LH 종합 판단</span>
+            </div>
+        </section>
+
+        <!-- Module Details -->
+        <section class="zs-section">
+            <h3 class="zs-section__title">모듈 상세</h3>
+            <div class="zs-section__content">
+                <table class="zs-table">
+                    <thead>
+                        <tr>
+                            <th>모듈</th>
+                            <th>기능</th>
+                            <th>핵심 산출물</th>
+                            <th>상태</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>M1</strong></td>
+                            <td>토지정보 분석</td>
+                            <td>주소, 대지면적, 용도지역</td>
+                            <td><span class="text-positive">운영중</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>M3</strong></td>
+                            <td>공급유형 결정</td>
+                            <td>청년형/신혼/다자녀/고령자 판단</td>
+                            <td><span class="text-positive">운영중</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>M4</strong></td>
+                            <td>건축 규모 판단</td>
+                            <td>세대수, 연면적, 주차계획</td>
+                            <td><span class="text-positive">운영중</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>M5</strong></td>
+                            <td>사업성 분석</td>
+                            <td>NPV, IRR, ROI, 리스크 분석</td>
+                            <td><span class="text-positive">운영중</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>M6</strong></td>
+                            <td>LH 종합 판단</td>
+                            <td>조건부 GO / 재검토 필요</td>
+                            <td><span class="text-positive">운영중</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- API Endpoints -->
+        <section class="zs-section">
+            <h3 class="zs-section__title">보고서 조회 엔드포인트</h3>
+            <div class="zs-section__content">
+                <p>각 모듈의 HTML 보고서는 다음 엔드포인트를 통해 조회할 수 있습니다:</p>
+                <table class="zs-table">
+                    <thead>
+                        <tr>
+                            <th>모듈</th>
+                            <th>엔드포인트</th>
+                            <th>설명</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>M3</strong></td>
+                            <td><code>/api/v4/reports/M3/html</code></td>
+                            <td>공급유형 결정 보고서</td>
+                        </tr>
+                        <tr>
+                            <td><strong>M4</strong></td>
+                            <td><code>/api/v4/reports/M4/html</code></td>
+                            <td>건축 규모 판단 보고서</td>
+                        </tr>
+                        <tr>
+                            <td><strong>M5</strong></td>
+                            <td><code>/api/v4/reports/M5/html</code></td>
+                            <td>사업성 분석 보고서</td>
+                        </tr>
+                        <tr>
+                            <td><strong>M6</strong></td>
+                            <td><code>/api/v4/reports/M6/html</code></td>
+                            <td>LH 종합 판단 보고서</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p><strong>파라미터:</strong> <code>context_id</code> (필수)</p>
+                <p><strong>예시:</strong> <code>/api/v4/reports/M6/html?context_id=1168010100005200012</code></p>
+            </div>
+        </section>
+
+        <!-- System Principles -->
+        <section class="zs-risk">
+            <h3 class="zs-risk__title">
+                <span class="zs-risk__icon">⚠️</span>
+                시스템 핵심 원칙
+            </h3>
+            <ul class="zs-risk__list">
+                <li class="zs-risk__item">
+                    <strong>Zero Tolerance:</strong>
+                    MOC/SAMPLE/기본값 기반 계산은 절대 허용되지 않습니다.
+                </li>
+                <li class="zs-risk__item">
+                    <strong>Data Integrity:</strong>
+                    상위 모듈 데이터가 연결되지 않은 상태에서 분석 결과를 생성하지 않습니다.
+                </li>
+                <li class="zs-risk__item">
+                    <strong>Conditional Decision:</strong>
+                    무조건 GO 또는 A등급 판정은 존재하지 않으며, 모든 판정은 조건부 구조입니다.
+                </li>
+                <li class="zs-risk__item">
+                    <strong>Single Source of Truth:</strong>
+                    모든 수치는 단일 Context ID 기반으로 계산됩니다.
+                </li>
+            </ul>
+        </section>
+
+        <!-- Quick Links -->
+        <section class="zs-section">
+            <h3 class="zs-section__title">Quick Links</h3>
+            <div class="zs-section__content">
+                <div class="zs-grid zs-grid--3col">
+                    <div>
+                        <h4>API 문서</h4>
+                        <p><a href="/docs" target="_blank">Swagger UI 보기</a></p>
+                    </div>
+                    <div>
+                        <h4>예시 보고서</h4>
+                        <p><a href="/api/v4/reports/M6/html?context_id=1168010100005200012" target="_blank">M6 종합 판단 예시</a></p>
+                    </div>
+                    <div>
+                        <h4>시스템 상태</h4>
+                        <p><a href="/health" target="_blank">Health Check</a></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="zs-footer">
+        <div class="zs-container">
+            <div class="zs-footer__content">
+                <p>본 시스템은 LH 신축매입임대 사업의 타당성 검토를 위한 의사결정 지원 도구입니다.</p>
+                <p>모든 분석 결과는 실제 입력 데이터를 기반으로 산출되며, 샘플 데이터는 사용되지 않습니다.</p>
+                <p class="zs-footer__copyright">ⓒ ZeroSite by AntennaHoldings | Natai Heum</p>
+                <p class="zs-footer__watermark">DESIGN SYSTEM: ZEROSITE DECISION OS V1.0</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
