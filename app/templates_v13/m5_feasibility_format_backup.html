@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>M5: 사업성 분석 보고서 - REAL APPRAISAL STANDARD</title>
+    <style>
+        @page { size: A4; margin: 20mm; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Malgun Gothic', sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+        .cover-page { text-align: center; padding: 80px 40px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; page-break-after: always; }
+        .company-logo { font-size: 24pt; font-weight: bold; margin-bottom: 10px; color: #2c3e50; letter-spacing: 8px; }
+        .main-title { font-size: 36pt; font-weight: bold; margin: 40px 0 10px 0; color: #1a1a1a; }
+        .sub-title { font-size: 28pt; font-weight: bold; margin-bottom: 60px; color: #2c3e50; }
+        .report-info-box { background: #f8f9fa; border: 2px solid #dee2e6; padding: 40px; margin: 40px auto; max-width: 600px; text-align: left; }
+        .report-info-row { display: flex; padding: 15px 0; border-bottom: 1px solid #dee2e6; font-size: 13pt; }
+        .report-info-row:last-child { border-bottom: none; }
+        .report-info-label { font-weight: bold; width: 150px; color: #495057; }
+        .report-info-value { flex: 1; color: #212529; }
+        .company-name { margin-top: 60px; font-size: 18pt; font-weight: bold; color: #2c3e50; }
+        .company-contact { margin-top: 20px; font-size: 10pt; color: #6c757d; line-height: 1.8; }
+        .content-page { padding: 40px; page-break-inside: avoid; }
+        .page-title { font-size: 20pt; font-weight: bold; margin-bottom: 25px; padding-bottom: 12px; border-bottom: 3px solid #0066cc; color: #2c3e50; }
+        .section { margin-bottom: 35px; }
+        .section-title { font-size: 15pt; font-weight: bold; margin-bottom: 18px; color: #495057; background: #f8f9fa; padding: 10px 15px; border-left: 5px solid #0066cc; }
+        .executive-summary { background: #e8f4f8; border: 3px solid #0066cc; padding: 30px; margin: 30px 0; text-align: center; }
+        .executive-label { font-size: 18pt; font-weight: bold; margin-bottom: 20px; color: #2c3e50; }
+        .executive-result { font-size: 24pt; font-weight: bold; color: #0066cc; margin-bottom: 15px; }
+        .executive-detail { font-size: 13pt; color: #495057; line-height: 1.8; }
+        .data-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 11pt; }
+        .data-table th { background: #2c3e50; color: white; padding: 12px; text-align: left; font-weight: bold; border: 1px solid #1a252f; }
+        .data-table td { padding: 10px 12px; border: 1px solid #dee2e6; }
+        .data-table tr:nth-child(even) { background: #f8f9fa; }
+        .highlight-row { background: #fff3cd !important; font-weight: bold; }
+        .pass-row { background: #d4edda !important; font-weight: bold; }
+        .info-box { background: #e7f3ff; border-left: 5px solid #0066cc; padding: 20px; margin: 20px 0; }
+        .info-box-title { font-weight: bold; margin-bottom: 10px; color: #0066cc; font-size: 13pt; }
+        .value-highlight { color: #0066cc; font-weight: bold; font-size: 1.1em; }
+        .hierarchy-badge { display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 10pt; font-weight: bold; margin-right: 10px; }
+        .badge-primary { background: #0066cc; color: white; }
+        .badge-secondary { background: #6c757d; color: white; }
+        .page-break { page-break-after: always; }
+    </style>
+</head>
+<body>
+    <div class="cover-page">
+        <div class="company-logo">ANTENNA HOLDINGS</div>
+        <div class="main-title">Professional Analysis Report</div>
+        <div class="sub-title">사업성 분석 보고서</div>
+        <div class="report-info-box">
+            <div class="report-info-row"><div class="report-info-label">보고서 번호</div><div class="report-info-value">{{ report_id }}</div></div>
+            </div>
+            <div class="report-info-row" style="background-color: #f0f8ff; border-left: 3px solid #0066cc; padding-left: 10px;">
+                <div class="report-info-label">🔒 Context ID</div>
+                <div class="report-info-value" style="font-family: monospace; font-size: 9pt;">{{ report_id.split("_M")[0] if "_M" in report_id else report_id }}</div>
+            <div class="report-info-row"><div class="report-info-label">사업지</div><div class="report-info-value">{{ project_address }}</div></div>
+            <div class="report-info-row"><div class="report-info-label">사업 규모</div><div class="report-info-value">{{ project_scale }}</div></div>
+            <div class="report-info-row"><div class="report-info-label">분석 기준일</div><div class="report-info-value">{{ analysis_date }}</div></div>
+        </div>
+        <div class="company-name">Antenna Holdings Co., Ltd.</div>
+        <div class="company-contact">서울시 강남구 테헤란로 427 위워크타워<br>Tel: 02-3789-2000</div>
+    </div>
+
+    <div class="content-page page-break">
+        <div class="page-title">핵심 판단 요약</div>
+        <div class="executive-summary">
+            <div class="executive-label">사업 실행 가능성</div>
+            <div class="executive-result">{{ feasibility_result }}</div>
+            <div class="executive-detail">
+                <p style="font-size: 11pt; color: #6c757d; margin-bottom: 15px;"><em>본 분석은 M4 건축 규모 판단 결과를 전제로 진행되었습니다.</em></p>
+                {{ executive_conclusion }}
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-title">재무 지표 요약</div>
+            <table class="data-table">
+                <tr><th style="width:40%;">지표</th><th>결과</th></tr>
+                <tr><td>총 사업비</td><td class="value-highlight">{{ total_cost | number_format }}백만원</td></tr>
+                <tr><td>LH 매입가</td><td class="value-highlight">{{ lh_purchase_price | number_format }}백만원</td></tr>
+                <tr><td>사업수익률</td><td class="value-highlight">{{ profit_rate }}%</td></tr>
+                <tr class="pass-row"><td><strong>실행 가능성</strong></td><td><strong>{{ feasibility_result }}</strong></td></tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="content-page page-break">
+        <div class="page-title"><span class="hierarchy-badge badge-primary">PRIMARY</span>1. LH 매입 구조 분석</div>
+        <div class="info-box">
+            <div class="info-box-title">📌 LH 매입 구조</div>
+            <p>LH 일괄매입 방식에 따른 사업 구조 및 수익성을 분석하여 재무적 실행 가능성을 판단합니다.</p>
+        </div>
+        <div class="section">
+            <div class="section-title">사업비 구성</div>
+            <table class="data-table">
+                <tr><th>항목</th><th>금액 (백만원)</th><th>비율</th></tr>
+                {% for cost_item in cost_breakdown %}
+                <tr><td>{{ cost_item.item }}</td><td>{{ cost_item.amount | number_format }}</td><td>{{ cost_item.ratio }}%</td></tr>
+                {% endfor %}
+                <tr class="highlight-row"><td><strong>총 사업비</strong></td><td><strong>{{ total_cost | number_format }}</strong></td><td><strong>100%</strong></td></tr>
+            </table>
+        </div>
+        <div class="section">
+            <div class="section-title">1-1. 건축 규모(150세대)와 사업성의 연계 검토</div>
+            <div class="info-box">
+                <p>{{ scale_connection }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-page page-break">
+        <div class="page-title"><span class="hierarchy-badge badge-secondary">SECONDARY</span>2. 재무 지표 분석</div>
+        <div class="section">
+            <div class="section-title">주요 재무 지표</div>
+            <table class="data-table">
+                <tr><th style="width:40%;">지표</th><th>결과</th></tr>
+                <tr><td>총 사업비</td><td class="value-highlight">{{ total_cost | number_format }}백만원</td></tr>
+                <tr><td>LH 매입가</td><td class="value-highlight">{{ lh_purchase_price | number_format }}백만원</td></tr>
+                <tr><td>사업수익률</td><td class="value-highlight">{{ profit_rate }}%</td></tr>
+                <tr class="pass-row"><td><strong>실행 가능성</strong></td><td><strong>{{ feasibility_result }}</strong></td></tr>
+            </table>
+        </div>
+        <div class="section">
+            <div class="section-title">2-1. 수익률 해석</div>
+            <div class="info-box">
+                <p>{{ profit_interpretation }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-page page-break">
+        <div class="page-title">3. 최종 판단</div>
+        <div class="section">
+            <div class="section-title">2-1. 주요 재무 리스크 및 대응 구조</div>
+            <div class="info-box">
+                <p>{{ risk_structure }}</p>
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-title">종합 평가 결과</div>
+            <table class="data-table">
+                <tr><th style="width:40%;">평가 항목</th><th>점수</th></tr>
+                <tr><td>LH 매입 구조</td><td class="value-highlight">{{ lh_structure_score }}점</td></tr>
+                <tr><td>재무 지표</td><td class="value-highlight">{{ financial_score }}점</td></tr>
+                <tr><td>리스크 분석</td><td class="value-highlight">{{ risk_score }}점</td></tr>
+                <tr class="pass-row"><td><strong>최종 실행 가능성</strong></td><td class="value-highlight"><strong>{{ feasibility_result }}</strong></td></tr>
+            </table>
+        </div>
+        <div class="section">
+            <div class="section-title">판단 의견</div>
+            <div class="info-box"><p>{{ final_opinion }}</p></div>
+        </div>
+        <div style="margin-top: 60px; text-align: right;">
+            <p style="font-size: 12pt; margin-bottom: 10px;">{{ analysis_date }}</p>
+            <p style="font-size: 13pt; font-weight: bold; color: #2c3e50;">작성 주체: ZeroSite Analysis Engine</p>
+            <p style="font-size: 12pt; color: #6c757d; margin-top: 15px;">Antenna Holdings Co., Ltd.</p>
+        </div>
+    </div>
+        <!-- 🔒 USER GUARANTEE FOOTER -->
+        {% include '_user_guarantee_footer.html' %}
+</body>
+</html>

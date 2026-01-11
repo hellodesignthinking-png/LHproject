@@ -93,15 +93,16 @@ def generate_module_report_html(
         Professional HTML report string matching uploaded PDF format
     """
     
-    # 🔥 NEW: M3/M4 use enhanced Jinja2 templates
-    if module_id in ["M3", "M4"]:
+    # 🔥 NEW: M3/M4/M5 use enhanced Jinja2 templates
+    if module_id in ["M3", "M4", "M5"]:
         try:
             logger.info(f"🎨 Using enhanced Jinja2 template for {module_id}")
             
             # Select template
             template_file = {
                 "M3": "m3_supply_type_format_v2_enhanced.html",
-                "M4": "m4_building_scale_format_v2_enhanced.html"
+                "M4": "m4_building_scale_format_v2_enhanced.html",
+                "M5": "m5_feasibility_format_v2_enhanced.html"
             }.get(module_id)
             
             # Load template
@@ -121,8 +122,8 @@ def generate_module_report_html(
             logger.warning(f"⚠️ Falling back to legacy inline HTML generator")
             # Fall through to legacy generator below
     
-    # Legacy inline HTML generator for M2, M5, M6
-    # (and fallback for M3/M4 if template rendering fails)
+    # Legacy inline HTML generator for M2, M6
+    # (M3/M4/M5 use enhanced templates, fallback only if template fails)
     
     # Module configurations (Korean names from uploaded PDFs)
     module_config = {
@@ -2152,7 +2153,12 @@ def _generate_m4_content(summary: Dict, details: Dict) -> str:
 
 
 def _generate_m5_content(summary: Dict, details: Dict) -> str:
-    """Generate M5 (Feasibility) report content"""
+    """Generate M5 (Feasibility) report content - OLD VERSION (DEPRECATED)"""
+    
+    # This function is deprecated and should not be used
+    # Use M5 Enhanced Logic instead
+    
+    logger.warning("_generate_m5_content (old version) called - this should not happen")
     
     npv = summary.get("npv_public_krw")
     irr = summary.get("irr_pct")
@@ -2161,7 +2167,16 @@ def _generate_m5_content(summary: Dict, details: Dict) -> str:
     
     content = f"""
     <div class="section">
-        <h2 class="section-title">📊 사업성 분석 결과</h2>
+        <h2 class="section-title">⚠️ 구버전 M5 보고서</h2>
+        <div class="highlight-box" style="background: #fff3cd; border: 2px solid #ff9800;">
+            <p style="line-height: 1.8; color: #856404;">
+                본 보고서는 구버전 로직으로 생성되었습니다. M5 Enhanced Logic을 사용하여 재생성이 필요합니다.
+            </p>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2 class="section-title">📊 사업성 분석 결과 (구버전)</h2>
         <div class="highlight-box">
             <h3>사업성 등급</h3>
             <div style="font-size: 48px; font-weight: 700; color: #667eea; margin: 15px 0;">
@@ -2186,41 +2201,6 @@ def _generate_m5_content(summary: Dict, details: Dict) -> str:
                 <div class="info-card-title">사업성 등급</div>
                 <div class="info-card-value">{grade}</div>
             </div>
-        </div>
-    </div>
-    
-    <div class="section">
-        <h2 class="section-title">💰 재무 분석</h2>
-        <p>LH 매입 모델을 기준으로 사업성을 분석하였습니다.</p>
-        
-        <table class="data-table">
-            <tr>
-                <th>항목</th>
-                <th>금액/비율</th>
-            </tr>
-            <tr>
-                <td>순현재가치 (NPV)</td>
-                <td>{format_currency(npv)}</td>
-            </tr>
-            <tr>
-                <td>내부수익률 (IRR)</td>
-                <td>{format_percentage(irr)}</td>
-            </tr>
-            <tr>
-                <td>투자수익률 (ROI)</td>
-                <td>{format_percentage(roi)}</td>
-            </tr>
-        </table>
-    </div>
-    
-    <div class="section">
-        <h2 class="section-title">📝 재무 평가 의견</h2>
-        <div class="highlight-box">
-            <p style="line-height: 1.8;">
-                본 사업은 <strong>{grade}등급</strong>의 사업성을 보유하고 있습니다.
-                NPV가 {'양(+)의 값' if npv and npv > 0 else '음(-)의 값'}을 나타내어 
-                {'경제적 타당성이 있는' if npv and npv > 0 else '추가 검토가 필요한'} 것으로 판단됩니다.
-            </p>
         </div>
     </div>
     """
@@ -2370,6 +2350,25 @@ def _prepare_template_data_for_enhanced(module_id: str, context_id: str, module_
             return result
         except Exception as e:
             logger.error(f"M4 enhanced logic failed: {e}, falling back to basic logic")
+            # Fallback to basic logic below
+    
+    if module_id == "M5":
+        from app.utils.m5_enhanced_logic import prepare_m5_enhanced_report_data
+        try:
+            # M5 requires M4 data
+            # Try to get M4 data from the same context
+            m4_data = {}  # TODO: Fetch M4 data from database/cache
+            
+            # For now, use module_data as both M4 and M5 (fallback)
+            result = prepare_m5_enhanced_report_data(context_id, m4_data or module_data, module_data)
+            # Check for data integrity error
+            if result.get("error", False):
+                logger.error(f"M5 data integrity check failed: {result.get('missing_items', [])}")
+                # Return error template data
+                return result
+            return result
+        except Exception as e:
+            logger.error(f"M5 enhanced logic failed: {e}, falling back to basic logic")
             # Fallback to basic logic below
     
     summary = module_data.get("summary", {})

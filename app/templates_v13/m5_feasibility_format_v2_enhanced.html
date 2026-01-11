@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M5: LH 신축매입임대 사업성 분석 보고서 - ZeroSite</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            font-size: 10.5pt;
+            line-height: 1.7;
+            color: #2c3e50;
+            background: white;
+            position: relative;
+        }
+
+        /* ZeroSite Watermark */
+        body::before {
+            content: 'ZEROSITE';
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 120pt;
+            font-weight: bold;
+            color: rgba(0, 102, 204, 0.03);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Footer */
+        .report-footer {
+            position: fixed;
+            bottom: 10mm;
+            left: 20mm;
+            right: 20mm;
+            text-align: center;
+            font-size: 8pt;
+            color: #95a5a6;
+            border-top: 1px solid #ecf0f1;
+            padding-top: 8px;
+        }
+
+        /* Cover Page */
+        .cover-page {
+            text-align: center;
+            padding: 80px 40px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            page-break-after: always;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        .company-logo {
+            font-size: 28pt;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #0066cc;
+            letter-spacing: 12px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .main-title {
+            font-size: 32pt;
+            font-weight: bold;
+            margin: 40px 0 15px 0;
+            color: #1a1a1a;
+            letter-spacing: 3px;
+        }
+
+        .sub-title {
+            font-size: 24pt;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #34495e;
+        }
+
+        .report-type-badge {
+            display: inline-block;
+            background: #0066cc;
+            color: white;
+            padding: 10px 25px;
+            font-size: 13pt;
+            font-weight: bold;
+            border-radius: 25px;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .report-info-box {
+            background: white;
+            border: 2px solid #0066cc;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 35px;
+            margin: 40px auto;
+            max-width: 650px;
+            text-align: left;
+            border-radius: 8px;
+        }
+
+        .report-info-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 11.5pt;
+            align-items: center;
+        }
+
+        .report-info-row:last-child {
+            border-bottom: none;
+        }
+
+        .report-info-label {
+            font-weight: 600;
+            width: 140px;
+            color: #34495e;
+        }
+
+        .report-info-value {
+            flex: 1;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .company-name {
+            margin-top: 60px;
+            font-size: 16pt;
+            font-weight: bold;
+            color: #34495e;
+        }
+
+        .company-contact {
+            margin-top: 15px;
+            font-size: 9.5pt;
+            color: #7f8c8d;
+            line-height: 1.9;
+        }
+
+        /* Content Pages */
+        .content-page {
+            padding: 40px;
+            page-break-after: always;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .page-title {
+            font-size: 18pt;
+            font-weight: bold;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 4px solid #0066cc;
+            color: #2c3e50;
+            background: linear-gradient(to right, #f8f9fa 0%, white 100%);
+            padding: 15px 20px;
+            margin-left: -20px;
+            margin-right: -20px;
+        }
+
+        .section {
+            margin-bottom: 35px;
+            page-break-inside: avoid;
+        }
+
+        .section-title {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 18px;
+            color: #34495e;
+            background: #f8f9fa;
+            padding: 12px 20px;
+            border-left: 6px solid #0066cc;
+            border-radius: 4px;
+        }
+
+        .subsection-title {
+            font-size: 12pt;
+            font-weight: 600;
+            margin: 20px 0 12px 0;
+            color: #2c3e50;
+            padding-left: 15px;
+            border-left: 3px solid #3498db;
+        }
+
+        /* Business Structure Box */
+        .business-structure-box {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d4edda 100%);
+            border: 3px solid #0066cc;
+            padding: 30px;
+            margin: 30px 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .business-structure-title {
+            font-size: 16pt;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #0066cc;
+            text-align: center;
+        }
+
+        .business-structure-content {
+            font-size: 11pt;
+            line-height: 1.9;
+            color: #2c3e50;
+            white-space: pre-line;
+        }
+
+        /* Financial Metrics Box */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .metric-card {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+        }
+
+        .metric-card:hover {
+            border-color: #0066cc;
+            box-shadow: 0 4px 12px rgba(0,102,204,0.15);
+        }
+
+        .metric-label {
+            font-size: 10pt;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-size: 24pt;
+            font-weight: bold;
+            color: #0066cc;
+            margin-bottom: 5px;
+        }
+
+        .metric-value.positive {
+            color: #27ae60;
+        }
+
+        .metric-value.negative {
+            color: #e74c3c;
+        }
+
+        .metric-value.neutral {
+            color: #f39c12;
+        }
+
+        .metric-unit {
+            font-size: 9pt;
+            color: #95a5a6;
+        }
+
+        /* Grade Box */
+        .grade-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            margin: 30px 0;
+            text-align: center;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .grade-label {
+            font-size: 14pt;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+
+        .grade-value {
+            font-size: 72pt;
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 4px 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .grade-description {
+            font-size: 12pt;
+            line-height: 1.8;
+            opacity: 0.95;
+        }
+
+        /* Interpretation Box */
+        .interpretation-box {
+            background: #f8f9fa;
+            border-left: 6px solid #0066cc;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 4px;
+            line-height: 1.9;
+        }
+
+        .interpretation-box p {
+            margin-bottom: 15px;
+        }
+
+        .interpretation-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Calculation Notes */
+        .notes-box {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .notes-title {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 12px;
+        }
+
+        .notes-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .notes-list li {
+            padding: 8px 0;
+            padding-left: 20px;
+            position: relative;
+            color: #856404;
+            font-size: 10pt;
+            line-height: 1.6;
+        }
+
+        .notes-list li::before {
+            content: '💡';
+            position: absolute;
+            left: 0;
+        }
+
+        /* Risk Factors */
+        .risk-section {
+            margin: 30px 0;
+        }
+
+        .risk-card {
+            background: white;
+            border: 2px solid #e74c3c;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 2px 6px rgba(231, 76, 60, 0.1);
+        }
+
+        .risk-title {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #e74c3c;
+            margin-bottom: 10px;
+        }
+
+        .risk-mitigation {
+            font-size: 10pt;
+            color: #27ae60;
+            padding: 12px;
+            background: #d4edda;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        /* M6 Linkage Box */
+        .m6-linkage-box {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 3px solid #28a745;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+
+        .m6-linkage-title {
+            font-size: 13pt;
+            font-weight: bold;
+            color: #155724;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .m6-linkage-content {
+            font-size: 11pt;
+            line-height: 1.9;
+            color: #155724;
+        }
+
+        /* Table Styles */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 10.5pt;
+            background: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        .data-table th {
+            background: #2c3e50;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #1a252f;
+        }
+
+        .data-table td {
+            padding: 10px 12px;
+            border: 1px solid #dee2e6;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .data-table tr:hover {
+            background: #e9ecef;
+        }
+
+        .highlight-row {
+            background: #fff3cd !important;
+            font-weight: bold;
+        }
+
+        /* Warning Box for Error Cases */
+        .error-box {
+            background: #f8d7da;
+            border: 3px solid #dc3545;
+            border-radius: 8px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .error-title {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #721c24;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            font-size: 12pt;
+            color: #721c24;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .missing-items-list {
+            text-align: left;
+            max-width: 500px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 6px;
+        }
+
+        .missing-items-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #dee2e6;
+            color: #721c24;
+        }
+
+        .missing-items-list li:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Footer (appears on all pages) -->
+    <div class="report-footer">
+        ⓒ ZeroSite by AntennaHoldings | Natai Heum | analysis@antennaholdings.com | 서울시 강남구 테헤란로 427 위워크타워
+    </div>
+
+    {% if error %}
+    <!-- Error Page -->
+    <div class="cover-page">
+        <div class="company-logo">ZEROSITE</div>
+        <div class="main-title">M5 사업성 분석</div>
+        <div class="sub-title">Data Integrity Error</div>
+        
+        <div class="error-box">
+            <div class="error-title">❌ 데이터 무결성 오류</div>
+            <div class="error-message">
+                {{ error_message }}
+            </div>
+            
+            {% if missing_items %}
+            <div class="missing-items-list">
+                <strong>누락된 필수 항목:</strong>
+                <ul style="list-style: none; padding: 10px 0;">
+                    {% for item in missing_items %}
+                    <li>❌ {{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
+            <p style="margin-top: 30px; color: #721c24; font-size: 11pt;">
+                M4 건축 규모 판단 결과 및 LH 매입 기준 데이터를 확인한 후 재분석하시기 바랍니다.
+            </p>
+        </div>
+        
+        <div class="company-name">Antenna Holdings</div>
+        <div class="company-contact">
+            ZeroSite Real Estate Analysis Platform<br>
+            서울시 강남구 테헤란로 427 위워크타워<br>
+            analysis@antennaholdings.com
+        </div>
+    </div>
+    {% else %}
+    <!-- Normal Report Pages -->
+    
+    <!-- Page 1: Cover -->
+    <div class="cover-page">
+        <div class="company-logo">ZEROSITE</div>
+        <div class="main-title">Professional Analysis Report</div>
+        <div class="sub-title">LH 신축매입임대 사업성 분석 보고서</div>
+        
+        <div class="report-type-badge">
+            Module 5: Feasibility Analysis
+        </div>
+        
+        <div class="report-info-box">
+            <div class="report-info-row">
+                <div class="report-info-label">보고서 번호</div>
+                <div class="report-info-value">{{ report_id }}</div>
+            </div>
+            <div class="report-info-row" style="background-color: #f0f8ff; border-left: 3px solid #0066cc; padding-left: 10px;">
+                <div class="report-info-label">🔒 Context ID</div>
+                <div class="report-info-value" style="font-family: monospace; font-size: 9pt;">{{ context_id }}</div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">사업지 주소</div>
+                <div class="report-info-value">{{ project_address }}</div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">분석 기준일</div>
+                <div class="report-info-value">{{ analysis_date }}</div>
+            </div>
+        </div>
+        
+        <div class="company-name">Antenna Holdings</div>
+        <div class="company-contact">
+            Powered by AntennaHoldings<br>
+            ZeroSite Real Estate Analysis Platform<br>
+            서울시 강남구 테헤란로 427 위워크타워<br>
+            analysis@antennaholdings.com
+        </div>
+    </div>
+
+    <!-- Page 2: Business Structure -->
+    <div class="content-page">
+        <div class="page-title">I. 사업 구조 및 수익 모델</div>
+        
+        <div class="business-structure-box">
+            <div class="business-structure-title">📊 LH 신축매입임대 사업 구조</div>
+            <div class="business-structure-content">{{ business_structure }}</div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">M4 건축 규모 연계 정보</div>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 40%;">항목</th>
+                    <th>값</th>
+                </tr>
+                <tr>
+                    <td>총 세대수 (M4 권장)</td>
+                    <td><strong>{{ m4_summary.unit_count }}세대</strong></td>
+                </tr>
+                <tr>
+                    <td>총 연면적</td>
+                    <td><strong>{{ "%.2f"|format(m4_summary.total_floor_area) }}㎡</strong></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Page 3: Financial Metrics -->
+    <div class="content-page">
+        <div class="page-title">II. 재무 지표 분석</div>
+        
+        <div class="grade-box">
+            <div class="grade-label">사업성 등급</div>
+            <div class="grade-value">{{ grade }}</div>
+            <div class="grade-description">
+                {% if grade == "A" %}
+                최우수 - 재무 지표 우수, 사업 추진 권장
+                {% elif grade == "B" %}
+                우수 - NPV 양호, 일부 지표 산정 제약
+                {% elif grade == "C" %}
+                양호 - 손익분기점 근처, 조건부 진행
+                {% elif grade == "D" %}
+                미흡 - 재무 지표 부정적, 재검토 필요
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if financial_metrics.calculable_metrics_count >= 2 %}
+        <div class="section">
+            <div class="section-title">주요 재무 지표</div>
+            
+            <div class="metrics-grid">
+                {% if financial_metrics.npv is not none %}
+                <div class="metric-card">
+                    <div class="metric-label">순현재가치 (NPV)</div>
+                    <div class="metric-value {% if financial_metrics.npv > 0 %}positive{% elif financial_metrics.npv < 0 %}negative{% else %}neutral{% endif %}">
+                        {{ "%.0f"|format(financial_metrics.npv / 1000000) }}
+                    </div>
+                    <div class="metric-unit">백만원</div>
+                </div>
+                {% endif %}
+                
+                {% if financial_metrics.irr is not none %}
+                <div class="metric-card">
+                    <div class="metric-label">연평균 수익률 (근사 IRR)</div>
+                    <div class="metric-value {% if financial_metrics.irr > 0.05 %}positive{% elif financial_metrics.irr < 0 %}negative{% else %}neutral{% endif %}">
+                        {{ "%.1f"|format(financial_metrics.irr * 100) }}
+                    </div>
+                    <div class="metric-unit">%</div>
+                </div>
+                {% endif %}
+                
+                {% if financial_metrics.roi is not none %}
+                <div class="metric-card">
+                    <div class="metric-label">투자수익률 (ROI)</div>
+                    <div class="metric-value {% if financial_metrics.roi > 0 %}positive{% elif financial_metrics.roi < 0 %}negative{% else %}neutral{% endif %}">
+                        {{ "%.1f"|format(financial_metrics.roi * 100) }}
+                    </div>
+                    <div class="metric-unit">%</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if financial_metrics.calculation_notes %}
+        <div class="notes-box">
+            <div class="notes-title">📝 계산 참고사항</div>
+            <ul class="notes-list">
+                {% for note in financial_metrics.calculation_notes %}
+                <li>{{ note }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Page 4: Interpretation -->
+    <div class="content-page">
+        <div class="page-title">III. 재무 분석 해석</div>
+        
+        <div class="interpretation-box">
+            {{ interpretation | safe }}
+        </div>
+    </div>
+
+    <!-- Page 5: Risk Factors -->
+    <div class="content-page">
+        <div class="page-title">IV. 리스크 요인 및 관리 방안</div>
+        
+        <div class="risk-section">
+            {% for risk in risk_factors %}
+            <div class="risk-card">
+                <div class="risk-title">⚠️ {{ risk.risk }}</div>
+                <div class="risk-mitigation">
+                    <strong>관리 방안:</strong> {{ risk.mitigation }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Page 6: M6 Linkage and Final Opinion -->
+    <div class="content-page">
+        <div class="page-title">V. M6 연계 및 최종 의견</div>
+        
+        <div class="m6-linkage-box">
+            <div class="m6-linkage-title">🔗 M6 LH 종합 심사 연계</div>
+            <div class="m6-linkage-content">
+                {{ m6_linkage }}
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">최종 의견</div>
+            <div class="interpretation-box">
+                <p>
+                    본 사업은 <strong>{{ grade }}등급</strong>으로 평가되었습니다.
+                </p>
+                <p>
+                    {% if grade == "A" %}
+                    재무 지표가 모두 양호하여 **사업 추진을 권장**합니다. 
+                    LH 매입 확정성과 함께 충분한 수익성이 확보될 것으로 판단됩니다.
+                    {% elif grade == "B" %}
+                    NPV가 양수이며 LH 매입 확정성이 있어, 일부 재무 지표 산정 제약에도 불구하고 
+                    **사업 추진이 가능**합니다. 사업비 관리를 철저히 할 것을 권장합니다.
+                    {% elif grade == "C" %}
+                    재무 지표가 손익분기점 근처이므로, **사업비 절감 또는 LH 매입 단가 상향 협의**가 필요합니다. 
+                    조건부 진행을 권장하며, VE(가치공학) 적용을 검토하시기 바랍니다.
+                    {% elif grade == "D" %}
+                    재무 지표가 부정적이므로, **사업 구조 재검토 또는 대안 검토**가 필요합니다. 
+                    현 조건에서는 사업 추진이 어려울 것으로 판단됩니다.
+                    {% endif %}
+                </p>
+                <p style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #dee2e6;">
+                    <strong>참고사항:</strong> 본 사업성 분석은 M4 건축 규모 판단 결과를 전제로 수행되었으며, 
+                    실제 인허가 과정에서 건축 규모가 변경될 경우 재분석이 필요합니다.
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</body>
+</html>
