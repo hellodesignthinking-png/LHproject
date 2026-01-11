@@ -512,13 +512,41 @@
                     
                     // 1-3: freeze-context-v2로 Context ID 생성
                     const freezePayload = {
-                        address: finalAddress,
-                        land_area_sqm: landArea ? parseFloat(landArea) : collectData.data.cadastral?.area || 500,
-                        zoning: zoning || collectData.data.legal?.use_zone || '제2종일반주거지역',
-                        building_coverage_ratio: collectData.data.legal?.building_coverage_ratio || 60,
-                        floor_area_ratio: collectData.data.legal?.floor_area_ratio || 200,
-                        land_price: collectData.data.market?.official_land_price || 5000000,
-                        road_contact: collectData.data.road?.road_contact || '접함'
+                        // 주소 정보
+                        address: collectData.data.address || finalAddress,
+                        road_address: firstResult.road_address || finalAddress,
+                        sido: collectData.data.sido || firstResult.sido || '서울',
+                        sigungu: collectData.data.sigungu || firstResult.sigungu || '',
+                        dong: collectData.data.dong || firstResult.dong || '',
+                        beopjeong_dong: collectData.data.beopjeong_dong || null,
+                        
+                        // 좌표
+                        coordinates: {
+                            lat: firstResult.coordinates.lat,
+                            lon: firstResult.coordinates.lon
+                        },
+                        
+                        // 지적 정보
+                        bonbun: collectData.data.cadastral?.bonbun || '0',
+                        bubun: collectData.data.cadastral?.bubun || '0',
+                        jimok: collectData.data.cadastral?.jimok || '대지',
+                        area: landArea ? parseFloat(landArea) : (collectData.data.cadastral?.area || 500),
+                        
+                        // 용도지역
+                        zone_type: zoning || collectData.data.legal?.use_zone || '제2종일반주거지역',
+                        land_use: collectData.data.legal?.use_zone || '제2종일반주거지역',
+                        
+                        // 건축 규제
+                        far: collectData.data.legal?.floor_area_ratio || 200,
+                        bcr: collectData.data.legal?.building_coverage_ratio || 60,
+                        
+                        // 도로 정보
+                        road_width: collectData.data.road?.road_width || 8.0,
+                        road_type: collectData.data.road?.road_type || '일반도로',
+                        
+                        // 가격 정보 (선택)
+                        official_land_price: collectData.data.market?.official_land_price || 5000000,
+                        official_land_price_date: collectData.data.market?.official_land_price_date || '2024-01-01'
                     };
 
                     const freezeResponse = await fetch('/api/m1/freeze-context-v2', {
@@ -530,7 +558,10 @@
                     const freezeData = await freezeResponse.json();
                     
                     if (!freezeResponse.ok) {
-                        throw new Error(freezeData.detail || 'Context 생성 실패');
+                        // 상세한 에러 메시지 출력
+                        const errorDetails = freezeData.detail || freezeData.message || 'Context 생성 실패';
+                        console.error('Freeze context error:', freezeData);
+                        throw new Error(typeof errorDetails === 'string' ? errorDetails : JSON.stringify(errorDetails));
                     }
                     
                     currentContextId = freezeData.context_id;
