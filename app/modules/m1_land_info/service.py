@@ -118,38 +118,26 @@ class LandInfoService:
             logger.error(f"❌ Failed to load frozen context: {e}")
             logger.warning("⚠️ Falling back to mock data")
         
-        # Fallback: Mock 데이터 생성
-        logger.warning("⚠️ Using MOCK DATA - This should only happen in development!")
-        land_context = CanonicalLandContext(
-            parcel_id=parcel_id,
-            address=address or "서울특별시 강남구 역삼동 123-45",
-            road_address="서울특별시 강남구 테헤란로 123",
-            coordinates=(37.498, 127.028),
-            sido="서울특별시",
-            sigungu="강남구",
-            dong="역삼동",
-            area_sqm=500.0,
-            area_pyeong=151.25,
-            land_category="대",
-            land_use="주거용",
-            zone_type="제2종일반주거지역",
-            zone_detail="7층 이하",
-            far=200.0,
-            bcr=60.0,
-            road_width=12.0,
-            road_type="중로",
-            terrain_height="평지",
-            terrain_shape="정형",
-            regulations={},
-            restrictions=[],
-            data_source="Mock Data (FALLBACK - Context not found)",
-            retrieval_date=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # 🚫 MOCK DATA FALLBACK BLOCKED - Address-Driven Data Binding Required
+        logger.error("="*80)
+        logger.error("🚫 DATA NOT LOADED – ADDRESS BINDING FAILED")
+        logger.error("="*80)
+        logger.error("")
+        logger.error("❌ No frozen context found for parcel_id: {parcel_id}")
+        logger.error("")
+        logger.error("🔧 Required Actions:")
+        logger.error("   1. User must input address via frontend")
+        logger.error("   2. System must call /api/m1/freeze-context-v2")
+        logger.error("   3. Frozen context must be created")
+        logger.error("   4. Then pipeline can use real data")
+        logger.error("")
+        logger.error("🚫 MOCK DATA FALLBACK IS NOW BLOCKED")
+        logger.error("🚫 Analysis cannot proceed without real address data")
+        logger.error("="*80)
+        
+        raise ValueError(
+            f"DATA NOT LOADED – ADDRESS BINDING FAILED. "
+            f"No frozen context found for parcel_id: {parcel_id}. "
+            f"User must input address and create frozen context first. "
+            f"MOCK DATA fallback is now blocked."
         )
-        
-        logger.info("✅ CanonicalLandContext created (MOCK)")
-        logger.info(f"   Address: {land_context.address}")
-        logger.info(f"   Area: {land_context.area_sqm}m² ({land_context.area_pyeong}평)")
-        logger.info(f"   Zone: {land_context.zone_type}")
-        logger.info("="*80)
-        
-        return land_context
