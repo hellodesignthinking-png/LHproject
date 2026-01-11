@@ -90,7 +90,16 @@ export const ProjectDashboardPage: React.FC = () => {
   return (
     <div className="project-dashboard-page">
       {/* Module Status Bar */}
-      <ModuleStatusBar projectId={projectId!} />
+      <ModuleStatusBar 
+        m1={status.m1_status}
+        m2={status.m2_status}
+        m3={status.m3_status}
+        m4={status.m4_status}
+        m5={status.m5_status}
+        m6={status.m6_status}
+        projectId={projectId!}
+        onModuleClick={handleNavigateToModule}
+      />
 
       {/* Project Header */}
       <div className="project-header">

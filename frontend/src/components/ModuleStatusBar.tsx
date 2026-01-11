@@ -53,7 +53,7 @@ export const ModuleStatusBar: React.FC<ModuleStatusBarProps> = ({
         icon: '✅',
         color: 'verified',
         clickable: true,
-        tooltip: 'Verified - Click to view results'
+        tooltip: '검증됨 - 클릭하여 결과 보기'
       };
     }
     
@@ -65,7 +65,7 @@ export const ModuleStatusBar: React.FC<ModuleStatusBarProps> = ({
         icon: '🔄',
         color: 'in-progress',
         clickable: false,
-        tooltip: 'Executing...'
+        tooltip: '실행 중...'
       };
     }
     
@@ -77,7 +77,7 @@ export const ModuleStatusBar: React.FC<ModuleStatusBarProps> = ({
         icon: '⚠️',
         color: 'pending',
         clickable: true,
-        tooltip: 'Awaiting verification - Click to verify'
+        tooltip: '검증 대기 중 - 클릭하여 검증'
       };
     }
     
@@ -89,7 +89,7 @@ export const ModuleStatusBar: React.FC<ModuleStatusBarProps> = ({
         icon: '✅',
         color: 'completed',
         clickable: true,
-        tooltip: 'Completed - Click to view results'
+        tooltip: '완료됨 - 클릭하여 결과 보기'
       };
     }
     
@@ -101,7 +101,7 @@ export const ModuleStatusBar: React.FC<ModuleStatusBarProps> = ({
         icon: '🚫',
         color: 'invalid',
         clickable: false,
-        tooltip: 'INVALID - Data changed, re-execute required'
+        tooltip: '유효하지 않음 - 데이터 변경됨, 재실행 필요'
       };
     }
     
@@ -113,7 +113,7 @@ export const ModuleStatusBar: React.FC<ModuleStatusBarProps> = ({
         icon: '❌',
         color: 'error',
         clickable: true,
-        tooltip: `Error: ${module.error_message || 'Unknown error'}`
+        tooltip: `오류: ${module.error_message || '알 수 없는 오류'}`
       };
     }
     
@@ -124,7 +124,7 @@ export const ModuleStatusBar: React.FC<ModuleStatusBarProps> = ({
       icon: '⏸️',
       color: 'locked',
       clickable: false,
-      tooltip: 'Locked - Complete previous module first'
+      tooltip: '잠김 - 이전 모듈을 먼저 완료하세요'
     };
   };
 
@@ -173,31 +173,31 @@ export const ModuleStatusBar: React.FC<ModuleStatusBarProps> = ({
 export const ModuleStatusLegend: React.FC = () => {
   return (
     <div className="status-legend">
-      <div className="legend-title">Status Icons:</div>
+      <div className="legend-title">상태 아이콘:</div>
       <div className="legend-items">
         <div className="legend-item">
           <span className="legend-icon">✅</span>
-          <span className="legend-text">Verified/Completed</span>
+          <span className="legend-text">검증됨/완료됨</span>
         </div>
         <div className="legend-item">
           <span className="legend-icon">🔄</span>
-          <span className="legend-text">In Progress</span>
+          <span className="legend-text">진행 중</span>
         </div>
         <div className="legend-item">
           <span className="legend-icon">⏸️</span>
-          <span className="legend-text">Locked</span>
+          <span className="legend-text">잠김</span>
         </div>
         <div className="legend-item">
           <span className="legend-icon">⚠️</span>
-          <span className="legend-text">Awaiting Verification</span>
+          <span className="legend-text">검증 대기 중</span>
         </div>
         <div className="legend-item">
           <span className="legend-icon">🚫</span>
-          <span className="legend-text">Invalid</span>
+          <span className="legend-text">유효하지 않음</span>
         </div>
         <div className="legend-item">
           <span className="legend-icon">❌</span>
-          <span className="legend-text">Error</span>
+          <span className="legend-text">오류</span>
         </div>
       </div>
     </div>
