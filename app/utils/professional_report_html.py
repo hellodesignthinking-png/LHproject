@@ -93,8 +93,8 @@ def generate_module_report_html(
         Professional HTML report string matching uploaded PDF format
     """
     
-    # 🔥 NEW: M3/M4/M5 use enhanced Jinja2 templates
-    if module_id in ["M3", "M4", "M5"]:
+    # 🔥 NEW: M3/M4/M5/M6 use enhanced Jinja2 templates
+    if module_id in ["M3", "M4", "M5", "M6"]:
         try:
             logger.info(f"🎨 Using enhanced Jinja2 template for {module_id}")
             
@@ -102,7 +102,8 @@ def generate_module_report_html(
             template_file = {
                 "M3": "m3_supply_type_format_v2_enhanced.html",
                 "M4": "m4_building_scale_format_v2_enhanced.html",
-                "M5": "m5_feasibility_format_v2_enhanced.html"
+                "M5": "m5_feasibility_format_v2_enhanced.html",
+                "M6": "m6_comprehensive_decision_v2_enhanced.html"
             }.get(module_id)
             
             # Load template
@@ -2369,6 +2370,34 @@ def _prepare_template_data_for_enhanced(module_id: str, context_id: str, module_
             return result
         except Exception as e:
             logger.error(f"M5 enhanced logic failed: {e}, falling back to basic logic")
+            # Fallback to basic logic below
+    
+    if module_id == "M6":
+        from app.utils.m6_enhanced_logic import prepare_m6_enhanced_report_data
+        try:
+            # M6 requires M1, M3, M4, M5 data
+            # Try to get all module data from the same context
+            m1_data = {}  # TODO: Fetch M1 data
+            m3_data = {}  # TODO: Fetch M3 data
+            m4_data = {}  # TODO: Fetch M4 data
+            m5_data = {}  # TODO: Fetch M5 data
+            
+            # For now, use module_data as fallback
+            result = prepare_m6_enhanced_report_data(
+                context_id,
+                m1_data or module_data,
+                m3_data or module_data,
+                m4_data or module_data,
+                m5_data or module_data
+            )
+            # Check for data integrity error
+            if result.get("error", False):
+                logger.error(f"M6 decision chain validation failed: {result.get('error_details', [])}")
+                # Return error template data
+                return result
+            return result
+        except Exception as e:
+            logger.error(f"M6 enhanced logic failed: {e}, falling back to basic logic")
             # Fallback to basic logic below
     
     summary = module_data.get("summary", {})

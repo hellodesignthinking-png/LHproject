@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M6: LH 신축매입임대 종합 판단 보고서 - ZeroSite</title>
+    <style>
+        @page { size: A4; margin: 20mm; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            font-size: 10.5pt;
+            line-height: 1.7;
+            color: #2c3e50;
+            background: white;
+            position: relative;
+        }
+        body::before {
+            content: 'ZEROSITE';
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 120pt;
+            font-weight: bold;
+            color: rgba(0, 102, 204, 0.03);
+            z-index: -1;
+            pointer-events: none;
+        }
+        .report-footer {
+            position: fixed;
+            bottom: 10mm;
+            left: 20mm;
+            right: 20mm;
+            text-align: center;
+            font-size: 8pt;
+            color: #95a5a6;
+            border-top: 1px solid #ecf0f1;
+            padding-top: 8px;
+        }
+        .cover-page {
+            text-align: center;
+            padding: 80px 40px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            page-break-after: always;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        .company-logo {
+            font-size: 28pt;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #0066cc;
+            letter-spacing: 12px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .main-title {
+            font-size: 32pt;
+            font-weight: bold;
+            margin: 40px 0 15px 0;
+            color: #1a1a1a;
+            letter-spacing: 3px;
+        }
+        .sub-title {
+            font-size: 24pt;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #34495e;
+        }
+        .error-box {
+            background: #f8d7da;
+            border: 3px solid #dc3545;
+            border-radius: 8px;
+            padding: 30px;
+            margin: 30px auto;
+            max-width: 700px;
+            text-align: left;
+        }
+        .error-title {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #721c24;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .error-message {
+            font-size: 12pt;
+            color: #721c24;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+        .error-details-list {
+            background: white;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+        .error-details-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #dee2e6;
+            color: #721c24;
+        }
+        .content-page {
+            padding: 40px;
+            page-break-after: always;
+            min-height: 100vh;
+            position: relative;
+        }
+        .page-title {
+            font-size: 18pt;
+            font-weight: bold;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 4px solid #0066cc;
+            color: #2c3e50;
+        }
+        .decision-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            margin: 30px 0;
+            text-align: center;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+        .decision-label {
+            font-size: 14pt;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+        .decision-value {
+            font-size: 48pt;
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 4px 4px 8px rgba(0,0,0,0.2);
+        }
+        .conditional-box {
+            background: #fff3cd;
+            border: 3px solid #ffc107;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        .conditional-title {
+            font-size: 13pt;
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 15px;
+        }
+        .meta-box {
+            background: #e9ecef;
+            border: 2px solid #6c757d;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 30px 0;
+            font-size: 9.5pt;
+            color: #495057;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="report-footer">
+        ⓒ ZeroSite by AntennaHoldings | Natai Heum | analysis@antennaholdings.com | 서울시 강남구 테헤란로 427 위워크타워
+    </div>
+
+    {% if error %}
+    <!-- Error Page -->
+    <div class="cover-page">
+        <div class="company-logo">ZEROSITE</div>
+        <div class="main-title">M6 LH 종합 판단</div>
+        <div class="sub-title">Decision Chain Integrity Error</div>
+        
+        <div class="error-box">
+            <div class="error-title">❌ 필수 입력 데이터 무결성 오류</div>
+            <div class="error-message">
+                {{ error_message }}
+            </div>
+            
+            {% if error_details %}
+            <div class="error-details-list">
+                <strong>오류 항목:</strong>
+                <ul style="list-style: none; padding: 10px 0;">
+                    {% for detail in error_details %}
+                    <li>❌ {{ detail }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <!-- Normal Report -->
+    <div class="cover-page">
+        <div class="company-logo">ZEROSITE</div>
+        <div class="main-title">LH 신축매입임대</div>
+        <div class="sub-title">종합 판단 보고서</div>
+        <div style="margin: 40px 0; font-size: 12pt; color: #6c757d;">
+            보고서 번호: {{ report_id }}<br>
+            분석일: {{ analysis_date }}
+        </div>
+    </div>
+
+    <div class="content-page">
+        <div class="page-title">최종 판단</div>
+        
+        <div class="decision-box">
+            <div class="decision-label">종합 판단 결과</div>
+            <div class="decision-value">{{ final_decision.decision }}</div>
+        </div>
+        
+        <div style="margin: 30px 0; line-height: 1.9;">
+            {{ final_decision.decision_text }}
+        </div>
+        
+        <div class="conditional-box">
+            <div class="conditional-title">📋 조건부 판단 구조</div>
+            <div style="white-space: pre-line; font-size: 10pt;">{{ final_decision.conditional_statement }}</div>
+        </div>
+        
+        <div class="meta-box">
+            <strong>메타 선언:</strong><br>
+            {{ meta_declaration }}
+        </div>
+    </div>
+    {% endif %}
+</body>
+</html>
