@@ -126,31 +126,14 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
   };
 
   const handleStep1Next = (address: AddressSuggestion) => {
-    // 🔒 EXECUTION LOCK: Only apply if pipeline callback exists
-    // Standalone M1 doesn't need execution lock
+    // 🔒 EXECUTION LOCK: Moved to Step 4 (Context Freeze)
+    // Users need to verify/edit data in Step 3.5 first
     const isPipelineMode = !!onContextFreezeComplete;
     
     if (isPipelineMode) {
-      // 🔒 RULE 1: Check if execution is already locked
-      if (executionLock.isLocked) {
-        alert('⚠️ 분석이 이미 진행 중입니다.\n현재 분석이 완료될 때까지 기다려주세요.');
-        console.warn('⚠️ EXECUTION BLOCKED: Analysis already in progress');
-        return;
-      }
-
-      // Generate context_id for this new analysis
-      const contextId = `CTX_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
-      
-      // 🔒 RULE 1: Lock execution for new analysis
-      const locked = executionLock.lockExecution(contextId);
-      if (!locked) {
-        alert('⚠️ 실행 잠금 실패. 다시 시도해주세요.');
-        return;
-      }
-
-      console.log('🔒 EXECUTION LOCKED (Pipeline Mode):', contextId);
+      console.log('🚀 [M1Landing] Pipeline mode - no lock yet, proceeding to data collection');
     } else {
-      console.log('ℹ️ Standalone M1 mode - Execution lock skipped');
+      console.log('ℹ️ Standalone M1 mode');
     }
     
     updateFormData({
@@ -325,6 +308,23 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
     console.log('🔍 [M1Landing] state.formData:', state.formData);
     
     const isPipelineMode = !!onContextFreezeComplete;
+    
+    // 🔒 NEW: Acquire execution lock HERE (Step 4) instead of Step 1
+    // This allows users to verify/edit data in Step 3.5 before locking
+    if (isPipelineMode) {
+      // Check if already locked
+      if (!executionLock.isLocked) {
+        const contextId = frozenContext.context_id;
+        const locked = executionLock.lockExecution(contextId);
+        if (!locked) {
+          alert('⚠️ 실행 잠금 실패. 다시 시도해주세요.');
+          return;
+        }
+        console.log('🔒 EXECUTION LOCKED (Step 4 - Context Freeze):', contextId);
+      } else {
+        console.log('ℹ️ Execution already locked:', executionLock.contextId);
+      }
+    }
     
     // 🔒 Mark M1 as complete (only in pipeline mode)
     if (isPipelineMode) {
