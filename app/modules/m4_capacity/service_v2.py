@@ -27,7 +27,7 @@ from app.core.context.housing_type_context import HousingTypeContext
 from app.core.context.capacity_context import CapacityContext
 
 # 🔴 CRITICAL: Real Engine Import
-from app.utils.m4_real_data_engine import M4RealDataEngine
+from app.utils.m4_real_data_engine import M4RealDataAnalyzer
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ class CapacityServiceV2:
         
         logger.info("="*80)
         logger.info("🏗️ M4 CAPACITY MODULE - REAL ENGINE MODE")
-        logger.info(f"   Context ID: {land_ctx.context_id}")
+        logger.info(f"   Context ID: {land_ctx.parcel_id}")
         logger.info(f"   Supply Type: {housing_type_ctx.selected_type_name}")
         logger.info("="*80)
         

@@ -72,7 +72,7 @@ class LHDemandService:
         
         logger.info("="*80)
         logger.info("🏘️ M3 LH DEMAND MODULE - REAL ENGINE MODE")
-        logger.info(f"   Context ID: {land_ctx.context_id}")
+        logger.info(f"   Parcel ID: {land_ctx.parcel_id}")
         logger.info(f"   Address: {land_ctx.address}")
         logger.info(f"   Area: {land_ctx.area_sqm}㎡")
         logger.info(f"   Zone: {land_ctx.zone_type}")
@@ -86,7 +86,7 @@ class LHDemandService:
         
         # 🔴 STEP 2: Real Engine 실행
         analyzer = M3EnhancedAnalyzer(
-            context_id=land_ctx.context_id,
+            context_id=land_ctx.parcel_id,
             module_data=m3_module_data,
             frozen_context={"results": {"land": self._land_context_to_dict(land_ctx)}}
         )
@@ -142,17 +142,27 @@ class LHDemandService:
     
     def _land_context_to_dict(self, land_ctx: CanonicalLandContext) -> Dict[str, Any]:
         """CanonicalLandContext를 Dict로 변환"""
+        # coordinates 안전 처리
+        coords = land_ctx.coordinates if hasattr(land_ctx, 'coordinates') else {}
+        if isinstance(coords, (list, tuple)) and len(coords) >= 2:
+            lat, lng = coords[0], coords[1]
+        elif isinstance(coords, dict):
+            lat = coords.get("lat", 0)
+            lng = coords.get("lng", 0)
+        else:
+            lat, lng = 0, 0
+        
         return {
             "address": land_ctx.address,
             "area_sqm": land_ctx.area_sqm,
             "zoning": {
                 "type": land_ctx.zone_type,
-                "far": land_ctx.far,
-                "bcr": land_ctx.bcr
+                "far": land_ctx.far if hasattr(land_ctx, 'far') else 0,
+                "bcr": land_ctx.bcr if hasattr(land_ctx, 'bcr') else 0
             },
             "coordinates": {
-                "lat": land_ctx.coordinates.get("lat") if land_ctx.coordinates else 0,
-                "lng": land_ctx.coordinates.get("lng") if land_ctx.coordinates else 0
+                "lat": lat,
+                "lng": lng
             }
         }
     

@@ -68,7 +68,7 @@ class LHReviewService:
         
         logger.info("="*80)
         logger.info("📋 M6 LH REVIEW MODULE - REAL ENGINE MODE")
-        logger.info(f"   Context ID: {land_ctx.context_id}")
+        logger.info(f"   Context ID: {land_ctx.parcel_id}")
         logger.info(f"   NPV: {feasibility_ctx.npv:,.0f}원")
         logger.info("="*80)
         

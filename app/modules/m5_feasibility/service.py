@@ -66,7 +66,7 @@ class FeasibilityService:
         
         logger.info("="*80)
         logger.info("💰 M5 FEASIBILITY MODULE - REAL ENGINE MODE")
-        logger.info(f"   Context ID: {land_ctx.context_id}")
+        logger.info(f"   Context ID: {land_ctx.parcel_id}")
         logger.info(f"   Units: {capacity_ctx.recommended_units}세대")
         logger.info("="*80)
         
