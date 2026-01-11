@@ -2357,11 +2357,12 @@ def _prepare_template_data_for_enhanced(module_id: str, context_id: str, module_
         from app.utils.m5_enhanced_logic import prepare_m5_enhanced_report_data
         try:
             # M5 requires M4 data
-            # Try to get M4 data from the same context
-            m4_data = {}  # TODO: Fetch M4 data from database/cache
+            # Extract from module_data which contains full pipeline results
+            results = module_data.get("results", {})
+            m4_data = results.get("capacity", {})
             
-            # For now, use module_data as both M4 and M5 (fallback)
-            result = prepare_m5_enhanced_report_data(context_id, m4_data or module_data, module_data)
+            # Call M5 enhanced logic with actual M4 data
+            result = prepare_m5_enhanced_report_data(context_id, m4_data, module_data)
             # Check for data integrity error
             if result.get("error", False):
                 logger.error(f"M5 data integrity check failed: {result.get('missing_items', [])}")
@@ -2376,19 +2377,20 @@ def _prepare_template_data_for_enhanced(module_id: str, context_id: str, module_
         from app.utils.m6_enhanced_logic import prepare_m6_enhanced_report_data
         try:
             # M6 requires M1, M3, M4, M5 data
-            # Try to get all module data from the same context
-            m1_data = {}  # TODO: Fetch M1 data
-            m3_data = {}  # TODO: Fetch M3 data
-            m4_data = {}  # TODO: Fetch M4 data
-            m5_data = {}  # TODO: Fetch M5 data
+            # Extract from module_data which contains full pipeline results
+            results = module_data.get("results", {})
+            m1_data = results.get("land", {})
+            m3_data = results.get("housing_type", {})
+            m4_data = results.get("capacity", {})
+            m5_data = results.get("feasibility", {})
             
-            # For now, use module_data as fallback
+            # Call M6 enhanced logic with actual pipeline data
             result = prepare_m6_enhanced_report_data(
                 context_id,
-                m1_data or module_data,
-                m3_data or module_data,
-                m4_data or module_data,
-                m5_data or module_data
+                m1_data,
+                m3_data,
+                m4_data,
+                m5_data
             )
             # Check for data integrity error
             if result.get("error", False):

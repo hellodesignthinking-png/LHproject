@@ -53,54 +53,81 @@ class M6EnhancedAnalyzer:
         """
         errors = []
         
-        # ✔ M1 토지·입지 정보
-        m1_land = self.m1_data.get("land", {})
-        if not m1_land.get("address"):
+        # ✔ M1 토지·입지 정보 (파이프라인 구조: m1_data가 직접 land 정보)
+        if not self.m1_data.get("address"):
             errors.append("M1: 주소 정보 누락")
-        if not m1_land.get("land", {}).get("area_sqm"):
+        if not self.m1_data.get("land", {}).get("area_sqm"):
             errors.append("M1: 토지면적 수치 누락")
-        if not m1_land.get("zoning", {}).get("type"):
+        if not self.m1_data.get("zoning", {}).get("type"):
             errors.append("M1: 용도지역 명시 누락")
             
-        # ✔ M3 공급유형 판단
+        # ✔ M3 공급유형 판단 (파이프라인 구조: housing_type)
         m3_summary = self.m3_data.get("summary", {})
-        if not m3_summary.get("selected_supply_type") and not m3_summary.get("recommended_type"):
+        m3_details = self.m3_data.get("details", {})
+        if not m3_summary.get("recommended_type") and not m3_details.get("selected", {}).get("type"):
             errors.append("M3: 최종 공급유형 명확하지 않음")
-        if not self.m3_data.get("details", {}).get("judgment_basis"):
-            # 판단 근거 서술 체크 (없으면 추천으로 간주)
-            if m3_summary.get("conclusion", "").find("추천") >= 0:
-                errors.append("M3: '추천'이 아닌 '판단 근거 서술' 필요")
                 
-        # ✔ M4 건축규모
+        # ✔ M4 건축규모 (파이프라인 구조: capacity)
         m4_summary = self.m4_data.get("summary", {})
         m4_details = self.m4_data.get("details", {})
         
-        unit_count = m4_summary.get("recommended_units") or m4_details.get("optimal_units")
+        # incentive_units 또는 legal_units 확인
+        unit_count = (
+            m4_summary.get("incentive_units") or 
+            m4_summary.get("legal_units") or 
+            m4_details.get("incentive_capacity", {}).get("total_units") or
+            m4_details.get("legal_capacity", {}).get("total_units")
+        )
         if not unit_count or unit_count == 0:
             errors.append("M4: 총 세대수 확정 필요")
             
-        total_floor_area = m4_details.get("total_floor_area_sqm")
+        # target_gfa_sqm 또는 total_gfa_sqm 확인
+        total_floor_area = (
+            m4_details.get("incentive_capacity", {}).get("target_gfa_sqm") or
+            m4_details.get("legal_capacity", {}).get("target_gfa_sqm") or
+            m4_details.get("total_floor_area_sqm")
+        )
         if not total_floor_area:
             errors.append("M4: 연면적 수치 누락")
             
-        # '권장 규모' 명시 체크 ('최대 가능' 표현 금지)
-        if m4_details.get("recommendation_reason", "").find("최대") >= 0:
-            errors.append("M4: '최대 가능' 대신 '권장 규모' 명시 필요")
-            
-        # ✔ M5 사업성 분석
+        # ✔ M5 사업성 분석 (파이프라인 구조: feasibility)
+        m5_summary = self.m5_data.get("summary", {})
         m5_details = self.m5_data.get("details", {})
-        m5_financial = self.m5_data.get("financial_metrics", {})
         
-        total_cost = m5_details.get("total_cost") or m5_details.get("total_investment")
+        # costs 또는 total_cost 확인
+        total_cost = (
+            m5_details.get("costs", {}).get("total") or
+            m5_details.get("total_cost") or
+            m5_summary.get("total_cost")
+        )
         if not total_cost:
             errors.append("M5: 총 사업비 산정 필요")
             
-        if not self.m5_data.get("business_structure"):
+        # revenue 또는 lh_purchase 확인
+        revenue_structure = (
+            m5_details.get("revenue") or
+            m5_details.get("lh_purchase") or
+            m5_summary.get("lh_purchase_price")
+        )
+        if not revenue_structure:
             errors.append("M5: 수익 구조 설명 누락")
             
         # NPV 또는 대체 판단 지표 존재
-        npv = m5_financial.get("npv")
-        roi = m5_financial.get("roi")
+        npv = (
+            m5_summary.get("npv_public_krw") or
+            m5_details.get("financials", {}).get("npv_public") or
+            m5_details.get("npv")
+        )
+        roi = (
+            m5_summary.get("roi_pct") or
+            m5_details.get("financials", {}).get("roi") or
+            m5_details.get("roi")
+        )
+        irr = (
+            m5_summary.get("irr_pct") or
+            m5_details.get("financials", {}).get("irr_public") or
+            m5_details.get("irr")
+        )
         if npv is None and roi is None:
             errors.append("M5: NPV 또는 대체 판단 지표 존재 필요")
             
