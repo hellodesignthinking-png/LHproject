@@ -98,19 +98,27 @@ def generate_module_report_html(
         try:
             logger.info(f"🎨 Using enhanced Jinja2 template for {module_id}")
             
-            # Select template
-            template_file = {
-                "M3": "m3_supply_type_format_v2_enhanced.html",
-                "M4": "m4_building_scale_format_v2_enhanced.html",
-                "M5": "m5_feasibility_format_v2_enhanced.html",
-                "M6": "m6_comprehensive_decision_v2_enhanced.html"
-            }.get(module_id)
+            # Prepare template data (convert module_data to template variables)
+            template_data = _prepare_template_data_for_enhanced(module_id, context_id, module_data)
+            
+            # 🔴 Check for DATA INSUFFICIENT
+            if template_data.get("error") and template_data.get("use_data_insufficient_template"):
+                logger.warning(f"🔴 DATA INSUFFICIENT detected for {module_id}")
+                template_file = {
+                    "M4": "m4_data_insufficient.html",
+                    # Add other modules as needed
+                }.get(module_id, "m4_data_insufficient.html")
+            else:
+                # Select template
+                template_file = {
+                    "M3": "m3_supply_type_format_v2_enhanced.html",
+                    "M4": "m4_building_scale_format_v2_enhanced.html",
+                    "M5": "m5_feasibility_format_v2_enhanced.html",
+                    "M6": "m6_comprehensive_decision_v2_enhanced.html"
+                }.get(module_id)
             
             # Load template
             template = jinja_env.get_template(template_file)
-            
-            # Prepare template data (convert module_data to template variables)
-            template_data = _prepare_template_data_for_enhanced(module_id, context_id, module_data)
             
             # Render template
             html = template.render(**template_data)

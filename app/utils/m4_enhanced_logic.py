@@ -89,29 +89,47 @@ class M4EnhancedAnalyzer:
         """
         데이터 무결성 검증 (Hard Gate)
         
+        🔴 DATA INSUFFICIENT 조건:
+        필수 입력 2개 이상 누락 시 즉시 중단
+        
         Returns:
             (valid: bool, errors: List[str])
         """
         errors = []
+        missing_required = []
         
-        # 1. 주소 검증
+        # 1. 주소 검증 (필수)
         address = self.m1_data.get("address", "").strip()
-        if not address or address == "주소 정보 없음":
-            errors.append("주소가 존재하지 않습니다.")
+        if not address or address == "주소 정보 없음" or "Mock Data" in str(address):
+            errors.append("사업지 주소")
+            missing_required.append("주소")
         
-        # 2. 토지면적 검증
+        # 2. 토지면적 검증 (필수)
         land_area = self.m1_data.get("land_area", 0)
         if not land_area or land_area <= 0:
-            errors.append("토지면적이 존재하지 않거나 유효하지 않습니다.")
+            errors.append("토지면적(㎡)")
+            missing_required.append("토지면적")
         if isinstance(land_area, str) and ("built-in" in land_area or "object" in land_area):
             errors.append("토지면적에 Python 객체 주소가 포함되어 있습니다.")
+            missing_required.append("토지면적")
         
-        # 3. 용도지역 검증
+        # 3. 용도지역 검증 (필수)
         zoning = self.m1_data.get("zoning", "").strip()
         if not zoning:
-            errors.append("용도지역이 명시되지 않았습니다.")
+            errors.append("용도지역")
+            missing_required.append("용도지역")
         
-        # 4. 숫자 필드 검증
+        # 4. M3 공급유형 검증 (필수)
+        if not self.m3_supply_type or self.m3_supply_type == "":
+            errors.append("공급유형(M3 결과)")
+            missing_required.append("공급유형")
+        
+        # 🔴 DATA INSUFFICIENT: 필수 입력 2개 이상 누락 시
+        if len(missing_required) >= 2:
+            logger.error(f"🔴 DATA INSUFFICIENT: {len(missing_required)}개 필수 입력 누락 - {missing_required}")
+            return (False, errors)
+        
+        # 5. 숫자 필드 검증
         numeric_fields = ["land_area", "building_coverage", "floor_area_ratio"]
         for field in numeric_fields:
             value = self.details.get(field, None)
@@ -426,7 +444,7 @@ class M4EnhancedAnalyzer:
         M4 보고서 전체 데이터 생성 (Hard Gate 적용)
         
         Returns:
-            Dict with complete M4 report data or error message
+            Dict with complete M4 report data or DATA INSUFFICIENT template data
         """
         from datetime import datetime
         
@@ -434,13 +452,44 @@ class M4EnhancedAnalyzer:
         valid, errors = self.validate_data_integrity()
         
         if not valid:
-            logger.error(f"M4 Data Integrity Failed: {errors}")
+            logger.error(f"🔴 M4 DATA INSUFFICIENT: {errors}")
+            
+            # DATA INSUFFICIENT 템플릿 데이터 생성
+            missing_items = []
+            
+            if "사업지 주소" in str(errors):
+                missing_items.append({
+                    "label": "사업지 주소 (법정동 기준)",
+                    "example": "예: 서울시 강남구 역삼동 520-12"
+                })
+            
+            if "토지면적" in str(errors):
+                missing_items.append({
+                    "label": "토지면적 (제곱미터)",
+                    "example": "예: 500 (단위: ㎡)"
+                })
+            
+            if "용도지역" in str(errors):
+                missing_items.append({
+                    "label": "용도지역",
+                    "example": "예: 제2종일반주거지역"
+                })
+            
+            if "공급유형" in str(errors):
+                missing_items.append({
+                    "label": "공급유형 (M3 분석 결과)",
+                    "example": "예: 청년형, 신혼희망타운 I형 등"
+                })
+            
             return {
                 "error": True,
-                "error_message": "본 보고서는 데이터 무결성 오류로 인해 재분석이 필요합니다.",
-                "error_details": errors,
+                "error_type": "DATA_INSUFFICIENT",
+                "error_message": "현재 입력된 데이터로는 건축 규모 분석을 수행할 수 없습니다.",
+                "missing_count": len(missing_items),
+                "missing_items": missing_items,
                 "context_id": self.context_id,
-                "report_id": f"ZS-M4-ERROR-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                "report_id": f"ZS-M4-INSUFFICIENT-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                "use_data_insufficient_template": True
             }
         
         # 2. 법적 건축 가능 범위 계산

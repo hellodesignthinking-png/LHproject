@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M4: 입력 데이터 부족 - ZeroSite</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            font-size: 11pt;
+            line-height: 1.8;
+            color: #2c3e50;
+            background: white;
+            position: relative;
+            padding: 40px;
+        }
+
+        /* ZeroSite Watermark */
+        body::before {
+            content: 'ZEROSITE';
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 120pt;
+            font-weight: bold;
+            color: rgba(0, 102, 204, 0.03);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding: 40px 0;
+            border-bottom: 4px solid #e74c3c;
+        }
+
+        .logo {
+            font-size: 28pt;
+            font-weight: bold;
+            color: #0066cc;
+            letter-spacing: 12px;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 32pt;
+            font-weight: bold;
+            color: #e74c3c;
+            margin: 20px 0;
+        }
+
+        .subtitle {
+            font-size: 18pt;
+            color: #7f8c8d;
+            margin-top: 10px;
+        }
+
+        .alert-box {
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
+            border: 3px solid #e74c3c;
+            border-radius: 12px;
+            padding: 40px;
+            margin: 40px 0;
+            box-shadow: 0 8px 20px rgba(231, 76, 60, 0.2);
+        }
+
+        .alert-icon {
+            font-size: 64pt;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .alert-title {
+            font-size: 20pt;
+            font-weight: bold;
+            color: #c0392b;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .alert-message {
+            font-size: 13pt;
+            color: #721c24;
+            line-height: 2.0;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .required-inputs {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+
+        .section-title {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+
+        .checklist-item {
+            padding: 15px 20px;
+            margin: 10px 0;
+            background: #f8f9fa;
+            border-left: 5px solid #e74c3c;
+            font-size: 12pt;
+            display: flex;
+            align-items: center;
+        }
+
+        .checklist-icon {
+            font-size: 20pt;
+            margin-right: 15px;
+            color: #e74c3c;
+        }
+
+        .checklist-label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .checklist-example {
+            color: #7f8c8d;
+            font-size: 10pt;
+            margin-left: 35px;
+            margin-top: 5px;
+        }
+
+        .info-box {
+            background: #e8f4f8;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+
+        .info-title {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #2980b9;
+            margin-bottom: 15px;
+        }
+
+        .info-text {
+            font-size: 11pt;
+            color: #34495e;
+            line-height: 1.8;
+        }
+
+        .prohibition-box {
+            background: #fff9e6;
+            border: 2px solid #f39c12;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+
+        .prohibition-title {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #d68910;
+            margin-bottom: 15px;
+        }
+
+        .prohibition-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .prohibition-item {
+            padding: 10px 15px;
+            margin: 5px 0;
+            color: #856404;
+            font-size: 11pt;
+        }
+
+        .prohibition-item::before {
+            content: '❌';
+            margin-right: 10px;
+        }
+
+        .system-message {
+            background: #2c3e50;
+            color: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin: 40px 0;
+            text-align: center;
+            font-size: 13pt;
+            font-weight: 600;
+            line-height: 2.0;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 2px solid #ecf0f1;
+            color: #7f8c8d;
+            font-size: 9pt;
+        }
+
+        .contact-info {
+            margin-top: 20px;
+            font-size: 10pt;
+            color: #95a5a6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">ZEROSITE</div>
+            <div class="title">🔴 DATA INSUFFICIENT</div>
+            <div class="subtitle">입력 데이터 부족으로 분석 중단</div>
+        </div>
+
+        <!-- Alert Box -->
+        <div class="alert-box">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-title">분석 불가 안내</div>
+            <div class="alert-message">
+                현재 입력된 데이터로는 건축 규모 분석을 수행할 수 없습니다.<br>
+                필수 입력 항목 중 <strong>{{ missing_count }}개</strong>가 누락되었습니다.
+            </div>
+        </div>
+
+        <!-- Required Inputs Checklist -->
+        <div class="required-inputs">
+            <div class="section-title">📌 추가 입력이 필요한 항목</div>
+            
+            <ul class="checklist">
+                {% for item in missing_items %}
+                <li class="checklist-item">
+                    <span class="checklist-icon">⬜</span>
+                    <div>
+                        <div class="checklist-label">{{ item.label }}</div>
+                        <div class="checklist-example">{{ item.example }}</div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box">
+            <div class="info-title">📋 입력 완료 시 제공되는 정보</div>
+            <div class="info-text">
+                위 정보가 입력되면 다음 항목을 산정할 수 있습니다:<br><br>
+                
+                • 법적 건축 가능 범위 (건폐율, 용적률)<br>
+                • 최대 건축면적 및 연면적<br>
+                • 권장 세대수 및 세대당 면적<br>
+                • 주차 계획 및 주차대수<br>
+                • 건축 규모 판단 및 리스크 분석
+            </div>
+        </div>
+
+        <!-- Prohibition Box -->
+        <div class="prohibition-box">
+            <div class="prohibition-title">🚫 입력 전까지 수행하지 않는 작업</div>
+            <ul class="prohibition-list">
+                <li class="prohibition-item">유사 사례 기반 추정 계산</li>
+                <li class="prohibition-item">평균값 적용</li>
+                <li class="prohibition-item">'일반적인 경우' 가정</li>
+                <li class="prohibition-item">불완전한 데이터 기반 판단</li>
+            </ul>
+        </div>
+
+        <!-- System Message -->
+        <div class="system-message">
+            ZeroSite는 필수 데이터가 입력되기 전까지<br>
+            분석·계산·판단을 수행하지 않습니다.
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div>ⓒ ZeroSite by AntennaHoldings | Natai Heum</div>
+            <div class="contact-info">
+                analysis@antennaholdings.com | 서울시 강남구 테헤란로 427 위워크타워
+            </div>
+        </div>
+    </div>
+</body>
+</html>
