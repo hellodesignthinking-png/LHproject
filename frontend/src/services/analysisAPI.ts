@@ -128,7 +128,7 @@ class AnalysisAPIService {
    * Create new analysis project
    */
   async createProject(request: CreateProjectRequest): Promise<CreateProjectResponse> {
-    const response = await fetch(`${this.baseUrl}/api/analysis/projects/create`, {
+    const response = await fetch(`${this.baseUrl}/analysis/projects/create`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -152,7 +152,7 @@ class AnalysisAPIService {
    */
   async getProjectStatus(projectId: string): Promise<AnalysisStatus> {
     const response = await fetch(
-      `${this.baseUrl}/api/analysis/projects/${projectId}/status`
+      `${this.baseUrl}/analysis/projects/${projectId}/status`
     );
 
     if (!response.ok) {
@@ -177,7 +177,7 @@ class AnalysisAPIService {
     expectedContextId?: string
   ): Promise<ModuleResult<T>> {
     const response = await fetch(
-      `${this.baseUrl}/api/analysis/projects/${projectId}/modules/${moduleName}/result`
+      `${this.baseUrl}/analysis/projects/${projectId}/modules/${moduleName}/result`
     );
 
     if (!response.ok) {
@@ -210,7 +210,7 @@ class AnalysisAPIService {
     request: VerifyModuleRequest
   ): Promise<VerifyModuleResponse> {
     const response = await fetch(
-      `${this.baseUrl}/api/analysis/projects/${projectId}/modules/${moduleName}/verify`,
+      `${this.baseUrl}/analysis/projects/${projectId}/modules/${moduleName}/verify`,
       {
         method: 'POST',
         headers: {
@@ -239,7 +239,7 @@ class AnalysisAPIService {
     moduleName: string
   ): Promise<{ success: boolean; message: string; execution_id?: string }> {
     const response = await fetch(
-      `${this.baseUrl}/api/analysis/projects/${projectId}/modules/${moduleName}/execute`,
+      `${this.baseUrl}/analysis/projects/${projectId}/modules/${moduleName}/execute`,
       {
         method: 'POST',
         headers: {
@@ -294,7 +294,7 @@ class AnalysisAPIService {
    */
   async listProjects(limit: number = 50, offset: number = 0) {
     const response = await fetch(
-      `${this.baseUrl}/api/analysis/projects?limit=${limit}&offset=${offset}`
+      `${this.baseUrl}/analysis/projects?limit=${limit}&offset=${offset}`
     );
 
     if (!response.ok) {
@@ -302,7 +302,8 @@ class AnalysisAPIService {
       throw new Error(error.detail || 'Failed to list projects');
     }
 
-    return response.json();
+    const data = await response.json();
+    return data.projects || [];
   }
 
   /**
@@ -310,7 +311,7 @@ class AnalysisAPIService {
    */
   async deleteProject(projectId: string): Promise<void> {
     const response = await fetch(
-      `${this.baseUrl}/api/analysis/projects/${projectId}`,
+      `${this.baseUrl}/analysis/projects/${projectId}`,
       {
         method: 'DELETE',
       }
