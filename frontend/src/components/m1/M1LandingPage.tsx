@@ -196,37 +196,17 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
       console.log('🚀 [M1Landing] Pipeline mode - auto-selecting API collection method');
       console.log('✅ [M1Landing] Collection method set to API, jumping to Step 3');
       
-      // 🔥 ULTRA FIX: In Pipeline mode, skip ReviewScreen (Step3) entirely
-      // Go directly to Step4 (Context Freeze) with minimal required data
-      console.log('🚀 [M1Landing] Pipeline mode - skipping ReviewScreen, jumping to Step 4');
+      // 🔥 NEW FIX: In Pipeline mode, go through ReviewScreen (Step 3) → Data Verification (Step 3.5)
+      // This allows users to verify and edit data before freezing context
+      console.log('🚀 [M1Landing] Pipeline mode - going to Step 3 (ReviewScreen)');
       
-      // Prepare minimal formData for Step4
+      // Store geocode data
       updateFormData({
         geocodeData: autoGeocodeData,
-        cadastralData: {
-          bonbun: address.bonbun || '123',
-          bubun: address.bubun || '0',
-          area: 500, // ← DEFAULT: 500 sqm (validation requires > 0)
-          jimok: '대', // Default
-        } as any,
-        landUseData: {
-          zone_type: '제2종일반주거지역', // Default
-          land_use: '주거용',
-          far: 200,
-          bcr: 60,
-        } as any,
-        roadInfoData: {
-          road_width: 12,
-          road_type: '일반도로',
-        } as any,
-        marketData: {
-          official_land_price: null,
-          transactions: [],
-        } as any,
       });
       
-      console.log('✅ [M1Landing] Minimal formData prepared, jumping to Step 4');
-      goToStep(4); // Skip Step3, go directly to Context Freeze
+      console.log('✅ [M1Landing] Geocode data stored, jumping to Step 3');
+      goToStep(3); // Go to ReviewScreen, then Step 3.5, then Step 4
     } else {
       goToStep(2); // Normal flow for standalone mode
     }
@@ -469,7 +449,10 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
             collectionMethod={collectionMethod} // NEW Phase 2: Pass selected method
             onBack={() => goToStep(2.5)} // Go back to method selection
             onNext={(landBundle) => {
+              console.log('🔥🔥🔥 [M1Landing] ReviewScreen onNext called!');
               console.log('✅ [M1Landing] ReviewScreen completed, data:', landBundle);
+              console.log('➡️ [M1Landing] MOVING TO STEP 3.5 (Data Verification)');
+              
               // Store review data before going to verification
               setState(prev => ({
                 ...prev,
@@ -478,14 +461,18 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
                   reviewedData: landBundle
                 }
               }));
+              
+              console.log('🎯 [M1Landing] Calling goToStep(3.5)...');
               goToStep(3.5);
+              console.log('✅ [M1Landing] goToStep(3.5) completed');
             }}
           />
         );
 
       case 3.5:
         // NEW: Data Verification & Edit Screen
-        console.log('📋 [M1Landing] Rendering Step7_5DataVerification');
+        console.log('🔥🔥🔥🔥🔥 [M1Landing] CASE 3.5 TRIGGERED! Rendering Step7_5DataVerification');
+        console.log('📋 [M1Landing] Current step:', state.currentStep);
         console.log('📋 [M1Landing] reviewedData:', state.formData.reviewedData);
         
         // Extract data from reviewedData (API responses)
