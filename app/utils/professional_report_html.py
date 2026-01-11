@@ -101,10 +101,15 @@ def generate_module_report_html(
             # Prepare template data (convert module_data to template variables)
             template_data = _prepare_template_data_for_enhanced(module_id, context_id, module_data)
             
-            # 🔴 Check for DATA INSUFFICIENT / DATA NOT LOADED
+            # 🔴 Check for DATA INSUFFICIENT / DATA NOT LOADED / DATA CONNECTION ERROR
             if template_data.get("error"):
+                # M3: DATA CONNECTION ERROR
+                if template_data.get("use_data_connection_error_template") and module_id == "M3":
+                    logger.warning(f"🔴 M3 DATA CONNECTION ERROR detected")
+                    template_file = "m3_data_connection_error.html"
+                
                 # M4: DATA INSUFFICIENT
-                if template_data.get("use_data_insufficient_template"):
+                elif template_data.get("use_data_insufficient_template"):
                     logger.warning(f"🔴 DATA INSUFFICIENT detected for {module_id}")
                     
                     # V2 템플릿 사용 여부 확인
@@ -2369,10 +2374,21 @@ def _prepare_template_data_for_enhanced(module_id: str, context_id: str, module_
     # ✅ NEW: Use advanced analysis logic for M3/M4
     if module_id == "M3":
         from app.utils.m3_enhanced_logic import prepare_m3_enhanced_report_data
+        from app.services.context_storage import Context
         try:
-            return prepare_m3_enhanced_report_data(context_id, module_data)
+            # 🔴 데이터 바인딩 복구를 위한 frozen_context 조회
+            frozen_context = Context.get_frozen_context(context_id)
+            logger.info(f"🔄 Retrieved frozen_context for M3: {bool(frozen_context)}")
+            
+            result = prepare_m3_enhanced_report_data(context_id, module_data, frozen_context)
+            # Check for data connection error
+            if result.get("error", False):
+                logger.error(f"M3 data connection check failed: {result.get('missing_fields', [])}")
+                # Return error template data
+                return result
+            return result
         except Exception as e:
-            logger.error(f"M3 enhanced logic failed: {e}, falling back to basic logic")
+            logger.error(f"M3 enhanced logic failed: {e}", exc_info=True)
             # Fallback to basic logic below
     
     if module_id == "M4":

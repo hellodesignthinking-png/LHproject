@@ -16,7 +16,7 @@ Author: ZeroSite Development Team
 Date: 2026-01-11
 """
 
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Optional
 import logging
 
 logger = logging.getLogger(__name__)
@@ -30,12 +30,125 @@ class M3EnhancedAnalyzer:
     - 근거 중심 서술형 출력
     """
     
-    def __init__(self, context_id: str, module_data: Dict[str, Any]):
+    def __init__(self, context_id: str, module_data: Dict[str, Any], frozen_context: Dict[str, Any] = None):
         self.context_id = context_id
         self.summary = module_data.get("summary", {})
         self.details = module_data.get("details", {})
         self.raw_data = module_data
+        self.frozen_context = frozen_context or {}
         
+        # DATA BINDING FAILURE 플래그
+        self.binding_error = False
+        self.missing_fields = []
+        
+        # M1 데이터 바인딩 복구 시도
+        self._recover_m1_data()
+        
+    def _recover_m1_data(self) -> None:
+        """
+        M1 → M3 데이터 재바인딩 루틴 (강제)
+        
+        필수 재바인딩 필드:
+        - address (법정동 기준 주소)
+        - land_area_sqm (㎡)
+        - zoning (용도지역/지구)
+        
+        재바인딩 실패 시 binding_error = True로 설정
+        """
+        if not self.frozen_context:
+            logger.warning(f"[M3 DATA BINDING] No frozen_context provided for context_id={self.context_id}")
+            self._validate_current_data()
+            return
+        
+        logger.info(f"[M3 DATA BINDING] Starting M1 data recovery for context_id={self.context_id}")
+        
+        # M1 데이터 추출
+        results = self.frozen_context.get('results', {})
+        m1_land = results.get('land', {})
+        
+        if not m1_land:
+            logger.error(f"[M3 DATA BINDING] M1 land data not found in frozen_context")
+            self.binding_error = True
+            self.missing_fields = ['land (M1 전체 누락)']
+            return
+        
+        # 필수 필드 재바인딩
+        try:
+            # 1. address
+            address = m1_land.get('address', '')
+            if not address or address in ['주소 정보 없음', 'Mock Data', '']:
+                logger.error(f"[M3 DATA BINDING] address missing or invalid: {address}")
+                self.missing_fields.append('address')
+            else:
+                # details에 주소 주입
+                self.details['address'] = address
+                logger.info(f"[M3 DATA BINDING] ✓ address recovered: {address}")
+            
+            # 2. land_area_sqm
+            land_area = m1_land.get('area_sqm', 0)
+            if land_area <= 0:
+                logger.error(f"[M3 DATA BINDING] land_area_sqm invalid: {land_area}")
+                self.missing_fields.append('land_area_sqm')
+            else:
+                # details에 토지면적 주입 (문자열 포맷)
+                self.details['land_area'] = f"{land_area}㎡"
+                logger.info(f"[M3 DATA BINDING] ✓ land_area recovered: {land_area}㎡")
+            
+            # 3. zoning
+            zoning_info = m1_land.get('zoning', {})
+            zoning_type = zoning_info.get('type', '') if isinstance(zoning_info, dict) else ''
+            if not zoning_type:
+                logger.error(f"[M3 DATA BINDING] zoning missing")
+                self.missing_fields.append('zoning')
+            else:
+                # details에 용도지역 주입
+                self.details['zoning'] = zoning_type
+                logger.info(f"[M3 DATA BINDING] ✓ zoning recovered: {zoning_type}")
+            
+            # 바인딩 실패 판정
+            if self.missing_fields:
+                self.binding_error = True
+                logger.error(f"[M3 DATA BINDING] ❌ Binding FAILED. Missing fields: {self.missing_fields}")
+            else:
+                logger.info(f"[M3 DATA BINDING] ✅ All M1 data successfully recovered")
+        
+        except Exception as e:
+            logger.error(f"[M3 DATA BINDING] Exception during recovery: {str(e)}")
+            self.binding_error = True
+            self.missing_fields.append(f'recovery_error: {str(e)}')
+    
+    def _validate_current_data(self) -> None:
+        """
+        0단계: 바인딩 실패 판정 (즉시 실행)
+        
+        다음 중 하나라도 존재하면 DATA BINDING FAILURE (M3)로 판정:
+        - 대상지 주소가 "없음/공란/주소 정보 없음"
+        - 대지면적이 "없음/공란/대지면적 정보 없음"
+        - zoning(용도지역)이 공란
+        """
+        address = self.details.get('address', '')
+        land_area = self.details.get('land_area', '')
+        zoning = self.details.get('zoning', '')
+        
+        # 주소 검증
+        if not address or address in ['주소 정보 없음', '없음', '', 'Mock Data']:
+            self.missing_fields.append('address')
+            logger.warning(f"[M3 VALIDATION] address invalid: {address}")
+        
+        # 토지면적 검증
+        if not land_area or land_area in ['대지면적 정보 없음', '없음', '', '0㎡']:
+            self.missing_fields.append('land_area')
+            logger.warning(f"[M3 VALIDATION] land_area invalid: {land_area}")
+        
+        # 용도지역 검증
+        if not zoning or zoning in ['없음', '']:
+            self.missing_fields.append('zoning')
+            logger.warning(f"[M3 VALIDATION] zoning invalid: {zoning}")
+        
+        if self.missing_fields:
+            self.binding_error = True
+            logger.error(f"[M3 VALIDATION] ❌ DATA BINDING FAILURE detected. Missing: {self.missing_fields}")
+    
     def analyze_location_interpretive(self) -> Dict[str, Any]:
         """
         입지 분석: POI 개수 나열 금지, 수요자 관점 해석
@@ -479,9 +592,44 @@ class M3EnhancedAnalyzer:
         }
 
 
-def prepare_m3_enhanced_report_data(context_id: str, module_data: Dict[str, Any]) -> Dict[str, Any]:
+def prepare_m3_enhanced_report_data(context_id: str, module_data: Dict[str, Any], frozen_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
     M3 Enhanced 보고서 데이터 준비 (외부 호출용)
+    
+    Args:
+        context_id: Context ID
+        module_data: M3 모듈 데이터
+        frozen_context: frozen snapshot 데이터 (M1 재조회용)
+    
+    Returns:
+        보고서 데이터 또는 DATA CONNECTION ERROR
     """
-    analyzer = M3EnhancedAnalyzer(context_id, module_data)
+    analyzer = M3EnhancedAnalyzer(context_id, module_data, frozen_context)
+    
+    # DATA BINDING ERROR 체크
+    if analyzer.binding_error:
+        from datetime import datetime
+        
+        logger.error(f"[M3 REPORT] DATA CONNECTION ERROR detected. Missing fields: {analyzer.missing_fields}")
+        
+        return {
+            "error": True,
+            "error_type": "DATA_CONNECTION_ERROR",
+            "error_message": "상위 모듈(M1) 핵심 데이터(주소/면적/용도지역)가 연결되지 않아 공급유형 의사결정 보고서를 생성할 수 없습니다.",
+            "missing_fields": analyzer.missing_fields,
+            "context_id": context_id,
+            "report_id": f"ZS-M3-CONNECTION-ERROR-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+            "use_data_connection_error_template": True,
+            "template_version": "v1",
+            "analysis_date": datetime.now().strftime("%Y년 %m월 %d일"),
+            "fixed_message": (
+                "🔴 DATA CONNECTION ERROR (M3)\n\n"
+                "상위 모듈(M1) 핵심 데이터(주소/면적/용도지역)가 연결되지 않아\n"
+                "공급유형 의사결정 보고서를 생성할 수 없습니다.\n\n"
+                "M1 입력값을 재확인 후 다시 실행하십시오.\n\n"
+                "✅ 이 상태에서는 '청년형 추천/결정' 같은 판단 문구도 출력되지 않습니다."
+            )
+        }
+    
+    # 정상 보고서 생성
     return analyzer.generate_full_m3_report_data()
