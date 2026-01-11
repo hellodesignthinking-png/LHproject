@@ -466,27 +466,52 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
             lon={lon}
             collectionMethod={collectionMethod} // NEW Phase 2: Pass selected method
             onBack={() => goToStep(2.5)} // Go back to method selection
-            onNext={() => goToStep(3.5)} // Go to Data Verification
+            onNext={(landBundle) => {
+              console.log('✅ [M1Landing] ReviewScreen completed, data:', landBundle);
+              // Store review data before going to verification
+              setState(prev => ({
+                ...prev,
+                formData: {
+                  ...prev.formData,
+                  reviewedData: landBundle
+                }
+              }));
+              goToStep(3.5);
+            }}
           />
         );
 
       case 3.5:
         // NEW: Data Verification & Edit Screen
         console.log('📋 [M1Landing] Rendering Step7_5DataVerification');
+        console.log('📋 [M1Landing] reviewedData:', state.formData.reviewedData);
+        
+        // Extract data from reviewedData (API responses)
+        const reviewedData = state.formData.reviewedData || {};
+        const cadastralData = reviewedData.cadastral || state.formData.cadastralData || {};
+        const legalData = reviewedData.legal || state.formData.legalInfo || {};
+        const roadData = reviewedData.road || state.formData.roadAccess || {};
+        const marketData = reviewedData.market || state.formData.marketData || {};
         
         return (
           <Step7_5DataVerification
             initialData={{
               land: {
                 address: state.formData.selectedAddress?.jibun_address || state.formData.selectedAddress?.road_address || '',
-                area_sqm: state.formData.parcelData?.area || 500,
-                jimok: state.formData.cadastralData?.jimok || '대',
-                jiyeok_jigu: state.formData.legalInfo?.jiyeok_jigu || '제2종일반주거지역',
-                floor_area_ratio: state.formData.legalInfo?.floor_area_ratio || 250,
-                building_coverage_ratio: state.formData.legalInfo?.building_coverage_ratio || 60,
-                road_width: state.formData.roadAccess?.road_width || 10,
+                area_sqm: cadastralData.area || state.formData.parcelData?.area || 500,
+                jimok: cadastralData.jimok || '대',
+                jiyeok_jigu: legalData.jiyeok_jigu || '제2종일반주거지역',
+                floor_area_ratio: legalData.floor_area_ratio || 250,
+                building_coverage_ratio: legalData.building_coverage_ratio || 60,
+                road_width: roadData.road_width || 10,
               },
-              // Other initial data will use defaults from component
+              appraisal: {
+                base_price_per_sqm: marketData?.price_info?.official_price || 1500000,
+                adjustment_rate: 3.8,
+                final_unit_price: marketData?.price_info?.official_price ? marketData.price_info.official_price * 1.038 : 1557000,
+              },
+              transactions: marketData?.nearby_transactions || undefined,
+              // POI data will use defaults from component
             }}
             onComplete={(verifiedData) => {
               console.log('✅ [M1Landing] Data verification complete:', verifiedData);
