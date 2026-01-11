@@ -40,6 +40,7 @@ import Step1AddressInput from './Step1AddressInput';
 import Step2LocationVerification from './Step2LocationVerification';
 import { Step2_5DataCollectionMethod, DataCollectionMethod } from './Step2_5DataCollectionMethod'; // NEW in Phase 2!
 import { ReviewScreen } from './ReviewScreen'; // NEW: Unified review screen
+import Step7_5DataVerification from './Step7_5DataVerification'; // NEW: Data Verification & Edit
 import Step8ContextFreeze from './Step8ContextFreeze';
 
 const STEP_LABELS = [
@@ -49,6 +50,7 @@ const STEP_LABELS = [
   '위치 확인',     // STEP 2: Location Verification
   '수집 방법',     // STEP 2.5: Data Collection Method (NEW!)
   '데이터 검토',   // STEP 3: Unified Review
+  '데이터 검증',   // STEP 3.5: Data Verification & Edit (NEW!)
   'M1 확정',       // STEP 4: Context Freeze
 ];
 
@@ -464,7 +466,42 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
             lon={lon}
             collectionMethod={collectionMethod} // NEW Phase 2: Pass selected method
             onBack={() => goToStep(2.5)} // Go back to method selection
-            onNext={handleReviewComplete}
+            onNext={() => goToStep(3.5)} // Go to Data Verification
+          />
+        );
+
+      case 3.5:
+        // NEW: Data Verification & Edit Screen
+        console.log('📋 [M1Landing] Rendering Step7_5DataVerification');
+        
+        return (
+          <Step7_5DataVerification
+            initialData={{
+              land: {
+                address: state.formData.selectedAddress?.jibun_address || state.formData.selectedAddress?.road_address || '',
+                area_sqm: state.formData.parcelData?.area || 500,
+                jimok: state.formData.cadastralData?.jimok || '대',
+                jiyeok_jigu: state.formData.legalInfo?.jiyeok_jigu || '제2종일반주거지역',
+                floor_area_ratio: state.formData.legalInfo?.floor_area_ratio || 250,
+                building_coverage_ratio: state.formData.legalInfo?.building_coverage_ratio || 60,
+                road_width: state.formData.roadAccess?.road_width || 10,
+              },
+              // Other initial data will use defaults from component
+            }}
+            onComplete={(verifiedData) => {
+              console.log('✅ [M1Landing] Data verification complete:', verifiedData);
+              // Store verified data in formData
+              setState(prev => ({
+                ...prev,
+                formData: {
+                  ...prev.formData,
+                  verifiedData: verifiedData
+                }
+              }));
+              // Move to Context Freeze
+              goToStep(4);
+            }}
+            onBack={() => goToStep(3)}
           />
         );
 
