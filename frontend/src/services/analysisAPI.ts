@@ -85,6 +85,22 @@ export interface CreateProjectResponse {
   next_action: string;
 }
 
+export interface ProjectListItem {
+  project_id: string;
+  name: string;
+  address: string;
+  progress: number;
+  next_action: string;
+  last_activity: string;
+  is_locked: boolean;
+  created_at: string;
+  updated_at: string;
+  context_id?: string;
+  module_statuses?: {
+    [key: string]: string;
+  };
+}
+
 export interface VerifyModuleRequest {
   approved: boolean;
   comments?: string;
