@@ -438,6 +438,7 @@
 
     <script>
         let currentContextId = null;
+        let currentParcelId = null; // PNU 형식 ID (M3~M6용)
 
         function setAddress(address, landArea, zoning) {
             document.getElementById('address').value = address;
@@ -565,7 +566,9 @@
                     }
                     
                     currentContextId = freezeData.context_id;
-                    return `Context ID: ${currentContextId} | ${finalAddress}`;
+                    currentParcelId = freezeData.parcel_id; // PNU 형식 ID
+                    
+                    return `Context: ${currentContextId} | PNU: ${currentParcelId} | ${finalAddress}`;
                 });
 
                 // Step 2: M2 감정평가 (자동 실행)
@@ -576,28 +579,33 @@
 
                 // Step 3: M3 공급유형 결정
                 await runModule('m3', 'M3: 공급유형 결정', async () => {
-                    const response = await fetch(`/api/v4/reports/M3/html?context_id=${currentContextId}`);
-                    if (!response.ok) throw new Error('M3 분석 실패');
+                    // M3는 parcel_id(PNU)를 context_id 파라미터로 사용
+                    const response = await fetch(`/api/v4/reports/M3/html?context_id=${currentParcelId}`);
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('M3 error:', errorText);
+                        throw new Error('M3 분석 실패');
+                    }
                     return '공급유형 결정 완료';
                 });
 
                 // Step 3: M4 건축규모 산정
                 await runModule('m4', 'M4: 건축규모 산정', async () => {
-                    const response = await fetch(`/api/v4/reports/M4/html?context_id=${currentContextId}`);
+                    const response = await fetch(`/api/v4/reports/M4/html?context_id=${currentParcelId}`);
                     if (!response.ok) throw new Error('M4 분석 실패');
                     return '건축규모 산정 완료';
                 });
 
                 // Step 4: M5 사업성 분석
                 await runModule('m5', 'M5: 사업성 분석', async () => {
-                    const response = await fetch(`/api/v4/reports/M5/html?context_id=${currentContextId}`);
+                    const response = await fetch(`/api/v4/reports/M5/html?context_id=${currentParcelId}`);
                     if (!response.ok) throw new Error('M5 분석 실패');
                     return '사업성 분석 완료';
                 });
 
                 // Step 5: M6 종합판단
                 await runModule('m6', 'M6: LH 종합판단', async () => {
-                    const response = await fetch(`/api/v4/reports/M6/html?context_id=${currentContextId}`);
+                    const response = await fetch(`/api/v4/reports/M6/html?context_id=${currentParcelId}`);
                     if (!response.ok) throw new Error('M6 분석 실패');
                     return 'LH 종합판단 완료';
                 });
@@ -640,12 +648,12 @@
 
         function showResults() {
             document.getElementById('resultsSection').style.display = 'block';
-            document.getElementById('finalContextId').textContent = currentContextId;
+            document.getElementById('finalContextId').textContent = `${currentParcelId} (PNU)`;
 
-            // 보고서 링크 설정
+            // 보고서 링크 설정 (parcelId 사용)
             ['m3', 'm4', 'm5', 'm6'].forEach(module => {
                 const link = document.getElementById(`link-${module}`);
-                link.href = `/api/v4/reports/${module.toUpperCase()}/html?context_id=${currentContextId}`;
+                link.href = `/api/v4/reports/${module.toUpperCase()}/html?context_id=${currentParcelId}`;
             });
 
             // 결과 섹션으로 스크롤
