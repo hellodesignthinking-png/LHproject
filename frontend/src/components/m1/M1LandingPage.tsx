@@ -567,6 +567,19 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
       <header style={{ marginBottom: '30px', textAlign: 'center' }}>
         <h1>ZeroSite M1: 토지 정보 수집</h1>
         <p style={{ color: '#666' }}>8단계 프로세스로 정확한 토지 정보를 수집합니다.</p>
+        {/* Debug: Show current step */}
+        <div style={{ 
+          padding: '10px', 
+          background: '#f0f0f0', 
+          borderRadius: '5px', 
+          marginTop: '10px',
+          fontSize: '14px',
+          color: '#666'
+        }}>
+          🔍 Current Step: <strong>{state.currentStep}</strong> ({STEP_LABELS[Math.floor(state.currentStep) + 1] || 'Unknown'})
+          {state.formData.reviewedData && ' | ✅ ReviewedData exists'}
+          {state.formData.verifiedData && ' | ✅ VerifiedData exists'}
+        </div>
       </header>
 
       {state.currentStep > 0 && (
