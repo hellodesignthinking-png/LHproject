@@ -42,37 +42,52 @@ class M5EnhancedAnalyzer:
         
     def validate_required_data(self) -> Tuple[bool, List[str]]:
         """
-        Hard Stop 규칙 1: 필수 데이터 검증
+        Hard Stop 규칙 1: 필수 데이터 검증 (DATA NOT LOADED 체크 포함)
         
         Returns:
             Tuple[bool, List[str]]: (검증 통과 여부, 누락 항목 리스트)
         """
         missing_items = []
         
+        # 🔴 CRITICAL: M4 데이터 로딩 체크
+        if not self.m4_data or len(self.m4_data) == 0:
+            logger.error("🔴 M5 DATA NOT LOADED: M4 데이터가 전혀 로딩되지 않음")
+            return (False, ["M4 건축규모 결과 전체"])
+        
         # M4에서 가져와야 할 데이터
         m4_summary = self.m4_data.get("summary", {})
         m4_details = self.m4_data.get("details", {})
         
-        # 1. 총 세대수
+        # 1. 총 세대수 (M4 필수 연계)
         unit_count = m4_summary.get("recommended_units") or m4_details.get("optimal_units")
         if not unit_count or unit_count == 0:
             missing_items.append("총 세대수 (M4 결과)")
+            logger.warning(f"🔴 M5 DATA NOT LOADED: 총 세대수 누락")
             
-        # 2. 총 연면적
+        # 2. 총 연면적 (M4 필수 연계)
         total_floor_area = m4_details.get("total_floor_area_sqm") or m4_details.get("scenario_b", {}).get("total_floor_area")
         if not total_floor_area:
             missing_items.append("총 연면적 (M4 결과)")
+            logger.warning(f"🔴 M5 DATA NOT LOADED: 총 연면적 누락")
             
         # 3. LH 매입 단가 또는 산정 기준
         lh_price_per_unit = self.details.get("lh_price_per_unit")
         lh_price_per_sqm = self.details.get("lh_price_per_sqm")
         if not lh_price_per_unit and not lh_price_per_sqm:
             missing_items.append("LH 매입 단가 또는 단가 산정 기준")
+            logger.warning(f"🔴 M5 DATA NOT LOADED: LH 매입 단가 누락")
             
         # 4. 총 사업비
         total_cost = self.details.get("total_cost") or self.details.get("total_investment")
         if not total_cost or total_cost == 0:
             missing_items.append("총 사업비(공사비 + 기타비용)")
+            logger.warning(f"🔴 M5 DATA NOT LOADED: 총 사업비 누락")
+        
+        # 🔴 DATA NOT LOADED: 1개라도 누락 시
+        if len(missing_items) >= 1:
+            logger.error(f"🔴 M5 DATA NOT LOADED: {len(missing_items)}개 필수 입력 누락 - {missing_items}")
+            logger.error(f"📍 위 항목 중 1개라도 누락 시 사업성 분석은 수행되지 않는다.")
+            return (False, missing_items)
             
         is_valid = len(missing_items) == 0
         return is_valid, missing_items
@@ -434,12 +449,23 @@ def prepare_m5_enhanced_report_data(context_id: str, m4_data: Dict[str, Any], mo
     is_valid, missing_items = analyzer.validate_required_data()
     
     if not is_valid:
-        # Hard Stop: 필수 데이터 누락
+        # Hard Stop: 필수 데이터 누락 → DATA NOT LOADED 템플릿
+        from datetime import datetime
+        
+        logger.error(f"🔴 M5 DATA NOT LOADED: {len(missing_items)}개 항목 누락")
+        
         return {
             "error": True,
-            "error_message": "본 사업성 분석은 필수 입력 데이터 누락으로 인해 재분석이 필요합니다.",
+            "error_type": "DATA_NOT_LOADED",
+            "error_message": "필수 사업성 데이터가 수집되지 않아 분석을 진행할 수 없습니다.",
             "missing_items": missing_items,
-            "context_id": context_id
+            "context_id": context_id,
+            "report_id": f"ZS-M5-NOT-LOADED-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+            "use_data_not_loaded_template": True,
+            "template_version": "v1",
+            "analysis_date": datetime.now().strftime("%Y년 %m월 %d일"),
+            "project_address": m4_data.get("details", {}).get("address", "주소 정보 없음"),
+            "fixed_message": "ZeroSite는 필수 사업성 데이터가 수집되기 전까지 사업성 분석 및 판단을 수행하지 않습니다."
         }
     
     # Step 2: 재무 지표 계산

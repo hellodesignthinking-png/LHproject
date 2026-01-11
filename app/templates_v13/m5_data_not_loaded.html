@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M5: 사업성 분석 - DATA NOT LOADED</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            font-size: 11pt;
+            line-height: 1.8;
+            color: #2c3e50;
+            background: white;
+        }
+
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 120pt;
+            font-weight: bold;
+            color: rgba(0, 0, 0, 0.03);
+            z-index: -1;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+
+        /* 🔴 상단 고정 블록 */
+        .critical-notice {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .critical-notice h1 {
+            font-size: 24pt;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .critical-notice h1::before {
+            content: "🔴";
+            margin-right: 10px;
+            font-size: 28pt;
+        }
+
+        .critical-notice p {
+            font-size: 13pt;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* 섹션 헤더 */
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #3498db;
+        }
+
+        .section-title::before {
+            content: "📌";
+            margin-right: 8px;
+        }
+
+        /* 체크리스트 */
+        .checklist {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 12pt;
+        }
+
+        .checklist-item:last-child {
+            border-bottom: none;
+        }
+
+        .checklist-item::before {
+            content: "⬜";
+            margin-right: 12px;
+            font-size: 16pt;
+        }
+
+        .checklist-note {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 11pt;
+            color: #856404;
+        }
+
+        .checklist-note::before {
+            content: "📍 ";
+            font-weight: bold;
+        }
+
+        /* 분석 범위 블록 */
+        .scope-box {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+
+        .scope-box h3 {
+            font-size: 13pt;
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 15px;
+        }
+
+        .scope-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .scope-box li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+            font-size: 11pt;
+        }
+
+        .scope-box li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        /* 금지 항목 블록 */
+        .prohibited-box {
+            background: #ffebee;
+            border: 2px solid #f44336;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+
+        .prohibited-box h3 {
+            font-size: 13pt;
+            font-weight: bold;
+            color: #c62828;
+            margin-bottom: 15px;
+        }
+
+        .prohibited-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .prohibited-box li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+            font-size: 11pt;
+        }
+
+        .prohibited-box li::before {
+            content: "❌";
+            position: absolute;
+            left: 0;
+        }
+
+        .prohibited-note {
+            background: white;
+            border: 1px solid #ef5350;
+            border-radius: 4px;
+            padding: 12px;
+            margin-top: 15px;
+            font-size: 10pt;
+            color: #b71c1c;
+        }
+
+        .prohibited-note::before {
+            content: "👉 ";
+            font-weight: bold;
+        }
+
+        /* 시스템 메시지 */
+        .system-message {
+            background: #f5f5f5;
+            border: 2px solid #9e9e9e;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+            font-size: 11pt;
+            text-align: center;
+            font-weight: bold;
+            color: #424242;
+        }
+
+        /* 무효 처리 블록 */
+        .invalid-notice {
+            background: #fff3e0;
+            border: 2px solid #ff9800;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 11pt;
+        }
+
+        .invalid-notice p {
+            margin: 0;
+            line-height: 1.8;
+        }
+
+        /* 하단 고정 문구 */
+        .footer-notice {
+            background: #263238;
+            color: white;
+            padding: 25px;
+            border-radius: 8px;
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12pt;
+            font-weight: bold;
+        }
+
+        /* 메타 정보 */
+        .meta-info {
+            text-align: center;
+            padding: 20px 0;
+            font-size: 10pt;
+            color: #7f8c8d;
+            border-top: 1px solid #ecf0f1;
+            margin-top: 40px;
+        }
+
+        /* 문서 표기 */
+        .document-footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #ecf0f1;
+            font-size: 10pt;
+            color: #95a5a6;
+        }
+
+        .copyright {
+            font-weight: bold;
+            color: #34495e;
+        }
+    </style>
+</head>
+<body>
+    <!-- 워터마크 -->
+    <div class="watermark">ZEROSITE</div>
+
+    <div class="container">
+        <!-- 🔴 상단 고정 블록 -->
+        <div class="critical-notice">
+            <h1>DATA NOT LOADED – FEASIBILITY ANALYSIS BLOCKED</h1>
+            <p>필수 사업성 데이터가 수집되지 않아 분석을 진행할 수 없습니다.</p>
+        </div>
+
+        <!-- 1️⃣ 분석 중단 사유 -->
+        <div class="section">
+            <div class="section-title">분석 중단 사유 (시스템 기준)</div>
+            <p style="line-height: 2.0; font-size: 11pt;">
+                ZeroSite M5는 <strong>M4 건축규모 결과와 LH 매입 기준 데이터가 모두 연결된 경우에만</strong> 
+                사업성 분석을 수행하도록 설계되어 있습니다.
+            </p>
+            <p style="line-height: 2.0; margin-top: 15px; font-size: 11pt;">
+                현재 세션(Context ID: <strong>{{ context_id }}</strong>)에서는 
+                <strong>사업성 산정에 필요한 핵심 데이터가 로딩되지 않았습니다.</strong>
+            </p>
+        </div>
+
+        <!-- 2️⃣ 필수 입력 항목 -->
+        <div class="section">
+            <div class="section-title">필수 입력 항목 (M5 기준)</div>
+            <div class="checklist">
+                <div class="checklist-item">총 세대수 (M4 결과)</div>
+                <div class="checklist-item">총 연면적 (M4 결과)</div>
+                <div class="checklist-item">LH 매입 단가 또는 단가 산정 기준</div>
+                <div class="checklist-item">총 사업비 (공사비 + 기타비용)</div>
+                
+                <div class="checklist-note">
+                    위 항목 중 1개라도 누락 시 사업성 분석은 수행되지 않는다.
+                </div>
+            </div>
+
+            {% if missing_items and missing_items|length > 0 %}
+            <div class="invalid-notice">
+                <p><strong>현재 누락된 항목 ({{ missing_items|length }}개):</strong></p>
+                <ul style="margin-top: 10px; padding-left: 20px;">
+                    {% for item in missing_items %}
+                    <li style="color: #e74c3c; font-weight: bold;">{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- 3️⃣ 입력 완료 시 수행되는 분석 범위 -->
+        <div class="section">
+            <div class="section-title">입력 완료 시 수행되는 분석 범위</div>
+            <div class="scope-box">
+                <h3>위 필수 입력 항목이 모두 충족될 경우에만, ZeroSite는 다음 사업성 분석을 수행합니다:</h3>
+                <ul>
+                    <li>총 사업비 구조 분석</li>
+                    <li>LH 매입 수익 구조 검토</li>
+                    <li>NPV 기반 사업 성립성 판단</li>
+                    <li>사업 안정성 및 손실 가능성 평가</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 4️⃣ 절대 수행하지 않는 작업 -->
+        <div class="section">
+            <div class="section-title">입력 전 '절대 수행하지 않는 작업' 선언</div>
+            <div class="prohibited-box">
+                <h3>다음 작업은 필수 데이터 로딩 전까지 수행되지 않습니다:</h3>
+                <ul>
+                    <li>유사 사업 평균값 적용</li>
+                    <li>추정 단가 기반 수익 계산</li>
+                    <li>IRR·ROI 임의 산출</li>
+                    <li>불완전 데이터 기반 등급 산정</li>
+                </ul>
+                <div class="prohibited-note">
+                    ZeroSite는 연결되지 않은 데이터를 가정하지 않는다.
+                </div>
+            </div>
+        </div>
+
+        <!-- 5️⃣ 기존 분석 결과 처리 -->
+        <div class="section">
+            <div class="section-title">기존 M5 분석 결과 처리 방식</div>
+            <div class="invalid-notice">
+                <p>
+                    현재 세션(Context ID: <strong>{{ context_id }}</strong>)에서 생성된 
+                    모든 M5 사업성 분석 결과는 <strong>무효 처리</strong>되었으며, 
+                    필수 데이터가 입력되면 <strong>새로운 분석 세션으로 재실행</strong>됩니다.
+                </p>
+            </div>
+        </div>
+
+        <!-- 6️⃣ 출력 형식 제한 -->
+        <div class="section">
+            <div class="section-title">출력 형식 제한</div>
+            <div class="prohibited-box">
+                <h3>DATA NOT LOADED 상태에서는 다음 출력이 금지됩니다:</h3>
+                <ul>
+                    <li>NPV, IRR, ROI 수치 출력 금지</li>
+                    <li>사업성 등급(A/B/C/D) 출력 금지</li>
+                    <li>표, 그래프, 퍼센트 값 출력 금지</li>
+                    <li>"사업성 있음/없음" 판단 문구 사용 금지</li>
+                </ul>
+                <div class="prohibited-note">
+                    안내 문구 + 체크리스트만 허용
+                </div>
+            </div>
+        </div>
+
+        <!-- 시스템 메시지 -->
+        <div class="system-message">
+            {{ fixed_message }}
+        </div>
+
+        <!-- 하단 고정 문구 -->
+        <div class="footer-notice">
+            ZeroSite는 필수 사업성 데이터가 수집되기 전까지<br>
+            사업성 분석 및 판단을 수행하지 않습니다.
+        </div>
+
+        <!-- 메타 정보 -->
+        <div class="meta-info">
+            <p>Report ID: {{ report_id }}</p>
+            <p>Context ID: {{ context_id }}</p>
+            <p>분석 일자: {{ analysis_date }}</p>
+            <p>상태: DATA NOT LOADED</p>
+        </div>
+
+        <!-- 문서 표기 -->
+        <div class="document-footer">
+            <p class="copyright">ⓒ ZeroSite by AntennaHoldings | Natai Heum</p>
+            <p style="margin-top: 10px; font-size: 9pt; color: #95a5a6;">
+                Watermark: ZEROSITE | Tone: 시스템 경고 / 데이터 로딩 대기 상태
+            </p>
+        </div>
+    </div>
+</body>
+</html>

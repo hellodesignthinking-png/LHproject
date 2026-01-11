@@ -101,17 +101,37 @@ def generate_module_report_html(
             # Prepare template data (convert module_data to template variables)
             template_data = _prepare_template_data_for_enhanced(module_id, context_id, module_data)
             
-            # 🔴 Check for DATA INSUFFICIENT
-            if template_data.get("error") and template_data.get("use_data_insufficient_template"):
-                logger.warning(f"🔴 DATA INSUFFICIENT detected for {module_id}")
+            # 🔴 Check for DATA INSUFFICIENT / DATA NOT LOADED
+            if template_data.get("error"):
+                # M4: DATA INSUFFICIENT
+                if template_data.get("use_data_insufficient_template"):
+                    logger.warning(f"🔴 DATA INSUFFICIENT detected for {module_id}")
+                    
+                    # V2 템플릿 사용 여부 확인
+                    template_version = template_data.get("template_version", "v1")
+                    
+                    template_file = {
+                        "M4": f"m4_data_insufficient_v2.html" if template_version == "v2" else "m4_data_insufficient.html",
+                    }.get(module_id, "m4_data_insufficient.html")
                 
-                # V2 템플릿 사용 여부 확인
-                template_version = template_data.get("template_version", "v1")
+                # M5: DATA NOT LOADED
+                elif template_data.get("use_data_not_loaded_template"):
+                    logger.warning(f"🔴 DATA NOT LOADED detected for {module_id}")
+                    
+                    template_version = template_data.get("template_version", "v1")
+                    
+                    template_file = {
+                        "M5": f"m5_data_not_loaded.html",
+                    }.get(module_id, "m5_data_not_loaded.html")
                 
-                template_file = {
-                    "M4": f"m4_data_insufficient_v2.html" if template_version == "v2" else "m4_data_insufficient.html",
-                    # Add other modules as needed
-                }.get(module_id, "m4_data_insufficient.html")
+                else:
+                    # 기타 오류: 정상 템플릿 사용 시도
+                    template_file = {
+                        "M3": "m3_supply_type_format_v2_enhanced.html",
+                        "M4": "m4_building_scale_format_v2_enhanced.html",
+                        "M5": "m5_feasibility_format_v2_enhanced.html",
+                        "M6": "m6_comprehensive_decision_v2_enhanced.html"
+                    }.get(module_id)
             else:
                 # Select template
                 template_file = {
