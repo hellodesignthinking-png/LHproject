@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M3: LH 신축매입임대 공급유형 결정 보고서 - ZeroSite</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            font-size: 10.5pt;
+            line-height: 1.7;
+            color: #2c3e50;
+            background: white;
+            position: relative;
+        }
+
+        /* ZeroSite Watermark */
+        body::before {
+            content: 'ZEROSITE';
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 120pt;
+            font-weight: bold;
+            color: rgba(0, 102, 204, 0.03);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Footer - ZeroSite by AntennaHoldings | Natai Heum */
+        .report-footer {
+            position: fixed;
+            bottom: 10mm;
+            left: 20mm;
+            right: 20mm;
+            text-align: center;
+            font-size: 8pt;
+            color: #95a5a6;
+            border-top: 1px solid #ecf0f1;
+            padding-top: 8px;
+        }
+
+        /* Cover Page */
+        .cover-page {
+            text-align: center;
+            padding: 80px 40px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            page-break-after: always;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        .company-logo {
+            font-size: 28pt;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #0066cc;
+            letter-spacing: 12px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .main-title {
+            font-size: 32pt;
+            font-weight: bold;
+            margin: 40px 0 15px 0;
+            color: #1a1a1a;
+            letter-spacing: 3px;
+        }
+
+        .sub-title {
+            font-size: 24pt;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #34495e;
+        }
+
+        .report-type-badge {
+            display: inline-block;
+            background: #0066cc;
+            color: white;
+            padding: 10px 25px;
+            font-size: 13pt;
+            font-weight: bold;
+            border-radius: 25px;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .report-info-box {
+            background: white;
+            border: 2px solid #0066cc;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 35px;
+            margin: 40px auto;
+            max-width: 650px;
+            text-align: left;
+            border-radius: 8px;
+        }
+
+        .report-info-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 11.5pt;
+            align-items: center;
+        }
+
+        .report-info-row:last-child {
+            border-bottom: none;
+        }
+
+        .report-info-label {
+            font-weight: 600;
+            width: 140px;
+            color: #34495e;
+        }
+
+        .report-info-value {
+            flex: 1;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .company-name {
+            margin-top: 60px;
+            font-size: 16pt;
+            font-weight: bold;
+            color: #34495e;
+        }
+
+        .company-contact {
+            margin-top: 15px;
+            font-size: 9.5pt;
+            color: #7f8c8d;
+            line-height: 1.9;
+        }
+
+        /* Content Pages */
+        .content-page {
+            padding: 40px;
+            page-break-inside: avoid;
+            min-height: auto;
+            position: relative;
+        }
+
+        .page-title {
+            font-size: 18pt;
+            font-weight: bold;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 4px solid #0066cc;
+            color: #2c3e50;
+            background: linear-gradient(to right, #f8f9fa 0%, white 100%);
+            padding: 15px 20px;
+            margin-left: -20px;
+            margin-right: -20px;
+        }
+
+        .section {
+            margin-bottom: 35px;
+            page-break-inside: avoid;
+        }
+
+        .section-title {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 18px;
+            color: #34495e;
+            background: #f8f9fa;
+            padding: 12px 20px;
+            border-left: 6px solid #0066cc;
+            border-radius: 4px;
+        }
+
+        .subsection-title {
+            font-size: 12pt;
+            font-weight: 600;
+            margin: 20px 0 12px 0;
+            color: #2c3e50;
+            padding-left: 15px;
+            border-left: 3px solid #3498db;
+        }
+
+        /* Executive Summary Box */
+        .executive-summary {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border: 3px solid #0066cc;
+            border-radius: 8px;
+            padding: 35px;
+            margin: 30px 0;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .executive-label {
+            font-size: 16pt;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #1565c0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .executive-result {
+            font-size: 28pt;
+            font-weight: bold;
+            color: #0066cc;
+            margin: 20px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .executive-detail {
+            font-size: 11.5pt;
+            color: #34495e;
+            line-height: 1.9;
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        /* Table Styles */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 10pt;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .data-table th {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            color: white;
+            padding: 12px 10px;
+            text-align: center;
+            font-weight: 600;
+            border: 1px solid #2c3e50;
+            font-size: 10.5pt;
+        }
+
+        .data-table td {
+            padding: 10px 12px;
+            border: 1px solid #dee2e6;
+            vertical-align: top;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .data-table tr:hover {
+            background: #e9ecef;
+        }
+
+        .highlight-row {
+            background: #fff3cd !important;
+            font-weight: 600;
+        }
+
+        .selected-row {
+            background: #d1f2eb !important;
+            font-weight: bold;
+            border-left: 5px solid #00a86b !important;
+        }
+
+        .eliminated-row {
+            background: #f8d7da !important;
+            color: #721c24;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: #f0f8ff;
+            border-left: 6px solid #0066cc;
+            border-radius: 4px;
+            padding: 20px 25px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .info-box-title {
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: #0066cc;
+            font-size: 12pt;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 6px solid #ffc107;
+            border-radius: 4px;
+            padding: 20px 25px;
+            margin: 20px 0;
+        }
+
+        .warning-box-title {
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: #856404;
+            font-size: 12pt;
+        }
+
+        .success-box {
+            background: #d1f2eb;
+            border-left: 6px solid #00a86b;
+            border-radius: 4px;
+            padding: 20px 25px;
+            margin: 20px 0;
+        }
+
+        .success-box-title {
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: #00a86b;
+            font-size: 12pt;
+        }
+
+        /* Value highlight */
+        .value-highlight {
+            color: #0066cc;
+            font-weight: bold;
+            font-size: 1.05em;
+        }
+
+        .value-negative {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .value-positive {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        /* Hierarchy Badge */
+        .hierarchy-badge {
+            display: inline-block;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 9pt;
+            font-weight: bold;
+            margin-right: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .badge-primary {
+            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,102,204,0.3);
+        }
+
+        .badge-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+        }
+
+        .badge-reference {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .badge-critical {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+
+        /* List Styles */
+        .checklist {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .checklist li {
+            padding: 8px 0 8px 30px;
+            position: relative;
+        }
+
+        .checklist li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #00a86b;
+            font-weight: bold;
+            font-size: 14pt;
+        }
+
+        .checklist-fail li::before {
+            content: '✗';
+            color: #dc3545;
+        }
+
+        /* Page break */
+        .page-break {
+            page-break-after: always;
+        }
+
+        /* Module Connection Box */
+        .module-connection {
+            background: linear-gradient(135deg, #e8eaf6 0%, #c5cae9 100%);
+            border: 2px solid #3f51b5;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 25px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .module-connection-title {
+            font-size: 13pt;
+            font-weight: bold;
+            color: #3f51b5;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .module-flow {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .module-box {
+            background: white;
+            border: 2px solid #3f51b5;
+            border-radius: 6px;
+            padding: 12px 20px;
+            text-align: center;
+            min-width: 120px;
+            font-weight: 600;
+            color: #3f51b5;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .module-arrow {
+            font-size: 20pt;
+            color: #3f51b5;
+            font-weight: bold;
+            margin: 0 10px;
+        }
+
+        @media print {
+            body {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            .report-footer {
+                position: fixed;
+                bottom: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Footer on every page -->
+    <div class="report-footer">
+        ⓒ ZeroSite by AntennaHoldings | Natai Heum - Confidential Analysis Report
+    </div>
+
+    <!-- Page 1: Cover -->
+    <div class="cover-page">
+        <div class="company-logo">ZEROSITE</div>
+        <div class="main-title">LH 신축매입임대 사업</div>
+        <div class="sub-title">공급유형 결정 보고서</div>
+        <div class="report-type-badge">M3: Supply Type Decision Report</div>
+        
+        <div class="report-info-box">
+            <div class="report-info-row">
+                <div class="report-info-label">📋 보고서 번호</div>
+                <div class="report-info-value">{{ report_id }}</div>
+            </div>
+            <div class="report-info-row" style="background-color: #e3f2fd; border-left: 4px solid #0066cc; padding-left: 15px; margin-left: -15px;">
+                <div class="report-info-label">🔒 Context ID</div>
+                <div class="report-info-value" style="font-family: 'Courier New', monospace; font-size: 9pt; color: #0066cc;">{{ report_id.split("_M")[0] if "_M" in report_id else report_id }}</div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">📍 대상지</div>
+                <div class="report-info-value"><strong>{{ project_address }}</strong></div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">📏 대지 면적</div>
+                <div class="report-info-value">{{ project_scale }}</div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">📅 분석 기준일</div>
+                <div class="report-info-value">{{ analysis_date }}</div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">🎯 보고서 성격</div>
+                <div class="report-info-value" style="color: #dc3545; font-weight: bold;">의사결정 근거 문서 (Not 추천서)</div>
+            </div>
+        </div>
+
+        <div class="company-name">Powered by AntennaHoldings</div>
+        <div class="company-contact">
+            ZeroSite Real Estate Analysis Platform<br>
+            서울시 강남구 테헤란로 427 위워크타워<br>
+            분석엔진: Natai Heum | Contact: analysis@antennaholdings.com
+        </div>
+    </div>
+
+    <!-- Page 2: Report Overview & Importance -->
+    <div class="content-page page-break">
+        <div class="page-title">I. 보고서 개요 및 목적</div>
+
+        <div class="section">
+            <div class="section-title">1.1 보고서의 성격 및 위상</div>
+            <div class="info-box">
+                <div class="info-box-title">📌 본 보고서는 다음 세 가지 성격을 동시에 갖는다</div>
+                <ul class="checklist" style="margin-top: 15px; line-height: 2.2;">
+                    <li><strong>정책 보고서</strong>: 공공주택특별법 및 LH 신축매입임대 정책 맥락 반영</li>
+                    <li><strong>입지·수요 분석 보고서</strong>: 실제 거주 및 임대 수요의 구조적 분석</li>
+                    <li><strong>사업 의사결정 보고서</strong>: 이후 M4(규모)·M5(사업성)·M6(LH 판단)의 근거 문서</li>
+                </ul>
+            </div>
+
+            <div class="warning-box" style="margin-top: 25px;">
+                <div class="warning-box-title">⚠️ 중요: 공급유형 결정의 파급효과</div>
+                <p style="line-height: 2.0; font-size: 10.5pt;">
+                    <strong>공급유형 결정은 LH 신축매입임대 사업에서 가장 중요한 1차 판단이다.</strong><br>
+                    선정된 공급유형에 따라 다음이 전면적으로 결정된다:
+                </p>
+                <table class="data-table" style="margin-top: 15px; font-size: 10pt;">
+                    <tr>
+                        <th style="width: 25%;">영향 영역</th>
+                        <th style="width: 75%;">구체적 영향</th>
+                    </tr>
+                    <tr>
+                        <td><strong>설계 방향</strong></td>
+                        <td>평형 구성(청년형: 소형 중심 vs 신혼형: 중형 포함), 공용시설 배치, 주차 계획</td>
+                    </tr>
+                    <tr>
+                        <td><strong>세대 구성</strong></td>
+                        <td>단위 세대 수, 평형별 비율, 전용면적 범위 (예: 청년형 30㎡ 이하 vs 신혼형 50㎡ 이상)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>임대 수요 안정성</strong></td>
+                        <td>목표 수요층의 규모, 회전율, 공실 리스크, 임대료 수준</td>
+                    </tr>
+                    <tr>
+                        <td><strong>LH 매입 가능성</strong></td>
+                        <td>정책 우선순위, 예산 배정 가능성, 심사 통과 확률, 매입 가격 수준</td>
+                    </tr>
+                </table>
+                <p style="margin-top: 15px; padding: 15px; background: white; border-radius: 4px; font-weight: 600; color: #dc3545;">
+                    → 따라서 본 보고서는 <strong>"유형 추천서"</strong>가 아니라 <strong>"유형 결정 근거서"</strong>로서의 성격을 갖는다.<br>
+                    → 다른 선택지가 성립하기 어려운 이유를 명확히 제시한다.
+                </p>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">1.2 분석 범위 및 제한사항</div>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 30%;">분석 항목</th>
+                    <th style="width: 70%;">세부 내용</th>
+                </tr>
+                <tr>
+                    <td>분석 기준일</td>
+                    <td>{{ analysis_date }} (이후 정책 변경사항은 반영되지 않음)</td>
+                </tr>
+                <tr>
+                    <td>정책 근거</td>
+                    <td>공공주택특별법, LH 신축매입임대 운영지침, 주거복지 로드맵 2.0</td>
+                </tr>
+                <tr>
+                    <td>데이터 출처</td>
+                    <td>통계청 인구총조사, 국토교통부 실거래가 공개시스템, LH 내부 심사기준</td>
+                </tr>
+                <tr>
+                    <td>전제 조건</td>
+                    <td><strong style="color: #dc3545;">M2 토지가치 판단이 "적정"으로 확정되었음을 전제</strong></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="module-connection">
+            <div class="module-connection-title">📊 ZeroSite 모듈 연계 구조</div>
+            <div class="module-flow">
+                <div class="module-box" style="background: #e0e0e0; color: #757575;">M1<br>입지</div>
+                <div class="module-arrow">→</div>
+                <div class="module-box" style="background: #e0e0e0; color: #757575;">M2<br>토지가치</div>
+                <div class="module-arrow">→</div>
+                <div class="module-box" style="background: #0066cc; color: white; font-size: 11pt; padding: 15px 25px;">M3<br>공급유형<br>(본 보고서)</div>
+                <div class="module-arrow">→</div>
+                <div class="module-box">M4<br>규모</div>
+                <div class="module-arrow">→</div>
+                <div class="module-box">M5<br>사업성</div>
+                <div class="module-arrow">→</div>
+                <div class="module-box">M6<br>LH 심사</div>
+            </div>
+            <p style="text-align: center; margin-top: 20px; font-size: 10pt; color: #34495e;">
+                <strong>M3는 전체 파이프라인의 "분기점"으로, 이후 모든 판단의 방향을 결정한다.</strong>
+            </p>
+        </div>
+    </div>
+
+    <!-- Page 3: Location Analysis - Interpretative -->
+    <div class="content-page page-break">
+        <div class="page-title">
+            <span class="hierarchy-badge badge-primary">PRIMARY</span>
+            II. 대상지 입지 분석 (해석형)
+        </div>
+
+        <div class="warning-box">
+            <div class="warning-box-title">⚠️ 단순 POI 개수 나열 지양</div>
+            <p>본 섹션은 단순히 "지하철역 2개, 버스정류장 5개"와 같은 나열식 분석이 <strong>아니다</strong>.<br>
+            각 공급유형이 요구하는 생활패턴에 따라 <strong>실제 거주 가능성</strong>을 판단한다.</p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">2.1 교통 접근성 (유형별 체감 분석)</div>
+            
+            <div class="subsection-title">2.1.1 대중교통 현황</div>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 25%;">교통수단</th>
+                    <th style="width: 35%;">거리/시간</th>
+                    <th style="width: 40%;">유형별 체감 평가</th>
+                </tr>
+                <tr>
+                    <td>지하철역</td>
+                    <td>{{ transport_subway_distance }}m (도보 {{ transport_subway_time }}분)</td>
+                    <td><strong class="value-highlight">{{ transport_subway_rating }}</strong></td>
+                </tr>
+                <tr>
+                    <td>버스정류장</td>
+                    <td>{{ transport_bus_distance }}m ({{ transport_bus_count }}개 노선)</td>
+                    <td><strong class="value-highlight">{{ transport_bus_rating }}</strong></td>
+                </tr>
+                <tr>
+                    <td>주요 간선도로</td>
+                    <td>{{ transport_road_distance }}m</td>
+                    <td>{{ transport_road_rating }}</td>
+                </tr>
+            </table>
+
+            <div class="subsection-title">2.1.2 유형별 출퇴근 가능성 분석</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 20%;">공급유형</th>
+                        <th style="width: 40%;">출퇴근 패턴</th>
+                        <th style="width: 40%;">본 입지 적합도</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="{% if selected_supply_type == '청년형' %}selected-row{% endif %}">
+                        <td><strong>청년형</strong></td>
+                        <td>직장 위치 다양, 대중교통 의존도 매우 높음, 야간 귀가 빈번</td>
+                        <td class="{% if selected_supply_type == '청년형' %}value-positive{% endif %}">{{ commute_youth_fit }}</td>
+                    </tr>
+                    <tr class="{% if '신혼' in selected_supply_type %}selected-row{% endif %}">
+                        <td><strong>신혼형</strong></td>
+                        <td>부부 각기 다른 직장, 보육시설 접근성 중요, 주차 수요 있음</td>
+                        <td class="{% if '신혼' in selected_supply_type %}value-positive{% endif %}">{{ commute_newlywed_fit }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>고령자형</strong></td>
+                        <td>출퇴근 부담 낮음, 도보 접근성·의료시설 근접 중요</td>
+                        <td>{{ commute_senior_fit }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="info-box" style="margin-top: 20px;">
+                <div class="info-box-title">💡 입지 해석</div>
+                <p style="line-height: 2.0;">{{ transport_interpretation }}</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">2.2 생활 인프라 (유형별 필수 체크리스트)</div>
+
+            <div class="subsection-title">2.2.1 청년형 필수 인프라 체크</div>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 35%;">체크 항목</th>
+                    <th style="width: 20%;">현황</th>
+                    <th style="width: 45%;">평가</th>
+                </tr>
+                <tr>
+                    <td>직주근접 (주요 업무지구 30분 내)</td>
+                    <td class="value-highlight">{{ youth_job_proximity }}</td>
+                    <td>{{ youth_job_eval }}</td>
+                </tr>
+                <tr>
+                    <td>소형 상업시설 (편의점, 카페, 음식점)</td>
+                    <td class="value-highlight">{{ youth_commercial_count }}개</td>
+                    <td>{{ youth_commercial_eval }}</td>
+                </tr>
+                <tr>
+                    <td>야간 생활 가능성 (치안, 조명, 심야 교통)</td>
+                    <td class="value-highlight">{{ youth_night_safety }}</td>
+                    <td>{{ youth_night_eval }}</td>
+                </tr>
+                <tr>
+                    <td>배달·택배 접근성</td>
+                    <td class="value-highlight">{{ youth_delivery }}</td>
+                    <td>{{ youth_delivery_eval }}</td>
+                </tr>
+            </table>
+
+            <div class="subsection-title">2.2.2 신혼형 필수 인프라 체크</div>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 35%;">체크 항목</th>
+                    <th style="width: 20%;">현황</th>
+                    <th style="width: 45%;">평가</th>
+                </tr>
+                <tr>
+                    <td>교육·보육 시설 (어린이집, 유치원)</td>
+                    <td class="value-highlight">{{ newlywed_edu_count }}개</td>
+                    <td>{{ newlywed_edu_eval }}</td>
+                </tr>
+                <tr>
+                    <td>주차 공간 확보 가능성</td>
+                    <td class="value-highlight">{{ newlywed_parking }}</td>
+                    <td>{{ newlywed_parking_eval }}</td>
+                </tr>
+                <tr>
+                    <td>공원·녹지 (유아 동반 산책)</td>
+                    <td class="value-highlight">{{ newlywed_park_distance }}m</td>
+                    <td>{{ newlywed_park_eval }}</td>
+                </tr>
+                <tr>
+                    <td>대형마트·생활편의시설</td>
+                    <td class="value-highlight">{{ newlywed_mart_distance }}m</td>
+                    <td>{{ newlywed_mart_eval }}</td>
+                </tr>
+            </table>
+
+            <div class="subsection-title">2.2.3 고령자형 필수 인프라 체크</div>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 35%;">체크 항목</th>
+                    <th style="width: 20%;">현황</th>
+                    <th style="width: 45%;">평가</th>
+                </tr>
+                <tr>
+                    <td>의료시설 (병원, 약국)</td>
+                    <td class="value-highlight">{{ senior_medical_count }}개</td>
+                    <td>{{ senior_medical_eval }}</td>
+                </tr>
+                <tr>
+                    <td>보행 안정성 (평지, 경사, 횡단보도)</td>
+                    <td class="value-highlight">{{ senior_walkability }}</td>
+                    <td>{{ senior_walk_eval }}</td>
+                </tr>
+                <tr>
+                    <td>커뮤니티 시설 (경로당, 복지관)</td>
+                    <td class="value-highlight">{{ senior_community_count }}개</td>
+                    <td>{{ senior_community_eval }}</td>
+                </tr>
+            </table>
+
+            <div class="success-box" style="margin-top: 25px;">
+                <div class="success-box-title">✅ 종합 판단: 입지 특성 요약</div>
+                <p style="font-size: 11pt; line-height: 2.0; font-weight: 500;">{{ location_summary }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 4: Population & Demand Structure Analysis (NEW REQUIRED SECTION) -->
+    <div class="content-page page-break">
+        <div class="page-title">
+            <span class="hierarchy-badge badge-critical">CRITICAL</span>
+            III. 인구·수요 구조 분석 (정량)
+        </div>
+
+        <div class="info-box">
+            <div class="info-box-title">📌 왜 이 섹션이 중요한가?</div>
+            <p style="line-height: 2.0;">
+                공급유형 결정에서 가장 중요한 것은 <strong>"단기 수요"</strong>가 아니라 <strong>"중·장기 안정 수요"</strong>이다.<br>
+                LH 신축매입임대는 최소 20년 이상 운영되므로, 일시적 트렌드가 아닌 <strong>구조적 수요</strong>를 확인해야 한다.<br>
+                본 섹션은 해당 지역의 인구 구조가 <strong>왜 특정 유형의 수요를 지속적으로 발생시킬 수밖에 없는지</strong>를 설명한다.
+            </p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">3.1 행정동/자치구 인구 구조 ({{ region_name }})</div>
+            
+            <div class="subsection-title">3.1.1 연령대별 인구 구성</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">연령대</th>
+                        <th style="width: 20%;">인구수</th>
+                        <th style="width: 20%;">비율</th>
+                        <th style="width: 35%;">주거 수요 특성</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="{% if selected_supply_type == '청년형' %}highlight-row{% endif %}">
+                        <td><strong>20-34세 (청년층)</strong></td>
+                        <td class="value-highlight">{{ pop_youth_count }}명</td>
+                        <td class="value-highlight">{{ pop_youth_ratio }}%</td>
+                        <td>1인 가구 중심, 소형 임대 선호, 직주근접 중시</td>
+                    </tr>
+                    <tr class="{% if '신혼' in selected_supply_type %}highlight-row{% endif %}">
+                        <td><strong>30-39세 (신혼·육아층)</strong></td>
+                        <td class="value-highlight">{{ pop_newlywed_count }}명</td>
+                        <td class="value-highlight">{{ pop_newlywed_ratio }}%</td>
+                        <td>2-3인 가구, 중형 평형, 보육·교육 인프라 중시</td>
+                    </tr>
+                    <tr>
+                        <td><strong>40-64세 (중장년층)</strong></td>
+                        <td>{{ pop_middle_count }}명</td>
+                        <td>{{ pop_middle_ratio }}%</td>
+                        <td>자가 소유 비율 높음, 임대 수요 제한적</td>
+                    </tr>
+                    <tr>
+                        <td><strong>65세 이상 (고령층)</strong></td>
+                        <td>{{ pop_senior_count }}명</td>
+                        <td>{{ pop_senior_ratio }}%</td>
+                        <td>고령자형 수요층, 의료·복지 접근성 중시</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="info-box" style="margin-top: 20px;">
+                <div class="info-box-title">💡 연령 구조 해석</div>
+                <p style="line-height: 2.0;">{{ age_structure_interpretation }}</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">3.2 가구 구성 및 임차 가구 비중</div>
+            
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">가구 유형</th>
+                        <th style="width: 20%;">가구 수</th>
+                        <th style="width: 20%;">비율</th>
+                        <th style="width: 35%;">임차 비율</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="{% if selected_supply_type == '청년형' %}highlight-row{% endif %}">
+                        <td><strong>1인 가구</strong></td>
+                        <td class="value-highlight">{{ household_single_count }}가구</td>
+                        <td class="value-highlight">{{ household_single_ratio }}%</td>
+                        <td class="value-positive">{{ household_single_rent_ratio }}% (전국 평균 대비 {{ household_single_rent_compare }})</td>
+                    </tr>
+                    <tr class="{% if '신혼' in selected_supply_type %}highlight-row{% endif %}">
+                        <td><strong>2인 가구</strong></td>
+                        <td class="value-highlight">{{ household_two_count }}가구</td>
+                        <td class="value-highlight">{{ household_two_ratio }}%</td>
+                        <td>{{ household_two_rent_ratio }}%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>3인 이상 가구</strong></td>
+                        <td>{{ household_three_plus_count }}가구</td>
+                        <td>{{ household_three_plus_ratio }}%</td>
+                        <td>{{ household_three_plus_rent_ratio }}%</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="subsection-title">3.2.1 임차 가구 증가 추세 (최근 5년)</div>
+            <table class="data-table">
+                <tr>
+                    <th style="width: 30%;">연도</th>
+                    <th style="width: 35%;">전체 임차 가구 비율</th>
+                    <th style="width: 35%;">1인 가구 임차 비율</th>
+                </tr>
+                <tr>
+                    <td>{{ trend_year_5 }}</td>
+                    <td>{{ trend_rent_5 }}%</td>
+                    <td>{{ trend_single_rent_5 }}%</td>
+                </tr>
+                <tr>
+                    <td>{{ trend_year_3 }}</td>
+                    <td>{{ trend_rent_3 }}%</td>
+                    <td>{{ trend_single_rent_3 }}%</td>
+                </tr>
+                <tr class="highlight-row">
+                    <td><strong>{{ trend_year_current }}</strong></td>
+                    <td class="value-highlight"><strong>{{ trend_rent_current }}%</strong></td>
+                    <td class="value-highlight"><strong>{{ trend_single_rent_current }}%</strong></td>
+                </tr>
+            </table>
+
+            <div class="success-box" style="margin-top: 25px;">
+                <div class="success-box-title">✅ 구조적 수요 판단</div>
+                <p style="font-size: 11pt; line-height: 2.0; font-weight: 500;">{{ structural_demand_conclusion }}</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">3.3 왜 {{ selected_supply_type }} 수요가 구조적으로 발생하는가?</div>
+            <div class="warning-box">
+                <p style="font-size: 11pt; line-height: 2.2; font-weight: 500;">{{ why_structural_demand }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 5: Supply Type Comparison - Elimination Analysis -->
+    <div class="content-page page-break">
+        <div class="page-title">
+            <span class="hierarchy-badge badge-primary">PRIMARY</span>
+            IV. 공급유형별 적합성 비교 (탈락 논리)
+        </div>
+
+        <div class="warning-box">
+            <div class="warning-box-title">⚠️ 본 섹션의 목적</div>
+            <p style="line-height: 2.0;">
+                단순히 "청년형이 가장 적합하다"고 말하는 것이 <strong>아니다</strong>.<br>
+                <strong>"왜 다른 유형은 구조적으로 불리한지"</strong>, <strong>"왜 청년형 외에 다른 선택지가 성립하기 어려운지"</strong>를<br>
+                입지·수요·사업 구조·LH 정책 우선도 측면에서 명확히 설명한다.
+            </p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">4.1 공급유형별 종합 평가표</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 18%;">공급유형</th>
+                        <th style="width: 18%;">입지 적합성</th>
+                        <th style="width: 18%;">수요 지속성</th>
+                        <th style="width: 18%;">사업 구조 적합성</th>
+                        <th style="width: 18%;">LH 정책 우선도</th>
+                        <th style="width: 10%;">종합</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for type_comp in type_comparison %}
+                    <tr class="{% if type_comp.is_selected %}selected-row{% elif type_comp.is_eliminated %}eliminated-row{% endif %}">
+                        <td><strong>{{ type_comp.type_name }}</strong></td>
+                        <td class="{% if type_comp.location_fit == '매우 적합' %}value-positive{% elif type_comp.location_fit == '부적합' %}value-negative{% endif %}">{{ type_comp.location_fit }}</td>
+                        <td class="{% if type_comp.demand_stability == '높음' %}value-positive{% elif type_comp.demand_stability == '낮음' %}value-negative{% endif %}">{{ type_comp.demand_stability }}</td>
+                        <td class="{% if type_comp.business_fit == '적합' %}value-positive{% elif type_comp.business_fit == '부적합' %}value-negative{% endif %}">{{ type_comp.business_fit }}</td>
+                        <td class="{% if type_comp.policy_priority == '최우선' %}value-positive{% elif type_comp.policy_priority == '후순위' %}value-negative{% endif %}">{{ type_comp.policy_priority }}</td>
+                        <td class="value-highlight">{{ type_comp.total_score }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">4.2 유형별 세부 분석</div>
+
+            {% for type_detail in type_details %}
+            <div class="subsection-title">{{ type_detail.type_name }} {{ type_detail.status_badge }}</div>
+            
+            <table class="data-table" style="margin-bottom: 20px;">
+                <tr>
+                    <th style="width: 25%;">평가 항목</th>
+                    <th style="width: 75%;">분석 결과</th>
+                </tr>
+                <tr>
+                    <td><strong>입지 적합성</strong></td>
+                    <td>{{ type_detail.location_analysis }}</td>
+                </tr>
+                <tr>
+                    <td><strong>수요 지속성</strong></td>
+                    <td>{{ type_detail.demand_analysis }}</td>
+                </tr>
+                <tr>
+                    <td><strong>사업 구조 적합성</strong></td>
+                    <td>{{ type_detail.business_analysis }}</td>
+                </tr>
+                <tr>
+                    <td><strong>LH 정책 우선도</strong></td>
+                    <td>{{ type_detail.policy_analysis }}</td>
+                </tr>
+                <tr class="{% if type_detail.is_selected %}selected-row{% else %}eliminated-row{% endif %}">
+                    <td><strong>종합 판단</strong></td>
+                    <td><strong>{{ type_detail.conclusion }}</strong></td>
+                </tr>
+            </table>
+
+            {% if not type_detail.is_selected %}
+            <div class="warning-box" style="margin-bottom: 25px;">
+                <div class="warning-box-title">❌ 탈락 사유</div>
+                <p style="font-size: 10.5pt; line-height: 2.0; font-weight: 500;">{{ type_detail.elimination_reason }}</p>
+            </div>
+            {% else %}
+            <div class="success-box" style="margin-bottom: 25px;">
+                <div class="success-box-title">✅ 선정 근거</div>
+                <p style="font-size: 10.5pt; line-height: 2.0; font-weight: 500;">{{ type_detail.selection_reason }}</p>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Page 6: Module Linkage (M4, M5, M6) -->
+    <div class="content-page page-break">
+        <div class="page-title">
+            <span class="hierarchy-badge badge-critical">ZEROSITE CORE</span>
+            V. M4·M5·M6 연계 논리
+        </div>
+
+        <div class="info-box">
+            <div class="info-box-title">📌 ZeroSite 파이프라인에서 M3의 역할</div>
+            <p style="line-height: 2.0;">
+                M3에서 결정된 공급유형은 단순히 "추천"에 그치는 것이 <strong>아니다</strong>.<br>
+                이후 M4(건축규모), M5(사업성), M6(LH 심사 판단)에서 구체적인 <strong>설계 방향, 사업 구조, 심사 전략</strong>을 결정하는<br>
+                <strong>"결정 트리(Decision Tree)의 분기점"</strong> 역할을 한다.<br><br>
+                본 섹션은 <strong>왜 M3의 결정이 이후 모듈에서 유리하게 작용하는지</strong>를 명시한다.
+            </p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">5.1 M4 건축규모 검토와의 연계</div>
+            
+            <div class="success-box">
+                <div class="success-box-title">🔗 본 공급유형 결정이 M4에 미치는 영향</div>
+                <p style="font-size: 11pt; line-height: 2.2; font-weight: 500;">{{ m4_linkage_explanation }}</p>
+            </div>
+
+            <table class="data-table" style="margin-top: 20px;">
+                <thead>
+                    <tr>
+                        <th style="width: 30%;">M4 검토 항목</th>
+                        <th style="width: 70%;">{{ selected_supply_type }}의 유리한 점</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>평형 구성</strong></td>
+                        <td>{{ m4_unit_mix_advantage }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>세대 수 최대화</strong></td>
+                        <td>{{ m4_unit_count_advantage }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>공용시설 계획</strong></td>
+                        <td>{{ m4_common_facility_advantage }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>주차 계획</strong></td>
+                        <td>{{ m4_parking_advantage }}</td>
+                    </tr>
+                    <tr class="highlight-row">
+                        <td><strong>건축비 효율성</strong></td>
+                        <td><strong>{{ m4_cost_efficiency }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">5.2 M5 사업성 분석과의 연계</div>
+            
+            <div class="success-box">
+                <div class="success-box-title">🔗 본 공급유형 결정이 M5에 미치는 영향</div>
+                <p style="font-size: 11pt; line-height: 2.2; font-weight: 500;">{{ m5_linkage_explanation }}</p>
+            </div>
+
+            <table class="data-table" style="margin-top: 20px;">
+                <thead>
+                    <tr>
+                        <th style="width: 30%;">M5 검토 항목</th>
+                        <th style="width: 70%;">{{ selected_supply_type }}의 유리한 점</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>임대 회전율</strong></td>
+                        <td>{{ m5_turnover_advantage }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>공실 리스크</strong></td>
+                        <td>{{ m5_vacancy_risk }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>임대료 수준</strong></td>
+                        <td>{{ m5_rent_level }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>운영비 관리</strong></td>
+                        <td>{{ m5_operation_cost }}</td>
+                    </tr>
+                    <tr class="highlight-row">
+                        <td><strong>수익성 안정성</strong></td>
+                        <td><strong>{{ m5_profitability_stability }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">5.3 M6 LH 심사 판단과의 연계</div>
+            
+            <div class="success-box">
+                <div class="success-box-title">🔗 본 공급유형 결정이 M6 LH 심사에 미치는 영향</div>
+                <p style="font-size: 11pt; line-height: 2.2; font-weight: 500;">{{ m6_linkage_explanation }}</p>
+            </div>
+
+            <table class="data-table" style="margin-top: 20px;">
+                <thead>
+                    <tr>
+                        <th style="width: 30%;">M6 LH 심사 항목</th>
+                        <th style="width: 40%;">심사 기준</th>
+                        <th style="width: 30%;">{{ selected_supply_type }}의 유리함</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>정책 적합성</strong></td>
+                        <td>정부 주거복지 정책 방향 일치 여부</td>
+                        <td class="value-positive">{{ m6_policy_fit }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>수요 안정성</strong></td>
+                        <td>중장기 입주자 확보 가능성</td>
+                        <td class="value-positive">{{ m6_demand_stability }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>운영 리스크</strong></td>
+                        <td>공실, 연체, 관리 문제 발생 가능성</td>
+                        <td class="value-positive">{{ m6_operation_risk }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>지역 균형 발전</strong></td>
+                        <td>지역별 공급 계획과의 정합성</td>
+                        <td>{{ m6_regional_balance }}</td>
+                    </tr>
+                    <tr class="highlight-row">
+                        <td><strong>LH 매입 우선순위</strong></td>
+                        <td>연간 예산 배정 및 승인 가능성</td>
+                        <td class="value-positive"><strong>{{ m6_priority_level }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="warning-box" style="margin-top: 25px;">
+                <div class="warning-box-title">💡 LH 심사 전략적 시사점</div>
+                <p style="font-size: 10.5pt; line-height: 2.0;">{{ m6_strategic_insight }}</p>
+            </div>
+        </div>
+
+        <div class="module-connection" style="margin-top: 30px;">
+            <div class="module-connection-title">📊 M3 → M4 → M5 → M6 연쇄 효과</div>
+            <div style="padding: 20px; background: white; border-radius: 6px; margin-top: 15px;">
+                <p style="font-size: 11pt; line-height: 2.2; text-align: center; font-weight: 500; color: #2c3e50;">
+                    <strong style="color: #0066cc; font-size: 12pt;">{{ selected_supply_type }}</strong> 선정<br>
+                    ↓<br>
+                    M4에서 <strong style="color: #00a86b;">{{ m4_design_direction }}</strong> 설계 방향 유도<br>
+                    ↓<br>
+                    M5에서 <strong style="color: #00a86b;">{{ m5_business_advantage }}</strong> 사업성 유리<br>
+                    ↓<br>
+                    M6에서 <strong style="color: #00a86b;">{{ m6_approval_advantage }}</strong> 심사 통과 가능성 제고
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 7: Final Decision & Risk Factors -->
+    <div class="content-page page-break">
+        <div class="page-title">VI. 종합 판단 및 리스크 요인</div>
+
+        <div class="section">
+            <div class="section-title">6.1 최종 공급유형 결정</div>
+            
+            <div class="executive-summary" style="background: linear-gradient(135deg, #d1f2eb 0%, #a2d9ce 100%); border-color: #00a86b;">
+                <div class="executive-label" style="color: #00695c;">최종 권장 공급유형</div>
+                <div class="executive-result" style="color: #00a86b; font-size: 32pt;">{{ selected_supply_type }}</div>
+                <div class="executive-detail" style="text-align: center;">
+                    <p style="font-size: 12pt; font-weight: 600; color: #00695c; margin-top: 15px;">
+                        본 대상지는 <strong>정책·수요·사업 구조상</strong><br>
+                        <strong style="font-size: 13pt;">다른 선택지가 성립하기 어려운 구조</strong>이다.
+                    </p>
+                </div>
+            </div>
+
+            <div class="success-box">
+                <div class="success-box-title">✅ 결정 근거 종합</div>
+                <p style="font-size: 11pt; line-height: 2.2; font-weight: 500;">{{ final_decision_rationale }}</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">6.2 강점 및 기회 요인</div>
+            <ul class="checklist" style="padding-left: 20px; line-height: 2.2;">
+                {% for strength in strengths %}
+                <li style="font-size: 10.5pt;">{{ strength }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="section">
+            <div class="section-title">6.3 리스크 요인 및 대응 방안</div>
+            <div class="warning-box">
+                <div class="warning-box-title">⚠️ 주요 리스크 요인 (현실성 확보)</div>
+                <p style="font-size: 10pt; margin-bottom: 15px; line-height: 1.9;">
+                    어떤 사업지도 완벽할 수 없다. 본 보고서는 <strong>현실적 판단</strong>을 위해<br>
+                    다음의 리스크 요인을 명시하고, 각각의 대응 방안을 제시한다.
+                </p>
+            </div>
+
+            <table class="data-table" style="margin-top: 20px;">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">리스크 유형</th>
+                        <th style="width: 35%;">구체적 리스크</th>
+                        <th style="width: 40%;">대응 방안</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for risk in risk_factors %}
+                    <tr>
+                        <td><strong>{{ risk.type }}</strong></td>
+                        <td class="value-negative">{{ risk.description }}</td>
+                        <td>{{ risk.mitigation }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="info-box" style="margin-top: 20px;">
+                <div class="info-box-title">💡 리스크 대응 전략</div>
+                <p style="line-height: 2.0;">{{ risk_management_strategy }}</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">6.4 권장사항</div>
+            <ol style="padding-left: 25px; line-height: 2.2; font-size: 10.5pt;">
+                {% for recommendation in recommendations %}
+                <li style="margin-bottom: 10px;"><strong>{{ recommendation }}</strong></li>
+                {% endfor %}
+            </ol>
+        </div>
+
+        <div class="success-box" style="margin-top: 40px; padding: 30px;">
+            <p style="text-align: center; font-size: 12pt; line-height: 2.2; font-weight: 600; color: #00695c;">
+                선정된 공급유형 <strong style="font-size: 14pt; color: #00a86b;">{{ selected_supply_type }}</strong>을 기준으로,<br>
+                실행 가능한 건축 규모 검토 <strong>(M4)</strong>를 진행합니다.
+            </p>
+        </div>
+
+        <div style="margin-top: 60px; padding-top: 30px; border-top: 2px solid #dee2e6;">
+            <p style="font-size: 11pt; margin-bottom: 8px; text-align: right;">{{ analysis_date }}</p>
+            <p style="font-size: 12pt; font-weight: bold; color: #2c3e50; text-align: right;">작성 주체: ZeroSite Analysis Engine</p>
+            <p style="font-size: 11pt; color: #7f8c8d; margin-top: 12px; text-align: right;">Powered by AntennaHoldings Co., Ltd.</p>
+        </div>
+    </div>
+
+    <!-- Page 8: Methodology & Disclaimers -->
+    <div class="content-page page-break">
+        <div class="page-title">VII. 분석 방법론 및 제한사항</div>
+
+        <div class="section">
+            <div class="section-title">7.1 분석 방법론</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 30%;">분석 단계</th>
+                        <th style="width: 70%;">세부 방법</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>1단계: 입지 분석</strong></td>
+                        <td>교통 접근성, 생활 인프라를 유형별 필수 체크리스트 기준으로 평가</td>
+                    </tr>
+                    <tr>
+                        <td><strong>2단계: 인구·수요 구조</strong></td>
+                        <td>통계청 인구총조사 데이터 기반, 연령·가구 구성·임차 비율 분석</td>
+                    </tr>
+                    <tr>
+                        <td><strong>3단계: 유형별 비교</strong></td>
+                        <td>입지·수요·사업·정책 적합성 4개 축 기준 탈락 논리 구축</td>
+                    </tr>
+                    <tr>
+                        <td><strong>4단계: 모듈 연계</strong></td>
+                        <td>M4·M5·M6 연쇄 효과 분석, LH 심사 전략 도출</td>
+                    </tr>
+                    <tr>
+                        <td><strong>5단계: 리스크 평가</strong></td>
+                        <td>주요 리스크 3개 이상 명시, 대응 방안 제시</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">7.2 데이터 출처</div>
+            <ul style="padding-left: 25px; line-height: 2.0; font-size: 10pt;">
+                <li><strong>인구 데이터</strong>: 통계청 인구총조사 ({{ pop_data_year }}년 기준)</li>
+                <li><strong>가구 데이터</strong>: 통계청 주택총조사 ({{ household_data_year }}년 기준)</li>
+                <li><strong>교통 데이터</strong>: 국토교통부 대중교통 정보시스템</li>
+                <li><strong>POI 데이터</strong>: 카카오맵 API, 네이버 지도 API</li>
+                <li><strong>정책 데이터</strong>: LH 신축매입임대 운영지침, 주거복지 로드맵 2.0</li>
+                <li><strong>심사 기준</strong>: LH 내부 심사 기준 (공개 자료 및 실무 경험 기반)</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <div class="section-title">7.3 제한사항 및 주의사항</div>
+            <div class="warning-box">
+                <ol style="padding-left: 25px; line-height: 2.2; font-size: 10pt;">
+                    <li><strong>분석 기준일 제한</strong>: 본 보고서는 {{ analysis_date }} 기준이며, 이후 정책 변경사항은 반영되지 않음</li>
+                    <li><strong>정책 변동 가능성</strong>: LH 신축매입임대 정책, 공급 우선순위는 정부 정책에 따라 변경될 수 있음</li>
+                    <li><strong>지역 개발 계획</strong>: 향후 지역 개발 계획, 교통 인프라 변경은 별도 확인 필요</li>
+                    <li><strong>최종 승인 권한</strong>: 본 보고서는 의사결정 근거 자료이며, 최종 사업 승인은 LH 및 관련 부서의 권한임</li>
+                    <li><strong>사업성 보장 불가</strong>: 공급유형 결정이 사업성을 보장하지 않으며, M5 사업성 분석을 통한 추가 검증 필요</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">7.4 보고서 활용 지침</div>
+            <div class="info-box">
+                <p style="line-height: 2.2; font-size: 10pt;">
+                    ✓ 본 보고서는 ZeroSite 파이프라인 M3 모듈의 공식 출력물이다.<br>
+                    ✓ M4(규모), M5(사업성), M6(LH 심사) 판단 시 본 보고서를 근거 자료로 활용한다.<br>
+                    ✓ 보고서 내용을 임의로 수정하거나 일부만 발췌하여 사용할 수 없다.<br>
+                    ✓ LH 실무 담당자가 읽고 추가 설명 없이 이해 가능한 수준으로 작성되었다.<br>
+                    ✓ 본 보고서는 의사결정 근거 문서이지, 추천서가 아니다.
+                </p>
+            </div>
+        </div>
+
+        <div style="margin-top: 80px; padding: 30px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border: 3px solid #0066cc; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+            <p style="text-align: center; font-size: 11pt; color: #2c3e50; line-height: 2.0; font-weight: 500;">
+                본 분석은 ZeroSite Real Estate Analysis Platform의 전문 분석 기준에 따라 작성되었으며,<br>
+                LH 신축매입임대 사업의 실무 기준 및 정책 방향을 반영하였습니다.<br>
+                분석 과정에서 취득한 정보와 자료는 엄격히 보호되며, 무단 복제 및 배포를 금지합니다.<br>
+                <br>
+                <strong style="font-size: 12pt; color: #0066cc;">Confidential - For Official Use Only</strong><br>
+                <strong style="font-size: 10pt; color: #7f8c8d; margin-top: 10px; display: block;">ⓒ ZeroSite by AntennaHoldings | Natai Heum</strong>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
