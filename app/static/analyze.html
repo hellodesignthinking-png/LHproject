@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프로젝트 분석 - ZeroSite Decision OS</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/zerosite-design-system.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Noto+Sans+KR:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        .analysis-section {
+            background: var(--color-background-section);
+            border: 2px solid var(--color-deep-navy);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-xxl);
+        }
+
+        .analysis-section__title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-deep-navy);
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 2px solid var(--color-deep-navy);
+        }
+
+        .input-group {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .input-group__label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .input-group__input {
+            width: 100%;
+            padding: 14px 18px;
+            font-size: 16px;
+            font-family: var(--font-primary);
+            border: 2px solid var(--color-border-light);
+            background: var(--color-background-white);
+            color: var(--color-text-primary);
+            transition: border-color 0.2s;
+        }
+
+        .input-group__input:focus {
+            outline: none;
+            border-color: var(--color-institutional-blue);
+        }
+
+        .input-group__hint {
+            font-size: 12px;
+            color: var(--color-text-caption);
+            margin-top: var(--spacing-xs);
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-md);
+        }
+
+        .action-button {
+            padding: 16px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            background: var(--color-deep-navy);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: var(--font-primary);
+            width: 100%;
+        }
+
+        .action-button:hover {
+            background: var(--color-institutional-blue);
+        }
+
+        .action-button:disabled {
+            background: var(--color-text-caption);
+            cursor: not-allowed;
+        }
+
+        .progress-section {
+            background: var(--color-background-section);
+            border: 1px solid var(--color-border-light);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-xxl);
+            display: none;
+        }
+
+        .progress-section.active {
+            display: block;
+        }
+
+        .progress-step {
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-sm);
+            border-left: 4px solid var(--color-text-caption);
+            background: var(--color-background-white);
+            transition: all 0.3s;
+        }
+
+        .progress-step.running {
+            border-left-color: var(--color-info);
+            background: #E3F2FD;
+        }
+
+        .progress-step.completed {
+            border-left-color: var(--color-positive);
+            background: #E8F5E9;
+        }
+
+        .progress-step.error {
+            border-left-color: var(--color-warning);
+            background: #FFEBEE;
+        }
+
+        .progress-step__title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .progress-step__message {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-xl);
+        }
+
+        .result-card {
+            border: 1px solid var(--color-border-light);
+            padding: var(--spacing-lg);
+            background: var(--color-background-section);
+            text-align: center;
+        }
+
+        .result-card__label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--color-text-caption);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .result-card__link {
+            display: inline-block;
+            padding: 10px 16px;
+            background: var(--color-deep-navy);
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .result-card__link:hover {
+            background: var(--color-institutional-blue);
+        }
+
+        .result-card__link:disabled {
+            background: var(--color-text-caption);
+            pointer-events: none;
+        }
+
+        .example-addresses {
+            margin-top: var(--spacing-md);
+            padding: var(--spacing-md);
+            background: var(--color-background-white);
+            border: 1px solid var(--color-border-light);
+        }
+
+        .example-addresses__title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .example-address {
+            display: inline-block;
+            margin: 4px;
+            padding: 6px 12px;
+            font-size: 12px;
+            color: var(--color-institutional-blue);
+            background: white;
+            border: 1px solid var(--color-border-light);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .example-address:hover {
+            background: var(--color-background-white);
+            border-color: var(--color-institutional-blue);
+        }
+
+        .info-message {
+            background: #E3F2FD;
+            border-left: 4px solid var(--color-info);
+            padding: var(--spacing-md);
+            margin-top: var(--spacing-lg);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .error-message {
+            background: #FFEBEE;
+            border-left: 4px solid var(--color-warning);
+            padding: var(--spacing-md);
+            margin-top: var(--spacing-lg);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="zs-header">
+        <div class="zs-header__container">
+            <div class="zs-header__main">
+                <h1 class="zs-header__title">ZeroSite</h1>
+                <p class="zs-header__meta">
+                    <span>프로젝트 분석</span>
+                    <span class="zs-header__divider">|</span>
+                    <span>Decision OS v1.0</span>
+                </p>
+            </div>
+            <div class="zs-header__context">
+                <span class="zs-label">System Status</span>
+                <span class="zs-number">Production Ready</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="zs-container">
+        <!-- Analysis Input Section -->
+        <section class="analysis-section">
+            <h2 class="analysis-section__title">프로젝트 정보 입력</h2>
+            
+            <div class="input-group">
+                <label class="input-group__label" for="address">프로젝트 주소 *</label>
+                <input 
+                    type="text" 
+                    id="address" 
+                    class="input-group__input" 
+                    placeholder="예: 서울특별시 강남구 역삼동 123-45"
+                >
+                <div class="input-group__hint">
+                    도로명 주소 또는 지번 주소를 입력하세요. (법정동 단위까지 필수)
+                </div>
+            </div>
+
+            <div class="input-grid">
+                <div class="input-group">
+                    <label class="input-group__label" for="landArea">대지면적 (㎡)</label>
+                    <input 
+                        type="number" 
+                        id="landArea" 
+                        class="input-group__input" 
+                        placeholder="예: 500"
+                        step="0.01"
+                    >
+                    <div class="input-group__hint">선택사항 (입력 시 더 정확한 분석 가능)</div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-group__label" for="zoning">용도지역</label>
+                    <input 
+                        type="text" 
+                        id="zoning" 
+                        class="input-group__input" 
+                        placeholder="예: 제2종일반주거지역"
+                    >
+                    <div class="input-group__hint">선택사항 (미입력 시 자동 조회 시도)</div>
+                </div>
+            </div>
+
+            <div class="example-addresses">
+                <div class="example-addresses__title">빠른 테스트용 예시 주소:</div>
+                <span class="example-address" onclick="setAddress('서울특별시 강남구 역삼동 123-45', 500, '제2종일반주거지역')">강남구 역삼동</span>
+                <span class="example-address" onclick="setAddress('서울특별시 서초구 서초동 1234-5', 600, '제3종일반주거지역')">서초구 서초동</span>
+                <span class="example-address" onclick="setAddress('서울특별시 송파구 잠실동 567-8', 450, '제2종일반주거지역')">송파구 잠실동</span>
+            </div>
+
+            <button class="action-button" id="analyzeButton" onclick="startAnalysis()">
+                🚀 분석 시작
+            </button>
+
+            <div class="info-message" style="margin-top: var(--spacing-lg);">
+                <strong>📌 분석 프로세스:</strong><br>
+                M1 토지정보 수집 → M3 공급유형 결정 → M4 건축규모 산정 → M5 사업성 분석 → M6 LH 종합판단<br>
+                <small style="color: var(--color-text-secondary);">전체 분석 소요시간: 약 30초~2분</small>
+            </div>
+        </section>
+
+        <!-- Progress Section -->
+        <section class="progress-section" id="progressSection">
+            <h3 class="zs-section__title">분석 진행 상황</h3>
+            
+            <div class="progress-step" id="step-m1">
+                <div class="progress-step__title">⏳ M1: 토지정보 수집</div>
+                <div class="progress-step__message">대기 중...</div>
+            </div>
+            
+            <div class="progress-step" id="step-m3">
+                <div class="progress-step__title">⏳ M3: 공급유형 결정</div>
+                <div class="progress-step__message">대기 중...</div>
+            </div>
+            
+            <div class="progress-step" id="step-m4">
+                <div class="progress-step__title">⏳ M4: 건축규모 산정</div>
+                <div class="progress-step__message">대기 중...</div>
+            </div>
+            
+            <div class="progress-step" id="step-m5">
+                <div class="progress-step__title">⏳ M5: 사업성 분석</div>
+                <div class="progress-step__message">대기 중...</div>
+            </div>
+            
+            <div class="progress-step" id="step-m6">
+                <div class="progress-step__title">⏳ M6: LH 종합판단</div>
+                <div class="progress-step__message">대기 중...</div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section class="zs-section" id="resultsSection" style="display: none;">
+            <h3 class="zs-section__title">분석 결과 보고서</h3>
+            <div class="results-grid">
+                <div class="result-card">
+                    <div class="result-card__label">M3 공급유형</div>
+                    <a href="#" id="link-m3" class="result-card__link" target="_blank">보고서 열기</a>
+                </div>
+                <div class="result-card">
+                    <div class="result-card__label">M4 건축규모</div>
+                    <a href="#" id="link-m4" class="result-card__link" target="_blank">보고서 열기</a>
+                </div>
+                <div class="result-card">
+                    <div class="result-card__label">M5 사업성</div>
+                    <a href="#" id="link-m5" class="result-card__link" target="_blank">보고서 열기</a>
+                </div>
+                <div class="result-card">
+                    <div class="result-card__label">M6 종합판단</div>
+                    <a href="#" id="link-m6" class="result-card__link" target="_blank">보고서 열기</a>
+                </div>
+            </div>
+
+            <div class="info-message" style="margin-top: var(--spacing-xl);">
+                <strong>💾 Context ID:</strong> <code id="finalContextId" style="font-family: var(--font-secondary); font-weight: 600;"></code><br>
+                <small>이 Context ID로 언제든지 보고서를 다시 조회할 수 있습니다.</small>
+            </div>
+        </section>
+
+        <!-- Instructions -->
+        <section class="zs-section">
+            <h3 class="zs-section__title">사용 안내</h3>
+            <div class="zs-section__content">
+                <h4>필수 입력 항목</h4>
+                <ul>
+                    <li><strong>주소:</strong> 프로젝트 대상지의 도로명 또는 지번 주소 (법정동 단위까지)</li>
+                </ul>
+
+                <h4 style="margin-top: var(--spacing-lg);">선택 입력 항목 (권장)</h4>
+                <ul>
+                    <li><strong>대지면적:</strong> 정확한 건축규모 산정을 위해 입력 권장</li>
+                    <li><strong>용도지역:</strong> 미입력 시 시스템이 자동으로 조회 시도</li>
+                </ul>
+
+                <h4 style="margin-top: var(--spacing-lg);">분석 프로세스</h4>
+                <ol>
+                    <li><strong>M1 (토지정보):</strong> 주소 기반 토지 정보 수집 및 검증</li>
+                    <li><strong>M3 (공급유형):</strong> 입지 및 인구 분석을 통한 최적 공급유형 결정</li>
+                    <li><strong>M4 (건축규모):</strong> 법정 기준 기반 건축 규모 산정 (세대수, 연면적, 주차)</li>
+                    <li><strong>M5 (사업성):</strong> 비용/수익 구조 분석 및 재무 지표 산출</li>
+                    <li><strong>M6 (종합판단):</strong> LH 심사 기준 기반 최종 의사결정</li>
+                </ol>
+
+                <div class="info-message" style="margin-top: var(--spacing-lg);">
+                    <strong>⚠️ 주의사항:</strong><br>
+                    • 모든 분석은 실제 입력 데이터를 기반으로 수행됩니다.<br>
+                    • 샘플 데이터나 기본값은 사용되지 않습니다.<br>
+                    • 분석 중 오류 발생 시 명확한 오류 메시지가 표시됩니다.
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Links -->
+        <section class="zs-section">
+            <h3 class="zs-section__title">다른 페이지</h3>
+            <div class="zs-section__content">
+                <div class="zs-grid zs-grid--3col">
+                    <div>
+                        <h4>메인 페이지</h4>
+                        <p><a href="/">ZeroSite 홈</a></p>
+                    </div>
+                    <div>
+                        <h4>보고서 조회</h4>
+                        <p><a href="/reports">기존 보고서 조회</a></p>
+                    </div>
+                    <div>
+                        <h4>API 문서</h4>
+                        <p><a href="/docs" target="_blank">Swagger UI</a></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="zs-footer">
+        <div class="zs-container">
+            <div class="zs-footer__content">
+                <p class="zs-footer__copyright">ⓒ ZeroSite by AntennaHoldings | Natai Heum</p>
+                <p class="zs-footer__watermark">DESIGN SYSTEM: ZEROSITE DECISION OS V1.0</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let currentContextId = null;
+
+        function setAddress(address, landArea, zoning) {
+            document.getElementById('address').value = address;
+            document.getElementById('landArea').value = landArea || '';
+            document.getElementById('zoning').value = zoning || '';
+        }
+
+        async function startAnalysis() {
+            const address = document.getElementById('address').value.trim();
+            const landArea = document.getElementById('landArea').value.trim();
+            const zoning = document.getElementById('zoning').value.trim();
+
+            if (!address) {
+                alert('주소를 입력해주세요.');
+                return;
+            }
+
+            // UI 초기화
+            document.getElementById('analyzeButton').disabled = true;
+            document.getElementById('analyzeButton').textContent = '⏳ 분석 중...';
+            document.getElementById('progressSection').classList.add('active');
+            document.getElementById('resultsSection').style.display = 'none';
+
+            // 진행 상황 초기화
+            ['m1', 'm3', 'm4', 'm5', 'm6'].forEach(module => {
+                const step = document.getElementById(`step-${module}`);
+                step.className = 'progress-step';
+                step.querySelector('.progress-step__title').textContent = `⏳ ${module.toUpperCase()}: 대기 중...`;
+                step.querySelector('.progress-step__message').textContent = '대기 중...';
+            });
+
+            try {
+                // Step 1: M1 토지정보 분석
+                await runModule('m1', 'M1: 토지정보 수집', async () => {
+                    const params = new URLSearchParams({ address });
+                    if (landArea) params.append('land_area_sqm', landArea);
+                    if (zoning) params.append('zoning', zoning);
+
+                    const response = await fetch(`/api/m1/v2/analyze?${params}`, { method: 'POST' });
+                    const data = await response.json();
+                    
+                    if (!response.ok) throw new Error(data.detail || 'M1 분석 실패');
+                    
+                    currentContextId = data.context_id;
+                    return `Context ID: ${currentContextId}`;
+                });
+
+                // Step 2: M3 공급유형 결정
+                await runModule('m3', 'M3: 공급유형 결정', async () => {
+                    const response = await fetch(`/api/v4/reports/M3/html?context_id=${currentContextId}`);
+                    if (!response.ok) throw new Error('M3 분석 실패');
+                    return '공급유형 결정 완료';
+                });
+
+                // Step 3: M4 건축규모 산정
+                await runModule('m4', 'M4: 건축규모 산정', async () => {
+                    const response = await fetch(`/api/v4/reports/M4/html?context_id=${currentContextId}`);
+                    if (!response.ok) throw new Error('M4 분석 실패');
+                    return '건축규모 산정 완료';
+                });
+
+                // Step 4: M5 사업성 분석
+                await runModule('m5', 'M5: 사업성 분석', async () => {
+                    const response = await fetch(`/api/v4/reports/M5/html?context_id=${currentContextId}`);
+                    if (!response.ok) throw new Error('M5 분석 실패');
+                    return '사업성 분석 완료';
+                });
+
+                // Step 5: M6 종합판단
+                await runModule('m6', 'M6: LH 종합판단', async () => {
+                    const response = await fetch(`/api/v4/reports/M6/html?context_id=${currentContextId}`);
+                    if (!response.ok) throw new Error('M6 분석 실패');
+                    return 'LH 종합판단 완료';
+                });
+
+                // 완료 처리
+                showResults();
+
+            } catch (error) {
+                console.error('Analysis error:', error);
+                alert(`분석 중 오류가 발생했습니다:\n${error.message}`);
+            } finally {
+                document.getElementById('analyzeButton').disabled = false;
+                document.getElementById('analyzeButton').textContent = '🚀 분석 시작';
+            }
+        }
+
+        async function runModule(moduleId, title, asyncFunc) {
+            const step = document.getElementById(`step-${moduleId}`);
+            
+            // Running 상태
+            step.className = 'progress-step running';
+            step.querySelector('.progress-step__title').textContent = `🔄 ${title}`;
+            step.querySelector('.progress-step__message').textContent = '처리 중...';
+
+            try {
+                const message = await asyncFunc();
+                
+                // Completed 상태
+                step.className = 'progress-step completed';
+                step.querySelector('.progress-step__title').textContent = `✅ ${title}`;
+                step.querySelector('.progress-step__message').textContent = message;
+            } catch (error) {
+                // Error 상태
+                step.className = 'progress-step error';
+                step.querySelector('.progress-step__title').textContent = `❌ ${title}`;
+                step.querySelector('.progress-step__message').textContent = error.message;
+                throw error;
+            }
+        }
+
+        function showResults() {
+            document.getElementById('resultsSection').style.display = 'block';
+            document.getElementById('finalContextId').textContent = currentContextId;
+
+            // 보고서 링크 설정
+            ['m3', 'm4', 'm5', 'm6'].forEach(module => {
+                const link = document.getElementById(`link-${module}`);
+                link.href = `/api/v4/reports/${module.toUpperCase()}/html?context_id=${currentContextId}`;
+            });
+
+            // 결과 섹션으로 스크롤
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Enter 키 지원
+        document.getElementById('address').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                startAnalysis();
+            }
+        });
+    </script>
+</body>
+</html>
