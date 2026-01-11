@@ -1,0 +1,179 @@
+/**
+ * Shared Module Results Page Styles
+ * ==================================
+ * Used by M2, M3, M4, M5, M6 results pages
+ */
+
+.results-page {
+  min-height: 100vh;
+  background: #f9fafb;
+}
+
+.results-page.loading,
+.results-page.error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 4rem 2rem;
+}
+
+/* Results Content */
+.results-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Result Panel */
+.result-panel {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.result-panel h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 1.5rem 0;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+/* Value Display */
+.value-display {
+  display: grid;
+  gap: 2rem;
+  margin: 1.5rem 0;
+}
+
+.primary-value {
+  text-align: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-radius: 8px;
+}
+
+.primary-value label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e40af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.primary-value value.large {
+  display: block;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1e3a8a;
+}
+
+.secondary-values {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.secondary-values > div {
+  padding: 1rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+.secondary-values label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.secondary-values value {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Method Info */
+.method-info {
+  padding: 1rem;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 6px;
+  margin-top: 1rem;
+}
+
+.method-info p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+  color: #065f46;
+}
+
+/* Table Adjustments */
+.data-table td.positive {
+  color: #059669;
+  font-weight: 600;
+}
+
+.data-table td.negative {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* Navigation Buttons */
+.navigation-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-top: 2rem;
+  padding: 2rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+/* Context Info Bar */
+.context-info-bar {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  color: #065f46;
+}
+
+.context-info-bar code {
+  background: #ffffff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .results-content {
+    padding: 1rem;
+  }
+
+  .result-panel {
+    padding: 1.5rem;
+  }
+
+  .primary-value value.large {
+    font-size: 1.8rem;
+  }
+
+  .navigation-buttons {
+    flex-direction: column;
+  }
+}
