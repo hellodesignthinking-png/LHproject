@@ -30,10 +30,17 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
     // Try verifiedData first (from Step 3.5)
     if (formData.verifiedData) {
       console.log('✅ [Step8] Using verifiedData from Step 3.5');
+      console.log('📋 [Step8] verifiedData:', formData.verifiedData);
+      
+      // Extract bonbun/bubun from address (e.g., "서울시 마포구 성산동 123-45" → bonbun=123, bubun=45)
+      const addressParts = formData.verifiedData.land?.address?.match(/(\d+)-?(\d*)\s*$/);
+      const bonbun = addressParts?.[1] || formData.cadastralData?.bonbun || '123';
+      const bubun = addressParts?.[2] || formData.cadastralData?.bubun || '0';
+      
       return {
         cadastralData: {
-          bonbun: formData.verifiedData.land?.address?.split(' ').pop()?.split('-')[0] || formData.cadastralData?.bonbun,
-          bubun: formData.verifiedData.land?.address?.split('-')[1] || formData.cadastralData?.bubun || '0',
+          bonbun: bonbun,
+          bubun: bubun,
           area: formData.verifiedData.land?.area_sqm || formData.cadastralData?.area || 500,
           jimok: formData.verifiedData.land?.jimok || formData.cadastralData?.jimok || '대',
         },
@@ -233,28 +240,28 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
         address_source: normalizeDataSource(formData.dataSources['address']?.source),
         coordinates_source: normalizeDataSource(formData.dataSources['geocode']?.source),
         
-        // STEP 3: Cadastral
-        bonbun: formData.cadastralData?.bonbun || '',
-        bubun: formData.cadastralData?.bubun || '',
-        jimok: formData.cadastralData?.jimok || '',  // ✅ NO DEFAULT - require explicit input
-        area: formData.cadastralData?.area || 0,
+        // STEP 3: Cadastral - USE effectiveData!
+        bonbun: effectiveData.cadastralData?.bonbun || '',
+        bubun: effectiveData.cadastralData?.bubun || '',
+        jimok: effectiveData.cadastralData?.jimok || '',  // ✅ NO DEFAULT - require explicit input
+        area: effectiveData.cadastralData?.area || 0,
         cadastral_source: normalizeDataSource(formData.dataSources['cadastral']?.source),
         cadastral_confidence: formData.dataSources['cadastral']?.confidence,
         
-        // STEP 4: Zoning & Legal
-        zone_type: formData.landUseData?.zone_type || '',
+        // STEP 4: Zoning & Legal - USE effectiveData!
+        zone_type: effectiveData.landUseData?.zone_type || '',
         zone_detail: formData.landUseData?.zone_detail,
         land_use: formData.landUseData?.land_use || '주거용',  // ← DEFAULT: 주거용 (if missing)
-        far: formData.landUseData?.far || 0,
-        bcr: formData.landUseData?.bcr || 0,
+        far: effectiveData.landUseData?.far || 0,
+        bcr: effectiveData.landUseData?.bcr || 0,
         height_limit: null,  // ← Always null (validation: must be > 0 or null)
         regulations: formData.landUseData?.regulations || [],
         restrictions: formData.landUseData?.restrictions || [],
         zoning_source: normalizeDataSource(formData.dataSources['land_use']?.source),
         
-        // STEP 5: Road Access
+        // STEP 5: Road Access - USE effectiveData!
         road_contact: formData.roadInfoData?.road_contact || '접도',
-        road_width: formData.roadInfoData?.road_width || 0,
+        road_width: effectiveData.roadInfoData?.road_width || 0,
         road_type: formData.roadInfoData?.road_type || '일반도로',  // ← DEFAULT: 일반도로
         nearby_roads: formData.roadInfoData?.nearby_roads?.map(r => ({
           name: r.name || '',
@@ -263,13 +270,13 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
         })) || [],
         road_source: normalizeDataSource(formData.dataSources['road_info']?.source),
         
-        // STEP 6: Market Data (거래사례 분리)
-        official_land_price: formData.marketData?.official_land_price,
+        // STEP 6: Market Data (거래사례 분리) - USE effectiveData!
+        official_land_price: effectiveData.marketData?.official_land_price,
         official_land_price_date: formData.marketData?.official_land_price_date,
         official_price_source: normalizeDataSource(formData.dataSources['market_data']?.source),
         
-        // 거래사례 - appraisal용 (M2 계산용, 최대 5건)
-        transaction_cases_appraisal: formData.marketData?.transactions
+        // 거래사례 - appraisal용 (M2 계산용, 최대 5건) - USE effectiveData!
+        transaction_cases_appraisal: effectiveData.marketData?.transactions
           ?.slice(0, 5)
           .map(tx => ({
             date: tx.date,
@@ -280,8 +287,8 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
             use_in_calculation: true
           })) || [],
         
-        // 거래사례 - reference용 (보고서 참고, 무제한)
-        transaction_cases_reference: formData.marketData?.transactions || [],
+        // 거래사례 - reference용 (보고서 참고, 무제한) - USE effectiveData!
+        transaction_cases_reference: effectiveData.marketData?.transactions || [],
         
         // Premium factors (M2 보정용)
         corner_lot: false,
@@ -619,18 +626,18 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
         <h3 style={{ marginTop: 0 }}>✅ 수집된 데이터 요약</h3>
         <ul style={{ paddingLeft: '20px' }}>
           <li>주소: {formData.selectedAddress?.road_address || '(미입력)'}</li>
-          <li>본번-부번: {formData.cadastralData?.bonbun || '(미입력)'}-{formData.cadastralData?.bubun || '0'}</li>
-          <li>지목: {formData.cadastralData?.jimok || '(미입력)'}</li>
-          <li>면적: {formData.cadastralData?.area ? `${formData.cadastralData.area}㎡ (${(formData.cadastralData.area / 3.3058).toFixed(1)}평)` : '(미입력)'}</li>
-          <li>용도지역: {formData.landUseData?.zone_type || '(미입력)'}</li>
+          <li>본번-부번: {effectiveData.cadastralData?.bonbun || '(미입력)'}-{effectiveData.cadastralData?.bubun || '0'}</li>
+          <li>지목: {effectiveData.cadastralData?.jimok || '(미입력)'}</li>
+          <li>면적: {effectiveData.cadastralData?.area ? `${effectiveData.cadastralData.area}㎡ (${(effectiveData.cadastralData.area / 3.3058).toFixed(1)}평)` : '(미입력)'}</li>
+          <li>용도지역: {effectiveData.landUseData?.zone_type || '(미입력)'}</li>
           <li>토지이용: {formData.landUseData?.land_use || '(미입력)'}</li>
-          <li>용적률/건폐율: {formData.landUseData?.far || 0}% / {formData.landUseData?.bcr || 0}%</li>
-          <li>도로폭: {formData.roadInfoData?.road_width || 0}m ({formData.roadInfoData?.road_type || '(미입력)'})</li>
-          {formData.marketData?.official_land_price && (
-            <li>공시지가: {formData.marketData.official_land_price.toLocaleString()}원/㎡</li>
+          <li>용적률/건폐율: {effectiveData.landUseData?.far || 0}% / {effectiveData.landUseData?.bcr || 0}%</li>
+          <li>도로폭: {effectiveData.roadInfoData?.road_width || 0}m ({formData.roadInfoData?.road_type || '(미입력)'})</li>
+          {effectiveData.marketData?.official_land_price && (
+            <li>공시지가: {effectiveData.marketData.official_land_price.toLocaleString()}원/㎡</li>
           )}
-          {formData.marketData?.transactions && formData.marketData.transactions.length > 0 && (
-            <li>거래사례: {formData.marketData.transactions.length}건</li>
+          {effectiveData.marketData?.transactions && effectiveData.marketData.transactions.length > 0 && (
+            <li>거래사례: {effectiveData.marketData.transactions.length}건</li>
           )}
         </ul>
       </div>
