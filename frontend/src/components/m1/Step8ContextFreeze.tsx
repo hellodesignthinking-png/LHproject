@@ -281,7 +281,7 @@ export const Step8ContextFreeze: React.FC<Step8Props> = ({ formData, onComplete,
           .map(tx => ({
             date: tx.date,
             area: tx.area,
-            amount: tx.amount,
+            amount: tx.amount || tx.price || 0,  // 🔥 FIX: Step 3.5 uses 'price', backend expects 'amount'
             distance: tx.distance,
             address: tx.address,
             use_in_calculation: true
