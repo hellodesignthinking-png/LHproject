@@ -745,14 +745,20 @@ def _generate_m2_content(summary: Dict, details: Dict) -> str:
 
 
 def _generate_m3_content(summary: Dict, details: Dict) -> str:
-    """Generate M3 (Housing Type) report content - Narrative Style (Classic Format)
+    """Generate M3 (Housing Type) report content - Full Logic Restoration
     
-    논문 스타일의 서술형 보고서로 작성:
-    - 분석 배경 및 목적
-    - 상세 입지 분석
-    - 수요 분석 및 근거
-    - 유형별 비교 검토
-    - 종합 판단 및 권고사항
+    M3 기획 복원 프롬프트 기반 완전 구현:
+    1. M3 모듈 개요 (서론)
+    2. 대상지 특성 요약 (M3 관점)
+    3. 검토 대상 공급유형 전체 리스트
+    4. 공급유형 평가 기준 체계 설명
+    5. 공급유형별 점수 비교 테이블
+    6. 최종 추천 유형 상세 해석
+    7. 탈락 유형별 배제 논리 (중요!)
+    8. M4·M5로 이어지는 연결 설명
+    9. 조건부 검토 문장
+    
+    핵심: "왜 이 유형인가? 왜 다른 유형은 아닌가?"에 답한다.
     """
     
     selected_type = summary.get("selected_type", "N/A")
@@ -1129,7 +1135,16 @@ def _generate_m3_content(summary: Dict, details: Dict) -> str:
             </p>
         </div>
     </div>
-    """.replace("{selected_type_name}", selected_type_name)
+    """
+    
+    # Replace all template variables
+    content = content.replace("{selected_type_name}", selected_type_name)
+    content = content.replace("{subway_count}", str(subway_count))
+    content = content.replace("{bus_count}", str(bus_count))
+    content = content.replace("{convenience_count}", str(convenience_count))
+    content = content.replace("{hospital_count}", str(hospital_count))
+    content = content.replace("{school_count}", str(school_count))
+    content = content.replace("{park_count}", str(park_count))
     
     return content
 
