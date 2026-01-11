@@ -71,6 +71,11 @@
   font-family: inherit;
 }
 
+.form-textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
 .form-input:focus {
   outline: none;
   border-color: #667eea;
@@ -184,6 +189,28 @@
 
 .info-box strong {
   color: #333;
+}
+
+/* Phase Declaration */
+.phase-declaration {
+  margin-top: 2rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #e8eaf6 0%, #f3e5f5 100%);
+  border-left: 4px solid #667eea;
+  border-radius: 8px;
+}
+
+.declaration-text {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.declaration-subtext {
+  margin: 0;
+  color: #666;
+  font-size: 0.85rem;
+  line-height: 1.5;
 }
 
 /* Responsive Design */
