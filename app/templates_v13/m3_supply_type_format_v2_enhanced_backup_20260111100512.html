@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M3: LH 신축매입임대 공급유형 결정 보고서 - ZeroSite</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            font-size: 10.5pt;
+            line-height: 1.7;
+            color: #2c3e50;
+            background: white;
+            position: relative;
+        }
+
+        /* ZeroSite Watermark */
+        body::before {
+            content: 'ZEROSITE';
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 120pt;
+            font-weight: bold;
+            color: rgba(0, 102, 204, 0.03);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Footer */
+        .report-footer {
+            position: fixed;
+            bottom: 10mm;
+            left: 20mm;
+            right: 20mm;
+            text-align: center;
+            font-size: 8pt;
+            color: #95a5a6;
+            border-top: 1px solid #ecf0f1;
+            padding-top: 8px;
+        }
+
+        /* Cover Page */
+        .cover-page {
+            text-align: center;
+            padding: 80px 40px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            page-break-after: always;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        .company-logo {
+            font-size: 28pt;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #0066cc;
+            letter-spacing: 12px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .main-title {
+            font-size: 32pt;
+            font-weight: bold;
+            margin: 40px 0 15px 0;
+            color: #1a1a1a;
+            letter-spacing: 3px;
+        }
+
+        .sub-title {
+            font-size: 24pt;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #34495e;
+        }
+
+        .report-type-badge {
+            display: inline-block;
+            background: #0066cc;
+            color: white;
+            padding: 10px 25px;
+            font-size: 13pt;
+            font-weight: bold;
+            border-radius: 25px;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .report-info-box {
+            background: white;
+            border: 2px solid #0066cc;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 35px;
+            margin: 40px auto;
+            max-width: 650px;
+            text-align: left;
+            border-radius: 8px;
+        }
+
+        .report-info-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 11.5pt;
+            align-items: center;
+        }
+
+        .report-info-row:last-child {
+            border-bottom: none;
+        }
+
+        .report-info-label {
+            font-weight: 600;
+            width: 140px;
+            color: #34495e;
+        }
+
+        .report-info-value {
+            flex: 1;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .company-name {
+            margin-top: 60px;
+            font-size: 16pt;
+            font-weight: bold;
+            color: #34495e;
+        }
+
+        .company-contact {
+            margin-top: 15px;
+            font-size: 9.5pt;
+            color: #7f8c8d;
+            line-height: 1.9;
+        }
+
+        /* Content Pages */
+        .content-page {
+            padding: 40px;
+            page-break-after: always;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .page-title {
+            font-size: 18pt;
+            font-weight: bold;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 4px solid #0066cc;
+            color: #2c3e50;
+            background: linear-gradient(to right, #f8f9fa 0%, white 100%);
+            padding: 15px 20px;
+            margin-left: -20px;
+            margin-right: -20px;
+        }
+
+        .section {
+            margin-bottom: 35px;
+            page-break-inside: avoid;
+        }
+
+        .section-title {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 18px;
+            color: #34495e;
+            background: #f8f9fa;
+            padding: 12px 20px;
+            border-left: 6px solid #0066cc;
+            border-radius: 4px;
+        }
+
+        .subsection-title {
+            font-size: 12pt;
+            font-weight: 600;
+            margin: 20px 0 12px 0;
+            color: #2c3e50;
+            padding-left: 15px;
+            border-left: 3px solid #3498db;
+        }
+
+        /* Executive Summary Box */
+        .executive-summary {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border: 3px solid #2196f3;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 25px 0;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+        }
+
+        .executive-summary-title {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #1565c0;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #1976d2;
+        }
+
+        .executive-summary-content {
+            font-size: 11pt;
+            line-height: 1.9;
+            color: #0d47a1;
+            font-weight: 500;
+        }
+
+        /* Analysis Box */
+        .analysis-box {
+            background: #fafafa;
+            border-left: 4px solid #3498db;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .analysis-box-title {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 12px;
+        }
+
+        .analysis-box-content {
+            font-size: 10pt;
+            line-height: 1.8;
+            color: #34495e;
+        }
+
+        /* Comparison Table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 9.5pt;
+        }
+
+        .comparison-table th {
+            background: #34495e;
+            color: white;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 600;
+            border: 1px solid #2c3e50;
+        }
+
+        .comparison-table td {
+            padding: 10px 8px;
+            border: 1px solid #ddd;
+            vertical-align: top;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .fit-high {
+            background: #c8e6c9;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .fit-medium {
+            background: #fff9c4;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .fit-low {
+            background: #ffccbc;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* Risk Box */
+        .risk-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .risk-title {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .risk-content {
+            font-size: 10pt;
+            line-height: 1.8;
+            color: #856404;
+        }
+
+        /* Linkage Box */
+        .linkage-box {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .linkage-title {
+            font-size: 12pt;
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 12px;
+        }
+
+        .linkage-content {
+            font-size: 10pt;
+            line-height: 1.8;
+            color: #1b5e20;
+        }
+
+        /* Final Decision Box */
+        .final-decision-box {
+            background: linear-gradient(135deg, #e1f5fe 0%, #b3e5fc 100%);
+            border: 3px solid #0288d1;
+            padding: 25px;
+            margin: 30px 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(2, 136, 209, 0.3);
+        }
+
+        .final-decision-title {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #01579b;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .final-decision-content {
+            font-size: 11pt;
+            line-height: 1.9;
+            color: #0277bd;
+            font-weight: 500;
+        }
+
+        /* List Items */
+        .strength-list, .limitation-list {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+
+        .strength-list li {
+            margin: 8px 0;
+            color: #2e7d32;
+            font-weight: 500;
+        }
+
+        .limitation-list li {
+            margin: 8px 0;
+            color: #c62828;
+            font-weight: 500;
+        }
+
+        /* Warning Notice */
+        .warning-notice {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .warning-notice-title {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #c62828;
+            margin-bottom: 8px;
+        }
+
+        .warning-notice-content {
+            font-size: 10pt;
+            line-height: 1.7;
+            color: #b71c1c;
+        }
+    </style>
+</head>
+<body>
+    <!-- Footer on all pages -->
+    <div class="report-footer">
+        ⓒ ZeroSite by AntennaHoldings | Natai Heum
+    </div>
+
+    <!-- Page 1: Cover -->
+    <div class="cover-page">
+        <div class="company-logo">ZEROSITE</div>
+        <div class="main-title">LH 신축매입임대</div>
+        <div class="sub-title">공급유형 결정 보고서</div>
+        <div class="report-type-badge">의사결정 근거 문서 (Not 추천서)</div>
+        
+        <div class="report-info-box">
+            <div class="report-info-row">
+                <div class="report-info-label">보고서 번호</div>
+                <div class="report-info-value">{{ report_id }}</div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">대상지 주소</div>
+                <div class="report-info-value">{{ project_address }}</div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">대지 규모</div>
+                <div class="report-info-value">{{ project_scale }}</div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">분석 기준일</div>
+                <div class="report-info-value">{{ analysis_date }}</div>
+            </div>
+            <div class="report-info-row">
+                <div class="report-info-label">최종 결정 유형</div>
+                <div class="report-info-value" style="color: #0066cc; font-weight: bold; font-size: 12pt;">
+                    {{ selected_supply_type }}
+                </div>
+            </div>
+        </div>
+        
+        <div class="company-name">AntennaHoldings</div>
+        <div class="company-contact">
+            ZeroSite Real Estate Analysis Platform<br>
+            서울시 강남구 테헤란로 427 위워크타워<br>
+            analysis@antennaholdings.com
+        </div>
+    </div>
+
+    <!-- Page 2: Report Overview & Executive Summary -->
+    <div class="content-page">
+        <div class="page-title">I. 보고서의 성격 및 위상</div>
+        
+        <div class="section">
+            <div class="section-title">1. 보고서의 목적</div>
+            <p style="line-height: 1.8; margin: 15px 0;">
+                본 보고서는 LH 신축매입임대 사업의 <strong>공급유형 결정을 위한 의사결정 근거서</strong>이다.
+                이는 단순한 분석 리포트나 추천서가 아니라, LH 내부 검토·결재에 바로 활용되는 <strong>결정 문서</strong>이며,
+                공급유형의 직접적 결정이 이후 M4(설계 규모), M5(사업성), M6(LH 심사) 단계에 결정적 영향을 미친다.
+            </p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">2. 보고서의 세 가지 성격</div>
+            
+            <div class="analysis-box">
+                <div class="analysis-box-title">① 정책 보고서</div>
+                <div class="analysis-box-content">
+                    LH 공공주택 특별법 및 신축매입임대 사업 지침을 기반으로 하며,
+                    청년·신혼·다자녀·고령자 등 정책 대상별 공급 조건을 법적·정책적 맥락에서 분석한다.
+                </div>
+            </div>
+
+            <div class="analysis-box">
+                <div class="analysis-box-title">② 입지·수요 분석 보고서</div>
+                <div class="analysis-box-content">
+                    대상지의 교통·생활 인프라·인구 구조를 수요자 관점에서 해석하고,
+                    각 공급유형별로 실제 입주 수요가 발생할 수 있는지를 정성·정량 통합 분석으로 판단한다.
+                </div>
+            </div>
+
+            <div class="analysis-box">
+                <div class="analysis-box-title">③ 사업 의사결정 보고서</div>
+                <div class="analysis-box-content">
+                    공급유형 결정은 이후 M4(건축 규모), M5(사업성 분석), M6(LH 심사) 단계의 전제 조건이 되므로,
+                    사업 전체의 성패를 좌우하는 가장 중요한 1차 판단이다.
+                </div>
+            </div>
+        </div>
+
+        <div class="warning-notice">
+            <div class="warning-notice-title">⚠️ 중요: 공급유형 결정의 파급 효과</div>
+            <div class="warning-notice-content">
+                공급유형 결정은 다음 사항들을 전면적으로 결정한다:<br>
+                • <strong>설계 방향</strong>: 청년형은 소형 중심, 신혼형은 중형 포함<br>
+                • <strong>평형 구성</strong>: 전용면적 범위 및 세대 구성비<br>
+                • <strong>공용시설 배치</strong>: 커뮤니티 시설, 어린이 놀이터, 경로당 등<br>
+                • <strong>주차 계획</strong>: 법정 주차 대수 및 완화 가능성<br>
+                • <strong>LH 심사 기준</strong>: 공급유형별로 심사 항목이 상이함
+            </div>
+        </div>
+
+        <div class="executive-summary">
+            <div class="executive-summary-title">📌 Executive Summary</div>
+            <div class="executive-summary-content">
+                {{ executive_conclusion }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 3: Location Analysis (Interpretive) -->
+    <div class="content-page">
+        <div class="page-title">II. 대상지 입지 분석 (해석형)</div>
+        
+        <div class="warning-notice">
+            <div class="warning-notice-title">📍 분석 원칙</div>
+            <div class="warning-notice-content">
+                본 섹션은 POI 개수 나열 방식을 폐기하고, <strong>수요자 관점의 입지 해석</strong>을 제공한다.
+                교통은 역세권 여부가 아닌 '실제 출퇴근 가능성'을, 생활 인프라는 '청년형 필수 조건 충족 여부'를 중심으로 서술한다.
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">1. 교통 접근성 (직주근접 가능성 중심)</div>
+            <p style="line-height: 1.8; margin: 15px 0;">
+                {{ location_analysis.transport_access_narrative }}
+            </p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">2. 생활 인프라 (필수 vs 선택 인프라 구분)</div>
+            <p style="line-height: 1.8; margin: 15px 0;">
+                {{ location_analysis.lifestyle_infra_narrative }}
+            </p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">3. 청년형 적합성 종합 판단</div>
+            <p style="line-height: 1.8; margin: 15px 0;">
+                {{ location_analysis.youth_suitability_narrative }}
+            </p>
+        </div>
+
+        <div class="section">
+            <div class="subsection-title">📊 입지 강점 (Strengths)</div>
+            <ul class="strength-list">
+                {% for strength in location_analysis.location_strengths %}
+                <li>{{ strength }}</li>
+                {% endfor %}
+            </ul>
+
+            <div class="subsection-title">⚠️ 입지 한계 (Limitations)</div>
+            <ul class="limitation-list">
+                {% for limitation in location_analysis.location_limitations %}
+                <li>{{ limitation }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Page 4: Demographic Analysis -->
+    <div class="content-page">
+        <div class="page-title">III. 인구·수요 구조 분석</div>
+        
+        <div class="section">
+            <div class="section-title">1. 인구 구조 분석</div>
+            <p style="line-height: 1.8; margin: 15px 0;">
+                {{ demographic_analysis.population_structure_narrative }}
+            </p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">2. 가구 구성 분석</div>
+            <p style="line-height: 1.8; margin: 15px 0;">
+                {{ demographic_analysis.household_composition_narrative }}
+            </p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">3. 임대 시장 구조</div>
+            <p style="line-height: 1.8; margin: 15px 0;">
+                {{ demographic_analysis.rental_market_narrative }}
+            </p>
+        </div>
+
+        <div class="final-decision-box">
+            <div class="final-decision-title">💡 수요 지속성 결론</div>
+            <div class="final-decision-content">
+                {{ demographic_analysis.demand_sustainability_conclusion }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 5: Supply Type Comparison -->
+    <div class="content-page">
+        <div class="page-title">IV. 공급유형별 비교 분석 (탈락 사유 중심)</div>
+        
+        <div class="warning-notice">
+            <div class="warning-notice-title">📋 비교 원칙</div>
+            <div class="warning-notice-content">
+                단순 점수표를 제거하고, <strong>각 공급유형별 탈락 사유를 명확히</strong> 제시한다.
+                청년형의 유리함, 신혼형의 불리함, 다자녀형의 한계, 고령자형의 부적합성을 논리적으로 서술한다.
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">1. 청년형 (Youth Type) - 최적 유형</div>
+            <div class="analysis-box">
+                <div class="analysis-box-content">
+                    {{ supply_type_comparison.youth_type_analysis }}
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">2. 신혼희망타운 I형 - 차선 (열위)</div>
+            <div class="analysis-box">
+                <div class="analysis-box-content">
+                    {{ supply_type_comparison.newlywed_1_rejection }}
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">3. 신혼희망타운 II형 - 부적합</div>
+            <div class="analysis-box">
+                <div class="analysis-box-content">
+                    {{ supply_type_comparison.newlywed_2_rejection }}
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">4. 다자녀형 - 부적합</div>
+            <div class="analysis-box">
+                <div class="analysis-box-content">
+                    {{ supply_type_comparison.multi_child_rejection }}
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">5. 고령자형 - 부적합</div>
+            <div class="analysis-box">
+                <div class="analysis-box-content">
+                    {{ supply_type_comparison.senior_rejection }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 6: Comparison Table -->
+    <div class="content-page">
+        <div class="page-title">IV-2. 공급유형 비교 종합표</div>
+        
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>공급유형</th>
+                    <th>입지 적합도</th>
+                    <th>수요 적합도</th>
+                    <th>사업 적합도</th>
+                    <th>LH 우선순위</th>
+                    <th>종합 결론</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for type in supply_type_comparison.comparison_table %}
+                <tr>
+                    <td style="font-weight: bold; text-align: center;">{{ type.type }}</td>
+                    <td class="{% if type.location_fit == '상' %}fit-high{% elif type.location_fit == '중' %}fit-medium{% else %}fit-low{% endif %}">
+                        {{ type.location_fit }}<br>
+                        <small style="font-size: 8pt; font-weight: normal;">{{ type.location_reason }}</small>
+                    </td>
+                    <td class="{% if type.demand_fit == '상' %}fit-high{% elif type.demand_fit == '중' %}fit-medium{% else %}fit-low{% endif %}">
+                        {{ type.demand_fit }}<br>
+                        <small style="font-size: 8pt; font-weight: normal;">{{ type.demand_reason }}</small>
+                    </td>
+                    <td class="{% if type.business_fit == '상' %}fit-high{% elif type.business_fit == '중' %}fit-medium{% else %}fit-low{% endif %}">
+                        {{ type.business_fit }}<br>
+                        <small style="font-size: 8pt; font-weight: normal;">{{ type.business_reason }}</small>
+                    </td>
+                    <td class="{% if type.lh_priority == '상' %}fit-high{% elif type.lh_priority == '중' %}fit-medium{% else %}fit-low{% endif %}">
+                        {{ type.lh_priority }}<br>
+                        <small style="font-size: 8pt; font-weight: normal;">{{ type.lh_reason }}</small>
+                    </td>
+                    <td style="font-weight: bold; text-align: center; {% if type.type == '청년형' %}color: #2e7d32;{% else %}color: #c62828;{% endif %}">
+                        {{ type.conclusion }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Page 7: M4/M5/M6 Linkage -->
+    <div class="content-page">
+        <div class="page-title">V. M4·M5·M6 연결 논리 (ZeroSite 핵심)</div>
+        
+        <div class="linkage-box">
+            <div class="linkage-title">🔗 M4 연결: 건축 규모 판단</div>
+            <div class="linkage-content">
+                {{ module_linkage.m4_linkage }}
+            </div>
+        </div>
+
+        <div class="linkage-box">
+            <div class="linkage-title">🔗 M5 연결: 사업성 분석</div>
+            <div class="linkage-content">
+                {{ module_linkage.m5_linkage }}
+            </div>
+        </div>
+
+        <div class="linkage-box">
+            <div class="linkage-title">🔗 M6 연결: LH 종합 심사</div>
+            <div class="linkage-content">
+                {{ module_linkage.m6_linkage }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 8: Final Decision -->
+    <div class="content-page">
+        <div class="page-title">VI. 종합 판단 및 최종 결정</div>
+        
+        <div class="final-decision-box">
+            <div class="final-decision-title">✅ 최종 결정</div>
+            <div class="final-decision-content">
+                {{ final_decision.final_decision }}
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">리스크 요인 및 관리 방안</div>
+            {% for risk in final_decision.risk_factors %}
+            <div class="risk-box">
+                <div class="risk-title">⚠️ {{ risk.risk }}</div>
+                <div class="risk-content">
+                    <strong>관리 방안:</strong> {{ risk.mitigation }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="final-decision-box" style="margin-top: 40px;">
+            <div class="final-decision-title">🎯 결론의 확신도</div>
+            <div class="final-decision-content" style="text-align: center; font-size: 13pt;">
+                {{ final_decision.decision_confidence }}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
