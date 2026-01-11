@@ -745,157 +745,391 @@ def _generate_m2_content(summary: Dict, details: Dict) -> str:
 
 
 def _generate_m3_content(summary: Dict, details: Dict) -> str:
-    """Generate M3 (Housing Type) report content"""
+    """Generate M3 (Housing Type) report content - Narrative Style (Classic Format)
+    
+    논문 스타일의 서술형 보고서로 작성:
+    - 분석 배경 및 목적
+    - 상세 입지 분석
+    - 수요 분석 및 근거
+    - 유형별 비교 검토
+    - 종합 판단 및 권고사항
+    """
     
     selected_type = summary.get("selected_type", "N/A")
     selected_type_name = summary.get("selected_type_name", selected_type)
-    confidence = summary.get("confidence_pct")
+    confidence = summary.get("confidence_pct", 0)
     demand_score = summary.get("demand_score", 0)
+    location_score = summary.get("location_score", 0)
+    
+    # POI 데이터
+    poi_data = details.get("poi_analysis", {})
+    subway_count = poi_data.get("subway_count", 0)
+    bus_count = poi_data.get("bus_stop_count", 0)
+    convenience_count = poi_data.get("convenience_count", 0)
+    hospital_count = poi_data.get("hospital_count", 0)
+    school_count = poi_data.get("school_count", 0)
+    park_count = poi_data.get("park_count", 0)
+    
+    # 유형별 점수
+    type_scores = details.get("type_scores", {})
     
     content = f"""
-    <div class="section">
-        <h2 class="section-title">🏘️ 공급 유형 판단 결과</h2>
-        <div class="highlight-box">
-            <h3>권장 공급 유형</h3>
-            <div style="font-size: 36px; font-weight: 700; color: #667eea; margin: 15px 0;">
-                {selected_type_name}
-            </div>
-            <p style="color: #666;">
-                수요 점수: {format_percentage(demand_score) if demand_score else 'N/A'} | 신뢰도: {format_percentage(confidence)}
+    <div class="section" style="page-break-after: avoid;">
+        <h2 class="section-title">I. 보고서 개요</h2>
+        <div style="line-height: 2.0; text-align: justify;">
+            <p style="text-indent: 2em; margin-bottom: 15px;">
+                본 보고서는 LH(한국토지주택공사) 신축매입임대사업을 위한 공급 유형 결정을 목적으로 작성되었습니다. 
+                대상지의 입지적 특성, 주변 생활인프라 현황, 교통 접근성, 인구 구조 등을 종합적으로 분석하여 
+                최적의 주택 공급 유형을 도출하고자 합니다.
+            </p>
+            <p style="text-indent: 2em; margin-bottom: 15px;">
+                분석 방법론으로는 POI(Point of Interest) 기반 입지 분석, 통계청 인구 데이터 분석, 
+                주변 부동산 시장 동향 분석을 활용하였으며, 각 공급 유형별 적합도를 정량적으로 평가하였습니다.
+                분석 신뢰도는 <strong>{format_percentage(confidence)}</strong>로 평가되었습니다.
             </p>
         </div>
     </div>
     
-    <div class="section">
-        <h2 class="section-title">📊 유형별 점수 분석</h2>
-        <p>각 공급 유형별 적합성을 종합 평가하였습니다.</p>
+    <div class="section" style="page-break-after: avoid;">
+        <h2 class="section-title">II. 대상지 입지 분석</h2>
+        
+        <h3 class="section-subtitle" style="margin-top: 25px;">2.1 교통 접근성 분석</h3>
+        <div style="line-height: 2.0; text-align: justify;">
+            <p style="text-indent: 2em; margin-bottom: 15px;">
+                대상지의 교통 접근성을 평가한 결과, 반경 1km 이내에 지하철역 <strong>{subway_count}개소</strong>, 
+                버스정류장 <strong>{bus_count}개소</strong>가 위치하고 있습니다. 
+    """
+    
+    # 교통 접근성 평가 서술
+    if subway_count >= 2:
+        content += """
+                특히 복수의 지하철역이 인접해 있어 대중교통 이용이 매우 편리한 역세권 입지로 평가됩니다.
+                이는 직장과 주거의 분리가 뚜렷한 청년층 및 신혼부부 세대에게 높은 선호도를 보일 것으로 판단됩니다.
+        """
+    elif subway_count == 1:
+        content += """
+                지하철역이 도보 거리 내에 위치하여 출퇴근 접근성이 양호한 편입니다.
+                버스 노선망도 잘 갖추어져 있어 전반적인 대중교통 이용 여건이 우수합니다.
+        """
+    else:
+        content += """
+                지하철역은 인접하지 않으나, 버스 노선이 잘 발달되어 있어 기본적인 대중교통 접근성은 확보되어 있습니다.
+                다만, 지하철 이용을 선호하는 청년층에게는 다소 불리할 수 있습니다.
+        """
+    
+    content += """
+            </p>
+        </div>
+        
+        <h3 class="section-subtitle" style="margin-top: 25px;">2.2 생활편의시설 분석</h3>
+        <div style="line-height: 2.0; text-align: justify;">
+            <p style="text-indent: 2em; margin-bottom: 15px;">
+                일상생활에 필수적인 생활편의시설의 분포 현황을 조사한 결과, 반경 500m 이내에 
+                편의점 <strong>{convenience_count}개소</strong>, 병원 <strong>{hospital_count}개소</strong>가 위치하며, 
+                반경 1km 이내에 학교 <strong>{school_count}개소</strong>, 공원 <strong>{park_count}개소</strong>가 분포하고 있습니다.
+            </p>
+    """
+    
+    # 생활편의시설 평가 서술
+    if convenience_count >= 8:
+        content += """
+            <p style="text-indent: 2em; margin-bottom: 15px;">
+                특히 편의점 밀도가 매우 높아 1인 가구 및 맞벌이 가구의 생활 편의성이 탁월합니다.
+                이는 청년층 및 신혼부부가 선호하는 입지 조건으로, 해당 세대를 타겟으로 한 공급 유형이 적합할 것으로 판단됩니다.
+            </p>
+        """
+    elif convenience_count >= 4:
+        content += """
+            <p style="text-indent: 2em; margin-bottom: 15px;">
+                편의점, 슈퍼마켓 등 기본 생활편의시설이 적절히 분포되어 있어 일상생활에 큰 불편함이 없을 것으로 예상됩니다.
+            </p>
+        """
+    
+    if school_count >= 3:
+        content += """
+            <p style="text-indent: 2em; margin-bottom: 15px;">
+                교육시설 접근성이 우수하여 자녀를 둔 신혼부부 또는 일반 가구에게 매력적인 입지입니다.
+                초등학교, 중학교 등이 도보 거리 내에 위치하여 자녀 통학에 유리합니다.
+            </p>
+        """
+    
+    if park_count >= 2:
+        content += """
+            <p style="text-indent: 2em; margin-bottom: 15px;">
+                공원 및 녹지 공간이 인근에 다수 분포하여 쾌적한 주거환경을 제공합니다.
+                고령자 또는 가족 단위 거주자의 건강 및 여가 활동에 긍정적인 영향을 미칠 것으로 기대됩니다.
+            </p>
+        """
+    
+    content += """
+        </div>
+        
+        <div class="info-grid" style="margin-top: 25px;">
+            <div class="info-card">
+                <div class="info-card-title">🚇 지하철역</div>
+                <div class="info-card-value">{subway_count}개소</div>
+                <div style="font-size: 12px; color: #888; margin-top: 5px;">반경 1km</div>
+            </div>
+            <div class="info-card">
+                <div class="info-card-title">🚌 버스정류장</div>
+                <div class="info-card-value">{bus_count}개소</div>
+                <div style="font-size: 12px; color: #888; margin-top: 5px;">반경 500m</div>
+            </div>
+            <div class="info-card">
+                <div class="info-card-title">🏪 편의점</div>
+                <div class="info-card-value">{convenience_count}개소</div>
+                <div style="font-size: 12px; color: #888; margin-top: 5px;">반경 500m</div>
+            </div>
+            <div class="info-card">
+                <div class="info-card-title">🏥 병원</div>
+                <div class="info-card-value">{hospital_count}개소</div>
+                <div style="font-size: 12px; color: #888; margin-top: 5px;">반경 1km</div>
+            </div>
+            <div class="info-card">
+                <div class="info-card-title">🏫 학교</div>
+                <div class="info-card-value">{school_count}개소</div>
+                <div style="font-size: 12px; color: #888; margin-top: 5px;">반경 1km</div>
+            </div>
+            <div class="info-card">
+                <div class="info-card-title">🌳 공원</div>
+                <div class="info-card-value">{park_count}개소</div>
+                <div style="font-size: 12px; color: #888; margin-top: 5px;">반경 1km</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section" style="page-break-before: always;">
+        <h2 class="section-title">III. 공급 유형별 적합성 평가</h2>
+        
+        <div style="line-height: 2.0; text-align: justify; margin-bottom: 25px;">
+            <p style="text-indent: 2em; margin-bottom: 15px;">
+                LH 신축매입임대사업의 주요 공급 유형(청년형, 신혼부부형, 고령자형 등)에 대하여 
+                대상지의 입지 특성, 주변 인구 구조, 수요 예측 등을 종합적으로 고려하여 각 유형별 적합도를 평가하였습니다.
+                평가 항목으로는 교통 접근성, 생활편의시설, 주변 인구 특성, 시장 수요 등을 포함하였으며,
+                각 항목별 가중치를 적용하여 정량적 점수를 산출하였습니다.
+            </p>
+        </div>
         
         <table class="data-table">
-            <tr>
-                <th>공급 유형</th>
-                <th>적합도 점수</th>
-            </tr>
+            <thead>
+                <tr>
+                    <th style="width: 40%;">공급 유형</th>
+                    <th style="width: 20%;">적합도 점수</th>
+                    <th style="width: 40%;">주요 평가 근거</th>
+                </tr>
+            </thead>
+            <tbody>
     """
     
-    # Add type scores
-    type_scores = details.get("type_scores", {})
-    if type_scores:
-        for type_key, type_data in type_scores.items():
-            type_name = type_data.get("name", type_key)
-            score = type_data.get("score", 0)
-            content += f"""
-            <tr>
-                <td>{type_name}</td>
-                <td style="font-weight: 700; color: {'#667eea' if score > 70 else '#888'};">
-                    {format_percentage(score) if score else 'N/A'}
-                </td>
-            </tr>
-            """
-    else:
-        content += """
-            <tr>
-                <td colspan="2" style="text-align: center; color: #999;">유형별 점수 데이터 없음</td>
-            </tr>
-        """
-    
-    content += """
-        </table>
-    </div>
-    
-    <div class="section">
-        <h2 class="section-title">🗺️ POI 분석 (입지 특성)</h2>
-        <p>주변 생활편의시설 및 교통 접근성을 분석하였습니다.</p>
-        
-        <div class="info-grid">
-    """
-    
-    # Add POI analysis
-    poi_data = details.get("poi_analysis", {})
-    poi_labels = {
-        "subway_count": "🚇 지하철역",
-        "bus_stop_count": "🚌 버스정류장",
-        "convenience_count": "🏪 편의점",
-        "hospital_count": "🏥 병원",
-        "school_count": "🏫 학교",
-        "park_count": "🌳 공원"
+    # 유형별 점수 및 평가 서술
+    type_explanations = {
+        "YOUTH_TYPE": "청년층 1인 가구 특성상 역세권 및 편의시설 접근성이 중요하며, 대상지는 이러한 조건을 충족함",
+        "NEWLYWED_TYPE": "신혼부부 세대는 교육시설 및 공원 접근성을 중시하며, 중소형 평형 선호도가 높음",
+        "SENIOR_TYPE": "고령자는 병원 접근성 및 조용한 주거환경을 선호하나, 대상지는 상대적으로 활성화된 지역",
+        "FAMILY_TYPE": "일반 가족 세대는 학교 및 대형 편의시설 접근성을 중시하며, 중대형 평형 선호",
+        "GENERAL_TYPE": "일반 공급 유형으로 다양한 세대 구성 가능"
     }
     
-    if poi_data:
-        for key, label in poi_labels.items():
-            value = poi_data.get(key, 0)
+    if type_scores:
+        sorted_types = sorted(type_scores.items(), key=lambda x: x[1].get("score", 0), reverse=True)
+        for type_key, type_data in sorted_types:
+            type_name = type_data.get("name", type_key)
+            score = type_data.get("score", 0)
+            explanation = type_explanations.get(type_key, "입지 특성 및 수요 분석 결과 기반")
+            
+            score_color = "#667eea" if score >= 75 else "#f59e0b" if score >= 60 else "#888"
             content += f"""
-        <div class="info-card">
-            <div class="info-card-title">{label}</div>
-            <div class="info-card-value">{value}개</div>
-        </div>
+                <tr>
+                    <td style="font-weight: 600;">{type_name}</td>
+                    <td style="font-weight: 700; font-size: 18px; color: {score_color}; text-align: center;">
+                        {format_percentage(score) if score else 'N/A'}
+                    </td>
+                    <td style="font-size: 13px; line-height: 1.6;">{explanation}</td>
+                </tr>
             """
     else:
         content += """
-        <div class="info-card">
-            <div class="info-card-title">⚠️ POI 데이터 없음</div>
-            <div class="info-card-value">N/A</div>
-        </div>
+                <tr>
+                    <td colspan="3" style="text-align: center; color: #999; padding: 30px;">
+                        유형별 상세 점수 데이터가 없습니다. 파이프라인 분석 결과를 확인해주세요.
+                    </td>
+                </tr>
         """
     
     content += """
+            </tbody>
+        </table>
+        
+        <div style="line-height: 2.0; text-align: justify; margin-top: 25px;">
+            <p style="text-indent: 2em; margin-bottom: 15px;">
+                위 표에 나타난 바와 같이, 각 공급 유형별 적합도 점수는 입지 특성, 주변 인프라, 예상 수요층 등을 종합적으로 반영한 결과입니다.
+                최고 점수를 기록한 유형이 가장 적합한 공급 유형으로 판단되나, 
+                실제 사업 추진 시에는 LH의 사업 정책, 예산, 지역 수요 동향 등을 추가로 고려하여 최종 결정할 필요가 있습니다.
+            </p>
         </div>
     </div>
+    
+    <div class="section" style="page-break-before: always;">
+        <h2 class="section-title">IV. 종합 판단 및 권고사항</h2>
+        
+        <div class="highlight-box" style="margin-bottom: 25px;">
+            <h3 style="color: #667eea; margin-bottom: 15px;">최종 권장 공급 유형</h3>
+            <div style="font-size: 32px; font-weight: 700; color: #667eea; margin: 15px 0;">
+                {selected_type_name}
+            </div>
+            <div style="font-size: 14px; color: #666; margin-top: 10px;">
+                수요 적합도: {format_percentage(demand_score) if demand_score else 'N/A'} | 
+                분석 신뢰도: {format_percentage(confidence)} | 
+                입지 점수: {format_percentage(location_score) if location_score else 'N/A'}
+            </div>
+        </div>
+        
+        <h3 class="section-subtitle" style="margin-top: 30px;">4.1 판단 근거</h3>
+        <div style="line-height: 2.0; text-align: justify;">
+            <p style="text-indent: 2em; margin-bottom: 15px;">
+                종합 분석 결과, 대상지는 <strong>{selected_type_name}</strong> 공급 유형이 가장 적합한 것으로 평가되었습니다.
+                이는 다음과 같은 입지적 특성 및 수요 분석 결과에 기반합니다:
+            </p>
     """
     
-    # Add strengths/weaknesses/recommendations
+    # 강점 분석
     strengths = details.get("strengths", [])
-    weaknesses = details.get("weaknesses", [])
-    recommendations = details.get("recommendations", [])
-    
     if strengths:
         content += """
-    <div class="section">
-        <h2 class="section-title">✅ 강점</h2>
-        <ul style="line-height: 2;">
+            <div style="background: #f0fdf4; border-left: 4px solid #22c55e; padding: 20px; margin: 20px 0;">
+                <h4 style="color: #16a34a; margin-bottom: 15px;">✅ 입지 강점 요인</h4>
+                <ul style="line-height: 2.2; padding-left: 20px;">
         """
         for strength in strengths:
-            content += f"<li>{strength}</li>"
+            content += f"<li style='margin-bottom: 10px;'>{strength}</li>"
         content += """
-        </ul>
-    </div>
+                </ul>
+            </div>
+        """
+    else:
+        # 기본 강점 분석 (POI 데이터 기반)
+        content += """
+            <div style="background: #f0fdf4; border-left: 4px solid #22c55e; padding: 20px; margin: 20px 0;">
+                <h4 style="color: #16a34a; margin-bottom: 15px;">✅ 입지 강점 요인</h4>
+                <ul style="line-height: 2.2; padding-left: 20px;">
+        """
+        if subway_count >= 2:
+            content += "<li style='margin-bottom: 10px;'>복수의 지하철역이 인접하여 교통 접근성이 탁월함</li>"
+        if convenience_count >= 8:
+            content += "<li style='margin-bottom: 10px;'>편의점 등 생활편의시설이 풍부하여 1인 가구 생활에 최적화됨</li>"
+        if school_count >= 3:
+            content += "<li style='margin-bottom: 10px;'>교육시설 접근성이 우수하여 자녀 교육 여건이 양호함</li>"
+        if park_count >= 2:
+            content += "<li style='margin-bottom: 10px;'>공원 및 녹지 공간이 인접하여 쾌적한 주거환경 제공</li>"
+        content += """
+                </ul>
+            </div>
         """
     
+    # 약점 분석
+    weaknesses = details.get("weaknesses", [])
     if weaknesses:
         content += """
-    <div class="section">
-        <h2 class="section-title">⚠️ 약점</h2>
-        <ul style="line-height: 2;">
+            <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 20px; margin: 20px 0;">
+                <h4 style="color: #dc2626; margin-bottom: 15px;">⚠️ 입지 약점 요인 및 개선 방안</h4>
+                <ul style="line-height: 2.2; padding-left: 20px;">
         """
         for weakness in weaknesses:
-            content += f"<li>{weakness}</li>"
+            content += f"<li style='margin-bottom: 10px;'>{weakness}</li>"
         content += """
-        </ul>
-    </div>
-        """
-    
-    content += f"""
-    <div class="section">
-        <h2 class="section-title">💡 권장사항</h2>
-        <div class="highlight-box">
-    """
-    
-    if recommendations:
-        content += "<ul style='line-height: 2;'>"
-        for rec in recommendations:
-            content += f"<li>{rec}</li>"
-        content += "</ul>"
-    else:
-        content += f"""
-            <p style="line-height: 1.8;">
-                입지 분석 결과, <strong>{selected_type_name}</strong> 공급이 가장 적합할 것으로 판단됩니다.
-                주변 생활 패턴과 인구 구조를 고려할 때 해당 유형에 대한 수요가 높을 것으로 예상됩니다.
-            </p>
+                </ul>
+            </div>
         """
     
     content += """
+            <p style="text-indent: 2em; margin-bottom: 15px; margin-top: 25px;">
+                이러한 입지 특성을 종합적으로 고려할 때, 대상지는 {selected_type_name}의 수요층이 선호하는 조건을 
+                대부분 충족하고 있으며, 향후 안정적인 임대 수요가 예상됩니다.
+            </p>
+        </div>
+        
+        <h3 class="section-subtitle" style="margin-top: 30px;">4.2 사업 추진 시 권장사항</h3>
+        <div style="line-height: 2.0; text-align: justify;">
+    """
+    
+    # 권장사항
+    recommendations = details.get("recommendations", [])
+    if recommendations:
+        content += "<ul style='line-height: 2.2; padding-left: 20px; margin-top: 15px;'>"
+        for rec in recommendations:
+            content += f"<li style='margin-bottom: 15px;'>{rec}</li>"
+        content += "</ul>"
+    else:
+        # 기본 권장사항 (유형별)
+        if "청년" in selected_type_name or "YOUTH" in selected_type:
+            content += """
+            <ul style='line-height: 2.2; padding-left: 20px; margin-top: 15px;'>
+                <li style='margin-bottom: 15px;'>
+                    <strong>평형 구성:</strong> 소형 평형(전용면적 30~45㎡) 위주로 설계하여 청년층의 경제적 부담을 최소화할 것을 권장합니다.
+                </li>
+                <li style='margin-bottom: 15px;'>
+                    <strong>공용시설:</strong> 공유 오피스, 라운지 등 1인 가구를 위한 커뮤니티 시설을 배치하여 거주 만족도를 향상시킬 필요가 있습니다.
+                </li>
+                <li style='margin-bottom: 15px;'>
+                    <strong>주차시설:</strong> 청년층의 차량 보유율을 고려하여 법정 주차 대수보다 축소된 주차장 계획이 가능합니다.
+                </li>
+            </ul>
+            """
+        elif "신혼" in selected_type_name or "NEWLYWED" in selected_type:
+            content += """
+            <ul style='line-height: 2.2; padding-left: 20px; margin-top: 15px;'>
+                <li style='margin-bottom: 15px;'>
+                    <strong>평형 구성:</strong> 중소형 평형(전용면적 45~60㎡) 중심으로 계획하며, 향후 자녀 출산을 고려한 확장 가능 구조를 권장합니다.
+                </li>
+                <li style='margin-bottom: 15px;'>
+                    <strong>공용시설:</strong> 육아 지원 시설(놀이방, 유모차 보관소 등)을 배치하여 신혼부부의 편의를 도모할 필요가 있습니다.
+                </li>
+                <li style='margin-bottom: 15px;'>
+                    <strong>주차시설:</strong> 세대당 1대 이상의 주차 공간 확보를 권장합니다.
+                </li>
+            </ul>
+            """
+        else:
+            content += """
+            <ul style='line-height: 2.2; padding-left: 20px; margin-top: 15px;'>
+                <li style='margin-bottom: 15px;'>
+                    <strong>평형 구성:</strong> 대상 수요층의 특성을 고려한 최적 평형을 선정하되, 시장 수요 변동성을 고려하여 다양한 평형 믹스를 권장합니다.
+                </li>
+                <li style='margin-bottom: 15px;'>
+                    <strong>공용시설:</strong> 주민 공동 시설을 적절히 배치하여 거주 만족도를 제고할 필요가 있습니다.
+                </li>
+                <li style='margin-bottom: 15px;'>
+                    <strong>추가 검토:</strong> 사업 추진 전 상세한 시장 조사 및 수요 분석을 재차 실시할 것을 권장합니다.
+                </li>
+            </ul>
+            """
+    
+    content += """
+        </div>
+        
+        <h3 class="section-subtitle" style="margin-top: 30px;">4.3 결론</h3>
+        <div style="line-height: 2.0; text-align: justify;">
+            <p style="text-indent: 2em; margin-bottom: 15px;">
+                본 분석에서는 대상지의 입지 특성, 주변 인프라, 교통 접근성, 예상 수요층 등을 종합적으로 검토한 결과,
+                <strong>{selected_type_name}</strong> 공급이 가장 적합한 것으로 판단하였습니다.
+                다만, 최종 사업 추진 시에는 LH의 사업 정책 방향, 예산 제약, 지역 내 경쟁 공급 현황 등을 추가로 고려하여
+                의사결정을 진행할 것을 권고합니다.
+            </p>
+            <p style="text-indent: 2em; margin-bottom: 15px;">
+                또한, 본 보고서의 분석 결과는 현재 시점의 데이터 및 시장 상황을 기반으로 하고 있으므로,
+                사업 착수 시점에 변동된 여건이 있을 경우 재분석이 필요할 수 있습니다.
+            </p>
+        </div>
+        
+        <div style="background: #eff6ff; border: 1px solid #3b82f6; padding: 20px; margin-top: 30px; border-radius: 8px;">
+            <p style="margin: 0; line-height: 1.8; color: #1e40af;">
+                <strong>📌 참고사항:</strong> 본 보고서는 ZeroSite 분석 엔진을 통해 생성된 결과이며, 
+                실제 사업 추진 시에는 현장 실사, 추가 시장 조사, 관계 기관 협의 등을 종합적으로 고려하여 
+                최종 의사결정을 내려야 합니다.
+            </p>
         </div>
     </div>
-    """
+    """.replace("{selected_type_name}", selected_type_name)
     
     return content
 
