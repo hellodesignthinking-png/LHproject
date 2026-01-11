@@ -12,6 +12,9 @@ import { M4ResultsPage } from './pages/M4ResultsPage'
 import { M5ResultsPage } from './pages/M5ResultsPage'
 import { M6ResultsPage } from './pages/M6ResultsPage'
 
+// Phase 3: Reporting & External Submission OS
+import FinalReportPage from './pages/FinalReportPage'
+
 /**
  * PHASE 2 COMPLETE: Human-Verified Decision OS
  * 
@@ -38,6 +41,9 @@ function App() {
         <Route path="/projects/:projectId/modules/m4/results" element={<M4ResultsPage />} />
         <Route path="/projects/:projectId/modules/m5/results" element={<M5ResultsPage />} />
         <Route path="/projects/:projectId/modules/m6/results" element={<M6ResultsPage />} />
+        
+        {/* Phase 3: Final Report & Export (REPORTING OS) */}
+        <Route path="/projects/:projectId/report" element={<FinalReportPage />} />
         
         {/* DEPRECATED: Legacy routes redirect to Phase 2 workflow */}
         <Route path="/analyze" element={<Navigate to="/projects" replace />} />

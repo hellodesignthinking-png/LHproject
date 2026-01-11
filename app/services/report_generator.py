@@ -1,504 +1,271 @@
 """
-LH 신축매입약정 사업 전문 보고서 생성 서비스
+ZeroSite Report Generator Service
+==================================
+
+Aggregates M1-M6 analysis data into comprehensive reports.
+
+Author: ZeroSite Phase 3 Team
+Date: 2026-01-11
+Version: 1.0
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional, List
 from datetime import datetime
-import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
-class ProfessionalReportGenerator:
-    """전문 보고서 생성기"""
+class ReportGenerator:
+    """
+    Generate comprehensive analysis reports from M1-M6 data
+    """
     
     def __init__(self):
-        self.report_date = datetime.now().strftime("%Y.%m")
+        self.report_version = "3.0"
+        logger.info("📊 Report Generator initialized")
     
-    def generate_comprehensive_report(self, analysis_data: Dict[str, Any]) -> str:
+    def generate_final_report(
+        self,
+        project_id: str,
+        project_name: str,
+        address: str,
+        m1_data: Dict[str, Any],
+        m2_data: Dict[str, Any],
+        m3_data: Dict[str, Any],
+        m4_data: Dict[str, Any],
+        m5_data: Dict[str, Any],
+        m6_data: Dict[str, Any],
+        context_id: str,
+        verification_log: Optional[List[Dict]] = None
+    ) -> Dict[str, Any]:
         """
-        종합 보고서 생성
+        Generate final comprehensive report
         
         Args:
-            analysis_data: 분석 결과 데이터
+            project_id: Project identifier
+            project_name: Project name
+            address: Property address
+            m1_data: M1 land information
+            m2_data: M2 valuation data
+            m3_data: M3 housing type data
+            m4_data: M4 building scale data
+            m5_data: M5 feasibility data
+            m6_data: M6 LH review data
+            context_id: Context identifier
+            verification_log: Verification history
             
         Returns:
-            Markdown 형식의 전문 보고서
+            Complete report dictionary
         """
         
-        # 데이터 추출
-        address = analysis_data.get('address', '')
-        land_area = analysis_data.get('land_area', 0)
-        coords = analysis_data.get('coordinates')
-        zone_info = analysis_data.get('zone_info')
-        capacity = analysis_data.get('building_capacity')
-        risks = analysis_data.get('risk_factors', [])
-        demographic = analysis_data.get('demographic_info')
-        demand = analysis_data.get('demand_analysis')
-        summary = analysis_data.get('summary')
+        logger.info(f"📊 Generating final report for project {project_id}")
         
-        # 지역명 추출 (예: "서울특별시 마포구 아현동")
-        location_parts = address.split()
-        district = " ".join(location_parts[:3]) if len(location_parts) >= 3 else address
-        dong_name = location_parts[2] if len(location_parts) > 2 else "해당 지역"
+        # Generate report timestamp
+        generated_at = datetime.now().isoformat()
         
-        # 보고서 생성
-        report = f"""# LH 신축매입약정 사업 대상지 종합 결과보고서
-
-## {address}
-### 청년·신혼 복합형 도시형생활주택
-
-**ZeroSite Urban Research Lab | {self.report_date} Draft**
-
----
-
-## Executive Summary
-
-본 보고서는 **{address}** 일대를 대상으로,
-LH(한국토지주택공사)의 「신축매입약정형 임대주택 사업」 공모 기준에 따라
-입지, 법규, 사업성, 공공성, 수요, 리스크 요인을 종합적으로 검토한 결과를 제시합니다.
-
-### 핵심 판단
-
-{self._generate_executive_summary(summary, demand, risks)}
-
----
-
-## Ⅰ. 대상지 기본 정보 및 개발 개요
-
-### 1. 위치 및 입지환경
-
-대상지는 **{address}**로,
-{self._generate_location_description(coords, demand)}
-
-### 2. 대지 및 법적 현황
-
-| 항목 | 내용 |
-|------|------|
-| **대지면적** | {land_area}㎡ (약 {int(land_area / 3.3)}평) |
-| **용도지역** | {zone_info.zone_type if zone_info else '제2종일반주거지역'} |
-| **건폐율** | {zone_info.building_coverage_ratio if zone_info else 60}% 이하 |
-| **용적률** | {zone_info.floor_area_ratio if zone_info else 200}% 이하 |
-| **지형** | 평탄, 침수 이력 없음 |
-
-### 3. 개발 계획 요약
-
-본 대상지는 **지하 1층~지상 {capacity.floors}층** 규모의 도시형생활주택 **{capacity.units}세대**를 계획합니다.
-
-| 구분 | 내용 |
-|------|------|
-| **건축 구조** | 철근콘크리트 벽식구조 (내진등급 II) |
-| **주택 유형** | 청년형 / 신혼형 복합 |
-| **총 세대수** | {capacity.units}세대 |
-| **세대당 평균면적** | 평균 32.5㎡ |
-| **주차 계획** | 총 {capacity.parking_spaces}대 |
-| **층수** | 지상 {capacity.floors}층 |
-| **연면적** | {capacity.total_floor_area:.2f}㎡ |
-
----
-
-## Ⅱ. LH 공고 기준 적합성 및 리스크 검토
-
-{self._generate_risk_assessment_table(risks, zone_info)}
-
-### 종합 판단
-
-{self._generate_risk_conclusion(risks, summary)}
-
----
-
-## Ⅲ. 입지 및 접근성 분석
-
-### 1. 교통 접근성
-
-{self._generate_accessibility_analysis(demand)}
-
-### 2. 생활 인프라
-
-{self._generate_infrastructure_analysis(demand)}
-
-### 3. 도보권·생활권 분석
-
-대상지를 중심으로 한 500m 도보권 분석(약 7분 이내) 결과,
-주거·교육·상업·여가시설이 균형적으로 입지하고 있으며,
-보행로 폭이 넓고 교통안전시설이 잘 갖춰져 있습니다.
-
-**결론**: 본 입지는 LH의 청년형 주택 선호 입지 요건인 "지하철역 500m 이내,
-생활편의시설 도보 접근 가능 지역" 조건을 충족합니다.
-
----
-
-## Ⅳ. 세대유형별 입지 적합성 및 수요 분석
-
-### 1. 청년형 세대 수요
-
-- **대상지 반경 내 20~30대 비중**: {demographic.youth_ratio if demographic else 30}% 
-- **1인 가구 비율**: {demographic.single_household_ratio if demographic else 31}%
-- **수요 평가**: {demand.recommendation if demand else '적합'}
-
-{self._generate_youth_demand_analysis(demographic, demand)}
-
-### 2. 신혼부부형 세대 수요
-
-- **도심 근무지 접근성**: 우수
-- **생활권 인프라**: 완비
-- **평균 연령 30대 중반 이하 신혼부부층 거주 비율**: 25%
-
-### 3. 수요층 구조 종합
-
-본 입지는 **이중 수요층(청년+신혼)**을 모두 포괄할 수 있는 구조로,
-직주근접형 주거수요와 생활형 주거수요가 교차하는 최적 지점입니다.
-
-**수요 점수**: **{demand.demand_score if demand else 0}/100점**
-
----
-
-## Ⅴ. 분양사례 및 예상 매각가 분석
-
-### 1. 인근 분양사례 비교
-
-{self._generate_comparable_sales_table(address)}
-
-### 2. 매각가 시나리오 분석
-
-{self._generate_valuation_scenarios(capacity, land_area)}
-
----
-
-## Ⅵ. 법규·건축 타당성 및 품질 기준 검토
-
-### 건축 법규 적합성
-
-- **용도지역**: 주거용 건축 가능 ✅
-- **층수 제한**: {capacity.floors}층 계획 (법규 적합) ✅
-- **층간소음 기준**: 슬래브 210mm + 완충재 20mm ✅
-- **소방·피난계획**: 대피공간·스프링클러 전층 설치 ✅
-- **내진설계**: 중요도계수 1.0 / 내진등급 II ✅
-
-### 품질관리 계획
-
-LH 품질관리 매뉴얼에 따라 4단계 검사 체계를 구축합니다:
-
-1. ① **기초단계** → 지반·철근 검사
-2. ② **골조단계** → 구조체 품질 검사
-3. ③ **마감단계** → 설비·마감재 검사
-4. ④**준공단계** → 최종 품질 검증
-
----
-
-## Ⅶ. LH 공고 기준 탈락 사유 및 대응 전략
-
-### 탈락 가능 요인 점검
-
-{self._generate_elimination_factors_check(risks)}
-
-### 종합 평가
-
-✅ **탈락 가능성**: 매우 낮음
-✅ **대응 전략**: 모든 리스크에 대한 대응방안 완비
-✅ **신청 적격성**: 우수
-
----
-
-## Ⅷ. 사업성 및 공공성 종합 평가
-
-### 공공성 측면
-
-본 사업은 청년 및 신혼부부 등 **주거취약 계층의 주거안정**에 기여하는 공공성이 높습니다.
-도심 역세권에 양질의 임대주택 {capacity.units}세대를 공급함으로써,
-주변 직장인과 대학생의 주거 부담을 경감할 수 있습니다.
-
-**임대료 경쟁력**: 시세 대비 70~80% 수준 (LH 매입임대 기준)
-
-### 분양성(임대수요) 측면
-
-- **수요 명확성**: 청년층 중심 높은 임대 경쟁률 예상
-- **공실 위험**: 사실상 없음
-- **장기 안정성**: 확보
-
-### 위험요소 종합
-
-| 위험 요소 | 평가 | 대응 방안 |
-|----------|------|----------|
-| 사업승인 리스크 | 낮음 | SH공사 대체 시나리오 보유 |
-| 공사비 상승 | 중간 | 예비비 확보, 표준내역 관리 |
-| 사업지연 | 낮음 | 인허가 신속처리 TF 구성 |
-| 운영 리스크 | 낮음 | LH 협력 커뮤니티 운영 |
-
-**종합 판단**: 입지·수요·사업성·공공성 측면 모두 **양호~우수** 수준.
-위험 대비 수익 비율이 안정적이며, LH 신축매입약정 사업 추진에 **적합**.
-
----
-
-## Ⅸ. 사업 추진 로드맵
-
-| 단계 | 기간 | 주요 내용 |
-|------|------|----------|
-| **사전준비** | {datetime.now().year}.11~12 | 감정평가·신탁협의·설계 완료 |
-| **신청 및 심사** | {datetime.now().year+1}.01~03 | LH 접수 → 현장실사 → 위원회 심의 |
-| **약정체결** | {datetime.now().year+1}.04 | 매입약정 체결, 착공준비 |
-| **착공** | {datetime.now().year+1}.06 | 공사기간 약 16개월 |
-| **준공 및 매각** | {datetime.now().year+2}.10 | 준공검사 후 매매본계약 체결 |
-| **사후관리** | {datetime.now().year+2}.11~ | 하자보수·운영협력 |
-
-### 행정 절차
-
-1. **1단계**: LH 매입약정 접수 및 현장실사
-2. **2단계**: 감정평가액 검증 및 매입가 확정
-3. **3단계**: 착공신고 → LH 단계별 품질점검
-4. **4단계**: 사용승인 → 매매계약 → 잔금지급
-
----
-
-## Ⅹ. 결론 및 제언
-
-### 최종 판단
-
-✅ **입지 평가**: 우수 (교통·인프라 접근성 탁월)
-✅ **수요 평가**: 우수 (청년·신혼 이중 수요층 확보)
-✅ **사업성 평가**: 양호 (안정적 수익구조)
-✅ **공공성 평가**: 우수 (주거복지 기여도 높음)
-✅ **리스크 평가**: 낮음 (대응 가능한 수준)
-
-### 권고사항
-
-본 대상지는 입지, 수요, 사업성, 공공성 측면에서 **모두 양호하거나 우수**한 평가가 가능하며,
-특히 LH의 "도심형 청년·신혼 주택 공급" 정책에 부합합니다.
-
-따라서 본 부지는 **LH 신축매입약정 사업 추진에 적합**하며,
-**조속한 약정 체결이 권장**됩니다.
-
----
-
-## 부록
-
-### A. 위치 정보
-- **위도**: {coords.latitude if coords else 0}
-- **경도**: {coords.longitude if coords else 0}
-
-### B. LH 매입약정 체크리스트
-
-{self._generate_checklist()}
-
-### C. 감정평가 시나리오
-- 토지비, 건축비, 부대비용을 포함한 상세 원가 분석
-- 매입가 산정 시뮬레이션
-
-### D. 공사단계 품질관리 점검표
-- 4단계 품질검사 항목별 체크리스트
-- 감리보고서 제출 양식
-
----
-
-## 📘 종합 결론
-
-이 보고서는 현장, 제도, 기술, 정책, 재무 전 영역을 아우르는
-**완전한 형태의 LH 신축매입약정 사업 통합 연구형 보고서**입니다.
-
-**생성일시**: {datetime.now().strftime("%Y년 %m월 %d일 %H:%M")}
-**분석 ID**: {analysis_data.get('analysis_id', 'N/A')}
-
----
-
-**본 보고서는 자동 분석 시스템을 통해 생성되었으며, 실제 사업 추진 시 전문가의 검토가 필요합니다.**
-"""
+        # Create executive summary
+        executive_summary = self._generate_executive_summary(
+            address=address,
+            m2_data=m2_data,
+            m3_data=m3_data,
+            m4_data=m4_data,
+            m5_data=m5_data,
+            m6_data=m6_data
+        )
+        
+        # Compile report sections
+        report = {
+            "report_metadata": {
+                "report_version": self.report_version,
+                "project_id": project_id,
+                "project_name": project_name,
+                "context_id": context_id,
+                "generated_at": generated_at,
+                "generated_by": "ZeroSite Decision OS v3.0"
+            },
+            
+            "executive_summary": executive_summary,
+            
+            "section_1_land_information": self._format_m1_section(m1_data),
+            "section_2_valuation": self._format_m2_section(m2_data),
+            "section_3_housing_type": self._format_m3_section(m3_data),
+            "section_4_building_scale": self._format_m4_section(m4_data),
+            "section_5_feasibility": self._format_m5_section(m5_data),
+            "section_6_lh_review": self._format_m6_section(m6_data),
+            
+            "appendix": {
+                "verification_log": verification_log or [],
+                "data_sources": self._collect_data_sources(m1_data, m2_data),
+                "methodology": self._get_methodology_notes()
+            }
+        }
+        
+        logger.info(f"✅ Report generated successfully")
         
         return report
     
-    def _generate_executive_summary(self, summary, demand, risks) -> str:
-        """Executive Summary 생성"""
+    def _generate_executive_summary(
+        self,
+        address: str,
+        m2_data: Dict,
+        m3_data: Dict,
+        m4_data: Dict,
+        m5_data: Dict,
+        m6_data: Dict
+    ) -> Dict[str, Any]:
+        """Generate executive summary section"""
         
-        if not summary:
-            return "분석 결과를 기반으로 종합 평가를 진행합니다."
+        # Extract key metrics
+        land_value = m2_data.get('land_value', 0)
+        unit_price = m2_data.get('unit_price_sqm', 0)
+        confidence = m2_data.get('confidence', 0)
         
-        eligible_text = "적합" if summary.is_eligible else "부적합"
-        risk_level = "낮음" if len(risks) <= 1 else "중간" if len(risks) <= 3 else "높음"
+        housing_type = m3_data.get('selected_type', 'N/A')
+        type_confidence = m3_data.get('confidence', 0)
         
+        total_units = m4_data.get('legal_capacity', {}).get('total_units', 0)
+        total_gfa = m4_data.get('legal_capacity', {}).get('total_gfa_sqm', 0)
+        
+        npv_public = m5_data.get('financial_metrics', {}).get('npv_public', 0)
+        irr = m5_data.get('financial_metrics', {}).get('irr_public', 0)
+        profitable = m5_data.get('profitability', {}).get('profitable', False)
+        
+        lh_decision = m6_data.get('decision', 'PENDING')
+        lh_score = m6_data.get('total_score', 0)
+        lh_grade = m6_data.get('grade', 'N/A')
+        
+        # Generate summary text
         summary_text = f"""
-대상지는 LH 매입 기준상 **{eligible_text}**으로 평가되며,
-수요 점수 **{demand.demand_score if demand else 0}/100점**으로 {'높은' if (demand and demand.demand_score >= 70) else '중간' if (demand and demand.demand_score >= 50) else '낮은'} 수준의 임대 수요가 예상됩니다.
+        ZeroSite has completed a comprehensive analysis of the property located at {address}.
+        
+        The land is valued at ₩{land_value:,.0f} (₩{unit_price:,.0f}/m²) with {confidence}% confidence.
+        The recommended housing type is {housing_type} with {type_confidence}% suitability.
+        
+        The project proposes {total_units} units with {total_gfa:,.0f}m² total floor area.
+        Financial analysis shows NPV of ₩{npv_public:,.0f} and IRR of {irr:.2f}%.
+        
+        LH Review: {lh_decision} (Score: {lh_score}/110, Grade: {lh_grade})
+        """
+        
+        return {
+            "summary_text": summary_text.strip(),
+            "key_metrics": {
+                "land_value": land_value,
+                "unit_price_sqm": unit_price,
+                "valuation_confidence": confidence,
+                "housing_type": housing_type,
+                "type_confidence": type_confidence,
+                "total_units": total_units,
+                "total_gfa_sqm": total_gfa,
+                "npv_public": npv_public,
+                "irr_public": irr,
+                "profitable": profitable,
+                "lh_decision": lh_decision,
+                "lh_score": lh_score,
+                "lh_grade": lh_grade
+            },
+            "recommendation": self._generate_recommendation(lh_decision, profitable)
+        }
+    
+    def _generate_recommendation(self, lh_decision: str, profitable: bool) -> str:
+        """Generate final recommendation text"""
+        
+        if lh_decision == "GO" and profitable:
+            return "Strong recommendation to proceed. All criteria met."
+        elif lh_decision == "CONDITIONAL":
+            return "Conditional approval. Address specified conditions before proceeding."
+        elif lh_decision == "REVIEW":
+            return "Further review required. Consider alternative approaches."
+        else:
+            return "Not recommended at this time. Significant concerns identified."
+    
+    def _format_m1_section(self, m1_data: Dict) -> Dict[str, Any]:
+        """Format M1 land information section"""
+        return {
+            "title": "M1: Land Information",
+            "data": m1_data,
+            "summary": f"Land area: {m1_data.get('area_sqm', 0):.2f}m² ({m1_data.get('area_pyeong', 0):.2f}평)"
+        }
+    
+    def _format_m2_section(self, m2_data: Dict) -> Dict[str, Any]:
+        """Format M2 valuation section"""
+        return {
+            "title": "M2: Land Valuation",
+            "data": m2_data,
+            "summary": f"Land value: ₩{m2_data.get('land_value', 0):,.0f}"
+        }
+    
+    def _format_m3_section(self, m3_data: Dict) -> Dict[str, Any]:
+        """Format M3 housing type section"""
+        return {
+            "title": "M3: Housing Type Selection",
+            "data": m3_data,
+            "summary": f"Selected type: {m3_data.get('selected_type', 'N/A')}"
+        }
+    
+    def _format_m4_section(self, m4_data: Dict) -> Dict[str, Any]:
+        """Format M4 building scale section"""
+        legal = m4_data.get('legal_capacity', {})
+        return {
+            "title": "M4: Building Scale Analysis",
+            "data": m4_data,
+            "summary": f"Capacity: {legal.get('total_units', 0)} units, {legal.get('total_gfa_sqm', 0):.0f}m² GFA"
+        }
+    
+    def _format_m5_section(self, m5_data: Dict) -> Dict[str, Any]:
+        """Format M5 feasibility section"""
+        financial = m5_data.get('financial_metrics', {})
+        return {
+            "title": "M5: Financial Feasibility",
+            "data": m5_data,
+            "summary": f"NPV: ₩{financial.get('npv_public', 0):,.0f}, IRR: {financial.get('irr_public', 0):.2f}%"
+        }
+    
+    def _format_m6_section(self, m6_data: Dict) -> Dict[str, Any]:
+        """Format M6 LH review section"""
+        return {
+            "title": "M6: LH Comprehensive Review",
+            "data": m6_data,
+            "summary": f"Decision: {m6_data.get('decision', 'PENDING')}, Score: {m6_data.get('total_score', 0)}/110"
+        }
+    
+    def _collect_data_sources(self, m1_data: Dict, m2_data: Dict) -> List[Dict]:
+        """Collect all data sources used"""
+        
+        sources = []
+        
+        # M1 data sources
+        if m1_data.get('data_sources'):
+            for source_type, source_name in m1_data['data_sources'].items():
+                sources.append({
+                    "module": "M1",
+                    "type": source_type,
+                    "source": source_name
+                })
+        
+        # M2 data sources
+        if m2_data.get('method'):
+            sources.append({
+                "module": "M2",
+                "type": "valuation_method",
+                "source": m2_data['method']
+            })
+        
+        return sources
+    
+    def _get_methodology_notes(self) -> Dict[str, str]:
+        """Get methodology documentation"""
+        
+        return {
+            "M1": "Land information collected from government APIs (VWorld, MOLIT)",
+            "M2": "4-Factor Enhanced Transaction Comparison Method",
+            "M3": "Multi-criteria housing type selection algorithm",
+            "M4": "LH standard capacity calculation with parking optimization",
+            "M5": "Discounted cash flow analysis with risk adjustment",
+            "M6": "110-point LH evaluation criteria (location, scale, feasibility, compliance)"
+        }
 
-**리스크 수준**: {risk_level} ({len(risks)}개 요인)
-**예상 세대수**: {summary.estimated_units}세대
-**최종 판단**: {summary.recommendation}
-"""
-        return summary_text
-    
-    def _generate_location_description(self, coords, demand) -> str:
-        """위치 설명 생성"""
-        
-        facilities = demand.nearby_facilities if demand and hasattr(demand, 'nearby_facilities') else []
-        
-        if facilities and len(facilities) > 0:
-            nearest = facilities[0]
-            distance = int(nearest.distance)
-            location_text = f"""
-지하철 {nearest.name} 도보 약 {int(distance/60)}분(직선거리 {distance}m) 내에 위치한 역세권 부지입니다.
-대중교통 접근성이 {'탁월' if distance < 500 else '양호' if distance < 1000 else '보통'}하며,
-생활편의시설이 고루 분포하여 청년층 및 신혼부부의 직주근접 수요가 높습니다.
-"""
-        else:
-            location_text = """
-도심 접근성이 양호한 위치에 있으며,
-주변 생활편의시설 및 대중교통 인프라가 갖춰져 있습니다.
-"""
-        
-        return location_text
-    
-    def _generate_risk_assessment_table(self, risks, zone_info) -> str:
-        """리스크 평가 테이블 생성"""
-        
-        table = """
-| 항목 | LH 기준 요건 | 검토 결과 | 리스크 | 대응 방안 |
-|------|-------------|----------|--------|----------|
-| **토지 확보** | 소유권 확보 또는 동의서 | 확보 완료 | 없음 | 등기부등본 첨부 |
-| **용도지역** | 주거용 가능 지역 | """ + (zone_info.zone_type if zone_info else "제2종일반주거지역") + """ | 없음 | 도시계획 확인서 제출 |
-| **도로 조건** | 4m 이상 진입도로 확보 | 확보 완료 | 없음 | 충족 |
-| **기반시설** | 상하수도, 도시가스 인입 | 모두 인접 | 없음 | 인입공사비 반영 |
-"""
-        
-        if risks:
-            for risk in risks[:3]:
-                severity_ko = {"high": "높음", "medium": "중간", "low": "낮음"}.get(risk.severity, "중간")
-                table += f"| **{risk.category}** | 해당 없음 | {risk.description} | {severity_ko} | 대응방안 수립 |\n"
-        else:
-            table += "| **유해시설** | 50m 내 위험물 금지 | 해당 없음 | 없음 | - |\n"
-            table += "| **재해요소** | 급경사지, 침수지구 제외 | 해당 없음 | 없음 | - |\n"
-        
-        return table
-    
-    def _generate_risk_conclusion(self, risks, summary) -> str:
-        """리스크 결론 생성"""
-        
-        if not risks or len(risks) == 0:
-            return "✅ LH 매입 제외 사유에 해당하는 항목이 **없으며**, 모든 기준을 충족합니다."
-        
-        elif len(risks) <= 2:
-            return f"⚠️ {len(risks)}개의 경미한 리스크 요인이 있으나, 모두 대응 가능한 수준입니다. LH 매입 적격성에는 영향이 없습니다."
-        
-        else:
-            return f"⚠️ {len(risks)}개의 리스크 요인이 확인되었습니다. 각 요인에 대한 대응방안을 수립하여 적격성을 확보해야 합니다."
-    
-    def _generate_accessibility_analysis(self, demand) -> str:
-        """접근성 분석 생성"""
-        
-        facilities = demand.nearby_facilities if demand and hasattr(demand, 'nearby_facilities') else []
-        
-        text = ""
-        if facilities:
-            for facility in facilities[:5]:
-                distance = int(facility.distance)
-                text += f"- **{facility.name}**: {distance}m (도보 약 {int(distance/60)}분)\n"
-        else:
-            text = """
-- **지하철**: 도보 접근 가능
-- **버스**: 주요 노선 이용 가능
-- **도로망**: 주요 간선도로 인접
-"""
-        
-        return text
-    
-    def _generate_infrastructure_analysis(self, demand) -> str:
-        """인프라 분석 생성"""
-        
-        return """
-**반경 500m 내**: 생활편의시설 다수 (편의점, 마트, 병원, 공원 등)
-**반경 1km 내**: 교육시설, 공공시설, 문화시설 분포
-**생활 만족도**: 높음 (주거환경 우수)
-"""
-    
-    def _generate_youth_demand_analysis(self, demographic, demand) -> str:
-        """청년 수요 분석 생성"""
-        
-        if not demographic:
-            return "청년층 수요가 높은 지역으로 평가됩니다."
-        
-        youth_ratio = demographic.youth_ratio
-        
-        if youth_ratio >= 35:
-            level = "매우 높은"
-        elif youth_ratio >= 30:
-            level = "높은"
-        elif youth_ratio >= 25:
-            level = "중간"
-        else:
-            level = "낮은"
-        
-        return f"""
-대상지 주변은 청년 인구 비중이 **{youth_ratio}%**로 {level} 수준이며,
-1인 가구 비율도 **{demographic.single_household_ratio}%**에 달합니다.
 
-최근 행복주택 청약 경쟁률이 10:1을 상회하는 등 공급 부족 현상이 명확하여,
-높은 임대 충족률이 예상됩니다.
-"""
-    
-    def _generate_comparable_sales_table(self, address) -> str:
-        """비교 분양사례 테이블 생성"""
-        
-        return """
-| 단지명 | 유형 | 시기 | 분양가(3.3㎡당) | 거리 |
-|--------|------|------|----------------|------|
-| 인근 A단지 | 아파트 | 2024.05 | 4,100만원 | 1.2km |
-| 인근 B단지 | 오피스텔 | 2024.03 | 3,950만원 | 0.8km |
-| 인근 C단지 | 아파트 | 2023.11 | 3,800만원 | 1.5km |
-| 청년주택 | 행복주택 | 2023.07 | 3,700만원 | 0.5km |
-
-**평균 분양가**: 3.3㎡당 약 **3,890만원** 수준
-"""
-    
-    def _generate_valuation_scenarios(self, capacity, land_area) -> str:
-        """매각가 시나리오 생성"""
-        
-        total_area_pyeong = capacity.total_floor_area / 3.3
-        
-        low_price = int(total_area_pyeong * 3300)
-        base_price = int(total_area_pyeong * 3600)
-        high_price = int(total_area_pyeong * 3960)
-        
-        return f"""
-| 시나리오 | 단가(만원/3.3㎡) | 총 매각가(억원) | 비고 |
-|---------|----------------|---------------|------|
-| **보수(Low)** | 3,300 | {int(low_price/100000000)} | 시장하락 반영 |
-| **표준(Base)** | 3,600 | {int(base_price/100000000)} | 중위값 기준 |
-| **공격(High)** | 3,960 | {int(high_price/100000000)} | 상승기 적용 |
-
-**표준 시나리오 기준**:
-- 총 매각가: 약 **{int(base_price/100000000)}억 원**
-- 예상 총사업비: 약 **{int(base_price*0.85/100000000)}억 원**
-- 예상 순이익: 약 **{int(base_price*0.15/100000000)}억 원**
-- 수익률: 약 **9.2%** 수준
-"""
-    
-    def _generate_elimination_factors_check(self, risks) -> str:
-        """탈락 요인 점검표 생성"""
-        
-        check_items = [
-            ("중대한 입지 제한 요소", "없음 (군부대·화장장 등 500m 내 미존재)", "✅"),
-            ("도로 미확보", "진입도로 확보 완료", "✅"),
-            ("인프라 미설치", "상하수도, 도시가스 완비", "✅"),
-            ("권리관계 불명확", "소유권 확보 완료", "✅"),
-        ]
-        
-        if risks and len(risks) > 0:
-            check_items.append(("유해시설 인접", f"{len(risks)}개 요인 확인됨", "⚠️"))
-        else:
-            check_items.append(("유해시설 인접", "해당 없음", "✅"))
-        
-        table = "| 점검 항목 | 현황 | 상태 |\n|----------|------|------|\n"
-        for item, status, icon in check_items:
-            table += f"| **{item}** | {status} | {icon} |\n"
-        
-        return table
-    
-    def _generate_checklist(self) -> str:
-        """체크리스트 생성"""
-        
-        return """
-✅ 토지 소유권 확보 완료
-✅ 용도지역 적합성 확인
-✅ 진입도로 4m 이상 확보
-✅ 기반시설 인입 가능
-✅ 유해시설 거리 기준 충족
-✅ 재해위험 지역 미해당
-✅ 개발제한구역 미해당
-✅ 세대수 기준 충족
-✅ 주차대수 기준 충족
-"""
+# Singleton instance
+report_generator = ReportGenerator()

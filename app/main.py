@@ -98,6 +98,9 @@ from app.routers.phase8_reports_router import router as phase8_router
 # ✨ UX Redesign: Import Analysis Status & Result API (Human-Verified Mode)
 from app.api.endpoints.analysis_status_api import router as analysis_status_router
 
+# ✨ Phase 3: Import Export & Submission Package API (Reporting OS)
+from app.api.endpoints.export_api import router as export_router
+
 # ✨ v11.0 ENHANCEMENTS: Import middleware and utilities
 from app.middleware.rate_limiter import RateLimiter, RateLimitConfig
 from app.middleware.cache_manager import cache_manager, start_cache_cleanup_task
@@ -246,6 +249,9 @@ app.include_router(phase8_router)
 
 # ✨ UX Redesign: Analysis Status & Result API (Human-Verified Workflow)
 app.include_router(analysis_status_router)
+
+# ✨ Phase 3: Export & Submission Package API (Reporting OS)
+app.include_router(export_router)
 
 # ✨ PDF Reports API
 from app.api.endpoints.pdf_reports import router as pdf_reports_router
