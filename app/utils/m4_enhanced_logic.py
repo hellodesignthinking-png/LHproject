@@ -604,6 +604,11 @@ def prepare_m4_enhanced_report_data(
     """
     M4 Enhanced 보고서 데이터 준비 (외부 호출용)
     
+    🔴 2026-01-11 업데이트: Real Data Engine 사용
+    - 샘플/MOC/기본값 기반 계산 절대 금지
+    - M1 + M3 실제 데이터만 사용
+    - 계산 과정 전체 서술형 출력
+    
     Args:
         context_id: Context ID
         module_data: M4 모듈 데이터
@@ -612,17 +617,34 @@ def prepare_m4_enhanced_report_data(
     Returns:
         보고서 데이터 또는 에러 상태
     """
-    analyzer = M4EnhancedAnalyzer(context_id, module_data, frozen_context)
+    # 🔴 Real Data Engine 사용 (2026-01-11)
+    try:
+        from app.utils.m4_real_data_engine import prepare_m4_real_data_report
+        
+        logger.info(f"🔄 [M4 REAL DATA ENGINE] Using Real Data Engine for {context_id}")
+        result = prepare_m4_real_data_report(context_id, module_data, frozen_context)
+        
+        if result.get("error"):
+            logger.error(f"❌ [M4 REAL DATA ENGINE] Error: {result.get('error_type')}")
+        else:
+            logger.info(f"✅ [M4 REAL DATA ENGINE] Report generated successfully")
+        
+        return result
     
-    # 🔴 데이터 바인딩 에러 체크
-    if analyzer.binding_error:
-        logger.error(f"❌ M4 Data Binding Error for {context_id}")
-        return {
-            "error": True,
-            "error_type": "DATA_BINDING_ERROR",
-            "error_message": analyzer.binding_error_message,
-            "use_data_insufficient_template": True,
-            "template_version": "connection_error"
-        }
-    
-    return analyzer.generate_full_m4_report_data()
+    except ImportError as e:
+        logger.warning(f"⚠️ [M4] Real Data Engine not available, falling back to legacy: {e}")
+        # Fallback to legacy analyzer
+        analyzer = M4EnhancedAnalyzer(context_id, module_data, frozen_context)
+        
+        # 🔴 데이터 바인딩 에러 체크
+        if analyzer.binding_error:
+            logger.error(f"❌ M4 Data Binding Error for {context_id}")
+            return {
+                "error": True,
+                "error_type": "DATA_BINDING_ERROR",
+                "error_message": analyzer.binding_error_message,
+                "use_data_insufficient_template": True,
+                "template_version": "connection_error"
+            }
+        
+        return analyzer.generate_full_m4_report_data()
