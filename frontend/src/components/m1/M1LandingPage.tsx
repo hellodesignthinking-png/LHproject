@@ -332,7 +332,9 @@ export const M1LandingPage: React.FC<M1LandingPageProps> = ({ onContextFreezeCom
       },
     });
     
-    goToStep(4); // Go to Context Freeze (was Step 8)
+    // NEW: Go to Step 3.5 (Data Verification) instead of directly to Step 4
+    console.log('➡️ [M1Landing] Review complete, moving to Step 3.5 (Data Verification)');
+    goToStep(3.5); // Go to Data Verification & Edit
   };
 
   const handleStep8Complete = (frozenContext: any) => {
