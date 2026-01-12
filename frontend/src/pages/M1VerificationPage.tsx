@@ -493,7 +493,19 @@ export const M1VerificationPage: React.FC = () => {
               </tbody>
             </table>
           ) : (
-            <p className="no-data">⚠️ 인근 지하철역 없음</p>
+            <div className="no-data-box">
+              <p className="no-data-title">⚠️ 교통 정보 미수집</p>
+              <p className="no-data-desc">
+                현재 백엔드에서 지하철역 정보를 자동으로 수집하지 않습니다.
+                <br />
+                실제 위치의 지하철역 정보를 확인하려면:
+              </p>
+              <ul className="no-data-tips">
+                <li>🗺️ 네이버 지도 또는 카카오맵에서 '{m1Data.address}' 검색</li>
+                <li>🚇 주변 지하철역 거리 확인</li>
+                <li>📝 [Reject] 클릭 후 수동 입력으로 교통 정보 추가</li>
+              </ul>
+            </div>
           )}
 
           <h3>버스정류장</h3>
@@ -502,7 +514,19 @@ export const M1VerificationPage: React.FC = () => {
               <p>{m1Data.bus_stops.length}개 정류장, 200m 이내</p>
             </div>
           ) : (
-            <p className="no-data">⚠️ 인근 버스정류장 없음</p>
+            <div className="no-data-box">
+              <p className="no-data-title">⚠️ 버스 정보 미수집</p>
+              <p className="no-data-desc">
+                현재 백엔드에서 버스정류장 정보를 자동으로 수집하지 않습니다.
+                <br />
+                실제 위치의 버스정류장 정보를 확인하려면:
+              </p>
+              <ul className="no-data-tips">
+                <li>🗺️ 네이버 지도 또는 카카오맵에서 '{m1Data.address}' 검색</li>
+                <li>🚌 주변 버스정류장 위치 및 노선 확인</li>
+                <li>📝 [Reject] 클릭 후 수동 입력으로 버스 정보 추가</li>
+              </ul>
+            </div>
           )}
 
           <h3>주요 시설</h3>
