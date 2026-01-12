@@ -115,6 +115,9 @@ from app.api.endpoints.m6_final_judgment_api import router as m6_final_judgment_
 # 🎯 ZeroSite Decision OS: M7 Community Planning API (커뮤니티 계획 모듈)
 from app.api.endpoints.m7_community_api import router as m7_community_router
 
+# 🎯 ZeroSite Decision OS: Integrated Reports API (M1~M7 통합 보고서)
+from app.api.endpoints.integrated_reports import router as integrated_reports_router
+
 # ✨ PDF Download: Import Standardized PDF Download Router (M2-M6)
 from app.routers.pdf_download_standardized import router as pdf_download_router
 
@@ -348,6 +351,9 @@ app.include_router(m6_final_judgment_router)
 
 # 🎯 ZeroSite Decision OS: M7 Community Planning API (커뮤니티 계획 모듈)
 app.include_router(m7_community_router)
+
+# 🎯 ZeroSite Decision OS: Integrated Reports API (M1~M7 통합 보고서)
+app.include_router(integrated_reports_router)
 
 # ✨ PDF Download: Standardized PDF Download Router (M2-M6)
 app.include_router(pdf_download_router)
