@@ -91,11 +91,20 @@ from app.api.endpoints.m1_3stage_api import router as m1_3stage_router
 # 🎯 ZeroSite Decision OS: M2 Valuation API (토지감정평가 모듈)
 from app.api.endpoints.m2_valuation_api import router as m2_valuation_router
 
+# 🎯 NEW: M2 Scoring API (LH Standard - M1 FACT 기반)
+from app.api.endpoints.m2_scoring_api import router as m2_scoring_router
+
 # 🎯 ZeroSite Decision OS: M2 Expert Report API (감정평가 전문가 완성본)
 from app.api.endpoints.m2_expert_report import router as m2_expert_report_router
 
 # 🎯 ZeroSite Decision OS: M3 Housing Type API (공급유형 적합성 모듈)
 from app.api.endpoints.m3_housing_type_api import router as m3_housing_type_router
+
+# 🎯 NEW: M3 Selection API (M2 점수 해석 기반)
+from app.api.endpoints.m3_selection_api import router as m3_selection_router
+
+# 🎯 NEW: XAI Score Flow API (설명 가능한 점수 흐름)
+from app.api.endpoints.xai_flow_api import router as xai_flow_router
 
 # 🎯 ZeroSite Decision OS: M3 Expert Report API (공급유형 전문가 완성본)
 from app.api.endpoints.m3_expert_report import router as m3_expert_report_router
@@ -328,7 +337,10 @@ app.include_router(m1_expert_report_router)
 # 🎯 ZeroSite Decision OS: M1 3-Stage System API
 app.include_router(m1_3stage_router)
 
-# 🎯 ZeroSite Decision OS: M2 Valuation API (토지감정평가 모듈)
+# 🎯 NEW: M2 Scoring API (LH Standard - M1 FACT 기반) - REGISTER FIRST!
+app.include_router(m2_scoring_router)
+
+# 🎯 ZeroSite Decision OS: M2 Valuation API (토지감정평가 모듈) - Legacy
 app.include_router(m2_valuation_router)
 
 # 🎯 ZeroSite Decision OS: M2 Expert Report API (감정평가 전문가 완성본)
@@ -336,6 +348,12 @@ app.include_router(m2_expert_report_router)
 
 # 🎯 ZeroSite Decision OS: M3 Housing Type API (공급유형 적합성 모듈)
 app.include_router(m3_housing_type_router)
+
+# 🎯 NEW: M3 Selection API (M2 점수 해석 기반)
+app.include_router(m3_selection_router)
+
+# 🎯 NEW: XAI Score Flow API (설명 가능한 점수 흐름)
+app.include_router(xai_flow_router)
 
 # 🎯 ZeroSite Decision OS: M3 Expert Report API (공급유형 전문가 완성본)
 app.include_router(m3_expert_report_router)

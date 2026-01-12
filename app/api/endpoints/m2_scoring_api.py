@@ -56,13 +56,13 @@ class M2CalculateResponse(BaseModel):
 # API Endpoints
 # ============================================================
 
-@router.post("/calculate", response_model=M2CalculateResponse)
+@router.post("/score", response_model=M2CalculateResponse)
 async def calculate_m2_score(
     project_id: str,
     request: M2CalculateRequest
 ):
     """
-    M2 점수 계산 실행
+    M2 점수 계산 실행 (LH Standard - M1 FACT 기반)
     
     실행 전제:
     - M1.status == FROZEN
@@ -127,7 +127,9 @@ async def calculate_m2_score(
             )
         
         # ⑤ M2 점수 계산 (핵심 엔진 호출)
-        result = scoring_engine.calculate(m1_fact, m1_context.context_id or project_id)
+        # Use context_id from result_data if available, otherwise use project_id
+        context_id = m1_context.result_data.context_id if m1_context.result_data and hasattr(m1_context.result_data, 'context_id') else project_id
+        result = scoring_engine.calculate(m1_fact, context_id)
         
         # ⑥ 결과 저장
         m2_results[project_id] = result
