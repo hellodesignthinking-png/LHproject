@@ -140,6 +140,14 @@ class RateLimiter(BaseHTTPMiddleware):
         if endpoint == "/favicon.ico":
             return False
         
+        # Don't rate limit health and status endpoints
+        if endpoint == "/health" or "/status" in endpoint:
+            return False
+        
+        # Don't rate limit analysis status polling (prevent 429 errors)
+        if "/api/analysis/projects/" in endpoint and endpoint.endswith("/status"):
+            return False
+        
         return True
     
     def _get_limit_config(self, endpoint: str) -> Tuple[int, int]:
