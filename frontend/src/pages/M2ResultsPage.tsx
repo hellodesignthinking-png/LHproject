@@ -166,16 +166,16 @@ export const M2ResultsPage: React.FC = () => {
           <div className="value-display">
             <div className="primary-value">
               <label>토지가치</label>
-              <value className="large">₩{m2Data.land_value.toLocaleString()}</value>
+              <span className="large">₩{m2Data.land_value.toLocaleString()}</span>
             </div>
             <div className="secondary-values">
               <div>
                 <label>단위면적당 (m²)</label>
-                <value>₩{m2Data.unit_price_sqm.toLocaleString()}</value>
+                <span>₩{m2Data.unit_price_sqm.toLocaleString()}</span>
               </div>
               <div>
                 <label>단위면적당 (평)</label>
-                <value>₩{m2Data.unit_price_pyeong.toLocaleString()}</value>
+                <span>₩{m2Data.unit_price_pyeong.toLocaleString()}</span>
               </div>
             </div>
           </div>
