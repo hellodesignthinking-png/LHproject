@@ -322,6 +322,40 @@ class AnalysisAPIService {
       throw new Error(error.detail || 'Failed to delete project');
     }
   }
+  /**
+   * Collect POI (Point of Interest) data using Kakao Map API
+   * 
+   * @param address - Address to collect POI data for
+   * @returns POI data including subway, bus, schools, and commercial facilities
+   */
+  async collectPOI(address: string): Promise<{
+    success: boolean;
+    message: string;
+    data?: {
+      subway_stations: any[];
+      bus_stops: any[];
+      poi_schools: any[];
+      poi_commercial: any[];
+    };
+  }> {
+    const response = await fetch(
+      `${this.baseUrl}/m1/collect-poi`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ address })
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to collect POI data');
+    }
+
+    return response.json();
+  }
 }
 
 // ============================================================================

@@ -98,6 +98,9 @@ from app.routers.phase8_reports_router import router as phase8_router
 # ✨ UX Redesign: Import Analysis Status & Result API (Human-Verified Mode)
 from app.api.endpoints.analysis_status_api import router as analysis_status_router
 
+# ✨ M1 POI: Import M1 POI Collection API (Kakao Map Integration)
+from app.api.endpoints.m1_poi_collection import router as m1_poi_router
+
 # ✨ Phase 3: Import Export & Submission Package API (Reporting OS)
 from app.api.endpoints.export_api import router as export_router
 
@@ -249,6 +252,9 @@ app.include_router(phase8_router)
 
 # ✨ UX Redesign: Analysis Status & Result API (Human-Verified Workflow)
 app.include_router(analysis_status_router)
+
+# ✨ M1 POI: M1 POI Collection API (Kakao Map Integration)
+app.include_router(m1_poi_router)
 
 # ✨ Phase 3: Export & Submission Package API (Reporting OS)
 app.include_router(export_router)

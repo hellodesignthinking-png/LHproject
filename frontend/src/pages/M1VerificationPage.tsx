@@ -97,6 +97,63 @@ export const M1VerificationPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [showManualInput, setShowManualInput] = useState(false);
+  const [collectingPOI, setCollectingPOI] = useState(false);
+  
+  // Handle POI data collection
+  const handleCollectPOI = async () => {
+    if (!m1Data?.address) {
+      alert('주소 정보가 없습니다.');
+      return;
+    }
+    
+    const confirmed = window.confirm(
+      '🗺️ 카카오맵 API로 주변 시설 정보를 수집하시겠습니까?\n\n' +
+      '수집 항목:\n' +
+      '- 지하철역 (1km 반경)\n' +
+      '- 버스 정류장 (500m 반경)\n' +
+      '- 학교 (1km 반경)\n' +
+      '- 편의시설 (1km 반경)\n\n' +
+      '소요 시간: 약 10-15초'
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+      setCollectingPOI(true);
+      console.log('🗺️ Collecting POI data for:', m1Data.address);
+      
+      const response = await analysisAPI.collectPOI(m1Data.address);
+      
+      if (response.success && response.data) {
+        console.log('✅ POI data collected:', response.data);
+        
+        // Update m1Data with collected POI
+        setM1Data(prev => prev ? {
+          ...prev,
+          subway_stations: response.data!.subway_stations,
+          bus_stops: response.data!.bus_stops,
+          poi_schools: response.data!.poi_schools,
+          poi_commercial: response.data!.poi_commercial
+        } : null);
+        
+        alert(
+          `✅ POI 데이터 수집 완료!\n\n` +
+          `🚇 지하철역: ${response.data.subway_stations.length}개\n` +
+          `🚌 버스 정류장: ${response.data.bus_stops.length}개\n` +
+          `🏫 학교: ${response.data.poi_schools.length}개\n` +
+          `🏪 편의시설: ${response.data.poi_commercial.length}개\n\n` +
+          `수집된 데이터가 화면에 표시되었습니다.`
+        );
+      } else {
+        throw new Error(response.message || 'POI 수집 실패');
+      }
+    } catch (err) {
+      console.error('❌ Failed to collect POI:', err);
+      alert(`❌ POI 데이터 수집 실패:\n${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setCollectingPOI(false);
+    }
+  };
 
   // Fetch M1 data
   useEffect(() => {
@@ -702,9 +759,18 @@ export const M1VerificationPage: React.FC = () => {
 
           <div className="action-buttons">
             <button 
+              className="btn btn-secondary"
+              onClick={handleCollectPOI}
+              disabled={verifying || collectingPOI}
+              title="카카오맵 API로 주변 시설 정보 수집"
+            >
+              {collectingPOI ? '🔄 수집 중...' : '🗺️ POI 데이터 수집'}
+            </button>
+            
+            <button 
               className="btn btn-danger"
               onClick={handleReject}
-              disabled={verifying}
+              disabled={verifying || collectingPOI}
             >
               ❌ 데이터 수정 필요 / 주소 재입력
             </button>
@@ -712,7 +778,7 @@ export const M1VerificationPage: React.FC = () => {
             <button 
               className="btn btn-primary"
               onClick={handleApprove}
-              disabled={verifying}
+              disabled={verifying || collectingPOI}
             >
               ✅ M1 데이터 확인 완료 → M2~M6 분석 진행
             </button>
