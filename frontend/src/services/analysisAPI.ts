@@ -185,7 +185,13 @@ class AnalysisAPIService {
       throw new Error(error.detail || `Failed to get ${moduleName} result`);
     }
 
-    const result: ModuleResult<T> = await response.json();
+    const rawResult: any = await response.json();
+    
+    // Handle both old format (result) and new format (result_data)
+    const result: ModuleResult<T> = {
+      ...rawResult,
+      result: rawResult.result || rawResult.result_data,
+    };
 
     // Validate context if provided
     if (expectedContextId && result.context_id !== expectedContextId) {
