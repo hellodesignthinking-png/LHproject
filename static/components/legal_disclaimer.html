@@ -1,0 +1,231 @@
+<!-- 
+  ZeroSite Decision OS - Legal Disclaimer Component
+  책임 및 한계 고지 시스템
+  
+  사용처:
+  1. Landing Page 하단
+  2. M6 Executive Dashboard Footer
+  3. PDF 표지 하단
+  4. PDF 부록 첫 페이지
+-->
+
+<style>
+.legal-disclaimer {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-left: 4px solid #6c757d;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #495057;
+}
+
+.legal-disclaimer.compact {
+  padding: 1rem;
+  font-size: 0.85rem;
+  margin: 1rem 0;
+}
+
+.legal-disclaimer-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: #343a40;
+}
+
+.legal-disclaimer-icon {
+  font-size: 1.2rem;
+}
+
+.legal-disclaimer-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.legal-disclaimer-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.legal-disclaimer-bullet {
+  color: #6c757d;
+  font-weight: bold;
+  margin-top: 0.2rem;
+}
+
+.legal-disclaimer-text {
+  flex: 1;
+}
+
+.legal-disclaimer-emphasis {
+  color: #495057;
+  font-weight: 500;
+}
+
+.legal-disclaimer-footer {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #dee2e6;
+  font-size: 0.85rem;
+  color: #6c757d;
+  text-align: center;
+}
+
+/* PDF 전용 스타일 */
+@media print {
+  .legal-disclaimer {
+    page-break-inside: avoid;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+  }
+}
+</style>
+
+<!-- 표준 버전 (Landing Page, M6 Dashboard) -->
+<div class="legal-disclaimer" id="legal-disclaimer-standard">
+  <div class="legal-disclaimer-header">
+    <span class="legal-disclaimer-icon">⚖️</span>
+    <span>책임 및 한계 고지</span>
+  </div>
+  
+  <div class="legal-disclaimer-content">
+    <div class="legal-disclaimer-item">
+      <span class="legal-disclaimer-bullet">•</span>
+      <span class="legal-disclaimer-text">
+        ZeroSite Decision OS는 <span class="legal-disclaimer-emphasis">의사결정을 보조하는 참고 자료</span>를 제공하는 도구입니다.
+      </span>
+    </div>
+    
+    <div class="legal-disclaimer-item">
+      <span class="legal-disclaimer-bullet">•</span>
+      <span class="legal-disclaimer-text">
+        본 시스템의 분석 결과는 <span class="legal-disclaimer-emphasis">최종 결정을 대체하지 않으며</span>, 
+        실제 사업 추진은 LH 한국토지주택공사, 지자체, 인허가 기관의 검토 및 승인에 따릅니다.
+      </span>
+    </div>
+    
+    <div class="legal-disclaimer-item">
+      <span class="legal-disclaimer-bullet">•</span>
+      <span class="legal-disclaimer-text">
+        토지 매입, 건축 설계, 사업성 분석 등 <span class="legal-disclaimer-emphasis">법적·재무적 책임은 사업 주체 및 관련 전문가</span>에게 있으며, 
+        본 시스템은 이를 대체하거나 보증하지 않습니다.
+      </span>
+    </div>
+    
+    <div class="legal-disclaimer-item">
+      <span class="legal-disclaimer-bullet">•</span>
+      <span class="legal-disclaimer-text">
+        모든 데이터는 <span class="legal-disclaimer-emphasis">공공 API 및 사용자 입력</span>을 기반으로 하며, 
+        정확성 및 최신성에 대한 검증은 사용자의 책임입니다.
+      </span>
+    </div>
+    
+    <div class="legal-disclaimer-item">
+      <span class="legal-disclaimer-bullet">•</span>
+      <span class="legal-disclaimer-text">
+        본 시스템의 판단 결과(GO/CONDITIONAL/NO-GO)는 <span class="legal-disclaimer-emphasis">참고용 권고사항</span>이며, 
+        실제 사업 추진 또는 포기는 사용자의 독립적 판단에 따라야 합니다.
+      </span>
+    </div>
+  </div>
+  
+  <div class="legal-disclaimer-footer">
+    ZeroSite Decision OS | Version 1.0 | LH 신축매입임대 사업 의사결정 보조 시스템
+  </div>
+</div>
+
+<!-- 간소 버전 (PDF Footer, 팝업) -->
+<div class="legal-disclaimer compact" id="legal-disclaimer-compact" style="display: none;">
+  <div class="legal-disclaimer-content">
+    <p style="margin: 0; text-align: center;">
+      <strong>책임 및 한계 고지:</strong> 
+      본 보고서는 의사결정 보조 자료이며, 최종 판단은 LH 한국토지주택공사 및 관련 인허가 기관의 검토에 따릅니다. 
+      법적·재무적 책임은 사업 주체에 있으며, 본 시스템은 이를 대체하지 않습니다.
+    </p>
+  </div>
+</div>
+
+<!-- 1줄 버전 (PDF 표지 하단) -->
+<div class="legal-disclaimer compact" id="legal-disclaimer-oneline" style="display: none;">
+  <p style="margin: 0; text-align: center; font-size: 0.8rem; color: #6c757d;">
+    본 보고서는 참고용 의사결정 보조 자료이며, 최종 결정은 발주기관 및 인허가권자의 검토 및 승인에 따릅니다.
+  </p>
+</div>
+
+<script>
+// JavaScript 함수로 필요한 버전을 가져오기
+function getLegalDisclaimer(version = 'standard') {
+  const disclaimers = {
+    standard: document.getElementById('legal-disclaimer-standard').outerHTML,
+    compact: document.getElementById('legal-disclaimer-compact').outerHTML.replace('display: none;', ''),
+    oneline: document.getElementById('legal-disclaimer-oneline').outerHTML.replace('display: none;', '')
+  };
+  return disclaimers[version] || disclaimers.standard;
+}
+
+// PDF 생성 시 포함할 텍스트 버전
+function getLegalDisclaimerText() {
+  return `
+책임 및 한계 고지
+
+• ZeroSite Decision OS는 의사결정을 보조하는 참고 자료를 제공하는 도구입니다.
+
+• 본 시스템의 분석 결과는 최종 결정을 대체하지 않으며, 실제 사업 추진은 LH 한국토지주택공사, 
+  지자체, 인허가 기관의 검토 및 승인에 따릅니다.
+
+• 토지 매입, 건축 설계, 사업성 분석 등 법적·재무적 책임은 사업 주체 및 관련 전문가에게 있으며, 
+  본 시스템은 이를 대체하거나 보증하지 않습니다.
+
+• 모든 데이터는 공공 API 및 사용자 입력을 기반으로 하며, 정확성 및 최신성에 대한 검증은 
+  사용자의 책임입니다.
+
+• 본 시스템의 판단 결과(GO/CONDITIONAL/NO-GO)는 참고용 권고사항이며, 실제 사업 추진 또는 
+  포기는 사용자의 독립적 판단에 따라야 합니다.
+
+ZeroSite Decision OS | Version 1.0 | LH 신축매입임대 사업 의사결정 보조 시스템
+  `.trim();
+}
+
+// Python PDF 생성 시 사용할 딕셔너리 (JSON 형태)
+const LEGAL_DISCLAIMER_DATA = {
+  title: "책임 및 한계 고지",
+  items: [
+    {
+      text: "ZeroSite Decision OS는 의사결정을 보조하는 참고 자료를 제공하는 도구입니다.",
+      emphasis: "의사결정을 보조하는 참고 자료"
+    },
+    {
+      text: "본 시스템의 분석 결과는 최종 결정을 대체하지 않으며, 실제 사업 추진은 LH 한국토지주택공사, 지자체, 인허가 기관의 검토 및 승인에 따릅니다.",
+      emphasis: "최종 결정을 대체하지 않으며"
+    },
+    {
+      text: "토지 매입, 건축 설계, 사업성 분석 등 법적·재무적 책임은 사업 주체 및 관련 전문가에게 있으며, 본 시스템은 이를 대체하거나 보증하지 않습니다.",
+      emphasis: "법적·재무적 책임은 사업 주체 및 관련 전문가"
+    },
+    {
+      text: "모든 데이터는 공공 API 및 사용자 입력을 기반으로 하며, 정확성 및 최신성에 대한 검증은 사용자의 책임입니다.",
+      emphasis: "공공 API 및 사용자 입력"
+    },
+    {
+      text: "본 시스템의 판단 결과(GO/CONDITIONAL/NO-GO)는 참고용 권고사항이며, 실제 사업 추진 또는 포기는 사용자의 독립적 판단에 따라야 합니다.",
+      emphasis: "참고용 권고사항"
+    }
+  ],
+  footer: "ZeroSite Decision OS | Version 1.0 | LH 신축매입임대 사업 의사결정 보조 시스템",
+  oneline: "본 보고서는 참고용 의사결정 보조 자료이며, 최종 결정은 발주기관 및 인허가권자의 검토 및 승인에 따릅니다."
+};
+
+// Export for use in other modules
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    getLegalDisclaimer,
+    getLegalDisclaimerText,
+    LEGAL_DISCLAIMER_DATA
+  };
+}
+</script>
