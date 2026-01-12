@@ -158,10 +158,10 @@ const FinalReportPage: React.FC = () => {
     if (!projectStatus) return '';
 
     const { modules, address } = projectStatus;
-    const m2 = modules.M2?.result_data;
-    const m3 = modules.M3?.result_data;
-    const m5 = modules.M5?.result_data;
-    const m6 = modules.M6?.result_data;
+    const m2 = modules?.M2?.result_data;
+    const m3 = modules?.M3?.result_data;
+    const m5 = modules?.M5?.result_data;
+    const m6 = modules?.M6?.result_data;
 
     return `
 본 보고서는 ${address}에 대한 제로사이트 분석 결과를 종합한 문서입니다.
@@ -283,27 +283,27 @@ const FinalReportPage: React.FC = () => {
         {/* M1: Land Data */}
         <section className="module-section">
           <h2>M1: 토지 데이터 수집 및 검증</h2>
-          {projectStatus.modules.M1 ? (
+          {projectStatus.modules?.M1 ? (
             <div className="module-content">
               <div className="module-status">
-                <span className={`badge ${projectStatus.modules.M1.verification_status?.toLowerCase()}`}>
-                  {projectStatus.modules.M1.verification_status || projectStatus.modules.M1.status}
+                <span className={`badge ${projectStatus.modules?.M1.verification_status?.toLowerCase()}`}>
+                  {projectStatus.modules?.M1.verification_status || projectStatus.modules?.M1.status}
                 </span>
-                {projectStatus.modules.M1.executed_at && (
+                {projectStatus.modules?.M1.executed_at && (
                   <span className="timestamp">
-                    실행일: {new Date(projectStatus.modules.M1.executed_at).toLocaleString('ko-KR')}
+                    실행일: {new Date(projectStatus.modules?.M1.executed_at).toLocaleString('ko-KR')}
                   </span>
                 )}
               </div>
-              {projectStatus.modules.M1.result_data && (
+              {projectStatus.modules?.M1.result_data && (
                 <div className="result-data">
                   <h3>기본 정보</h3>
                   <ul>
-                    <li><strong>주소:</strong> {projectStatus.modules.M1.result_data.address}</li>
-                    <li><strong>면적:</strong> {projectStatus.modules.M1.result_data.area}㎡</li>
-                    <li><strong>용도지역:</strong> {projectStatus.modules.M1.result_data.zoning}</li>
-                    <li><strong>건폐율:</strong> {projectStatus.modules.M1.result_data.bcr}%</li>
-                    <li><strong>용적률:</strong> {projectStatus.modules.M1.result_data.far}%</li>
+                    <li><strong>주소:</strong> {projectStatus.modules?.M1.result_data.address}</li>
+                    <li><strong>면적:</strong> {projectStatus.modules?.M1.result_data.area}㎡</li>
+                    <li><strong>용도지역:</strong> {projectStatus.modules?.M1.result_data.zoning}</li>
+                    <li><strong>건폐율:</strong> {projectStatus.modules?.M1.result_data.bcr}%</li>
+                    <li><strong>용적률:</strong> {projectStatus.modules?.M1.result_data.far}%</li>
                   </ul>
                 </div>
               )}
@@ -316,24 +316,24 @@ const FinalReportPage: React.FC = () => {
         {/* M2: Land Valuation */}
         <section className="module-section">
           <h2>M2: 토지 가치 평가</h2>
-          {projectStatus.modules.M2 ? (
+          {projectStatus.modules?.M2 ? (
             <div className="module-content">
               <div className="module-status">
-                <span className={`badge ${projectStatus.modules.M2.status.toLowerCase()}`}>
-                  {projectStatus.modules.M2.status}
+                <span className={`badge ${projectStatus.modules?.M2.status.toLowerCase()}`}>
+                  {projectStatus.modules?.M2.status}
                 </span>
-                {projectStatus.modules.M2.executed_at && (
+                {projectStatus.modules?.M2.executed_at && (
                   <span className="timestamp">
-                    실행일: {new Date(projectStatus.modules.M2.executed_at).toLocaleString('ko-KR')}
+                    실행일: {new Date(projectStatus.modules?.M2.executed_at).toLocaleString('ko-KR')}
                   </span>
                 )}
               </div>
-              {projectStatus.modules.M2.result_data && (
+              {projectStatus.modules?.M2.result_data && (
                 <div className="result-data">
                   <ul>
-                    <li><strong>토지 가치:</strong> ₩{(projectStatus.modules.M2.result_data.land_value / 100000000).toFixed(2)}억</li>
-                    <li><strong>평당 단가:</strong> ₩{(projectStatus.modules.M2.result_data.unit_price / 10000).toFixed(0)}만원/평</li>
-                    <li><strong>신뢰도:</strong> {projectStatus.modules.M2.result_data.confidence}%</li>
+                    <li><strong>토지 가치:</strong> ₩{(projectStatus.modules?.M2.result_data.land_value / 100000000).toFixed(2)}억</li>
+                    <li><strong>평당 단가:</strong> ₩{(projectStatus.modules?.M2.result_data.unit_price / 10000).toFixed(0)}만원/평</li>
+                    <li><strong>신뢰도:</strong> {projectStatus.modules?.M2.result_data.confidence}%</li>
                   </ul>
                 </div>
               )}
@@ -346,23 +346,23 @@ const FinalReportPage: React.FC = () => {
         {/* M3: Housing Type */}
         <section className="module-section">
           <h2>M3: 주택 유형 선정</h2>
-          {projectStatus.modules.M3 ? (
+          {projectStatus.modules?.M3 ? (
             <div className="module-content">
               <div className="module-status">
-                <span className={`badge ${projectStatus.modules.M3.status.toLowerCase()}`}>
-                  {projectStatus.modules.M3.status}
+                <span className={`badge ${projectStatus.modules?.M3.status.toLowerCase()}`}>
+                  {projectStatus.modules?.M3.status}
                 </span>
-                {projectStatus.modules.M3.executed_at && (
+                {projectStatus.modules?.M3.executed_at && (
                   <span className="timestamp">
-                    실행일: {new Date(projectStatus.modules.M3.executed_at).toLocaleString('ko-KR')}
+                    실행일: {new Date(projectStatus.modules?.M3.executed_at).toLocaleString('ko-KR')}
                   </span>
                 )}
               </div>
-              {projectStatus.modules.M3.result_data && (
+              {projectStatus.modules?.M3.result_data && (
                 <div className="result-data">
                   <ul>
-                    <li><strong>권장 유형:</strong> {projectStatus.modules.M3.result_data.housing_type}</li>
-                    <li><strong>근거:</strong> {projectStatus.modules.M3.result_data.justification}</li>
+                    <li><strong>권장 유형:</strong> {projectStatus.modules?.M3.result_data.housing_type}</li>
+                    <li><strong>근거:</strong> {projectStatus.modules?.M3.result_data.justification}</li>
                   </ul>
                 </div>
               )}
@@ -375,24 +375,24 @@ const FinalReportPage: React.FC = () => {
         {/* M4: Building Scale */}
         <section className="module-section">
           <h2>M4: 건축 규모 산정</h2>
-          {projectStatus.modules.M4 ? (
+          {projectStatus.modules?.M4 ? (
             <div className="module-content">
               <div className="module-status">
-                <span className={`badge ${projectStatus.modules.M4.status.toLowerCase()}`}>
-                  {projectStatus.modules.M4.status}
+                <span className={`badge ${projectStatus.modules?.M4.status.toLowerCase()}`}>
+                  {projectStatus.modules?.M4.status}
                 </span>
-                {projectStatus.modules.M4.executed_at && (
+                {projectStatus.modules?.M4.executed_at && (
                   <span className="timestamp">
-                    실행일: {new Date(projectStatus.modules.M4.executed_at).toLocaleString('ko-KR')}
+                    실행일: {new Date(projectStatus.modules?.M4.executed_at).toLocaleString('ko-KR')}
                   </span>
                 )}
               </div>
-              {projectStatus.modules.M4.result_data && (
+              {projectStatus.modules?.M4.result_data && (
                 <div className="result-data">
                   <ul>
-                    <li><strong>법정 세대수:</strong> {projectStatus.modules.M4.result_data.legal_capacity}세대</li>
-                    <li><strong>필수 세대수:</strong> {projectStatus.modules.M4.result_data.required_capacity}세대</li>
-                    <li><strong>인센티브 세대수:</strong> {projectStatus.modules.M4.result_data.incentive_capacity}세대</li>
+                    <li><strong>법정 세대수:</strong> {projectStatus.modules?.M4.result_data.legal_capacity}세대</li>
+                    <li><strong>필수 세대수:</strong> {projectStatus.modules?.M4.result_data.required_capacity}세대</li>
+                    <li><strong>인센티브 세대수:</strong> {projectStatus.modules?.M4.result_data.incentive_capacity}세대</li>
                   </ul>
                 </div>
               )}
@@ -405,30 +405,30 @@ const FinalReportPage: React.FC = () => {
         {/* M5: Feasibility */}
         <section className="module-section">
           <h2>M5: 사업 타당성 분석</h2>
-          {projectStatus.modules.M5 ? (
+          {projectStatus.modules?.M5 ? (
             <div className="module-content">
               <div className="module-status">
-                <span className={`badge ${projectStatus.modules.M5.status.toLowerCase()}`}>
-                  {projectStatus.modules.M5.status}
+                <span className={`badge ${projectStatus.modules?.M5.status.toLowerCase()}`}>
+                  {projectStatus.modules?.M5.status}
                 </span>
-                {projectStatus.modules.M5.executed_at && (
+                {projectStatus.modules?.M5.executed_at && (
                   <span className="timestamp">
-                    실행일: {new Date(projectStatus.modules.M5.executed_at).toLocaleString('ko-KR')}
+                    실행일: {new Date(projectStatus.modules?.M5.executed_at).toLocaleString('ko-KR')}
                   </span>
                 )}
               </div>
-              {projectStatus.modules.M5.result_data && (
+              {projectStatus.modules?.M5.result_data && (
                 <div className="result-data">
                   <ul>
-                    <li><strong>NPV:</strong> ₩{(projectStatus.modules.M5.result_data.npv / 100000000).toFixed(2)}억</li>
-                    <li><strong>IRR:</strong> {projectStatus.modules.M5.result_data.irr}%</li>
-                    <li><strong>총 사업비:</strong> ₩{(projectStatus.modules.M5.result_data.total_cost / 100000000).toFixed(2)}억</li>
+                    <li><strong>NPV:</strong> ₩{(projectStatus.modules?.M5.result_data.npv / 100000000).toFixed(2)}억</li>
+                    <li><strong>IRR:</strong> {projectStatus.modules?.M5.result_data.irr}%</li>
+                    <li><strong>총 사업비:</strong> ₩{(projectStatus.modules?.M5.result_data.total_cost / 100000000).toFixed(2)}억</li>
                   </ul>
-                  {projectStatus.modules.M5.result_data.risk_notes && (
+                  {projectStatus.modules?.M5.result_data.risk_notes && (
                     <div className="risk-notes">
                       <h4>리스크 노트:</h4>
                       <ul>
-                        {projectStatus.modules.M5.result_data.risk_notes.map((note: string, idx: number) => (
+                        {projectStatus.modules?.M5.result_data.risk_notes.map((note: string, idx: number) => (
                           <li key={idx}>{note}</li>
                         ))}
                       </ul>
@@ -445,34 +445,34 @@ const FinalReportPage: React.FC = () => {
         {/* M6: LH Comprehensive Review */}
         <section className="module-section">
           <h2>M6: LH 종합 검토</h2>
-          {projectStatus.modules.M6 ? (
+          {projectStatus.modules?.M6 ? (
             <div className="module-content">
               <div className="module-status">
-                <span className={`badge ${projectStatus.modules.M6.status.toLowerCase()}`}>
-                  {projectStatus.modules.M6.status}
+                <span className={`badge ${projectStatus.modules?.M6.status.toLowerCase()}`}>
+                  {projectStatus.modules?.M6.status}
                 </span>
-                {projectStatus.modules.M6.executed_at && (
+                {projectStatus.modules?.M6.executed_at && (
                   <span className="timestamp">
-                    실행일: {new Date(projectStatus.modules.M6.executed_at).toLocaleString('ko-KR')}
+                    실행일: {new Date(projectStatus.modules?.M6.executed_at).toLocaleString('ko-KR')}
                   </span>
                 )}
               </div>
-              {projectStatus.modules.M6.result_data && (
+              {projectStatus.modules?.M6.result_data && (
                 <div className="result-data">
-                  <div className={`decision-badge ${projectStatus.modules.M6.result_data.decision?.toLowerCase()}`}>
-                    {projectStatus.modules.M6.result_data.decision}
+                  <div className={`decision-badge ${projectStatus.modules?.M6.result_data.decision?.toLowerCase()}`}>
+                    {projectStatus.modules?.M6.result_data.decision}
                   </div>
-                  {projectStatus.modules.M6.result_data.breakdown && (
+                  {projectStatus.modules?.M6.result_data.breakdown && (
                     <div className="breakdown">
                       <h4>세부 분석:</h4>
-                      <p>{projectStatus.modules.M6.result_data.breakdown}</p>
+                      <p>{projectStatus.modules?.M6.result_data.breakdown}</p>
                     </div>
                   )}
-                  {projectStatus.modules.M6.result_data.recommendations && (
+                  {projectStatus.modules?.M6.result_data.recommendations && (
                     <div className="recommendations">
                       <h4>권장 사항:</h4>
                       <ul>
-                        {projectStatus.modules.M6.result_data.recommendations.map((rec: string, idx: number) => (
+                        {projectStatus.modules?.M6.result_data.recommendations.map((rec: string, idx: number) => (
                           <li key={idx}>{rec}</li>
                         ))}
                       </ul>
