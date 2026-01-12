@@ -143,14 +143,36 @@ export const M1VerificationPage: React.FC = () => {
     try {
       setVerifying(true);
       
+      // Check if this is manual data
+      const isManualData = sessionStorage.getItem(`m1_manual_${projectId}`) !== null;
+      
+      if (isManualData) {
+        // For manual data, we need to execute M1 first
+        console.log('📝 수동 입력 데이터 → M1 실행 중...');
+        
+        try {
+          // Attempt to execute M1 (this will trigger the backend M1 collection)
+          await analysisAPI.executeModule(projectId, 'M1');
+          console.log('✅ M1 실행 완료');
+          
+          // Wait a bit for execution to complete
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        } catch (execError) {
+          console.warn('⚠️ M1 자동 실행 실패:', execError);
+          // Continue anyway - the manual data is our fallback
+        }
+      }
+      
       // Step 1: Verify M1
       const verifyResponse = await analysisAPI.verifyModule(projectId, 'M1', {
         approved: true,
-        comments: 'M1 data verified by user',
+        comments: isManualData 
+          ? 'M1 data manually entered and verified by user'
+          : 'M1 data verified by user',
         verified_by: 'user@example.com' // TODO: Get from auth context
       });
       
-      console.log('✅ M1 Verified:', verifyResponse.message);
+      console.log('✅ M1 검증 완료:', verifyResponse.message);
       
       // Step 2: Execute M2-M6 pipeline (CRITICAL EXECUTION TRIGGER)
       console.log('⚡ Triggering M2-M6 execution...');
@@ -407,30 +429,30 @@ export const M1VerificationPage: React.FC = () => {
           <div className="data-grid">
             <div className="data-item">
               <label>도로명 주소:</label>
-              <value>{m1Data.road_address}</value>
+              <span className="value">{m1Data.road_address}</span>
             </div>
             <div className="data-item">
               <label>지번 주소:</label>
-              <value>{m1Data.address}</value>
+              <span className="value">{m1Data.address}</span>
             </div>
             <div className="data-item">
               <label>면적:</label>
-              <value>
+              <span className="value">
                 {m1Data.area_sqm.toLocaleString()}m² 
                 ({m1Data.area_pyeong.toLocaleString()}평)
-              </value>
+              </span>
             </div>
             <div className="data-item">
               <label>용도지역:</label>
-              <value>{m1Data.zone_type}</value>
+              <span className="value">{m1Data.zone_type}</span>
             </div>
             <div className="data-item">
               <label>건폐율 / 용적률:</label>
-              <value>{m1Data.bcr}% / {m1Data.far}%</value>
+              <span className="value">{m1Data.bcr}% / {m1Data.far}%</span>
             </div>
             <div className="data-item">
               <label>도로폭:</label>
-              <value>{m1Data.road_width}m</value>
+              <span className="value">{m1Data.road_width}m</span>
             </div>
             <div className="data-source">
               📍 Source: {m1Data.data_sources.cadastral} ✅
@@ -520,11 +542,11 @@ export const M1VerificationPage: React.FC = () => {
           <div className="data-grid">
             <div className="data-item">
               <label>공시지가:</label>
-              <value>₩{m1Data.official_land_price.toLocaleString()}/m²</value>
+              <span className="value">₩{m1Data.official_land_price.toLocaleString()}/m²</span>
             </div>
             <div className="data-item">
               <label>기준일:</label>
-              <value>{m1Data.official_price_date}</value>
+              <span className="value">{m1Data.official_price_date}</span>
             </div>
           </div>
 

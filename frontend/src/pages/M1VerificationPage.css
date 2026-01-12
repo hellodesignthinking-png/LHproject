@@ -135,7 +135,8 @@
   letter-spacing: 0.05em;
 }
 
-.data-item value {
+.data-item .value,
+.data-item span.value {
   font-size: 1rem;
   color: #111827;
   font-weight: 500;
