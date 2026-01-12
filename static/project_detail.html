@@ -831,8 +831,24 @@
                     }
                     
                     try {
-                        // M1 자동 수집 시작
                         this.loading = true;
+                        
+                        // 1. M1 현재 상태 확인
+                        const stateResponse = await fetch(`/api/projects/${this.projectId}/modules/M1/state`);
+                        
+                        if (stateResponse.ok) {
+                            const state = await stateResponse.json();
+                            console.log('M1 현재 상태:', state);
+                            
+                            // 이미 AUTO_FETCHED 이상의 상태라면 다음 단계로
+                            if (state.status !== 'EMPTY') {
+                                alert(`M1 데이터가 이미 수집되었습니다.\n현재 상태: ${state.status}\n\n다음 단계를 진행해주세요.`);
+                                await this.loadProject();
+                                return;
+                            }
+                        }
+                        
+                        // 2. M1 자동 수집 시작 (EMPTY 상태인 경우만)
                         const response = await fetch(`/api/projects/${this.projectId}/modules/M1/auto-fetch`, {
                             method: 'POST',
                             headers: {
@@ -841,6 +857,14 @@
                         });
                         
                         if (!response.ok) {
+                            const errorData = await response.json();
+                            
+                            // 400 에러 상세 처리
+                            if (response.status === 400 && errorData.detail) {
+                                const detail = errorData.detail;
+                                throw new Error(`${detail.message || detail.error || 'M1 시작 실패'}`);
+                            }
+                            
                             throw new Error(`M1 시작 실패: ${response.status}`);
                         }
                         
@@ -848,14 +872,14 @@
                         console.log('M1 Auto-Fetch 결과:', result);
                         
                         // 성공 메시지 표시
-                        alert('✅ M1 데이터 자동 수집이 시작되었습니다!');
+                        alert('✅ M1 데이터 자동 수집이 완료되었습니다!');
                         
                         // 프로젝트 정보 리로드
                         await this.loadProject();
                         
                     } catch (error) {
                         console.error('M1 시작 오류:', error);
-                        alert(`M1 시작 중 오류가 발생했습니다: ${error.message}`);
+                        alert(`M1 시작 중 오류가 발생했습니다:\n\n${error.message}`);
                     } finally {
                         this.loading = false;
                     }
