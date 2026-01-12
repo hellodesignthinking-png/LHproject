@@ -245,19 +245,30 @@ async def generate_mock_data(project_id: str) -> JSONResponse:
         
         context.mock_data = mock_data
         context.editable_data = editable_data
-        context.transition_to(M1Status.EDITABLE, "Mock 데이터 생성 완료")
+        
+        # 🔴 Freeze 가능 여부 확인 (Mock 데이터는 모든 필드 완성)
+        validation = context.validate_for_freeze()
+        
+        if validation.can_freeze:
+            context.transition_to(M1Status.READY_TO_FREEZE, "Mock 데이터 생성 완료 (필수값 충족)")
+        else:
+            context.transition_to(M1Status.EDITABLE, "Mock 데이터 생성 완료")
+        
         save_m1_state(context)
         
         logger.info("✅ Mock data generated")
         logger.info(f"   Area: {mock_data.area_sqm} ㎡")
         logger.info(f"   Zone: {mock_data.zone_type}")
         logger.info(f"   Price: ₩{mock_data.official_land_price:,}/㎡")
+        logger.info(f"   Status: {context.status.value}")
+        logger.info(f"   Can freeze: {validation.can_freeze}")
         logger.info("="*80)
         
         return JSONResponse(content={
             "status": context.status.value,
             "mock_data": mock_data.dict(),
-            "editable_data": editable_data.dict()
+            "editable_data": editable_data.dict(),
+            "validation": validation.dict()
         })
         
     except Exception as e:
@@ -463,21 +474,53 @@ async def freeze_land_data(
             address=data.address,
             lat=data.lat,
             lng=data.lng,
-            area_sqm=data.area_sqm,
-            zone_type=data.zone_type,
+            # 🔴 Updated field names
+            land_area=data.land_area,
+            zoning=data.zoning,
             bcr=data.bcr,
             far=data.far,
-            road_condition=data.road_condition or "정보 없음",
             official_land_price=data.official_land_price,
-            official_price_date=data.official_price_date,
-            transaction_cases=data.transaction_cases or [],
-            regulation_summary=data.regulation_summary or {},
+            
+            # 🔴 Road conditions (5 fields)
+            road_access_type=data.road_access_type,
+            road_width_m=data.road_width_m,
+            road_count=data.road_count,
+            fire_truck_access=data.fire_truck_access,
+            road_legal_status=data.road_legal_status,
+            
+            # 🔴 Site shape (4 fields)
+            site_shape_type=data.site_shape_type,
+            frontage_m=data.frontage_m,
+            depth_m=data.depth_m,
+            effective_build_ratio=data.effective_build_ratio,
+            
+            # 🔴 Orientation/sunlight (3 fields)
+            main_direction=data.main_direction,
+            sunlight_risk=data.sunlight_risk,
+            adjacent_height_risk=data.adjacent_height_risk,
+            
+            # 🔴 Market context (3 fields)
+            nearby_transaction_price_py=data.nearby_transaction_price_py,
+            public_land_price_py=data.public_land_price_py,
+            price_gap_ratio=data.price_gap_ratio,
+            
+            # 🔴 Existing building (5 fields)
+            existing_building_exists=data.existing_building_exists,
+            existing_building_structure=data.existing_building_structure,
+            existing_building_floors=data.existing_building_floors,
+            existing_building_area_m2=data.existing_building_area_m2,
+            demolition_required=data.demolition_required,
+            
+            # 🔴 Additional fields
+            transaction_price=data.transaction_price,
+            regulation_summary=data.regulation_summary or "정보 없음",
+            lh_compatibility=data.lh_compatibility or "검토 필요",
             sources={
                 "address": DataSource.KAKAO_API.value,
                 "lat": DataSource.KAKAO_API.value,
                 "lng": DataSource.KAKAO_API.value,
-                "area_sqm": DataSource.USER_EDIT.value,
-                "zone_type": DataSource.MOCK_EDIT.value,
+                "land_area": DataSource.USER_EDIT.value,
+                "zoning": DataSource.MOCK_EDIT.value,
                 "bcr": DataSource.MOCK.value,
                 "far": DataSource.MOCK.value,
                 "official_land_price": DataSource.MOCK_EDIT.value
@@ -494,18 +537,22 @@ async def freeze_land_data(
         logger.info("🔥 FREEZE COMPLETED")
         logger.info(f"   Context ID: {context_id}")
         logger.info(f"   Address: {result_data.address}")
-        logger.info(f"   Area: {result_data.area_sqm} ㎡")
-        logger.info(f"   Zone: {result_data.zone_type}")
+        logger.info(f"   Area: {result_data.land_area} ㎡")
+        logger.info(f"   Zone: {result_data.zoning}")
         logger.info(f"   Price: ₩{result_data.official_land_price:,}/㎡")
         logger.info(f"   Frozen by: {request.approved_by}")
         logger.info(f"   Frozen at: {result_data.frozen_at}")
         logger.info("🔒 THIS DATA IS NOW IMMUTABLE")
         logger.info("="*80)
         
+        # Convert to dict with JSON-safe datetime
+        result_dict = result_data.model_dump()
+        result_dict['frozen_at'] = result_data.frozen_at.isoformat()
+        
         return JSONResponse(content={
             "status": context.status.value,
             "context_id": context_id,
-            "result_data": result_data.dict()
+            "result_data": result_dict
         })
         
     except Exception as e:
