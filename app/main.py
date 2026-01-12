@@ -112,6 +112,9 @@ from app.api.endpoints.m5_expert_report import router as m5_expert_report_router
 # 🎯 ZeroSite Decision OS: M6 Final Judgment API (LH 종합 판단 모듈)
 from app.api.endpoints.m6_final_judgment_api import router as m6_final_judgment_router
 
+# 🎯 ZeroSite Decision OS: Project Management API (프로젝트 관리 시스템)
+from app.api.endpoints.project_management import router as project_management_router
+
 # 🎯 ZeroSite Decision OS: M7 Community Planning API (커뮤니티 계획 모듈)
 from app.api.endpoints.m7_community_api import router as m7_community_router
 
@@ -348,6 +351,9 @@ app.include_router(m5_expert_report_router)
 
 # 🎯 ZeroSite Decision OS: M6 Final Judgment API (LH 종합 판단 모듈)
 app.include_router(m6_final_judgment_router)
+
+# 🎯 ZeroSite Decision OS: Project Management API (프로젝트 관리 시스템)
+app.include_router(project_management_router)
 
 # 🎯 ZeroSite Decision OS: M7 Community Planning API (커뮤니티 계획 모듈)
 app.include_router(m7_community_router)
