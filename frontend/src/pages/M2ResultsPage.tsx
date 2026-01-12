@@ -64,8 +64,20 @@ export const M2ResultsPage: React.FC = () => {
       try {
         setLoading(true);
         const result = await analysisAPI.getModuleResult<M2Data>(projectId, 'M2');
-        setM2Data(result.result);
-        setError(null);
+        
+        // Check if we got real data or just mock metadata
+        const hasRealData = result.result && 
+                           typeof result.result === 'object' && 
+                           'land_value' in result.result;
+        
+        if (!hasRealData) {
+          // Mock data detected - show appropriate message
+          setError('M2 분석이 완료되었지만 상세 데이터가 아직 생성되지 않았습니다. (Mock execution)');
+          setM2Data(null);
+        } else {
+          setM2Data(result.result);
+          setError(null);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load M2 data');
       } finally {
@@ -87,8 +99,39 @@ export const M2ResultsPage: React.FC = () => {
   if (error || !m2Data) {
     return (
       <div className="results-page error">
-        <h2>❌ Error</h2>
-        <p>{error || 'No data available'}</p>
+        <div style={{ maxWidth: '600px', margin: '100px auto', padding: '30px', textAlign: 'center' }}>
+          <h2>⚠️ M2 데이터 생성 중</h2>
+          <p style={{ marginBottom: '20px' }}>
+            {error || 'M2 분석 결과가 아직 준비되지 않았습니다.'}
+          </p>
+          <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
+            <p style={{ marginBottom: '10px' }}><strong>현재 상태:</strong></p>
+            <p>✅ M2 모듈 실행 완료</p>
+            <p>⏳ 상세 데이터 생성 대기 중 (Mock execution)</p>
+          </div>
+          <div style={{ marginBottom: '20px' }}>
+            <p><strong>💡 해결 방법:</strong></p>
+            <ul style={{ textAlign: 'left', display: 'inline-block' }}>
+              <li>백엔드 M2 분석 엔진이 실제 토지가치를 계산하도록 구현 필요</li>
+              <li>현재는 Mock 데이터로 실행 완료 상태만 표시</li>
+              <li>M1 데이터를 기반으로 실제 가치 산출 로직 추가 예정</li>
+            </ul>
+          </div>
+          <button 
+            onClick={() => navigate(`/projects/${projectId}`)}
+            style={{
+              padding: '12px 24px',
+              fontSize: '16px',
+              background: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer'
+            }}
+          >
+            ← 프로젝트 대시보드로 돌아가기
+          </button>
+        </div>
       </div>
     );
   }
