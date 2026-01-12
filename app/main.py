@@ -94,6 +94,12 @@ from app.api.endpoints.m2_valuation_api import router as m2_valuation_router
 # 🎯 ZeroSite Decision OS: M2 Expert Report API (감정평가 전문가 완성본)
 from app.api.endpoints.m2_expert_report import router as m2_expert_report_router
 
+# 🎯 ZeroSite Decision OS: M3 Housing Type API (공급유형 적합성 모듈)
+from app.api.endpoints.m3_housing_type_api import router as m3_housing_type_router
+
+# 🎯 ZeroSite Decision OS: M3 Expert Report API (공급유형 전문가 완성본)
+from app.api.endpoints.m3_expert_report import router as m3_expert_report_router
+
 # ✨ PDF Download: Import Standardized PDF Download Router (M2-M6)
 from app.routers.pdf_download_standardized import router as pdf_download_router
 
@@ -306,6 +312,12 @@ app.include_router(m2_valuation_router)
 
 # 🎯 ZeroSite Decision OS: M2 Expert Report API (감정평가 전문가 완성본)
 app.include_router(m2_expert_report_router)
+
+# 🎯 ZeroSite Decision OS: M3 Housing Type API (공급유형 적합성 모듈)
+app.include_router(m3_housing_type_router)
+
+# 🎯 ZeroSite Decision OS: M3 Expert Report API (공급유형 전문가 완성본)
+app.include_router(m3_expert_report_router)
 
 # ✨ PDF Download: Standardized PDF Download Router (M2-M6)
 app.include_router(pdf_download_router)
