@@ -99,6 +99,9 @@ export const M1VerificationPage: React.FC = () => {
   const [showManualInput, setShowManualInput] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [collectingPOI, setCollectingPOI] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedData, setEditedData] = useState<M1Data | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Handle POI data collection
   const handleCollectPOI = async () => {
@@ -635,26 +638,114 @@ export const M1VerificationPage: React.FC = () => {
           </div>
         </div>
         <div className="header-actions">
-          <button 
-            className="btn-edit"
-            onClick={() => setEditMode(true)}
-            style={{
-              padding: '10px 20px',
-              fontSize: '16px',
-              background: '#28a745',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              marginTop: '10px'
-            }}
-          >
-            ✏️ M1 데이터 수정하기
-          </button>
+          {!isEditing ? (
+            <button 
+              className="btn-edit"
+              onClick={() => {
+                setIsEditing(true);
+                setEditedData({...m1Data});
+              }}
+              style={{
+                padding: '10px 20px',
+                fontSize: '16px',
+                background: '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                marginTop: '10px'
+              }}
+            >
+              ✏️ 데이터 수정하기
+            </button>
+          ) : (
+            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+              <button 
+                className="btn-save"
+                onClick={async () => {
+                  if (!editedData || !projectId) return;
+                  
+                  try {
+                    setIsSaving(true);
+                    
+                    // 백엔드에 업데이트
+                    await analysisAPI.updateM1Data(projectId, editedData);
+                    
+                    // 로컬 상태 업데이트
+                    setM1Data(editedData);
+                    setIsEditing(false);
+                    
+                    alert('✅ M1 데이터가 성공적으로 저장되었습니다!');
+                  } catch (err) {
+                    console.error('저장 실패:', err);
+                    alert('❌ 저장에 실패했습니다: ' + (err instanceof Error ? err.message : 'Unknown error'));
+                  } finally {
+                    setIsSaving(false);
+                  }
+                }}
+                disabled={isSaving}
+                style={{
+                  padding: '10px 20px',
+                  fontSize: '16px',
+                  background: '#007bff',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: isSaving ? 'not-allowed' : 'pointer',
+                  opacity: isSaving ? 0.6 : 1
+                }}
+              >
+                {isSaving ? '💾 저장 중...' : '💾 저장'}
+              </button>
+              <button 
+                className="btn-cancel"
+                onClick={() => {
+                  setIsEditing(false);
+                  setEditedData(null);
+                }}
+                disabled={isSaving}
+                style={{
+                  padding: '10px 20px',
+                  fontSize: '16px',
+                  background: '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: isSaving ? 'not-allowed' : 'pointer',
+                  opacity: isSaving ? 0.6 : 1
+                }}
+              >
+                ❌ 취소
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
       <div className="verification-content">
+        {/* Editing Mode Indicator */}
+        {isEditing && (
+          <div style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            padding: '15px 20px',
+            borderRadius: '8px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+          }}>
+            <span style={{ fontSize: '24px' }}>✏️</span>
+            <div>
+              <strong style={{ fontSize: '18px' }}>편집 모드 활성화</strong>
+              <p style={{ margin: '5px 0 0 0', fontSize: '14px', opacity: 0.9 }}>
+                파란색 테두리가 있는 필드를 클릭하여 수정할 수 있습니다. 완료되면 "💾 저장" 버튼을 클릭하세요.
+              </p>
+            </div>
+          </div>
+        )}
+        
         {/* Warning Banner */}
         <div className="warning-banner">
           <h3>⚠️ IMPORTANT: Data Verification Required</h3>
@@ -671,30 +762,147 @@ export const M1VerificationPage: React.FC = () => {
           <div className="data-grid">
             <div className="data-item">
               <label>도로명 주소:</label>
-              <span className="value">{m1Data.road_address}</span>
+              {isEditing && editedData ? (
+                <input
+                  type="text"
+                  value={editedData.road_address}
+                  onChange={(e) => setEditedData({...editedData, road_address: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    border: '2px solid #007bff',
+                    borderRadius: '4px',
+                    fontSize: '14px'
+                  }}
+                />
+              ) : (
+                <span className="value">{m1Data.road_address}</span>
+              )}
             </div>
             <div className="data-item">
               <label>지번 주소:</label>
-              <span className="value">{m1Data.address}</span>
+              {isEditing && editedData ? (
+                <input
+                  type="text"
+                  value={editedData.address}
+                  onChange={(e) => setEditedData({...editedData, address: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    border: '2px solid #007bff',
+                    borderRadius: '4px',
+                    fontSize: '14px'
+                  }}
+                />
+              ) : (
+                <span className="value">{m1Data.address}</span>
+              )}
             </div>
             <div className="data-item">
-              <label>면적:</label>
-              <span className="value">
-                {m1Data.area_sqm.toLocaleString()}m² 
-                ({m1Data.area_pyeong.toLocaleString()}평)
-              </span>
+              <label>면적 (m²):</label>
+              {isEditing && editedData ? (
+                <input
+                  type="number"
+                  value={editedData.area_sqm}
+                  onChange={(e) => {
+                    const area_sqm = parseFloat(e.target.value) || 0;
+                    setEditedData({
+                      ...editedData,
+                      area_sqm,
+                      area_pyeong: area_sqm / 3.3058
+                    });
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    border: '2px solid #007bff',
+                    borderRadius: '4px',
+                    fontSize: '14px'
+                  }}
+                />
+              ) : (
+                <span className="value">
+                  {m1Data.area_sqm.toLocaleString()}m² 
+                  ({m1Data.area_pyeong.toLocaleString()}평)
+                </span>
+              )}
             </div>
             <div className="data-item">
               <label>용도지역:</label>
-              <span className="value">{m1Data.zone_type}</span>
+              {isEditing && editedData ? (
+                <input
+                  type="text"
+                  value={editedData.zone_type}
+                  onChange={(e) => setEditedData({...editedData, zone_type: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    border: '2px solid #007bff',
+                    borderRadius: '4px',
+                    fontSize: '14px'
+                  }}
+                  placeholder="예: 준주거지역, 제2종일반주거지역"
+                />
+              ) : (
+                <span className="value">{m1Data.zone_type}</span>
+              )}
             </div>
             <div className="data-item">
-              <label>건폐율 / 용적률:</label>
-              <span className="value">{m1Data.bcr}% / {m1Data.far}%</span>
+              <label>건폐율 (%):</label>
+              {isEditing && editedData ? (
+                <input
+                  type="number"
+                  value={editedData.bcr}
+                  onChange={(e) => setEditedData({...editedData, bcr: parseFloat(e.target.value) || 0})}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    border: '2px solid #007bff',
+                    borderRadius: '4px',
+                    fontSize: '14px'
+                  }}
+                />
+              ) : (
+                <span className="value">{m1Data.bcr}%</span>
+              )}
             </div>
             <div className="data-item">
-              <label>도로폭:</label>
-              <span className="value">{m1Data.road_width}m</span>
+              <label>용적률 (%):</label>
+              {isEditing && editedData ? (
+                <input
+                  type="number"
+                  value={editedData.far}
+                  onChange={(e) => setEditedData({...editedData, far: parseFloat(e.target.value) || 0})}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    border: '2px solid #007bff',
+                    borderRadius: '4px',
+                    fontSize: '14px'
+                  }}
+                />
+              ) : (
+                <span className="value">{m1Data.far}%</span>
+              )}
+            </div>
+            <div className="data-item">
+              <label>도로폭 (m):</label>
+              {isEditing && editedData ? (
+                <input
+                  type="number"
+                  value={editedData.road_width}
+                  onChange={(e) => setEditedData({...editedData, road_width: parseFloat(e.target.value) || 0})}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    border: '2px solid #007bff',
+                    borderRadius: '4px',
+                    fontSize: '14px'
+                  }}
+                />
+              ) : (
+                <span className="value">{m1Data.road_width}m</span>
+              )}
             </div>
             <div className="data-source">
               📍 Source: {m1Data.data_sources.cadastral} ✅
@@ -807,34 +1015,115 @@ export const M1VerificationPage: React.FC = () => {
           
           <div className="data-grid">
             <div className="data-item">
-              <label>공시지가:</label>
-              <span className="value">₩{m1Data.official_land_price.toLocaleString()}/m²</span>
+              <label>공시지가 (₩/m²):</label>
+              {isEditing && editedData ? (
+                <input
+                  type="number"
+                  value={editedData.official_land_price}
+                  onChange={(e) => setEditedData({...editedData, official_land_price: parseFloat(e.target.value) || 0})}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    border: '2px solid #007bff',
+                    borderRadius: '4px',
+                    fontSize: '14px'
+                  }}
+                  placeholder="예: 5000000"
+                />
+              ) : (
+                <span className="value">₩{m1Data.official_land_price.toLocaleString()}/m²</span>
+              )}
             </div>
             <div className="data-item">
               <label>기준일:</label>
-              <span className="value">{m1Data.official_price_date}</span>
+              {isEditing && editedData ? (
+                <input
+                  type="date"
+                  value={editedData.official_price_date}
+                  onChange={(e) => setEditedData({...editedData, official_price_date: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    border: '2px solid #007bff',
+                    borderRadius: '4px',
+                    fontSize: '14px'
+                  }}
+                />
+              ) : (
+                <span className="value">{m1Data.official_price_date}</span>
+              )}
             </div>
           </div>
 
           <h3>규제 사항</h3>
-          {m1Data.regulations && m1Data.regulations.length > 0 ? (
-            <ul className="regulation-list">
-              {m1Data.regulations.map((reg, idx) => (
-                <li key={idx}>⚠️ {reg}</li>
-              ))}
-            </ul>
+          {isEditing && editedData ? (
+            <div>
+              <textarea
+                value={(editedData.regulations || []).join(', ')}
+                onChange={(e) => {
+                  const regulations = e.target.value.split(',').map(r => r.trim()).filter(r => r);
+                  setEditedData({...editedData, regulations});
+                }}
+                placeholder="규제 사항을 쉼표(,)로 구분하여 입력하세요"
+                style={{
+                  width: '100%',
+                  minHeight: '60px',
+                  padding: '8px',
+                  border: '2px solid #007bff',
+                  borderRadius: '4px',
+                  fontSize: '14px',
+                  fontFamily: 'inherit'
+                }}
+              />
+              <small style={{ color: '#666', display: 'block', marginTop: '5px' }}>
+                예: 주택건설사업계획승인, 건축물의 건축허가, 도시관리계획
+              </small>
+            </div>
           ) : (
-            <p className="no-data">특별 규제 사항 없음</p>
-          )}
-
-          {m1Data.restrictions && m1Data.restrictions.length > 0 && (
-            <>
-              <h3>제한 사항</h3>
+            m1Data.regulations && m1Data.regulations.length > 0 ? (
               <ul className="regulation-list">
-                {m1Data.restrictions.map((res, idx) => (
-                  <li key={idx}>🚫 {res}</li>
+                {m1Data.regulations.map((reg, idx) => (
+                  <li key={idx}>⚠️ {reg}</li>
                 ))}
               </ul>
+            ) : (
+              <p className="no-data">특별 규제 사항 없음</p>
+            )
+          )}
+
+          {(isEditing || (m1Data.restrictions && m1Data.restrictions.length > 0)) && (
+            <>
+              <h3>제한 사항</h3>
+              {isEditing && editedData ? (
+                <div>
+                  <textarea
+                    value={(editedData.restrictions || []).join(', ')}
+                    onChange={(e) => {
+                      const restrictions = e.target.value.split(',').map(r => r.trim()).filter(r => r);
+                      setEditedData({...editedData, restrictions});
+                    }}
+                    placeholder="제한 사항을 쉼표(,)로 구분하여 입력하세요"
+                    style={{
+                      width: '100%',
+                      minHeight: '60px',
+                      padding: '8px',
+                      border: '2px solid #007bff',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      fontFamily: 'inherit'
+                    }}
+                  />
+                  <small style={{ color: '#666', display: 'block', marginTop: '5px' }}>
+                    예: 녹지지역, 고도제한, 일조권 제한
+                  </small>
+                </div>
+              ) : (
+                <ul className="regulation-list">
+                  {m1Data.restrictions.map((res, idx) => (
+                    <li key={idx}>🚫 {res}</li>
+                  ))}
+                </ul>
+              )}
             </>
           )}
 
