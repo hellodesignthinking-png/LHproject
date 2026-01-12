@@ -229,14 +229,23 @@ export const M1VerificationPage: React.FC = () => {
       const isManualData = sessionStorage.getItem(`m1_manual_${projectId}`) !== null;
       
       if (isManualData) {
-        // For manual data, we can't execute M1 (backend doesn't support it)
-        // So we need to mark the manual data context and proceed directly to verification
-        console.log('📝 수동 입력 데이터 → 직접 검증 진행');
+        // For manual data, upload to backend first
+        console.log('📝 수동 입력 데이터 → 백엔드에 업데이트');
+        
+        try {
+          const manualData = JSON.parse(sessionStorage.getItem(`m1_manual_${projectId}`)!);
+          await analysisAPI.updateM1Data(projectId, manualData);
+          console.log('✅ M1 수동 데이터 백엔드 업데이트 완료');
+        } catch (updateErr) {
+          console.error('❌ M1 데이터 업데이트 실패:', updateErr);
+          alert('M1 데이터 업데이트에 실패했습니다. 다시 시도해주세요.');
+          return;
+        }
         
         // Show info to user
         alert(
-          '📝 수동 입력 데이터 검증\n\n' +
-          '수동으로 입력하신 M1 데이터를 기반으로 검증을 진행합니다.\n' +
+          '📝 수동 입력 데이터 저장 완료\n\n' +
+          '수동으로 입력하신 M1 데이터가 저장되었습니다.\n' +
           'M2-M6 분석은 이 데이터를 사용하여 실행됩니다.'
         );
       }

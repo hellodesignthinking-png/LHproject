@@ -591,3 +591,41 @@ async def delete_project(project_id: str):
         "success": True,
         "message": f"Project {project_id} deleted"
     }
+
+
+@router.put("/projects/{project_id}/modules/M1/data")
+async def update_m1_data(
+    project_id: str,
+    data: Dict[str, Any]
+):
+    """
+    Update M1 data with manual input
+    
+    This allows users to manually input M1 land data when
+    automatic collection fails or is incomplete.
+    """
+    # Get project status
+    status = analysis_status_storage.get_status(project_id)
+    if not status:
+        raise HTTPException(status_code=404, detail=f"Project not found: {project_id}")
+    
+    try:
+        # Update M1 data
+        analysis_status_storage.update_module_status(
+            project_id=project_id,
+            module_name="M1",
+            status=ModuleStatus.COMPLETED,
+            result_summary=data
+        )
+        
+        logger.info(f"✅ M1 data updated manually for project {project_id}")
+        
+        return {
+            "success": True,
+            "message": "M1 data updated successfully",
+            "project_id": project_id
+        }
+    
+    except Exception as e:
+        logger.error(f"❌ Failed to update M1 data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

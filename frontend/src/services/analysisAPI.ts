@@ -328,6 +328,28 @@ class AnalysisAPIService {
       throw new Error(error.detail || 'Failed to delete project');
     }
   }
+  
+  /**
+   * Update M1 data with manual input
+   */
+  async updateM1Data(projectId: string, data: any): Promise<{success: boolean, message: string}> {
+    const response = await fetch(
+      `${this.baseUrl}/analysis/projects/${projectId}/modules/M1/data`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to update M1 data');
+    }
+
+    return await response.json();
+  }
+  
   /**
    * Collect POI (Point of Interest) data using Kakao Map API
    * 
