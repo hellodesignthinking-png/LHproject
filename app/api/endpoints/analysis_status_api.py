@@ -395,6 +395,54 @@ async def execute_module(
             detail=f"Cannot execute {module_name}: {reason}"
         )
     
+    # 🔥 CRITICAL: Validate M1 data before executing M2~M6
+    # All downstream modules depend on M1 result_data
+    m1_status = status.get_module_status("M1")
+    m1_data = m1_status.result_data if hasattr(m1_status, 'result_data') and m1_status.result_data else m1_status.result_summary
+    
+    if not m1_data:
+        logger.error(f"❌ M1 result_data is empty! Cannot execute {module_name}")
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "M1_DATA_MISSING",
+                "message": "M1 data has not been committed. Please complete M1 first.",
+                "required_action": "Update M1 data via PUT /projects/{project_id}/modules/M1/data"
+            }
+        )
+    
+    # Validate M1 data has non-zero values
+    area_sqm = m1_data.get("area_sqm", 0)
+    official_land_price = m1_data.get("official_land_price", 0)
+    zone_type = m1_data.get("zone_type", "")
+    
+    if area_sqm <= 0:
+        logger.error(f"❌ M1 area_sqm = {area_sqm} (invalid). Cannot execute {module_name}")
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "INVALID_M1_DATA",
+                "message": f"M1 area_sqm is invalid ({area_sqm}). Must be > 0.",
+                "required_action": "Update M1 with valid area_sqm"
+            }
+        )
+    
+    if official_land_price <= 0:
+        logger.error(f"❌ M1 official_land_price = {official_land_price} (invalid). Cannot execute {module_name}")
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "INVALID_M1_DATA",
+                "message": f"M1 official_land_price is invalid ({official_land_price}). Must be > 0.",
+                "required_action": "Update M1 with valid official_land_price"
+            }
+        )
+    
+    logger.info(f"✅ M1 data validation passed for {module_name}")
+    logger.info(f"   Area: {area_sqm}㎡")
+    logger.info(f"   Official Price: ₩{official_land_price:,}/㎡")
+    logger.info(f"   Zone Type: {zone_type}")
+    
     try:
         execution_id = str(uuid.uuid4())
         
@@ -420,15 +468,20 @@ async def execute_module(
             # ⚠️ CRITICAL: M1 data is in result_data, not result_summary
             m1_data = m1_status.result_data if hasattr(m1_status, 'result_data') and m1_status.result_data else m1_status.result_summary
             
-            logger.info(f"🔍 M2 Debug: m1_data type = {type(m1_data)}")
-            logger.info(f"🔍 M2 Debug: m1_data keys = {list(m1_data.keys()) if m1_data else 'None'}")
-            logger.info(f"🔍 M2 Debug: area_sqm = {m1_data.get('area_sqm') if m1_data else 'N/A'}")
-            logger.info(f"🔍 M2 Debug: official_land_price = {m1_data.get('official_land_price') if m1_data else 'N/A'}")
+            logger.info(f"🔍 M2 EXECUTE: Reading M1 data")
+            logger.info(f"   m1_data type = {type(m1_data)}")
+            logger.info(f"   m1_data keys = {list(m1_data.keys()) if m1_data else 'None'}")
+            
             if m1_data:
                 # Simple land value calculation based on M1 data
                 area_sqm = m1_data.get("area_sqm", 0)
                 official_price = m1_data.get("official_land_price", 0)
                 zone_type = m1_data.get("zone_type", "")
+                
+                logger.info(f"🔍 M2 INPUT DATA:")
+                logger.info(f"   area_sqm = {area_sqm}")
+                logger.info(f"   official_land_price = {official_price}")
+                logger.info(f"   zone_type = {zone_type}")
                 
                 # Calculate estimated land value (simple formula)
                 # Official price usually 70-80% of market price
@@ -436,7 +489,12 @@ async def execute_module(
                     estimated_value = int(area_sqm * official_price * 1.3)  # 30% markup
                     unit_price_sqm = int(official_price * 1.3)
                     unit_price_pyeong = int(unit_price_sqm * 3.3058)
+                    
+                    logger.info(f"✅ M2 CALCULATION SUCCESS:")
+                    logger.info(f"   estimated_value = ₩{estimated_value:,}")
+                    logger.info(f"   unit_price_sqm = ₩{unit_price_sqm:,}/㎡")
                 else:
+                    logger.error(f"❌ M2 CALCULATION FAILED: Invalid input (area={area_sqm}, price={official_price})")
                     estimated_value = 0
                     unit_price_sqm = 0
                     unit_price_pyeong = 0
@@ -480,6 +538,9 @@ async def execute_module(
             m1_data = m1_status.result_data if hasattr(m1_status, 'result_data') and m1_status.result_data else m1_status.result_summary
             zone_type = m1_data.get("zone_type", "") if m1_data else ""
             
+            logger.info(f"🔍 M3 EXECUTE: Reading M1 data")
+            logger.info(f"   zone_type = {zone_type}")
+            
             # Simple housing type selection based on zone
             if "상업" in zone_type:
                 selected_type = "도시형생활주택"
@@ -490,6 +551,10 @@ async def execute_module(
             else:
                 selected_type = "공공임대주택"
                 confidence = 70
+            
+            logger.info(f"✅ M3 DECISION:")
+            logger.info(f"   selected_type = {selected_type}")
+            logger.info(f"   confidence = {confidence}%")
             
             mock_result = {
                 "execution_id": execution_id,
@@ -878,10 +943,14 @@ async def update_m1_data(
     data: Dict[str, Any]
 ):
     """
-    Update M1 data with manual input
+    🔥 CRITICAL: Update M1 data and COMMIT to result_data
     
-    This allows users to manually input M1 land data when
-    automatic collection fails or is incomplete.
+    This is the ONLY source of truth for M2~M6 calculations.
+    When user manually inputs or edits M1 data, it MUST be committed
+    to result_data for downstream modules to use.
+    
+    ❌ NEVER store only in preview/temporary fields
+    ✅ ALWAYS store in result_data for M2~M6 to consume
     """
     # Get project status
     status = analysis_status_storage.get_status(project_id)
@@ -889,22 +958,84 @@ async def update_m1_data(
         raise HTTPException(status_code=404, detail=f"Project not found: {project_id}")
     
     try:
-        # Update M1 data
+        # 🔒 CRITICAL VALIDATION: Ensure M1 data has required fields
+        area_sqm = data.get("area_sqm", 0)
+        official_land_price = data.get("official_land_price", 0)
+        zone_type = data.get("zone_type", "")
+        
+        # Validate non-zero critical fields
+        validation_errors = []
+        if area_sqm <= 0:
+            validation_errors.append(f"area_sqm must be > 0 (got {area_sqm})")
+        if official_land_price <= 0:
+            validation_errors.append(f"official_land_price must be > 0 (got {official_land_price})")
+        if not zone_type or zone_type.strip() == "":
+            validation_errors.append("zone_type must not be empty")
+        
+        if validation_errors:
+            logger.error(f"❌ M1 data validation failed: {validation_errors}")
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "INVALID_M1_DATA",
+                    "message": "M1 data validation failed",
+                    "validation_errors": validation_errors
+                }
+            )
+        
+        # 🔥 COMMIT TO result_data (PRIMARY SOURCE FOR M2~M6)
+        # This is the ONLY data M2~M6 will read
+        committed_data = {
+            "address": data.get("address", ""),
+            "road_address": data.get("road_address", data.get("address", "")),
+            "area_sqm": area_sqm,
+            "area_pyeong": round(area_sqm / 3.3058, 2) if area_sqm > 0 else 0,
+            "zone_type": zone_type,
+            "official_land_price": official_land_price,
+            "official_price_date": data.get("official_price_date", ""),
+            "far": data.get("far", 0),
+            "bcr": data.get("bcr", 0),
+            "road_width": data.get("road_width", 0),
+            "subway_stations": data.get("subway_stations", []),
+            "bus_stops": data.get("bus_stops", []),
+            "poi_schools": data.get("poi_schools", []),
+            "poi_commercial": data.get("poi_commercial", []),
+            "regulations": data.get("regulations", ""),
+            "restrictions": data.get("restrictions", ""),
+            "transaction_cases": data.get("transaction_cases", []),
+            "data_sources": data.get("data_sources", ["Manual Input"]),
+            "is_manual_input": True,
+            "committed_at": datetime.now().isoformat()
+        }
+        
+        # Update M1 with committed data in result_data
         analysis_status_storage.update_module_status(
             project_id=project_id,
             module_name="M1",
             status=ModuleStatus.COMPLETED,
-            result_summary=data
+            result_data=committed_data,  # 🔥 PRIMARY: For M2~M6 calculation
+            result_summary=committed_data  # For backward compatibility
         )
         
-        logger.info(f"✅ M1 data updated manually for project {project_id}")
+        logger.info(f"✅ M1 data COMMITTED to result_data for project {project_id}")
+        logger.info(f"   Area: {area_sqm}㎡ ({committed_data['area_pyeong']}평)")
+        logger.info(f"   Official Price: ₩{official_land_price:,}/㎡")
+        logger.info(f"   Zone Type: {zone_type}")
+        logger.info(f"   🔥 This data will be used by M2~M6")
         
         return {
             "success": True,
-            "message": "M1 data updated successfully",
-            "project_id": project_id
+            "message": "M1 data committed successfully. Ready for M2~M6 execution.",
+            "project_id": project_id,
+            "committed_data": {
+                "area_sqm": area_sqm,
+                "official_land_price": official_land_price,
+                "zone_type": zone_type
+            }
         }
     
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"❌ Failed to update M1 data: {e}")
+        logger.error(f"❌ Failed to commit M1 data: {e}")
         raise HTTPException(status_code=500, detail=str(e))

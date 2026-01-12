@@ -45,7 +45,8 @@ class ModuleInfo(BaseModel):
     context_id: Optional[str] = None  # 실행 시 사용된 Context ID
     
     # 실행 결과 메타데이터
-    result_summary: Optional[Dict] = None  # 주요 결과 요약
+    result_summary: Optional[Dict] = None  # 주요 결과 요약 (deprecated, use result_data)
+    result_data: Optional[Dict] = None  # 🔥 PRIMARY: 분석 계산용 실제 데이터 (M2~M6가 읽음)
 
 
 class AnalysisStatus(BaseModel):
@@ -246,6 +247,7 @@ class AnalysisStatusStorage:
         status: ModuleStatus,
         context_id: Optional[str] = None,
         result_summary: Optional[Dict] = None,
+        result_data: Optional[Dict] = None,  # 🔥 PRIMARY: For M2~M6 calculation
         error_message: Optional[str] = None
     ):
         """Update individual module status"""
@@ -265,6 +267,9 @@ class AnalysisStatusStorage:
         
         if result_summary:
             module_status.result_summary = result_summary
+        
+        if result_data:
+            module_status.result_data = result_data  # 🔥 Store for M2~M6 use
         
         if error_message:
             module_status.error_message = error_message
