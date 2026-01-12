@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { analysisAPI, M5Result } from '../services/analysisAPI';
+import { analysisAPI, ModuleResult } from '../services/analysisAPI';
+
+type M5Result = ModuleResult<any>;
 import './ModuleResultsPage.css';
 
 export const M5ResultsPage: React.FC = () => {
@@ -16,7 +18,16 @@ export const M5ResultsPage: React.FC = () => {
     const loadResult = async () => {
       try {
         setLoading(true);
-        const data = await analysisAPI.getModuleResult<M5Result>(projectId, 'M5');
+        const data = await analysisAPI.getModuleResult<any>(projectId, 'M5');
+        
+        // Check if we got real data or just mock metadata
+        const hasRealData = data.result && 
+                           typeof data.result === 'object' && 
+                           Object.keys(data.result).length > 5;
+        
+        if (!hasRealData) {
+          throw new Error('M5 분석이 완료되었지만 상세 데이터가 아직 생성되지 않았습니다. (Mock execution)');
+        }
         
         if (!data.context_id || !data.execution_id) {
           throw new Error('Invalid context: Missing context_id or execution_id');

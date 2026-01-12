@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { analysisAPI, M3Result } from '../services/analysisAPI';
+import { analysisAPI, ModuleResult } from '../services/analysisAPI';
 import './ModuleResultsPage.css';
+
+type M3Result = ModuleResult<any>;
 
 export const M3ResultsPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -16,7 +18,16 @@ export const M3ResultsPage: React.FC = () => {
     const loadResult = async () => {
       try {
         setLoading(true);
-        const data = await analysisAPI.getModuleResult<M3Result>(projectId, 'M3');
+        const data = await analysisAPI.getModuleResult<any>(projectId, 'M3');
+        
+        // Check if we got real data or just mock metadata
+        const hasRealData = data.result && 
+                           typeof data.result === 'object' && 
+                           ('selected_type' in data.result || 'housing_type' in data.result);
+        
+        if (!hasRealData) {
+          throw new Error('M3 분석이 완료되었지만 상세 데이터가 아직 생성되지 않았습니다. (Mock execution)');
+        }
         
         // Context validation
         if (!data.context_id || !data.execution_id) {
