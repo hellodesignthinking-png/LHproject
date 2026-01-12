@@ -81,6 +81,7 @@ interface M1FormData {
 interface M1DataInputFormProps {
   projectId: string;
   initialAddress?: string;
+  initialData?: Partial<M1FormData>;
   onSubmit: (data: M1FormData) => Promise<void>;
   onCancel: () => void;
 }
@@ -88,27 +89,28 @@ interface M1DataInputFormProps {
 export const M1DataInputForm: React.FC<M1DataInputFormProps> = ({
   projectId,
   initialAddress,
+  initialData,
   onSubmit,
   onCancel
 }) => {
   const [formData, setFormData] = useState<M1FormData>({
-    address: initialAddress || '',
-    road_address: '',
-    parcel_number: '',
-    area_sqm: 0,
-    zone_type: '',
-    far: 0,
-    bcr: 0,
-    road_width: 0,
-    official_land_price: 0,
-    official_price_date: new Date().toISOString().split('T')[0],
-    regulations: '',
-    restrictions: '',
-    subway_stations: [],
-    bus_stops: [],
-    poi_schools: [],
-    poi_commercial: [],
-    transaction_cases: []
+    address: initialData?.address || initialAddress || '',
+    road_address: initialData?.road_address || '',
+    parcel_number: initialData?.parcel_number || '',
+    area_sqm: initialData?.area_sqm || 0,
+    zone_type: initialData?.zone_type || '',
+    far: initialData?.far || 0,
+    bcr: initialData?.bcr || 0,
+    road_width: initialData?.road_width || 0,
+    official_land_price: initialData?.official_land_price || 0,
+    official_price_date: initialData?.official_price_date || new Date().toISOString().split('T')[0],
+    regulations: initialData?.regulations || '',
+    restrictions: initialData?.restrictions || '',
+    subway_stations: initialData?.subway_stations || [],
+    bus_stops: initialData?.bus_stops || [],
+    poi_schools: initialData?.poi_schools || [],
+    poi_commercial: initialData?.poi_commercial || [],
+    transaction_cases: initialData?.transaction_cases || []
   });
 
   const [loading, setLoading] = useState(false);

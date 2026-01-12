@@ -97,6 +97,7 @@ export const M1VerificationPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [showManualInput, setShowManualInput] = useState(false);
+  const [editMode, setEditMode] = useState(false);
   const [collectingPOI, setCollectingPOI] = useState(false);
   
   // Handle POI data collection
@@ -384,6 +385,97 @@ export const M1VerificationPage: React.FC = () => {
     );
   }
 
+  // Show edit form if in edit mode
+  if (editMode && m1Data) {
+    return (
+      <div className="verification-page">
+        <M1DataInputForm
+          projectId={projectId!}
+          initialAddress={m1Data.address}
+          initialData={{
+            address: m1Data.address,
+            road_address: m1Data.road_address || '',
+            parcel_number: '',
+            area_sqm: m1Data.area_sqm,
+            zone_type: m1Data.zone_type,
+            far: m1Data.far,
+            bcr: m1Data.bcr,
+            road_width: m1Data.road_width || 0,
+            official_land_price: m1Data.official_land_price || 0,
+            official_price_date: m1Data.official_price_date || new Date().toISOString().split('T')[0],
+            regulations: m1Data.regulations ? m1Data.regulations.join(', ') : '',
+            restrictions: m1Data.restrictions ? m1Data.restrictions.join(', ') : '',
+            subway_stations: m1Data.subway_stations || [],
+            bus_stops: m1Data.bus_stops || [],
+            poi_schools: m1Data.poi_schools || [],
+            poi_commercial: m1Data.poi_commercial || [],
+            transaction_cases: m1Data.transaction_cases || []
+          }}
+          onSubmit={async (formData) => {
+            try {
+              console.log('수정된 M1 데이터:', formData);
+              
+              // 수정된 데이터를 M1Data 형식으로 변환
+              const updatedM1Data: M1Data = {
+                address: formData.address,
+                road_address: formData.road_address || '',
+                area_sqm: formData.area_sqm,
+                area_pyeong: formData.area_sqm / 3.3058,
+                zone_type: formData.zone_type,
+                far: formData.far,
+                bcr: formData.bcr,
+                road_width: formData.road_width || 0,
+                
+                subway_stations: formData.subway_stations || [],
+                bus_stops: formData.bus_stops || [],
+                poi_schools: formData.poi_schools || [],
+                poi_commercial: formData.poi_commercial || [],
+                
+                official_land_price: formData.official_land_price || 0,
+                official_price_date: formData.official_price_date || new Date().toISOString().split('T')[0],
+                official_price_source: '수동 수정',
+                
+                regulations: formData.regulations ? formData.regulations.split(',').map(r => r.trim()) : [],
+                restrictions: formData.restrictions ? formData.restrictions.split(',').map(r => r.trim()) : [],
+                
+                transaction_cases: formData.transaction_cases || [],
+                
+                // 메타데이터
+                context_id: m1Data.context_id,
+                fetched_at: new Date().toISOString(),
+                data_sources: {
+                  address: '수동 수정',
+                  cadastral: '수동 수정',
+                  zoning: '수동 수정',
+                  official_price: '수동 수정'
+                }
+              };
+              
+              // 백엔드에 업데이트
+              await analysisAPI.updateM1Data(projectId!, updatedM1Data);
+              
+              // 세션 스토리지에도 저장
+              sessionStorage.setItem(`m1_manual_${projectId}`, JSON.stringify(updatedM1Data));
+              
+              alert('✅ M1 데이터가 성공적으로 수정되었습니다!');
+              
+              // 수정 모드 종료 및 페이지 새로고침
+              setEditMode(false);
+              window.location.reload();
+            } catch (err) {
+              console.error('M1 데이터 수정 실패:', err);
+              alert(`❌ M1 데이터 수정에 실패했습니다:\n${err instanceof Error ? err.message : 'Unknown error'}`);
+              throw err;
+            }
+          }}
+          onCancel={() => {
+            setEditMode(false);
+          }}
+        />
+      </div>
+    );
+  }
+
   if (statusError || error) {
     // Show manual input form if requested
     if (showManualInput) {
@@ -541,6 +633,24 @@ export const M1VerificationPage: React.FC = () => {
           <div className="info-item">
             <strong>Data Fetched:</strong> {m1Data.fetched_at}
           </div>
+        </div>
+        <div className="header-actions">
+          <button 
+            className="btn-edit"
+            onClick={() => setEditMode(true)}
+            style={{
+              padding: '10px 20px',
+              fontSize: '16px',
+              background: '#28a745',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              marginTop: '10px'
+            }}
+          >
+            ✏️ M1 데이터 수정하기
+          </button>
         </div>
       </div>
 
