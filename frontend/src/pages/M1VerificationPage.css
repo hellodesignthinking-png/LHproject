@@ -425,3 +425,99 @@
     padding: 0.5rem;
   }
 }
+
+/* Error Container */
+.error-container {
+  max-width: 700px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.error-container h2 {
+  margin: 0 0 1rem 0;
+  color: #dc3545;
+  font-size: 1.5rem;
+}
+
+.error-message {
+  margin: 0 0 1.5rem 0;
+  padding: 1rem;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+  color: #856404;
+}
+
+.error-details {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.error-details h3 {
+  margin: 0 0 1rem 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.error-details ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.error-details li {
+  margin-bottom: 0.5rem;
+  color: #555;
+  line-height: 1.5;
+}
+
+.error-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+}
+
+.error-actions button {
+  padding: 0.875rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.error-hint {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #e8eaf6;
+  border-radius: 6px;
+  border-left: 4px solid #667eea;
+}
+
+.error-hint p {
+  margin: 0;
+  color: #555;
+  line-height: 1.6;
+}
+
+.error-hint strong {
+  color: #333;
+}
+
+/* Responsive Error */
+@media (max-width: 768px) {
+  .error-container {
+    padding: 1.5rem;
+  }
+
+  .error-actions button {
+    width: 100%;
+  }
+}

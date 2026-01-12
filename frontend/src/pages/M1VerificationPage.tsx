@@ -19,6 +19,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { analysisAPI, ModuleResult, useProjectStatus } from '../services/analysisAPI';
 import { ModuleStatusBar } from '../components/ModuleStatusBar';
+import { M1DataInputForm } from './M1DataInputForm';
 import './M1VerificationPage.css';
 
 interface M1Data {
@@ -95,6 +96,7 @@ export const M1VerificationPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
+  const [showManualInput, setShowManualInput] = useState(false);
 
   // Fetch M1 data
   useEffect(() => {
@@ -216,13 +218,75 @@ export const M1VerificationPage: React.FC = () => {
   }
 
   if (statusError || error) {
+    // Show manual input form if requested
+    if (showManualInput) {
+      return (
+        <div className="verification-page">
+          <M1DataInputForm
+            projectId={projectId!}
+            initialAddress={projectStatus?.address}
+            onSubmit={async (formData) => {
+              try {
+                console.log('Submitting manual M1 data:', formData);
+                alert('수동 입력 기능이 곧 지원됩니다.\n현재는 자동 수집 데이터만 사용 가능합니다.');
+                setShowManualInput(false);
+              } catch (err) {
+                throw err;
+              }
+            }}
+            onCancel={() => {
+              setShowManualInput(false);
+              navigate(`/projects/${projectId}`);
+            }}
+          />
+        </div>
+      );
+    }
+
     return (
       <div className="verification-page error">
-        <h2>❌ Error Loading M1 Data</h2>
-        <p>{statusError || error}</p>
-        <button onClick={() => navigate(`/projects`)}>
-          ← Back to Projects
-        </button>
+        <div className="error-container">
+          <h2>❌ M1 데이터 로딩 오류</h2>
+          <p className="error-message">{statusError || error}</p>
+          
+          <div className="error-details">
+            <h3>📋 가능한 원인:</h3>
+            <ul>
+              <li>M1 데이터 자동 수집이 아직 시작되지 않았습니다</li>
+              <li>정부 API 연결에 문제가 있을 수 있습니다</li>
+              <li>입력하신 주소로 토지 정보를 찾을 수 없습니다</li>
+            </ul>
+          </div>
+
+          <div className="error-actions">
+            <button 
+              className="btn-primary"
+              onClick={() => setShowManualInput(true)}
+            >
+              📝 수동으로 M1 데이터 입력하기
+            </button>
+            <button 
+              className="btn-secondary"
+              onClick={() => window.location.reload()}
+            >
+              🔄 페이지 새로고침
+            </button>
+            <button 
+              className="btn-secondary"
+              onClick={() => navigate(`/projects/${projectId}`)}
+            >
+              ← 프로젝트 대시보드로 돌아가기
+            </button>
+          </div>
+
+          <div className="error-hint">
+            <p>
+              <strong>💡 도움말:</strong><br/>
+              M1 데이터 수집은 프로젝트 생성 시 자동으로 시작됩니다. 
+              몇 분 정도 기다린 후 다시 시도하거나, 수동 입력을 선택하세요.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
