@@ -606,6 +606,19 @@ export const M1VerificationPage: React.FC = () => {
     );
   }
 
+  // 디버그 로그
+  console.log('📊 M1VerificationPage 렌더링:', {
+    projectId,
+    hasM1Data: !!m1Data,
+    isEditing,
+    hasEditedData: !!editedData,
+    m1Data_preview: m1Data ? {
+      address: m1Data.address,
+      area_sqm: m1Data.area_sqm,
+      zone_type: m1Data.zone_type
+    } : null
+  });
+
   return (
     <div className="verification-page">
       {/* Module Status Bar */}
@@ -642,8 +655,11 @@ export const M1VerificationPage: React.FC = () => {
             <button 
               className="btn-edit"
               onClick={() => {
+                console.log('🖊️ 편집 버튼 클릭됨!');
+                console.log('현재 M1 데이터:', m1Data);
                 setIsEditing(true);
                 setEditedData({...m1Data});
+                console.log('편집 모드 활성화됨, isEditing:', true);
               }}
               style={{
                 padding: '10px 20px',
@@ -663,13 +679,22 @@ export const M1VerificationPage: React.FC = () => {
               <button 
                 className="btn-save"
                 onClick={async () => {
-                  if (!editedData || !projectId) return;
+                  console.log('💾 저장 버튼 클릭됨!');
+                  console.log('editedData:', editedData);
+                  console.log('projectId:', projectId);
+                  
+                  if (!editedData || !projectId) {
+                    console.error('❌ editedData 또는 projectId가 없습니다');
+                    return;
+                  }
                   
                   try {
                     setIsSaving(true);
+                    console.log('🚀 백엔드에 데이터 전송 중...');
                     
                     // 백엔드에 업데이트
                     await analysisAPI.updateM1Data(projectId, editedData);
+                    console.log('✅ 백엔드 업데이트 성공!');
                     
                     // 로컬 상태 업데이트
                     setM1Data(editedData);
@@ -677,7 +702,7 @@ export const M1VerificationPage: React.FC = () => {
                     
                     alert('✅ M1 데이터가 성공적으로 저장되었습니다!');
                   } catch (err) {
-                    console.error('저장 실패:', err);
+                    console.error('❌ 저장 실패:', err);
                     alert('❌ 저장에 실패했습니다: ' + (err instanceof Error ? err.message : 'Unknown error'));
                   } finally {
                     setIsSaving(false);
