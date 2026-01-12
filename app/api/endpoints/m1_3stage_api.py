@@ -165,7 +165,7 @@ async def generate_mock_data(project_id: str) -> JSONResponse:
             }
         )
     
-    # 3. Mock 데이터 생성
+    # 3. Mock 데이터 생성 (LH 실무 기준 포함)
     try:
         mock_data = M1MockData(
             area_sqm=1200,
@@ -197,19 +197,50 @@ async def generate_mock_data(project_id: str) -> JSONResponse:
             }
         )
         
-        # editable_data 초기화 (auto_data + mock_data)
+        # editable_data 초기화 (auto_data + mock_data + LH 필수 필드)
         editable_data = M1EditableData(
+            # 기본 정보
             address=context.auto_data.address if context.auto_data else None,
             lat=context.auto_data.lat if context.auto_data else None,
             lng=context.auto_data.lng if context.auto_data else None,
-            area_sqm=mock_data.area_sqm,
-            zone_type=mock_data.zone_type,
+            
+            # 토지 정보 (신규 필드명)
+            land_area=mock_data.area_sqm,
+            zoning=mock_data.zone_type,
             bcr=mock_data.bcr,
             far=mock_data.far,
-            road_condition=mock_data.road_condition,
             official_land_price=mock_data.official_land_price,
-            transaction_cases=mock_data.transaction_cases,
-            regulation_summary=mock_data.regulation_summary
+            
+            # 🔴 도로 조건 (LH 필수 - Mock 데이터)
+            road_access_type="단일접면",
+            road_width_m=8.0,
+            road_count=1,
+            fire_truck_access=True,
+            road_legal_status="도로",
+            
+            # 🔴 대지 형상 (LH 필수 - Mock 데이터)
+            site_shape_type="정형",
+            frontage_m=20.0,
+            depth_m=24.0,
+            effective_build_ratio=90.0,
+            
+            # 방향/일조 (Mock 데이터)
+            main_direction="남",
+            sunlight_risk="낮음",
+            adjacent_height_risk="낮음",
+            
+            # 시세 정보 (Mock 데이터)
+            nearby_transaction_price_py=20000000.0,
+            public_land_price_py=15000000.0,
+            price_gap_ratio=1.33,
+            
+            # 기존 건물 (Mock 데이터)
+            existing_building_exists=False,
+            
+            # 기타
+            transaction_price=17500000.0,
+            regulation_summary="일반규제지역",
+            lh_compatibility="적합"
         )
         
         context.mock_data = mock_data
