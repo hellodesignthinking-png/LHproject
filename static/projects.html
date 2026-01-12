@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 프로젝트 - ZeroSite Decision OS</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Malgun Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Header */
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .header-left h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .header-left p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .header-right {
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* Controls */
+        .controls {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #ddd;
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        
+        .filter-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .sort-select {
+            padding: 8px 16px;
+            border: 2px solid #ddd;
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        /* Button Styles */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
+        /* Project Grid */
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        /* Project Card */
+        .project-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+        
+        .project-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .project-address {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        
+        .status-draft {
+            background: #e9ecef;
+            color: #6c757d;
+        }
+        
+        .status-in-progress {
+            background: #cfe2ff;
+            color: #084298;
+        }
+        
+        .status-completed {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+        
+        .status-archived {
+            background: #f8d7da;
+            color: #842029;
+        }
+        
+        /* Progress Bar */
+        .progress-section {
+            margin: 15px 0;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        /* Module Pills */
+        .module-pills {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+        
+        .module-pill {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+        
+        .module-pill.completed {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+        
+        .module-pill.frozen {
+            background: #cff4fc;
+            color: #055160;
+        }
+        
+        /* Card Footer */
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .last-updated {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            background: white;
+            border-radius: 15px;
+            padding: 60px 30px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        .empty-state h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .empty-state p {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: white;
+        }
+        
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Modal */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        
+        .modal h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .project-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filters {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <h1>📁 내 프로젝트</h1>
+                <p>ZeroSite Decision OS</p>
+            </div>
+            <div class="header-right">
+                <button @click="showCreateModal = true" class="btn btn-primary">
+                    ➕ 새 프로젝트
+                </button>
+            </div>
+        </div>
+        
+        <!-- Controls -->
+        <div class="controls" v-if="!loading && projects.length > 0">
+            <div class="filters">
+                <button 
+                    @click="statusFilter = 'ALL'" 
+                    :class="['filter-btn', {active: statusFilter === 'ALL'}]"
+                >
+                    전체 ({{ projects.length }})
+                </button>
+                <button 
+                    @click="statusFilter = 'IN_PROGRESS'" 
+                    :class="['filter-btn', {active: statusFilter === 'IN_PROGRESS'}]"
+                >
+                    진행 중 ({{ inProgressCount }})
+                </button>
+                <button 
+                    @click="statusFilter = 'COMPLETED'" 
+                    :class="['filter-btn', {active: statusFilter === 'COMPLETED'}]"
+                >
+                    완료 ({{ completedCount }})
+                </button>
+            </div>
+            
+            <select v-model="sortBy" class="sort-select">
+                <option value="updated_at">최신순</option>
+                <option value="project_name">이름순</option>
+                <option value="progress">진행률순</option>
+            </select>
+        </div>
+        
+        <!-- Loading -->
+        <div v-if="loading" class="loading">
+            <div class="spinner"></div>
+            <p>프로젝트를 불러오는 중...</p>
+        </div>
+        
+        <!-- Empty State -->
+        <div v-else-if="projects.length === 0" class="empty-state">
+            <div class="empty-state-icon">📂</div>
+            <h2>아직 프로젝트가 없습니다</h2>
+            <p>새 프로젝트를 만들어 LH 신축매입임대 사업 분석을 시작하세요.</p>
+            <button @click="showCreateModal = true" class="btn btn-primary">
+                ➕ 첫 프로젝트 만들기
+            </button>
+        </div>
+        
+        <!-- Project Grid -->
+        <div v-else class="project-grid">
+            <div 
+                v-for="project in filteredProjects" 
+                :key="project.project_id"
+                class="project-card"
+                @click="viewProject(project.project_id)"
+            >
+                <div class="card-header">
+                    <div>
+                        <div class="project-name">{{ project.project_name }}</div>
+                        <div class="project-address">{{ project.land_address || '주소 미입력' }}</div>
+                    </div>
+                    <span :class="['status-badge', getStatusClass(project.status)]">
+                        {{ getStatusText(project.status) }}
+                    </span>
+                </div>
+                
+                <div class="progress-section">
+                    <div class="progress-label">
+                        <span>전체 진행률</span>
+                        <span><strong>{{ project.overall_progress }}%</strong></span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div 
+                            class="progress-bar" 
+                            :style="{width: project.overall_progress + '%'}"
+                        ></div>
+                    </div>
+                </div>
+                
+                <div class="module-pills">
+                    <span 
+                        v-for="module in project.modules" 
+                        :key="module.module_name"
+                        :class="['module-pill', getModuleClass(module.status)]"
+                    >
+                        {{ module.module_name }}
+                    </span>
+                </div>
+                
+                <div class="card-footer">
+                    <div class="last-updated">
+                        {{ formatDate(project.updated_at) }}
+                    </div>
+                    <div class="card-actions" @click.stop>
+                        <button 
+                            v-if="project.status !== 'COMPLETED'"
+                            @click="continueProject(project.project_id)"
+                            class="btn btn-primary btn-sm"
+                        >
+                            계속하기
+                        </button>
+                        <button 
+                            v-if="project.status === 'COMPLETED' && project.m1_context_id"
+                            @click="viewReport(project)"
+                            class="btn btn-secondary btn-sm"
+                        >
+                            📄 보고서
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Create Project Modal -->
+        <div v-if="showCreateModal" class="modal-backdrop" @click.self="showCreateModal = false">
+            <div class="modal">
+                <h2>새 프로젝트 만들기</h2>
+                
+                <form @submit.prevent="createProject">
+                    <div class="form-group">
+                        <label>프로젝트명 *</label>
+                        <input 
+                            v-model="newProject.project_name" 
+                            type="text" 
+                            placeholder="예: 강남구 역삼동 신축매입임대"
+                            required
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>토지 주소</label>
+                        <input 
+                            v-model="newProject.land_address" 
+                            type="text" 
+                            placeholder="예: 서울특별시 강남구 역삼동 XXX-X"
+                        >
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" @click="showCreateModal = false" class="btn btn-secondary">
+                            취소
+                        </button>
+                        <button type="submit" class="btn btn-primary" :disabled="creating">
+                            {{ creating ? '생성 중...' : '프로젝트 생성' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    loading: true,
+                    projects: [],
+                    statusFilter: 'ALL',
+                    sortBy: 'updated_at',
+                    showCreateModal: false,
+                    creating: false,
+                    newProject: {
+                        project_name: '',
+                        land_address: ''
+                    },
+                    apiBaseUrl: window.location.origin
+                }
+            },
+            
+            computed: {
+                filteredProjects() {
+                    let filtered = this.projects;
+                    
+                    // 상태 필터
+                    if (this.statusFilter !== 'ALL') {
+                        filtered = filtered.filter(p => {
+                            if (this.statusFilter === 'IN_PROGRESS') {
+                                return p.status !== 'COMPLETED' && p.status !== 'ARCHIVED' && p.status !== 'DRAFT';
+                            }
+                            return p.status === this.statusFilter;
+                        });
+                    }
+                    
+                    // 정렬
+                    filtered = [...filtered].sort((a, b) => {
+                        if (this.sortBy === 'project_name') {
+                            return a.project_name.localeCompare(b.project_name);
+                        } else if (this.sortBy === 'progress') {
+                            return b.overall_progress - a.overall_progress;
+                        } else {
+                            return new Date(b.updated_at) - new Date(a.updated_at);
+                        }
+                    });
+                    
+                    return filtered;
+                },
+                
+                inProgressCount() {
+                    return this.projects.filter(p => 
+                        p.status !== 'COMPLETED' && p.status !== 'ARCHIVED' && p.status !== 'DRAFT'
+                    ).length;
+                },
+                
+                completedCount() {
+                    return this.projects.filter(p => p.status === 'COMPLETED').length;
+                }
+            },
+            
+            methods: {
+                async loadProjects() {
+                    try {
+                        const response = await fetch(`${this.apiBaseUrl}/api/projects`);
+                        const data = await response.json();
+                        this.projects = data.projects || [];
+                    } catch (error) {
+                        console.error('프로젝트 로딩 실패:', error);
+                        // Demo data for testing
+                        this.loadDemoProjects();
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                loadDemoProjects() {
+                    this.projects = [
+                        {
+                            project_id: 'proj_demo_001',
+                            project_name: '강남구 역삼동 신축매입임대',
+                            land_address: '서울특별시 강남구 역삼동 123-45',
+                            status: 'M5_PENDING',
+                            overall_progress: 68,
+                            modules: [
+                                { module_name: 'M1', status: 'FROZEN' },
+                                { module_name: 'M2', status: 'COMPLETED' },
+                                { module_name: 'M3', status: 'COMPLETED' },
+                                { module_name: 'M4', status: 'COMPLETED' },
+                                { module_name: 'M5', status: 'IN_PROGRESS' },
+                                { module_name: 'M6', status: 'NOT_STARTED' },
+                                { module_name: 'M7', status: 'NOT_STARTED' }
+                            ],
+                            m1_context_id: 'ctx_demo_001',
+                            updated_at: new Date().toISOString()
+                        },
+                        {
+                            project_id: 'proj_demo_002',
+                            project_name: '송파구 잠실동 청년임대',
+                            land_address: '서울특별시 송파구 잠실동 567-89',
+                            status: 'COMPLETED',
+                            overall_progress: 100,
+                            modules: [
+                                { module_name: 'M1', status: 'FROZEN' },
+                                { module_name: 'M2', status: 'COMPLETED' },
+                                { module_name: 'M3', status: 'COMPLETED' },
+                                { module_name: 'M4', status: 'COMPLETED' },
+                                { module_name: 'M5', status: 'COMPLETED' },
+                                { module_name: 'M6', status: 'COMPLETED' },
+                                { module_name: 'M7', status: 'COMPLETED' }
+                            ],
+                            m1_context_id: 'ctx_demo_002',
+                            final_decision: 'GO (조건부)',
+                            lh_pass_probability: '높음',
+                            updated_at: new Date(Date.now() - 86400000).toISOString()
+                        },
+                        {
+                            project_id: 'proj_demo_003',
+                            project_name: '마포구 상암동 신혼부부',
+                            land_address: '서울특별시 마포구 상암동 345-67',
+                            status: 'M1_PENDING',
+                            overall_progress: 10,
+                            modules: [
+                                { module_name: 'M1', status: 'IN_PROGRESS' },
+                                { module_name: 'M2', status: 'NOT_STARTED' },
+                                { module_name: 'M3', status: 'NOT_STARTED' },
+                                { module_name: 'M4', status: 'NOT_STARTED' },
+                                { module_name: 'M5', status: 'NOT_STARTED' },
+                                { module_name: 'M6', status: 'NOT_STARTED' },
+                                { module_name: 'M7', status: 'NOT_STARTED' }
+                            ],
+                            updated_at: new Date(Date.now() - 172800000).toISOString()
+                        }
+                    ];
+                },
+                
+                async createProject() {
+                    if (!this.newProject.project_name.trim()) {
+                        alert('프로젝트명을 입력해주세요.');
+                        return;
+                    }
+                    
+                    this.creating = true;
+                    
+                    try {
+                        const response = await fetch(`${this.apiBaseUrl}/api/projects`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(this.newProject)
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error('프로젝트 생성 실패');
+                        }
+                        
+                        const project = await response.json();
+                        
+                        // 프로젝트 목록에 추가
+                        this.projects.unshift(project);
+                        
+                        // 모달 닫기
+                        this.showCreateModal = false;
+                        this.newProject = { project_name: '', land_address: '' };
+                        
+                        // 프로젝트 상세로 이동
+                        this.continueProject(project.project_id);
+                        
+                    } catch (error) {
+                        console.error('프로젝트 생성 실패:', error);
+                        alert('프로젝트 생성에 실패했습니다.');
+                    } finally {
+                        this.creating = false;
+                    }
+                },
+                
+                viewProject(projectId) {
+                    // 프로젝트 상세 페이지로 이동
+                    window.location.href = `/static/project_detail.html?project_id=${projectId}`;
+                },
+                
+                continueProject(projectId) {
+                    // 현재 진행 중인 모듈로 이동 (M1 시작)
+                    window.location.href = `/static/project_detail.html?project_id=${projectId}`;
+                },
+                
+                viewReport(project) {
+                    if (project.m1_context_id) {
+                        // M6 Dashboard로 이동
+                        window.location.href = `/static/m6_dashboard.html?project_id=${project.project_id}&context_id=${project.m1_context_id}`;
+                    }
+                },
+                
+                getStatusClass(status) {
+                    if (status === 'COMPLETED') return 'status-completed';
+                    if (status === 'DRAFT') return 'status-draft';
+                    if (status === 'ARCHIVED') return 'status-archived';
+                    return 'status-in-progress';
+                },
+                
+                getStatusText(status) {
+                    const statusMap = {
+                        'DRAFT': '작성 중',
+                        'M1_PENDING': 'M1 진행 중',
+                        'M1_FROZEN': 'M1 완료',
+                        'M2_PENDING': 'M2 진행 중',
+                        'M3_PENDING': 'M3 진행 중',
+                        'M4_PENDING': 'M4 진행 중',
+                        'M5_PENDING': 'M5 진행 중',
+                        'M6_PENDING': 'M6 진행 중',
+                        'M7_PENDING': 'M7 진행 중',
+                        'COMPLETED': '완료',
+                        'ARCHIVED': '보관'
+                    };
+                    return statusMap[status] || status;
+                },
+                
+                getModuleClass(status) {
+                    if (status === 'COMPLETED') return 'completed';
+                    if (status === 'FROZEN') return 'frozen';
+                    return '';
+                },
+                
+                formatDate(dateString) {
+                    const date = new Date(dateString);
+                    const now = new Date();
+                    const diffTime = Math.abs(now - date);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    if (diffDays === 0) return '오늘';
+                    if (diffDays === 1) return '어제';
+                    if (diffDays < 7) return `${diffDays}일 전`;
+                    
+                    return date.toLocaleDateString('ko-KR', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                }
+            },
+            
+            mounted() {
+                this.loadProjects();
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
