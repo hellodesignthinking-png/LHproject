@@ -619,6 +619,21 @@ export const M1VerificationPage: React.FC = () => {
     } : null
   });
 
+  // M1 데이터가 비어있는지 확인
+  const isM1DataEmpty = m1Data && (
+    !m1Data.area_sqm || 
+    m1Data.area_sqm === 0 || 
+    !m1Data.zone_type || 
+    m1Data.zone_type === ''
+  );
+
+  console.log('🔍 M1 데이터 상태:', {
+    isM1DataEmpty,
+    area_sqm: m1Data?.area_sqm,
+    zone_type: m1Data?.zone_type,
+    official_land_price: m1Data?.official_land_price
+  });
+
   return (
     <div className="verification-page">
       {/* Module Status Bar */}
@@ -771,6 +786,32 @@ export const M1VerificationPage: React.FC = () => {
           </div>
         )}
         
+        {/* Empty Data Warning */}
+        {isM1DataEmpty && !isEditing && (
+          <div style={{
+            background: '#fff3cd',
+            border: '2px solid #ffc107',
+            borderRadius: '8px',
+            padding: '20px',
+            marginBottom: '20px'
+          }}>
+            <h3 style={{ color: '#856404', margin: '0 0 10px 0' }}>
+              ⚠️ M1 데이터가 비어있습니다
+            </h3>
+            <p style={{ color: '#856404', margin: '0 0 15px 0' }}>
+              필수 정보(면적, 용도지역, 공시지가 등)가 입력되지 않았습니다.
+              <br />
+              <strong>"✏️ 데이터 수정하기"</strong> 버튼을 클릭하여 필수 정보를 입력해주세요.
+            </p>
+            <ul style={{ color: '#856404', margin: '0', paddingLeft: '20px' }}>
+              <li>토지 면적 (m²)</li>
+              <li>용도지역 (예: 준주거지역, 상업지역)</li>
+              <li>공시지가 (₩/m²)</li>
+              <li>건폐율, 용적률</li>
+            </ul>
+          </div>
+        )}
+        
         {/* Warning Banner */}
         <div className="warning-banner">
           <h3>⚠️ IMPORTANT: Data Verification Required</h3>
@@ -847,8 +888,8 @@ export const M1VerificationPage: React.FC = () => {
                 />
               ) : (
                 <span className="value">
-                  {m1Data.area_sqm.toLocaleString()}m² 
-                  ({m1Data.area_pyeong.toLocaleString()}평)
+                  {(m1Data.area_sqm || 0).toLocaleString()}m² 
+                  ({(m1Data.area_pyeong || 0).toLocaleString()}평)
                 </span>
               )}
             </div>
@@ -1056,7 +1097,7 @@ export const M1VerificationPage: React.FC = () => {
                   placeholder="예: 5000000"
                 />
               ) : (
-                <span className="value">₩{m1Data.official_land_price.toLocaleString()}/m²</span>
+                <span className="value">₩{(m1Data.official_land_price || 0).toLocaleString()}/m²</span>
               )}
             </div>
             <div className="data-item">
@@ -1179,8 +1220,8 @@ export const M1VerificationPage: React.FC = () => {
                     <tr key={idx}>
                       <td>{idx + 1}</td>
                       <td>{txn.date}</td>
-                      <td>{txn.area_sqm.toLocaleString()}</td>
-                      <td>₩{txn.amount.toLocaleString()}</td>
+                      <td>{(txn.area_sqm || 0).toLocaleString()}</td>
+                      <td>₩{(txn.amount || 0).toLocaleString()}</td>
                       <td>{txn.distance_m}m</td>
                       <td>{txn.address}</td>
                     </tr>
