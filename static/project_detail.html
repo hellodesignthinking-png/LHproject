@@ -818,8 +818,20 @@
                     // M1 모듈 시작 로직
                     if (moduleName === 'M1') {
                         await this.startM1Module();
+                    } else if (moduleName === 'M2') {
+                        alert('M2 매입가 타당성 모듈 (구현 예정)');
+                    } else if (moduleName === 'M3') {
+                        alert('M3 공급유형 판단 모듈 (구현 예정)');
+                    } else if (moduleName === 'M4') {
+                        alert('M4 건물규모 산정 모듈 (구현 예정)');
+                    } else if (moduleName === 'M5') {
+                        alert('M5 사업성 & 리스크 모듈 (구현 예정)');
+                    } else if (moduleName === 'M6') {
+                        // M6는 대시보드로 이동
+                        this.viewDashboard();
+                    } else if (moduleName === 'M7') {
+                        alert('M7 커뮤니티 계획 모듈 (구현 예정)');
                     } else {
-                        // 다른 모듈은 아직 구현 예정
                         alert(`${moduleName} 모듈로 이동 (구현 예정)`);
                     }
                 },
@@ -840,10 +852,9 @@
                             const state = await stateResponse.json();
                             console.log('M1 현재 상태:', state);
                             
-                            // 이미 AUTO_FETCHED 이상의 상태라면 다음 단계로
+                            // 이미 AUTO_FETCHED 이상의 상태라면 데이터 편집 페이지로 이동
                             if (state.status !== 'EMPTY') {
-                                alert(`M1 데이터가 이미 수집되었습니다.\n현재 상태: ${state.status}\n\n다음 단계를 진행해주세요.`);
-                                await this.loadProject();
+                                window.location.href = `/static/m1_data_edit.html?project_id=${this.projectId}`;
                                 return;
                             }
                         }
@@ -871,11 +882,9 @@
                         const result = await response.json();
                         console.log('M1 Auto-Fetch 결과:', result);
                         
-                        // 성공 메시지 표시
-                        alert('✅ M1 데이터 자동 수집이 완료되었습니다!');
-                        
-                        // 프로젝트 정보 리로드
-                        await this.loadProject();
+                        // 성공 후 M1 데이터 편집 페이지로 이동
+                        alert('✅ M1 데이터 자동 수집이 완료되었습니다!\n\n데이터를 확인하고 편집할 수 있습니다.');
+                        window.location.href = `/static/m1_data_edit.html?project_id=${this.projectId}`;
                         
                     } catch (error) {
                         console.error('M1 시작 오류:', error);
