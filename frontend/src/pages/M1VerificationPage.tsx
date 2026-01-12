@@ -179,7 +179,32 @@ export const M1VerificationPage: React.FC = () => {
         
         // Validate result exists
         if (!result.result) {
+          console.log('⚠️ M1 data not available - auto collecting might be needed');
           throw new Error('M1 data not available');
+        }
+        
+        // Check if POI data is missing and try to auto-collect
+        if (result.result.address && 
+            (!result.result.subway_stations || result.result.subway_stations.length === 0) &&
+            (!result.result.poi_schools || result.result.poi_schools.length === 0)) {
+          console.log('🔄 POI 데이터 누락 감지 - 자동 수집 시도');
+          
+          try {
+            const poiResponse = await analysisAPI.collectPOI(result.result.address);
+            if (poiResponse.success && poiResponse.data) {
+              console.log('✅ POI 자동 수집 완료:', poiResponse.data);
+              result.result = {
+                ...result.result,
+                subway_stations: poiResponse.data.subway_stations,
+                bus_stops: poiResponse.data.bus_stops,
+                poi_schools: poiResponse.data.poi_schools,
+                poi_commercial: poiResponse.data.poi_commercial
+              };
+            }
+          } catch (poiErr) {
+            console.warn('⚠️ POI 자동 수집 실패:', poiErr);
+            // Continue with existing data even if POI collection fails
+          }
         }
         
         setM1Data(result.result);

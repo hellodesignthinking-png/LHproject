@@ -110,11 +110,60 @@ async def create_analysis_project(request: CreateProjectRequest):
         logger.info(f"   Name: {request.project_name}")
         logger.info(f"   Address: {request.address}")
         
+        # Auto-collect POI data using Kakao Map API
+        try:
+            from app.services.kakao.kakao_map_service import KakaoMapService
+            
+            kakao_service = KakaoMapService()
+            poi_data = await kakao_service.collect_all_poi(request.address)
+            
+            # Create basic M1 data structure with POI
+            m1_result = {
+                "address": request.address,
+                "road_address": request.address,  # Will be filled by geocoding
+                "area_sqm": 0,  # To be filled manually
+                "area_pyeong": 0,
+                "zone_type": "",
+                "far": 0,
+                "bcr": 0,
+                "road_width": 0,
+                "official_land_price": 0,
+                "official_price_date": "",
+                "regulations": "",
+                "restrictions": "",
+                "subway_stations": poi_data.get("subway_stations", []),
+                "bus_stops": poi_data.get("bus_stops", []),
+                "poi_schools": poi_data.get("poi_schools", []),
+                "poi_commercial": poi_data.get("poi_commercial", []),
+                "data_sources": {
+                    "cadastral": "Kakao Map API (POI only)",
+                    "official_price": "Not collected",
+                    "regulations": "Not collected"
+                }
+            }
+            
+            # Update M1 status with collected data
+            analysis_status_storage.update_module_status(
+                project_id=project_id,
+                module_name="M1",
+                status=ModuleStatus.COMPLETED,
+                result_summary=m1_result
+            )
+            
+            logger.info(f"✅ M1 POI data auto-collected for {project_id}")
+            logger.info(f"   Subway stations: {len(poi_data.get('subway_stations', []))}")
+            logger.info(f"   Schools: {len(poi_data.get('poi_schools', []))}")
+            logger.info(f"   Commercial: {len(poi_data.get('poi_commercial', []))}")
+            
+        except Exception as poi_err:
+            logger.warning(f"⚠️ Failed to auto-collect POI: {poi_err}")
+            # Continue without POI data - user can collect manually later
+        
         return CreateProjectResponse(
             success=True,
             project_id=project_id,
-            message="Project created successfully. M1 data collection will start automatically.",
-            next_action="Collecting M1 land information..."
+            message="Project created successfully. M1 data collection completed with POI data.",
+            next_action="Please verify M1 data and complete missing information..."
         )
     
     except Exception as e:
@@ -173,11 +222,22 @@ async def verify_module_results(
     
     # Check if module has been executed
     module_info = status.get_module_status(module_name)
-    if module_info.status != ModuleStatus.COMPLETED:
-        raise HTTPException(
-            status_code=400,
-            detail=f"{module_name} has not been completed yet. Current status: {module_info.status}"
-        )
+    
+    # For M1, allow verification even if status is not COMPLETED
+    # This supports manual data entry workflow
+    if module_name == "M1":
+        if module_info.status == ModuleStatus.NOT_STARTED:
+            logger.warning(f"⚠️ M1 verification requested but status is NOT_STARTED")
+            logger.warning(f"   Allowing verification for manual data workflow")
+        elif module_info.status != ModuleStatus.COMPLETED:
+            logger.warning(f"⚠️ M1 status is {module_info.status}, not COMPLETED")
+    else:
+        # For M2-M6, require COMPLETED status
+        if module_info.status != ModuleStatus.COMPLETED:
+            raise HTTPException(
+                status_code=400,
+                detail=f"{module_name} has not been completed yet. Current status: {module_info.status}"
+            )
     
     # Apply verification
     verification_status = VerificationStatus.APPROVED if request.approved else VerificationStatus.REJECTED
