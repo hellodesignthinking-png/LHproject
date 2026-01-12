@@ -525,10 +525,16 @@ async def freeze_land_data(
 
 @router.get("/state")
 async def get_state(project_id: str) -> JSONResponse:
-    """M1 상태 조회 (디버그용)"""
+    """M1 상태 조회 (UI에서 사용)"""
     context = get_m1_state(project_id)
     if not context:
         raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Pydantic 모델을 dict로 변환
+    def model_to_dict(obj):
+        if obj is None:
+            return None
+        return obj.model_dump() if hasattr(obj, 'model_dump') else obj
     
     return JSONResponse(content={
         "project_id": context.project_id,
@@ -538,6 +544,12 @@ async def get_state(project_id: str) -> JSONResponse:
         "created_at": context.created_at.isoformat(),
         "updated_at": context.updated_at.isoformat(),
         "state_history": context.state_history,
+        # 🔥 실제 데이터 반환
+        "auto_data": model_to_dict(context.auto_data),
+        "mock_data": model_to_dict(context.mock_data),
+        "editable_data": model_to_dict(context.editable_data),
+        "result_data": model_to_dict(context.result_data),
+        # Legacy flags (호환성)
         "has_auto_data": context.auto_data is not None,
         "has_mock_data": context.mock_data is not None,
         "has_editable_data": context.editable_data is not None,
