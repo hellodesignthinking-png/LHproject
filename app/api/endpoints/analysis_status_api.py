@@ -396,52 +396,77 @@ async def execute_module(
         )
     
     # 🔥 CRITICAL: Validate M1 data before executing M2~M6
-    # All downstream modules depend on M1 result_data
+    # All downstream modules MUST have valid M1 result_data
     m1_status = status.get_module_status("M1")
-    m1_data = m1_status.result_data if hasattr(m1_status, 'result_data') and m1_status.result_data else m1_status.result_summary
+    
+    # Check if result_data exists (primary source)
+    m1_data = None
+    if hasattr(m1_status, 'result_data') and m1_status.result_data:
+        m1_data = m1_status.result_data
+    elif m1_status.result_summary:
+        # Fallback to result_summary for backward compatibility
+        m1_data = m1_status.result_summary
+        logger.warning(f"⚠️ Using result_summary instead of result_data for {module_name}")
     
     if not m1_data:
-        logger.error(f"❌ M1 result_data is empty! Cannot execute {module_name}")
+        logger.error(f"❌ M1 data NOT COMMITTED! Cannot execute {module_name}")
+        logger.error(f"   M1 status: {m1_status.status}")
+        logger.error(f"   M1 result_data: {m1_status.result_data}")
+        logger.error(f"   M1 result_summary: {m1_status.result_summary}")
         raise HTTPException(
             status_code=400,
             detail={
-                "error": "M1_DATA_MISSING",
-                "message": "M1 data has not been committed. Please complete M1 first.",
-                "required_action": "Update M1 data via PUT /projects/{project_id}/modules/M1/data"
+                "error": "M1_DATA_NOT_COMMITTED",
+                "message": "M1 data has not been committed. Cannot execute downstream modules.",
+                "required_action": "Commit M1 data via POST /projects/{project_id}/modules/M1/commit",
+                "m1_status": m1_status.status
             }
         )
     
-    # Validate M1 data has non-zero values
+    # Validate M1 data has non-zero critical values
     area_sqm = m1_data.get("area_sqm", 0)
     official_land_price = m1_data.get("official_land_price", 0)
     zone_type = m1_data.get("zone_type", "")
+    is_committed = m1_data.get("is_committed", False)
     
+    validation_errors = []
     if area_sqm <= 0:
-        logger.error(f"❌ M1 area_sqm = {area_sqm} (invalid). Cannot execute {module_name}")
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "error": "INVALID_M1_DATA",
-                "message": f"M1 area_sqm is invalid ({area_sqm}). Must be > 0.",
-                "required_action": "Update M1 with valid area_sqm"
-            }
-        )
-    
+        validation_errors.append(f"area_sqm must be > 0 (got {area_sqm})")
     if official_land_price <= 0:
-        logger.error(f"❌ M1 official_land_price = {official_land_price} (invalid). Cannot execute {module_name}")
+        validation_errors.append(f"official_land_price must be > 0 (got {official_land_price})")
+    if not zone_type or zone_type.strip() == "":
+        validation_errors.append(f"zone_type must not be empty (got '{zone_type}')")
+    
+    if validation_errors:
+        logger.error(f"❌ M1 data validation FAILED for {module_name}:")
+        for error in validation_errors:
+            logger.error(f"   - {error}")
         raise HTTPException(
             status_code=400,
             detail={
                 "error": "INVALID_M1_DATA",
-                "message": f"M1 official_land_price is invalid ({official_land_price}). Must be > 0.",
-                "required_action": "Update M1 with valid official_land_price"
+                "message": "M1 data validation failed. Fix M1 data before executing downstream modules.",
+                "validation_errors": validation_errors,
+                "m1_data": {
+                    "area_sqm": area_sqm,
+                    "official_land_price": official_land_price,
+                    "zone_type": zone_type
+                }
             }
         )
     
-    logger.info(f"✅ M1 data validation passed for {module_name}")
-    logger.info(f"   Area: {area_sqm}㎡")
+    # Log M1 data being used for execution
+    logger.info("=" * 80)
+    logger.info(f"✅ M1 DATA VALIDATION PASSED for {module_name} execution")
+    logger.info(f"   Project: {project_id}")
+    logger.info(f"   Area: {area_sqm}㎡ ({round(area_sqm / 3.3058, 2)}평)")
     logger.info(f"   Official Price: ₩{official_land_price:,}/㎡")
     logger.info(f"   Zone Type: {zone_type}")
+    logger.info(f"   FAR: {m1_data.get('far', 0)}%")
+    logger.info(f"   BCR: {m1_data.get('bcr', 0)}%")
+    logger.info(f"   Is Committed: {is_committed}")
+    logger.info(f"   🔥 {module_name} WILL USE THIS DATA FOR CALCULATION")
+    logger.info("=" * 80)
     
     try:
         execution_id = str(uuid.uuid4())
@@ -478,10 +503,13 @@ async def execute_module(
                 official_price = m1_data.get("official_land_price", 0)
                 zone_type = m1_data.get("zone_type", "")
                 
-                logger.info(f"🔍 M2 INPUT DATA:")
-                logger.info(f"   area_sqm = {area_sqm}")
-                logger.info(f"   official_land_price = {official_price}")
+                logger.info("=" * 80)
+                logger.info(f"🔍 [M2 EXECUTE] INPUT DATA FROM M1:")
+                logger.info(f"   area_sqm = {area_sqm}㎡ ({round(area_sqm / 3.3058, 2)}평)")
+                logger.info(f"   official_land_price = ₩{official_price:,}/㎡")
                 logger.info(f"   zone_type = {zone_type}")
+                logger.info(f"   🔥 Source: M1 result_data (committed)")
+                logger.info("=" * 80)
                 
                 # Calculate estimated land value (simple formula)
                 # Official price usually 70-80% of market price
@@ -490,11 +518,20 @@ async def execute_module(
                     unit_price_sqm = int(official_price * 1.3)
                     unit_price_pyeong = int(unit_price_sqm * 3.3058)
                     
-                    logger.info(f"✅ M2 CALCULATION SUCCESS:")
+                    logger.info("=" * 80)
+                    logger.info(f"✅ [M2 CALCULATION] SUCCESS:")
+                    logger.info(f"   Formula: area × price × 1.3 (market adjustment)")
+                    logger.info(f"   Calculation: {area_sqm} × {official_price:,} × 1.3")
                     logger.info(f"   estimated_value = ₩{estimated_value:,}")
                     logger.info(f"   unit_price_sqm = ₩{unit_price_sqm:,}/㎡")
+                    logger.info(f"   unit_price_pyeong = ₩{unit_price_pyeong:,}/평")
+                    logger.info("=" * 80)
                 else:
-                    logger.error(f"❌ M2 CALCULATION FAILED: Invalid input (area={area_sqm}, price={official_price})")
+                    logger.error("=" * 80)
+                    logger.error(f"❌ [M2 CALCULATION] FAILED: Invalid input data")
+                    logger.error(f"   area_sqm = {area_sqm} (must be > 0)")
+                    logger.error(f"   official_land_price = {official_price} (must be > 0)")
+                    logger.error("=" * 80)
                     estimated_value = 0
                     unit_price_sqm = 0
                     unit_price_pyeong = 0
@@ -937,20 +974,35 @@ async def delete_project(project_id: str):
     }
 
 
-@router.put("/projects/{project_id}/modules/M1/data")
-async def update_m1_data(
+@router.post("/projects/{project_id}/modules/M1/commit")
+async def commit_m1_data(
     project_id: str,
     data: Dict[str, Any]
 ):
     """
-    🔥 CRITICAL: Update M1 data and COMMIT to result_data
+    🔥 CRITICAL: COMMIT M1 data to result_data (THE ONLY API FOR M1 DATA COMMIT)
     
-    This is the ONLY source of truth for M2~M6 calculations.
-    When user manually inputs or edits M1 data, it MUST be committed
-    to result_data for downstream modules to use.
+    This API is the SINGLE SOURCE OF TRUTH for downstream M2~M6 calculations.
     
-    ❌ NEVER store only in preview/temporary fields
-    ✅ ALWAYS store in result_data for M2~M6 to consume
+    PURPOSE:
+    - Convert preview/temporary M1 data into COMMITTED analysis data
+    - Store in result_data field for M2~M6 to consume
+    - Set is_committed flag to True
+    
+    WORKFLOW:
+    1. User edits M1 data in UI (preview state)
+    2. User clicks "Approve" button
+    3. Frontend calls THIS API to commit data
+    4. Backend stores data in result_data
+    5. M2~M6 can now execute with committed data
+    
+    ❌ NEVER allow M2~M6 execution without committed result_data
+    ✅ ALWAYS validate critical fields before commit
+    
+    Required fields:
+    - area_sqm > 0
+    - official_land_price > 0
+    - zone_type not empty
     """
     # Get project status
     status = analysis_status_storage.get_status(project_id)
@@ -1005,7 +1057,9 @@ async def update_m1_data(
             "transaction_cases": data.get("transaction_cases", []),
             "data_sources": data.get("data_sources", ["Manual Input"]),
             "is_manual_input": True,
-            "committed_at": datetime.now().isoformat()
+            "committed_at": datetime.now().isoformat(),
+            "is_committed": True,
+            "committed_by": data.get("user_id", "user@example.com")
         }
         
         # Update M1 with committed data in result_data
@@ -1017,20 +1071,29 @@ async def update_m1_data(
             result_summary=committed_data  # For backward compatibility
         )
         
-        logger.info(f"✅ M1 data COMMITTED to result_data for project {project_id}")
+        logger.info("=" * 80)
+        logger.info(f"🔥 M1 DATA COMMITTED for project {project_id}")
         logger.info(f"   Area: {area_sqm}㎡ ({committed_data['area_pyeong']}평)")
         logger.info(f"   Official Price: ₩{official_land_price:,}/㎡")
         logger.info(f"   Zone Type: {zone_type}")
-        logger.info(f"   🔥 This data will be used by M2~M6")
+        logger.info(f"   FAR: {committed_data.get('far', 0)}%")
+        logger.info(f"   BCR: {committed_data.get('bcr', 0)}%")
+        logger.info(f"   🔥 COMMITTED AT: {committed_data['committed_at']}")
+        logger.info(f"   🔥 M2~M6 CAN NOW EXECUTE WITH THIS DATA")
+        logger.info("=" * 80)
         
         return {
             "success": True,
-            "message": "M1 data committed successfully. Ready for M2~M6 execution.",
+            "message": "M1 data committed successfully. M2~M6 can now execute.",
             "project_id": project_id,
+            "committed_at": committed_data["committed_at"],
             "committed_data": {
                 "area_sqm": area_sqm,
+                "area_pyeong": committed_data["area_pyeong"],
                 "official_land_price": official_land_price,
-                "zone_type": zone_type
+                "zone_type": zone_type,
+                "far": committed_data.get("far", 0),
+                "bcr": committed_data.get("bcr", 0)
             }
         }
     

@@ -351,6 +351,52 @@ class AnalysisAPIService {
   }
   
   /**
+   * 🔥 CRITICAL: Commit M1 data to result_data (THE ONLY API FOR M1 COMMIT)
+   * 
+   * This API is the SINGLE SOURCE OF TRUTH for M2~M6 calculations.
+   * 
+   * WORKFLOW:
+   * 1. User edits M1 data in UI (preview state)
+   * 2. User clicks "Approve" button
+   * 3. Frontend calls THIS API to commit data
+   * 4. Backend stores data in result_data
+   * 5. M2~M6 can now execute with committed data
+   * 
+   * @param projectId - Project identifier
+   * @param data - M1 data to commit (must include area_sqm, official_land_price, zone_type)
+   * @returns Commit response with success status and committed data
+   */
+  async commitM1Data(projectId: string, data: any): Promise<{
+    success: boolean;
+    message: string;
+    committed_at: string;
+    committed_data: {
+      area_sqm: number;
+      area_pyeong: number;
+      official_land_price: number;
+      zone_type: string;
+      far: number;
+      bcr: number;
+    };
+  }> {
+    const response = await fetch(
+      `${this.baseUrl}/analysis/projects/${projectId}/modules/M1/commit`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail?.message || error.detail || 'Failed to commit M1 data');
+    }
+
+    return await response.json();
+  }
+  
+  /**
    * Collect POI (Point of Interest) data using Kakao Map API
    * 
    * @param address - Address to collect POI data for

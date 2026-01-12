@@ -229,115 +229,139 @@ export const M1VerificationPage: React.FC = () => {
     try {
       setVerifying(true);
       
-      // Check if this is manual data
-      const isManualData = sessionStorage.getItem(`m1_manual_${projectId}`) !== null;
+      // 🔥 CRITICAL STEP 1: COMMIT M1 DATA to result_data
+      // This is THE MOST IMPORTANT step - without this, M2~M6 cannot execute
+      console.log('=' .repeat(80));
+      console.log('🔥 STEP 1: COMMITTING M1 DATA TO BACKEND');
+      console.log('=' .repeat(80));
+      
+      let m1DataToCommit = m1Data;
+      
+      // Check if this is manual data or edited data
+      const manualDataStr = sessionStorage.getItem(`m1_manual_${projectId}`);
+      const isManualData = manualDataStr !== null;
       
       if (isManualData) {
-        // For manual data, upload to backend first
-        console.log('📝 수동 입력 데이터 → 백엔드에 업데이트');
-        
-        try {
-          const manualData = JSON.parse(sessionStorage.getItem(`m1_manual_${projectId}`)!);
-          await analysisAPI.updateM1Data(projectId, manualData);
-          console.log('✅ M1 수동 데이터 백엔드 업데이트 완료');
-        } catch (updateErr) {
-          console.error('❌ M1 데이터 업데이트 실패:', updateErr);
-          alert('M1 데이터 업데이트에 실패했습니다. 다시 시도해주세요.');
-          return;
-        }
-        
-        // Show info to user
-        alert(
-          '📝 수동 입력 데이터 저장 완료\n\n' +
-          '수동으로 입력하신 M1 데이터가 저장되었습니다.\n' +
-          'M2-M6 분석은 이 데이터를 사용하여 실행됩니다.'
-        );
-      }
-      
-      // Step 1: Verify M1
-      try {
-        const verifyResponse = await analysisAPI.verifyModule(projectId, 'M1', {
-          approved: true,
-          comments: isManualData 
-            ? 'M1 data manually entered and verified by user'
-            : 'M1 data verified by user',
-          verified_by: 'user@example.com' // TODO: Get from auth context
-        });
-        
-        console.log('✅ M1 검증 완료:', verifyResponse.message);
-      } catch (verifyError: any) {
-        // If verification fails because M1 is not completed, that's expected for manual data
-        if (verifyError.message?.includes('not been completed') && isManualData) {
-          console.log('⚠️ M1 미완료 상태이지만 수동 데이터이므로 계속 진행');
-          // For manual data, we'll proceed anyway since the data is in sessionStorage
-        } else {
-          throw verifyError; // Re-throw if it's a different error
-        }
-      }
-      
-      // Step 2: Execute M2-M6 pipeline (CRITICAL EXECUTION TRIGGER)
-      console.log('⚡ Triggering M2-M6 execution...');
-      
-      if (isManualData) {
-        // For manual data, backend may not support M2-M6 execution
-        const proceedWithManual = window.confirm(
-          '⚠️ 수동 입력 데이터 주의사항\n\n' +
-          '수동으로 입력하신 M1 데이터는 백엔드에 완전히 저장되지 않았습니다.\n' +
-          'M2-M6 분석이 실패할 수 있습니다.\n\n' +
-          '권장 해결 방법:\n' +
-          '1. [취소] 클릭 → 프로젝트 삭제 → 주소로 새 프로젝트 생성 (자동 수집)\n' +
-          '2. [확인] 클릭 → 계속 진행 (M2-M6 실패 가능)\n\n' +
-          '계속 진행하시겠습니까?'
-        );
-        
-        if (!proceedWithManual) {
-          setVerifying(false);
-          return;
-        }
-        
-        // Clean up session storage
-        sessionStorage.removeItem(`m1_manual_${projectId}`);
-        console.log('🗑️ 수동 입력 데이터 세션 스토리지 정리 완료');
-        
-        // Navigate to dashboard with warning
-        alert(
-          '✅ M1 데이터 확인 완료\n\n' +
-          '프로젝트 대시보드로 이동합니다.\n' +
-          '대시보드에서 M2-M6 모듈을 수동으로 실행해주세요.'
-        );
-        
-        navigate(`/projects/${projectId}`);
+        // Use manual/edited data from session storage
+        m1DataToCommit = JSON.parse(manualDataStr);
+        console.log('📝 Using manual/edited M1 data from session');
+      } else if (m1Data) {
+        // Use existing M1 data
+        console.log('📊 Using existing M1 data');
+      } else {
+        alert('❌ M1 데이터가 없습니다. 데이터를 먼저 입력해주세요.');
+        setVerifying(false);
         return;
       }
       
+      // Validate M1 data before commit
+      if (!m1DataToCommit.area_sqm || m1DataToCommit.area_sqm <= 0) {
+        alert('❌ 면적(area_sqm)이 유효하지 않습니다. 0보다 큰 값을 입력해주세요.');
+        setVerifying(false);
+        return;
+      }
+      
+      if (!m1DataToCommit.official_land_price || m1DataToCommit.official_land_price <= 0) {
+        alert('❌ 공시지가(official_land_price)가 유효하지 않습니다. 0보다 큰 값을 입력해주세요.');
+        setVerifying(false);
+        return;
+      }
+      
+      if (!m1DataToCommit.zone_type || m1DataToCommit.zone_type.trim() === '') {
+        alert('❌ 용도지역(zone_type)이 유효하지 않습니다. 값을 입력해주세요.');
+        setVerifying(false);
+        return;
+      }
+      
+      console.log('📤 M1 Data to commit:', {
+        area_sqm: m1DataToCommit.area_sqm,
+        official_land_price: m1DataToCommit.official_land_price,
+        zone_type: m1DataToCommit.zone_type,
+        far: m1DataToCommit.far,
+        bcr: m1DataToCommit.bcr
+      });
+      
+      try {
+        const commitResponse = await analysisAPI.commitM1Data(projectId, m1DataToCommit);
+        console.log('=' .repeat(80));
+        console.log('✅ M1 DATA COMMITTED SUCCESSFULLY');
+        console.log('   Committed at:', commitResponse.committed_at);
+        console.log('   Area:', commitResponse.committed_data.area_sqm, '㎡');
+        console.log('   Price:', commitResponse.committed_data.official_land_price, '원/㎡');
+        console.log('   Zone:', commitResponse.committed_data.zone_type);
+        console.log('   🔥 M2~M6 CAN NOW EXECUTE');
+        console.log('=' .repeat(80));
+        
+        // Clean up session storage after successful commit
+        if (isManualData) {
+          sessionStorage.removeItem(`m1_manual_${projectId}`);
+          console.log('🗑️ Session storage cleaned');
+        }
+      } catch (commitError: any) {
+        console.error('❌ M1 commit failed:', commitError);
+        alert(
+          `❌ M1 데이터 커밋 실패\n\n` +
+          `${commitError.message}\n\n` +
+          `M1 데이터가 유효한지 확인해주세요.`
+        );
+        setVerifying(false);
+        return;
+      }
+      
+      // 🔥 STEP 2: VERIFY M1 (mark as approved)
+      console.log('=' .repeat(80));
+      console.log('🔥 STEP 2: VERIFYING M1 MODULE');
+      console.log('=' .repeat(80));
+      
+      try {
+        const verifyResponse = await analysisAPI.verifyModule(projectId, 'M1', {
+          approved: true,
+          comments: 'M1 data committed and verified by user',
+          verified_by: 'user@example.com'
+        });
+        
+        console.log('✅ M1 verified:', verifyResponse.message);
+      } catch (verifyError: any) {
+        // If verification fails, log but continue (data is already committed)
+        console.warn('⚠️ M1 verification warning:', verifyError.message);
+      }
+      
+      // 🔥 STEP 3: EXECUTE M2~M6 PIPELINE
+      console.log('=' .repeat(80));
+      console.log('🔥 STEP 3: EXECUTING M2~M6 PIPELINE');
+      console.log('=' .repeat(80));
+      
       try {
         const execResponse = await analysisAPI.executeFullPipeline(projectId);
-        console.log('✅ Pipeline execution triggered:', execResponse.message);
-        console.log('Executed modules:', execResponse.executed_modules);
+        console.log('✅ Pipeline execution triggered');
+        console.log('   Executed modules:', execResponse.executed_modules);
+        console.log('=' .repeat(80));
         
         alert(
           `✅ M1 검증 성공!\n\n` +
-          `⚡ M2-M6 모듈 실행 중...\n` +
-          `실행된 모듈: ${execResponse.executed_modules.join(', ')}`
+          `🔥 M1 데이터가 커밋되었습니다.\n` +
+          `⚡ M2~M6 모듈 실행 중...\n\n` +
+          `실행된 모듈: ${execResponse.executed_modules?.join(', ') || 'N/A'}`
         );
-      } catch (execError) {
+        
+        // Navigate to M2 results
+        navigate(`/projects/${projectId}/modules/m2/results`);
+      } catch (execError: any) {
         console.error('❌ Pipeline execution failed:', execError);
         alert(
-          `✅ M1 검증 완료, 하지만 파이프라인 실행 실패:\n` +
-          `${execError instanceof Error ? execError.message : 'Unknown error'}\n\n` +
+          `✅ M1 검증 완료\n\n` +
+          `하지만 파이프라인 실행 실패:\n` +
+          `${execError.message}\n\n` +
           `대시보드에서 모듈을 수동으로 실행해주세요.`
         );
-      }
-      
-      // Step 3: Navigate to dashboard or M2 results
-      if (isManualData) {
+        
+        // Navigate to dashboard
         navigate(`/projects/${projectId}`);
-      } else {
-        navigate(`/projects/${projectId}/modules/m2/results`);
       }
       
-    } catch (err) {
-      alert(`❌ Verification failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } catch (err: any) {
+      console.error('❌ Approval process failed:', err);
+      alert(`❌ Verification failed: ${err.message || 'Unknown error'}`);
     } finally {
       setVerifying(false);
     }
