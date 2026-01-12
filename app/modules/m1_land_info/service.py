@@ -70,8 +70,18 @@ class LandInfoService:
                     break
             
             if not frozen_context:
-                logger.warning(f"⚠️ No frozen context found for parcel_id: {parcel_id}")
-                logger.warning("⚠️ Falling back to mock data (NOT RECOMMENDED for production)")
+                # 🚨 ZeroSite Decision OS 헌법 3️⃣: Fail Fast
+                # M1 데이터가 승인(FREEZE)되지 않았으면 후속 분석 불가
+                logger.error(f"❌ CRITICAL: No frozen context found for parcel_id: {parcel_id}")
+                logger.error("❌ M1 데이터가 승인되지 않았습니다")
+                logger.error("❌ M2~M6 분석은 M1 승인 후에만 가능합니다")
+                
+                raise ValueError(
+                    f"M1_DATA_NOT_FROZEN: "
+                    f"M1 데이터가 승인되지 않았습니다. "
+                    f"M1 검증 페이지에서 데이터를 확인하고 승인하세요. "
+                    f"(parcel_id: {parcel_id})"
+                )
             else:
                 # Convert M1FinalContext to CanonicalLandContext
                 land_info = frozen_context.land_info
@@ -115,41 +125,13 @@ class LandInfoService:
                 return land_context
                 
         except Exception as e:
-            logger.error(f"❌ Failed to load frozen context: {e}")
-            logger.warning("⚠️ Falling back to mock data")
-        
-        # Fallback: Mock 데이터 생성
-        logger.warning("⚠️ Using MOCK DATA - This should only happen in development!")
-        land_context = CanonicalLandContext(
-            parcel_id=parcel_id,
-            address=address or "서울특별시 강남구 역삼동 123-45",
-            road_address="서울특별시 강남구 테헤란로 123",
-            coordinates=(37.498, 127.028),
-            sido="서울특별시",
-            sigungu="강남구",
-            dong="역삼동",
-            area_sqm=500.0,
-            area_pyeong=151.25,
-            land_category="대",
-            land_use="주거용",
-            zone_type="제2종일반주거지역",
-            zone_detail="7층 이하",
-            far=200.0,
-            bcr=60.0,
-            road_width=12.0,
-            road_type="중로",
-            terrain_height="평지",
-            terrain_shape="정형",
-            regulations={},
-            restrictions=[],
-            data_source="Mock Data (FALLBACK - Context not found)",
-            retrieval_date=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        )
-        
-        logger.info("✅ CanonicalLandContext created (MOCK)")
-        logger.info(f"   Address: {land_context.address}")
-        logger.info(f"   Area: {land_context.area_sqm}m² ({land_context.area_pyeong}평)")
-        logger.info(f"   Zone: {land_context.zone_type}")
-        logger.info("="*80)
-        
-        return land_context
+            # 🚨 ZeroSite Decision OS 헌법 3️⃣: Fail Fast
+            logger.error(f"❌ CRITICAL: Failed to load frozen context: {e}")
+            logger.error("❌ M1 데이터 로드 실패 - 시스템 분석 불가")
+            
+            raise ValueError(
+                f"M1_DATA_LOAD_FAILED: "
+                f"M1 데이터 로드 중 오류가 발생했습니다. "
+                f"M1 검증 페이지에서 데이터를 다시 확인하고 승인하세요. "
+                f"(parcel_id: {parcel_id}, error: {str(e)})"
+            )
