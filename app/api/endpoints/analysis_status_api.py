@@ -716,6 +716,9 @@ async def get_module_result(
         - Verification status
         - Result data (if completed)
         - Whether next module can execute
+    
+    🔒 CRITICAL: This endpoint MUST return result_data or throw error
+    ❌ NEVER return success=True with empty result_data for completed modules
     """
     
     # Validate module name
@@ -730,6 +733,57 @@ async def get_module_result(
     
     # Get module info
     module_info = status.get_module_status(module_name)
+    
+    # 🔒 CRITICAL CHECK: If module is NOT completed, throw explicit error
+    if module_info.status != ModuleStatus.COMPLETED:
+        raise HTTPException(
+            status_code=409,  # Conflict
+            detail={
+                "error": "MODULE_NOT_EXECUTED",
+                "message": f"{module_name} has not been executed yet. Execute {module_name} first.",
+                "module": module_name,
+                "current_status": module_info.status.value,
+                "project_id": project_id
+            }
+        )
+    
+    # Get result data (prioritize result_data over result_summary)
+    result_data = None
+    if hasattr(module_info, 'result_data') and module_info.result_data:
+        result_data = module_info.result_data
+    elif module_info.result_summary:
+        result_data = module_info.result_summary
+    
+    # 🔒 CRITICAL VALIDATION: Ensure result_data exists for completed modules
+    if not result_data:
+        logger.error(f"❌ {module_name} is COMPLETED but result_data is empty! This is a BUG.")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "RESULT_DATA_MISSING",
+                "message": f"{module_name} is marked as COMPLETED but result data is missing. This indicates a backend bug.",
+                "module": module_name,
+                "project_id": project_id
+            }
+        )
+    
+    # 🔒 SCHEMA VALIDATION: For M3, ensure required fields exist
+    if module_name == "M3":
+        if not result_data.get("selected_type"):
+            logger.error(f"❌ M3 result_data exists but selected_type is missing: {result_data}")
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "error": "M3_SCHEMA_INVALID",
+                    "message": "M3 result exists but selected_type field is missing",
+                    "module": "M3",
+                    "project_id": project_id,
+                    "result_keys": list(result_data.keys())
+                }
+            )
+        
+        if not result_data.get("decision_rationale") or len(result_data.get("decision_rationale", "")) < 20:
+            logger.warning(f"⚠️ M3 decision_rationale is too short or missing")
     
     # Check execution permission for next module
     module_order = ["M1", "M2", "M3", "M4", "M5", "M6"]
@@ -748,7 +802,7 @@ async def get_module_result(
         status=module_info.status.value,
         verification_status=module_info.verification_status.value if module_info.verification_status else None,
         executed_at=module_info.executed_at,
-        result_data=module_info.result_summary,
+        result_data=result_data,
         can_execute=can_execute_next,
         execution_blocked_reason=None if can_execute_next else reason
     )

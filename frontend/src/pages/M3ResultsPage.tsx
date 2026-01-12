@@ -11,44 +11,115 @@ export const M3ResultsPage: React.FC = () => {
   const [result, setResult] = useState<M3Result | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notExecuted, setNotExecuted] = useState(false);
+  const [executing, setExecuting] = useState(false);
 
-  useEffect(() => {
+  const loadResult = async () => {
     if (!projectId) return;
 
-    const loadResult = async () => {
-      try {
-        setLoading(true);
-        const data = await analysisAPI.getModuleResult<any>(projectId, 'M3');
-        
-        // Check if we got real data or just mock metadata
-        const hasRealData = data.result && 
-                           typeof data.result === 'object' && 
-                           ('selected_type' in data.result || 'housing_type' in data.result);
-        
-        if (!hasRealData) {
-          throw new Error('M3 분석이 완료되었지만 상세 데이터가 아직 생성되지 않았습니다. (Mock execution)');
-        }
-        
-        // Context validation
-        if (!data.context_id || !data.execution_id) {
-          throw new Error('Invalid context: Missing context_id or execution_id');
-        }
-        
-        setResult(data);
-      } catch (err: any) {
-        setError(err.message || 'Failed to load M3 results');
-      } finally {
-        setLoading(false);
+    try {
+      setLoading(true);
+      setError(null);
+      setNotExecuted(false);
+      
+      const data = await analysisAPI.getModuleResult<any>(projectId, 'M3');
+      
+      // ✅ Validate M3 result schema
+      const m3Data = data.result;
+      
+      if (!m3Data || typeof m3Data !== 'object') {
+        throw new Error('M3 result data is missing or invalid');
       }
-    };
+      
+      if (!m3Data.selected_type) {
+        throw new Error('M3 result missing required field: selected_type');
+      }
+      
+      if (!m3Data.decision_rationale || m3Data.decision_rationale.length < 20) {
+        throw new Error('M3 result has invalid decision_rationale (too short or missing)');
+      }
+      
+      setResult(data);
+    } catch (err: any) {
+      console.error('Error loading M3 result:', err);
+      
+      // Check if it's a MODULE_NOT_EXECUTED error
+      if (err.message?.includes('MODULE_NOT_EXECUTED') || 
+          err.message?.includes('has not been executed')) {
+        setNotExecuted(true);
+        setError('M3 has not been executed yet. Click "Run M3" to execute.');
+      } else {
+        setError(err.message || 'Failed to load M3 results');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadResult();
   }, [projectId]);
+
+  const handleExecuteM3 = async () => {
+    if (!projectId) return;
+    
+    try {
+      setExecuting(true);
+      setError(null);
+      
+      // Execute M3
+      await analysisAPI.executeModule(projectId, 'M3');
+      
+      // Wait a moment for execution to complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Reload result
+      await loadResult();
+    } catch (err: any) {
+      setError(err.message || 'Failed to execute M3');
+    } finally {
+      setExecuting(false);
+    }
+  };
 
   if (loading) {
     return (
       <div className="module-results-page">
         <div className="loading-spinner">Loading M3 Results...</div>
+      </div>
+    );
+  }
+
+  if (notExecuted) {
+    return (
+      <div className="module-results-page">
+        <div className="not-executed-message">
+          <h2>⏳ M3 Not Executed</h2>
+          <p>M3 Housing Type Decision has not been executed yet.</p>
+          <p className="help-text">
+            Make sure M2 is completed first, then click the button below to execute M3.
+          </p>
+          <div className="action-buttons">
+            <button 
+              className="btn-primary"
+              onClick={handleExecuteM3}
+              disabled={executing}
+            >
+              {executing ? 'Executing M3...' : '▶️ Run M3'}
+            </button>
+            <button 
+              className="btn-secondary"
+              onClick={() => navigate(`/projects/${projectId}`)}
+            >
+              ← Back to Project
+            </button>
+          </div>
+          {error && (
+            <div className="error-message" style={{ marginTop: '1rem' }}>
+              {error}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -59,21 +130,38 @@ export const M3ResultsPage: React.FC = () => {
         <div className="error-message">
           <h3>❌ Error Loading M3 Results</h3>
           <p>{error}</p>
-          <button onClick={() => navigate(`/projects/${projectId}`)}>
-            ← Back to Project
+          <div className="action-buttons">
+            <button onClick={loadResult} className="btn-primary">
+              🔄 Retry
+            </button>
+            <button onClick={() => navigate(`/projects/${projectId}`)} className="btn-secondary">
+              ← Back to Project
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!result || !result.result) {
+    return (
+      <div className="module-results-page">
+        <div className="no-data">
+          <h3>No M3 results available</h3>
+          <button onClick={handleExecuteM3} disabled={executing}>
+            {executing ? 'Executing...' : '▶️ Run M3'}
           </button>
         </div>
       </div>
     );
   }
 
-  if (!result) {
-    return (
-      <div className="module-results-page">
-        <div className="no-data">No M3 results available</div>
-      </div>
-    );
-  }
+  // Safe access with defaults
+  const m3Data = result.result;
+  const selectedType = m3Data.selected_type || 'Unknown';
+  const confidence = m3Data.confidence || 0;
+  const rationale = m3Data.decision_rationale || m3Data.selection_reason || 'No rationale provided';
+  const selectionMethod = m3Data.selection_method || 'N/A';
 
   return (
     <div className="module-results-page">
@@ -81,20 +169,20 @@ export const M3ResultsPage: React.FC = () => {
       <div className="context-metadata">
         <div className="metadata-grid">
           <div className="metadata-item">
-            <span className="label">Context ID:</span>
-            <code>{result.context_id}</code>
+            <span className="label">Module:</span>
+            <code>M3</code>
           </div>
           <div className="metadata-item">
             <span className="label">Execution ID:</span>
-            <code>{result.execution_id}</code>
+            <code>{m3Data.execution_id || 'N/A'}</code>
           </div>
           <div className="metadata-item">
             <span className="label">Computed At:</span>
-            <span>{new Date(result.computed_at).toLocaleString('ko-KR')}</span>
+            <span>{m3Data.computed_at ? new Date(m3Data.computed_at).toLocaleString('ko-KR') : 'N/A'}</span>
           </div>
           <div className="metadata-item">
-            <span className="label">Input Hash:</span>
-            <code className="hash">{result.inputs_hash?.substring(0, 16)}...</code>
+            <span className="label">Status:</span>
+            <span className="status-badge">{m3Data.status || 'completed'}</span>
           </div>
         </div>
       </div>
@@ -110,10 +198,10 @@ export const M3ResultsPage: React.FC = () => {
         <h2>✅ Selected Housing Type</h2>
         <div className="housing-type-card selected">
           <div className="type-name">
-            {result.result.selected_type || 'Unknown'}
+            {selectedType}
           </div>
           <div className="confidence-score">
-            Confidence: {result.result.confidence || 0}%
+            Confidence: {confidence}%
           </div>
         </div>
       </section>
@@ -123,25 +211,23 @@ export const M3ResultsPage: React.FC = () => {
         <h2>📋 Decision Rationale</h2>
         <div className="rationale-box">
           <p className="rationale-text">
-            {result.result.decision_rationale || 
-             result.result.selection_reason || 
-             'No rationale provided'}
+            {rationale}
           </p>
         </div>
         
-        {result.result.selection_method && (
+        {selectionMethod && (
           <div className="method-info">
-            <strong>Selection Method:</strong> {result.result.selection_method}
+            <strong>Selection Method:</strong> {selectionMethod}
           </div>
         )}
       </section>
 
       {/* Strengths */}
-      {result.result.strengths && result.result.strengths.length > 0 && (
+      {m3Data.strengths && m3Data.strengths.length > 0 && (
         <section className="result-section">
           <h2>💪 Strengths</h2>
           <ul className="strength-list">
-            {result.result.strengths.map((strength, idx) => (
+            {m3Data.strengths.map((strength: string, idx: number) => (
               <li key={idx} className="strength-item">
                 ✓ {strength}
               </li>
@@ -151,11 +237,11 @@ export const M3ResultsPage: React.FC = () => {
       )}
 
       {/* Weaknesses */}
-      {result.result.weaknesses && result.result.weaknesses.length > 0 && (
+      {m3Data.weaknesses && m3Data.weaknesses.length > 0 && (
         <section className="result-section">
           <h2>⚠️ Weaknesses</h2>
           <ul className="weakness-list">
-            {result.result.weaknesses.map((weakness, idx) => (
+            {m3Data.weaknesses.map((weakness: string, idx: number) => (
               <li key={idx} className="weakness-item">
                 ⚠ {weakness}
               </li>
@@ -165,11 +251,11 @@ export const M3ResultsPage: React.FC = () => {
       )}
 
       {/* Rejected Types */}
-      {result.result.rejected_types && result.result.rejected_types.length > 0 && (
+      {m3Data.rejected_types && m3Data.rejected_types.length > 0 && (
         <section className="result-section">
           <h2>❌ Rejected Types</h2>
           <div className="rejected-types">
-            {result.result.rejected_types.map((rejected: any, idx: number) => (
+            {m3Data.rejected_types.map((rejected: any, idx: number) => (
               <div key={idx} className="rejected-type-card">
                 <div className="rejected-type-name">{rejected.type}</div>
                 <div className="rejection-reason">{rejected.reason}</div>
@@ -180,21 +266,21 @@ export const M3ResultsPage: React.FC = () => {
       )}
 
       {/* Demand Prediction */}
-      {result.result.demand_prediction && (
+      {m3Data.demand_prediction && (
         <section className="result-section">
           <h2>📊 Demand Prediction</h2>
           <div className="demand-metrics">
             <div className="metric-card">
               <div className="metric-label">Demand Score</div>
               <div className="metric-value">
-                {result.result.demand_prediction.score || 'N/A'}%
+                {m3Data.demand_prediction.score || 'N/A'}%
               </div>
             </div>
-            {result.result.demand_prediction.competitors && (
+            {m3Data.demand_prediction.competitors && (
               <div className="metric-card">
                 <div className="metric-label">Nearby Competitors</div>
                 <div className="metric-value">
-                  {result.result.demand_prediction.competitors} projects
+                  {m3Data.demand_prediction.competitors} projects
                 </div>
               </div>
             )}
