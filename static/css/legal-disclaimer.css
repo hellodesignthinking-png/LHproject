@@ -1,0 +1,225 @@
+/* ================================================
+   ZeroSite Decision OS - Legal Disclaimer System
+   ================================================
+   목적: 공공 SaaS 법적 리스크 관리
+   적용: Landing, M6 Dashboard, PDF Footer
+   ================================================ */
+
+/* ============================================
+   1. Disclaimer Container (공통)
+   ============================================ */
+.legal-disclaimer {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-left: 4px solid #6c757d;
+    padding: 20px 24px;
+    margin: 32px 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.legal-disclaimer-compact {
+    background: #f8f9fa;
+    border-left: 3px solid #6c757d;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 4px;
+    font-size: 0.875rem;
+}
+
+/* ============================================
+   2. Disclaimer Header
+   ============================================ */
+.legal-disclaimer-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.95rem;
+}
+
+.legal-disclaimer-icon {
+    font-size: 1.2rem;
+}
+
+/* ============================================
+   3. Disclaimer Content
+   ============================================ */
+.legal-disclaimer-content {
+    color: #6c757d;
+    line-height: 1.6;
+    font-size: 0.9rem;
+}
+
+.legal-disclaimer-content p {
+    margin: 8px 0;
+}
+
+.legal-disclaimer-content strong {
+    color: #495057;
+    font-weight: 600;
+}
+
+/* ============================================
+   4. Disclaimer List (책임 범위 명시)
+   ============================================ */
+.legal-disclaimer-list {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0 0 0;
+}
+
+.legal-disclaimer-list li {
+    padding: 6px 0 6px 24px;
+    position: relative;
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.legal-disclaimer-list li:before {
+    content: "•";
+    position: absolute;
+    left: 8px;
+    color: #adb5bd;
+    font-weight: bold;
+}
+
+/* ============================================
+   5. Disclaimer Footer (연락처)
+   ============================================ */
+.legal-disclaimer-footer {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #dee2e6;
+    color: #868e96;
+    font-size: 0.85rem;
+}
+
+/* ============================================
+   6. Page Footer Disclaimer (하단 고정)
+   ============================================ */
+.page-footer-disclaimer {
+    background: #343a40;
+    color: #adb5bd;
+    padding: 24px 0;
+    margin-top: auto;
+    text-align: center;
+}
+
+.page-footer-disclaimer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    line-height: 1.6;
+    font-size: 0.875rem;
+}
+
+.page-footer-disclaimer-title {
+    color: #f8f9fa;
+    font-weight: 600;
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+}
+
+.page-footer-disclaimer-text {
+    color: #ced4da;
+    margin: 8px 0;
+}
+
+/* ============================================
+   7. M6 Dashboard Footer Disclaimer
+   ============================================ */
+.dashboard-disclaimer {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 24px 0;
+}
+
+.dashboard-disclaimer-icon {
+    color: #ff6b6b;
+    font-size: 1.1rem;
+    margin-right: 8px;
+}
+
+.dashboard-disclaimer-content {
+    color: #856404;
+    line-height: 1.6;
+    font-size: 0.9rem;
+}
+
+/* ============================================
+   8. PDF Disclaimer Watermark
+   ============================================ */
+.pdf-disclaimer {
+    page-break-before: always;
+    padding: 40px;
+}
+
+.pdf-disclaimer-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #343a40;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #dee2e6;
+    padding-bottom: 12px;
+}
+
+.pdf-disclaimer-section {
+    margin: 24px 0;
+}
+
+.pdf-disclaimer-section h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 12px;
+}
+
+.pdf-disclaimer-section p {
+    color: #6c757d;
+    line-height: 1.8;
+    margin: 8px 0;
+}
+
+/* ============================================
+   9. Responsive Design
+   ============================================ */
+@media (max-width: 768px) {
+    .legal-disclaimer {
+        padding: 16px;
+        margin: 20px 0;
+    }
+    
+    .legal-disclaimer-content {
+        font-size: 0.85rem;
+    }
+    
+    .page-footer-disclaimer {
+        padding: 20px 0;
+    }
+    
+    .page-footer-disclaimer-content {
+        font-size: 0.8rem;
+    }
+}
+
+/* ============================================
+   10. Print Styles (PDF 생성용)
+   ============================================ */
+@media print {
+    .legal-disclaimer,
+    .dashboard-disclaimer {
+        page-break-inside: avoid;
+        border: 1px solid #dee2e6;
+        background: white !important;
+    }
+    
+    .page-footer-disclaimer {
+        background: white !important;
+        color: #343a40 !important;
+        border-top: 2px solid #dee2e6;
+    }
+}
