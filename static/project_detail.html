@@ -798,7 +798,7 @@
                     return (completedCount / this.moduleOrder.length) * 100;
                 },
                 
-                navigateToModule(moduleName) {
+                async navigateToModule(moduleName) {
                     const module = this.getModuleStatus(moduleName);
                     if (!module) return;
                     
@@ -815,8 +815,50 @@
                         }
                     }
                     
-                    // TODO: 각 모듈별 화면으로 이동
-                    alert(`${moduleName} 모듈로 이동 (구현 예정)`);
+                    // M1 모듈 시작 로직
+                    if (moduleName === 'M1') {
+                        await this.startM1Module();
+                    } else {
+                        // 다른 모듈은 아직 구현 예정
+                        alert(`${moduleName} 모듈로 이동 (구현 예정)`);
+                    }
+                },
+                
+                async startM1Module() {
+                    if (!this.projectId) {
+                        alert('프로젝트 ID가 없습니다.');
+                        return;
+                    }
+                    
+                    try {
+                        // M1 자동 수집 시작
+                        this.loading = true;
+                        const response = await fetch(`/api/projects/${this.projectId}/modules/M1/auto-fetch`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`M1 시작 실패: ${response.status}`);
+                        }
+                        
+                        const result = await response.json();
+                        console.log('M1 Auto-Fetch 결과:', result);
+                        
+                        // 성공 메시지 표시
+                        alert('✅ M1 데이터 자동 수집이 시작되었습니다!');
+                        
+                        // 프로젝트 정보 리로드
+                        await this.loadProject();
+                        
+                    } catch (error) {
+                        console.error('M1 시작 오류:', error);
+                        alert(`M1 시작 중 오류가 발생했습니다: ${error.message}`);
+                    } finally {
+                        this.loading = false;
+                    }
                 },
                 
                 startModule(moduleName) {
