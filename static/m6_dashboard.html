@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite M6 - LH 종합 판단</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Malgun Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Hero Card */
+        .hero-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        
+        .hero-title {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .decision {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .decision.go {
+            color: #28a745;
+        }
+        
+        .decision.conditional {
+            color: #ffc107;
+        }
+        
+        .decision.no-go {
+            color: #dc3545;
+        }
+        
+        .decision-icon {
+            font-size: 64px;
+            margin-bottom: 10px;
+        }
+        
+        .probability {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .confidence {
+            font-size: 16px;
+            color: #666;
+        }
+        
+        .action-buttons {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        /* Module Evaluation Card */
+        .eval-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .card-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .module-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 5px solid #ddd;
+        }
+        
+        .module-item.pass {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        
+        .module-item.warning {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+        }
+        
+        .module-item.fail {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        
+        .module-name {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .module-status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .status-pass {
+            background: #28a745;
+            color: white;
+        }
+        
+        .status-warning {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .status-fail {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .module-points {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .module-points li {
+            margin-bottom: 5px;
+        }
+        
+        /* Supplement Conditions Card */
+        .conditions-list {
+            list-style: none;
+        }
+        
+        .condition-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 5px solid #ddd;
+        }
+        
+        .condition-item.high {
+            border-left-color: #dc3545;
+        }
+        
+        .condition-item.medium {
+            border-left-color: #ffc107;
+        }
+        
+        .condition-item.low {
+            border-left-color: #28a745;
+        }
+        
+        .condition-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .condition-priority {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .priority-high {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .priority-medium {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .priority-low {
+            background: #28a745;
+            color: white;
+        }
+        
+        .condition-content {
+            font-size: 16px;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        /* Community & Complaint Card */
+        .community-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .community-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .section-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .section-content {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .section-content li {
+            margin-bottom: 8px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-card {
+                padding: 30px 20px;
+            }
+            
+            .decision {
+                font-size: 36px;
+            }
+            
+            .modules-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+        
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 18px;
+        }
+        
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Loading State -->
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>M6 종합 판단 결과를 불러오는 중...</p>
+        </div>
+        
+        <!-- Main Content (Hidden initially) -->
+        <div id="main-content" style="display: none;">
+            <!-- Hero Card: 최종 판단 -->
+            <div class="hero-card">
+                <div class="hero-title">🎯 LH 종합 판단 결과</div>
+                <div class="decision-icon" id="decision-icon">🟢</div>
+                <div class="decision go" id="decision-text">GO (조건부)</div>
+                <div class="probability" id="probability-text">LH 매입 가능성: 높음</div>
+                <div class="confidence" id="confidence-text">신뢰도: 85%</div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="downloadPDF()">
+                        📄 PDF 다운로드
+                    </button>
+                    <button class="btn btn-secondary" onclick="viewDetailedReport()">
+                        📊 상세 보고서 보기
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Module Evaluation Card: 모듈별 평가 -->
+            <div class="eval-card">
+                <div class="card-title">
+                    📊 모듈별 평가
+                </div>
+                <div class="modules-grid" id="modules-grid">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+            </div>
+            
+            <!-- Supplement Conditions Card: 보완 조건 -->
+            <div class="eval-card">
+                <div class="card-title">
+                    ⚠️ 보완 조건
+                </div>
+                <ul class="conditions-list" id="conditions-list">
+                    <!-- Dynamic content will be inserted here -->
+                </ul>
+            </div>
+            
+            <!-- Community & Complaint Defense Card -->
+            <div class="eval-card">
+                <div class="card-title">
+                    🏘️ 커뮤니티 & 민원 방어
+                </div>
+                <div class="community-grid">
+                    <div class="community-section">
+                        <div class="section-title">예상 민원 유형</div>
+                        <ul class="section-content" id="complaint-types">
+                            <!-- Dynamic content -->
+                        </ul>
+                    </div>
+                    <div class="community-section">
+                        <div class="section-title">대응 전략</div>
+                        <ul class="section-content" id="mitigation-strategies">
+                            <!-- Dynamic content -->
+                        </ul>
+                    </div>
+                    <div class="community-section">
+                        <div class="section-title">관리 주체</div>
+                        <div class="section-content" id="management-entity">
+                            <!-- Dynamic content -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // API Base URL (환경에 따라 변경)
+        const API_BASE_URL = window.location.origin;
+        
+        // Context ID (URL 파라미터에서 가져오기)
+        const urlParams = new URLSearchParams(window.location.search);
+        const contextId = urlParams.get('context_id') || 'test-context-123';
+        const projectId = urlParams.get('project_id') || 'test-project-123';
+        
+        // Load M6 Data
+        async function loadM6Data() {
+            try {
+                // M6 결과 가져오기
+                const response = await fetch(`${API_BASE_URL}/api/projects/${projectId}/modules/M6/result?context_id=${contextId}`);
+                
+                if (!response.ok) {
+                    throw new Error('M6 데이터를 불러올 수 없습니다.');
+                }
+                
+                const data = await response.json();
+                
+                // Render data
+                renderHeroCard(data);
+                renderModules(data.module_evaluations);
+                renderConditions(data.supplement_conditions);
+                
+                // Load M7 data for community section
+                await loadM7Data();
+                
+                // Show main content
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error loading M6 data:', error);
+                // Load mock data for demo
+                loadMockData();
+            }
+        }
+        
+        // Load M7 Data
+        async function loadM7Data() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/projects/${projectId}/modules/M7/result?context_id=${contextId}`);
+                
+                if (!response.ok) {
+                    throw new Error('M7 데이터를 불러올 수 없습니다.');
+                }
+                
+                const data = await response.json();
+                renderCommunity(data);
+                
+            } catch (error) {
+                console.error('Error loading M7 data:', error);
+                renderCommunityMock();
+            }
+        }
+        
+        // Render Hero Card
+        function renderHeroCard(data) {
+            const decision = data.final_decision;
+            const probability = data.lh_submission_probability;
+            const confidence = Math.round(data.confidence_score * 100);
+            
+            // Update icon
+            const iconMap = {
+                'GO': '🟢',
+                'CONDITIONAL': '🟡',
+                'NO-GO': '🔴'
+            };
+            document.getElementById('decision-icon').textContent = iconMap[decision.split(' ')[0]] || '🟡';
+            
+            // Update decision text
+            const decisionEl = document.getElementById('decision-text');
+            decisionEl.textContent = decision;
+            decisionEl.className = 'decision ' + (decision.includes('GO') && !decision.includes('NO') ? 'go' : decision.includes('CONDITIONAL') ? 'conditional' : 'no-go');
+            
+            // Update probability
+            document.getElementById('probability-text').textContent = `LH 매입 가능성: ${probability}`;
+            
+            // Update confidence
+            document.getElementById('confidence-text').textContent = `신뢰도: ${confidence}%`;
+        }
+        
+        // Render Modules
+        function renderModules(modules) {
+            const grid = document.getElementById('modules-grid');
+            grid.innerHTML = '';
+            
+            modules.forEach(module => {
+                const statusClass = module.status.toLowerCase();
+                const statusText = {
+                    'PASS': '통과',
+                    'WARNING': '경고',
+                    'FAIL': '실패'
+                }[module.status] || module.status;
+                
+                const item = document.createElement('div');
+                item.className = `module-item ${statusClass}`;
+                item.innerHTML = `
+                    <div class="module-name">${module.module_name}</div>
+                    <span class="module-status status-${statusClass}">${statusText}</span>
+                    <ul class="module-points">
+                        ${module.key_points.map(point => `<li>• ${point}</li>`).join('')}
+                    </ul>
+                `;
+                grid.appendChild(item);
+            });
+        }
+        
+        // Render Conditions
+        function renderConditions(conditions) {
+            const list = document.getElementById('conditions-list');
+            list.innerHTML = '';
+            
+            if (conditions.length === 0) {
+                list.innerHTML = '<li style="list-style: none; padding: 20px; text-align: center; color: #666;">보완 조건이 없습니다.</li>';
+                return;
+            }
+            
+            conditions.forEach(condition => {
+                const priorityClass = condition.priority.toLowerCase();
+                const priorityText = {
+                    'HIGH': '높음',
+                    'MEDIUM': '보통',
+                    'LOW': '낮음'
+                }[condition.priority] || condition.priority;
+                
+                const item = document.createElement('li');
+                item.className = `condition-item ${priorityClass}`;
+                item.innerHTML = `
+                    <div class="condition-header">
+                        <strong>${condition.category}</strong>
+                        <span class="condition-priority priority-${priorityClass}">${priorityText}</span>
+                    </div>
+                    <div class="condition-content">${condition.condition}</div>
+                `;
+                list.appendChild(item);
+            });
+        }
+        
+        // Render Community
+        function renderCommunity(data) {
+            // Complaint Types
+            const typesEl = document.getElementById('complaint-types');
+            typesEl.innerHTML = data.complaint_mitigation
+                .map(item => `<li>• ${item.complaint_type}</li>`)
+                .join('');
+            
+            // Mitigation Strategies
+            const strategiesEl = document.getElementById('mitigation-strategies');
+            strategiesEl.innerHTML = data.complaint_mitigation
+                .map(item => `<li>• ${item.mitigation_strategy}</li>`)
+                .join('');
+            
+            // Management Entity
+            document.getElementById('management-entity').textContent = data.operation_model;
+        }
+        
+        // Render Community Mock Data
+        function renderCommunityMock() {
+            document.getElementById('complaint-types').innerHTML = `
+                <li>• 소음 (공용 공간 이용)</li>
+                <li>• 주차 부족</li>
+                <li>• 외부인 유입</li>
+            `;
+            
+            document.getElementById('mitigation-strategies').innerHTML = `
+                <li>• 야간(22시~07시) 공용 공간 이용 제한</li>
+                <li>• 법정 기준 +10% 주차 확보</li>
+                <li>• 입주자 전용 공간, 출입 통제</li>
+            `;
+            
+            document.getElementById('management-entity').textContent = 'LH 위탁 운영';
+        }
+        
+        // Load Mock Data (for demo)
+        function loadMockData() {
+            const mockData = {
+                final_decision: 'GO (조건부)',
+                lh_submission_probability: '높음',
+                confidence_score: 0.85,
+                module_evaluations: [
+                    {
+                        module_name: 'M1 사실 확정',
+                        status: 'PASS',
+                        key_points: ['FROZEN 완료', '필수 항목 검증 통과']
+                    },
+                    {
+                        module_name: 'M2 토지 매입 적정성',
+                        status: 'PASS',
+                        key_points: ['적정 매입가 420억원', '신뢰도 82%']
+                    },
+                    {
+                        module_name: 'M3 공급유형 적합성',
+                        status: 'PASS',
+                        key_points: ['청년 매입임대', 'LH 통과 점수 85점']
+                    },
+                    {
+                        module_name: 'M4 건축 규모',
+                        status: 'PASS',
+                        key_points: ['세대수 240세대', '보수적 설계 적용']
+                    },
+                    {
+                        module_name: 'M5 사업성·리스크',
+                        status: 'PASS',
+                        key_points: ['안전 마진 12.76%', '리스크 관리 가능']
+                    },
+                    {
+                        module_name: 'M7 커뮤니티 계획',
+                        status: 'PASS',
+                        key_points: ['청년 생활안정형', '민원 방어 전략 수립']
+                    }
+                ],
+                supplement_conditions: [
+                    {
+                        category: 'M5 사업성',
+                        condition: '매입가 상단 3% 이내 권고',
+                        priority: 'HIGH'
+                    },
+                    {
+                        category: 'M4 건축 규모',
+                        condition: '주차대수 +5% 확보',
+                        priority: 'MEDIUM'
+                    },
+                    {
+                        category: 'M7 운영',
+                        condition: '운영규칙 사전 명문화',
+                        priority: 'LOW'
+                    }
+                ]
+            };
+            
+            renderHeroCard(mockData);
+            renderModules(mockData.module_evaluations);
+            renderConditions(mockData.supplement_conditions);
+            renderCommunityMock();
+            
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+        }
+        
+        // Download PDF
+        function downloadPDF() {
+            window.location.href = `${API_BASE_URL}/api/reports/integrated/${contextId}/pdf`;
+        }
+        
+        // View Detailed Report
+        function viewDetailedReport() {
+            window.open(`${API_BASE_URL}/api/reports/integrated/${contextId}/html`, '_blank');
+        }
+        
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            loadM6Data();
+        });
+    </script>
+</body>
+</html>
