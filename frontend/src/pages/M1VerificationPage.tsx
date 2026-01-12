@@ -105,6 +105,19 @@ export const M1VerificationPage: React.FC = () => {
     const fetchM1Data = async () => {
       try {
         setLoading(true);
+        
+        // 먼저 세션 스토리지에서 수동 입력 데이터 확인
+        const manualDataStr = sessionStorage.getItem(`m1_manual_${projectId}`);
+        if (manualDataStr) {
+          const manualData = JSON.parse(manualDataStr);
+          console.log('📝 수동 입력된 M1 데이터 로드:', manualData);
+          setM1Data(manualData);
+          setError(null);
+          setLoading(false);
+          return;
+        }
+        
+        // 수동 데이터가 없으면 API에서 가져오기
         const result = await analysisAPI.getModuleResult<M1Data>(projectId, 'M1');
         
         // Validate result exists
@@ -227,10 +240,54 @@ export const M1VerificationPage: React.FC = () => {
             initialAddress={projectStatus?.address}
             onSubmit={async (formData) => {
               try {
-                console.log('Submitting manual M1 data:', formData);
-                alert('수동 입력 기능이 곧 지원됩니다.\n현재는 자동 수집 데이터만 사용 가능합니다.');
-                setShowManualInput(false);
+                console.log('수동 입력된 M1 데이터:', formData);
+                
+                // 수동 입력 데이터를 M1Data 형식으로 변환
+                const m1Data: M1Data = {
+                  address: formData.address,
+                  road_address: formData.road_address || '',
+                  area_sqm: formData.area_sqm,
+                  area_pyeong: formData.area_sqm / 3.3058,
+                  zone_type: formData.zone_type,
+                  far: formData.far,
+                  bcr: formData.bcr,
+                  road_width: formData.road_width || 0,
+                  
+                  subway_stations: formData.subway_stations || [],
+                  bus_stops: formData.bus_stops || [],
+                  poi_schools: formData.poi_schools || [],
+                  poi_commercial: formData.poi_commercial || [],
+                  
+                  official_land_price: formData.official_land_price || 0,
+                  official_price_date: formData.official_price_date || new Date().toISOString().split('T')[0],
+                  official_price_source: '수동 입력',
+                  
+                  regulations: formData.regulations ? formData.regulations.split(',').map(r => r.trim()) : [],
+                  restrictions: formData.restrictions ? formData.restrictions.split(',').map(r => r.trim()) : [],
+                  
+                  transaction_cases: formData.transaction_cases || [],
+                  
+                  // 메타데이터
+                  context_id: projectStatus?.current_context_id || '',
+                  fetched_at: new Date().toISOString(),
+                  data_sources: {
+                    address: '수동 입력',
+                    cadastral: '수동 입력',
+                    zoning: '수동 입력',
+                    official_price: '수동 입력'
+                  }
+                };
+                
+                // TODO: 백엔드 API에 수동 입력 데이터 저장 엔드포인트 필요
+                // 지금은 로컬 스토리지에 임시 저장
+                sessionStorage.setItem(`m1_manual_${projectId}`, JSON.stringify(m1Data));
+                
+                alert('✅ M1 데이터가 저장되었습니다!\n이제 데이터를 검증하고 승인할 수 있습니다.');
+                
+                // 페이지 새로고침하여 저장된 데이터 로드
+                window.location.reload();
               } catch (err) {
+                console.error('M1 데이터 저장 실패:', err);
                 throw err;
               }
             }}
