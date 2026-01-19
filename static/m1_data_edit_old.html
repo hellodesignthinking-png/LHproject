@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M1 FACT 데이터 편집 - ZeroSite Decision OS</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+        
+        .header .subtitle {
+            color: #718096;
+            font-size: 14px;
+        }
+        
+        .stage-indicator {
+            display: flex;
+            gap: 12px;
+            margin: 20px 0;
+            padding: 16px;
+            background: #f7fafc;
+            border-radius: 12px;
+        }
+        
+        .stage {
+            flex: 1;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+        
+        .stage.active {
+            border-color: #667eea;
+            background: #eef2ff;
+        }
+        
+        .stage.completed {
+            border-color: #10b981;
+            background: #d1fae5;
+        }
+        
+        .stage-number {
+            font-weight: bold;
+            color: #4a5568;
+            margin-bottom: 4px;
+        }
+        
+        .stage.active .stage-number {
+            color: #667eea;
+        }
+        
+        .stage.completed .stage-number {
+            color: #10b981;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+        }
+        
+        .data-field {
+            padding: 16px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .data-field.editable {
+            background: #fef3c7;
+            border-color: #f59e0b;
+        }
+        
+        .data-field.auto {
+            background: #dbeafe;
+            border-color: #3b82f6;
+        }
+        
+        .field-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .source-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: #e5e7eb;
+            color: #374151;
+        }
+        
+        .source-badge.kakao {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .source-badge.vworld {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .source-badge.manual {
+            background: #fce7f3;
+            color: #831843;
+        }
+        
+        .field-value {
+            font-size: 16px;
+            font-weight: 500;
+            color: #1a202c;
+            margin-top: 4px;
+        }
+        
+        .field-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-top: 4px;
+            transition: border-color 0.3s;
+        }
+        
+        .field-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #d97706;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .alert {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .alert-info {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+        }
+        
+        .alert-warning {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+        }
+        
+        .alert-success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+        
+        .validation-errors {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        
+        .validation-errors h4 {
+            color: #dc2626;
+            margin-bottom: 8px;
+        }
+        
+        .validation-errors ul {
+            list-style-position: inside;
+            color: #991b1b;
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            margin-bottom: 16px;
+        }
+        
+        .back-button:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container">
+        <a href="#" @click.prevent="goBack" class="back-button">
+            ← 프로젝트 상세로 돌아가기
+        </a>
+        
+        <div class="header">
+            <h1>📊 M1 FACT 데이터 편집</h1>
+            <p class="subtitle">{{ project.project_name || '프로젝트 이름' }} | {{ project.land_address || '주소' }}</p>
+            
+            <!-- 3-Stage Indicator -->
+            <div class="stage-indicator">
+                <div class="stage" :class="{ completed: stageStatus.stage1 }">
+                    <div class="stage-number">Stage 1</div>
+                    <div>자동 수집</div>
+                </div>
+                <div class="stage" :class="{ active: stageStatus.stage2, completed: stageStatus.stage2Complete }">
+                    <div class="stage-number">Stage 2</div>
+                    <div>데이터 편집</div>
+                </div>
+                <div class="stage" :class="{ active: stageStatus.stage3 }">
+                    <div class="stage-number">Stage 3</div>
+                    <div>FACT FREEZE</div>
+                </div>
+            </div>
+        </div>
+        
+        <div v-if="loading" class="loading">
+            <p>⏳ 데이터를 불러오는 중...</p>
+        </div>
+        
+        <template v-else>
+            <!-- Alert Messages -->
+            <div v-if="m1State.status === 'AUTO_FETCHED'" class="alert alert-info">
+                💡 <strong>Stage 2: 데이터 편집</strong><br>
+                자동 수집된 데이터를 확인하고 수정하세요. Mock 데이터를 생성하거나 직접 입력할 수 있습니다.
+            </div>
+            
+            <div v-if="m1State.status === 'EDITABLE'" class="alert alert-warning">
+                ⚠️ <strong>편집 모드</strong><br>
+                모든 필수 항목을 입력한 후 "FACT FREEZE"를 클릭하면 데이터가 확정됩니다. 확정 후에는 수정할 수 없습니다.
+            </div>
+            
+            <div v-if="m1State.status === 'FROZEN'" class="alert alert-success">
+                ✅ <strong>FACT FROZEN</strong><br>
+                M1 데이터가 확정되었습니다. M2 모듈을 진행할 수 있습니다.
+            </div>
+            
+            <!-- 기본 정보 -->
+            <div class="card">
+                <h2 class="card-title">📍 기본 정보 (자동 수집)</h2>
+                <div class="data-grid">
+                    <div class="data-field auto">
+                        <div class="field-label">
+                            <span>주소</span>
+                            <span class="source-badge kakao">Kakao</span>
+                        </div>
+                        <div class="field-value">{{ m1Data.address || '수집 중...' }}</div>
+                    </div>
+                    
+                    <div class="data-field auto">
+                        <div class="field-label">
+                            <span>위도</span>
+                            <span class="source-badge kakao">Kakao</span>
+                        </div>
+                        <div class="field-value">{{ m1Data.lat || 'N/A' }}</div>
+                    </div>
+                    
+                    <div class="data-field auto">
+                        <div class="field-label">
+                            <span>경도</span>
+                            <span class="source-badge kakao">Kakao</span>
+                        </div>
+                        <div class="field-value">{{ m1Data.lng || 'N/A' }}</div>
+                    </div>
+                    
+                    <div class="data-field auto">
+                        <div class="field-label">
+                            <span>행정구역</span>
+                            <span class="source-badge kakao">Kakao</span>
+                        </div>
+                        <div class="field-value">
+                            {{ m1Data.admin_area ? `${m1Data.admin_area.si} ${m1Data.admin_area.gu} ${m1Data.admin_area.dong}` : 'N/A' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 필수 입력 데이터 -->
+            <div class="card">
+                <h2 class="card-title">✏️ 필수 입력 데이터 (편집 가능)</h2>
+                <div class="data-grid">
+                    <div class="data-field editable">
+                        <div class="field-label">
+                            <span>대지면적 (㎡) *</span>
+                            <span class="source-badge manual">수동입력</span>
+                        </div>
+                        <input 
+                            v-model.number="editableData.land_area" 
+                            type="number" 
+                            class="field-input"
+                            :disabled="m1State.status === 'FROZEN'"
+                            placeholder="예: 500">
+                    </div>
+                    
+                    <div class="data-field editable">
+                        <div class="field-label">
+                            <span>용도지역 *</span>
+                            <span class="source-badge vworld">V-World</span>
+                        </div>
+                        <input 
+                            v-model="editableData.zoning" 
+                            type="text" 
+                            class="field-input"
+                            :disabled="m1State.status === 'FROZEN'"
+                            placeholder="예: 제2종일반주거지역">
+                    </div>
+                    
+                    <div class="data-field editable">
+                        <div class="field-label">
+                            <span>건폐율 (%) *</span>
+                            <span class="source-badge vworld">V-World</span>
+                        </div>
+                        <input 
+                            v-model.number="editableData.bcr" 
+                            type="number" 
+                            step="0.1"
+                            class="field-input"
+                            :disabled="m1State.status === 'FROZEN'"
+                            placeholder="예: 60">
+                    </div>
+                    
+                    <div class="data-field editable">
+                        <div class="field-label">
+                            <span>용적률 (%) *</span>
+                            <span class="source-badge vworld">V-World</span>
+                        </div>
+                        <input 
+                            v-model.number="editableData.far" 
+                            type="number" 
+                            step="0.1"
+                            class="field-input"
+                            :disabled="m1State.status === 'FROZEN'"
+                            placeholder="예: 200">
+                    </div>
+                    
+                    <div class="data-field editable">
+                        <div class="field-label">
+                            <span>공시지가 (원/㎡) *</span>
+                            <span class="source-badge vworld">V-World</span>
+                        </div>
+                        <input 
+                            v-model.number="editableData.official_land_price" 
+                            type="number" 
+                            class="field-input"
+                            :disabled="m1State.status === 'FROZEN'"
+                            placeholder="예: 5000000">
+                    </div>
+                    
+                    <div class="data-field editable">
+                        <div class="field-label">
+                            <span>거래 사례가 (원/㎡)</span>
+                            <span class="source-badge manual">수동입력</span>
+                        </div>
+                        <input 
+                            v-model.number="editableData.transaction_price" 
+                            type="number" 
+                            class="field-input"
+                            :disabled="m1State.status === 'FROZEN'"
+                            placeholder="예: 6000000">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 규제 정보 -->
+            <div class="card">
+                <h2 class="card-title">⚖️ 규제 정보</h2>
+                <div class="data-grid">
+                    <div class="data-field editable">
+                        <div class="field-label">
+                            <span>규제 요약</span>
+                            <span class="source-badge manual">수동입력</span>
+                        </div>
+                        <input 
+                            v-model="editableData.regulation_summary" 
+                            type="text" 
+                            class="field-input"
+                            :disabled="m1State.status === 'FROZEN'"
+                            placeholder="예: 일반규제지역, 특별규제 없음">
+                    </div>
+                    
+                    <div class="data-field editable">
+                        <div class="field-label">
+                            <span>LH 사업 적합성</span>
+                            <span class="source-badge manual">수동입력</span>
+                        </div>
+                        <select 
+                            v-model="editableData.lh_compatibility" 
+                            class="field-input"
+                            :disabled="m1State.status === 'FROZEN'">
+                            <option value="">선택하세요</option>
+                            <option value="적합">적합</option>
+                            <option value="검토필요">검토 필요</option>
+                            <option value="부적합">부적합</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Validation Errors -->
+            <div v-if="validationErrors.length > 0" class="validation-errors">
+                <h4>❌ 필수 항목 미입력</h4>
+                <ul>
+                    <li v-for="error in validationErrors" :key="error">{{ error }}</li>
+                </ul>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button 
+                    v-if="m1State.status === 'AUTO_FETCHED'" 
+                    @click="generateMockData" 
+                    class="btn btn-secondary"
+                    :disabled="loading">
+                    🎲 Mock 데이터 생성
+                </button>
+                
+                <button 
+                    v-if="m1State.status === 'EDITABLE'" 
+                    @click="saveEdit" 
+                    class="btn btn-primary"
+                    :disabled="loading">
+                    💾 저장
+                </button>
+                
+                <button 
+                    v-if="m1State.status === 'EDITABLE'" 
+                    @click="validateAndFreeze" 
+                    class="btn btn-success"
+                    :disabled="loading">
+                    🔒 FACT FREEZE (확정)
+                </button>
+                
+                <button 
+                    v-if="m1State.status === 'FROZEN'" 
+                    @click="goToM2" 
+                    class="btn btn-success">
+                    ➡️ M2 모듈로 이동
+                </button>
+            </div>
+        </template>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    projectId: '',
+                    loading: true,
+                    project: {},
+                    m1State: {},
+                    m1Data: {},
+                    editableData: {
+                        land_area: null,
+                        zoning: '',
+                        bcr: null,
+                        far: null,
+                        official_land_price: null,
+                        transaction_price: null,
+                        regulation_summary: '',
+                        lh_compatibility: ''
+                    },
+                    validationErrors: []
+                };
+            },
+            
+            computed: {
+                stageStatus() {
+                    const status = this.m1State.status || 'EMPTY';
+                    return {
+                        stage1: ['AUTO_FETCHED', 'EDITABLE', 'FROZEN'].includes(status),
+                        stage2: ['EDITABLE'].includes(status),
+                        stage2Complete: ['FROZEN'].includes(status),
+                        stage3: ['FROZEN'].includes(status)
+                    };
+                }
+            },
+            
+            methods: {
+                async loadProject() {
+                    try {
+                        const response = await fetch(`/api/projects/${this.projectId}`);
+                        if (response.ok) {
+                            this.project = await response.json();
+                        }
+                    } catch (error) {
+                        console.error('프로젝트 로딩 오류:', error);
+                    }
+                },
+                
+                async loadM1State() {
+                    try {
+                        const response = await fetch(`/api/projects/${this.projectId}/modules/M1/state`);
+                        if (response.ok) {
+                            this.m1State = await response.json();
+                            console.log('M1 State:', this.m1State);
+                            
+                            // 자동 수집 데이터 표시
+                            if (this.m1State.has_auto_data) {
+                                await this.loadM1Data();
+                            }
+                        }
+                    } catch (error) {
+                        console.error('M1 상태 로딩 오류:', error);
+                    }
+                },
+                
+                async loadM1Data() {
+                    try {
+                        // M1 auto_data를 가져오기 위해 state 재조회
+                        const response = await fetch(`/api/projects/${this.projectId}/modules/M1/state`);
+                        if (response.ok) {
+                            const state = await response.json();
+                            // TODO: 실제 API에서 auto_data를 반환하도록 수정 필요
+                            // 임시로 더미 데이터 사용
+                            this.m1Data = {
+                                address: this.project.land_address,
+                                lat: 37.5079,
+                                lng: 127.0623,
+                                admin_area: {
+                                    si: '서울특별시',
+                                    gu: '강남구',
+                                    dong: '역삼동'
+                                }
+                            };
+                        }
+                    } catch (error) {
+                        console.error('M1 데이터 로딩 오류:', error);
+                    }
+                },
+                
+                async generateMockData() {
+                    if (!confirm('Mock 데이터를 생성하시겠습니까?\n자동 수집 실패 항목을 Mock으로 채웁니다.')) {
+                        return;
+                    }
+                    
+                    try {
+                        this.loading = true;
+                        const response = await fetch(`/api/projects/${this.projectId}/modules/M1/mock-generate`, {
+                            method: 'POST'
+                        });
+                        
+                        if (response.ok) {
+                            alert('✅ Mock 데이터가 생성되었습니다!');
+                            await this.loadM1State();
+                            
+                            // Mock 데이터를 editableData에 로드
+                            this.editableData = {
+                                land_area: 500,
+                                zoning: '제2종일반주거지역',
+                                bcr: 60,
+                                far: 200,
+                                official_land_price: 5000000,
+                                transaction_price: 6000000,
+                                regulation_summary: '일반규제지역',
+                                lh_compatibility: '적합'
+                            };
+                        } else {
+                            const error = await response.json();
+                            alert(`Mock 생성 실패: ${error.detail?.message || '알 수 없는 오류'}`);
+                        }
+                    } catch (error) {
+                        console.error('Mock 생성 오류:', error);
+                        alert(`오류 발생: ${error.message}`);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                async saveEdit() {
+                    try {
+                        this.loading = true;
+                        const response = await fetch(`/api/projects/${this.projectId}/modules/M1/edit`, {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(this.editableData)
+                        });
+                        
+                        if (response.ok) {
+                            alert('✅ 저장되었습니다!');
+                            await this.loadM1State();
+                        } else {
+                            const error = await response.json();
+                            alert(`저장 실패: ${error.detail?.message || '알 수 없는 오류'}`);
+                        }
+                    } catch (error) {
+                        console.error('저장 오류:', error);
+                        alert(`오류 발생: ${error.message}`);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                async validateAndFreeze() {
+                    // Validate
+                    const validation = await this.validateData();
+                    if (!validation.can_freeze) {
+                        this.validationErrors = validation.missing_fields.map(f => `${f} 항목을 입력해주세요`);
+                        alert('❌ 필수 항목을 모두 입력해주세요.');
+                        return;
+                    }
+                    
+                    if (!confirm('⚠️ FACT FREEZE를 진행하시겠습니까?\n\n확정 후에는 데이터를 수정할 수 없습니다.')) {
+                        return;
+                    }
+                    
+                    try {
+                        this.loading = true;
+                        const response = await fetch(`/api/projects/${this.projectId}/modules/M1/freeze`, {
+                            method: 'POST'
+                        });
+                        
+                        if (response.ok) {
+                            alert('✅ FACT FREEZE가 완료되었습니다!\nM2 모듈을 진행할 수 있습니다.');
+                            await this.loadM1State();
+                        } else {
+                            const error = await response.json();
+                            alert(`Freeze 실패: ${error.detail?.message || '알 수 없는 오류'}`);
+                        }
+                    } catch (error) {
+                        console.error('Freeze 오류:', error);
+                        alert(`오류 발생: ${error.message}`);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                async validateData() {
+                    try {
+                        const response = await fetch(`/api/projects/${this.projectId}/modules/M1/validate`);
+                        if (response.ok) {
+                            return await response.json();
+                        }
+                    } catch (error) {
+                        console.error('Validation 오류:', error);
+                    }
+                    return { can_freeze: false, missing_fields: [] };
+                },
+                
+                goToM2() {
+                    window.location.href = `/static/project_detail.html?project_id=${this.projectId}`;
+                },
+                
+                goBack() {
+                    window.location.href = `/static/project_detail.html?project_id=${this.projectId}`;
+                }
+            },
+            
+            async mounted() {
+                // URL에서 project_id 가져오기
+                const urlParams = new URLSearchParams(window.location.search);
+                this.projectId = urlParams.get('project_id');
+                
+                if (!this.projectId) {
+                    alert('프로젝트 ID가 없습니다.');
+                    window.location.href = '/static/projects.html';
+                    return;
+                }
+                
+                await this.loadProject();
+                await this.loadM1State();
+                this.loading = false;
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

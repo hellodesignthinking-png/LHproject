@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroSite Decision OS - LH 신축매입임대 사업 의사결정 시스템</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Malgun Gothic', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.1)" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
+            opacity: 0.5;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .hero .tagline {
+            font-size: 1.5rem;
+            margin-bottom: 3rem;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        .hero .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 2.5rem;
+            opacity: 0.9;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-3px);
+        }
+
+        /* How It Works Section */
+        .how-it-works {
+            padding: 5rem 2rem;
+            background: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 4rem;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .step-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .step-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .step-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .step-card p {
+            color: #666;
+            line-height: 1.8;
+        }
+
+        /* Key Features Section */
+        .key-features {
+            padding: 5rem 2rem;
+            background: white;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .feature-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .feature-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .feature-card p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        /* Demo Section */
+        .demo-section {
+            padding: 5rem 2rem;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .demo-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn-demo {
+            padding: 1.2rem 3rem;
+            font-size: 1.3rem;
+            font-weight: 600;
+            background: white;
+            color: #f5576c;
+            border-radius: 50px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.7rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-demo:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        /* Legal Disclaimer Section */
+        .legal-section {
+            padding: 3rem 2rem;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .legal-disclaimer {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-left: 4px solid #6c757d;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #495057;
+        }
+
+        .legal-disclaimer h3 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            color: #343a40;
+        }
+
+        .legal-disclaimer ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .legal-disclaimer li {
+            margin: 0.75rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .legal-disclaimer li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: #6c757d;
+            font-weight: bold;
+        }
+
+        /* Footer */
+        footer {
+            background: #343a40;
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero .tagline {
+                font-size: 1.2rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn {
+                justify-content: center;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .steps {
+                grid-template-columns: 1fr;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-content {
+            animation: fadeIn 1s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>
+                LH 신축매입임대,<br>
+                <strong>15분 안에 GO / NO-GO 판단</strong>
+            </h1>
+            <p class="tagline">
+                지번 하나로 토지·건축·사업성·커뮤니티까지<br>
+                한 번에 판단합니다
+            </p>
+            <p class="subtitle">
+                🏗️ LH 기준 반영 | 📊 실무자 검증 구조 | 📄 PDF 즉시 제출 가능
+            </p>
+            
+            <div class="cta-buttons">
+                <a href="/static/projects.html" class="btn btn-primary">
+                    🚀 프로젝트 시작하기
+                </a>
+                <a href="/static/m6_dashboard.html?project_id=demo&context_id=demo" class="btn btn-secondary">
+                    📊 데모 보기
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works">
+        <div class="container">
+            <h2 class="section-title">어떻게 사용하나요?</h2>
+            <p class="section-subtitle">3단계로 완성되는 LH 제출용 보고서</p>
+            
+            <div class="steps">
+                <div class="step-card">
+                    <span class="step-number">1</span>
+                    <h3>지번 입력 & FACT 확정</h3>
+                    <p>
+                        프로젝트를 생성하고 지번 주소만 입력하면 시작됩니다.<br>
+                        <strong>M1 모듈</strong>에서 토지·입지 정보를 자동 수집하고 확정합니다.<br>
+                        <em>Single Source of Truth - 이후 모든 판단의 기준</em>
+                    </p>
+                </div>
+                
+                <div class="step-card">
+                    <span class="step-number">2</span>
+                    <h3>자동 분석 (M1→M7)</h3>
+                    <p>
+                        <strong>M2</strong> 토지 매입 적정성<br>
+                        <strong>M3</strong> 공급유형 적합성<br>
+                        <strong>M4</strong> 건축 규모 검토<br>
+                        <strong>M5</strong> 사업성·리스크 검증<br>
+                        <strong>M7</strong> 커뮤니티 계획 (민원 대응 전략)<br>
+                        <strong>M6</strong> 종합 판단 (GO/CONDITIONAL/NO-GO)
+                    </p>
+                </div>
+                
+                <div class="step-card">
+                    <span class="step-number">3</span>
+                    <h3>LH 제출용 PDF 생성</h3>
+                    <p>
+                        M6 Executive Dashboard에서<br>
+                        <strong>최종 판단 결과</strong>를 확인하고<br>
+                        <strong>PDF 다운로드</strong> 버튼 클릭 한 번으로<br>
+                        표지·목차·페이지 번호가 포함된<br>
+                        <em>LH 제출용 보고서</em>가 완성됩니다.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Key Features Section -->
+    <section class="key-features">
+        <div class="container">
+            <h2 class="section-title">왜 ZeroSite인가?</h2>
+            <p class="section-subtitle">LH 신축매입임대 사업의 의사결정을 위한 4대 차별점</p>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <span class="feature-icon">🔒</span>
+                    <h3>M1 FACT FREEZE</h3>
+                    <p>
+                        Single Source of Truth<br>
+                        한 번 확정된 데이터는 변경 불가<br>
+                        모든 판단의 일관성 보장
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">🎯</span>
+                    <h3>GO/CONDITIONAL/NO-GO</h3>
+                    <p>
+                        명확한 의사결정<br>
+                        조건부 통과 시 보완 조건 제시<br>
+                        실패 이유까지 설명
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">📄</span>
+                    <h3>LH 제출용 PDF</h3>
+                    <p>
+                        즉시 사용 가능한 보고서<br>
+                        표지·목차·페이지 번호 자동<br>
+                        한글 폰트·워터마크 포함
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">🛡️</span>
+                    <h3>민원 대응 전략 (M7)</h3>
+                    <p>
+                        예상 민원 유형 분석<br>
+                        대응 전략 구체화<br>
+                        입주자대표회의 대비
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">💰</span>
+                    <h3>감정평가 논리 기반</h3>
+                    <p>
+                        LH 매입가 범위 계산<br>
+                        감정가 대비 적정성 검증<br>
+                        안전 마진 자동 산출
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">📊</span>
+                    <h3>실무자 검증 구조</h3>
+                    <p>
+                        8~10페이지 상세 보고서<br>
+                        정책·리스크·데이터 포인트<br>
+                        판단 근거 투명 공개
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">🔍</span>
+                    <h3>건축 규모 자동 산정</h3>
+                    <p>
+                        용적률·건폐율·주차대수<br>
+                        세대수·층수·세대당 면적<br>
+                        법정 기준 자동 검증
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">⚡</span>
+                    <h3>Fail Fast</h3>
+                    <p>
+                        구조적 결함 즉시 판단<br>
+                        불필요한 비용·시간 절감<br>
+                        NO-GO 근거 명확화
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section class="demo-section">
+        <div class="container">
+            <h2>먼저 데모를 보시겠어요?</h2>
+            <a href="/static/m6_dashboard.html?project_id=demo&context_id=demo" class="btn-demo">
+                📊 강남구 샘플 보고서 보기
+            </a>
+        </div>
+    </section>
+
+    <!-- Legal Disclaimer Section -->
+    <section class="legal-section">
+        <div class="container">
+            <div class="legal-disclaimer">
+                <h3>⚖️ 책임 및 한계 고지</h3>
+                <ul>
+                    <li>ZeroSite Decision OS는 <strong>의사결정을 보조하는 참고 자료</strong>를 제공하는 도구입니다.</li>
+                    <li>본 시스템의 분석 결과는 <strong>최종 결정을 대체하지 않으며</strong>, 실제 사업 추진은 LH 한국토지주택공사, 지자체, 인허가 기관의 검토 및 승인에 따릅니다.</li>
+                    <li>토지 매입, 건축 설계, 사업성 분석 등 <strong>법적·재무적 책임은 사업 주체 및 관련 전문가</strong>에게 있으며, 본 시스템은 이를 대체하거나 보증하지 않습니다.</li>
+                    <li>모든 데이터는 <strong>공공 API 및 사용자 입력</strong>을 기반으로 하며, 정확성 및 최신성에 대한 검증은 사용자의 책임입니다.</li>
+                    <li>본 시스템의 판단 결과(GO/CONDITIONAL/NO-GO)는 <strong>참고용 권고사항</strong>이며, 실제 사업 추진 또는 포기는 사용자의 독립적 판단에 따라야 합니다.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>
+            <strong>ZeroSite Decision OS</strong> | Version 1.0 | LH 신축매입임대 사업 의사결정 보조 시스템
+        </p>
+        <p style="margin-top: 0.5rem; opacity: 0.8; font-size: 0.9rem;">
+            © 2026 ZeroSite. All rights reserved.
+        </p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프로젝트 상세 - ZeroSite Decision OS</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Malgun Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Back Button */
+        .back-button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Project Header */
+        .project-header {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .project-info h1 {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .project-address {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .project-id {
+            font-size: 13px;
+            color: #999;
+        }
+        
+        .status-badge {
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .status-draft {
+            background: #e9ecef;
+            color: #6c757d;
+        }
+        
+        .status-in-progress {
+            background: #cfe2ff;
+            color: #084298;
+        }
+        
+        .status-completed {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+        
+        /* Progress Section */
+        .progress-section {
+            margin-top: 30px;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .progress-bar-container {
+            width: 100%;
+            height: 12px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        /* Module Stepper */
+        .stepper-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .stepper-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .stepper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .stepper-line {
+            position: absolute;
+            top: 30px;
+            left: 60px;
+            right: 60px;
+            height: 3px;
+            background: #e9ecef;
+            z-index: 0;
+        }
+        
+        .stepper-progress-line {
+            position: absolute;
+            top: 30px;
+            left: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            z-index: 1;
+            transition: width 0.5s ease;
+        }
+        
+        .stepper-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            z-index: 2;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .stepper-item:hover .stepper-circle {
+            transform: scale(1.1);
+        }
+        
+        .stepper-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.3s;
+            border: 3px solid #e9ecef;
+            background: white;
+        }
+        
+        .stepper-circle.completed {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .stepper-circle.frozen {
+            background: linear-gradient(135deg, #17a2b8 0%, #0dcaf0 100%);
+            color: white;
+            border-color: #17a2b8;
+        }
+        
+        .stepper-circle.in-progress {
+            background: white;
+            color: #667eea;
+            border-color: #667eea;
+            border-width: 4px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(102, 126, 234, 0); }
+        }
+        
+        .stepper-circle.locked {
+            background: #f8f9fa;
+            color: #adb5bd;
+            border-color: #dee2e6;
+            cursor: not-allowed;
+        }
+        
+        .stepper-label {
+            font-size: 13px;
+            font-weight: bold;
+            color: #666;
+        }
+        
+        .stepper-label.completed,
+        .stepper-label.frozen,
+        .stepper-label.in-progress {
+            color: #333;
+        }
+        
+        /* Current Step Card */
+        .current-step-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .step-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .step-info h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .step-info p {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .step-content {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .step-section {
+            margin-bottom: 20px;
+        }
+        
+        .step-section:last-child {
+            margin-bottom: 0;
+        }
+        
+        .step-section h3 {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .step-section p,
+        .step-section ul {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .step-section ul {
+            padding-left: 20px;
+        }
+        
+        .step-section li {
+            margin-bottom: 8px;
+        }
+        
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        /* Completion Card */
+        .completion-card {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(40, 167, 69, 0.3);
+        }
+        
+        .completion-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        .completion-card h2 {
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+        
+        .completion-card p {
+            font-size: 16px;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: white;
+        }
+        
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .stepper {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .stepper-line,
+            .stepper-progress-line {
+                display: none;
+            }
+            
+            .stepper-item {
+                flex-direction: row;
+                justify-content: flex-start;
+                margin-bottom: 15px;
+            }
+            
+            .stepper-circle {
+                width: 50px;
+                height: 50px;
+                font-size: 16px;
+            }
+            
+            .stepper-label {
+                flex: 1;
+                text-align: left;
+                margin-left: 15px;
+            }
+            
+            .project-header {
+                padding: 25px;
+            }
+            
+            .project-info h1 {
+                font-size: 24px;
+            }
+            
+            .stepper-card {
+                padding: 25px;
+            }
+            
+            .current-step-card {
+                padding: 25px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container">
+        <button @click="goBack" class="back-button">
+            ← 프로젝트 목록으로
+        </button>
+        
+        <!-- Loading -->
+        <div v-if="loading" class="loading">
+            <div class="spinner"></div>
+            <p>프로젝트 정보를 불러오는 중...</p>
+        </div>
+        
+        <template v-else-if="project">
+            <!-- Project Header -->
+            <div class="project-header">
+                <div class="header-top">
+                    <div class="project-info">
+                        <h1>{{ project.project_name }}</h1>
+                        <div class="project-address">{{ project.land_address || '주소 미입력' }}</div>
+                        <div class="project-id">프로젝트 ID: {{ project.project_id }}</div>
+                    </div>
+                    <span :class="['status-badge', getStatusClass(project.status)]">
+                        {{ getStatusText(project.status) }}
+                    </span>
+                </div>
+                
+                <div class="progress-section">
+                    <div class="progress-label">
+                        <span>전체 진행률</span>
+                        <span>{{ project.overall_progress }}%</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div 
+                            class="progress-bar" 
+                            :style="{width: project.overall_progress + '%'}"
+                        ></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Module Stepper -->
+            <div class="stepper-card">
+                <div class="stepper-title">🗺️ 프로젝트 진행 단계</div>
+                
+                <div class="stepper">
+                    <div class="stepper-line"></div>
+                    <div 
+                        class="stepper-progress-line" 
+                        :style="{width: getStepperProgress() + '%'}"
+                    ></div>
+                    
+                    <div 
+                        v-for="module in moduleOrder" 
+                        :key="module"
+                        class="stepper-item"
+                        @click="navigateToModule(module)"
+                    >
+                        <div :class="['stepper-circle', getModuleStepperClass(module)]">
+                            {{ getModuleIcon(module) }}
+                        </div>
+                        <div :class="['stepper-label', getModuleStepperClass(module)]">
+                            {{ module }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Completion Card -->
+            <div v-if="project.status === 'COMPLETED'" class="completion-card">
+                <div class="completion-icon">🎉</div>
+                <h2>프로젝트 완료!</h2>
+                <p>모든 분석이 완료되었습니다. 이제 최종 보고서를 확인하세요.</p>
+                <div class="action-buttons" style="justify-content: center;">
+                    <button @click="viewDashboard" class="btn btn-success">
+                        📊 M6 종합 판단 보기
+                    </button>
+                    <button @click="downloadPDF" class="btn btn-secondary" style="color: white; border-color: white;">
+                        📄 PDF 다운로드
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Current Step Card -->
+            <div v-else-if="currentModule" class="current-step-card">
+                <div class="step-header">
+                    <div class="step-icon">{{ currentModule.name }}</div>
+                    <div class="step-info">
+                        <h2>{{ currentModule.title }}</h2>
+                        <p>{{ currentModule.subtitle }}</p>
+                    </div>
+                </div>
+                
+                <div class="step-content">
+                    <div class="step-section">
+                        <h3>📋 지금 해야 할 일</h3>
+                        <p>{{ currentModule.action }}</p>
+                    </div>
+                    
+                    <div class="step-section">
+                        <h3>💡 모듈 설명</h3>
+                        <p>{{ currentModule.description }}</p>
+                    </div>
+                    
+                    <div class="step-section" v-if="currentModule.warnings.length > 0">
+                        <h3>⚠️ 주의사항</h3>
+                        <ul>
+                            <li v-for="(warning, index) in currentModule.warnings" :key="index">
+                                {{ warning }}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button @click="startModule(currentModule.name)" class="btn btn-primary">
+                        {{ currentModule.cta }}
+                    </button>
+                    <button v-if="hasPreviousModule()" @click="goToPreviousModule" class="btn btn-secondary">
+                        ← 이전 모듈
+                    </button>
+                </div>
+            </div>
+        </template>
+    </div>
+    
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    loading: true,
+                    project: null,
+                    projectId: null,
+                    apiBaseUrl: window.location.origin,
+                    moduleOrder: ['M1', 'M2', 'M3', 'M4', 'M5', 'M7', 'M6'],
+                    moduleInfo: {
+                        'M1': {
+                            name: 'M1',
+                            title: '토지·입지 사실 확정',
+                            subtitle: 'Single Source of Truth',
+                            action: '지번을 입력하고 토지 정보를 자동으로 수집한 후, 데이터를 검증하고 동결(FREEZE)합니다.',
+                            description: 'M1은 전체 분석의 기준이 되는 토지 정보를 확정합니다. 대지면적, 용도지역, 건폐율·용적률, 도로조건 등 필수 데이터를 수집하고, 인간 검증 후 동결하여 이후 모든 모듈이 동일한 데이터를 참조하도록 합니다.',
+                            warnings: [
+                                'M1이 FROZEN되어야 다음 모듈로 진행 가능합니다.',
+                                '한 번 동결된 데이터는 수정할 수 없습니다.',
+                                '데이터의 정확성을 반드시 확인하세요.'
+                            ],
+                            cta: '🚀 M1 시작하기'
+                        },
+                        'M2': {
+                            name: 'M2',
+                            title: '토지 매입 적정성',
+                            subtitle: 'LH 매입 관점 적정가',
+                            action: '공시지가와 거래사례를 기반으로 LH 매입 관점의 적정 가격 범위를 산정합니다.',
+                            description: 'M2는 감정평가사 수준의 토지 가치 평가를 수행합니다. 공시지가, 거래사례 비교, 보정계수 적용 등을 통해 LH가 매입할 수 있는 합리적인 가격 범위를 제시합니다.',
+                            warnings: [
+                                'M1의 FROZEN 데이터를 기준으로 분석합니다.',
+                                '시세 변동을 고려하여 정기적으로 재평가가 필요할 수 있습니다.'
+                            ],
+                            cta: '💰 M2 시작하기'
+                        },
+                        'M3': {
+                            name: 'M3',
+                            title: '공급유형 적합성',
+                            subtitle: 'LH 통과 확률 중심',
+                            action: '토지 특성과 LH 정책을 고려하여 가장 적합한 공급유형을 선정합니다.',
+                            description: 'M3는 청년, 신혼부부, 다자녀 등 LH 공급유형 중 통과 확률이 가장 높은 유형을 추천합니다. 정책 부합성, 입지 특성, 시장 수요 등을 종합 평가합니다.',
+                            warnings: [
+                                '선택한 유형은 M4(건축 규모)와 M5(사업성)에 영향을 미칩니다.',
+                                'LH 정책 변경 시 재검토가 필요할 수 있습니다.'
+                            ],
+                            cta: '🏠 M3 시작하기'
+                        },
+                        'M4': {
+                            name: 'M4',
+                            title: '건축 규모 검토',
+                            subtitle: 'LH 보수 설계',
+                            action: 'LH 심사에 통과 가능한 보수적 건축 규모를 산정합니다.',
+                            description: 'M4는 법정 최대 규모가 아닌 LH 심사 기준을 통과할 수 있는 안전한 규모를 제안합니다. 세대수, 주차계획, 층수 등을 보수적으로 설정하여 인허가 리스크를 최소화합니다.',
+                            warnings: [
+                                '과도한 규모는 심사 탈락 원인이 될 수 있습니다.',
+                                '주차 기준을 상향 적용하여 민원을 예방합니다.'
+                            ],
+                            cta: '🏗️ M4 시작하기'
+                        },
+                        'M5': {
+                            name: 'M5',
+                            title: '사업성·리스크 검증',
+                            subtitle: '실패하지 않을 이유 증명',
+                            action: '총사업비와 LH 매입가를 비교하여 안전 마진을 확인하고, 리스크를 평가합니다.',
+                            description: 'M5는 수익 극대화가 아닌 사업 안정성을 검증합니다. 토지비, 건축비, 부대비용을 산정하고 LH 매입가와 비교하여 안전 마진(8~12%)을 확보했는지 확인합니다.',
+                            warnings: [
+                                '과도한 수익 추구는 LH 매입가 조정 요인이 됩니다.',
+                                '공사비 변동 리스크를 고려한 여유 확보가 필수입니다.'
+                            ],
+                            cta: '📊 M5 시작하기'
+                        },
+                        'M7': {
+                            name: 'M7',
+                            title: '커뮤니티 계획',
+                            subtitle: '민원 방어 전략',
+                            action: '지역 수요를 분석하고 커뮤니티 공간을 설계하여 민원을 사전에 방어합니다.',
+                            description: 'M7은 단순한 커뮤니티 설계가 아닌 민원 예방 전략을 수립합니다. 예상 민원을 식별하고 대응 전략을 마련하여 LH 실무자가 설명 가능한 논리를 제공합니다.',
+                            warnings: [
+                                '소음, 주차, 외부인 유입 등 주요 민원 유형을 반드시 검토합니다.',
+                                '운영 주체와 관리 방안을 명확히 해야 합니다.'
+                            ],
+                            cta: '🏘️ M7 시작하기'
+                        },
+                        'M6': {
+                            name: 'M6',
+                            title: 'LH 종합 판단',
+                            subtitle: 'GO / CONDITIONAL / NO-GO',
+                            action: 'M1~M5, M7의 결과를 종합하여 최종 판단을 내립니다.',
+                            description: 'M6는 ZeroSite의 최종 결론입니다. 모든 모듈의 결과를 통합하여 GO(진행 가능), CONDITIONAL(조건부 진행), NO-GO(진행 불가) 중 하나로 판단하고, 그 근거를 명확히 제시합니다.',
+                            warnings: [
+                                'M6 결과는 LH 실무자의 상신 판단 기준이 됩니다.',
+                                'CONDITIONAL 판단 시 보완 조건을 반드시 이행해야 합니다.'
+                            ],
+                            cta: '🎯 M6 최종 판단'
+                        }
+                    }
+                }
+            },
+            
+            computed: {
+                currentModule() {
+                    if (!this.project) return null;
+                    
+                    // 다음 진행할 모듈 찾기
+                    for (const moduleName of this.moduleOrder) {
+                        const module = this.getModuleStatus(moduleName);
+                        if (module && (module.status === 'NOT_STARTED' || module.status === 'IN_PROGRESS')) {
+                            return this.moduleInfo[moduleName];
+                        }
+                    }
+                    
+                    return null;
+                }
+            },
+            
+            methods: {
+                async loadProject() {
+                    try {
+                        const response = await fetch(`${this.apiBaseUrl}/api/projects/${this.projectId}`);
+                        
+                        if (!response.ok) {
+                            throw new Error('프로젝트를 찾을 수 없습니다.');
+                        }
+                        
+                        this.project = await response.json();
+                    } catch (error) {
+                        console.error('프로젝트 로딩 실패:', error);
+                        // Demo data
+                        this.loadDemoProject();
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                loadDemoProject() {
+                    this.project = {
+                        project_id: this.projectId,
+                        project_name: '강남구 역삼동 신축매입임대',
+                        land_address: '서울특별시 강남구 역삼동 123-45',
+                        status: 'M5_PENDING',
+                        overall_progress: 68,
+                        modules: [
+                            { module_name: 'M1', status: 'FROZEN', progress_percent: 100, context_id: 'ctx_demo_001' },
+                            { module_name: 'M2', status: 'COMPLETED', progress_percent: 100 },
+                            { module_name: 'M3', status: 'COMPLETED', progress_percent: 100 },
+                            { module_name: 'M4', status: 'COMPLETED', progress_percent: 100 },
+                            { module_name: 'M5', status: 'IN_PROGRESS', progress_percent: 50 },
+                            { module_name: 'M6', status: 'NOT_STARTED', progress_percent: 0 },
+                            { module_name: 'M7', status: 'NOT_STARTED', progress_percent: 0 }
+                        ],
+                        m1_context_id: 'ctx_demo_001'
+                    };
+                },
+                
+                getModuleStatus(moduleName) {
+                    if (!this.project) return null;
+                    return this.project.modules.find(m => m.module_name === moduleName);
+                },
+                
+                getModuleStepperClass(moduleName) {
+                    const module = this.getModuleStatus(moduleName);
+                    if (!module) return 'locked';
+                    
+                    if (module.status === 'COMPLETED') return 'completed';
+                    if (module.status === 'FROZEN') return 'frozen';
+                    if (module.status === 'IN_PROGRESS') return 'in-progress';
+                    return 'locked';
+                },
+                
+                getModuleIcon(moduleName) {
+                    const module = this.getModuleStatus(moduleName);
+                    if (!module) return '🔒';
+                    
+                    if (module.status === 'COMPLETED' || module.status === 'FROZEN') return '✅';
+                    if (module.status === 'IN_PROGRESS') return moduleName;
+                    return '🔒';
+                },
+                
+                getStepperProgress() {
+                    if (!this.project) return 0;
+                    
+                    const completedCount = this.project.modules.filter(m => 
+                        m.status === 'COMPLETED' || m.status === 'FROZEN'
+                    ).length;
+                    
+                    return (completedCount / this.moduleOrder.length) * 100;
+                },
+                
+                async navigateToModule(moduleName) {
+                    const module = this.getModuleStatus(moduleName);
+                    if (!module) return;
+                    
+                    // LOCKED 상태면 클릭 불가
+                    if (module.status === 'NOT_STARTED' && moduleName !== 'M1') {
+                        // M1이 아닌 경우, 이전 모듈이 완료되었는지 확인
+                        const moduleIndex = this.moduleOrder.indexOf(moduleName);
+                        if (moduleIndex > 0) {
+                            const prevModule = this.getModuleStatus(this.moduleOrder[moduleIndex - 1]);
+                            if (prevModule && prevModule.status !== 'COMPLETED' && prevModule.status !== 'FROZEN') {
+                                alert('이전 모듈을 먼저 완료해주세요.');
+                                return;
+                            }
+                        }
+                    }
+                    
+                    // M1 모듈 시작 로직
+                    if (moduleName === 'M1') {
+                        await this.startM1Module();
+                    } else if (moduleName === 'M2') {
+                        alert('M2 매입가 타당성 모듈 (구현 예정)');
+                    } else if (moduleName === 'M3') {
+                        alert('M3 공급유형 판단 모듈 (구현 예정)');
+                    } else if (moduleName === 'M4') {
+                        alert('M4 건물규모 산정 모듈 (구현 예정)');
+                    } else if (moduleName === 'M5') {
+                        alert('M5 사업성 & 리스크 모듈 (구현 예정)');
+                    } else if (moduleName === 'M6') {
+                        // M6는 대시보드로 이동
+                        this.viewDashboard();
+                    } else if (moduleName === 'M7') {
+                        alert('M7 커뮤니티 계획 모듈 (구현 예정)');
+                    } else {
+                        alert(`${moduleName} 모듈로 이동 (구현 예정)`);
+                    }
+                },
+                
+                async startM1Module() {
+                    if (!this.projectId) {
+                        alert('프로젝트 ID가 없습니다.');
+                        return;
+                    }
+                    
+                    try {
+                        this.loading = true;
+                        
+                        // 1. M1 현재 상태 확인
+                        const stateResponse = await fetch(`/api/projects/${this.projectId}/modules/M1/state`);
+                        
+                        if (stateResponse.ok) {
+                            const state = await stateResponse.json();
+                            console.log('M1 현재 상태:', state);
+                            
+                            // 이미 AUTO_FETCHED 이상의 상태라면 데이터 편집 페이지로 이동
+                            if (state.status !== 'EMPTY') {
+                                window.location.href = `/static/m1_data_edit.html?project_id=${this.projectId}`;
+                                return;
+                            }
+                        }
+                        
+                        // 2. M1 자동 수집 시작 (EMPTY 상태인 경우만)
+                        const response = await fetch(`/api/projects/${this.projectId}/modules/M1/auto-fetch`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            
+                            // 400 에러 상세 처리
+                            if (response.status === 400 && errorData.detail) {
+                                const detail = errorData.detail;
+                                throw new Error(`${detail.message || detail.error || 'M1 시작 실패'}`);
+                            }
+                            
+                            throw new Error(`M1 시작 실패: ${response.status}`);
+                        }
+                        
+                        const result = await response.json();
+                        console.log('M1 Auto-Fetch 결과:', result);
+                        
+                        // 성공 후 M1 데이터 편집 페이지로 이동
+                        alert('✅ M1 데이터 자동 수집이 완료되었습니다!\n\n데이터를 확인하고 편집할 수 있습니다.');
+                        window.location.href = `/static/m1_data_edit.html?project_id=${this.projectId}`;
+                        
+                    } catch (error) {
+                        console.error('M1 시작 오류:', error);
+                        alert(`M1 시작 중 오류가 발생했습니다:\n\n${error.message}`);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                startModule(moduleName) {
+                    this.navigateToModule(moduleName);
+                },
+                
+                hasPreviousModule() {
+                    if (!this.currentModule) return false;
+                    const currentIndex = this.moduleOrder.indexOf(this.currentModule.name);
+                    return currentIndex > 0;
+                },
+                
+                goToPreviousModule() {
+                    if (!this.currentModule) return;
+                    const currentIndex = this.moduleOrder.indexOf(this.currentModule.name);
+                    if (currentIndex > 0) {
+                        this.navigateToModule(this.moduleOrder[currentIndex - 1]);
+                    }
+                },
+                
+                viewDashboard() {
+                    if (this.project.m1_context_id) {
+                        window.location.href = `/static/m6_dashboard.html?project_id=${this.project.project_id}&context_id=${this.project.m1_context_id}`;
+                    }
+                },
+                
+                downloadPDF() {
+                    if (this.project.m1_context_id) {
+                        window.location.href = `/api/reports/integrated/${this.project.m1_context_id}/pdf`;
+                    }
+                },
+                
+                goBack() {
+                    window.location.href = '/static/projects.html';
+                },
+                
+                getStatusClass(status) {
+                    if (status === 'COMPLETED') return 'status-completed';
+                    if (status === 'DRAFT') return 'status-draft';
+                    return 'status-in-progress';
+                },
+                
+                getStatusText(status) {
+                    const statusMap = {
+                        'DRAFT': '작성 중',
+                        'M1_PENDING': 'M1 진행 중',
+                        'M1_FROZEN': 'M1 완료',
+                        'M2_PENDING': 'M2 진행 중',
+                        'M3_PENDING': 'M3 진행 중',
+                        'M4_PENDING': 'M4 진행 중',
+                        'M5_PENDING': 'M5 진행 중',
+                        'M6_PENDING': 'M6 진행 중',
+                        'M7_PENDING': 'M7 진행 중',
+                        'COMPLETED': '완료',
+                        'ARCHIVED': '보관'
+                    };
+                    return statusMap[status] || status;
+                }
+            },
+            
+            mounted() {
+                // URL에서 project_id 가져오기
+                const urlParams = new URLSearchParams(window.location.search);
+                this.projectId = urlParams.get('project_id');
+                
+                if (!this.projectId) {
+                    alert('프로젝트 ID가 없습니다.');
+                    this.goBack();
+                    return;
+                }
+                
+                this.loadProject();
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

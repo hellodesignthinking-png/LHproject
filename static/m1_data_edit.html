@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M1 FACT 편집 - ZeroSite Decision OS</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+    <link rel="stylesheet" href="/static/css/m1_edit.css">
+</head>
+<body>
+    <div id="app" class="container">
+        <a href="#" @click.prevent="goBack" class="back-button">
+            ← 프로젝트로 돌아가기
+        </a>
+        
+        <div class="header">
+            <h1>📊 M1 FACT 데이터 편집 (LH 실무 기준)</h1>
+            <p class="subtitle">{{ project.project_name }} | {{ project.land_address }}</p>
+            
+            <div class="stage-indicator">
+                <div class="stage" :class="{ completed: stageCompleted.stage1 }">
+                    <div>Stage 1</div>
+                    <div>자동 수집</div>
+                </div>
+                <div class="stage" :class="{ active: stageActive.stage2, completed: stageCompleted.stage2 }">
+                    <div>Stage 2</div>
+                    <div>편집</div>
+                </div>
+                <div class="stage" :class="{ active: stageActive.stage3, completed: stageCompleted.stage3 }">
+                    <div>Stage 3</div>
+                    <div>FREEZE</div>
+                </div>
+            </div>
+        </div>
+        
+        <div v-if="loading" class="loading">⏳ 데이터 로딩 중...</div>
+        
+        <template v-else>
+            <!-- Alerts -->
+            <div v-if="m1State.status === 'AUTO_FETCHED'" class="alert alert-info">
+                💡 자동 수집 완료. Mock 생성 또는 직접 입력을 시작하세요.
+            </div>
+            
+            <div v-if="m1State.status === 'EDITABLE'" class="alert alert-warning">
+                ⚠️ 편집 모드. 모든 필수 항목 입력 후 FACT FREEZE 가능합니다.
+            </div>
+            
+            <div v-if="m1State.status === 'FROZEN'" class="alert alert-success">
+                ✅ FACT FROZEN. M2 모듈을 시작할 수 있습니다.
+            </div>
+            
+            <!-- 기본 정보 -->
+            <div class="card">
+                <h2 class="card-title">📍 기본 정보</h2>
+                <div class="field-grid">
+                    <div class="field auto">
+                        <label>주소</label>
+                        <input v-model="formData.address" :disabled="isFrozen" placeholder="서울특별시 강남구...">
+                    </div>
+                    <div class="field auto">
+                        <label>위도</label>
+                        <input v-model.number="formData.lat" type="number" step="0.0001" :disabled="isFrozen">
+                    </div>
+                    <div class="field auto">
+                        <label>경도</label>
+                        <input v-model.number="formData.lng" type="number" step="0.0001" :disabled="isFrozen">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 토지 정보 -->
+            <div class="card">
+                <h2 class="card-title">🏞️ 토지 정보 (필수)</h2>
+                <div class="field-grid">
+                    <div class="field required">
+                        <label>대지면적 (㎡) *</label>
+                        <input v-model.number="formData.land_area" type="number" :disabled="isFrozen" placeholder="500">
+                    </div>
+                    <div class="field required">
+                        <label>용도지역 *</label>
+                        <input v-model="formData.zoning" :disabled="isFrozen" placeholder="제2종일반주거지역">
+                    </div>
+                    <div class="field required">
+                        <label>건폐율 (%) *</label>
+                        <input v-model.number="formData.bcr" type="number" :disabled="isFrozen" placeholder="60">
+                    </div>
+                    <div class="field required">
+                        <label>용적률 (%) *</label>
+                        <input v-model.number="formData.far" type="number" :disabled="isFrozen" placeholder="200">
+                    </div>
+                    <div class="field required">
+                        <label>공시지가 (원/㎡) *</label>
+                        <input v-model.number="formData.official_land_price" type="number" :disabled="isFrozen" placeholder="5000000">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 도로 조건 (LH 필수) -->
+            <div class="card critical">
+                <h2 class="card-title">🛣️ 도로 조건 (LH 필수 - 100% 입력)</h2>
+                <div class="field-grid">
+                    <div class="field required">
+                        <label>도로 접면 유형 *</label>
+                        <select v-model="formData.road_access_type" :disabled="isFrozen">
+                            <option value="">선택하세요</option>
+                            <option value="단일접면">단일접면</option>
+                            <option value="코너">코너</option>
+                            <option value="막다른도로">막다른도로</option>
+                        </select>
+                    </div>
+                    <div class="field required">
+                        <label>도로 폭 (m) *</label>
+                        <input v-model.number="formData.road_width_m" type="number" step="0.1" :disabled="isFrozen" placeholder="8">
+                        <span v-if="formData.road_width_m && formData.road_width_m < 6" class="warning">⚠️ 6m 미만 시 위험</span>
+                    </div>
+                    <div class="field required">
+                        <label>접면 도로 수 *</label>
+                        <input v-model.number="formData.road_count" type="number" :disabled="isFrozen" placeholder="1">
+                    </div>
+                    <div class="field required">
+                        <label>소방차 진입 가능 *</label>
+                        <select v-model="formData.fire_truck_access" :disabled="isFrozen">
+                            <option value="">선택하세요</option>
+                            <option :value="true">가능</option>
+                            <option :value="false">불가능</option>
+                        </select>
+                    </div>
+                    <div class="field required">
+                        <label>도로 법적 지위 *</label>
+                        <select v-model="formData.road_legal_status" :disabled="isFrozen">
+                            <option value="">선택하세요</option>
+                            <option value="도로">도로</option>
+                            <option value="사도">사도</option>
+                            <option value="미지정">미지정</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 대지 형상 -->
+            <div class="card critical">
+                <h2 class="card-title">📐 대지 형상 (LH 필수 - 100% 입력)</h2>
+                <div class="field-grid">
+                    <div class="field required">
+                        <label>형상 유형 *</label>
+                        <select v-model="formData.site_shape_type" :disabled="isFrozen">
+                            <option value="">선택하세요</option>
+                            <option value="정형">정형</option>
+                            <option value="장방형">장방형</option>
+                            <option value="부정형">부정형</option>
+                            <option value="자루형">자루형</option>
+                        </select>
+                    </div>
+                    <div class="field required">
+                        <label>전면 길이 (m) *</label>
+                        <input v-model.number="formData.frontage_m" type="number" step="0.1" :disabled="isFrozen" placeholder="20">
+                    </div>
+                    <div class="field required">
+                        <label>깊이 (m) *</label>
+                        <input v-model.number="formData.depth_m" type="number" step="0.1" :disabled="isFrozen" placeholder="25">
+                    </div>
+                    <div class="field required">
+                        <label>실효 건축 가능 비율 (%) *</label>
+                        <input v-model.number="formData.effective_build_ratio" type="number" :disabled="isFrozen" placeholder="90">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 방향/일조 -->
+            <div class="card">
+                <h2 class="card-title">🧭 방향 및 일조</h2>
+                <div class="field-grid">
+                    <div class="field required">
+                        <label>주 방향 *</label>
+                        <select v-model="formData.main_direction" :disabled="isFrozen">
+                            <option value="">선택하세요</option>
+                            <option value="남">남</option>
+                            <option value="남동">남동</option>
+                            <option value="남서">남서</option>
+                            <option value="동">동</option>
+                            <option value="서">서</option>
+                            <option value="북">북</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>일조권 리스크</label>
+                        <select v-model="formData.sunlight_risk" :disabled="isFrozen">
+                            <option value="">선택하세요</option>
+                            <option value="낮음">낮음</option>
+                            <option value="보통">보통</option>
+                            <option value="높음">높음</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>인접 건물 높이 리스크</label>
+                        <select v-model="formData.adjacent_height_risk" :disabled="isFrozen">
+                            <option value="">선택하세요</option>
+                            <option value="낮음">낮음</option>
+                            <option value="보통">보통</option>
+                            <option value="높음">높음</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 시세 정보 -->
+            <div class="card critical">
+                <h2 class="card-title">💰 시세 정보 (최소 1개 필수)</h2>
+                <div class="field-grid">
+                    <div class="field">
+                        <label>최근 거래가 (평당, 원)</label>
+                        <input v-model.number="formData.nearby_transaction_price_py" type="number" :disabled="isFrozen" placeholder="20000000">
+                    </div>
+                    <div class="field">
+                        <label>공시지가 (평당, 원)</label>
+                        <input v-model.number="formData.public_land_price_py" type="number" :disabled="isFrozen" placeholder="15000000">
+                    </div>
+                    <div class="field">
+                        <label>거래가/공시지가 배율</label>
+                        <input v-model.number="formData.price_gap_ratio" type="number" step="0.1" :disabled="isFrozen" placeholder="1.3">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 기존 건물 -->
+            <div class="card">
+                <h2 class="card-title">🏢 기존 건물 현황</h2>
+                <div class="field-grid">
+                    <div class="field">
+                        <label>기존 건물 존재 여부</label>
+                        <select v-model="formData.existing_building_exists" :disabled="isFrozen">
+                            <option :value="false">없음</option>
+                            <option :value="true">있음</option>
+                        </select>
+                    </div>
+                    <template v-if="formData.existing_building_exists">
+                        <div class="field">
+                            <label>구조</label>
+                            <select v-model="formData.existing_building_structure" :disabled="isFrozen">
+                                <option value="">선택하세요</option>
+                                <option value="RC">RC (철근콘크리트)</option>
+                                <option value="SRC">SRC (철골철근콘크리트)</option>
+                                <option value="조적">조적</option>
+                                <option value="철골">철골</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>층수</label>
+                            <input v-model.number="formData.existing_building_floors" type="number" :disabled="isFrozen" placeholder="3">
+                        </div>
+                        <div class="field">
+                            <label>연면적 (㎡)</label>
+                            <input v-model.number="formData.existing_building_area_m2" type="number" :disabled="isFrozen" placeholder="300">
+                        </div>
+                        <div class="field">
+                            <label>철거 필요</label>
+                            <select v-model="formData.demolition_required" :disabled="isFrozen">
+                                <option :value="false">불필요</option>
+                                <option :value="true">필요</option>
+                            </select>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            
+            <!-- 기타 -->
+            <div class="card">
+                <h2 class="card-title">📝 기타 정보</h2>
+                <div class="field-grid">
+                    <div class="field">
+                        <label>거래 사례가 (원/㎡)</label>
+                        <input v-model.number="formData.transaction_price" type="number" :disabled="isFrozen" placeholder="6000000">
+                    </div>
+                    <div class="field">
+                        <label>규제 요약</label>
+                        <input v-model="formData.regulation_summary" :disabled="isFrozen" placeholder="일반규제지역">
+                    </div>
+                    <div class="field">
+                        <label>LH 사업 적합성</label>
+                        <select v-model="formData.lh_compatibility" :disabled="isFrozen">
+                            <option value="">선택하세요</option>
+                            <option value="적합">적합</option>
+                            <option value="검토필요">검토 필요</option>
+                            <option value="부적합">부적합</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Validation Errors -->
+            <div v-if="validationErrors.length > 0" class="validation-errors">
+                <h3>❌ FREEZE 불가 - 필수 항목 미입력</h3>
+                <ul>
+                    <li v-for="error in validationErrors" :key="error">{{ error }}</li>
+                </ul>
+            </div>
+            
+            <!-- Actions -->
+            <div class="actions">
+                <button v-if="m1State.status === 'AUTO_FETCHED'" @click="generateMock" class="btn btn-secondary" :disabled="loading">
+                    🎲 Mock 데이터 생성
+                </button>
+                <button v-if="m1State.status === 'EDITABLE' || m1State.status === 'READY_TO_FREEZE'" @click="saveEdit" class="btn btn-primary" :disabled="loading">
+                    💾 저장
+                </button>
+                <button v-if="m1State.status === 'EDITABLE' || m1State.status === 'READY_TO_FREEZE'" @click="freezeData" class="btn btn-success" :disabled="loading">
+                    🔒 FACT FREEZE (확정)
+                </button>
+                <button v-if="m1State.status === 'FROZEN'" @click="goToM2" class="btn btn-success">
+                    ➡️ M2 모듈로 이동
+                </button>
+            </div>
+        </template>
+    </div>
+    
+    <script src="/static/js/m1_edit.js"></script>
+</body>
+</html>

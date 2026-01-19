@@ -82,6 +82,54 @@ from app.api.endpoints.proxy_vworld import router as proxy_vworld_router
 # ✨ M1 Phase 4: Import Kakao Proxy API (Bypass CORS for address search)
 from app.api.endpoints.proxy_kakao import router as proxy_kakao_router
 
+# 🎯 ZeroSite Decision OS: M1 Expert Report API (전문가 완성본)
+from app.api.endpoints.m1_expert_report import router as m1_expert_report_router
+
+# 🎯 ZeroSite Decision OS: M1 3-Stage System API (자동수집 → Mock/수정 → Freeze)
+from app.api.endpoints.m1_3stage_api import router as m1_3stage_router
+
+# 🎯 ZeroSite Decision OS: M2 Valuation API (토지감정평가 모듈)
+from app.api.endpoints.m2_valuation_api import router as m2_valuation_router
+
+# 🎯 NEW: M2 Scoring API (LH Standard - M1 FACT 기반)
+from app.api.endpoints.m2_scoring_api import router as m2_scoring_router
+
+# 🎯 ZeroSite Decision OS: M2 Expert Report API (감정평가 전문가 완성본)
+from app.api.endpoints.m2_expert_report import router as m2_expert_report_router
+
+# 🎯 ZeroSite Decision OS: M3 Housing Type API (공급유형 적합성 모듈)
+from app.api.endpoints.m3_housing_type_api import router as m3_housing_type_router
+
+# 🎯 NEW: M3 Selection API (M2 점수 해석 기반)
+from app.api.endpoints.m3_selection_api import router as m3_selection_router
+
+# 🎯 NEW: XAI Score Flow API (설명 가능한 점수 흐름)
+from app.api.endpoints.xai_flow_api import router as xai_flow_router
+
+# 🎯 ZeroSite Decision OS: M3 Expert Report API (공급유형 전문가 완성본)
+from app.api.endpoints.m3_expert_report import router as m3_expert_report_router
+
+# 🎯 ZeroSite Decision OS: M4 Building Scale API (건축규모 모듈)
+from app.api.endpoints.m4_building_scale_api import router as m4_building_scale_router
+
+# 🎯 ZeroSite Decision OS: M5 Feasibility & Risk API (사업성·리스크 모듈)
+from app.api.endpoints.m5_feasibility_api import router as m5_feasibility_router
+
+# 🎯 ZeroSite Decision OS: M5 Expert Report API (사업성·리스크 전문가 완성본)
+from app.api.endpoints.m5_expert_report import router as m5_expert_report_router
+
+# 🎯 ZeroSite Decision OS: M6 Final Judgment API (LH 종합 판단 모듈)
+from app.api.endpoints.m6_final_judgment_api import router as m6_final_judgment_router
+
+# 🎯 ZeroSite Decision OS: Project Management API (프로젝트 관리 시스템)
+from app.api.endpoints.project_management import router as project_management_router
+
+# 🎯 ZeroSite Decision OS: M7 Community Planning API (커뮤니티 계획 모듈)
+from app.api.endpoints.m7_community_api import router as m7_community_router
+
+# 🎯 ZeroSite Decision OS: Integrated Reports API (M1~M7 통합 보고서)
+from app.api.endpoints.integrated_reports import router as integrated_reports_router
+
 # ✨ PDF Download: Import Standardized PDF Download Router (M2-M6)
 from app.routers.pdf_download_standardized import router as pdf_download_router
 
@@ -282,6 +330,54 @@ app.include_router(proxy_vworld_router)
 
 # ✨ M1 Phase 4: Kakao Proxy API
 app.include_router(proxy_kakao_router)
+
+# 🎯 ZeroSite Decision OS: M1 Expert Report API (전문가 완성본)
+app.include_router(m1_expert_report_router)
+
+# 🎯 ZeroSite Decision OS: M1 3-Stage System API
+app.include_router(m1_3stage_router)
+
+# 🎯 NEW: M2 Scoring API (LH Standard - M1 FACT 기반) - REGISTER FIRST!
+app.include_router(m2_scoring_router)
+
+# 🎯 ZeroSite Decision OS: M2 Valuation API (토지감정평가 모듈) - Legacy
+app.include_router(m2_valuation_router)
+
+# 🎯 ZeroSite Decision OS: M2 Expert Report API (감정평가 전문가 완성본)
+app.include_router(m2_expert_report_router)
+
+# 🎯 ZeroSite Decision OS: M3 Housing Type API (공급유형 적합성 모듈)
+app.include_router(m3_housing_type_router)
+
+# 🎯 NEW: M3 Selection API (M2 점수 해석 기반)
+app.include_router(m3_selection_router)
+
+# 🎯 NEW: XAI Score Flow API (설명 가능한 점수 흐름)
+app.include_router(xai_flow_router)
+
+# 🎯 ZeroSite Decision OS: M3 Expert Report API (공급유형 전문가 완성본)
+app.include_router(m3_expert_report_router)
+
+# 🎯 ZeroSite Decision OS: M4 Building Scale API (건축규모 모듈)
+app.include_router(m4_building_scale_router)
+
+# 🎯 ZeroSite Decision OS: M5 Feasibility & Risk API (사업성·리스크 모듈)
+app.include_router(m5_feasibility_router)
+
+# 🎯 ZeroSite Decision OS: M5 Expert Report API (사업성·리스크 전문가 완성본)
+app.include_router(m5_expert_report_router)
+
+# 🎯 ZeroSite Decision OS: M6 Final Judgment API (LH 종합 판단 모듈)
+app.include_router(m6_final_judgment_router)
+
+# 🎯 ZeroSite Decision OS: Project Management API (프로젝트 관리 시스템)
+app.include_router(project_management_router)
+
+# 🎯 ZeroSite Decision OS: M7 Community Planning API (커뮤니티 계획 모듈)
+app.include_router(m7_community_router)
+
+# 🎯 ZeroSite Decision OS: Integrated Reports API (M1~M7 통합 보고서)
+app.include_router(integrated_reports_router)
 
 # ✨ PDF Download: Standardized PDF Download Router (M2-M6)
 app.include_router(pdf_download_router)

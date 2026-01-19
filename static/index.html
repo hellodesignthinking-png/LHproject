@@ -1,777 +1,496 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZeroSite OS v3.4 - 부동산 의사결정 엔진</title>
-    <meta name="description" content="토지 진단 · LH 판단 · 투자 검증까지 — 10초면 끝나는 부동산 엔진">
+  <meta charset="UTF-8" />
+  <title>ZeroSite Decision OS | LH 신축매입임대 15분 판단</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="LH 신축매입임대 사업, 지번 하나로 15분 안에 GO / NO-GO 판단. PDF 바로 제출 가능한 의사결정 SaaS." />
+  <link rel="stylesheet" href="/static/css/legal-disclaimer.css" />
+
+  <style>
+    /* ============================================
+       ZeroSite Landing Page Styles
+       ============================================ */
     
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", "Malgun Gothic", sans-serif;
+      color: #0A1628;
+      background: #F7F9FC;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
     
-    <link rel="stylesheet" href="/static/css/landing.css">
-</head>
-<body>
-    <!-- Header -->
-    <header class="header">
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <i class="fas fa-cube"></i>
-                    <span>ZeroSite OS</span>
-                    <span class="version">v3.4</span>
-                </div>
-                <nav class="nav">
-                    <a href="#home">홈</a>
-                    <a href="#features">기능</a>
-                    <a href="#reports">보고서</a>
-                    <a href="/docs" target="_blank">API 문서</a>
-                    <a href="https://github.com/hellodesignthinking-png/LHproject" target="_blank">
-                        <i class="fab fa-github"></i> GitHub
-                    </a>
-                    <a href="/api/v3/reports/health" target="_blank" class="health-link">
-                        <i class="fas fa-heartbeat"></i> 상태 확인
-                    </a>
-                </nav>
-            </div>
-        </div>
-    </header>
-
-    <!-- Hero Section -->
-    <section class="hero" id="home">
-        <div class="hero-background">
-            <div class="grid-pattern"></div>
-            <div class="gradient-overlay"></div>
-        </div>
-        <div class="container">
-            <div class="hero-content">
-                <div class="hero-badge">
-                    <i class="fas fa-bolt"></i>
-                    <span>프로덕션 준비완료</span>
-                </div>
-                <h1 class="hero-title">
-                    ZeroSite OS
-                </h1>
-                <p class="hero-subtitle">
-                    토지 진단 · LH 판단 · 투자 검증까지
-                </p>
-                <p class="hero-tagline">
-                    10초면 끝나는 부동산 의사결정 엔진
-                </p>
-                <div class="hero-stats">
-                    <div class="stat">
-                        <div class="stat-value">6</div>
-                        <div class="stat-label">보고서 종류</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-value">12</div>
-                        <div class="stat-label">API 엔드포인트</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-value">100%</div>
-                        <div class="stat-label">테스트 커버리지</div>
-                    </div>
-                </div>
-                <div class="hero-cta">
-                    <button class="btn btn-primary" onclick="scrollToInput()">
-                        <i class="fas fa-chart-line"></i>
-                        토지 분석 시작하기
-                    </button>
-                    <button class="btn btn-secondary" onclick="window.location.href='/docs'">
-                        <i class="fas fa-book"></i>
-                        API 문서 보기
-                    </button>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Land Input System Section (v3.4) -->
-    <section class="land-input-system" id="input">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">토지 분석 시작하기</h2>
-                <p class="section-subtitle">
-                    주소 입력만으로 자동 감정평가 → 보고서 생성까지
-                </p>
-            </div>
-            
-            <!-- Step 1: Address Input -->
-            <div class="input-card">
-                <div class="input-step">
-                    <span class="step-number">1</span>
-                    <h3>토지 주소 입력</h3>
-                </div>
-                <div class="input-form">
-                    <input 
-                        type="text" 
-                        id="land-address" 
-                        placeholder="예: 서울특별시 강남구 테헤란로 123"
-                        class="address-input"
-                    />
-                    <button onclick="lookupAddress()" class="btn btn-primary">
-                        <i class="fas fa-search"></i>
-                        자동조회 실행
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Lookup Result Preview (Hidden initially) -->
-            <div id="lookup-result" class="lookup-result" style="display: none;">
-                <div class="result-header">
-                    <i class="fas fa-check-circle"></i>
-                    <h3>토지 정보 조회 완료</h3>
-                </div>
-                
-                <!-- Basic Land Information -->
-                <div class="land-data-section">
-                    <h4 class="section-subtitle"><i class="fas fa-info-circle"></i> 기본 정보</h4>
-                    <div class="data-grid">
-                        <div class="data-field">
-                            <label>주소</label>
-                            <input type="text" id="display-address" readonly />
-                        </div>
-                        <div class="data-field">
-                            <label>필지고유번호 (PNU)</label>
-                            <input type="text" id="display-pnu" readonly />
-                        </div>
-                        <div class="data-field">
-                            <label>면적 (㎡)</label>
-                            <input type="text" id="display-area" readonly />
-                        </div>
-                        <div class="data-field">
-                            <label>면적 (평)</label>
-                            <input type="text" id="display-area-pyeong" readonly />
-                        </div>
-                        <div class="data-field">
-                            <label>지목</label>
-                            <input type="text" id="display-land-category" readonly />
-                        </div>
-                        <div class="data-field">
-                            <label>용도지역</label>
-                            <input type="text" id="display-land-use-zone" readonly />
-                        </div>
-                        <div class="data-field">
-                            <label>이용상황</label>
-                            <input type="text" id="display-land-use-situation" readonly />
-                        </div>
-                        <div class="data-field">
-                            <label>소유구분</label>
-                            <input type="text" id="display-ownership-type" readonly />
-                        </div>
-                        <div class="data-field">
-                            <label>변동일자</label>
-                            <input type="text" id="display-change-date" readonly />
-                        </div>
-                        <div class="data-field">
-                            <label>도로접면</label>
-                            <input type="text" id="display-road-side" readonly />
-                        </div>
-                        <div class="data-field">
-                            <label>지형높이</label>
-                            <input type="text" id="display-terrain-height" readonly />
-                        </div>
-                        <div class="data-field">
-                            <label>지형형상</label>
-                            <input type="text" id="display-terrain-shape" readonly />
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Price Information -->
-                <div class="land-data-section">
-                    <h4 class="section-subtitle"><i class="fas fa-won-sign"></i> 가격 정보</h4>
-                    <div class="data-grid">
-                        <div class="data-field">
-                            <label>개별공시지가 (원/㎡)</label>
-                            <input type="text" id="display-official-price" readonly />
-                        </div>
-                        <div class="data-field">
-                            <label>기준연도</label>
-                            <input type="text" id="display-price-year" readonly />
-                        </div>
-                        <div class="data-field">
-                            <label>총 공시지가 (원)</label>
-                            <input type="text" id="display-total-price" readonly />
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Regulation Information -->
-                <div class="land-data-section">
-                    <h4 class="section-subtitle"><i class="fas fa-gavel"></i> 규제 정보</h4>
-                    <div class="data-grid">
-                        <div class="data-field">
-                            <label>용적률 (%)</label>
-                            <input type="text" id="display-far" readonly />
-                        </div>
-                        <div class="data-field">
-                            <label>건폐율 (%)</label>
-                            <input type="text" id="display-bcr" readonly />
-                        </div>
-                        <div class="data-field">
-                            <label>최대 높이 (m)</label>
-                            <input type="text" id="display-max-height" readonly />
-                        </div>
-                    </div>
-                    <div class="data-field full-width">
-                        <label>규제 사항</label>
-                        <textarea id="display-regulations" readonly rows="3"></textarea>
-                    </div>
-                </div>
-                
-                <!-- Transaction Information -->
-                <div class="land-data-section">
-                    <h4 class="section-subtitle"><i class="fas fa-exchange-alt"></i> 실거래 정보</h4>
-                    <div id="transactions-container">
-                        <table class="transactions-table">
-                            <thead>
-                                <tr>
-                                    <th>거래일자</th>
-                                    <th>거래금액 (만원)</th>
-                                    <th>면적 (㎡)</th>
-                                    <th>단가 (원/㎡)</th>
-                                    <th>지목</th>
-                                </tr>
-                            </thead>
-                            <tbody id="transactions-tbody">
-                                <!-- Will be populated by JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                
-                <!-- Building Information (if available) -->
-                <div id="building-info-section" class="land-data-section" style="display: none;">
-                    <h4 class="section-subtitle"><i class="fas fa-building"></i> 건축물 정보</h4>
-                    <div class="data-grid">
-                        <div class="data-field">
-                            <label>건물명</label>
-                            <input type="text" id="display-building-name" readonly />
-                        </div>
-                        <div class="data-field">
-                            <label>주용도</label>
-                            <input type="text" id="display-building-purpose" readonly />
-                        </div>
-                        <div class="data-field">
-                            <label>연면적 (㎡)</label>
-                            <input type="text" id="display-building-area" readonly />
-                        </div>
-                        <div class="data-field">
-                            <label>층수</label>
-                            <input type="text" id="display-floor-count" readonly />
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Data Source Indicator -->
-                <div class="data-source-indicator">
-                    <i class="fas fa-database"></i>
-                    <span id="data-source-text">데이터 출처: 정부 공공데이터 API</span>
-                </div>
-            </div>
-            
-            <!-- Premium Override (Collapsible) -->
-            <div id="premium-override" class="premium-override" style="display: none;">
-                <div class="override-header" onclick="togglePremiumOverride()">
-                    <h4>
-                        <i class="fas fa-sliders-h"></i>
-                        Premium 직접 수정하기 (선택사항)
-                    </h4>
-                    <i class="fas fa-chevron-down toggle-icon"></i>
-                </div>
-                <div id="override-content" class="override-content" style="display: none;">
-                    <div class="override-grid">
-                        <div class="override-field">
-                            <label>도로 점수 (0-10)</label>
-                            <input type="number" id="road-score" min="0" max="10" step="0.1" placeholder="8.5" />
-                        </div>
-                        <div class="override-field">
-                            <label>지형 점수 (0-10)</label>
-                            <input type="number" id="topo-score" min="0" max="10" step="0.1" placeholder="7.0" />
-                        </div>
-                        <div class="override-field">
-                            <label>전체 할증률 (%)</label>
-                            <input type="number" id="overall-premium" min="0" max="100" step="1" placeholder="30" />
-                        </div>
-                    </div>
-                    <button onclick="applyPremiumOverride()" class="btn btn-secondary btn-small">
-                        <i class="fas fa-check"></i>
-                        적용하기
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Report Selection -->
-            <div id="report-selection" class="report-selection" style="display: none;">
-                <div class="input-step">
-                    <span class="step-number">2</span>
-                    <h3>생성할 보고서 선택</h3>
-                </div>
-                <div class="report-checkboxes">
-                    <label class="checkbox-card">
-                        <input type="checkbox" id="select-pre-report" checked />
-                        <div class="checkbox-content">
-                            <i class="fas fa-bolt"></i>
-                            <span class="report-name">Pre-Report</span>
-                            <span class="report-pages">2 pages</span>
-                        </div>
-                    </label>
-                    <label class="checkbox-card">
-                        <input type="checkbox" id="select-comprehensive" checked />
-                        <div class="checkbox-content">
-                            <i class="fas fa-file-contract"></i>
-                            <span class="report-name">Comprehensive</span>
-                            <span class="report-pages">17 pages</span>
-                        </div>
-                    </label>
-                    <label class="checkbox-card">
-                        <input type="checkbox" id="select-lh-decision" />
-                        <div class="checkbox-content">
-                            <i class="fas fa-check-circle"></i>
-                            <span class="report-name">LH Decision</span>
-                            <span class="report-pages">Variable</span>
-                        </div>
-                    </label>
-                    <label class="checkbox-card">
-                        <input type="checkbox" id="select-investor" />
-                        <div class="checkbox-content">
-                            <i class="fas fa-chart-line"></i>
-                            <span class="report-name">Investor</span>
-                            <span class="report-pages">12 pages</span>
-                        </div>
-                    </label>
-                    <label class="checkbox-card">
-                        <input type="checkbox" id="select-land-price" />
-                        <div class="checkbox-content">
-                            <i class="fas fa-coins"></i>
-                            <span class="report-name">Land Price</span>
-                            <span class="report-pages">Variable</span>
-                        </div>
-                    </label>
-                    <label class="checkbox-card">
-                        <input type="checkbox" id="select-internal" />
-                        <div class="checkbox-content">
-                            <i class="fas fa-clipboard-check"></i>
-                            <span class="report-name">Internal</span>
-                            <span class="report-pages">5 pages</span>
-                        </div>
-                    </label>
-                </div>
-            </div>
-            
-            <!-- Generate Button -->
-            <div id="generate-section" class="generate-section" style="display: none;">
-                <button onclick="generateSelectedReports()" class="btn btn-primary btn-large">
-                    <i class="fas fa-magic"></i>
-                    선택한 보고서 생성하기
-                </button>
-                <p class="help-text">
-                    선택한 보고서를 한번에 생성합니다. 생성 시간은 보고서당 약 1-2초 소요됩니다.
-                </p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Canonical Flow Section -->
-    <section class="canonical-flow" id="features">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">ZeroSite Canonical Flow</h2>
-                <p class="section-subtitle">
-                    단일 흐름. 단일 진실. ZeroSite OS의 핵심 엔진입니다.
-                </p>
-            </div>
-            <div class="flow-diagram">
-                <div class="flow-step">
-                    <div class="flow-icon">
-                        <i class="fas fa-database"></i>
-                    </div>
-                    <div class="flow-label">FACT</div>
-                    <div class="flow-desc">데이터 수집</div>
-                </div>
-                <div class="flow-arrow">
-                    <i class="fas fa-arrow-right"></i>
-                </div>
-                <div class="flow-step">
-                    <div class="flow-icon">
-                        <i class="fas fa-brain"></i>
-                    </div>
-                    <div class="flow-label">INTERPRETATION</div>
-                    <div class="flow-desc">데이터 해석</div>
-                </div>
-                <div class="flow-arrow">
-                    <i class="fas fa-arrow-right"></i>
-                </div>
-                <div class="flow-step">
-                    <div class="flow-icon">
-                        <i class="fas fa-gavel"></i>
-                    </div>
-                    <div class="flow-label">JUDGMENT</div>
-                    <div class="flow-desc">의사결정</div>
-                </div>
-                <div class="flow-arrow">
-                    <i class="fas fa-arrow-right"></i>
-                </div>
-                <div class="flow-step">
-                    <div class="flow-icon">
-                        <i class="fas fa-file-alt"></i>
-                    </div>
-                    <div class="flow-label">REPORT</div>
-                    <div class="flow-desc">보고서 생성</div>
-                </div>
-                <div class="flow-arrow">
-                    <i class="fas fa-arrow-right"></i>
-                </div>
-                <div class="flow-step">
-                    <div class="flow-icon">
-                        <i class="fas fa-file-pdf"></i>
-                    </div>
-                    <div class="flow-label">PDF</div>
-                    <div class="flow-desc">최종 출력</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Report Composers Section -->
-    <section class="report-composers" id="reports">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">6 Report Composers</h2>
-                <p class="section-subtitle">
-                    각 목적에 최적화된 전문 보고서를 자동 생성합니다
-                </p>
-            </div>
-            <div class="composers-grid">
-                <!-- Pre-Report -->
-                <div class="composer-card">
-                    <div class="card-icon pre-report">
-                        <i class="fas fa-bolt"></i>
-                    </div>
-                    <div class="card-header">
-                        <h3 class="card-title">Pre-Report</h3>
-                        <span class="card-pages">2 pages</span>
-                    </div>
-                    <p class="card-description">
-                        사업 가능성 요약 및 LH 적합도 초기 진단. 빠른 의사결정을 위한 핵심 요약 보고서.
-                    </p>
-                    <ul class="card-features">
-                        <li><i class="fas fa-check"></i> LH 가능성 분석</li>
-                        <li><i class="fas fa-check"></i> 예상 세대수 계산</li>
-                        <li><i class="fas fa-check"></i> 위험 요소 평가</li>
-                    </ul>
-                    <button class="card-btn" onclick="generateReport('pre-report')">
-                        <i class="fas fa-play"></i> API로 생성하기
-                    </button>
-                </div>
-
-                <!-- Comprehensive Report -->
-                <div class="composer-card featured">
-                    <div class="featured-badge">Most Popular</div>
-                    <div class="card-icon comprehensive">
-                        <i class="fas fa-file-contract"></i>
-                    </div>
-                    <div class="card-header">
-                        <h3 class="card-title">Comprehensive Report</h3>
-                        <span class="card-pages">17 pages</span>
-                    </div>
-                    <p class="card-description">
-                        토지진단 종합판. 입지·규모·규제 분석부터 재무 시뮬레이션까지 완벽 커버.
-                    </p>
-                    <ul class="card-features">
-                        <li><i class="fas fa-check"></i> 토지 기본 정보</li>
-                        <li><i class="fas fa-check"></i> LH 사업성 분석</li>
-                        <li><i class="fas fa-check"></i> 재무 시뮬레이션</li>
-                    </ul>
-                    <button class="card-btn" onclick="generateReport('comprehensive')">
-                        <i class="fas fa-play"></i> API로 생성하기
-                    </button>
-                </div>
-
-                <!-- LH Decision Report -->
-                <div class="composer-card">
-                    <div class="card-icon lh-decision">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <div class="card-header">
-                        <h3 class="card-title">LH Decision Report</h3>
-                        <span class="card-pages">Variable</span>
-                    </div>
-                    <p class="card-description">
-                        LH 심사 적합성 판단 + 통과 확률 예측. 100점 만점 스코어링 시스템.
-                    </p>
-                    <ul class="card-features">
-                        <li><i class="fas fa-check"></i> GO/NO-GO 판단</li>
-                        <li><i class="fas fa-check"></i> 100점 스코어링</li>
-                        <li><i class="fas fa-check"></i> 공급 유형 추천</li>
-                    </ul>
-                    <button class="card-btn" onclick="generateReport('lh-decision')">
-                        <i class="fas fa-play"></i> API로 생성하기
-                    </button>
-                </div>
-
-                <!-- Investor Report -->
-                <div class="composer-card">
-                    <div class="card-icon investor">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div class="card-header">
-                        <h3 class="card-title">Investor Report</h3>
-                        <span class="card-pages">12 pages</span>
-                    </div>
-                    <p class="card-description">
-                        투자자를 위한 IRR/ROI 시나리오 분석. A~F 등급 평가 및 수익성 예측.
-                    </p>
-                    <ul class="card-features">
-                        <li><i class="fas fa-check"></i> IRR/ROI 계산</li>
-                        <li><i class="fas fa-check"></i> 투자 등급 (A~F)</li>
-                        <li><i class="fas fa-check"></i> 위험-수익 분석</li>
-                    </ul>
-                    <button class="card-btn" onclick="generateReport('investor')">
-                        <i class="fas fa-play"></i> API로 생성하기
-                    </button>
-                </div>
-
-                <!-- Land Price Report -->
-                <div class="composer-card">
-                    <div class="card-icon land-price">
-                        <i class="fas fa-coins"></i>
-                    </div>
-                    <div class="card-header">
-                        <h3 class="card-title">Land Price Report</h3>
-                        <span class="card-pages">Variable</span>
-                    </div>
-                    <p class="card-description">
-                        감정평가 기반 토지가격 분석. 4-way 가격 비교 및 적정 가격 범위 제시.
-                    </p>
-                    <ul class="card-features">
-                        <li><i class="fas fa-check"></i> 4-way 가격 비교</li>
-                        <li><i class="fas fa-check"></i> 공시지가 트렌드</li>
-                        <li><i class="fas fa-check"></i> 적정 가격 범위</li>
-                    </ul>
-                    <button class="card-btn" onclick="generateReport('land-price')">
-                        <i class="fas fa-play"></i> API로 생성하기
-                    </button>
-                </div>
-
-                <!-- Internal Assessment -->
-                <div class="composer-card">
-                    <div class="card-icon internal">
-                        <i class="fas fa-clipboard-check"></i>
-                    </div>
-                    <div class="card-header">
-                        <h3 class="card-title">Internal Assessment</h3>
-                        <span class="card-pages">5 pages</span>
-                    </div>
-                    <p class="card-description">
-                        내부 개발팀용 빠른 의사결정 보고서. 종합 점수 및 조건부 판단 제공.
-                    </p>
-                    <ul class="card-features">
-                        <li><i class="fas fa-check"></i> 종합 점수 (100점)</li>
-                        <li><i class="fas fa-check"></i> 조건부 판단</li>
-                        <li><i class="fas fa-check"></i> 개발 우선순위</li>
-                    </ul>
-                    <button class="card-btn" onclick="generateReport('internal')">
-                        <i class="fas fa-play"></i> API로 생성하기
-                    </button>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- System Status Section -->
-    <section class="system-status">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Real-time System Status</h2>
-                <p class="section-subtitle">
-                    서버 상태를 실시간으로 모니터링합니다
-                </p>
-            </div>
-            <div class="status-grid">
-                <div class="status-card">
-                    <div class="status-icon" id="status-icon">
-                        <i class="fas fa-circle-notch fa-spin"></i>
-                    </div>
-                    <div class="status-label">Server Status</div>
-                    <div class="status-value" id="server-status">Loading...</div>
-                </div>
-                <div class="status-card">
-                    <div class="status-icon">
-                        <i class="fas fa-code-branch"></i>
-                    </div>
-                    <div class="status-label">Version</div>
-                    <div class="status-value" id="version-status">-</div>
-                </div>
-                <div class="status-card">
-                    <div class="status-icon">
-                        <i class="fas fa-cogs"></i>
-                    </div>
-                    <div class="status-label">Composers</div>
-                    <div class="status-value" id="composers-status">-</div>
-                </div>
-                <div class="status-card">
-                    <div class="status-icon">
-                        <i class="fas fa-file-pdf"></i>
-                    </div>
-                    <div class="status-label">PDF Engine</div>
-                    <div class="status-value" id="pdf-status">-</div>
-                </div>
-            </div>
-            <div class="status-details">
-                <pre id="status-json">Loading system status...</pre>
-            </div>
-        </div>
-    </section>
-
-    <!-- API Quick Start Section -->
-    <section class="api-quickstart">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">API Quick Start</h2>
-                <p class="section-subtitle">
-                    간단한 API 호출로 보고서를 생성하세요
-                </p>
-            </div>
-            <div class="api-examples">
-                <div class="api-example">
-                    <div class="example-header">
-                        <h3>1. Health Check</h3>
-                        <button class="copy-btn" onclick="copyCode('code-health')">
-                            <i class="fas fa-copy"></i> Copy
-                        </button>
-                    </div>
-                    <pre><code id="code-health">curl https://8000-ia7ssj6hrruzfzb34j25f-c81df28e.sandbox.novita.ai/api/v3/reports/health</code></pre>
-                </div>
-                <div class="api-example">
-                    <div class="example-header">
-                        <h3>2. Generate Pre-Report</h3>
-                        <button class="copy-btn" onclick="copyCode('code-pre-report')">
-                            <i class="fas fa-copy"></i> Copy
-                        </button>
-                    </div>
-                    <pre><code id="code-pre-report">curl -X POST https://8000-ia7ssj6hrruzfzb34j25f-c81df28e.sandbox.novita.ai/api/v3/reports/pre-report \
-  -H "Content-Type: application/json" \
-  -d '{
-    "appraisal_context": {
-      "calculation": {
-        "land_area_sqm": 660.0,
-        "final_appraised_total": 4154535000
-      },
-      "zoning": {
-        "confirmed_type": "제2종일반주거지역",
-        "far": 250.0
+    a { 
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+    
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    
+    /* ============================================
+       Hero Section
+       ============================================ */
+    header {
+      padding: 80px 0 60px;
+      background: linear-gradient(135deg, #0A1628, #1C2F4A);
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.05)" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,138.7C960,139,1056,117,1152,101.3C1248,85,1344,75,1392,69.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
+      background-size: cover;
+      opacity: 0.3;
+    }
+    
+    header h1 {
+      font-size: 42px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    header h1 strong {
+      color: #22C55E;
+    }
+    
+    header p {
+      font-size: 20px;
+      opacity: 0.9;
+      margin-bottom: 32px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    header p strong {
+      font-weight: 700;
+      color: #FBBF24;
+    }
+    
+    .cta-group {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .cta-primary {
+      background: #22C55E;
+      color: #0A1628;
+      padding: 14px 32px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 16px;
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+      transition: all 0.3s ease;
+    }
+    
+    .cta-primary:hover {
+      background: #16A34A;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+    }
+    
+    .cta-secondary {
+      background: #FFFFFF;
+      color: #0A1628;
+      padding: 14px 32px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+    
+    .cta-secondary:hover {
+      background: #F3F4F6;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* ============================================
+       Sections
+       ============================================ */
+    section {
+      padding: 72px 0;
+    }
+    
+    .section-title {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 48px;
+      text-align: center;
+      color: #0A1628;
+    }
+    
+    /* ============================================
+       How It Works Section
+       ============================================ */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 32px;
+      margin-bottom: 48px;
+    }
+    
+    .step-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+      position: relative;
+      border-top: 4px solid #667EEA;
+    }
+    
+    .step-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+    }
+    
+    .step-card::before {
+      content: attr(data-number);
+      position: absolute;
+      top: -20px;
+      left: 32px;
+      width: 48px;
+      height: 48px;
+      background: #667EEA;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 20px;
+    }
+    
+    .step-card h3 {
+      font-size: 20px;
+      margin-bottom: 12px;
+      margin-top: 16px;
+      color: #0A1628;
+    }
+    
+    .step-card p {
+      color: #6B7280;
+      line-height: 1.7;
+    }
+    
+    /* ============================================
+       Features Section
+       ============================================ */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+    
+    .feature {
+      background: #fff;
+      border-radius: 12px;
+      padding: 28px;
+      border-left: 6px solid #667EEA;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      transition: all 0.3s ease;
+      font-size: 16px;
+      font-weight: 600;
+      color: #1F2937;
+    }
+    
+    .feature:hover {
+      border-left-color: #22C55E;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+      transform: translateX(4px);
+    }
+    
+    /* ============================================
+       Trust Section
+       ============================================ */
+    .trust-section {
+      background: linear-gradient(135deg, #EEF2FF, #E0E7FF);
+      border-radius: 20px;
+      padding: 56px 40px;
+      text-align: center;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    }
+    
+    .trust-section h2 {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      color: #1E40AF;
+    }
+    
+    .trust-section p {
+      font-size: 18px;
+      color: #3730A3;
+      line-height: 1.8;
+    }
+    
+    /* ============================================
+       Stats Section
+       ============================================ */
+    .stats-section {
+      background: #fff;
+      padding: 56px 0;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 32px;
+      text-align: center;
+    }
+    
+    .stat-item {
+      padding: 24px;
+    }
+    
+    .stat-number {
+      font-size: 48px;
+      font-weight: 800;
+      color: #667EEA;
+      margin-bottom: 8px;
+    }
+    
+    .stat-label {
+      font-size: 16px;
+      color: #6B7280;
+      font-weight: 600;
+    }
+    
+    /* ============================================
+       Footer
+       ============================================ */
+    footer {
+      background: #0A1628;
+      color: #9CA3AF;
+      padding: 48px 0 32px;
+      text-align: center;
+    }
+    
+    footer p {
+      margin-bottom: 12px;
+      line-height: 1.8;
+    }
+    
+    .footer-links {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid #374151;
+    }
+    
+    .footer-links a {
+      color: #D1D5DB;
+      margin: 0 16px;
+      font-size: 14px;
+    }
+    
+    .footer-links a:hover {
+      color: #22C55E;
+    }
+    
+    /* ============================================
+       Responsive Design
+       ============================================ */
+    @media (max-width: 768px) {
+      header h1 {
+        font-size: 32px;
+      }
+      
+      header p {
+        font-size: 18px;
+      }
+      
+      .section-title {
+        font-size: 26px;
+      }
+      
+      .steps {
+        grid-template-columns: 1fr;
+      }
+      
+      .features {
+        grid-template-columns: 1fr;
+      }
+      
+      .trust-section {
+        padding: 40px 24px;
+      }
+      
+      .stat-number {
+        font-size: 36px;
       }
     }
-  }'</code></pre>
-                </div>
-                <div class="api-example">
-                    <div class="example-header">
-                        <h3>3. Download Report PDF</h3>
-                        <button class="copy-btn" onclick="copyCode('code-download')">
-                            <i class="fas fa-copy"></i> Copy
-                        </button>
-                    </div>
-                    <pre><code id="code-download">curl https://8000-ia7ssj6hrruzfzb34j25f-c81df28e.sandbox.novita.ai/api/v3/reports/{report_id}/pdf \
-  -o report.pdf</code></pre>
-                </div>
-            </div>
-            <div class="api-cta">
-                <button class="btn btn-primary" onclick="window.open('/docs', '_blank')">
-                    <i class="fas fa-book-open"></i> 전체 API 문서 보기
-                </button>
-            </div>
-        </div>
-    </section>
+  </style>
+</head>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-left">
-                    <div class="footer-logo">
-                        <i class="fas fa-cube"></i>
-                        <span>ZeroSite OS</span>
-                    </div>
-                    <p class="footer-tagline">
-                        부동산 의사결정의 새로운 표준
-                    </p>
-                    <p class="footer-copyright">
-                        © 2025 ZeroSite OS. All rights reserved.
-                    </p>
-                </div>
-                <div class="footer-right">
-                    <div class="footer-links">
-                        <div class="footer-column">
-                            <h4>Product</h4>
-                            <a href="#features">Features</a>
-                            <a href="#reports">Reports</a>
-                            <a href="/docs" target="_blank">API Docs</a>
-                        </div>
-                        <div class="footer-column">
-                            <h4>Resources</h4>
-                            <a href="/api/v3/reports/health" target="_blank">Health Check</a>
-                            <a href="https://github.com/hellodesignthinking-png/LHproject" target="_blank">GitHub</a>
-                            <a href="#">Documentation</a>
-                        </div>
-                        <div class="footer-column">
-                            <h4>System</h4>
-                            <a href="#" id="footer-version">Version v3.3</a>
-                            <a href="#" id="footer-status">Status: Loading...</a>
-                            <a href="#">Privacy Policy</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </footer>
+<body>
 
-    <!-- Report Generation Modal -->
-    <div id="reportModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h2 id="modal-title">보고서 생성중...</h2>
-            <div class="modal-body">
-                <div class="loading-spinner">
-                    <i class="fas fa-circle-notch fa-spin"></i>
-                </div>
-                <p id="modal-message">보고서를 생성하고 있습니다. 잠시만 기다려주세요...</p>
-                <div id="modal-result" style="display: none;">
-                    <div class="result-success">
-                        <i class="fas fa-check-circle"></i>
-                        <h3>보고서 생성 성공!</h3>
-                        <div class="result-info">
-                            <p><strong>보고서 ID:</strong> <span id="result-id"></span></p>
-                            <p><strong>Type:</strong> <span id="result-type"></span></p>
-                            <p><strong>생성 시간:</strong> <span id="result-time"></span></p>
-                        </div>
-                        <div class="result-actions">
-                            <button class="btn btn-primary" onclick="downloadReport('json')">
-                                <i class="fas fa-download"></i> JSON 다운로드
-                            </button>
-                            <button class="btn btn-secondary" onclick="downloadReport('pdf')">
-                                <i class="fas fa-file-pdf"></i> PDF 다운로드
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div id="modal-error" style="display: none;">
-                    <div class="result-error">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <h3>Generation Failed</h3>
-                        <p id="error-message"></p>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- Hero Section -->
+<header>
+  <div class="container">
+    <h1>
+      LH 신축매입임대,<br/>
+      <strong>15분 안에 GO / NO-GO 판단</strong>
+    </h1>
+    <p>
+      지번 하나로<br/>
+      토지 · 건축 · 사업성 · 커뮤니티까지<br/>
+      <strong>한 번에 판단하는 의사결정 OS</strong>
+    </p>
+    <div class="cta-group">
+      <a href="/static/projects.html" class="cta-primary">
+        🚀 프로젝트 시작하기
+      </a>
+      <a href="/static/m6_dashboard.html?project_id=demo&context_id=demo" class="cta-secondary">
+        📊 데모 보기
+      </a>
     </div>
+  </div>
+</header>
 
-    <script src="/static/js/landing.js"></script>
+<!-- How It Works Section -->
+<section>
+  <div class="container">
+    <h2 class="section-title">어떻게 사용하나요?</h2>
+    <div class="steps">
+      <div class="step-card" data-number="1">
+        <h3>지번 입력 & FACT 확정</h3>
+        <p>주소 하나로 토지·규제·입지 정보를 자동 수집하고 사실을 확정합니다. M1에서 데이터를 FREEZE하면 이후 모든 분석의 기준이 됩니다.</p>
+      </div>
+      <div class="step-card" data-number="2">
+        <h3>자동 분석 (M1~M7)</h3>
+        <p>LH 기준에 따라 매입 적정성, 공급유형, 건축규모, 사업성, 커뮤니티 계획을 순차 분석합니다. 실무자 검증 구조를 반영합니다.</p>
+      </div>
+      <div class="step-card" data-number="3">
+        <h3>LH 제출용 PDF 생성</h3>
+        <p>GO / CONDITIONAL / NO-GO 최종 판단과 근거가 담긴 보고서를 즉시 다운로드합니다. 표지·목차·페이지 번호 자동 생성.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Why ZeroSite Section -->
+<section style="background: #F9FAFB;">
+  <div class="container">
+    <h2 class="section-title">왜 ZeroSite인가</h2>
+    <div class="features">
+      <div class="feature">🔒 M1 FACT FREEZE: Single Source of Truth</div>
+      <div class="feature">🎯 LH 실무 기준을 그대로 반영</div>
+      <div class="feature">✅ GO뿐 아니라 NO-GO 사유까지 설명</div>
+      <div class="feature">📊 감정평가·사업성 논리 기반 판단</div>
+      <div class="feature">🛡️ 커뮤니티·민원 리스크 사전 반영</div>
+      <div class="feature">📄 PDF 그대로 LH 제출 가능</div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+  <div class="container">
+    <h2 class="section-title">ZeroSite 실전 성과</h2>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-number">M1~M7</div>
+        <div class="stat-label">7단계 의사결정 모듈</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">15분</div>
+        <div class="stat-label">분석 소요 시간</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">100%</div>
+        <div class="stat-label">LH 기준 반영</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">PDF</div>
+        <div class="stat-label">즉시 제출 가능</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Trust Section -->
+<section>
+  <div class="container">
+    <div class="trust-section">
+      <h2>신뢰를 전제로 설계되었습니다</h2>
+      <p>
+        ZeroSite는 실제 LH 사업 구조와<br/>
+        실무자의 판단 흐름을 기준으로 설계되었습니다.<br/>
+        <strong>Human-Verified, Fail Fast, LH Practical Standards</strong>를 헌법으로 합니다.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Legal Disclaimer Section -->
+<section style="background: #F9FAFB;">
+  <div class="container">
+    <div class="landing-disclaimer-container">
+      <!-- JavaScript로 자동 삽입 -->
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <p>
+      <strong>ZeroSite Decision OS</strong>는 의사결정을 보조하는 도구이며,<br/>
+      최종 판단은 발주기관(LH 등) 및 인허가권자의 검토에 따릅니다.
+    </p>
+    <p style="margin-top: 24px; font-size: 14px; color: #6B7280;">
+      © 2026 ZeroSite Decision OS by Antenna Holdings | Version 1.0 | LH-READY
+    </p>
+    <div class="footer-links">
+      <a href="/static/projects.html">프로젝트 목록</a>
+      <a href="/static/m6_dashboard.html?project_id=demo&context_id=demo">데모 보기</a>
+      <a href="/docs">API 문서</a>
+    </div>
+  </div>
+</footer>
+
+<script src="/static/js/legal-disclaimer.js"></script>
+<script>
+  // Legal Disclaimer 자동 삽입
+  document.addEventListener('DOMContentLoaded', () => {
+    LegalDisclaimerSystem.init('landing');
+  });
+  
+  // Smooth scroll for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+</script>
+
 </body>
 </html>
